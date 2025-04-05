@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useRecoilValue } from "recoil";
 import {
+  cssPropForAssetsManagerState,
   currentElState,
   framesStylesState,
   ruleState,
@@ -8,7 +9,13 @@ import {
   showAnimationsBuilderState,
 } from "../helpers/atoms";
 import { useEditorMaybe } from "@grapesjs/react";
-import { getCurrentMediaDevice } from "../helpers/functions";
+import {
+  extractAllRulesWithChildRules,
+  getCurrentMediaDevice,
+  getCurrentSelector,
+} from "../helpers/functions";
+import { inf_symbol_Id_attribute } from "../constants/shared";
+import { InfinitelyEvents } from "../constants/infinitelyEvents";
 
 /**
  *
@@ -26,24 +33,57 @@ export const useUpdateInputValue = ({
   const selector = useRecoilValue(selectorState);
   const showAnimationsBuilder = useRecoilValue(showAnimationsBuilderState);
   const framesStyles = useRecoilValue(framesStylesState);
+  const cssPropForAM = useRecoilValue(cssPropForAssetsManagerState);
 
-  useEffect(() => {
-    if (currentElObj.currentEl && !showAnimationsBuilder) {
-      const slEL = editor.getSelected();
+  const handler = ({ isDeviceEvent = false }) => {
+    const slEL = editor?.getSelected();
+    const Media = getCurrentMediaDevice(editor);
+    const currentSelector = getCurrentSelector(selector, slEL);
+
+    function getRuleStyle () {
+      // console.log("currentSelector : ", currentSelector);
+      // console.log("rule.ruleString : ", rule.ruleString);
+      // console.log("rule.atRuleParams : ", rule.atRuleParams);
+      // console.log("rule.atRuleType : ", rule.atRuleType);
+      // console.log("rule.is : ", rule.is);
+      // console.log("rules : ", rule);
+
+      const mediaAccordingToRule =
+        (rule.atRuleParams && rule.atRuleType && !isDeviceEvent) ||
+        (rule.is && !isDeviceEvent)
+          ? {
+              atRuleParams: rule.atRuleParams,
+              atRuleType: rule.atRuleType,
+            }
+          : { ...Media };
+      // console.log("mediaAccordingToRule  : ", mediaAccordingToRule);
+
+      //==========
+      const outPut = editor.Css.getRule(
+        `${currentSelector}${rule.ruleString}`,
+        mediaAccordingToRule
+      )?.toJSON()?.style;
+      // console.log("outPut : ", outPut , extractAllRulesWithChildRules());
+      // console.log("rule : ", rule.ruleString);
+      // console.log('sle is heare' , outPut);
+
+      return outPut || {};
+    };
+
+    if (!slEL || !getRuleStyle()[cssProp]) {
+      console.log('!sadsadsa' , cssProp , getRuleStyle());
+      
+      setVal("");
+      onEffect(cssProp, "");
+      return;
+    }
+    if (slEL && !showAnimationsBuilder) {
       const slElStyles = slEL.getStyle();
-      const Media = getCurrentMediaDevice(editor);
-      const getRuleStyle = () => {
-        const currentSelector = selector
-          ? selector
-          : `#${currentElObj.currentEl.id}`;
-        const outPut = editor.Css.getRule(
-          `${currentSelector}${rule.ruleString}`,
-          {...Media}
-        )?.toJSON()?.style;
-        return outPut || {};
-      };
+      // const infSymbolAttrValue = slEL.getAttributes()[inf_symbol_Id_attribute];
+      
+     
 
-      if (selector || rule.is) {
+      if (currentSelector || rule.is) {
         const value = returnPropsAsIt
           ? getRuleStyle()
           : getRuleStyle()[cssProp] || "";
@@ -67,5 +107,32 @@ export const useUpdateInputValue = ({
       setVal(value);
       onEffect(cssProp, value);
     }
-  }, [currentElObj, rule, selector, showAnimationsBuilder, framesStyles]);
+
+    editor.trigger("inf:rules:update");
+  };
+
+  useEffect(() => {
+    const pageHandler = () => {
+      handler({});
+    };
+    const deviceHandler = () => {
+      handler({ isDeviceEvent: true });
+    };
+    const setRuleHandler = () => {
+      handler({});
+    };
+    editor.on(InfinitelyEvents.pages.select, pageHandler);
+    editor.on("device:change", deviceHandler);
+    editor.on("inf:rules:set", setRuleHandler);
+
+    return () => {
+      editor.off(InfinitelyEvents.pages.select, pageHandler);
+      editor.off("device:change", deviceHandler);
+      editor.off("inf:rules:set", setRuleHandler);
+    };
+  }, []);
+
+  useEffect(() => {
+    handler({});
+  }, [currentElObj, selector, rule, showAnimationsBuilder, framesStyles , cssPropForAM]);
 };

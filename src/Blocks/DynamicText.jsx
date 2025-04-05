@@ -1,4 +1,6 @@
+import React from 'react'
 import { html } from '../helpers/cocktail'
+
 
 /**
  * 
@@ -6,15 +8,16 @@ import { html } from '../helpers/cocktail'
  * @returns 
  */
 export const DynamicText = ({editor}) => {
- editor.Components.addType('dynamic text',{
-    model:{
-        defaults:{
-            tagName:'p',
-            attributes:{
-                class:'dt'
-            },
-            components:html`Insert Dynamic Text`
+    editor.Components.addType('dynamic text',{
+        model:{
+            defaults:{
+                tagName:'pre',
+                attributes:{
+                    class:'dt'
+                },
+                components:html`Insert Dynamic Text`
+            }
         }
-    }
- })
+     })
+    
 }

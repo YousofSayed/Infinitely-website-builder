@@ -1,17 +1,18 @@
 import React from "react";
 import { addClickClass } from "../../helpers/cocktail";
 
-export const Button = ({ children , title ,className = "py-[7.5px] px-[30px]  font-bold", onClick = ()=>{} }) => {
+export const Button = ({ children , title , type = 'button'  , className = "py-2 h-full  px-4  font-bold", onClick = ()=>{} }) => {
   return (
     <button
     title={title}
-      className={`bg-blue-600 rounded-lg ${className} text-white`}
+    type={type}
+      className={`bg-blue-600 rounded-lg flex gap-2 items-center ${className} text-nowrap text-white text-[14px]`}
       onClick={(ev) => {
-        addClickClass(ev.target, "click");
-        onClick(ev);
+        addClickClass(ev.currentTarget, "click");
+        onClick(ev); 
       }}
     >
-      {children}
+      {children} 
     </button>
   );
 };

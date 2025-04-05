@@ -7,10 +7,15 @@
 .parent {
   display: flex;
   padding: 10px;
+  width: 100%;
 }
 .row {
   min-height: 75px;
   flex-grow: 1;
+}
+
+.minh-60 {
+  min-height: 60px;
 }
 
 .col {
@@ -18,15 +23,68 @@
   flex-grow: 1;
 }
 
-.dt{
-  display: inline-block;
+/* .dynamic-temp{
+  min-height: 350px;
+  min-width: 310px;
+  width: fit-content;
   padding: 10px;
+} */
+
+.inf-block {
+  display: block;
+  padding: 10px;
+  height: 320px;
+  width: 300px;
 }
 
+/* Container Class */
 .container {
-  margin: auto;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 15px;    /* Consistent edge spacing */
+  padding-right: 15px;
+  max-width: 1140px;    /* Sweet spot for readability */
+  width: 100%;          /* Fluid up to the max */
+  box-sizing: border-box; /* Padding stays in bounds */
+  min-height: 65px;
 }
 
-.p-10{
+/* Responsive Breakpoints */
+@media (min-width: 576px) {
+  .container {
+    max-width: 540px;   /* Small screens */
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 720px;   /* Medium screens */
+  }
+}
+
+@media (min-width: 992px) {
+  .container {
+    max-width: 960px;   /* Large screens */
+  }
+}
+
+@media (min-width: 1200px) {
+  .container {
+    max-width: 1140px;  /* Extra large screens */
+  }
+}
+
+/* Optional Variants */
+.container--full {
+  max-width: none;      /* Full width option */
+}
+
+.container--fluid {
+  padding-left: 15px;
+  padding-right: 15px;
+  max-width: none;      /* Edge padding, no max-width */
+}
+
+.p-10 {
   padding: 10px;
 }

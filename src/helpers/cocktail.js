@@ -311,7 +311,7 @@ export function OTP(length) {
 }
 
 export function uniqueID() {
-  return hash(crypto.randomUUID()).replaceAll("=", "");
+  return hash(random(20) + random(500) + crypto.randomUUID() + random(20) + random(500)).replaceAll("=", "");
 }
 
 /**
@@ -320,11 +320,11 @@ export function uniqueID() {
  */
 export const appendWithDelay = ({ where, els, starterIndex, delay }) => {
   let cloneStarterIndex = starterIndex;
-  
+
   setTimeout(() => {
     if (cloneStarterIndex > els.length - 1) return;
     where.appendChild(els[starterIndex]);
-    cloneStarterIndex++
+    cloneStarterIndex++;
     appendWithDelay({
       where,
       els,
@@ -391,10 +391,10 @@ export function createBlobFileAs(data, mimeType) {
 }
 
 /**
- * 
- * @param {any[]} oldArray 
- * @param {any[]} newArray 
- * @returns 
+ *
+ * @param {any[]} oldArray
+ * @param {any[]} newArray
+ * @returns
  */
 export function getDifferences(oldArray, newArray) {
   const differences = [];
@@ -417,9 +417,10 @@ export function transformToNumInput(inputElement) {
   const rgx = /(-)?(\d+)?/gi;
   // console.log(inputElement.value.match(rgx)[0]);
   console.log(parseFloat(inputElement.value));
-  console.log(inputElement.value.split(/[a-z]/ig));
-  
-  inputElement.value = parseFloat(inputElement.value)+1 ? parseFloat(inputElement.value) : ''
+  console.log(inputElement.value.split(/[a-z]/gi));
+
+  inputElement.value =
+    parseFloat(inputElement.value) + 1 ? parseFloat(inputElement.value) : "";
   // inputElement.value = rgx.test(inputElement.value)
   //   ? inputElement.value?.match(rgx)[0]
   //   : "";
@@ -904,35 +905,63 @@ export class CocktailDB {
    * @param {string} dbname
    */
   constructor(dbname = "string") {
-    this.updateI = +localStorage.getItem("IDBV") || 1;
+    this._updateI = +localStorage.getItem("IDBV") || 1;
     this.dbname = dbname;
     this.handlers = {
-      doRequest: async (callback = () => {}) => {
-        const request = indexedDB.open(dbname, this.updateI);
-        let db = new Promise((res, rej) => {
-          request.addEventListener("success", function (ev) {
-            res(callback(this.result));
+      /**
+       *
+       * @param {(db:IDBDatabase)=>void} callback
+       * @param {number} collectionVersion
+       * @returns {Promise<IDBDatabase>}
+       */
+      doRequest: async (callback = (db) => {}, collectionVersion) => {
+        const request = indexedDB.open(
+          dbname,
+          collectionVersion ? collectionVersion : this.updateI
+        );
+
+        let returnedDB;
+        return new Promise((res, rej) => {
+          request.addEventListener("success", function () {
+            // Use request.result instead of this.result
+            returnedDB = request.result;
+            res(callback(returnedDB));
           });
 
           request.addEventListener("error", function () {
-            rej(new Error("Error : " + this.error));
+            returnedDB = request.error;
+            rej(new Error("Error : " + request.error));
           });
         });
 
-        return db;
+        // return db; // Return the resolved promise
       },
 
+      /**
+       *
+       * @param {string} name
+       * @param {IDBOpenDBRequest} request
+       */
       createObjectStore: async (name, request) => {
-        request.addEventListener("upgradeneeded", function (ev) {
-          this.result.createObjectStore(name, {
-            keyPath: "id",
-            autoIncrement: true,
-          });
-        });
+        // request.addEventListener("upgradeneeded", function (ev) {
+
+        // });
+        // request.result.createObjectStore(name, {
+        //   keyPath: "id",
+        //   autoIncrement: true,
+        // });
+        console.log("upgrade");
+        // const db = await this.handlers.doRequest((db)=>db);
+        // await db.createObjectStore(name, {
+        //   keyPath: "id",
+        //   autoIncrement: true,
+        // })
 
         // close request if it seccesded and to if we wanna to create new collection
         request.addEventListener("success", function () {
-          this.result.close();
+          console.log("success");
+
+          request.result.close();
         });
       },
 
@@ -1144,17 +1173,54 @@ export class CocktailDB {
   }
 
   /**
+   * @param {number | undefined} value
+   */
+  set updateI(value) {
+    this._updateI = value; // Assign the value to the internal property
+  }
+
+  /**
+   * @param {number | undefined} value
+   */
+  get updateI() {
+    return this._updateI; // Assign the value to the internal property
+  }
+
+  /**
    * Create collection at your db
    * @param {string} name
    * @returns
    */
-  async createCollction(name) {
-    const request = indexedDB.open(this.dbname, this.updateI);
-    this.updateI++; //to update version to create new objectStore (collection)
-    this.handlers.createObjectStore(name, request); //to create new objectStore (collection)
-    localStorage.setItem("IDBV", this.updateI);
+  async createCollection(name) {
+    try {
+      // Open the database in a way that allows version changes (this triggers onupgradeneeded)
 
-    return this.collectionHandler(name);
+      const request = indexedDB.open(this.dbname, this.updateI);
+
+      // This event triggers when the database version changes or is created
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+
+        // Create object store only if it doesn't already exist
+        if (!db.objectStoreNames.contains(name)) {
+          db.createObjectStore(name, {
+            keyPath: "id",
+            autoIncrement: true,
+          });
+        }
+      };
+
+    
+
+    
+
+      // After the object store is created (or already exists), use the db
+      localStorage.setItem("IDBV", this.updateI);
+
+      return this.collectionHandler(name);
+    } catch (error) {
+      console.error("Error creating collection:", error);
+    }
   }
 
   async openCollection(name) {
@@ -1163,6 +1229,32 @@ export class CocktailDB {
 
   deleteDatabase() {
     indexedDB.deleteDatabase(dbname);
+  }
+
+  async deleteCollection(name) {
+    const db = this.handlers.doRequest((db) => db);
+    (await db).deleteObjectStore(name);
+    (await db).close(name);
+  }
+
+  async getCollectionLength() {
+    try {
+      const db = await this.handlers.doRequest((db) => db);
+      const clsNames = db.objectStoreNames; // Directly access the DOMStringList
+      return clsNames.length; // Return the length of objectStoreNames
+    } catch (error) {
+      console.error("Error getting collection length:", error);
+    }
+  }
+
+  async getAllCollections() {
+    try {
+      const db = await this.handlers.doRequest((db) => db);
+      const clsNames = db.objectStoreNames; // Directly access the DOMStringList
+      return clsNames; // Return the length of objectStoreNames
+    } catch (error) {
+      console.error("Error getting collection length:", error);
+    }
   }
 }
 
@@ -1412,13 +1504,13 @@ export function deleteCookie(key) {
 
 /**
  *
- * @param {{arr:array , oldContet:any , content:any}} param0
+ * @param {{arr:array , oldContent:any , content:any}} param0
  * @returns
  */
-export function pushBetween({ arr, oldContet, content }) {
+export function pushBetween({ arr, oldContent, content }) {
   const newArr = [...arr];
 
-  const index = newArr.indexOf(oldContet);
+  const index = newArr.indexOf(oldContent);
 
   if (index !== -1) {
     newArr.splice(index + 1, 0, content);

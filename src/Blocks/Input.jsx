@@ -1,4 +1,6 @@
-import { inputTypes } from "../constants/constants";
+import { inputTypes } from "../constants/hsValues";
+import { open_files_manager_modal } from "../constants/InfinitelyCommands";
+import { traitCallback } from "../helpers/functions";
 
 /**
  *
@@ -19,17 +21,17 @@ export const Input = ({ editor }) => {
             name: "type",
             label: "select type",
             type: "select",
-            options: inputTypes.map((type) => ({ id: type, label: type })),
-          },
-          {
-            id: "id",
-            name: "id",
-            type: "text",
+            role: "attribute",
+            keywords: inputTypes,
+            // options: inputTypes.map((type) => ({ id: type, label: type })),
+            // command:open_files_manager_modal, //for testing
+            callback: traitCallback(({ editor, newValue, oldValue, trait }) => {
+              const sle = editor.getSelected();
+              sle.addAttributes({ [trait.name]: newValue });
+            }),
           },
         ],
       },
     },
-    
-    
   });
 };

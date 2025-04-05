@@ -41,10 +41,10 @@ export const onKeyDown = ({ ev, setClass, setVal ,cssProp  , isCurrentELChange})
   const handleChange = ({ ev, increase }) => {
     const finalVal = `${
       increase
-        ? +parseInt(ev.target.value) + 1
-        : +parseInt(ev.target.value) <= 0
+        ? +parseInt(ev.target.value || 0) + 1
+        : +parseInt(ev.target.value || 0) <= 0
         ? 0
-        : +parseInt(ev.target.value) - 1
+        : +parseInt(ev.target.value || 0) - 1
     }${
       CSS.supports(cssProp , ev.target.value)
         ? ev.target.value.split(/\d+/g).join("")

@@ -840,11 +840,11 @@ export class CocktailDB {
    * @param {string} dbname
    */
   constructor(dbname = "string") {
-    this.updateI = +localStorage.getItem("IDBV") || 1;
+    this._updateI = +localStorage.getItem("IDBV") || 1;
     this.dbname = dbname;
     this.handlers = {
       doRequest: async (callback = () => {}) => {
-        const request = indexedDB.open(dbname, this.updateI);
+        const request = indexedDB.open(dbname, this._updateI);
         let db = new Promise((res, rej) => {
           request.addEventListener("success", function (ev) {
             res(callback(this.result));
@@ -1085,10 +1085,10 @@ export class CocktailDB {
    * @returns
    */
   async createCollction(name) {
-    const request = indexedDB.open(this.dbname, this.updateI);
-    this.updateI++; //to update version to create new objectStore (collection)
+    const request = indexedDB.open(this.dbname, this._updateI);
+    this._updateI++; //to update version to create new objectStore (collection)
     this.handlers.createObjectStore(name, request); //to create new objectStore (collection)
-    localStorage.setItem("IDBV", this.updateI);
+    localStorage.setItem("IDBV", this._updateI);
 
     return this.collectionHandler(name);
   }

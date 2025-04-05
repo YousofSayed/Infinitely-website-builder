@@ -13,16 +13,25 @@ export const Li = ({
   title = "",
   onClick = () => {},
   justHover = false,
+  isObjectParamsIcon=false,
+  fillObjIcon=true,
+  fillObjIconStroke=false,
+  fillIcon = false,
+  fillStrokeIcon = false,
+  refForward ,
+  linkClassName  = '',
   target,
   icon = (strokeColor, strokeWidth) => {},
 }) => {
-  const path = useResolvedPath().pathname;
+  const path = useResolvedPath();
   const setRemoveActives = useSetRecoilState(removeAllActivesState);
   const allActives = useRecoilValue(removeAllActivesState);
   const [myName, setMyName] = useState("");
   const [isClicked, setIsClicked] = useState();
   const buttonRef = useRef(refType);
 
+  // console.log(path.pathname?.match(to)?.filter(link=>link)?.length);
+  
   // useEffect(() => {
   //   //   if (!buttonRef || !buttonRef.current) return;
   //   console.log(isClicked);
@@ -48,36 +57,35 @@ export const Li = ({
 
   return (
     <li
-      className={`group  w-[35px] h-[35px] rounded-lg cursor-pointer grid place-items-center transition-all ${
-        path == to && "bg-blue-600"
+      className={`group li-btn h-[35px] w-[35px]   rounded-lg cursor-pointer grid place-items-center transition-all ${
+       to &&  path.pathname?.match(to)?.filter(link=>link)?.length ? "bg-blue-600" : ''
       } ${className}  ${hover ? "hover:bg-blue-700" : ""}`}
     >
       {to ? (
         <Link
           to={to}
           title={title}
-          aria-label={title}
+          aria-label={title} 
+          ref={refForward}
           target={target}
-          className="w-full h-full flex justify-center items-center"
+          className={`w-full h-full   ${linkClassName ? linkClassName : 'flex justify-center items-center'}`}
           onClick={(ev) => {
-            console.log(path.pathname, to);
             addClickClass(ev.currentTarget, "click");
-
             onClick(ev);
           }}
         >
-          {icon(path == to ? "white" : undefined)}
+          {icon(path.pathname.includes(to) ? "white" : undefined)}
           {children}
         </Link>
       ) : (
         <button
-          ref={buttonRef}
+          ref={refForward}
           aria-label={title}
           title={title}
-          className="w-full h-full flex justify-center items-center "
+          className={`w-full h-full  flex justify-center items-center ${fillIcon && '[&_path]:hover:fill-white'} ${fillStrokeIcon && '[&_path]:hover:stroke-white'}`}
           onClick={(ev) => {
             onClick(ev);
-            addClickClass(ev.currentTarget, "click");
+            addClickClass(ev.currentTarget, "click"); 
 
             // if(justHover)return;
             // [...$a(".clicked")]
@@ -97,7 +105,10 @@ export const Li = ({
             // }
           }}
         >
-          {icon(
+          {isObjectParamsIcon ? icon?.({
+            fill: fillObjIcon ? (isClicked && allActives == title ? "white" : undefined) : undefined,
+            strokeColor : fillObjIconStroke? (isClicked && allActives == title ? "white" : undefined) : undefined,
+          }) : icon?.(
             undefined,
             undefined,
             isClicked && allActives == title ? "white" : undefined

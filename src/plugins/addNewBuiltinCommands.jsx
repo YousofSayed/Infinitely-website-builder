@@ -1,8 +1,6 @@
-import React from "react";
-import { AssetsManager } from "../components/Home/AssetsManager";
-import { ErrorModal } from "../components/Home/Modals/ErrorModal";
-import { PagesManager } from "../components/Home/Modals/PagesManager";
-import { RestAPIModels } from "../components/Home/Modals/RestAPIModels";
+import { select_page } from '../constants/InfinitelyCommands';
+import { InfinitelyEvents } from '../constants/infinitelyEvents';
+import { current_page_id } from '../constants/shared';
 
 /**
  *
@@ -10,39 +8,23 @@ import { RestAPIModels } from "../components/Home/Modals/RestAPIModels";
  * @returns
  */
 export const addNewBuiltinCommands = (editor) => {
-  editor.Commands.add("open:files-manager", (editor, sender, options) => {
-    editor.runCommand("open:custom:modal", {
-      title: "Files Manager",
-      JSXModal: <AssetsManager editor={editor} />,
-    });
-  });
-
-  editor.Commands.add("open:pages-manager", (editor, sender, options) => {
-    editor.runCommand("open:custom:modal", {
-      title: "Pages Manager",
-      JSXModal: <PagesManager />,
-    });
-  });
+ 
 
   editor.Commands.add("open:symbols-manager", (editor, sender, options) => {
-    editor.runCommand("open:symbols:model");
+    editor.runCommand("open:symbols:modal");
   });
 
-  editor.Commands.add("open:error:modal", (editor, sender, options) => {
-    editor.runCommand("open:custom:modal", {
-      title: options.errMsg,
-      JSXModal: <ErrorModal>{options.content}</ErrorModal>,
-    });
-  });
-
-  editor.Commands.add("open:models:modal", (editor, sender, options) => {
-    editor.runCommand("open:custom:modal", {
-      title: "Rest API Models",
-      JSXModal: <RestAPIModels />,
-    });
-  });
 
   editor.Commands.add("close:current:modal", (editor, sender, options) => {
     editor.runCommand("close:custom:modal");
+  });
+
+  
+  editor.Commands.add(select_page, (editor, sender, options) => {
+     const pageId = options.pageId;
+     if(pageId == localStorage.getItem(current_page_id))return;
+     localStorage.setItem(current_page_id , pageId);
+    //  editor.store();
+     editor.load()
   });
 };

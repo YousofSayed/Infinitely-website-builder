@@ -2,6 +2,8 @@ import { useRecoilValue } from "recoil";
 import { html, uniqueID } from "../helpers/cocktail";
 import { currentElState } from "../helpers/atoms";
 import { editorIcons } from "../components/Icons/editorIcons";
+import { dynamic_container, dynamic_text } from "../constants/cmpsTypes";
+import { defineTraits } from "../helpers/functions";
 
 const svgText = html`<svg style="width:24px;height:24px" viewBox="0 0 24 24">
   <path
@@ -53,16 +55,6 @@ const svgVideo = html`
   </svg>
 `;
 
-const jsxComponent = () => {
-  const selectedEl = useRecoilValue(currentElState);
-  return (
-    <div>
-      <custom-component>{selectedEl.currentEl.textContent}</custom-component>
-    </div>
-  );
-};
-let str = "${x}";
-
 /**
  * @type {import('grapesjs').BlockProperties[]}
  */
@@ -72,8 +64,9 @@ export const blocks = [
     label: "Text",
     category: "Basic",
     media: svgText,
-    activate: true,
-    content: html`<p class="p-10">Insert your Text Here</p>`
+    // activate: true,
+    content: html`<p class="p-10">Insert your Text Here</p>`,
+    select: false,
   },
   {
     id: "link",
@@ -86,20 +79,22 @@ export const blocks = [
       content: "Insert your link here",
       // style: { color: "#d983a6" },
     },
+    select: false,
   },
   {
     id: "image",
     category: "Basic",
     label: html`<p class="custom-font-size">Image</p>`,
     media: svgImage,
-    content: { type: "image" , onActive(ev){
-      console.log('lol');
-      
-    } },
-    activate: true,
-    
-    select: true,
-    
+    content: {
+      type: "image",
+      // traits: defineTraits([
+      //   { type: "media", role: "handler", mediaType: "image" , },
+      // ]),
+    },
+    // activate: true,
+
+    select: false,
   },
   {
     id: "video",
@@ -109,8 +104,8 @@ export const blocks = [
     content: {
       type: "video",
     },
-    select: true,
-    activate: true,
+    select: false,
+    // activate: true,
   },
 
   {
@@ -118,41 +113,80 @@ export const blocks = [
     category: "Basic",
     media: editorIcons.button,
     label: html`<p class="custom-font-size">Button</p>`,
-    content: html` 
-       <button infinit="console.log('lol')" _="on mutation of @foo log 'foo' end ">Click me</button>
-       <button _="on click set $div to document.createElement('button') then set $div.innerHTML to 'aywa b2aa' then put $div after me then $div.addEventListener('click', \ ev -> {console:log('lalala')})">Click me</button>
-     `,
+    content: html` <button>Click me</button> `,
+    select: false,
   },
   {
     id: "columns",
     category: "Basic",
     label: html`<p class="custom-font-size ">Columns</p>`,
-    media:editorIcons.columns,
+    media: editorIcons.columns,
     content: html`
-      <section class="parent">
+      <section class="parent ">
         <div class="col"></div>
         <div class="col"></div>
         <div class="col"></div>
       </section>
     `,
     default: {},
+    select: false,
   },
   {
-    id:'input',
-    label:'input',
-    media:editorIcons.input,
-    category:'Basic',
-    content:{
-      type:'input'
-    }
+    id: "input",
+    label: html`<p class="custom-font-size ">Input</p>`,
+    media: editorIcons.input,
+    category: "Basic",
+    content: {
+      type: "input",
+    },
+    select: false,
   },
   {
-    id:'dynamic text',
-    label:'Dynamic Text',
-    media:editorIcons.dynamicText,
-    category:'Basic',
-    content:{
-      type:'dynamic text'
-    }
+    id: "section",
+    label: html`<p class="custom-font-size ">Section</p>`,
+    media: editorIcons.section({ fill: "white", width: 25, height: 25 }),
+    content: { type: "section" },
+    category: "Layout",
+    select: false,
   },
+  {
+    id: "container",
+    label: html`<p class="custom-font-size ">Container</p>`,
+    media: editorIcons.container({ fill: "white", width: 25, height: 25 }),
+    category: "Layout",
+    content: {
+      type: "container",
+    },
+    select: false,
+  },
+
+  {
+    id: "block",
+    label: html`<p class="custom-font-size ">Block</p>`,
+    media: editorIcons.block({ fill: "white", width: 25, height: 25 }),
+    category: "Layout",
+    content: {
+      type: "block",
+    },
+    select: false,
+  },
+
+  // {
+  //   id: dynamic_text,
+  //   label: "Dynamic Text",
+  //   media: editorIcons.dynamicText,
+  //   category: "Basic",
+  //   content: {
+  //     type: dynamic_text,
+  //   },
+  // },
+  // {
+  //   id:'template',
+  //   label:'Template',
+  //   media:editorIcons.looper,
+  //   category:'Basic',
+  //   content:{
+  //     type:'template'
+  //   }
+  // }
 ];

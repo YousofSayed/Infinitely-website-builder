@@ -5,7 +5,7 @@ export const Path = ({
   transform,
   strokeMiterlimit,
   stroke = "#64748B",
-  strokeWidth = "1.5",
+  strokeWidth = "2",
   dontHover = false,
   fill = "",
   justFillOnHover = false,

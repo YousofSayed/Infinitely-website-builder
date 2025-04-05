@@ -2,11 +2,22 @@ import React from "react";
 import { atom } from "recoil";
 import {
   animeStylesType,
+  cmdsContextType,
   cmdType,
+  dynamicTemplatesType,
+  globalSettingsType,
+  IDBType,
+  projectDataType,
+  projectSettingsType,
+  projectsType,
+  refType,
   restModelType,
   sharedLayerType,
+  swType,
+  tooltipDataType,
   varType,
 } from "./jsDocs";
+import { getGlobalSettings, getProjectSettings } from "./functions";
 
 export const widths = atom({
   key: "widths",
@@ -16,19 +27,42 @@ export const widths = atom({
   },
 });
 
+export const popoverState = atom({
+  key: "popoverState",
+  default: {
+    isOpen: false,
+    parentWidth: 0,
+    parentHeight: 0,
+    width: 0,
+    height: 0,
+    top: 0,
+    right: 0,
+    left: 0,
+    bottom: 0,
+    className: "",
+    dependencies: [],
+    content: <></>,
+  },
+});
+
+export const popoverRefState = atom({
+  key: "popoverRefState",
+  default: refType,
+});
+
 export const searchWord = atom({
   key: "searchWord",
   default: "",
 });
 
 /**
- * @type {import('grapesjs').Block[]}
+ * @type {{[categoryName: string]: import('./types').InfinitelyBlock[];}}
  */
-let blocksType = [];
+ export let editorBlocksType = [];
 
 export const blocksStt = atom({
   key: "blocks",
-  default: blocksType,
+  default: editorBlocksType,
 });
 
 /**
@@ -100,6 +134,11 @@ export const currentElState = atom({
   default: currentElType,
 });
 
+export const accorddingState = atom({
+  key: "accorddingState",
+  default: 0,
+});
+
 /**
  * @type {import('grapesjs').Editor}
  */
@@ -110,12 +149,17 @@ export const editorStt = atom({
   default: editor,
 });
 
-let rule = { is: false, ruleString: "" };
+let rule = { is: false, ruleString: "", atRuleType: null, atRuleParams: null };
 
 export const ruleState = atom({
   key: "ruleState",
   default: rule,
 });
+
+export const showDragLayerState = atom({
+  key : 'showCanvasLayerState',
+  default:false
+})
 
 export const selectorState = atom({
   key: "selectorState",
@@ -132,11 +176,18 @@ export const cssPropForAssetsManagerState = atom({
   default: "",
 });
 
+export const assetTypeState = atom({
+  key: `assetTypeState`,
+  default: "",
+});
+
 export const modalDataState = atom({
   key: "modalDataState",
   default: {
     title: "",
     JSXModal: <section></section>,
+    width: "80%",
+    height: "auto",
   },
 });
 
@@ -198,4 +249,84 @@ export const restModelState = atom({
 export const sharedLayerState = atom({
   key: "layerSharedState",
   default: sharedLayerType,
+});
+
+export const dynamicTemplatesState = atom({
+  key: "dynamicTemplatesState",
+  default: dynamicTemplatesType,
+});
+
+export const currentDynamicTemplateIdState = atom({
+  key: "currentDynamicTemplateIdState",
+  default: "",
+});
+
+export const cmdsContextState = atom({
+  key: "cmdsContextState",
+  default: "",
+});
+
+export const projectData = atom({
+  key: "projectData",
+  default: projectDataType,
+});
+
+export const IDBState = atom({
+  key: "IDBState",
+  default: IDBType,
+});
+
+export const globalSettingsState = atom({
+  key: "globalSettingsState",
+  default: getGlobalSettings().globalSettings,
+});
+
+export const projectSettingsState = atom({
+  key: "projectSettings",
+  default: getProjectSettings().projectSettings,
+});
+
+export const tooltipDataState = atom({
+  key: "tooltipDataState",
+  default: tooltipDataType,
+});
+
+export const fileInfoState = atom({
+  key: "fileInfoState",
+  default: {
+    fileType: "",
+    fileName: "",
+    fileContent: "",
+    isHeader: false,
+    isFooter: true,
+    id: "",
+  },
+});
+
+export const restModelsVarsState = atom({
+  key: "restModelsVars",
+  default: [],
+});
+
+export const dbAssetsSwState = atom({
+  key: "swState",
+  default: swType,
+});
+
+//============Workspace==============
+export const projectState = atom({
+  key: "searchResultsState",
+  default: projectsType,
+});
+export const showCrtModalState = atom({
+  key: "showCrtModalState",
+  default: false,
+});
+
+export const newProjectData = atom({
+  key: "newProjectData",
+  default: {
+    name: "",
+    descreption: "",
+  },
 });

@@ -5,6 +5,6 @@ export const useRemoveCssProp = () => {
   const editor = useEditorMaybe();
 
   return ({cssProp})=>{
-    editor.getSelected().removeStyle(cssProp); 
+    editor?.getSelected()?.removeStyle(cssProp); 
   }
 }

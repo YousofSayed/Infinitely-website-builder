@@ -1,10 +1,11 @@
 import React from "react";
-import { ReusableCmb } from "../../components/Home/Modals/ReusableCmb";
+import { ReusableCmb } from "../../components/Editor/Modals/ReusableCmb";
 import { addItemInToolBarForEditor } from "../../helpers/functions";
 import { editorIcons } from "../../components/Icons/editorIcons";
 
 export const createReusableCmpTool = (editor) => {
   addItemInToolBarForEditor({
+    forAll:true,
     commandCallback: (ed) => {
       ed.runCommand("open:custom:modal", {
         title: `Create Reusable Component`,

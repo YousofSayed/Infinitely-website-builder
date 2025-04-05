@@ -1,7 +1,0 @@
-def makeLopp()
-    log "loler"
-    for x in $data.${finalVal}
-    put '${parse.outerHTML}' at end of #${
-        sle.parent().getEl().id
-    }
-end 
