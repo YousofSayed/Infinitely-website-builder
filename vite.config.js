@@ -69,14 +69,36 @@ export default defineConfig({
     react(),
     removeConsole(),
     VitePWA({
-      registerType: "prompt",
+      registerType: "autoUpdate",
       minify: true,
-      workbox:{
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,tff,webp}'],
+      workbox: {
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,tff,webp}"],
+        // Add runtime caching for dynamic content
+        runtimeCaching: [
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|webp)$/, // Cache images at runtime
+            handler: "CacheFirst",
+            options: {
+              cacheName: "images",
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+              },
+            },
+          },
+          {
+            urlPattern: /^https?.*/, // Cache all HTTP/HTTPS requests (e.g., APIs)
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "api",
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 24 * 60 * 60, // 1 day
+              },
+            },
+          },
+        ],
       },
-      // injectManifest: {
-      //   globPatterns: ["**/*.{js,css,html,ico,png,svg}"], // Precache these files
-      // },
       manifest: {
         name: "Infinitely",
         description: "Infinitely website builder",
@@ -86,7 +108,7 @@ export default defineConfig({
         start_url: "/",
         ...icons,
       },
-    }),
+    })
     // mergePrecacheIntoDbAssetsSw(),
   ],
   worker: {
