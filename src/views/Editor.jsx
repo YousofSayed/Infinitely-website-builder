@@ -36,7 +36,7 @@ export const Editor = memo(() => {
   const pathname = useResolvedPath();
   const setShowCustomModal = useSetRecoilState(showCustomModalState);
   const showCustomModal = useRecoilValue(showCustomModalState);
-  const [dbAssetsSw, setDBAssetsSw] = useRecoilState(dbAssetsSwState);
+  // const [dbAssetsSw, setDBAssetsSw] = useRecoilState(dbAssetsSwState);
 
   useEffect(() => {
     /**
@@ -67,38 +67,36 @@ export const Editor = memo(() => {
     return () => {
       window.removeEventListener("open:custom:modal", openModal);
       window.removeEventListener("close:custom:modal", closeModal);
-      clearInterval(swAliveInterval);
+      // clearInterval(swAliveInterval);
     };
   }, []);
 
   useLayoutEffect(() => {
-    const projectId = localStorage.getItem(current_project_id);
+    const projectId = +localStorage.getItem(current_project_id);
     if (!projectId) {
       navigate("/workspace");
-    } else {
-      navigate("add-blocks");
-    }
-    initDBAssetsSw(setDBAssetsSw);
+    } 
+    // initDBAssetsSw(setDBAssetsSw);
   }, []);
 
-  useEffect(() => {
-    if (!dbAssetsSw) return;
-    sendVarsToSw();
-    // dbAssetsSw.addEventListener('')
-  }, [dbAssetsSw]);
+  // useEffect(() => {
+  //   if (!dbAssetsSw) return;
+  //   sendVarsToSw();
+  //   // dbAssetsSw.addEventListener('')
+  // }, [dbAssetsSw]);
 
-  const sendVarsToSw = async () => {
-    dbAssetsSw.postMessage({
-      command: "setVar",
-      props: {
-        obj: {
-          projectId: +localStorage.getItem(current_project_id),
-          projectData: await getProjectData(),
-        },
-        // value: +localStorage.getItem(current_project_id),
-      },
-    });
-  };
+  // const sendVarsToSw = async () => {
+  //   dbAssetsSw.postMessage({
+  //     command: "setVar",
+  //     props: {
+  //       obj: {
+  //         projectId: +localStorage.getItem(current_project_id),
+  //         projectData: await getProjectData(),
+  //       },
+  //       // value: +localStorage.getItem(current_project_id),
+  //     },
+  //   });
+  // };
 
   return (
     <GJEditor>

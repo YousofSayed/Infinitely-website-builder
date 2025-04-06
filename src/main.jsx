@@ -6,6 +6,7 @@ import "./index.css";
 import { makeAppResponsive } from "./helpers/cocktail.js";
 import { RecoilRoot } from "recoil";
 import { ErrorBoundary } from "react-error-boundary";
+import { BrowserRouter } from "react-router-dom";
 // import worker from './helpers/worker.js';
 // import './helpers/backbonePacher.js'
 // src/main.js
@@ -14,44 +15,46 @@ import { ErrorBoundary } from "react-error-boundary";
 makeAppResponsive("#root");
 ReactDOM.createRoot(document.getElementById("root")).render(
   // <React.StrictMode>
-  
-  <ErrorBoundary
-    fallbackRender={({ error, resetErrorBoundary }) => {
-      return (
-        <div
-      className="flex items-center justify-center min-h-screen h-full bg-slate-950 text-slate-200 relative overflow-hidden"
-      role="alert"
-    >
-      {/* Blurry Background */}
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl"></div>
 
-      {/* Error Card */}
-      <div className="relative z-10 max-w-md p-8 bg-slate-900 rounded-xl shadow-xl border border-slate-800">
-        <h1 className="text-2xl font-semibold text-red-500 mb-4">
-          Something went wrong!
-        </h1>
-        <p className="text-slate-300 mb-4">
-          We encountered an error while processing your request.
-        </p>
-        <pre className="bg-slate-950 text-slate-200 p-4 rounded-lg border border-slate-800 overflow-auto max-h-40 mb-6">
-          {error.message}
-        </pre>
-        <button
-          onClick={resetErrorBoundary}
-          className="w-full px-4 py-2 bg-red-500 text-slate-100 font-medium rounded-md hover:bg-red-600 transition focus:outline-none focus:ring focus:ring-red-400"
-        >
-          Try Again
-        </button>
-      </div>
-    </div>
-      );
-    }}
-  >
-    <RecoilRoot>
-      <App />
-    </RecoilRoot>
-  </ErrorBoundary>
+  <BrowserRouter>
+    <ErrorBoundary
+      fallbackRender={({ error, resetErrorBoundary }) => {
+        return (
+          <div
+            className="flex items-center justify-center min-h-screen h-full bg-slate-950 text-slate-200 relative overflow-hidden"
+            role="alert"
+          >
+            {/* Blurry Background */}
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl"></div>
+
+            {/* Error Card */}
+            <div className="relative z-10 max-w-md p-8 bg-slate-900 rounded-xl shadow-xl border border-slate-800">
+              <h1 className="text-2xl font-semibold text-red-500 mb-4">
+                Something went wrong!
+              </h1>
+              <p className="text-slate-300 mb-4">
+                We encountered an error while processing your request.
+              </p>
+              <pre className="bg-slate-950 text-slate-200 p-4 rounded-lg border border-slate-800 overflow-auto max-h-40 mb-6">
+                {error.message}
+              </pre>
+              <button
+                onClick={resetErrorBoundary}
+                className="w-full px-4 py-2 bg-red-500 text-slate-100 font-medium rounded-md hover:bg-red-600 transition focus:outline-none focus:ring focus:ring-red-400"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        );
+      }}
+    >
+      <RecoilRoot>
+        <App />
+      </RecoilRoot>
+    </ErrorBoundary>
+  </BrowserRouter>
   // </React.StrictMode>,
 );
 
-console.log('Beta v0.1');
+console.log("Beta v0.1");

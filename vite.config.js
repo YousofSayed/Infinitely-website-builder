@@ -71,6 +71,11 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       minify: true,
+      devOptions: {
+        enabled: true, // Enable service worker in development mode
+        type: "module", // Use module type for service worker (if your project supports it)
+        navigateFallback: "/", // Fallback for navigation in dev mode
+      },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,tff,webp}"],
         // Add runtime caching for dynamic content

@@ -9,7 +9,8 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   console.log("SW: Activating...");
-  event.waitUntil(self.clients.claim());
+  self.skipWaiting();
+  // event.waitUntil(self.clients.claim());
 });
 
 self.addEventListener("message", (ev) => {
@@ -20,16 +21,18 @@ self.addEventListener("message", (ev) => {
   if (cond) {
     console.log("a3aaaaaaaaaaaaaaaa", vars);
   }
+  self.skipWaiting();
 });
 
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-
+  
   // Handle /keep-alive first
   if (url.pathname.includes("/keep-alive")) {
     event.respondWith(new Response(new Blob(["ok"], { type: "text/plain" })));
     return;
   }
+  console.log(`fetch from db assets url : ${url.pathname}`);
 
   // Single response logic
   event.respondWith(
@@ -66,4 +69,5 @@ self.addEventListener("fetch", (event) => {
       return await fetch(url);
     })()
   );
+  self.skipWaiting();
 });

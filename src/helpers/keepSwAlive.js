@@ -14,7 +14,14 @@ export const swAliveInterval = setInterval(() => {
   console.log('akive');
   
   initDBAssetsSw(()=>{}).then(async sw=>{
+    const projectId =+localStorage.getItem(current_project_id);
+    if(!projectId){
+      console.log('no project id dude');
+      return
+    } 
     if(sw){
+      console.log('sw is here');
+      
       sw.postMessage({
         command: "setVar",
         props: {

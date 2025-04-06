@@ -37,6 +37,7 @@ import { blobToDataUrlAndClean } from "../../helpers/bridge";
 import { useEditorMaybe } from "@grapesjs/react";
 import { infinitelyWorker } from "../../helpers/infinitelyWorker";
 import { Loader } from "../Loader";
+import { initDBAssetsSw } from "../../serviceWorkers/initDBAssets-sw";
 
 /**
  *
@@ -122,7 +123,7 @@ export const AssetsManager = memo(() => {
    * @param {InputEvent} ev
    */
   const onUploaderLoad = async (ev) => {
-    setShowLoader(true)
+    setShowLoader(true);
     try {
       /**
        * @type {File[]}
@@ -132,7 +133,9 @@ export const AssetsManager = memo(() => {
         id: uniqueID(),
         // blobUrl: URL.createObjectURL(file),
       }));
+
       const projectData = await getProjectData();
+      const init = initDBAssetsSw(() => {});
       console.log("itr : ", projectData.assets);
 
       await db.projects.update(projectId, {
@@ -142,12 +145,23 @@ export const AssetsManager = memo(() => {
         ],
       });
 
-      infinitelyWorker.postMessage({
-        command: "keepSwLive",
-        props: {
-          projectId: +localStorage.getItem(current_project_id),
-        },
+      init.then(async (sw) => {
+        sw.postMessage({
+          command: "setVar",
+          props: {
+            obj: {
+              projectId: +localStorage.getItem(current_project_id),
+              projectData: await getProjectData(),
+            },
+          },
+        });
       });
+      // infinitelyWorker.postMessage({
+      //   command: "keepSwLive",
+      //   props: {
+      //     projectId: +localStorage.getItem(current_project_id),
+      //   },
+      // });
     } catch (error) {
       console.error(`Assets Manager : ${error}`);
 
@@ -300,7 +314,7 @@ export const AssetsManager = memo(() => {
     <main className="w-full h-[500px]">
       <section className=" w-full h-full m-auto  rounded-lg flex flex-col gap-2">
         <header className="h-[50px!important] flex justify-between items-center gap-5 p-2 rounded-lg rounded-tl-full rounded-tr-2xl rounded-br-2xl rounded-bl-full bg-gray-950 ">
-          <figure>{Icons.logo({width:38})}</figure>
+          <figure>{Icons.logo({ width: 38 })}</figure>
           {warn && (
             <p className="font-semibold text-xl bg-red-700 p-2 rounded-lg">
               {warn}
@@ -334,7 +348,7 @@ export const AssetsManager = memo(() => {
         {/* <section
           className={`w-full h-full  bg-gray-950 rounded-lg p-2 overflow-auto grid grid-cols-[repeat(auto-fill,minmax(25%,1fr))] grid-rows-[repeat(auto-fill,minmax(200px,200px))] justify-start gap-[15px] `}
         > */}
-        {showLoader  && <Loader />}
+        {showLoader && <Loader />}
         {!!files.length && (
           <VirtuosoGrid
             totalCount={files.length}

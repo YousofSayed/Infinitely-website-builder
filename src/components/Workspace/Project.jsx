@@ -53,7 +53,7 @@ export const Project = ({ project }) => {
       <ul className="flex gap-2 items-center justify-center p-1 bg-slate-950 rounded-lg">
         <Li
           onClick={() => {
-            localStorage.setItem("currentProjectId", project.id);
+            localStorage.setItem(current_project_id, project.id);
             navigate("/");
           }}
         >

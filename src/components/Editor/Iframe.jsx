@@ -60,35 +60,35 @@ export const Iframe = memo(() => {
      *
      * @param {MessageEvent} ev
      */
-    const handleAssetsFromWorker = (ev) => {
-      const { props, command } = ev.data;
-      if (command == "getDataFromDB" && props.key == "assets") {
-        window.parseInfinitelyURLForWindow = parseInfinitelyURLForWindow;
-        window.infinitelyAssets = props.data;
-        console.log(
-          "good assets is here : ",
-          window.infinitelyAssets,
-          window.parseInfinitelyURLForWindow
-        );
-      } else {
-        console.warn("Some thing wrong!!!");
-      }
-    };
+    // const handleAssetsFromWorker = (ev) => {
+    //   const { props, command } = ev.data;
+    //   if (command == "getDataFromDB" && props.key == "assets") {
+    //     window.parseInfinitelyURLForWindow = parseInfinitelyURLForWindow;
+    //     window.infinitelyAssets = props.data;
+    //     console.log(
+    //       "good assets is here : ",
+    //       window.infinitelyAssets,
+    //       window.parseInfinitelyURLForWindow
+    //     );
+    //   } else {
+    //     console.warn("Some thing wrong!!!");
+    //   }
+    // };
 
-    infinitelyWorker.postMessage({
-      command: "getDataFromDB",
-      props: {
-        projectId,
-        key: "assets",
-      },
-    });
+    // infinitelyWorker.postMessage({
+    //   command: "getDataFromDB",
+    //   props: {
+    //     projectId,
+    //     key: "assets",
+    //   },
+    // });
 
-    infinitelyWorker.addEventListener("message", handleAssetsFromWorker);
+    // infinitelyWorker.addEventListener("message", handleAssetsFromWorker);
 
     editor.on("canvas:frame:load:body", loadMonaco);
     return () => {
       editor.off("canvas:frame:load:body", loadMonaco);
-      infinitelyWorker.removeEventListener("message", handleAssetsFromWorker);
+      // infinitelyWorker.removeEventListener("message", handleAssetsFromWorker);
     };
   }, [editor]);
 
