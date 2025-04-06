@@ -4,16 +4,6 @@ let vars = {};
 
 self.addEventListener("install", (event) => {
   console.log("SW: Installing...");
-  event.waitUntil(
-    caches.open('my-app-v1').then((cache) => {
-      return cache.addAll([
-        '/',
-        '/index.html',
-        '/styles.css',
-        '/app.js'
-      ]);
-    }).then(() => self.skipWaiting())
-  );
 });
 
 self.addEventListener("activate", (event) => {
@@ -57,7 +47,13 @@ self.addEventListener("fetch", (event) => {
               encodeURIComponent(asset.file.name).toLowerCase() ===
               fileName.toLowerCase()
           );
-        console.log("sw worker 2m : ", projectId, projectData, fileFromDB, fileName.toLowerCase());
+        console.log(
+          "sw worker 2m : ",
+          projectId,
+          projectData,
+          fileFromDB,
+          fileName.toLowerCase()
+        );
         if (fileFromDB) {
           return new Response(fileFromDB.file, {
             status: 200,
