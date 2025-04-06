@@ -4,6 +4,7 @@ let vars = {};
 
 self.addEventListener("install", (event) => {
   console.log("SW: Installing...");
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {

@@ -11,6 +11,8 @@ export const swAliveInterval = setInterval(() => {
   //     projectId: +localStorage.getItem(current_project_id),
   //   },
   // });
+  console.log('akive');
+  
   initDBAssetsSw(()=>{}).then(async sw=>{
     if(sw){
       sw.postMessage({

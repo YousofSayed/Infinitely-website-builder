@@ -67,7 +67,7 @@ function mergePrecacheIntoDbAssetsSw() {
 export default defineConfig({
   plugins: [
     react(),
-    removeConsole(),
+    // removeConsole(),
     VitePWA({
       registerType: "autoUpdate",
       minify: true,
