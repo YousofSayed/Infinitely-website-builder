@@ -19,10 +19,10 @@ export const swAliveInterval = setInterval(() => {
       console.log('no project id dude');
       return
     } 
-    if(sw){
-      console.log('sw is here');
+    // if(sw){
+    //   console.log('sw is here');
       
-      sw.postMessage({
+      navigator.serviceWorker.controller.postMessage({
         command: "setVar",
         props: {
           obj: {
@@ -31,6 +31,6 @@ export const swAliveInterval = setInterval(() => {
           },
         },
       })
-    }
+    // }
   })
 }, 15000);

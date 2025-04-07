@@ -4,12 +4,12 @@ let vars = {};
 
 self.addEventListener("install", (event) => {
   console.log("SW: Installing...");
-  self.skipWaiting();
+  // self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   console.log("SW: Activating...");
-  self.skipWaiting();
+  // self.skipWaiting();
   // event.waitUntil(self.clients.claim());
 });
 
@@ -21,18 +21,19 @@ self.addEventListener("message", (ev) => {
   if (cond) {
     console.log("a3aaaaaaaaaaaaaaaa", vars);
   }
-  self.skipWaiting();
+  // self.skipWaiting();
+  // event.waitUntil(clients.claim());
 });
 
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-  
+
   // Handle /keep-alive first
   if (url.pathname.includes("/keep-alive")) {
     event.respondWith(new Response(new Blob(["ok"], { type: "text/plain" })));
     return;
   }
-  console.log(`fetch from db assets url : ${url.pathname}`);
+  console.log(`fetch from db assets url : ${url.pathname} ,rororor`);
 
   // Single response logic
   event.respondWith(
@@ -66,8 +67,23 @@ self.addEventListener("fetch", (event) => {
         }
       }
       // Fallback to fetch if no projectId or no file found
-      return await fetch(url);
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        return fetch(event.request);
+      });
+      // try {
+
+      //   const res = await fetch(url);
+      //   return res;
+      // } catch (error) {
+      //   console.error(`error from db assets : ${error}`);
+      //   return;
+      // }
     })()
   );
   self.skipWaiting();
+
+  // clients.claim();
 });

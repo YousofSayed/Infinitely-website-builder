@@ -67,8 +67,9 @@ if (!self.define) {
     });
   };
 }
-define(['./workbox-f001acab'], (function (workbox) { 'use strict';
+define(['./workbox-c5a460e4'], (function (workbox) { 'use strict';
 
+  importScripts("/custom-sw.js");
   self.skipWaiting();
   workbox.clientsClaim();
 
@@ -82,25 +83,53 @@ define(['./workbox-f001acab'], (function (workbox) { 'use strict';
     "revision": "3ca0b8505b4bec776b69afdba2768812"
   }, {
     "url": "index.html",
-    "revision": "0.ap5k3krq0hg"
+    "revision": "0.20mjmm35pfo"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("index.html"), {
     allowlist: [/^\/$/]
   }));
+  workbox.registerRoute(({
+    url
+  }) => url.pathname.includes("assets/"), ({
+    url,
+    request,
+    event
+  }) => {
+    if (url.pathname.includes("/keep-alive")) {
+      event.respondWith(new Response(new Blob(["ok"], {
+        type: "text/plain"
+      })));
+      return;
+    }
+    const fileName = url.pathname.split("/").pop();
+    const projectId = vars["projectId"];
+    if (projectId) {
+      const projectData = vars["projectData"] || {};
+      const assets = projectData.assets || [];
+      const fileFromDB = assets.concat(Object.values(projectData.fonts || {})).find(asset => {
+        var _asset$file;
+        return encodeURIComponent(((_asset$file = asset.file) == null ? void 0 : _asset$file.name) || "").toLowerCase() === fileName.toLowerCase();
+      });
+      if (fileFromDB) {
+        var _fileFromDB$file;
+        event.respondWith(new Response(fileFromDB.file, {
+          status: 200,
+          headers: {
+            "Content-Type": ((_fileFromDB$file = fileFromDB.file) == null ? void 0 : _fileFromDB$file.type) || "application/octet-stream"
+          }
+        }));
+        return;
+      }
+    }
+  }, 'GET');
   workbox.registerRoute(/\.(?:png|jpg|jpeg|svg|webp)$/, new workbox.CacheFirst({
     "cacheName": "images",
-    plugins: [new workbox.ExpirationPlugin({
-      maxEntries: 50,
-      maxAgeSeconds: 2592000
-    })]
+    plugins: []
   }), 'GET');
   workbox.registerRoute(/^https?.*/, new workbox.NetworkFirst({
     "cacheName": "api",
-    plugins: [new workbox.ExpirationPlugin({
-      maxEntries: 20,
-      maxAgeSeconds: 86400
-    })]
+    plugins: []
   }), 'GET');
 
 }));

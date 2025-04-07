@@ -1,37 +1,33 @@
+// import { registerSW } from "virtual:pwa-register";
+// src/serviceWorkers/initDBAssetsSw.js
 export const initDBAssetsSw = async (setSw = () => {}) => {
-  if ("serviceWorker" in navigator) {
-    console.log("sholud init");
-    // window.addEventListener("load", async () => {
-    // Wait for page load
+  if ('serviceWorker' in navigator) {
+    console.log('Initializing service worker...');
+
+    // Determine the correct SW file based on environment
+    const isDev = import.meta.env.MODE === 'development'; // Vite-specific env check
+    const swPath = isDev ? '/dev-sw.js?dev-sw' : '/sw.js'; // Use dev-sw.js in dev, sw.js in prod
+
     try {
-        // "/dbAssets-sw.js"
-        // new URL("./dbAssets-sw.js" , import.meta.url)
-      const reg = await navigator.serviceWorker.register("/dbAssets-sw.js");
-      console.log("SW Registered:", reg.scope);
+      const reg = await navigator.serviceWorker.register(swPath);
+      console.log(`SW Registered: ${reg.scope} (Path: ${swPath})`);
 
-      // Ensure SW is active
       const sw = await navigator.serviceWorker.ready;
+      console.log('SW Ready:', sw.active.state);
 
-      // Force page control (optional, for dev)
-      if (reg.active) {
-        console.log("SW State:", reg.active.state);
-        setSw(reg.active);
-        return reg.active
+      if (sw.active) {
+        setSw(sw.active);
+        return sw.active;
       } else {
-        console.log("SW not active yet, reloading...");
-        // window.location.reload(); // Reload to ensure control
-        return;
+        console.log('SW not active yet...');
+        return null;
       }
-
-      // Fetch the CSS
-    //   const response = await fetch("assets/css/custom-style");
-    //   if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
-    //   const file = await response.blob();
-    //   const text = await file.text();
-    //   console.log("File is:", text); // Should log: body { color: red; }
     } catch (err) {
-      console.error("Error:", err);
+      console.error('SW Registration Error:', err);
+      return null;
     }
-    // });
+  } else {
+    console.log('Service workers not supported');
+    return null;
   }
 };
