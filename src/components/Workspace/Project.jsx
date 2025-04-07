@@ -27,8 +27,8 @@ export const Project = ({ project }) => {
         <img
           src={project.imgSrc ? URL.createObjectURL(project.imgSrc) : '/images/blank.jpg'}
           className={`max-w-full max-h-full ${
-            project.imgSrc ? "h-full " : "h-full max-h-[190px!important] object-cover"
-          }  w-full   rounded`}
+            project.imgSrc ? "h-full " : "h-full  object-cover"
+          }  w-full   max-h-[190px!important] rounded`}
           alt="project image"
           loading="lazy"
         />
