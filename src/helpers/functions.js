@@ -1973,36 +1973,47 @@ export const mount = ({ editor, all, specificCmp }) => {
 export const unMount = ({ editor, all, specificCmp, selectAfterUnMout }) => {
   if (all) {
     pvUnMount(editor.getWrapper().getEl());
-    const original = editor
-      .getWrapper()
-      .components()
-      .models.filter((cmp) =>
-        Object.keys(cmp.getAttributes() || {}).some((key) =>
-          key.startsWith("v-")
-        )
-      );
+    editor.render()
+//     const original = editor
+//       .getWrapper()
+//       .components()
+//       .models.filter((cmp) =>
+//         Object.keys(cmp.getAttributes() || {}).some((key) =>
+//           key.startsWith("v-")
+//         )
+//       );
+// console.log('orgs : ' ,editor
+//   .getWrapper()
+//   .components()
+//   .models.map(el=>el.getAttributes()));
 
-    original.forEach((cmp) => {
-      console.log("re el : ", cmp.getEl(), cmp);
-
-      cmp.replaceWith(cmp.clone());
-    });
-    editor
-      .getWrapper()
-      .addAttributes(
-        { ...editor.getWrapper().getAttributes() },
-        { silent: false, avoidStore: true }
-      );
-    Object.entries(editor.getWrapper().getAttributes()).forEach(
-      ([key, value]) => {
-        editor.getWrapper().getEl().setAttribute(key, value);
-      }
-    );
-    console.log(
-      "wrapper attrs : ",
-      editor.getWrapper().getAttributes(),
-      editor.getWrapper().getEl()
-    );
+//   editor.getWrapper()
+//   .components()
+//   .models.forEach((cmp) => {
+//       // console.log("re el : ", cmp.getEl(), cmp);
+//       if(cmp.toHTML({withProps:true , keepInlineStyle:true}) == cmp.getEl().outerHTML){
+//         console.log('equal');
+        
+//         return
+//       }
+//       cmp.replaceWith(cmp.clone());
+//     });
+//     editor
+//       .getWrapper()
+//       .addAttributes(
+//         { ...editor.getWrapper().getAttributes() },
+//         { silent: false, avoidStore: true }
+//       );
+//     Object.entries(editor.getWrapper().getAttributes()).forEach(
+//       ([key, value]) => {
+//         editor.getWrapper().getEl().setAttribute(key, value);
+//       }
+//     );
+//     console.log(
+//       "wrapper attrs : ",
+//       editor.getWrapper().getAttributes(),
+//       editor.getWrapper().getEl()
+//     );
     // editor.Storage.setAutosave(false);
     // editor.render();
     // editor.Storage.setAutosave(true);
