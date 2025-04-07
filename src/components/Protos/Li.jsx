@@ -54,6 +54,7 @@ export const Li = ({
   //     window.removeEventListener("click", handleClickCallback);
   //   };
   // }, []);
+console.log(path.pathname.includes(to) , to ,path.pathname );
 
   return (
     <li
@@ -74,7 +75,14 @@ export const Li = ({
             onClick(ev);
           }}
         >
-          {icon(path.pathname.includes(to) ? "white" : undefined)}
+         {isObjectParamsIcon ? icon?.({
+            fill:path.pathname.includes(to)  ? 'white' :fillObjIcon ?'white':undefined,
+            strokeColor : fillObjIconStroke? (isClicked && allActives == title ? "white" : undefined) : undefined,
+          }) : icon?.(
+            path.pathname.includes(to)  ? "white" : undefined,
+            undefined,
+            isClicked && allActives == title ? "white" : undefined
+          )}
           {children}
         </Link>
       ) : (
@@ -109,7 +117,7 @@ export const Li = ({
             fill: fillObjIcon ? (isClicked && allActives == title ? "white" : undefined) : undefined,
             strokeColor : fillObjIconStroke? (isClicked && allActives == title ? "white" : undefined) : undefined,
           }) : icon?.(
-            undefined,
+            fillStrokeIcon ? 'white' : undefined,
             undefined,
             isClicked && allActives == title ? "white" : undefined
           )}

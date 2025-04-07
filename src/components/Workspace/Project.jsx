@@ -25,7 +25,7 @@ export const Project = ({ project }) => {
     <article className="p-2 bg-slate-900  rounded-lg flex flex-col h-[320px] justify-evenly  gap-2">
       <figure className="flex flex-col gap-2 h-[70%]  items-center ">
         <img
-          src={project.imgSrc ? URL.createObjectURL(project.imgSrc) : blankImg}
+          src={project.imgSrc ? URL.createObjectURL(project.imgSrc) : '/images/blank.jpg'}
           className={`max-w-full max-h-full ${
             project.imgSrc ? "h-full " : "h-full max-h-[190px!important] object-cover"
           }  w-full   rounded`}

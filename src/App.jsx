@@ -18,11 +18,13 @@ import "react-toastify/dist/ReactToastify.css";
 import { current_project_id } from "./constants/shared";
 import { getProjectData } from "./helpers/functions";
 import { swAliveInterval } from "./helpers/keepSwAlive";
+import { Editor } from "./views/Editor";
 
 function App() {
-  const Editor = lazy(async () => ({
-    default: (await import("./views/Editor")).Editor,
-  }));
+  // const Editor = lazy(async () => ({
+  //   default: (await import("./views/Editor")).Editor,
+  // }));
+  // const Editor = lazy( async() => await import("./views/Editor"));
 
   const [dbAssetsSw, setDBAssetsSw] = useRecoilState(dbAssetsSwState);
   const navigate = useNavigate();
@@ -54,10 +56,14 @@ function App() {
   }, []);
 
   useLayoutEffect(() => {
+    console.log('app');
+    
     const projectId = localStorage.getItem(current_project_id);
     if (!projectId) {
+      console.log('workspacce');
       navigate("/workspace");
     } else {
+      console.log('add-blocks');
       navigate("add-blocks");
     }
     initDBAssetsSw(setDBAssetsSw);
@@ -83,7 +89,7 @@ function App() {
   };
 
   return (
-    <Suspense fallback={<Loader />}>
+    // <Suspense fallback={<Loader />}>
       <Routes>
         <Route path="/" element={<Editor />}>
           <Route path="/add-blocks" element={<Blocks />} />
@@ -103,7 +109,7 @@ function App() {
 
         <Route path="/workspace" element={<Workspace />}></Route>
       </Routes>
-    </Suspense>
+    // </Suspense>
   );
 }
 

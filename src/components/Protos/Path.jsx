@@ -24,7 +24,7 @@ export const Path = ({
         justFillOnHover && !dontHover
           ? group &&
             !dontHover &&
-            "group-hover:fill-white" 
+            "group-hover:fill-[white!important]" 
           : ""
       } transition-all`}
       strokeLinejoin="round"

@@ -4,6 +4,8 @@ import react from "@vitejs/plugin-react";
 import removeConsole from "vite-plugin-remove-console";
 import { VitePWA } from "vite-plugin-pwa";
 import icons from "./public/icons/icons.json";
+// import { manualChunksPlugin } from "vite-plugin-webpackchunkname";
+import { chunkSplitPlugin } from "vite-plugin-chunk-split";
 
 export default defineConfig({
   plugins: [
@@ -111,8 +113,8 @@ export default defineConfig({
       manifest: {
         name: "Infinitely",
         description: "Infinitely website builder",
-        theme_color: "#020617",
-        background_color: "#020617",
+        theme_color: "#1e293b",
+        background_color: "#1e293b",
         display: "standalone",
         start_url: "/",
         ...icons,
@@ -123,14 +125,18 @@ export default defineConfig({
       //   injectionPoint: undefined, // Let VitePWA handle injection
       // },
     }),
+    chunkSplitPlugin({
+      strategy:'default',
+      customSplitting: {
+        'vendor': [/react/, /react-dom/, /react-router-dom/ , /grapesjs/ , /\@grapesjs\/react/ , /react-resizable-panels/], // Example grouping
+      },
+    })
     // mergePrecacheIntoDbAssetsSw(),
   ],
   worker: {
     format: "es", // Use 'es' instead of 'iife'
   },
-//  build:{
-//   rollupOptions: {
-//     external: ['virtual:pwa-register'],
-//   },
-//  }
+ build:{
+  chunkSizeWarningLimit:'5000'
+ }
 });

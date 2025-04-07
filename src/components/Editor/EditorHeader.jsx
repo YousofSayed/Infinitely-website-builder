@@ -92,8 +92,8 @@ export const HomeHeader = () => {
   };
 
   return (
-    <header className="w-full h-[60px] zoom-80 bg-slate-900 border-b-[1.5px]  border-slate-400  px-3  flex items-center justify-between gap-5">
-      <ul className="flex gap-[25px] w-full h-full flex-grow items-center">
+    <header className="w-full h-[60px] zoom-80 px-2 bg-slate-900  border-b-[1.5px]  border-slate-400    flex items-center justify-between gap-5">
+      <ul className="flex gap-[25px] w-[90%] h-full flex-grow items-center">
         <Li
           title="desktop size"
           className="flex-shrink-0"
@@ -161,7 +161,7 @@ export const HomeHeader = () => {
         keywords={pages}
       /> */}
 
-      <section className="flex items-center justify-between gap-[10px] overflow-auto hideScrollBar flex-shrink w-full px-2">
+      <section className="flex items-center justify-between gap-2  overflow-auto hideScrollBar flex-shrink w-full px-2">
         <IframeControllers />
 
         {/* <div className="flex items-center justify-between gap-2 h-full w-full"> */}
@@ -170,6 +170,7 @@ export const HomeHeader = () => {
             onClick={() => {
               editor.runCommand(open_code_manager_modal);
             }}
+            className="flex-shrink-0"
           >
             {Icons.code({ strokWidth: 3 })}
           </Li>
@@ -179,11 +180,13 @@ export const HomeHeader = () => {
             onClick={(ev) => {
               setShowPreview((old) => !old);
             }}
+            className="flex-shrink-0"
           />
           <Li
             icon={Icons.save}
             title="save"
             justHover={true}
+            className="flex-shrink-0"
             onClick={() => {
               try {
                 editor.store();
@@ -197,6 +200,7 @@ export const HomeHeader = () => {
             icon={Icons.export}
             title="download"
             justHover={true}
+            className="flex-shrink-0"
             onClick={async () => {
               const projectId = +localStorage.getItem(current_project_id);
               infinitelyWorker.postMessage({
@@ -208,7 +212,22 @@ export const HomeHeader = () => {
               });
             }}
           />
-          <Li to={"/add-blocks"} icon={Icons.plus} title="add blocks" />
+          <Li
+            to={"/edite/styling"}
+            className="flex-shrink-0"
+            icon={Icons.prush}
+            isObjectParamsIcon
+            fillObjIcon={false}
+            title="style block"
+          />
+          <Li
+            to={"/add-blocks"}
+            className="flex-shrink-0"
+            icon={Icons.plus}
+            fillIcon
+            fillObjIcon
+            title="add blocks"
+          />
         </ul>
 
         {/* <Button>Publish</Button> */}

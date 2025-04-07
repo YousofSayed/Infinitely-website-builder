@@ -136,9 +136,15 @@ export const GJEditor = memo(({ children }) => {
         setSelector("");
         sessionStorage.removeItem(current_symbol_id);
         const projectSettings = getProjectSettings().projectSettings;
-        (!isBlockedNavigatedPath ||
-          !projectSettings.navigate_to_style_when_Select) &&
-          navigate("edite/styling");
+        if(projectSettings.navigate_to_style_when_Select){
+          navigate("/edite/styling")
+        }
+        // console.log((!isBlockedNavigatedPath ||
+        //   !projectSettings.navigate_to_style_when_Select) , getProjectSettings().projectSettings.navigate_to_style_when_Select);
+        
+        // (!isBlockedNavigatedPath ||
+        //   !projectSettings.navigate_to_style_when_Select) &&
+        //   navigate("/edite/styling");
       });
 
       ev.on("component:cmds:update", () => {

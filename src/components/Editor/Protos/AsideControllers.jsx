@@ -72,6 +72,8 @@ export const AsideControllers = () => {
         title="styling"
         to={"/edite/styling"}
         className={`w-[50%] h-[40.5px!important] hover:bg-blue-600 `}
+        isObjectParamsIcon
+        fillObjIcon={undefined}
         icon={Icons.prush}
       />
     </ul>

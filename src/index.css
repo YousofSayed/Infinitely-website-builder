@@ -9,7 +9,7 @@
   flex-direction: row-reverse;
   text-align: left !important; */
 }
-ul{
+ul , li{
   list-style: none;
 }
 /* *::selection{
