@@ -1,8 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { refType } from "../../../helpers/jsDocs";
 import { HighlightContentEditable } from "./HighlightContentEditable";
-import { FixedSizeList as List } from "react-window";
-import { uniqueID } from "../../../helpers/cocktail";
 import { ViewportList } from "react-viewport-list";
 
 /**

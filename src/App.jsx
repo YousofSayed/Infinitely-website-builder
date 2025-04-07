@@ -1,15 +1,14 @@
 import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
-
 import { StyleAside } from "./components/Editor/StyleAside";
 import { Blocks } from "./components/Editor/Blocks";
 import { TraitsAside } from "./components/Editor/TraitsAside";
-import { lazy, Suspense, useEffect, useLayoutEffect, useState } from "react";
+import React, { lazy, Suspense, useEffect, useLayoutEffect, useState } from "react";
 import { Loader } from "./components/Loader";
 import { Workspace } from "./views/Workspace";
 import { Commands } from "./components/Editor/Commands";
 import { ChooseModel } from "./components/Editor/Protos/ChooseModel";
-import { DynamicContent } from "./components/Editor/Protos/DynamicContent";
-import { DynamicAttributes } from "./components/Editor/Protos/DynamicAttributes";
+// import { DynamicContent } from "./components/Editor/Protos/DynamicContent";
+// import { DynamicAttributes } from "./components/Editor/Protos/DynamicAttributes";
 import { infinitelyWorker } from "./helpers/infinitelyWorker";
 import { dbAssetsSwState } from "./helpers/atoms";
 import { initDBAssetsSw } from "./serviceWorkers/initDBAssets-sw";
@@ -97,13 +96,13 @@ function App() {
             <Route path="styling" element={<StyleAside />} />
             <Route path="traits" element={<TraitsAside />} />
             <Route path="commands" element={<Commands />} />
-            <Route path="choose-and-write-model" element={<ChooseModel />}>
+            {/* <Route path="choose-and-write-model" element={<ChooseModel />}>
               <Route path="dynamic-content" element={<DynamicContent />} />
               <Route
                 path="dynamic-attributes"
                 element={<DynamicAttributes />}
               />
-            </Route>
+            </Route> */}
           </Route>
         </Route>
 

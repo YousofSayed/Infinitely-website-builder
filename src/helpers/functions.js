@@ -1,6 +1,6 @@
 import { Icons } from "../components/Icons/Icons";
 import { filterUnits } from "../constants/cssProps";
-import { css, html, isString, parseToHTML, random, uniqueID } from "./cocktail";
+import { css, html, random, uniqueID } from "./cocktail";
 import { dynamic_container, dynamic_text } from "../constants/cmpsTypes";
 import {
   projectDataType,
@@ -20,12 +20,8 @@ import {
 } from "../constants/shared";
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
 import { db } from "./db";
-import _hyperscript from "hyperscript.org";
 import html2canvas from "html2canvas-pro";
-import { flatten } from "flat";
 import { jsURLRgx } from "../constants/rgxs";
-import { pVueApp, reCreatePvApp } from "./pVuewApp";
-import { createApp } from "petite-vue";
 import { pvMount, pvUnMount } from "./customEvents";
 export {
   replaceBlobs,
@@ -189,7 +185,7 @@ export const getIconForMultiChoice = (iconName) => {
  * @param {import('grapesjs').Editor} editor
  * @returns {{[categoryName : string] : import('grapesjs').BlockProperties[]}}
  */
-export  function handleCustomBlock(blocks, editor) {
+export function handleCustomBlock(blocks, editor) {
   /**
    * @type {{[categoryName : string] : import('grapesjs').BlockProperties[]}}
    */
@@ -389,11 +385,16 @@ export function objectToString(obj) {
  * @param {string|string[]} [targetKeys] - Optional keys to search in if array contains objects
  * @returns {Array<string | object>} - Filtered and sorted suggestions
  */
-export function advancedSearchSuggestions(array, query = "", ignoreLastSpace, targetKeys = null) {
+export function advancedSearchSuggestions(
+  array,
+  query = "",
+  ignoreLastSpace,
+  targetKeys = null
+) {
   if (!query) return array; // Return full array if no query
   if (ignoreLastSpace && query.endsWith(" ")) return []; // Bail if ignoring trailing space
-  console.log('query : ' ,query);
-  
+  console.log("query : ", query);
+
   const lowerQuery = query.toLowerCase();
 
   // Score a single item based on query
@@ -420,14 +421,14 @@ export function advancedSearchSuggestions(array, query = "", ignoreLastSpace, ta
 
   // Handle both strings and objects
   const scoredItems = array.map((item) => {
-    if (typeof item === 'string') {
+    if (typeof item === "string") {
       // String case: score directly
       return { item, score: score(item) };
-    } else if (typeof item === 'object' && targetKeys) {
+    } else if (typeof item === "object" && targetKeys) {
       // Object case: score based on targetKeys
       const keys = Array.isArray(targetKeys) ? targetKeys : [targetKeys];
       const scores = keys
-        .filter((key) => item[key] && typeof item[key] === 'string') // Only valid string keys
+        .filter((key) => item[key] && typeof item[key] === "string") // Only valid string keys
         .map((key) => score(item[key]));
       const maxScore = Math.max(...scores, -Infinity); // Best score across keys
       return { item, score: maxScore };
@@ -1073,17 +1074,17 @@ export function flattenObject(arr, prefixVar = "", separator = ".") {
   return schema;
 }
 
-export function flatResponse(response, varName) {
-  return flatten(
-    { [varName]: response },
-    {
-      transformKey(key) {
-        return typeof +key == "number" && !Number.isNaN(+key) ? `[index]` : key;
-      },
-      maxDepth: Infinity,
-    }
-  );
-}
+// export function flatResponse(response, varName) {
+//   return flatten(
+//     { [varName]: response },
+//     {
+//       transformKey(key) {
+//         return typeof +key == "number" && !Number.isNaN(+key) ? `[index]` : key;
+//       },
+//       maxDepth: Infinity,
+//     }
+//   );
+// }
 
 export function parseDynamicContent(content = "", dKeyV = {}) {
   let newContent = content;
@@ -1122,7 +1123,6 @@ export const getModelResAndKeys = (models = restModelType) => {
   });
   return { keys, res };
 };
-
 
 /**
  *
@@ -1922,7 +1922,9 @@ export function doDocument(content = "") {
 }
 
 // let pVueApp = createApp()
-let app;
+let vComponents = [],
+  vAttributes = {},
+  vWrapperAttributes = {};
 
 /**
  *
@@ -1938,14 +1940,17 @@ export const mount = ({ editor, all, specificCmp }) => {
     const original = editor
       .getWrapper()
       .find("*")
-      .filter((cmp) =>
-        Object.keys(cmp.getAttributes() || {}).some((key) =>
-          key.startsWith("v-")
-        )
+      .filter(
+        (cmp) =>
+          Object.keys(cmp.getAttributes() || {}).some((key) =>
+            key.startsWith("v-")
+          ) || /\{\{.+\}\}/gi.test(cmp.getInnerHTML())
       );
     // editor.getWrapper().addAttributes({ "v-scope": "" });
     const wrapperAttrs = editor.getWrapper().getAttributes();
-
+    vComponents = original;
+    vAttributes = original.map((cmp) => cmp.getAttributes());
+    vWrapperAttributes = wrapperAttrs;
     console.log("rogs : ", original);
     // console.log("PetiteVue.reactiveEffect : ",  , );
 
@@ -1973,47 +1978,102 @@ export const mount = ({ editor, all, specificCmp }) => {
 export const unMount = ({ editor, all, specificCmp, selectAfterUnMout }) => {
   if (all) {
     pvUnMount(editor.getWrapper().getEl());
-    editor.render()
-//     const original = editor
-//       .getWrapper()
-//       .components()
-//       .models.filter((cmp) =>
-//         Object.keys(cmp.getAttributes() || {}).some((key) =>
-//           key.startsWith("v-")
-//         )
-//       );
-// console.log('orgs : ' ,editor
-//   .getWrapper()
-//   .components()
-//   .models.map(el=>el.getAttributes()));
+    // editor.render();
+    const wrapper = editor.getWrapper();
+    /**
+     *
+     * @param {{starter:number , ender:number , components:import('grapesjs').Component[] , attributes : {}[], timeout:number}} param0
+     */
+    const render = ({
+      starter = 0,
+      ender,
+      components = [],
+      attributes,
+      timeout = 10,
+    }) => {
+      // if (components.length <= 100) {
+      //   console.log('less than 100');
 
-//   editor.getWrapper()
-//   .components()
-//   .models.forEach((cmp) => {
-//       // console.log("re el : ", cmp.getEl(), cmp);
-//       if(cmp.toHTML({withProps:true , keepInlineStyle:true}) == cmp.getEl().outerHTML){
-//         console.log('equal');
-        
-//         return
-//       }
-//       cmp.replaceWith(cmp.clone());
-//     });
-//     editor
-//       .getWrapper()
-//       .addAttributes(
-//         { ...editor.getWrapper().getAttributes() },
-//         { silent: false, avoidStore: true }
-//       );
-//     Object.entries(editor.getWrapper().getAttributes()).forEach(
-//       ([key, value]) => {
-//         editor.getWrapper().getEl().setAttribute(key, value);
-//       }
-//     );
-//     console.log(
-//       "wrapper attrs : ",
-//       editor.getWrapper().getAttributes(),
-//       editor.getWrapper().getEl()
-//     );
+      //   components.forEach((cmp) => cmp.replaceWith(cmp.clone()));
+      // } else {
+      setTimeout(() => {
+        console.log("render start");
+        editor.Storage.setAutosave(false);
+
+        const relEnder = starter + 101;
+        const slices = components.slice(starter, relEnder);
+        slices.forEach((cmp) => cmp.replaceWith(cmp.clone()));
+        if (relEnder >= components.length) {
+          console.log("render end");
+          editor.Storage.setAutosave(true);
+          editor.clearDirtyCount();
+          return;
+        }
+        console.log("start new one");
+        render({
+          starter: relEnder,
+          components,
+        });
+      }, timeout);
+      // }
+    };
+
+    editor.Storage.setAutosave(false);
+    render({
+      components: vComponents,
+    });
+    editor
+      .getWrapper()
+      .addAttributes(vWrapperAttributes, { avoidStore: true, addStyle: true });
+    const el = wrapper.getEl();
+    for (const key in vWrapperAttributes) {
+      if (!el) continue;
+      el.setAttribute(key, vWrapperAttributes[key]);
+    }
+    console.log(vAttributes, vComponents, "warppaer", vWrapperAttributes);
+
+    editor.Storage.setAutosave(true);
+    // editor.store();
+    //     const original = editor
+    //       .getWrapper()
+    //       .components()
+    //       .models.filter((cmp) =>
+    //         Object.keys(cmp.getAttributes() || {}).some((key) =>
+    //           key.startsWith("v-")
+    //         )
+    //       );
+    // console.log('orgs : ' ,editor
+    //   .getWrapper()
+    //   .components()
+    //   .models.map(el=>el.getAttributes()));
+
+    //   editor.getWrapper()
+    //   .components()
+    //   .models.forEach((cmp) => {
+    //       // console.log("re el : ", cmp.getEl(), cmp);
+    //       if(cmp.toHTML({withProps:true , keepInlineStyle:true}) == cmp.getEl().outerHTML){
+    //         console.log('equal');
+
+    //         return
+    //       }
+    //       cmp.replaceWith(cmp.clone());
+    //     });
+    //     editor
+    //       .getWrapper()
+    //       .addAttributes(
+    //         { ...editor.getWrapper().getAttributes() },
+    //         { silent: false, avoidStore: true }
+    //       );
+    //     Object.entries(editor.getWrapper().getAttributes()).forEach(
+    //       ([key, value]) => {
+    //         editor.getWrapper().getEl().setAttribute(key, value);
+    //       }
+    //     );
+    //     console.log(
+    //       "wrapper attrs : ",
+    //       editor.getWrapper().getAttributes(),
+    //       editor.getWrapper().getEl()
+    //     );
     // editor.Storage.setAutosave(false);
     // editor.render();
     // editor.Storage.setAutosave(true);

@@ -215,11 +215,10 @@ export const TraitsAside = memo(() => {
           }}
         />
       </AccordionItem>
-
-      <AccordionItem title={"Attributes"}>
+      <AccordionItem title={"Traits"}>
         <section className="p-2 flex flex-col gap-2">
           {!![...attributesTraits, ...handlerTraits].length && (
-            <MiniTitle className={`py-3 w-full`}>Options</MiniTitle>
+            <MiniTitle className={`py-3 w-full`}>Traits</MiniTitle>
           )}
           {[...attributesTraits, ...handlerTraits].map((trait, i) => {
             console.log("trait type:", trait);
@@ -306,7 +305,11 @@ export const TraitsAside = memo(() => {
               </li>
             );
           })}
+        </section>
+      </AccordionItem>
 
+      <AccordionItem title={"Attributes"}>
+        <section className="p-2 flex flex-col gap-2">
           <MiniTitle className={`py-3 w-full`}>Attributes</MiniTitle>
           {!!Object.keys(attributes).length &&
             Object.keys(attributes).map((key, i) => {
@@ -353,6 +356,7 @@ export const TraitsAside = memo(() => {
                 setNewAttributeName("");
               }}
             >
+              {Icons.plus('white')}
               Add
             </Button>
           </section>

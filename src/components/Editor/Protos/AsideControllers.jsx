@@ -4,8 +4,8 @@ import { Li } from "../../Protos/Li";
 import { useEditorMaybe } from "@grapesjs/react";
 import { useRecoilValue } from "recoil";
 import { currentElState } from "../../../helpers/atoms";
-import { dynamic_container } from "../../../constants/cmpsTypes";
-import { isDynamicComponent } from "../../../helpers/functions";
+// import { dynamic_container } from "../../../constants/cmpsTypes";
+// import { isDynamicComponent } from "../../../helpers/functions";
 
 export const AsideControllers = () => {
   const editor = useEditorMaybe();

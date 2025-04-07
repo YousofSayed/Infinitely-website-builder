@@ -20,6 +20,11 @@ export const Section = ({ editor }) => {
         },
         traits: defineTraits([
           {
+            placeholder:'select tag',
+            label:'Select tag',
+            name:'Select tag',
+            role:'handler',
+            
             keywords: tagNames,
             type: "select",
             callback({ editor, trait, newValue }) {

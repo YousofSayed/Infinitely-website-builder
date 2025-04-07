@@ -6,10 +6,13 @@ import { VitePWA } from "vite-plugin-pwa";
 import icons from "./public/icons/icons.json";
 // import { manualChunksPlugin } from "vite-plugin-webpackchunkname";
 import { chunkSplitPlugin } from "vite-plugin-chunk-split";
+// import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [
     react(),
+    // tailwindcss(),
+    
     // removeConsole(),
     VitePWA({
       registerType: "autoUpdate",
@@ -106,7 +109,6 @@ export default defineConfig({
               // },
             },
           },
-         
         ],
         importScripts: ["/custom-sw.js"],
       },
@@ -126,17 +128,34 @@ export default defineConfig({
       // },
     }),
     chunkSplitPlugin({
-      strategy:'default',
+      strategy: "default",
       customSplitting: {
-        'vendor': [/react/, /react-dom/, /react-router-dom/ , /grapesjs/ , /\@grapesjs\/react/ , /react-resizable-panels/], // Example grouping
+        vendor: [
+          /react/,
+          /react-dom/,
+          /react-router-dom/,
+          /grapesjs/,
+          /\@grapesjs\/react/,
+          /\@monaco-editor\/react/,
+          /react-resizable-panels/,
+          /react-virtuoso/,
+          // /react-sortablejs/,
+          // /linkedom/,
+          // /lodash/,
+          // /html2canvas-pro/,
+          // /csso/,
+          // /css/
+        ], 
+        
       },
-    })
+    }),
     // mergePrecacheIntoDbAssetsSw(),
   ],
   worker: {
     format: "es", // Use 'es' instead of 'iife'
   },
- build:{
-  chunkSizeWarningLimit:'5000'
- }
+ 
+  build: {
+    chunkSizeWarningLimit: "5000",
+  },
 });

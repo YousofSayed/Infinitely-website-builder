@@ -19,7 +19,6 @@ import { customModal } from "../../plugins/cutomModal";
 import { addNewTools } from "../../plugins/addNewTools.jsx";
 import { addNewBuiltinCommands } from "../../plugins/addNewBuiltinCommands.jsx";
 import { customCmps } from "../../plugins/customCmps.jsx";
-import _hyperscript from "hyperscript.org";
 import { html } from "../../helpers/cocktail.js";
 import { IDB } from "../../plugins/IDB.js";
 import { updateProjectThumbnail } from "../../plugins/updateProjectThumbnail.js";
