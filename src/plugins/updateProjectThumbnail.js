@@ -18,13 +18,16 @@ export const updateProjectThumbnail = (editor) => {
       // await db.projects.update(+projectID, {
       //   imgSrc: await getImgAsBlob(editor.Canvas.getBody()),
       // });
+      const blob = await getImgAsBlob(editor.Canvas.getBody());
+      console.log('blob : ' , blob);
+      
 
       infinitelyWorker.postMessage({
         command: "updateDB",
         props: {
           projectId: +localStorage.getItem(current_project_id),
           data: {
-            imgSrc: await getImgAsBlob(editor.Canvas.getBody()) //await getImgAsBlob(editor.Canvas.getBody()),
+            imgSrc: blob //await getImgAsBlob(editor.Canvas.getBody()),
           },
         },
       });

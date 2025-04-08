@@ -1,3 +1,4 @@
+import { open_files_manager_modal } from "../constants/InfinitelyCommands";
 import { defineTraits, traitCallback } from "../helpers/functions";
 
 /**
@@ -7,6 +8,14 @@ import { defineTraits, traitCallback } from "../helpers/functions";
 export const Image = ({ editor }) => {
   editor.Components.addType("image", {
     extend:'image',
+    view:{
+      onActive(ev){
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        editor.runCommand(open_files_manager_modal)
+      }
+    },
     model: {
       defaults: {
         tagName: "img",

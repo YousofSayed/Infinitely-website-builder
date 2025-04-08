@@ -23,6 +23,7 @@ import { db } from "./db";
 import html2canvas from "html2canvas-pro";
 import { jsURLRgx } from "../constants/rgxs";
 import { pvMount, pvUnMount } from "./customEvents";
+import { toBlob } from "html-to-image";
 export {
   replaceBlobs,
   base64ToBlob,
@@ -1727,29 +1728,33 @@ export function executeAndExtractFunctions(jsCode) {
  */
 export async function getImgAsBlob(el, mimeType = "image/webp") {
   if (!el) {
-    // throw new Error("No Elememt Founded...")
-    return null;
+    throw new Error("No Elememt Founded...")
+    // return null;
   }
-  return await new Promise(async (res, rej) => {
-    await (
-      await html2canvas(el, {
-        // foreignObjectRendering: true,
-        // allowTaint: true,
-        useCORS: true,
-        // imageTimeout: 300,
-        // windowWidth: 300,
-        // windowHeight: 300,
-        // width:300,
-        // height: 300,
-      })
-    ).toBlob(
-      (blob) => {
-        res(blob);
-      },
-      mimeType,
-      0.5
-    );
-  });
+  // return await new Promise(async (res, rej) => {
+  //   await (
+  //     await html2canvas(el, {
+  //       // foreignObjectRendering: true,
+  //       // allowTaint: true,
+  //       useCORS: true,
+  //       // imageTimeout: 200,
+  //       windowWidth: window.innerWidth,
+  //       windowHeight:window.innerHeight,
+        
+  //       // windowHeight: 300,
+  //       // width:300,
+  //       // height: 300,
+  //     })
+  //   ).toBlob(
+  //     (blob) => {
+  //       res(blob);
+  //     },
+  //     mimeType,
+  //     // 0.5
+  //   );
+
+  // });
+  return await toBlob(el)
 }
 
 /**
@@ -1989,7 +1994,7 @@ export const unMount = ({ editor, all, specificCmp, selectAfterUnMout }) => {
       ender,
       components = [],
       attributes,
-      timeout = 10,
+      timeout = 15,
     }) => {
       // if (components.length <= 100) {
       //   console.log('less than 100');
@@ -1998,6 +2003,7 @@ export const unMount = ({ editor, all, specificCmp, selectAfterUnMout }) => {
       // } else {
       setTimeout(() => {
         console.log("render start");
+        if (!components.length) return;
         editor.Storage.setAutosave(false);
 
         const relEnder = starter + 101;
@@ -2007,6 +2013,9 @@ export const unMount = ({ editor, all, specificCmp, selectAfterUnMout }) => {
           console.log("render end");
           editor.Storage.setAutosave(true);
           editor.clearDirtyCount();
+          vComponents = [];
+          vAttributes = {};
+          vWrapperAttributes = {};
           return;
         }
         console.log("start new one");

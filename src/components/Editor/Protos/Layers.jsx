@@ -1,16 +1,11 @@
 import { useEditorMaybe } from "@grapesjs/react";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { layersType, refType } from "../../../helpers/jsDocs";
 import { uniqueID } from "../../../helpers/cocktail";
 import { Layer } from "./Layer";
+import { Virtuoso } from "react-virtuoso";
 
-[
-  { id: uniqueID(), name: "yousef" },
-  { id: uniqueID(), name: "mohammed" },
-  { id: uniqueID(), name: "ahmed" },
-];
-
-export const Layers = () => {
+export const Layers = memo(() => {
   const editor = useEditorMaybe();
   const layerSecRef = useRef(refType);
   const [layers, setLayers] = useState(layersType);
@@ -60,12 +55,36 @@ export const Layers = () => {
   // })
 
   return (
-    <section id="layers" ref={layerSecRef}>
-      <main
-        id="layer-wrapper"
-        className=" [&>:not(:last-child)]:mb-2"
-      >
-        {layers.map((layer, i) => {
+    <section id="layers" className="h-full hideScrollBar" ref={layerSecRef}>
+      <main id="layer-wrapper" className="h-full  [&>:not(:last-child)]:mb-2">
+        <Virtuoso
+          className="hideScrollBar"
+          totalCount={layers.length}
+          itemContent={(i) => {
+            const layer = layers[i];
+            return (
+              // <section
+              //   key={layer.cid}
+              //   id={layer.id}
+              //   className="p-2 select-none rounded-lg flex items-center justify-between bg-slate-800 text-slate-200 mb-2"
+              // >
+              //   {layer.components().models.length || ""}
+              //   <span>{layer.getName().toUpperCase()}</span>
+              //   {layer.components().models.length && (
+              //     <figure>{Icons.arrow()}</figure>
+              //   )}
+              //   <figure className="handle cursor-grab">{Icons.plus()}</figure>
+              // </section>
+              <Layer
+                layers={layers}
+                setLayers={setLayers}
+                layer={layer}
+                key={i}
+              />
+            );
+          }}
+        />
+        {/* {layers.map((layer, i) => {
           return (
             // <section
             //   key={layer.cid}
@@ -86,8 +105,8 @@ export const Layers = () => {
               key={layer.getId()}
             />
           );
-        })}
+        })} */}
       </main>
     </section>
   );
-};
+});

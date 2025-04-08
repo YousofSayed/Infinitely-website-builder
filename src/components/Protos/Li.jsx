@@ -15,6 +15,7 @@ export const Li = ({
   justHover = false,
   isObjectParamsIcon=false,
   fillObjIcon=true,
+  fillObjectIconOnHover = false,
   fillObjIconStroke=false,
   fillIcon = false,
   fillStrokeIcon = false,
@@ -69,7 +70,7 @@ console.log(path.pathname.includes(to) , to ,path.pathname );
           aria-label={title} 
           ref={refForward}
           target={target}
-          className={`w-full h-full   ${linkClassName ? linkClassName : 'flex justify-center items-center'}`}
+          className={`w-full h-full   ${linkClassName ? linkClassName : 'flex justify-center items-center'} ${fillObjectIconOnHover && '[&_path]:hover:fill-[white!important]'}  ${fillStrokeIcon && '[&_path]:hover:stroke-white'}`}
           onClick={(ev) => {
             addClickClass(ev.currentTarget, "click");
             onClick(ev);

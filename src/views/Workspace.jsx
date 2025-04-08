@@ -25,7 +25,7 @@ export const Workspace = memo(() => {
     };
   }, []);
   return (
-    <main className=" h-full flex flex-col gap-2 py-2 ">
+    <main className=" h-full bg-slate-900 flex flex-col gap-2 py-2 ">
       <ToastContainer
         toastStyle={{ background: " #111827 " }}
         autoClose={3000}

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import { Icons } from "../Icons/Icons";
 import { Li } from "../Protos/Li";
 import { IframeControllers } from "./Protos/IframeControllers";
@@ -31,7 +31,7 @@ import { current_project_id } from "../../constants/shared";
 import { infinitelyWorker } from "../../helpers/infinitelyWorker";
 import { db } from "../../helpers/db";
 
-export const HomeHeader = () => {
+export const HomeHeader = memo(() => {
   const editor = useEditorMaybe();
   const widthRef = useRef("");
   const heightRef = useRef("");
@@ -218,6 +218,7 @@ export const HomeHeader = () => {
             icon={Icons.prush}
             isObjectParamsIcon
             fillObjIcon={false}
+            fillObjectIconOnHover
             title="style block"
           />
           <Li
@@ -235,7 +236,4 @@ export const HomeHeader = () => {
       </section>
     </header>
   );
-};
-
-console.log([1,2,3,4,5].slice(1,5));
-
+});

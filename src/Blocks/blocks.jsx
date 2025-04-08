@@ -169,6 +169,7 @@ export const blocks = [
       type: "block",
     },
     select: false,
+    
   },
 
   // {

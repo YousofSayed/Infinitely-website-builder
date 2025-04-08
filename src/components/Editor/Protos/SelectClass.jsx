@@ -30,9 +30,25 @@ export const SelectClass = memo(() => {
       return;
     }
     setClassesKeywords(getELClasses());
-
-    setSelector("");
+    console.log('select is rerendered');
+    
+    // setSelector("");
   }, [selectedEl]);
+
+  useEffect(()=>{
+    if(!editor)return;
+    const cb=()=>{
+      console.log('selector setted');
+      
+      setSelector('');
+    }
+    editor.on('component:selected',cb)
+    
+    return ()=>{
+      editor.off('component:selected',cb)
+
+    }
+  },[editor])
 
   useEffect(() => {
     if (!editor) return;
@@ -194,11 +210,11 @@ export const SelectClass = memo(() => {
             onActive={({ keyword, index }) => {
               console.log("keeeeyword : ", keyword, "active");
 
-              setSelector(keyword ? `.${keyword}` : null);
+              // setSelector(keyword ? `.${keyword}` : null);
             }}
             onUnActive={({ keyword, index }) => {
               console.log("keeeeyword : ", keyword, "unActive");
-              setSelector(new String(""));
+              // setSelector(new String(""));
             }}
             enableSelecting={true}
           />

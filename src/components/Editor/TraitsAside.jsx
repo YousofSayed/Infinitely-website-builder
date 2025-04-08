@@ -215,98 +215,99 @@ export const TraitsAside = memo(() => {
           }}
         />
       </AccordionItem>
-      <AccordionItem title={"Traits"}>
-        <section className="p-2 flex flex-col gap-2">
-          {!![...attributesTraits, ...handlerTraits].length && (
+      {!![...attributesTraits, ...handlerTraits].length && (
+        <AccordionItem title={"Traits"}>
+          <section className="p-2 flex flex-col gap-2">
             <MiniTitle className={`py-3 w-full`}>Traits</MiniTitle>
-          )}
-          {[...attributesTraits, ...handlerTraits].map((trait, i) => {
-            console.log("trait type:", trait);
 
-            return (
-              <li
-                key={i}
-                className="flex flex-col gap-2 bg-slate-950 p-2 rounded-lg"
-              >
-                <h1 className="text-[14px!important] px-2 text-white capitalize font-semibold">
-                  {trait.name}
-                </h1>
-                {trait.type == "text" && (
-                  <Input
-                    value={trait.value}
-                    placeholder={trait.placeholder || trait.name}
-                    className="py-3 w-full bg-slate-800"
-                    onInput={(ev) => {
-                      trait.callback &&
-                        trait.callback({
-                          editor,
-                          oldValue: trait.value,
-                          newValue: ev.target.value,
-                          trait,
-                        });
-                      trait.command && editor.runCommand(trait.command);
-                      updateTraitValue({
-                        name: trait.name,
-                        key: "value",
-                        value: ev.target.value,
-                      });
-                      // if (trait.role == "attribute") {
-                      //   addAttribute({ [trait.name]: ev.target.value });
-                      // }
-                    }}
-                  />
-                )}
+            {[...attributesTraits, ...handlerTraits].map((trait, i) => {
+              console.log("trait type:", trait);
 
-                {trait.type == "select" && (
-                  <Select
-                    placeholder={trait.placeholder || trait.name}
-                    keywords={trait.keywords}
-                    value={trait.value}
-                    onAll={(value) => {
-                      console.log(value);
-
-                      trait.callback &&
-                        trait.callback({
-                          editor,
-                          oldValue: trait.value,
-                          newValue: value,
-                          trait,
-                        });
-                      trait.command && editor.runCommand(trait.command);
-                      updateTraitValue({
-                        name: trait.name,
-                        key: "value",
-                        value,
-                      });
-                      // if (trait.role == "attribute") {
-                      //   addAttribute({ [trait.name]: value });
-                      // }
-                    }}
-                  />
-                )}
-
-                {trait.type.toLowerCase() == "media" && (
-                  <section className="flex gap-2 w-full">
+              return (
+                <li
+                  key={i}
+                  className="flex flex-col gap-2 bg-slate-950 p-2 rounded-lg"
+                >
+                  <h1 className="text-[14px!important] px-2 text-white capitalize font-semibold">
+                    {trait.name}
+                  </h1>
+                  {trait.type == "text" && (
                     <Input
-                      placeholder="Url"
-                      className="w-full bg-slate-900"
-                      value={fileName}
-                    />
-                    <SmallButton
-                      onClick={(ev) => {
-                        setAssetType(trait.mediaType);
-                        editor.runCommand(open_files_manager_modal);
+                      value={trait.value}
+                      placeholder={trait.placeholder || trait.name}
+                      className="py-3 w-full bg-slate-800"
+                      onInput={(ev) => {
+                        trait.callback &&
+                          trait.callback({
+                            editor,
+                            oldValue: trait.value,
+                            newValue: ev.target.value,
+                            trait,
+                          });
+                        trait.command && editor.runCommand(trait.command);
+                        updateTraitValue({
+                          name: trait.name,
+                          key: "value",
+                          value: ev.target.value,
+                        });
+                        // if (trait.role == "attribute") {
+                        //   addAttribute({ [trait.name]: ev.target.value });
+                        // }
                       }}
-                    >
-                      {Icons.gallery("white")}
-                    </SmallButton>
-                  </section>
-                )}
-              </li>
-            );
-          })}
-        </section>
-      </AccordionItem>
+                    />
+                  )}
+
+                  {trait.type == "select" && (
+                    <Select
+                      placeholder={trait.placeholder || trait.name}
+                      keywords={trait.keywords}
+                      value={trait.value}
+                      onAll={(value) => {
+                        console.log(value);
+
+                        trait.callback &&
+                          trait.callback({
+                            editor,
+                            oldValue: trait.value,
+                            newValue: value,
+                            trait,
+                          });
+                        trait.command && editor.runCommand(trait.command);
+                        updateTraitValue({
+                          name: trait.name,
+                          key: "value",
+                          value,
+                        });
+                        // if (trait.role == "attribute") {
+                        //   addAttribute({ [trait.name]: value });
+                        // }
+                      }}
+                    />
+                  )}
+
+                  {trait.type.toLowerCase() == "media" && (
+                    <section className="flex gap-2 w-full">
+                      <Input
+                        placeholder="Url"
+                        className="w-full bg-slate-900"
+                        value={fileName}
+                      />
+                      <SmallButton
+                        onClick={(ev) => {
+                          setAssetType(trait.mediaType);
+                          editor.runCommand(open_files_manager_modal);
+                        }}
+                      >
+                        {Icons.gallery("white")}
+                      </SmallButton>
+                    </section>
+                  )}
+                </li>
+              );
+            })}
+          </section>
+        </AccordionItem>
+      )}
 
       <AccordionItem title={"Attributes"}>
         <section className="p-2 flex flex-col gap-2">
@@ -356,7 +357,7 @@ export const TraitsAside = memo(() => {
                 setNewAttributeName("");
               }}
             >
-              {Icons.plus('white')}
+              {Icons.plus("white")}
               Add
             </Button>
           </section>

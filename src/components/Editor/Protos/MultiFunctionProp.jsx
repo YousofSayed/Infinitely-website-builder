@@ -140,9 +140,9 @@ export const MultiFunctionProp = memo(
                 <Adder
                   key={i}
                   className=" bg-slate-800 relative minion"
-                  addClassName="bg-slate-900 h-[52px] w-[50px] flex-shrink-0"
-                  delClassName="bg-slate-900 h-[52px] w-[50px] flex-shrink-0"
-                  inputClassName="p-[unset] px-[unset] py-1 bg-slate-900"
+                  addClassName="bg-slate-900 h-[42px] w-[50px] flex-shrink-0"
+                  delClassName="bg-slate-900 h-[42px] w-[50px] flex-shrink-0"
+                  inputClassName="p-[unset] px-[unset]  py-1 bg-slate-900"
                   placeholder="New Prop"
                   showSelectMenu={true}
                   keywords={keywords}
@@ -180,7 +180,7 @@ export const MultiFunctionProp = memo(
                         />
                       ) : (
                         <Input
-                          className={`bg-slate-900 w-full  ${
+                          className={`bg-slate-900 w-full  focus:border-none ${
                             !filterUnits[filterProp.name]
                               ? "rounded-lg"
                               : "rounded-tr-none  rounded-br-none"

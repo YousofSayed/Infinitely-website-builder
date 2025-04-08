@@ -139,6 +139,7 @@ export default defineConfig({
           /\@monaco-editor\/react/,
           /react-resizable-panels/,
           /react-virtuoso/,
+          /html-to-image/
           // /react-sortablejs/,
           // /linkedom/,
           // /lodash/,
@@ -146,7 +147,7 @@ export default defineConfig({
           // /csso/,
           // /css/
         ], 
-        
+
       },
     }),
     // mergePrecacheIntoDbAssetsSw(),

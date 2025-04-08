@@ -17,6 +17,18 @@ export const Block = ({ editor }) => {
         attributes: {
           class: "inf-block",
         },
+        resizable: {
+          tl: 0, // Top-left handle (0 = disabled, 1 = enabled)
+          tc: 1, // Top-center
+          tr: 0, // Top-right
+          cl: 1, // Center-left
+          cr: 1, // Center-right
+          bl: 0, // Bottom-left
+          bc: 1, // Bottom-center
+          br: 0, // Bottom-right
+          minDim: 50, // Minimum width/height in px
+          step: 1, // Resize step in px
+        },
         traits:defineTraits([
           {
             placeholder:'select tag',
