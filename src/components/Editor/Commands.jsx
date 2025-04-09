@@ -30,6 +30,7 @@ import { AccordionItem } from "@heroui/accordion";
 import { getInfinitelySymbolInfo } from "../../helpers/functions";
 import { current_symbol_id } from "../../constants/shared";
 import { SearchHeader } from "../Protos/SearchHeader";
+import { commentRgx } from "../../constants/rgxs";
 
 export const Commands = memo(() => {
   const editor = useEditorMaybe();
@@ -100,7 +101,9 @@ export const Commands = memo(() => {
   }, [editor]);
 
   const objectSplitter = (string = "") => {
-    string = string.trim();
+    string = string.replaceAll(commentRgx, "").trim();
+    console.log(string);
+
     if (!string) return "";
     if (string.startsWith("(") && string.endsWith(")")) {
       string = string.slice(1, -1).trim();
@@ -205,8 +208,7 @@ export const Commands = memo(() => {
 
   return (
     <section className="flex flex-col gap-2">
-      
-      <SearchHeader search={search}/>
+      <SearchHeader search={search} />
       <InfAccordion>
         {/* {selectedType && (
          
@@ -491,25 +493,31 @@ export const Commands = memo(() => {
                         cmd.isModifiersRequired
                       )}
                       value={cmd.modifierValue}
-                      onInput={(value) => {
+                      onAll={(value) => {
                         // const clone = cloneDeep(cmds);
                         // clone[i].value = value;
                         // setCmds(clone);
                         addModifierValue(value, i);
                       }}
-                      onEnterPress={(value) => {
-                        // const clone = cloneDeep(cmds);
-                        // clone[i].selectedModifiers = [
-                        //   ...(clone?.[i]?.selectedModifiers || []),
-                        //   value,
-                        // ];
-                        // setCmds(clone);
-                        addModifier(value, i);
-                        // cmd.callback({ value, editor });
-                      }}
-                      onItemClicked={(value) => {
-                        addModifier(value, i);
-                      }}
+                      // onInput={(value) => {
+                      //   // const clone = cloneDeep(cmds);
+                      //   // clone[i].value = value;
+                      //   // setCmds(clone);
+                      //   addModifierValue(value, i);
+                      // }}
+                      // onEnterPress={(value) => {
+                      //   // const clone = cloneDeep(cmds);
+                      //   // clone[i].selectedModifiers = [
+                      //   //   ...(clone?.[i]?.selectedModifiers || []),
+                      //   //   value,
+                      //   // ];
+                      //   // setCmds(clone);
+                      //   addModifier(value, i);
+                      //   // cmd.callback({ value, editor });
+                      // }}
+                      // onItemClicked={(value) => {
+                      //   addModifier(value, i);
+                      // }}
                       // onItemClicked={}
                     />
                     <SmallButton
@@ -684,12 +692,45 @@ export const Commands = memo(() => {
                                   cmd.nestedCallback({
                                     editor,
                                     targetAttribute: key,
-                                    value: value,
+                                    value: cmd.nestedMaybeObjectModel
+                                      ? () => {
+                                          if (
+                                            value.startsWith(`(`) &&
+                                            value.endsWith(`)`)
+                                          ) {
+                                            return objectSplitter(value);
+                                          }
+                                        }
+                                      : value,
                                   });
                                 }, 300);
                               },
                               onMount(mEditor) {
-                                mEditor.setValue(js_beautify(obj[key].value));
+                                const setType = (type) =>
+                                  `/**\n* @type {${type}}\n*/`;
+                                console.log('sfixees : ', obj[key].suffixes);
+                                
+                                if (obj[key].suffixes.includes(":class")) {
+                                  mEditor.setValue(
+                                    js_beautify(
+                                      `(${obj[key].value || `{\n\n}`})`
+                                    )
+                                  );
+                                } else if (
+                                  obj[key].suffixes.includes(":style")
+                                ) {
+                                  mEditor.setValue(
+                                    js_beautify(
+                                      `
+                                      ${setType("CSSStyleDeclaration")}
+                                      (${obj[key].value || `{\n\n}`})`
+                                    )
+                                  );
+                                } else {
+                                  mEditor.setValue(
+                                    js_beautify(obj[key].value)
+                                  );
+                                }
                               },
                             }}
                           />

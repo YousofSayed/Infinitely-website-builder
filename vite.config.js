@@ -17,11 +17,11 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       // minify: true,
-      devOptions: {
-        enabled: true, // Enable SW in dev mode
-        type: "classic", // Use module type for SW
-        navigateFallback: "/", // Fallback for navigation
-      },
+      // devOptions: {
+      //   enabled: true, // Enable SW in dev mode
+      //   type: "classic", // Use module type for SW
+      //   navigateFallback: "/", // Fallback for navigation
+      // },
       strategies: "generateSW",
 
       workbox: {

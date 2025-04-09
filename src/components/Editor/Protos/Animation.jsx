@@ -14,6 +14,8 @@ import { MultiChoice } from "./MultiChoice";
 import { ChoicesForStates } from "./ChoicesForStates";
 import { AddMultiValuestoSingleProp } from "./AddMultiValuestoSingleProp";
 import { useEditorMaybe } from "@grapesjs/react";
+import { useLiveQuery } from "dexie-react-hooks";
+import { getProjectData } from "../../../helpers/functions";
 
 export const Animation = memo(() => {
   const editor = useEditorMaybe();
@@ -24,6 +26,25 @@ export const Animation = memo(() => {
         .map((rule) => rule.mediaText)
     ),
   ]);
+
+  useLiveQuery(async () => {
+    const projectData = await getProjectData();
+    const cssLibs = projectData.cssLibs;
+    const keyframes =
+      editor.getCss() +
+      `\n` +
+      (await (
+        await Promise.all(cssLibs.map(async (lib) => await lib.file.text()))
+      ).join("\n"));
+
+    setAnimationNames([
+      ...new Set(
+        editor.Parser.parseCss(keyframes)
+          .filter((rule) => rule.atRuleType == "keyframes")
+          .map((rule) => rule.mediaText)
+      ),
+    ]);
+  });
   // useEf
   return (
     <section className="mt-3 flex flex-col gap-2 p-2">

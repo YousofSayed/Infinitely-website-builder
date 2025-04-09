@@ -226,8 +226,8 @@ export const exportProject = async (props) => {
   //Handling pages folder
   const pages = Object.values(projectData.pages).filter(
     (page) =>
-      page.name.toLowerCase() != "index" &&
-      page.name.toLowerCase() != "playground"
+      page.name.toLowerCase() != "index" 
+    // && page.name.toLowerCase() != "playground"
   );
   console.log("pages build : ", pages);
 

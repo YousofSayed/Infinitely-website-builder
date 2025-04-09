@@ -2,7 +2,7 @@ import React from "react";
 import { MultiTab } from "../../Protos/Multitabs";
 import { TabLabel } from "../Protos/TabLabel";
 import { Icons } from "../../Icons/Icons";
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilState} from "recoil";
 import { fileInfoState } from "../../../helpers/atoms";
 import { CodeEditor } from "../Protos/CodeEditor";
 import { Button } from "../../Protos/Button";
@@ -16,8 +16,9 @@ import { open_library_installer_modal } from "../../../constants/InfinitelyComma
 
 export const FileEditorModal = () => {
   const editor = useEditorMaybe();
-  const fileInfo = useRecoilValue(fileInfoState);
-  const setFileInfo = useSetRecoilState(fileInfoState);
+  // const fileInfo = useRecoilValue(fileInfoState);
+  const [fileInfo,setFileInfo] = useRecoilState(fileInfoState);
+  
   const projectId = +localStorage.getItem(current_project_id);
 
   const saveToDB = async () => {
@@ -62,7 +63,7 @@ export const FileEditorModal = () => {
     <section className="h-full flex flex-col gap-2 justify-between">
       <MultiTab
         style={{
-          height: `93%`,
+          height: `90%`,
         }}
         tabs={[
           {
@@ -95,9 +96,8 @@ export const FileEditorModal = () => {
                     });
                   },
                   language:
-                    (fileInfo.fileType.toLowerCase().includes("javascript") &&
-                      "javascript") ||
-                    (fileInfo.fileType.toLowerCase().includes("css") && "css"),
+                    fileInfo.fileType.toLowerCase().includes("javascript") ? 'javascript': 
+                    (fileInfo.fileType.toLowerCase().includes("css") ? "css" : ''),
                 }}
               />
             ),

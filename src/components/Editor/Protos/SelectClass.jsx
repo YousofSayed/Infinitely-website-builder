@@ -30,25 +30,24 @@ export const SelectClass = memo(() => {
       return;
     }
     setClassesKeywords(getELClasses());
-    console.log('select is rerendered');
-    
+    console.log("select is rerendered");
+
     // setSelector("");
   }, [selectedEl]);
 
-  useEffect(()=>{
-    if(!editor)return;
-    const cb=()=>{
-      console.log('selector setted');
-      
-      setSelector('');
-    }
-    editor.on('component:selected',cb)
-    
-    return ()=>{
-      editor.off('component:selected',cb)
+  useEffect(() => {
+    if (!editor) return;
+    const cb = () => {
+      console.log("selector setted");
 
-    }
-  },[editor])
+      setSelector("");
+    };
+    editor.on("component:selected", cb);
+
+    return () => {
+      editor.off("component:selected", cb);
+    };
+  }, [editor]);
 
   useEffect(() => {
     if (!editor) return;
@@ -67,7 +66,7 @@ export const SelectClass = memo(() => {
       setAllStyleSheetClasses(await getAllStyleSheetClasses());
     };
     callAsync();
-  }, []);
+  }, [editor, selectedEl]);
 
   useEffect(() => {
     if (!editor) return;
@@ -99,6 +98,7 @@ export const SelectClass = memo(() => {
     setClassesKeywords(Array.from(new Set(newArr)));
     editor.getSelected().addClass(newArr);
     setvalue(new String(""));
+    editor.getSelected().view.render()
   };
 
   const removeClass = (classNameKeyword = "") => {
@@ -118,8 +118,8 @@ export const SelectClass = memo(() => {
   const getAllStyleSheetClasses = async () => {
     const per1 = performance.now();
     console.log(per1);
-    const calssRgx = /(?<=\s|^)\.[a-zA-Z_][a-zA-Z0-9_-]*(?=\s*{)/g;
-
+    const calssRgx = /(?<!\/\*.*)\.[a-zA-Z_][a-zA-Z0-9_-]*(?=[,{\s:])/ig ///(?<=\s|^)\.[a-zA-Z_][a-zA-Z0-9_-]*(?=\s*{)/g;
+    const commentRgx = /\/\*[\s\S]*?\*\//g;
     const prjectData = await await db.projects.get(projectId);
     const cssLibsClasses = await (
       (await Promise.all(
@@ -127,11 +127,24 @@ export const SelectClass = memo(() => {
       )) || []
     )
       .join("\n")
+      .replaceAll(commentRgx , '')
       .match(calssRgx);
+
+    // console.log(
+    //   "cssLibsClasses : ",
+      
+    
+    //   await (
+    //     (await Promise.all(
+    //       [...prjectData.cssLibs].map(async (lib) => await lib.file.text())
+    //     )) || []
+    //   ).join("\n").replaceAll(/\/\*[\s\S]*?\*\//g, '').match(/(?<!\/\*.*)\.[a-zA-Z_][a-zA-Z0-9_-]*(?=[,{\s:])/ig)
+    // );
 
     const editorClasses =
       editor
         .getCss({ clearStyles: false, keepUnusedStyles: true })
+        .replaceAll(commentRgx , '')
         .match(calssRgx) || [];
 
     const inlineStyles = [
@@ -139,6 +152,7 @@ export const SelectClass = memo(() => {
     ]
       .map((styleEl) => styleEl.innerHTML)
       .join("\n")
+      .replaceAll(commentRgx , '')
       .match(calssRgx);
 
     const allClasses = [

@@ -316,7 +316,7 @@ export const Select = ({
       } h-full`}
     >
       {icon}
-      {label ? <P>{label}: </P> : null}
+      {label ? <P>{label.replaceAll(/(\s+)?\:/ig ,'')} : </P> : null}
       <div
         className={`h-full ${label ? "w-[55%]" : "w-full"} ${
           isRelative ? "relative" : ""

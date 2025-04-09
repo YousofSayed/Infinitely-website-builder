@@ -67,12 +67,12 @@ self.addEventListener("fetch", (event) => {
         }
       }
       // Fallback to fetch if no projectId or no file found
-      caches.match(event.request).then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-        return fetch(event.request);
-      });
+      // caches.match(event.request).then((cachedResponse) => {
+      //   if (cachedResponse) {
+      //     return cachedResponse;
+      //   }
+      //   return fetch(event.request);
+      // });
       // try {
 
       //   const res = await fetch(url);

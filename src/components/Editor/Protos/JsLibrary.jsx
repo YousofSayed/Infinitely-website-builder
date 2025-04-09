@@ -34,16 +34,18 @@ export const JsLibrary = ({
       const isJs = resBlob.type.includes("javascript");
       const isCss = resBlob.type.includes("css");
       const ext = (isJs && ".js") || (isCss && ".css") || "";
+      
       const responseData = new File(
         [resBlob],
         `${library.name.replaceAll(
           ext,
           ""
-        )}.${ext}`,
+        )}${ext}`,
         {
           type: resBlob.type,
         }
       );
+      console.log('installing data : ',ext , isJs , isCss , response , responseData );
       console.log("haha file name : ", responseData.name);
 
       if (responseStatus != 200 || !response.ok) {
@@ -74,7 +76,7 @@ export const JsLibrary = ({
        */
       const updater = async (key, newContent = {}) => {
         // const realKey = `${libraryType}${key}`;
-        // console.log(libraryType, realKey, responseData);
+        console.log('from updater :', newContent);
 
         await db.projects.update(+projectId, {
           [key]: [...projectData[key], { ...newContent }],
@@ -90,9 +92,9 @@ export const JsLibrary = ({
        */
       const defaultData = {
         ...installData,
-        type: libraryType,
+        type: ext.replace('.',''),
         file: responseData,
-        fileType: libraryType,
+        fileType: ext.replace('.',''),
         description: library.description,
         name: library.name.replaceAll(ext , '') + ext,
         isCDN: isCDN,
@@ -104,7 +106,7 @@ export const JsLibrary = ({
         id: uniqueID(),
       };
 
-      console.log("lib type:", libraryType, responseData.type);
+      // console.log("lib type:", libraryType, responseData.type);
 
       if (isHeader && responseData.type.includes("javascript")) {
         updater("jsHeaderLibs", {

@@ -222,9 +222,7 @@ export const IDB = (editor) => {
         // Set styles without triggering store
 
         // Restore autosave setting
-        editor.setComponents(document.body.innerHTML, {});
         editor.setStyle(``, { avoidStore: true });
-
         editor.CssComposer.addRules(
           minify(`
           ${getFonts()}
@@ -232,6 +230,8 @@ export const IDB = (editor) => {
           ${allSymbolsStyle}
          `).css
         );
+        editor.setComponents(document.body.innerHTML, {});
+
         //         console.log(
         //           "csssssss:",
         //           minify(`
@@ -757,13 +757,17 @@ const loadScripts = async (editor, projectData) => {
       ).length;
       !isExist && editor.config.canvas.scripts.push(libData);
     });
+console.log('cssLibs : ' , cssLibs);
 
     cssLibs
       .concat([{ file: projectData.globalCss, name: "globalCss" }])
-      .forEach((lib) => {
+      .forEach((lib) => { 
+        if(typeof lib == 'string'){
+          return lib;
+        }
         const libData = getCssLib(lib);
         const isExist = editor.config.canvas.styles.find(
-          (lib) => lib.name.toLowerCase() == libData.libData.name.toLowerCase()
+          (lib) => typeof lib != 'string' && lib.name.toLowerCase() == libData.libData.name.toLowerCase()
         );
         !isExist &&
           editor.config.canvas.styles.push({
@@ -773,9 +777,9 @@ const loadScripts = async (editor, projectData) => {
         console.log(`Libbbbbbbbbbbbbbb@@#: `, libData);
 
         //For Fonts
-        const isFontsExist = editor.config.canvas.styles.find(
-          (existLib) => existLib.name.toLowerCase() == "fonts"
-        );
+        // const isFontsExist = editor.config.canvas.styles.find(
+        //   (existLib) => existLib.name.toLowerCase() == "fonts"
+        // );
       });
 
     // jsHeaderLocal.forEach((lib) => {

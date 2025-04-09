@@ -50,7 +50,7 @@ export const LibraryInstaller = () => {
   };
 
   return (
-    <section className="  bg-gradient-to-b from-slate-900 mb-3 to-slate-950 text-slate-200 p-2 rounded-lg">
+    <section className="p-2">
       {/* <header className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-extrabold text-center mb-10 text-blue-600">
           JavaScript Library Installer

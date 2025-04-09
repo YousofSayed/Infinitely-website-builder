@@ -108,6 +108,7 @@ export const CodeEditor = memo(
       //   noSyntaxValidation: false,
       //   diagnosticCodesToIgnore: []
       // });
+      console.log("frommmmmated : ", toFormateValue);
 
       toFormateValue &&
         isProjectSettingPropTrue(
@@ -124,19 +125,24 @@ export const CodeEditor = memo(
             //   semi: true,
             //   singleQuote: true,
             // });
-            const formatedValue = js_beautify(toFormateValue, {
-              indent_size: 2, // 2 spaces
-              space_in_empty_paren: true,
-            });
+            const formatedValue =
+              props.language == "js"
+                ? js_beautify(toFormateValue, {
+                    indent_size: 2, // 2 spaces
+                    space_in_empty_paren: true,
+                  })
+                : toFormateValue;
+            console.log(formatedValue);
 
-            // editor.setValue(formatedValue);
-            editor.executeEdits("initial-set", [
-              {
-                range: editor.getModel().getFullModelRange(),
-                text: formatedValue,
-                forceMoveMarkers: true,
-              },
-            ]);
+            editor.setValue(formatedValue);
+            props.language == 'css' && editor.trigger('mySource', 'editor.action.formatDocument');
+            // editor.executeEdits("initial-set", [
+            //   {
+            //     range: editor.getModel().getFullModelRange(),
+            //     text: formatedValue,
+            //     forceMoveMarkers: true,
+            //   },
+            // ]);
           },
           () => {
             editor.setValue(toFormateValue);
@@ -192,12 +198,12 @@ export const CodeEditor = memo(
             editorRef.current = editor;
             editor.focus();
             console.log("pos", editor.getPosition().lineNumber);
+            console.log("lllllllllang :", props.language);
 
-            if (props.language == "html" || props.language == "css") {
+            if (props.language == "html") {
               props?.onMount?.(editor);
               return;
             }
-
             editor.onKeyDown((e) => {
               if (
                 e.ctrlKey &&

@@ -109,7 +109,7 @@ export const Choices = memo(
                   setSelector(selector.includes(keyword) ? '' : `.${keyword}`);
                 }}
                 key={i}
-                className={`relative group px-[20px] w-fit cursor-pointer select-none  flex-shrink-0 py-[10px] text-white ${
+                className={`text-wrap break-all relative group px-[20px] w-fit cursor-pointer select-none  flex-shrink-0 py-[10px] text-white ${
                   (active && currentIndex.current == i)
                     ? "bg-blue-600"
                     : enableSelecting

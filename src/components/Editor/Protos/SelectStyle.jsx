@@ -58,6 +58,7 @@ export const SelectStyle = ({
         label={label}
         splitHyphen={splitHyphen}
         placeholder={placeholder}
+        className="px-2 bg-slate-800"
         keywords={keywords}
         wrap={wrap}
         setKeyword={setKeyword}

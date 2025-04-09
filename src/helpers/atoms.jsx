@@ -300,6 +300,7 @@ export const fileInfoState = atom({
     isHeader: false,
     isFooter: true,
     id: "",
+    file:new File([''] , 'empty.txt' , {type:'plain/text'})
   },
 });
 

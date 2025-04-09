@@ -263,6 +263,7 @@ export const GJEditor = memo(({ children }) => {
             // 'core:redo': '', // Unbind Ctrl+Y
           },
         },
+        protectedCss:``,
         // customUI: true,
         // headless:true,
         // autorender: false,
@@ -272,6 +273,7 @@ export const GJEditor = memo(({ children }) => {
             // {src:`${jsToDataURL(`console.log('data js url.............@')`)}`}
           ],
           styles: [],
+          
           customBadgeLabel:
             /**
              *

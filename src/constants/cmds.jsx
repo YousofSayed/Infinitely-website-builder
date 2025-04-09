@@ -122,28 +122,34 @@ export const directives = [
     directive: "v-bind",
     id: uniqueID(),
     type: "multi",
+    isSuffixRequired:true,
     keywordsForMulti: defaultAttributeNames,
+    codeLang:'javascript',
+    nestedCodeLang:'javascript',
     nestedtype: "code",
+    valueInputType:'code',
+    nestedInputType:'code',
+    nestedMaybeObjectModel:true,
     name: "bind",
     preventDefault: false,
     preventNestedDefault: false,
-    callback({ editor, value, callback }) {
+    callback({ editor, suffix, modifiers, value, callback }) {
       defaultDirectiveCallback({
         editor,
-        directive: `${this.directive}${value}`,
+        directive: `${this.directive}`,
+        suffix,
+        modifiers,
         preventDefault: this.preventDefault,
-        value: "",
+        value: value,
         callback,
       });
     },
-    nestedCallback({ editor, value, targetAttribute, callback }) {
-      defaultDirectiveCallback({
-        editor,
-        directive: targetAttribute,
-        preventDefault: this.preventNestedDefault,
-        value,
-        callback,
-      });
+    nestedCallback({ editor, targetAttribute, value, callback }) {
+      if (!this.preventNestedDefault) {
+        const sle = editor.getSelected();
+        sle.addAttributes({ [targetAttribute]: value });
+      }
+      callback?.();
     },
   },
 

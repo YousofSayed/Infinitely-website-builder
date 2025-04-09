@@ -126,6 +126,7 @@ export interface Directive {
   nestedInputType: "select" | "code" | "input";
   nestedCodeLang: "html" | "javascript" | "css";
   nestedInputKeywords: string[];
+  nestedMaybeObjectModel:boolean,
   codeLang: "html" | "javascript" | "css";
   suffixes: string[];
   modifiers: string[];

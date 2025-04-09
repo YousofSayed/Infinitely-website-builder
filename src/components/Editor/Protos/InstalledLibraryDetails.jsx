@@ -7,7 +7,7 @@ import { useEditorMaybe } from "@grapesjs/react";
 import { toast } from "react-toastify";
 import { SmallButton } from "./SmallButton";
 import { close_current_modal, open_file_editor_modal } from "../../../constants/InfinitelyCommands";
-import { useSetRecoilState } from "recoil";
+import { useRecoilState } from "recoil";
 import { fileInfoState } from "../../../helpers/atoms";
 
 /**
@@ -21,7 +21,7 @@ export const InstalledLibraryDetails = ({
   dbKey = "",
 }) => {
   const editor = useEditorMaybe();
-  const setFileInfo = useSetRecoilState(fileInfoState);
+  const [ fileInfo,setFileInfo] = useRecoilState(fileInfoState);
 
   const deleteLibrary = async () => {
     try {
@@ -56,11 +56,14 @@ export const InstalledLibraryDetails = ({
                 fileName: library.file.name,
                 fileType: library.file.type,
                 fileContent:await library.file.text(),
+                
                 isHeader:library.header,
                 isFooter:library.footer,
                 id:library.id,
-                
+                file:library.file,
               });
+              // console.log(await library.file.text());
+              
               // editor.runCommand(close_current_modal)
               editor.runCommand(open_file_editor_modal);
             }}
@@ -121,7 +124,7 @@ export const InstalledLibraryDetails = ({
           </p>
 
           <p className="max-w-[90%] overflow-hidden text-ellipsis text-nowrap">
-            <span className="text-blue-300 font-semibold text-lg">Is CDN</span> :{library.isCDN}
+            <span className="text-blue-300 font-semibold text-lg">Is CDN</span> :{new String(library.isCDN)}
           </p>
           </>
         )}

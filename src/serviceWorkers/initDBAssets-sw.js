@@ -6,7 +6,7 @@ export const initDBAssetsSw = async (setSw = () => {}) => {
 
     // Determine the correct SW file based on environment
     const isDev = import.meta.env.MODE === 'development'; // Vite-specific env check
-    const swPath = isDev ? '/dev-sw.js?dev-sw' : '/sw.js'; // Use dev-sw.js in dev, sw.js in prod
+    const swPath = isDev ? '/dbAssets-sw.js' : '/sw.js'; // Use dev-sw.js in dev, sw.js in prod
 
     try {
       const reg = await navigator.serviceWorker.register(swPath);
