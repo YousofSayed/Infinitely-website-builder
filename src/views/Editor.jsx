@@ -18,13 +18,14 @@ import {
 import { Layers } from "../components/Editor/Protos/Layers";
 import { CustomModals } from "../components/Editor/CustomModals";
 import { AnimationsBuilder } from "../components/Editor/AnimationsBuilder";
-import { ToastContainer } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import { AsideControllers } from "../components/Editor/Protos/AsideControllers";
 import { initDBAssetsSw } from "../serviceWorkers/initDBAssets-sw";
 import { current_project_id } from "../constants/shared";
 import { getProjectData } from "../helpers/functions";
 import { infinitelyWorker } from "../helpers/infinitelyWorker";
 import { swAliveInterval } from "../helpers/keepSwAlive";
+import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
 
 // export const Editor = () => {
 //   const navigate = useNavigate();
@@ -230,6 +231,24 @@ export function Editor({params}) {
     console.log('navo');
     
     // initDBAssetsSw(setDBAssetsSw);
+  }, []);
+
+  useEffect(() => {
+    /**
+     *
+     * @param {MessageEvent} ev
+     */
+    const cb = (ev) => {
+      const { command, props } = ev.data;
+      if (command != "toast") return;
+      const { msg, type } = props;
+      toast[type]?.(<ToastMsgInfo msg={msg} />);
+    };
+    infinitelyWorker.addEventListener("message", cb);
+
+    return () => {
+      infinitelyWorker.removeEventListener("message", cb);
+    };
   }, []);
 
   // useEffect(() => {

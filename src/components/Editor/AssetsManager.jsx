@@ -33,7 +33,7 @@ import { ViewportList } from "react-viewport-list";
 import { VirtuosoGrid } from "react-virtuoso";
 import { GridComponents } from "../Protos/VirtusoGridComponent";
 import { InfinitelyEvents } from "../../constants/infinitelyEvents";
-import { blobToDataUrlAndClean } from "../../helpers/bridge";
+import { blobToDataUrlAndClean, getFilesSize } from "../../helpers/bridge";
 import { useEditorMaybe } from "@grapesjs/react";
 import { infinitelyWorker } from "../../helpers/infinitelyWorker";
 import { Loader } from "../Loader";
@@ -92,6 +92,28 @@ export const AssetsManager = memo(() => {
     };
   }, [files]);
 
+  useEffect(() => {
+    /**
+     *
+     * @param {MessageEvent} ev
+     */
+    const cb = (ev) => {
+      if (ev.data.command == "setVar") {
+        const init = initDBAssetsSw(() => {});
+        init.then((sw) => {
+          sw.postMessage(ev.data);
+        });
+        setShowLoader(false);
+        console.log('data : ' , ev.data);
+        
+      }
+    };
+    infinitelyWorker.addEventListener("message", cb);
+    return () => {
+      infinitelyWorker.removeEventListener("message", cb);
+    };
+  }, []);
+
   const getAssetsFromAM = async () => {
     const projectData = await await getProjectData();
     const assets = cssPropForAM
@@ -128,34 +150,40 @@ export const AssetsManager = memo(() => {
       /**
        * @type {File[]}
        */
-      const inputFiles = Array.from(ev.target.files).map((file) => ({
+      const files = ev.target.files;
+      const inputFiles = Array.from(files).map((file) => ({
         file: file,
         id: uniqueID(),
         // blobUrl: URL.createObjectURL(file),
       }));
+      const filesSize = getFilesSize(files);
+      console.log(filesSize.MB, filesSize.GB);
+      if (filesSize.MB > 80) {
+        toast.warn(<ToastMsgInfo msg={`Files Size Is Too Large!!`} />);
+        return;
+      }
 
       const projectData = await getProjectData();
-      const init = initDBAssetsSw(() => {});
-      console.log("itr : ", projectData.assets);
+      // console.log("itr : ", projectData.assets);
 
-      await db.projects.update(projectId, {
-        assets: [
-          ...(Array.isArray(projectData.assets) ? projectData.assets : []),
-          ...inputFiles,
-        ],
+      // await db.projects.update(projectId, {
+      // assets: [
+      //   ...(Array.isArray(projectData.assets) ? projectData.assets : []),
+      //   ...inputFiles,
+      // ],
+      // });
+
+      infinitelyWorker.postMessage({
+        command: "uploadAssets",
+        props: {
+          projectId,
+          assets: [
+            ...(Array.isArray(projectData.assets) ? projectData.assets : []),
+            ...inputFiles,
+          ],
+        },
       });
 
-      init.then(async (sw) => {
-        sw.postMessage({
-          command: "setVar",
-          props: {
-            obj: {
-              projectId: +localStorage.getItem(current_project_id),
-              projectData: await getProjectData(),
-            },
-          },
-        });
-      });
       // infinitelyWorker.postMessage({
       //   command: "keepSwLive",
       //   props: {
@@ -167,7 +195,7 @@ export const AssetsManager = memo(() => {
 
       toast.error(<ToastMsgInfo msg={`Files upload failed`} />);
     } finally {
-      setShowLoader(false);
+      // setShowLoader(false);
     }
 
     // const newFiles = [];
@@ -233,7 +261,7 @@ export const AssetsManager = memo(() => {
         value: `url("../assets/${file.name}")`, //`url("${URL.createObjectURL(file)}") , url("../assets/${file.name}") /* buildUrl: url("https://example.com/style.css"); prop: background-image */`,
       });
     } else {
-      editor.getSelected().addAttributes({ src: `../assets/${file.name}` });
+      editor.getSelected().setAttributes({ src: `../assets/${file.name}` });
     }
     // const urls = JSON.parse(selectedEl.getAttributes()[inf_css_urls] || "{}");
     // selectedEl.addAttributes({
@@ -362,7 +390,7 @@ export const AssetsManager = memo(() => {
                 asset = files[index];
 
               return (
-                <article
+                <section
                   key={i}
                   className={`group relative rounded-lg p-3 bg-slate-800  flex flex-col justify-center items-center gap-2`}
                 >
@@ -386,14 +414,41 @@ export const AssetsManager = memo(() => {
                     {(asset.file.type.includes("video") && (
                       <>
                         <video
-                          onClick={(ev) => onItemClicked(ev, asset.file)}
+                        className="w-full h-full object-cover"
+                          onClick={(ev) => {
+                            ev.stopPropagation()
+                            ev.currentTarget.play()
+                          }}
+                          onLoad={(ev)=>{
+                            console.log('video load');
+                            
+                          }}
+                          autoPlay={true}
+                          muted={true}
+                          poster=""
+                          onMouseOver={(ev)=>{
+                            ev.currentTarget.controls = true;
+                          }}
+
+                          onMouseLeave={(ev)=>{
+                            ev.currentTarget.controls = false
+                          }}
+
+                          onBlur={(ev)=>{
+                            ev.currentTarget.controls = false
+                          }}
+                          onError={(ev)=>{
+                            console.log('Video dont load correctly' , asset , asset.file ,);
+                            // ev.currentTarget.load()
+
+                          }}
                           // className="w-full h-full"
-                          src={asset.blobUrl}
+                          src={`assets/${asset.file.name}`}
                           // controls={true}
                         ></video>
-                        <p className="mt-5 p-1 bg-blue-600 w-fit font-bold rounded-lg">
+                        {/* <p className="mt-5 p-1 bg-blue-600 w-fit font-bold rounded-lg">
                           video
-                        </p>
+                        </p> */}
                       </>
                     )) ||
                       (asset.file.type.includes("audio") && (
@@ -424,7 +479,7 @@ export const AssetsManager = memo(() => {
                   >
                     {asset.file.name}
                   </p>
-                </article>
+                </section>
               );
             }}
           />
@@ -441,3 +496,5 @@ export const AssetsManager = memo(() => {
     </main>
   );
 });
+
+// console.log(encodeURI(`WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4`) == 'whatsapp%20video%202025-04-09%20at%206.37.02%20am.mp4');

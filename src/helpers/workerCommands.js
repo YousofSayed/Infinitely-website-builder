@@ -342,6 +342,38 @@ export function keepSwLive(props) {
 
 /**
  *
- * @param {{file:File , cssProp , }} props
+ * @param {{projectId:number , assets : import('./types').InfinitelyAsset[]}} props
  */
-export function toDataURL(props) {}
+export async function uploadAssets(props) {
+  try {
+    await db.projects.update(props.projectId, { assets: props.assets });
+    self.postMessage({
+      command: "setVar",
+      props: {
+        obj: {
+          projectId: props.projectId,
+          projectData: await db.projects.get(props.projectId),
+        },
+      },
+    });
+
+    self.postMessage({
+      command: "toast",
+      props: {
+        msg: "Files Uploaded Successfully",
+        type: "success",
+      },
+    });
+  } catch (error) {
+    await updateDB({ projectId: props.projectId, data: props.assets });
+    console.error(`From worker command uploadAssets: ${error}`);
+
+    self.postMessage({
+      command: "toast",
+      props: {
+        msg: "Faild To Upload Files",
+        type: "error",
+      },
+    });
+  }
+}

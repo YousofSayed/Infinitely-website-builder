@@ -1,6 +1,6 @@
 import { exportProject } from "./exportProject";
 import { loadProject } from "./loadProject";
-import { deleteAllSymbolsById, getDataFromDB, keepSwLive, storeGrapesjsDataIfSymbols, updateAllPages, updateDB, } from "./workerCommands";
+import { deleteAllSymbolsById, getDataFromDB, keepSwLive, storeGrapesjsDataIfSymbols, updateAllPages, updateDB, uploadAssets, } from "./workerCommands";
 // import { getProjectData } from "./functions";
 
 const commands = {
@@ -13,6 +13,7 @@ const commands = {
     storeGrapesjsDataIfSymbols,
     loadProject,
     keepSwLive,
+    uploadAssets,
 };
 
 

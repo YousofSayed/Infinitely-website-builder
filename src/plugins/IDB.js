@@ -564,7 +564,11 @@ export const IDB = (editor) => {
                     editor.getWrapper().getInnerHTML({
                       keepInlineStyle: true,
                       withProps: true,
-
+                      // attributes:(cmp , attr)=>{
+                      //   console.log('save attrs :' , cmp.get('type') , attr);
+                        
+                      // attr
+                      // }
                       // asDocument: true,
                       // cleanId: true,
                     }),

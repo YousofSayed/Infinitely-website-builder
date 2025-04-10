@@ -9,7 +9,7 @@ export const initDBAssetsSw = async (setSw = () => {}) => {
     const swPath = isDev ? '/dbAssets-sw.js' : '/sw.js'; // Use dev-sw.js in dev, sw.js in prod
 
     try {
-      const reg = await navigator.serviceWorker.register(swPath);
+      const reg = await navigator.serviceWorker.register(swPath,{scope:'/' });
       console.log(`SW Registered: ${reg.scope} (Path: ${swPath})`);
 
       const sw = await navigator.serviceWorker.ready;

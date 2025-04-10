@@ -463,29 +463,34 @@ export async function minifyBlobJSAndCssStream(blob, type = "") {
   });
 }
 
-// Use it
-// const blob = new Blob(['Hello'], { type: 'text/plain' });
-// blobToDataUrlAndClean(blob).then(() => {
-//   // After this, 'reader' and 'dataUrl' are out of scope
-//   console.log('Done');
-// });
+export function isDevMode(resolve = (result) => {}, reject = (result) => {}) {
+  const isDev = import.meta.env.MODE === "development";
+  if (isDev) {
+    resolve(isDev);
+  } else {
+    reject(isDev);
+  }
+}
 
-// Force GC (for demo, not reliable in practice)
-// setTimeout(() => { /* GC might run here */ }, 1000);
-// const text = "@infinitely/assets/Frame 4(1).png";
-// const pattern = /^@[\w-]+(?:\/[\w-]+)*\/[^\/]+\.\w+$/ig;
-// const match = text.match(pattern);
+/**
+ *
+ * @param {File[]} files
+ */
+export function getFilesSize(files) {
+  const bytesPerMB = 1048576; // 1 MB = 2^20 bytes
+  const bytesPerGB = 1073741824; // 1 GB = 2^30 bytes
+  const totalSizeInBytes = Array.from(files).reduce(
+    (prev, current, currentIndex, arr) => {
+      console.log("files : ", prev, current.size);
+      return prev + current.size;
+    },
+    0
+  );
+  const totalSizeInMB = totalSizeInBytes / bytesPerMB;
+  const totalSizeInGB = (totalSizeInBytes / bytesPerGB).toFixed(2);
 
-// if (match) {
-//     console.log(match[0]);  // Output: Frame 4(1)
-// }
-
-// const jsRgx = /(\.+)?(?:\/[\w-]+)*\/[^\/"]+\.\w+/g;
-
-// console.log(
-//   `
-
-// const data = await  fetch("../assets/data2.json");const data2 = await  fetch("@infinitely/assets/Frame 4(1).png");
-
-//   `.match(jsRgx)
-// );
+  return {
+    MB: +(totalSizeInMB).toFixed(2),
+    GB: +totalSizeInGB,
+  };
+}
