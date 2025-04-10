@@ -30,7 +30,7 @@ export default defineConfig({
           {
             urlPattern: ({ url }) => url.pathname.includes("assets/"),
             handler: ({ url, request, event }) => {
-              const url = new URL(event.request.url);
+              // const url = new URL(event.request.url);
 
               // Handle /keep-alive first
               if (url.pathname.includes("/keep-alive")) {
