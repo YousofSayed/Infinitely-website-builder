@@ -16,7 +16,7 @@ import { inf_build_url } from "../../constants/shared";
 import { InfinitelyEvents } from "../../constants/infinitelyEvents";
 import { CodeEditor } from "./Protos/CodeEditor";
 import { parseHTML } from "linkedom";
-import { doDocument, isValidAttribute } from "../../helpers/functions";
+import { doDocument, getProjectSettings, isValidAttribute } from "../../helpers/functions";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
 import { InfAccordion } from "../Protos/InfAccordion";
@@ -129,6 +129,12 @@ export const TraitsAside = memo(() => {
     setAttributesTraits(attributesTraits);
     setHandlerTraits(handlerTraits);
     setAttributes(elementAttributes);
+    console.log(
+      "traits : ",
+      attributesTraits,
+      handlerTraits,
+      sle.getTraits().map((tr) => tr.attributes)
+    );
   };
 
   const updateTraitValue = ({ name = "", key = "", value = "" }) => {
@@ -140,9 +146,20 @@ export const TraitsAside = memo(() => {
 
   const addAttribute = ({ key, value }) => {
     const sle = editor.getSelected();
+    const type = sle.get("type").toLowerCase();
     if (isValidAttribute(key, value)) {
       sle.addAttributes({ [key]: value || "" }, { avoidTransformers: true });
       setAttributes(getFilterdAttributes());
+      if (type == "video" || type == "iframe" || type == "source") {
+       const newSle = sle.replaceWith(sle.clone())[0];
+       getProjectSettings().set({
+        navigate_to_style_when_Select:false
+      })
+        editor.select(newSle);
+        getProjectSettings().set({
+          navigate_to_style_when_Select:true
+        })
+      }
     } else {
       // const { document } = parseHTML(
       //   doDocument(sle.toHTML({ withProps: true }))
@@ -164,8 +181,19 @@ export const TraitsAside = memo(() => {
 
   const removeAttribute = (key) => {
     const sle = editor.getSelected();
+    const type = sle.get('type').toLowerCase()
     sle.removeAttributes([key]);
     setAttributes(getFilterdAttributes());
+    if (type == "video" || type == "iframe" || type == "source") {
+      const newSle = sle.replaceWith(sle.clone())[0];
+      getProjectSettings().set({
+        navigate_to_style_when_Select:false
+      })
+        editor.select(newSle);
+        getProjectSettings().set({
+          navigate_to_style_when_Select:true
+        })
+    }
   };
 
   return (

@@ -28,6 +28,7 @@ import { useGlobalSettings } from "../../hooks/useGlobalSettings.js";
 import { current_symbol_id } from "../../constants/shared.js";
 import { cloneDeep } from "lodash";
 import { getProjectSettings } from "../../helpers/functions.js";
+import { muatationDomElements } from "../../plugins/mutation.js";
 // import { infinitelyGrapesjs } from "../../helpers/backbonePacher.js";
 
 export const GJEditor = memo(({ children }) => {
@@ -57,7 +58,7 @@ export const GJEditor = memo(({ children }) => {
     updateProjectThumbnail,
     customInfinitelySymbols,
     updateDynamicTemplates,
-    // muatationDomElements,
+    muatationDomElements,
   ]);
 
   useEffect(() => {}, []);
@@ -76,6 +77,20 @@ export const GJEditor = memo(({ children }) => {
       // ev.on("load", () => {
       //   console.log("csss ruuuules", ev.CssComposer.getAll().models);
       // });
+     
+      ev.on('load', () => {
+        // Get canvas iframe element
+        const canvasIframe = ev.Canvas.getFrameEl();
+        console.log('ifrmae origin : ',ev.Canvas.getWindow().origin);
+        console.log('main origin : ',window.origin);
+        
+        // Set attributes on the iframe
+        // canvasIframe.setAttribute('class', 'gjs-custom-canvas');
+        // canvasIframe.setAttribute('title', 'GrapesJS Editor Canvas');
+        // canvasIframe.setAttribute('data-custom', 'editor-workspace');
+        // canvasIframe.setAttribute('sandbox', 'allow-same-origin allow-scripts');
+        // canvasIframe.setAttribute('src', 'about:blank');
+    });
       ev.on("storage:end:store", () => {});
       // setCmdsContext();
       ev.runCommand("core:component-outline");

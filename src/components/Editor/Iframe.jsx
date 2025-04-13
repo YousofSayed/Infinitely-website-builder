@@ -27,18 +27,28 @@ import {
 import { InfinitelyEvents } from "../../constants/infinitelyEvents";
 import monacoLoader from "@monaco-editor/loader";
 import { infinitelyWorker } from "../../helpers/infinitelyWorker";
+import { initDBAssetsSw } from "../../serviceWorkers/initDBAssets-sw";
 
 export const Iframe = memo(() => {
   const showLayers = useRecoilValue(showLayersState);
-  const showAnimBuilder = useRecoilValue(showAnimationsBuilderState);
-  const setShowAnimBuilder = useSetRecoilState(showAnimationsBuilderState);
-  const showPreview = useRecoilValue(showPreviewState);
-  const setShowPreview = useSetRecoilState(showPreviewState);
+  const [showAnimBuilder, setShowAnimBuilder] = useRecoilState(
+    showAnimationsBuilderState
+  );
+  const [showPreview, setShowPreview] = useRecoilState(showPreviewState);
   const [showDragLayer, setShowDragLayer] = useRecoilState(showDragLayerState);
   const previewIframe = useRef(iframeType);
   const virtualBrowserWindow = useRef(iframeType);
   const editor = useEditorMaybe();
   const projectId = +localStorage.getItem(current_project_id);
+
+  useEffect(() => {
+    // if (!previewIframe.current || !showPreview) return;
+    // previewIframe.current.contentWindow.navigator.serviceWorker.register(
+    //   "/dbAssets-sw.js",
+    //   { scope: "/" }
+    // );
+    // console.log('origins :' , window.origin , previewIframe.current.contentWindow.origin);
+  }, [showPreview]);
 
   useEffect(() => {
     if (!editor) return;
@@ -257,7 +267,16 @@ export const Iframe = memo(() => {
 
   const getAndSetPreviewData = async () => {
     const pageData = await getPageData();
-
+    const testScript = `
+    <script>
+    document.body.innerHTML = \`
+    <video
+            src="../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4"
+            controls
+          ></video>
+    \`
+    </script>
+    `
     const content = html`
       <!DOCTYPE html>
       <html lang="en">
@@ -286,86 +305,28 @@ export const Iframe = memo(() => {
             .map((key) => `${key}="${pageData.bodyAttributes[key]}"`)
             .join(" ")}
         >
-          <!-- <body
-            style="height:100%;"
-            id="i11h"
-            v-scope="{
-    productsRes:[],
-    myName:'upoi',
-}"
-          >
-            <section
-              v-mount=""
-              v-scope="{
-    name: 'yousef',
-    products: productsRes.products || [],
-    productsLoaded: false,
-    about22() {
-        console.log('go');
-    }
-}"
-              inf-class-name="inf-Mjg4Mg"
-              inf-symbol-id="Mjk4Ng"
-              v-on:click="console.log(true);"
-              inf-css-urls='{"background-image":{"fileName":"pexels-pixabay-33545.jpg","media":{},"rule":".inf-Mjg4Mg"}}'
-              v-effect="about22();
-globalHello()"
-              class="parent minh-60 inf-Mjg4Mg hvr-icon"
-              data-gjs-type="section"
-            >
-              <p
-                v-for="(product , i) in products"
-                inf-class-name="inf-MjY5OQ"
-                class="p-10 inf-MjU4Ng inf-MjY5OQ"
-                data-gjs-tagname="p"
-                data-gjs-type="text"
-              >
-                {{product.price}}
-              </p>
-            </section>
-            <section
-              v-mount=""
-              v-scope="{
-    name: 'yousef',
-    products: productsRes.products || [],
-    productsLoaded: false,
-    about22() {
-        console.log('go');
-    }
-}"
-              inf-class-name="inf-Mjg4Mg"
-              inf-symbol-id="Mjk4Ng"
-              v-on:click="console.log(true);"
-              inf-css-urls='{"background-image":{"fileName":"pexels-pixabay-33545.jpg","media":{},"rule":".inf-Mjg4Mg"}}'
-              v-effect="about22();
-globalHello()"
-              class="parent minh-60 inf-Mjg4Mg hvr-icon"
-              data-gjs-type="section"
-            >
-              <p
-                v-for="(product , i) in products"
-                inf-class-name="inf-MjY5OQ"
-                class="p-10 inf-MjU4Ng inf-MjY5OQ"
-                data-gjs-tagname="p"
-                data-gjs-type="text"
-              >
-                {{product.price}}
-              </p>
-            </section>
-            <p v-text="" class="p-10" data-gjs-tagname="p" data-gjs-type="text">
-              Insert your Text Here
-            </p>
-          </body> -->
-
+        
+         <!-- ${testScript} -->
           ${pageData.content} ${pageData.footerScripts} ${pageData.globalScript}
-          ${pageData.localScript}
-          ${pageData.mainScripts}
+          ${pageData.localScript} ${pageData.mainScripts}
         </body>
       </html>
     `;
-    previewIframe.current.contentDocument.open();
-    previewIframe.current.contentDocument.write(content);
-    previewIframe.current.contentDocument.close();
+    function htmlToDataUrl(htmlText, mimeType = "text/html") {
+      // Encode the HTML string to base64
+      const base64String = btoa(unescape(encodeURIComponent(htmlText)));
+
+      // Create the data URL
+      return `data:${mimeType};base64,${base64String}`;
+    }
+    // previewIframe.current.contentDocument.open();
+    // previewIframe.current.contentDocument.write(htmlToDataUrl(content));
+    initDBAssetsSw(() => {}).then((sw) => {
+      if (!sw) return;
+      previewIframe.current.srcdoc = content;
+      // previewIframe.current.src = htmlToDataUrl(content);
+    });
+    // previewIframe.current.contentDocument.close();
   };
 
   const reloadPreview = () => {
@@ -374,7 +335,7 @@ globalHello()"
   };
 
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || !showPreview) return;
     // previewIframe.current.contentDocument.location.reload();
     // const content = html`
     //   <!DOCTYPE html>
@@ -435,6 +396,10 @@ globalHello()"
         aria-label="Editor"
         className="overflow-auto"
         style={{ display: showPreview ? "none" : "block", overflow: "auto" }}
+        scope="/"
+        src="about:blank"
+        sandbox="true"
+        // srcDoc="<video src='../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4'></video>"
       ></Canvas>
 
       {/* <FloatingButton/> */}
@@ -513,6 +478,10 @@ globalHello()"
             ref={previewIframe}
             id="preview"
             allowFullScreen
+            // srcDoc={`<video
+            //    src="../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4"
+            //    controls
+            //  ></video>`}
             className={`bg-white w-full h-[calc(100%-60px)]  transition-all border-[5px] rounded-bl-lg rounded-br-lg border-black`}
             // srcDoc={srcDoc}
           ></iframe>
@@ -521,4 +490,3 @@ globalHello()"
     </section>
   );
 });
-

@@ -4,8 +4,12 @@ import { createReusableCmpTool } from "./tools/createReusableCmpTool";
 import { mountAppTool } from "./tools/mountAppTool";
 import { createDynamicTemplate } from "./tools/createDynamicTemplate";
 import { addClickClass, html } from "../helpers/cocktail";
-import { getInfinitelySymbolInfo, isDynamicComponent } from "../helpers/functions";
+import {
+  getInfinitelySymbolInfo,
+  isDynamicComponent,
+} from "../helpers/functions";
 import { unMountAppTool } from "./tools/unMountAppTool";
+import { cloneDeep } from "lodash";
 
 /**
  *
@@ -13,9 +17,12 @@ import { unMountAppTool } from "./tools/unMountAppTool";
  * @returns
  */
 export const addNewTools = (editor) => {
+  let children;
+
   editor.on("component:selected", (args) => {
     const sle = editor.getSelected();
     const symbolInfo = getInfinitelySymbolInfo(sle);
+    !children && (children = editor.Canvas.getResizerEl().children);
     // editor.refresh({ tools.: true });
     // editor.Canvas.refresh({ all: true, spots: true });
 
@@ -23,8 +30,8 @@ export const addNewTools = (editor) => {
 
     if (isDynamicComponent(sle)) {
       createDynamicTemplate(editor);
-      console.log(true , ' yes is dynamic');
-      
+      console.log(true, " yes is dynamic");
+
       // runHsCmdsTool(editor);
     } else {
       // createDynamicTemplate(editor);
@@ -45,7 +52,7 @@ export const addNewTools = (editor) => {
       // tlb-move gjs-no-touch-actions
       // if (!toolbarItemsEl) {
       console.log("hahahahahah");
-      toolbarEl.innerHTML='';
+      toolbarEl.innerHTML = "";
       const newToolbarItemsEl = document.createElement("menu");
       newToolbarItemsEl.className = toolbarItemsClass;
       //====================Append Tools===========
@@ -69,7 +76,7 @@ export const addNewTools = (editor) => {
           });
         } else {
           toolEl.addEventListener("click", (ev) => {
-            addClickClass(ev.currentTarget , 'click')
+            addClickClass(ev.currentTarget, "click");
             if (typeof tool.command == "string") {
               editor.runCommand(tool.command);
             } else if (typeof tool.command == "function") {
@@ -85,7 +92,28 @@ export const addNewTools = (editor) => {
     // };
 
     renderTool();
-
-  
+    console.log("resizer : ");
+    // editor.Canvas.getResizerEl().remove()
+    // [...children].forEach((el) => editor.Canvas.getResizerEl().appendChild(el));
+    // editor.Canvas.getResizerEl().innerHTML = "";
+    if (sle.is("wrapper")) {
+      console.log("i am wrapper");
+      return;
+    }
+    // console.log("resizer element : ", editor.Canvas.getResizerEl());
+    // console.log(
+    //   "resizer children html : ",
+    //   editor.Canvas.getResizerEl().innerHTML
+    // );
+    // console.log(
+    //   "resizer children els : ",
+    //   children,
+    //   sle.getEl().__trackedListeners
+    // );
+    // editor.Canvas.getResizerEl().insertAdjacentHTML(
+    //   "beforeend",
+    //   `<div class="gjs-resizer-c" style="display: block;"><i class="gjs-resizer-h gjs-resizer-h-tl" data-gjs-handler="tl"></i><i class="gjs-resizer-h gjs-resizer-h-tc" data-gjs-handler="tc"></i><i class="gjs-resizer-h gjs-resizer-h-tr" data-gjs-handler="tr"></i><i class="gjs-resizer-h gjs-resizer-h-cl" data-gjs-handler="cl"></i><i class="gjs-resizer-h gjs-resizer-h-cr" data-gjs-handler="cr"></i><i class="gjs-resizer-h gjs-resizer-h-bl" data-gjs-handler="bl"></i><i class="gjs-resizer-h gjs-resizer-h-bc" data-gjs-handler="bc"></i><i class="gjs-resizer-h gjs-resizer-h-br" data-gjs-handler="br"></i></div>`
+    // );
+    
   });
 };

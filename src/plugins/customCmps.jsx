@@ -7,6 +7,7 @@ import { Template } from "../Blocks/Template";
 import { Section } from "../Blocks/Section";
 import { Container } from "../Blocks/Container";
 import { Block } from "../Blocks/Block";
+import { Video } from "../Blocks/Video";
 
 /**
  *
@@ -17,6 +18,7 @@ export const customCmps = (editor) => {
   DynamicContainer({ editor });
   DynamicText({ editor });
   Image({ editor });
+  Video({editor})
   // Template({ editor });
   Container({ editor });
   Section({ editor });

@@ -104,8 +104,7 @@ export const AssetsManager = memo(() => {
           sw.postMessage(ev.data);
         });
         setShowLoader(false);
-        console.log('data : ' , ev.data);
-        
+        console.log("data : ", ev.data);
       }
     };
     infinitelyWorker.addEventListener("message", cb);
@@ -158,7 +157,7 @@ export const AssetsManager = memo(() => {
       }));
       const filesSize = getFilesSize(files);
       console.log(filesSize.MB, filesSize.GB);
-      if (filesSize.MB > 80) {
+      if (filesSize.MB > 10) {
         toast.warn(<ToastMsgInfo msg={`Files Size Is Too Large!!`} />);
         return;
       }
@@ -261,7 +260,22 @@ export const AssetsManager = memo(() => {
         value: `url("../assets/${file.name}")`, //`url("${URL.createObjectURL(file)}") , url("../assets/${file.name}") /* buildUrl: url("https://example.com/style.css"); prop: background-image */`,
       });
     } else {
-      editor.getSelected().setAttributes({ src: `../assets/${file.name}` });
+      const el = editor.getSelected().getEl();
+      const tagName = el.tagName.toLowerCase();
+      console.log(
+        tagName,
+        editor.getSelected().getEl(),
+        editor.getSelected().getEl() instanceof HTMLDivElement
+      );
+      const src = `../assets/${file.name}`;
+      editor.getSelected().addAttributes({ src });
+      // editor.getSelected().getView().render();
+      // editor.getSelected().updateView()
+      if (!("src" in el)) {
+        // el.querySelector(`[src]`).setAttribute("src", src);
+        editor.getSelected().replaceWith(editor.getSelected().clone())
+      }
+      // console.log("nooo", !("src" in el));
     }
     // const urls = JSON.parse(selectedEl.getAttributes()[inf_css_urls] || "{}");
     // selectedEl.addAttributes({
@@ -405,42 +419,56 @@ export const AssetsManager = memo(() => {
                   </button>
 
                   <figure
-                    onClick={(ev) => {
-                      ev.stopPropagation();
+                    onDoubleClick={(ev) => {
+                      // ev.stopPropagation();
                       onItemClicked(ev, asset.file);
                     }}
                     className=" p-2 h-[150px]  cursor-pointer rounded-lg  "
                   >
                     {(asset.file.type.includes("video") && (
-                      <>
+                      <section
+                        onClick={(ev) => {
+                          console.log("play");
+                        }}
+                      >
                         <video
-                        className="w-full h-full object-cover"
+                          className="w-full h-full object-cover"
                           onClick={(ev) => {
-                            ev.stopPropagation()
-                            ev.currentTarget.play()
+                            ev.stopPropagation();
+                            ev.preventDefault();
+                            ev.currentTarget.play();
+                            console.log("play");
                           }}
-                          onLoad={(ev)=>{
-                            console.log('video load');
-                            
+                          onDoubleClick={(ev) => {
+                            ev.preventDefault();
+                            ev.stopPropagation();
+                            console.log("dbplay");
+                            onItemClicked(ev, asset.file);
+                          }}
+                          onLoad={(ev) => {
+                            console.log("video load");
                           }}
                           autoPlay={true}
                           muted={true}
                           poster=""
-                          onMouseOver={(ev)=>{
-                            ev.currentTarget.controls = true;
-                          }}
+                          // onMouseOver={(ev)=>{
+                          //   ev.currentTarget.controls = true;
+                          // }}
 
-                          onMouseLeave={(ev)=>{
-                            ev.currentTarget.controls = false
-                          }}
+                          // onMouseLeave={(ev)=>{
+                          //   ev.currentTarget.controls = false
+                          // }}
 
-                          onBlur={(ev)=>{
-                            ev.currentTarget.controls = false
-                          }}
-                          onError={(ev)=>{
-                            console.log('Video dont load correctly' , asset , asset.file ,);
+                          // onBlur={(ev)=>{
+                          //   ev.currentTarget.controls = false
+                          // }}
+                          onError={(ev) => {
+                            console.log(
+                              "Video dont load correctly",
+                              asset,
+                              asset.file
+                            );
                             // ev.currentTarget.load()
-
                           }}
                           // className="w-full h-full"
                           src={`assets/${asset.file.name}`}
@@ -449,7 +477,7 @@ export const AssetsManager = memo(() => {
                         {/* <p className="mt-5 p-1 bg-blue-600 w-fit font-bold rounded-lg">
                           video
                         </p> */}
-                      </>
+                      </section>
                     )) ||
                       (asset.file.type.includes("audio") && (
                         <audio

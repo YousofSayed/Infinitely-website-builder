@@ -45,6 +45,13 @@ let storeTimeout;
  */
 export const IDB = (editor) => {
   const projectID = localStorage.getItem(current_project_id);
+  const mainCreateObjectURLMethod = URL.createObjectURL;
+  const willRevokedURLs = new Map();
+  URL.createObjectURL = (obj) => {
+    const url = mainCreateObjectURLMethod(obj);
+    willRevokedURLs.set(url);
+    return url;
+  };
 
   async function getAllSymbolsStyles() {
     const projectData = await await getProjectData();
@@ -87,7 +94,11 @@ export const IDB = (editor) => {
       }
 
       editor.DomComponents.clear();
-
+      willRevokedURLs.forEach((value, key) => {
+        console.log("From revoked map : ", value, key);
+        URL.revokeObjectURL(value);
+      });
+      willRevokedURLs.clear();
       loadScripts(editor, projectData);
       const storageManager = editor.StorageManager;
 
@@ -106,40 +117,24 @@ export const IDB = (editor) => {
         const allSymbolsStyle = await getAllSymbolsStyles();
         const { document } = parseHTML(doDocument(htmlPage));
         const cssPropsUrlsElsArr = [];
+        const srcElements = [...document.querySelectorAll(`[src]`)];
 
-        // const loadCssProps = () => {
-        //   const urlsEls = document.body.querySelectorAll(`[${inf_css_urls}]`);
+        // await Promise.all(
+        //   srcElements.map(async (el) => {
+        //     console.error("srccc :", el);
+        //     const url = await (await fetch(el.src)).blob();
+        //     el.src = URL.createObjectURL(url);
+        //     console.error("srccc :", el.src);
+        //     return url;
+        //   })
+        // );
 
-        //   const setedProps = [
-        //     ...new Set(
-        //       Array.from(urlsEls).map((el) =>
-        //         el.getAttribute(`${inf_css_urls}`)
-        //       )
-        //     ),
-        //   ].map((props) => JSON.parse(props || "{}"));
-        //   cssPropsUrlsElsArr.push(...setedProps);
-        // };
-
-        // const loadMedia = async () => {
-        //   const els = document.body.querySelectorAll(`[${inf_build_url}]`);
-        //   const urls = {};
-        //   const noRepeatedUrls = await Promise.all(
-        //     [
-        //       ...new Set(
-        //         Array.from(els).map((el) => el.getAttribute(inf_build_url))
-        //       ),
-        //     ].map(async (url) => {
-        //       urls[url] = (await parseInfinitelyURL(url)).blobUrl;
-        //       return urls[url];
-        //     })
-        //   );
-
-        //   els.forEach((el) => {
-        //     el.src = urls[el.getAttribute(inf_build_url)];
-        //   });
-
-        //   console.log("URLS : ", urls);
-        // };
+        console.error(
+          "innner :",
+          [...document.querySelectorAll(`[src]`)]
+            .map((el) => el.outerHTML)
+            .join("")
+        );
 
         const getFonts = () => {
           const fonts = Object.values(projectData.fonts);
@@ -151,77 +146,7 @@ export const IDB = (editor) => {
           );
           return stringFonts.join("\n");
         };
-        // ${URL.createObjectURL(font.file)}
-        // loadCssProps();
-        // await loadMedia();
-        // const blobRegex = /url\(['"]?(blob:[^'")]+)['"]?\)/g;
-        // const infinitelyRgx = /url\((\"|\'|\`)?infinitely(.+)(\"|\'|\`)?\)/g;
-        // const stylesheet = parseCss(
-        //   `
-        //     ${getFonts()}
-        //     ${allSymbolsStyle}
-        //     ${await currentPage.css.text()}
-        //   `
-        //     .replace(/{/g, " {\n  ")
-        //     .replace(/}/g, "\n}\n")
-        //     .replace(/;/g, ";\n  ")
-        //     .replace(/(@media[^{]*){/, "$1 {\n")
-        //     .replace(/\n\s*\n/g, "\n")
-        // );
-        // await Promise.all(
-        //   stylesheet.stylesheet.rules.map(async (rule) => {
-        //     if (rule?.declarations) {
-        //       const decs = rule?.declarations;
-        //       console.log("decs : ", decs);
-        //       await Promise.all(
-        //         decs.map(async (dec) => {
-        //           /**
-        //            * @type {{value : string , property : string}}
-        //            */
-        //           const { value, property } = dec;
-        //           if (value?.match?.(blobRegex)) {
-        //             const splitted = [...new Set(value.split(","))];
-        //             const blobUrlIndex = splitted.findIndex((url) =>
-        //               blobRegex.test(url)
-        //             );
-        //             const infUrl = splitted
-        //               .find((url) => infinitelyRgx.test(url))
-        //               ?.replaceAll('url', "")
-        //               .slice(2,-2)
 
-        //             console.log("truuuu match", blobUrlIndex, infUrl);
-        //             if (infUrl) {
-        //               console.log((await parseInfinitelyURL(infUrl)).blobUrl);
-
-        //               splitted[0] = `url(${
-        //                 (await parseInfinitelyURL(infUrl)).blobUrl
-        //               })`;
-        //               dec.value = splitted.join(" , ");
-        //             }
-        //           }
-        //           return dec;
-        //         })
-        //       );
-        //     }
-
-        //     return rule;
-        //   })
-        // );
-        // const str = await replaceCssURLS(
-        //   `
-        //    ${getFonts()}
-        //     ${allSymbolsStyle}
-        //     ${await currentPage.css.text()}
-        //   `,
-        //   async (url) => (await parseInfinitelyURL(url)).blobUrl
-        // );
-
-        // editor.setComponents(JSON.parse(cmps));
-        // console.log("Allllllllllllllllll: $:", minify(str).css);
-
-        // Set styles without triggering store
-
-        // Restore autosave setting
         editor.setStyle(``, { avoidStore: true });
         editor.CssComposer.addRules(
           minify(`
@@ -230,7 +155,44 @@ export const IDB = (editor) => {
           ${allSymbolsStyle}
          `).css
         );
-        editor.setComponents(document.body.innerHTML, {});
+        // const mainIframeFunction = editor.Canvas.getFrameEl().contentDocument.write ;
+        // console.log('mainIframeFunction : ' , mainIframeFunction);
+
+        // editor.setComponents( `<iframe src='../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4'></iframe>` );
+
+        console.error("innner : ", document.body.innerHTML);
+
+        editor.setComponents(document.body.innerHTML);
+        // editor.setComponents(
+        //   `<img data-gjs-highlightable="true" id="ilmj" data-gjs-type="image" draggable="true" src="../assets/SD7000-.png" class="Mjg0NQ" />
+        //   <div id="iook" data-gjs-type="video" draggable="true"   class="MjgxNA"><video src='../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4' controles="true"  allowfullscreen="allowfullscreen"></video></div>
+        //   <div id="iook" data-gjs-type="video" draggable="true"   class="MjgxNA"><video src='../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4' controles="true"  allowfullscreen="allowfullscreen"></video></div>
+        //   `
+        // );
+
+        // editor.EditorModel.b
+        // editor.addComponents(
+        //   `<video
+        //     src="../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4"
+        //     controls
+        //   ></video>`,
+        //   { }
+        // );
+        // editor.Canvas.
+        // editor.Canvas.config.frameContent=`<video
+        //     src="../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4"
+        //     controls
+        //   ></video>`
+
+        // editor.on('canvas:frame:load',(model)=>{
+        //   console.log('winnnnnnnnnnnn : ' , model);
+
+        //   // editor.Canvas.getFrameEl().srcdoc = `<video
+        //   //   src="../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4"
+        //   //   controls
+        //   // ></video>`
+        //   model.window.navigator.serviceWorker.register(`dbAssets-sw.js` )
+        // })
 
         //         console.log(
         //           "csssssss:",
@@ -282,6 +244,7 @@ export const IDB = (editor) => {
       editor.render();
       storageManager.setAutosave(originalAutosave);
       editor.clearDirtyCount();
+      URL.createObjectURL = mainCreateObjectURLMethod;
       return {};
     },
 
@@ -566,7 +529,7 @@ export const IDB = (editor) => {
                       withProps: true,
                       // attributes:(cmp , attr)=>{
                       //   console.log('save attrs :' , cmp.get('type') , attr);
-                        
+
                       // attr
                       // }
                       // asDocument: true,
@@ -761,17 +724,19 @@ const loadScripts = async (editor, projectData) => {
       ).length;
       !isExist && editor.config.canvas.scripts.push(libData);
     });
-console.log('cssLibs : ' , cssLibs);
+    console.log("cssLibs : ", cssLibs);
 
     cssLibs
       .concat([{ file: projectData.globalCss, name: "globalCss" }])
-      .forEach((lib) => { 
-        if(typeof lib == 'string'){
+      .forEach((lib) => {
+        if (typeof lib == "string") {
           return lib;
         }
         const libData = getCssLib(lib);
         const isExist = editor.config.canvas.styles.find(
-          (lib) => typeof lib != 'string' && lib.name.toLowerCase() == libData.libData.name.toLowerCase()
+          (lib) =>
+            typeof lib != "string" &&
+            lib.name.toLowerCase() == libData.libData.name.toLowerCase()
         );
         !isExist &&
           editor.config.canvas.styles.push({

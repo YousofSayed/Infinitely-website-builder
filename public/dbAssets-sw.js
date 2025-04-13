@@ -9,6 +9,7 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   console.log("SW: Activating...");
+  event.waitUntil(clients.claim());
   // self.skipWaiting();
   // event.waitUntil(self.clients.claim());
 });
@@ -33,7 +34,7 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(new Response(new Blob(["ok"], { type: "text/plain" })));
     return;
   }
-  console.log(`fetch from db assets url : ${url.pathname} ,rororor`);
+  // console.log(`fetch from db assets url : ${url.pathname} ,rororor`);
   (async () => {
     const splittedUrl = url.pathname.split("/");
     const fileName = splittedUrl[splittedUrl.length - 1];
@@ -61,22 +62,25 @@ self.addEventListener("fetch", (event) => {
             fileName
            }
         );
-      console.log(
-        "sw worker 2m : ",
-        projectId,
-        projectData,
-        fileFromDB,
+      // console.log(
+      //   "sw worker 2m : ",
+      //   projectId,
+      //   projectData,
+      //   fileFromDB,
 
-        fileName.toLowerCase()
-      );
-      console.log('files name :' ,assets.map(asset=>asset.file.name) ,fileName );
+      //   fileName.toLowerCase()
+      // );
+      // console.log('files name :' ,assets.map(asset=>asset.file.name) ,fileName );
       if (fileFromDB) {
         
-        console.log("sw file:", fileFromDB.file.name);
+        // console.log("sw file:", fileFromDB.file.name);
         event.respondWith(
           new Response(fileFromDB.file, {
             status: 200,
-            headers: { "Content-Type": fileFromDB.file.type },
+            headers: {
+              "Content-Type": fileFromDB.file.type || "application/octet-stream",
+              "Access-Control-Allow-Origin": "*", // For cross-origin iframes
+            },
           })
         );
         // return ;
