@@ -32,6 +32,7 @@ export const muatationDomElements = (editor) => {
           : "";
         srcUrl && el.setAttribute("src", srcUrl) && el.urls.push(srcUrl);
         hrefUrl && el.setAttribute("href", hrefUrl) && el.urls.push(hrefUrl);
+        el.load?.()
         el.loadTimes++;
       } catch (error) {
         console.error("hahahahahahaha");
@@ -53,6 +54,7 @@ export const muatationDomElements = (editor) => {
             if (node.tagName) {
               console.log("from observer node is:", node);
               init(node);
+              observer.observe(node);
               // const attrNames = node.getAttributeNames();
               // const isSrc = attrNames.includes("src");
               // const isHref = attrNames.includes("href");

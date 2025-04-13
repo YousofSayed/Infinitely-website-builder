@@ -21,6 +21,7 @@ import {
   getCurrentSelector,
   getInfinitelySymbolInfo,
   getProjectData,
+  getProjectSettings,
 } from "../../helpers/functions";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
@@ -273,7 +274,13 @@ export const AssetsManager = memo(() => {
       // editor.getSelected().updateView()
       if (!("src" in el)) {
         // el.querySelector(`[src]`).setAttribute("src", src);
-        editor.getSelected().replaceWith(editor.getSelected().clone())
+        getProjectSettings().set({
+          navigate_to_style_when_Select: false,
+        });
+        editor.getSelected().replaceWith(editor.getSelected().clone());
+        getProjectSettings().set({
+          navigate_to_style_when_Select: true,
+        });
       }
       // console.log("nooo", !("src" in el));
     }
