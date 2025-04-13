@@ -58,6 +58,13 @@ export const muatationDomElements = (editor) => {
                 childList: true,
                 subtree: true,
               });
+
+              node.childNodes.forEach(childNode=>{
+                observer.observe(childNode,{
+                  childList: true,
+                  subtree: true,
+                });
+              })
               // const attrNames = node.getAttributeNames();
               // const isSrc = attrNames.includes("src");
               // const isHref = attrNames.includes("href");
