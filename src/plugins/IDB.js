@@ -162,7 +162,12 @@ export const IDB = (editor) => {
 
         console.error("innner : ", document.body.innerHTML);
 
+        editor.once('load',()=>{
+          
+          // editor.Canvas.getFrameEl().sandbox =  `allow-top-navigation-by-user-activation allow-top-navigation allow-scripts allow-same-origin allow-presentation`
+        })
         editor.setComponents(document.body.innerHTML);
+       
         // editor.setComponents(
         //   `<img data-gjs-highlightable="true" id="ilmj" data-gjs-type="image" draggable="true" src="../assets/SD7000-.png" class="Mjg0NQ" />
         //   <div id="iook" data-gjs-type="video" draggable="true"   class="MjgxNA"><video src='../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4' controles="true"  allowfullscreen="allowfullscreen"></video></div>

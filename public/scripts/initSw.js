@@ -1,0 +1,1 @@
+navigator.serviceWorker.register('/dbAssets-sw-ifr.js' );

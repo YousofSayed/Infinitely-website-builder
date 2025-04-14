@@ -1,6 +1,7 @@
 import { Editor } from "@grapesjs/react";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import grapesjs from "grapesjs";
+// import  "../../helpers/grapesjs.js";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import {
   blocksStt,
@@ -77,20 +78,79 @@ export const GJEditor = memo(({ children }) => {
       // ev.on("load", () => {
       //   console.log("csss ruuuules", ev.CssComposer.getAll().models);
       // });
-     
-      ev.on('load', () => {
-        // Get canvas iframe element
-        const canvasIframe = ev.Canvas.getFrameEl();
-        console.log('ifrmae origin : ',ev.Canvas.getWindow().origin);
-        console.log('main origin : ',window.origin);
-        
-        // Set attributes on the iframe
-        // canvasIframe.setAttribute('class', 'gjs-custom-canvas');
-        // canvasIframe.setAttribute('title', 'GrapesJS Editor Canvas');
-        // canvasIframe.setAttribute('data-custom', 'editor-workspace');
-        // canvasIframe.setAttribute('sandbox', 'allow-same-origin allow-scripts');
-        // canvasIframe.setAttribute('src', 'about:blank');
-    });
+      const editor = ev; // Assuming 'ev' is your GrapesJS editor instance
+      // editor.on("load", () => {
+      //   console.log("Editor loaded, attempting to override document.write");
+
+      //   // Get the canvas iframe element
+      //   const iframe = editor.Canvas.getFrameEl();
+      //   if (!iframe) {
+      //     console.error("No iframe found in Canvas.getFrameEl()");
+      //     return;
+      //   }
+      //   console.log("Iframe element:", iframe);
+
+      //   // Function to override document.write
+      //   const overrideDocumentWrite = () => {
+      //     try {
+      //       const iframeDoc =
+      //         iframe.contentDocument || iframe.contentWindow.document;
+      //       if (iframeDoc) {
+      //         console.log("Iframe document accessed successfully");
+      //         // Store original document.write for reference
+      //         const originalWrite = iframeDoc.write;
+      //         // Override document.write
+      //         iframeDoc.write = (content) => {
+      //           console.log("document.write called with content:", content);
+      //           // Prevent default behavior
+      //           return;
+      //           // Optional: Call original if needed: originalWrite.call(iframeDoc, content);
+      //         };
+      //         // Test the override
+      //         iframeDoc.write("Test override");
+      //       } else {
+      //         console.warn("Iframe document is null or inaccessible");
+      //       }
+      //     } catch (e) {
+      //       console.warn("Error accessing iframe document:", e);
+      //     }
+      //   };
+
+      //   // Check if iframe is loaded
+      //   if (iframe.contentDocument?.readyState === "complete") {
+      //     console.log("Iframe already loaded, overriding now");
+      //     overrideDocumentWrite();
+      //   } else {
+      //     console.log("Waiting for iframe to load");
+      //     iframe.addEventListener(
+      //       "load",
+      //       () => {
+      //         console.log("Iframe load event fired");
+      //         overrideDocumentWrite();
+      //       },
+      //       { once: true }
+      //     );
+      //   }
+
+      //   // Handle canvas reloads
+      //   editor.on("canvas:frame:reload", () => {
+      //     console.log("Canvas frame reloaded, reapplying override");
+      //     overrideDocumentWrite();
+      //   });
+
+      //   // Log origins for debugging
+      //   console.log(
+      //     "Iframe origin:",
+      //     iframe.contentWindow?.origin || "unknown"
+      //   );
+      //   console.log("Main origin:", window.origin);
+
+      //   // Optional: Override document.write in main document for testing
+      //   document.write = (content) => {
+      //     console.log("Main document.write called with content:", content);
+      //   };
+      // });
+
       ev.on("storage:end:store", () => {});
       // setCmdsContext();
       ev.runCommand("core:component-outline");
@@ -150,12 +210,12 @@ export const GJEditor = memo(({ children }) => {
         setSelector("");
         sessionStorage.removeItem(current_symbol_id);
         const projectSettings = getProjectSettings().projectSettings;
-        if(projectSettings.navigate_to_style_when_Select){
-          navigate("/edite/styling")
+        if (projectSettings.navigate_to_style_when_Select) {
+          navigate("/edite/styling");
         }
         // console.log((!isBlockedNavigatedPath ||
         //   !projectSettings.navigate_to_style_when_Select) , getProjectSettings().projectSettings.navigate_to_style_when_Select);
-        
+
         // (!isBlockedNavigatedPath ||
         //   !projectSettings.navigate_to_style_when_Select) &&
         //   navigate("/edite/styling");
@@ -278,17 +338,19 @@ export const GJEditor = memo(({ children }) => {
             // 'core:redo': '', // Unbind Ctrl+Y
           },
         },
-        protectedCss:``,
+        protectedCss: ``,
         // customUI: true,
         // headless:true,
         // autorender: false,
         // plugins:[mutationPlugin],
         canvas: {
           scripts: [
+            { src: `/scripts/initSw.js`, name: "initSw.js" },
+
             // {src:`${jsToDataURL(`console.log('data js url.............@')`)}`}
           ],
           styles: [],
-          
+
           customBadgeLabel:
             /**
              *

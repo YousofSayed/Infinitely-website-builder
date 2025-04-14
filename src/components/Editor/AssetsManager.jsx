@@ -277,7 +277,8 @@ export const AssetsManager = memo(() => {
         getProjectSettings().set({
           navigate_to_style_when_Select: false,
         });
-        editor.getSelected().replaceWith(editor.getSelected().clone());
+        const newSle = editor.getSelected().replaceWith(editor.getSelected().clone())[0];
+        editor.select(newSle);
         getProjectSettings().set({
           navigate_to_style_when_Select: true,
         });

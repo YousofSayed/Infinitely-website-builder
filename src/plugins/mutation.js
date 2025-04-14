@@ -6,15 +6,16 @@ import { getProjectData } from "../helpers/functions";
  * @param {import('grapesjs').Editor} editor
  */
 export const muatationDomElements = async (editor) => {
-  if (!isChrome()) {
+  if ( !isChrome()) {
     console.log(
       "Your browser does not need to obeserve assets sw.js will handle every thing for you 💙"
     );
 
     return;
   }
-  const projectData = await getProjectData();
-  const urls = [];
+  // !isChrome() ||
+  // const projectData = await getProjectData();
+  // const urls = [];
   /**
    *
    * @param {HTMLElement} el
