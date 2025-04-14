@@ -2,11 +2,21 @@ import { isChrome } from "../helpers/bridge";
 import { getProjectData } from "../helpers/functions";
 
 /**
+ * @type {MutationObserverInit}
+ */
+const observerConfig = {
+  attributes: true,
+  childList: true,
+  characterData: true,
+  subtree: true,
+};
+
+/**
  *
  * @param {import('grapesjs').Editor} editor
  */
 export const muatationDomElements = async (editor) => {
-  if ( !isChrome()) {
+  if (!isChrome()) {
     console.log(
       "Your browser does not need to obeserve assets sw.js will handle every thing for you 💙"
     );
@@ -81,19 +91,13 @@ export const muatationDomElements = async (editor) => {
               if (!node.hasAttribute("observed")) {
                 init(node);
               }
-              observer.observe(node, {
-                childList: true,
-                subtree: true,
-              });
+              observer.observe(node, observerConfig);
 
               node.querySelectorAll("*").forEach((el) => {
                 if (!el.hasAttribute("observed")) {
                   init(el);
                 }
-                observer.observe(el, {
-                  childList: true,
-                  subtree: true,
-                });
+                observer.observe(el,observerConfig);
               });
               // node.childNodes.forEach(childNode=>{
               //   observer.observe(childNode,{
@@ -139,9 +143,6 @@ export const muatationDomElements = async (editor) => {
 
     console.log("from observer body is : ", body, ev.window.document.body);
     body.querySelectorAll("*").forEach((el) => init(el));
-    observer.observe(body, {
-      childList: true,
-      subtree: true,
-    });
+    observer.observe(body, observerConfig);
   });
 };

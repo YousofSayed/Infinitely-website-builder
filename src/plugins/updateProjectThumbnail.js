@@ -27,7 +27,7 @@ export const updateProjectThumbnail = (editor) => {
         props: {
           projectId: +localStorage.getItem(current_project_id),
           data: {
-            imgSrc: blob //await getImgAsBlob(editor.Canvas.getBody()),
+            imgSrc: blob // await getImgAsBlob(editor.Canvas.getBody()),
           },
         },
       });

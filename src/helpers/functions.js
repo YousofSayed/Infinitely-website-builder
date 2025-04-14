@@ -1731,30 +1731,30 @@ export async function getImgAsBlob(el, mimeType = "image/webp") {
     throw new Error("No Elememt Founded...")
     // return null;
   }
-  // return await new Promise(async (res, rej) => {
-  //   await (
-  //     await html2canvas(el, {
-  //       // foreignObjectRendering: true,
-  //       // allowTaint: true,
-  //       useCORS: true,
-  //       // imageTimeout: 200,
-  //       windowWidth: window.innerWidth,
-  //       windowHeight:window.innerHeight,
+  return await new Promise(async (res, rej) => {
+    await (
+      await html2canvas(el, {
+        // foreignObjectRendering: true,
+        // allowTaint: true,
+        useCORS: true,
+        // imageTimeout: 200,
+        windowWidth: window.innerWidth,
+        windowHeight:window.innerHeight,
         
-  //       // windowHeight: 300,
-  //       // width:300,
-  //       // height: 300,
-  //     })
-  //   ).toBlob(
-  //     (blob) => {
-  //       res(blob);
-  //     },
-  //     mimeType,
-  //     // 0.5
-  //   );
+        // windowHeight: 300,
+        // width:300,
+        // height: 300,
+      })
+    ).toBlob(
+      (blob) => {
+        res(blob);
+      },
+      mimeType,
+      // 0.5
+    );
 
-  // });
-  return await toBlob(el)
+  });
+  // return await toBlob(el)
 }
 
 /**
