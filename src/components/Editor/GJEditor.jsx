@@ -176,11 +176,11 @@ export const GJEditor = memo(({ children }) => {
       //   }
       // );
 
-      ev.on("storage:end:load", () => {
-        // const cmps = ev.getComponents().models;
-        // cmps.forEach((cmp) => {
-        // });
-      });
+      // ev.on("storage:end:load", () => {
+      //   // const cmps = ev.getComponents().models;
+      //   // cmps.forEach((cmp) => {
+      //   // });
+      // });
       // setCmdsContext(); //cmp
 
       ev.on("component:deselected", () => {
@@ -345,7 +345,7 @@ export const GJEditor = memo(({ children }) => {
         // plugins:[mutationPlugin],
         canvas: {
           scripts: [
-            { src: `/scripts/initSw.js`, name: "initSw.js" },
+            // { src: `/scripts/initSw.js`, name: "initSw.js" },
 
             // {src:`${jsToDataURL(`console.log('data js url.............@')`)}`}
           ],
