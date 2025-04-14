@@ -129,12 +129,12 @@ export const IDB = (editor) => {
         //   })
         // );
 
-        console.error(
-          "innner :",
-          [...document.querySelectorAll(`[src]`)]
-            .map((el) => el.outerHTML)
-            .join("")
-        );
+        // console.error(
+        //   "innner :",
+        //   [...document.querySelectorAll(`[src]`)]
+        //     .map((el) => el.outerHTML)
+        //     .join("")
+        // );
 
         const getFonts = () => {
           const fonts = Object.values(projectData.fonts);

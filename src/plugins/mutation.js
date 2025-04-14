@@ -1,43 +1,65 @@
+import { isChrome } from "../helpers/bridge";
+import { getProjectData } from "../helpers/functions";
+
 /**
  *
  * @param {import('grapesjs').Editor} editor
  */
-export const muatationDomElements = (editor) => {
-  if(!navigator.userAgent.toLowerCase().includes('chrome')){
-    console.log('Your browser does not need to obeserve assets sw.js will handle every thing for you 💙');
-    
-    return
+export const muatationDomElements = async (editor) => {
+  if (!isChrome()) {
+    console.log(
+      "Your browser does not need to obeserve assets sw.js will handle every thing for you 💙"
+    );
+
+    return;
   }
+  const projectData = await getProjectData();
   const urls = [];
   /**
    *
    * @param {HTMLElement} el
    */
-  const init = (el) => {
-    el.addEventListener("error", async () => {
-      try {
-        !el.loadTimes && (el.loadTimes = 0);
-        !el.urls && (el.urls = []);
-        if (el.loadTimes > 3) {
-          throw new Error("More calling");
-        }
-        el.urls.forEach((url) => URL.revokeObjectURL(url));
-        const srcAttr = el.getAttribute("src");
-        const hrefAttr = el.getAttribute("href");
-        const srcUrl = srcAttr
-          ? URL.createObjectURL(await (await fetch(srcAttr)).blob())
-          : "";
-        const hrefUrl = hrefAttr
-          ? URL.createObjectURL(await (await fetch(hrefAttr)).blob())
-          : "";
-        srcUrl && el.setAttribute("src", srcUrl) && el.urls.push(srcUrl);
-        hrefUrl && el.setAttribute("href", hrefUrl) && el.urls.push(hrefUrl);
-        // el.load?.()
-        el.loadTimes++;
-      } catch (error) {
-        console.error("hahahahahahaha");
+  const init = async (el) => {
+    const isSupportedAttr = (attribute = "", el) => {
+      if (!attribute || !el) {
+        throw new Error(`Expected two params`);
       }
-    });
+      return attribute in el;
+    };
+
+    // el.addEventListener('load',(ev)=>{
+    //   ev.preventDefault()
+    // })
+
+    // el.addEventListener("error", async () => {
+    try {
+      !el.loadTimes && (el.loadTimes = 0);
+      !el.urls && (el.urls = []);
+      if (el.loadTimes > 3) {
+        throw new Error("More calling");
+      }
+      el.urls.forEach((url) => URL.revokeObjectURL(url));
+
+      if (!isSupportedAttr("src", el) || isSupportedAttr("href", el)) {
+        return;
+      }
+      const srcAttr = el.getAttribute("src");
+      const hrefAttr = el.getAttribute("href");
+      const srcUrl = srcAttr
+        ? URL.createObjectURL(await (await fetch(srcAttr)).blob())
+        : "";
+      const hrefUrl = hrefAttr
+        ? URL.createObjectURL(await (await fetch(hrefAttr)).blob())
+        : "";
+      srcUrl && el.setAttribute("src", srcUrl) && el.urls.push(srcUrl);
+      hrefUrl && el.setAttribute("href", hrefUrl) && el.urls.push(hrefUrl);
+      el.load?.();
+      el.loadTimes++;
+      el.setAttribute("observed", "true");
+    } catch (error) {
+      console.error(error);
+    }
+    // });
   };
 
   editor.on("canvas:frame:load:body", (ev) => {
@@ -49,22 +71,35 @@ export const muatationDomElements = (editor) => {
       entries.forEach((entry) => {
         console.log("from observer nodes is:", entry.addedNodes);
         if (entry.target instanceof HTMLElement) {
+          if (!entry.target.hasAttribute("observed")) {
+            init(entry.target);
+          }
           entry.addedNodes.forEach((node) => {
-            console.log();
             if (node.tagName) {
               console.log("from observer node is:", node);
-              init(node);
-              observer.observe(node,{
+              if (!node.hasAttribute("observed")) {
+                init(node);
+              }
+              observer.observe(node, {
                 childList: true,
                 subtree: true,
               });
 
-              node.childNodes.forEach(childNode=>{
-                observer.observe(childNode,{
+              node.querySelectorAll("*").forEach((el) => {
+                if (!el.hasAttribute("observed")) {
+                  init(el);
+                }
+                observer.observe(el, {
                   childList: true,
                   subtree: true,
                 });
-              })
+              });
+              // node.childNodes.forEach(childNode=>{
+              //   observer.observe(childNode,{
+              //     childList: true,
+              //     subtree: true,
+              //   });
+              // })
               // const attrNames = node.getAttributeNames();
               // const isSrc = attrNames.includes("src");
               // const isHref = attrNames.includes("href");
