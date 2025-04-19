@@ -49,19 +49,19 @@ export const Video = ({ editor }) => {
 
         op.el.addEventListener("click", () => {
           console.log("clickckckck");
-          editor.Canvas.removeSpots({ type: "resize", component: op.model });
-          editor.Canvas.addSpot({
-            type: "resize",
-            component: op.model,
-            force: true,
-            // componentView:sle.view,
-            // frame:sle.frame,
-            // boxRect:{
-            //   height:400,
-            //   width:400
-            // }
-          });
-          editor.Canvas.getCanvasView().updateFrames();
+          // editor.Canvas.removeSpots({ type: "resize", component: op.model });
+          // editor.Canvas.addSpot({
+          //   type: "resize",
+          //   component: op.model,
+          //   force: true,
+          //   // componentView:sle.view,
+          //   // frame:sle.frame,
+          //   // boxRect:{
+          //   //   height:400,
+          //   //   width:400
+          //   // }
+          // });
+          // editor.Canvas.getCanvasView().updateFrames();
 
           // op.model.set('resizable' , {
           //   tl: 0,
@@ -153,7 +153,21 @@ export const Video = ({ editor }) => {
         //   class: classId,
         // },
         // content: html`<video src=""></video>`,
-
+        resizable: {
+          tl: 0, tc: 0, tr: 0,
+          bl: 0, bc: 0, br: 0,
+          updateTarget: function(element, rect, context)
+          {
+              //console.log('custom updateTarget invoked');
+  
+              var elStyle = element.style;
+  
+              elStyle.width = rect.w + 'px';
+              elStyle.minWidth = rect.w + 'px';
+              elStyle.maxWidth = rect.w + 'px';
+              elStyle.flexGrow = 0;
+          }
+      }
         // attributes: {
         //   //   src: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3R5bGU9ImZpbGw6IHJnYmEoMCwwLDAsMC4xNSk7IHRyYW5zZm9ybTogc2NhbGUoMC43NSkiPgogICAgICAgIDxwYXRoIGQ9Ik04LjUgMTMuNWwyLjUgMyAzLjUtNC41IDQuNSA2SDVtMTYgMVY1YTIgMiAwIDAgMC0yLTJINWMtMS4xIDAtMiAuOS0yIDJ2MTRjMCAxLjEuOSAyIDIgMmgxNGMxLjEgMCAyLS45IDItMnoiPjwvcGF0aD4KICAgICAgPC9zdmc+",
         //   class: `${classId}`,

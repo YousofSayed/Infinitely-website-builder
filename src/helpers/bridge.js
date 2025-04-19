@@ -496,6 +496,10 @@ export function getFilesSize(files) {
 }
 
 
-export function isChrome() {
-  return navigator.userAgent.toLowerCase().includes('chrome')
+export function isChrome( callback=  (bool = false)=>{}) {
+  const cond = navigator.userAgent.toLowerCase().includes('chrome');
+  if(cond){
+    callback(cond)
+  }
+  return cond
 }

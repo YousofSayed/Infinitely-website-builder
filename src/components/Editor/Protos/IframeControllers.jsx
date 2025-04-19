@@ -1,4 +1,4 @@
-import React, {  useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { Li } from "../../Protos/Li";
 import { Icons } from "../../Icons/Icons";
 import { useEditorMaybe } from "@grapesjs/react";
@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { mount, unMount } from "../../../helpers/functions";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./ToastMsgInfo";
+import { isChrome } from "../../../helpers/bridge";
 
 export const IframeControllers = () => {
   const editor = useEditorMaybe();
@@ -74,8 +75,7 @@ export const IframeControllers = () => {
     const cb = () => {
       isEditorLoad.current = false;
       editor?.Canvas?.getBody?.()?.setAttribute("loaded", true);
-      console.log('i should load');
-      
+      console.log("i should load");
     };
     editor.on("canvas:frame:load:body", cb);
     return () => {
@@ -94,11 +94,35 @@ export const IframeControllers = () => {
   };
 
   const clearIFrameBody = () => {
-    editor.select(null);
-    editor.DomComponents.clear();
-    // editor.getComponents().models.forEach(cmp=>cmp.remove())
-    editor.refresh({ tools: true });
-    editor.Canvas.refresh({ all: true, spots: true });
+    isChrome((bool) => {
+      // editor.Canvas.getFrameEl().setAttribute("srcdoc" , '');
+      // editor.Canvas.getFrameEl().setAttribute("sandbox" , '');
+      // editor.select(null);
+      editor.Components.clear();
+      console.log('tools : ' , editor.Components.getComponent('sda'));
+      
+      // editor.Canvas.getFrameEl().contentWindow.location.reload()
+      // editor.Canvas.getFrameEl().srcdoc = "about:blank";
+      // editor.Canvas.getFrameEl().sandbox = "allow-same-origin allow-scripts";
+      if(!bool){
+        editor.select(null);
+        console.log(editor.Components.getComponents().models);
+        editor.Components.clear();
+      }
+    });
+    // editor.select(null);
+    // console.log(editor.Components.getComponents().models);
+    // editor.Components.clear();
+    
+    // // editor.getComponents().models.forEach(cmp=>cmp.remove())
+    // editor.refresh({ tools: true });
+    // editor.Canvas.refresh({ all: true, spots: true });
+    // isChrome((bool) => {
+    //   console.error("chrome");
+
+      // editor.Canvas.getFrameEl().srcdoc = "about:blank";
+      // editor.Canvas.getFrameEl().sandbox = "allow-same-origin allow-scripts";
+    // });
   };
 
   const setComponentsView = () => {
@@ -216,8 +240,8 @@ export const IframeControllers = () => {
           // editor.store();
           console.log(editor?.Canvas?.getBody?.());
           // isEditorLoad.current
-          const body = editor?.Canvas?.getBody()
-          if (!body && body.getAttribute('loaded') != 'true') {
+          const body = editor?.Canvas?.getBody();
+          if (!body && body.getAttribute("loaded") != "true") {
             toast.warn(<ToastMsgInfo msg={`Wait until load end`} />);
             return;
           }

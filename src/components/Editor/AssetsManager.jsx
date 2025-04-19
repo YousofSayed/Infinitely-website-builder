@@ -399,7 +399,7 @@ export const AssetsManager = memo(() => {
           className={`w-full h-full  bg-gray-950 rounded-lg p-2 overflow-auto grid grid-cols-[repeat(auto-fill,minmax(25%,1fr))] grid-rows-[repeat(auto-fill,minmax(200px,200px))] justify-start gap-[15px] `}
         > */}
         {showLoader && <Loader />}
-        {!!files.length && (
+        {!!files.length && !showLoader && (
           <VirtuosoGrid
             totalCount={files.length}
             components={GridComponents}

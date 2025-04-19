@@ -10,7 +10,7 @@ import {
 } from "../../helpers/atoms";
 import { Button } from "../Protos/Button";
 import { Icons } from "../Icons/Icons";
-import { addClickClass, html } from "../../helpers/cocktail";
+import { addClickClass, html, uniqueID } from "../../helpers/cocktail";
 import { iframeType } from "../../helpers/jsDocs";
 import {
   getProjectData,
@@ -28,6 +28,7 @@ import { InfinitelyEvents } from "../../constants/infinitelyEvents";
 import monacoLoader from "@monaco-editor/loader";
 import { infinitelyWorker } from "../../helpers/infinitelyWorker";
 import { initDBAssetsSw } from "../../serviceWorkers/initDBAssets-sw";
+import { random } from "lodash";
 
 export const Iframe = memo(() => {
   const showLayers = useRecoilValue(showLayersState);
@@ -396,9 +397,6 @@ export const Iframe = memo(() => {
         aria-label="Editor"
         className="overflow-auto"
         style={{ display: showPreview ? "none" : "block", overflow: "auto" }}
-        scope="/"
-        src="about:blank"
-        sandbox="true"
         // srcDoc="<video src='../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4'></video>"
       ></Canvas>
 

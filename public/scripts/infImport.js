@@ -1,5 +1,14 @@
 console.log("inf load first");
+// document.addEventListener('DOMContentLoaded',()=>{
+  
+//    navigator.serviceWorker.register('../dbAssets-sw.js' , {scope:'/dsadad'})
+//    console.error('compleeeeeeeeeeeeeeeeeeteeee');
+// })
 
+// window.addEventListener('load',()=>{
+//   navigator.serviceWorker.register('../dbAssets-sw.js' , {scope:'/dsadad'})
+//    console.error('compleeeeeeeeeeeeeeeeeeteeee');
+// })
 /**
  *
  * @param {InfinitelyURLsType} url

@@ -12,7 +12,7 @@ export default defineConfig({
   plugins: [
     react(),
     // tailwindcss(),
-    
+
     // removeConsole(),
     VitePWA({
       registerType: "autoUpdate",
@@ -34,18 +34,22 @@ export default defineConfig({
 
               // Handle /keep-alive first
               if (url.pathname.includes("/keep-alive")) {
-                event.respondWith(new Response(new Blob(["ok"], { type: "text/plain" })));
+                event.respondWith(
+                  new Response(new Blob(["ok"], { type: "text/plain" }))
+                );
                 return;
               }
-              console.log(`fetch from db assets url : ${url.pathname} ,rororor`);
+              console.log(
+                `fetch from db assets url : ${url.pathname} ,rororor`
+              );
               (async () => {
                 const splittedUrl = url.pathname.split("/");
                 const fileName = splittedUrl[splittedUrl.length - 1];
                 const projectId = vars["projectId"];
-                let fileNameFromAssets = ''
+                let fileNameFromAssets = "";
                 if (projectId) {
                   const projectData = vars["projectData"];
-                   /**
+                  /**
                    * @type {import('../src/helpers/types').InfinitelyAsset[] | undefined}
                    */
                   const assets = projectData.assets;
@@ -54,28 +58,29 @@ export default defineConfig({
                    */
                   const fileFromDB = assets
                     .concat(Object.values(projectData.fonts || {}))
-                    .find(
-                      (asset) =>
-                       {
-                        if( encodeURIComponent(asset.file.name.toLowerCase()) ==
-                        fileName.toLowerCase()){
-                          fileNameFromAssets = asset.file.name.toLowerCase()
-                        }
-                        return  encodeURIComponent(asset.file.name) ==
-                        fileName
-                       }
-                    );
+                    .find((asset) => {
+                      if (
+                        encodeURIComponent(asset.file.name.toLowerCase()) ==
+                        fileName.toLowerCase()
+                      ) {
+                        fileNameFromAssets = asset.file.name.toLowerCase();
+                      }
+                      return encodeURIComponent(asset.file.name) == fileName;
+                    });
                   console.log(
                     "sw worker 2m : ",
                     projectId,
                     projectData,
                     fileFromDB,
-            
+
                     fileName.toLowerCase()
                   );
-                  console.log('files name :' ,assets.map(asset=>asset.file.name) ,fileName );
+                  console.log(
+                    "files name :",
+                    assets.map((asset) => asset.file.name),
+                    fileName
+                  );
                   if (fileFromDB) {
-                    
                     console.log("sw file:", fileFromDB.file.name);
                     event.respondWith(
                       new Response(fileFromDB.file, {
@@ -104,7 +109,7 @@ export default defineConfig({
                 //   return fetch(event.request);
                 // });
                 // try {
-            
+
                 //   const res = await fetch(url);
                 //   return res;
                 // } catch (error) {
@@ -176,24 +181,22 @@ export default defineConfig({
     chunkSplitPlugin({
       strategy: "default",
       customSplitting: {
-        vendor: [
-          /react/,
-          /react-dom/,
-          /react-router-dom/,
-          /grapesjs/,
-          /\@grapesjs\/react/,
+        vendor0: [/react/, /react-dom/, /react-router-dom/],
+        vendor1: [/grapesjs/, /\@grapesjs\/react/],
+        vendor2: [
           /\@monaco-editor\/react/,
           /react-resizable-panels/,
           /react-virtuoso/,
-          /html-to-image/
-          // /react-sortablejs/,
-          // /linkedom/,
-          // /lodash/,
-          // /html2canvas-pro/,
-          // /csso/,
-          // /css/
-        ], 
-
+        ],
+        vendor3: [
+          /html-to-image/,
+          /react-sortablejs/,
+          /linkedom/,
+          /lodash/,
+          /html2canvas-pro/,
+          /csso/,
+          /css/,
+        ],
       },
     }),
     // mergePrecacheIntoDbAssetsSw(),
@@ -201,7 +204,7 @@ export default defineConfig({
   worker: {
     format: "es", // Use 'es' instead of 'iife'
   },
- 
+
   build: {
     chunkSizeWarningLimit: "5000",
   },

@@ -30,6 +30,7 @@ import { current_symbol_id } from "../../constants/shared.js";
 import { cloneDeep } from "lodash";
 import { getProjectSettings } from "../../helpers/functions.js";
 import { muatationDomElements } from "../../plugins/mutation.js";
+import { isChrome } from "../../helpers/bridge.js";
 // import { infinitelyGrapesjs } from "../../helpers/backbonePacher.js";
 
 export const GJEditor = memo(({ children }) => {
@@ -79,77 +80,43 @@ export const GJEditor = memo(({ children }) => {
       //   console.log("csss ruuuules", ev.CssComposer.getAll().models);
       // });
       const editor = ev; // Assuming 'ev' is your GrapesJS editor instance
-      // editor.on("load", () => {
+      // editor.on("canvas:frame:load:body", ({window}) => {
       //   console.log("Editor loaded, attempting to override document.write");
 
       //   // Get the canvas iframe element
-      //   const iframe = editor.Canvas.getFrameEl();
-      //   if (!iframe) {
-      //     console.error("No iframe found in Canvas.getFrameEl()");
-      //     return;
-      //   }
-      //   console.log("Iframe element:", iframe);
+      //   // const iframe = editor.Canvas.getFrameEl();
+      //   // if (!iframe) {
+      //   //   console.error("No iframe found in Canvas.getFrameEl()");
+      //   //   return;
+      //   // }
 
-      //   // Function to override document.write
-      //   const overrideDocumentWrite = () => {
-      //     try {
-      //       const iframeDoc =
-      //         iframe.contentDocument || iframe.contentWindow.document;
-      //       if (iframeDoc) {
-      //         console.log("Iframe document accessed successfully");
-      //         // Store original document.write for reference
-      //         const originalWrite = iframeDoc.write;
-      //         // Override document.write
-      //         iframeDoc.write = (content) => {
-      //           console.log("document.write called with content:", content);
-      //           // Prevent default behavior
-      //           return;
-      //           // Optional: Call original if needed: originalWrite.call(iframeDoc, content);
-      //         };
-      //         // Test the override
-      //         iframeDoc.write("Test override");
-      //       } else {
-      //         console.warn("Iframe document is null or inaccessible");
-      //       }
-      //     } catch (e) {
-      //       console.warn("Error accessing iframe document:", e);
-      //     }
-      //   };
+      //   console.log('wdsads' , window);
+      //   /**
+      //    * @type {Document}
+      //    */
+      //   const doc = window.document;
 
-      //   // Check if iframe is loaded
-      //   if (iframe.contentDocument?.readyState === "complete") {
-      //     console.log("Iframe already loaded, overriding now");
-      //     overrideDocumentWrite();
-      //   } else {
-      //     console.log("Waiting for iframe to load");
-      //     iframe.addEventListener(
-      //       "load",
-      //       () => {
-      //         console.log("Iframe load event fired");
-      //         overrideDocumentWrite();
-      //       },
-      //       { once: true }
-      //     );
-      //   }
-
-      //   // Handle canvas reloads
-      //   editor.on("canvas:frame:reload", () => {
-      //     console.log("Canvas frame reloaded, reapplying override");
-      //     overrideDocumentWrite();
-      //   });
-
-      //   // Log origins for debugging
-      //   console.log(
-      //     "Iframe origin:",
-      //     iframe.contentWindow?.origin || "unknown"
-      //   );
-      //   console.log("Main origin:", window.origin);
-
-      //   // Optional: Override document.write in main document for testing
-      //   document.write = (content) => {
-      //     console.log("Main document.write called with content:", content);
-      //   };
+      //   // iframe.setAttribute('sandbox' , '')
+      //   // console.log(editor.Canvas.getDocument().readyState , 'state');
+      //   console.error(doc.readyState , 'state');
+      //   doc.addEventListener('DOMContentLoaded',()=>{
+          
+      //     console.error(doc.readyState , 'state ev');
+      //   })
+        
       // });
+
+        editor.on('load', ({ window }) => {
+          // const iframeDoc = window.document;
+        //  isChrome((bool)=>{
+        //   console.error('chrome');
+          
+        //    editor.Canvas.getFrameEl().srcdoc = 'about:blank'
+        //    editor.Canvas.getFrameEl().sandbox = 'allow-same-origin allow-scripts'
+        //  })
+          // Set base URL
+          
+      });
 
       ev.on("storage:end:store", () => {});
       // setCmdsContext();
@@ -189,7 +156,8 @@ export const GJEditor = memo(({ children }) => {
 
       ev.on("component:selected", () => {
         const selectedEl = ev.getSelected();
-
+      
+        
         setSelectedEl({ currentEl: selectedEl?.getEl() });
         setRule({ is: false, ruleString: "" });
 
@@ -346,7 +314,6 @@ export const GJEditor = memo(({ children }) => {
         canvas: {
           scripts: [
             // { src: `/scripts/initSw.js`, name: "initSw.js" },
-
             // {src:`${jsToDataURL(`console.log('data js url.............@')`)}`}
           ],
           styles: [],

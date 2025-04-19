@@ -34,7 +34,7 @@ import { minify } from "csso";
 import { parseHTML } from "linkedom";
 import { toBlob } from "html-to-image";
 import { parse } from "@wordpress/block-serialization-default-parser";
-import { replaceCssURLS } from "../helpers/bridge";
+import { isChrome, replaceCssURLS } from "../helpers/bridge";
 
 let loadFooterScriptsCallback, loadHeadScriptsCallback, loadMainScriptsCallback;
 let isLoading = 0;
@@ -160,20 +160,29 @@ export const IDB = (editor) => {
 
         // editor.setComponents( `<iframe src='../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4'></iframe>` );
 
-        console.error("innner : ", document.body.innerHTML);
+        // console.error("innner : ", document.body.innerHTML);
 
-        editor.once('load',()=>{
+        // editor.once('load',()=>{
           
-          // editor.Canvas.getFrameEl().sandbox =  `allow-top-navigation-by-user-activation allow-top-navigation allow-scripts allow-same-origin allow-presentation`
-        })
-        editor.setComponents(document.body.innerHTML);
+        //   // editor.Canvas.getFrameEl().sandbox =  `allow-top-navigation-by-user-activation allow-top-navigation allow-scripts allow-same-origin allow-presentation`
+        // })
+        // editor.setComponents(document.body.innerHTML);
        
-        // editor.setComponents(
-        //   `<img data-gjs-highlightable="true" id="ilmj" data-gjs-type="image" draggable="true" src="../assets/SD7000-.png" class="Mjg0NQ" />
-        //   <div id="iook" data-gjs-type="video" draggable="true"   class="MjgxNA"><video src='../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4' controles="true"  allowfullscreen="allowfullscreen"></video></div>
-        //   <div id="iook" data-gjs-type="video" draggable="true"   class="MjgxNA"><video src='../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4' controles="true"  allowfullscreen="allowfullscreen"></video></div>
-        //   `
-        // );
+        editor.setComponents(
+          `
+          <div id="ied8" data-gjs-type="video" draggable="true" allowfullscreen="allowfullscreen" src="../assets/3173312-hd_1280_720_30fps.mp4" controls="true" class="gjs-selected"></div>
+         ${document.body.innerHTML}
+          `,{
+            // asDocument:true
+          }
+        );
+
+      // const cmps = editor.addComponents(` <img src="SD7000-.png" />`)
+      //   console.log('cppppppps : ' , cmps);
+        
+        // editor.on('canvas:frame:load:body',()=>{
+        //   // editor.select(cmps[0])
+        // })
 
         // editor.EditorModel.b
         // editor.addComponents(
@@ -238,15 +247,41 @@ export const IDB = (editor) => {
             ).filter(([key, value]) => key.startsWith("v-") && value)
           )
         );
-      console.log(
-        "wrapper attributes : ",
-        projectData.pages[`${currentPageId}`].bodyAttributes
-      );
+      // console.log(
+      //   "wrapper attributes : ",
+      //   projectData.pages[`${currentPageId}`].bodyAttributes
+      // );
 
       currentPageId.toLowerCase() != "playground" &&
         sessionStorage.removeItem(current_dynamic_template_id);
-      editor.select(null);
-      editor.render();
+        editor.render();
+        editor.select(null);
+         editor.once('canvas:frame:load:body',()=>{
+          
+         })
+
+         setTimeout(()=>{
+          isChrome((bool) => {
+            console.error("chrome");
+      
+            editor.Canvas.getFrameEl().contentWindow.fetch = fetch;
+            // editor.Canvas.getFrameEl().srcdoc = "about:blank";
+            // editor.Canvas.getFrameEl().sandbox = "allow-same-origin allow-scripts";
+          });
+         },0)
+
+        //  setInterval(()=>{
+          
+        // editor.addComponents(
+        //   `
+        //   <div id="ied8"  data-gjs-type="video" draggable="true" allowfullscreen="allowfullscreen" src="../assets/3173312-hd_1280_720_30fps.mp4" controls="true" class="gjs-selected"></div>
+        //   `,{
+        //     // asDocument:true
+        //   }
+        // );
+        //  },5000)
+        // editor.Canvas.render()
+      // editor.Canvas.getCanvasView().render()
       storageManager.setAutosave(originalAutosave);
       editor.clearDirtyCount();
       URL.createObjectURL = mainCreateObjectURLMethod;
