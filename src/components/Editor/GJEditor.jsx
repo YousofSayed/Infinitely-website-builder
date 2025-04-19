@@ -106,17 +106,20 @@ export const GJEditor = memo(({ children }) => {
         
       // });
 
-        editor.on('load', ({ window }) => {
-          // const iframeDoc = window.document;
-        //  isChrome((bool)=>{
-        //   console.error('chrome');
+      //   editor.once('canvas:frame:load', (ev) => {
+      //     // const iframeDoc = window.document;
+      //     console.log('evvvvvvvvv : ' , ev);
           
-        //    editor.Canvas.getFrameEl().srcdoc = 'about:blank'
-        //    editor.Canvas.getFrameEl().sandbox = 'allow-same-origin allow-scripts'
-        //  })
-          // Set base URL
+      //   //  isChrome((bool)=>{
+      //   //   console.error('chrome');
           
-      });
+      //   // editor.Canvas.getFrameEl().srcdoc = 'about:blank'
+      //   // ev.el.srcdoc = ''
+      //   //    editor.Canvas.getFrameEl().sandbox = 'allow-same-origin allow-scripts'
+      //   //  })
+      //   // Set base URL
+          
+      // });
 
       ev.on("storage:end:store", () => {});
       // setCmdsContext();

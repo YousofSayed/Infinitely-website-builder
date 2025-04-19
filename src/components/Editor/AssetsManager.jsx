@@ -270,17 +270,19 @@ export const AssetsManager = memo(() => {
       );
       const src = `../assets/${file.name}`;
       editor.getSelected().addAttributes({ src });
+      const projectSettings =  getProjectSettings();
+      const navigateValue = projectSettings.projectSettings.navigate_to_style_when_Select
       // editor.getSelected().getView().render();
       // editor.getSelected().updateView()
       if (!("src" in el)) {
         // el.querySelector(`[src]`).setAttribute("src", src);
-        getProjectSettings().set({
+       projectSettings.set({
           navigate_to_style_when_Select: false,
         });
         const newSle = editor.getSelected().replaceWith(editor.getSelected().clone())[0];
         editor.select(newSle);
-        getProjectSettings().set({
-          navigate_to_style_when_Select: true,
+       projectSettings.set({
+          navigate_to_style_when_Select:navigateValue,
         });
       }
       // console.log("nooo", !("src" in el));

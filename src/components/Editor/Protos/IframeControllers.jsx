@@ -98,25 +98,26 @@ export const IframeControllers = () => {
       // editor.Canvas.getFrameEl().setAttribute("srcdoc" , '');
       // editor.Canvas.getFrameEl().setAttribute("sandbox" , '');
       // editor.select(null);
-      editor.Components.clear();
-      console.log('tools : ' , editor.Components.getComponent('sda'));
       
       // editor.Canvas.getFrameEl().contentWindow.location.reload()
       // editor.Canvas.getFrameEl().srcdoc = "about:blank";
       // editor.Canvas.getFrameEl().sandbox = "allow-same-origin allow-scripts";
-      if(!bool){
-        editor.select(null);
-        console.log(editor.Components.getComponents().models);
-        editor.Components.clear();
-      }
+      // if(!bool){
+      //   editor.select(null);
+      //   console.log(editor.Components.getComponents().models);
+      //   editor.Components.clear();
+      // }
     });
     // editor.select(null);
     // console.log(editor.Components.getComponents().models);
     // editor.Components.clear();
     
     // // editor.getComponents().models.forEach(cmp=>cmp.remove())
-    // editor.refresh({ tools: true });
-    // editor.Canvas.refresh({ all: true, spots: true });
+    editor.Components.clear();
+      console.log('tools : ' , editor.Components.getComponent('sda'));
+      
+    editor.refresh({ tools: true });
+    editor.Canvas.refresh({ all: true, spots: true });
     // isChrome((bool) => {
     //   console.error("chrome");
 

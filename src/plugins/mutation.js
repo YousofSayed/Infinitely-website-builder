@@ -5,9 +5,9 @@ import { getProjectData } from "../helpers/functions";
  * @type {MutationObserverInit}
  */
 const observerConfig = {
-  attributes: true,
+  // attributes: true,
   childList: true,
-  characterData: true,
+  // characterData: true,
   subtree: true,
 };
 const tagsRequiringSrcAndFetching = [
@@ -35,13 +35,13 @@ const isMediaEl = (el) => {
  */
 export const muatationDomElements = async (editor) => {
   // return
-  // if (!isChrome()) {
-  //   console.log(
-  //     "Your browser does not need to obeserve assets sw.js will handle every thing for you 💙"
-  //   );
+  if (!isChrome()) {
+    console.log(
+      "Your browser does not need to obeserve assets , sw.js will handle every thing for you 💙"
+    );
 
-  //   return;
-  // }
+    return;
+  }
   // !isChrome() ||
   // const projectData = await getProjectData();
   // const urls = [];
@@ -58,14 +58,18 @@ export const muatationDomElements = async (editor) => {
     };
     // const tagName= el.tagName.toLowerCase();
     // const isMediaEl = tagsRequiringSrcAndFetching.includes(tagName);
-    if (!isMediaEl(el)) return;
+    if (el.hasAttribute("observed")) {
+      console.log("obsserved");
+    }
+    if (!isMediaEl(el) || el.hasAttribute("observed")) return;
 
     // el.addEventListener('load',(ev)=>{
     //   ev.preventDefault()
     // })
 
     el.addEventListener("error", async () => {
-      if (el.hasAttribute("observed")) return;
+      console.log("from error event listener");
+
       try {
         !el.loadTimes && (el.loadTimes = 0);
         !el.urls && (el.urls = []);
@@ -110,11 +114,11 @@ export const muatationDomElements = async (editor) => {
         el.load?.();
         el.lastAttriuteValue = srcAttr || hrefAttr;
         el.loadTimes++;
-        el.setAttribute("observed", "true");
       } catch (error) {
         console.error(error);
       }
     });
+    el.setAttribute("observed", "true");
   };
 
   editor.on("canvas:frame:load:body", (ev) => {
@@ -125,9 +129,69 @@ export const muatationDomElements = async (editor) => {
     const observer = new MutationObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.type == "attributes" && !isMediaEl(entry.target)) return;
-        console.log("from observer nodes is:", entry.addedNodes, entry.target);
+        console.log(
+          "from observer nodes is:",
+          entry.addedNodes,
+          entry.target,
+          entry.type
+        );
+        if (entry.target.tagName) {
+          console.log(
+            "from observer nodes is instaneceof:",
+            entry.addedNodes,
+            entry.target,
+            entry.type,
+            entry.target instanceof HTMLElement
+          );
+          init(entry.target);
+          observeMediaElements(entry.target);
+
+          entry.addedNodes.forEach((node) => {
+            if (node.tagName) {
+              init(node);
+              console.log("from observer child node is:", node);
+              observeMediaElements(node)
+              node.querySelectorAll("*").forEach((el) => {
+                init(el);
+                observeMediaElements(el)
+              });
+            }
+          });
+        }
+      });
+    });
+
+    /**
+     *
+     * @param {HTMLElement} el
+     */
+    const observeMediaElements = (el) => {
+      const tagName = el.tagName.toLowerCase();
+      if (tagsRequiringSrcAndFetching.includes(tagName)) {
+        observer.observe(el, observerConfig);
+      }
+    };
+
+    console.log("from observer body is : ", body, ev.window.document.body);
+    body.querySelectorAll("*").forEach((el) => {
+      init(el);
+      observeMediaElements(el)
+    });
+    observer.observe(body, observerConfig);
+  });
+};
+
+/***************************
+ * TRASH
+ * 
+ *    const observer = new MutationObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.type == "attributes" && !isMediaEl(entry.target)) return;
+        console.log("from observer nodes is:", entry.addedNodes, entry.target , entry.type);
         if (entry.target instanceof HTMLElement) {
           if (!entry.target.hasAttribute("observed")) {
+            console.log('from observer , Target not contains observed attribute');
+            
             init(entry.target);
           }
           entry.addedNodes.forEach((node) => {
@@ -190,20 +254,4 @@ export const muatationDomElements = async (editor) => {
         }
       });
     });
-
-    /**
-     *
-     * @param {HTMLElement} el
-     */
-    const observeMediaElements = (el) => {
-      const tagName = el.tagName.toLowerCase();
-      if (tagsRequiringSrcAndFetching.includes(tagName)) {
-        observer.observe(el, observerConfig);
-      }
-    };
-
-    console.log("from observer body is : ", body, ev.window.document.body);
-    body.querySelectorAll("*").forEach((el) => init(el));
-    observer.observe(body, observerConfig);
-  });
-};
+ * ****************************/
