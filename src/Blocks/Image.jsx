@@ -1,6 +1,8 @@
+import { Icons } from "../components/Icons/Icons";
 import { open_files_manager_modal } from "../constants/InfinitelyCommands";
 import { html, uniqueID } from "../helpers/cocktail";
 import { defineTraits, traitCallback } from "../helpers/functions";
+import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
 
 /**
  *
@@ -110,51 +112,58 @@ export const Image = ({ editor }) => {
         // });
 
         // let loadCounter = 0;
-        // op.el.addEventListener('error',async(ev)=>{
-        //   if(!op.el.src)return
-        //   console.log('img , no src here' , op.el.src);
+        op.el.addEventListener('error',async(ev)=>{
+          // if(!op.el.src)return
+          // console.log('img , no src here' , op.el.src);
 
-        //   console.log('from outer :' , loadCounter);
+          // console.log('from outer :' , loadCounter);
 
-        //   try {
-        //     if(loadCounter >3)throw new Error('More of calling')
-        //     op.el.src = URL.createObjectURL(await (await fetch(`${window.origin}/${op.el.src}`)).blob());
-        //     loadCounter++;
-        //     console.log('from in :' , loadCounter);
+          // try {
+          //   if(loadCounter >3)throw new Error('More of calling')
+          //   op.el.src = URL.createObjectURL(await (await fetch(`${window.origin}/${op.el.src}`)).blob());
+          //   loadCounter++;
+          //   console.log('from in :' , loadCounter);
             
-        //     // editor.refresh({tools:true});
-        //     // editor.Canvas.refresh({all:true,spots:true});
-        //     // editor.Canvas.refreshSpots()
+            // editor.refresh({tools:true});
+            // editor.Canvas.refresh({all:true,spots:true});
+            // editor.Canvas.refreshSpots()
             
-        //   } catch (error) {
+          // } catch (error) {
             
-        //     op.el.src = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3R5bGU9ImZpbGw6IHJnYmEoMCwwLDAsMC4xNSk7IHRyYW5zZm9ybTogc2NhbGUoMC43NSkiPgogICAgICAgIDxwYXRoIGQ9Ik0yLjI4IDNMMSA0LjI3bDIgMlYxOWMwIDEuMS45IDIgMiAyaDEyLjczbDIgMkwyMSAyMS43MiAyLjI4IDNtMi41NSAwTDIxIDE5LjE3VjVhMiAyIDAgMCAwLTItMkg0LjgzTTguNSAxMy41bDIuNSAzIDEtMS4yNUwxNC43MyAxOEg1bDMuNS00LjV6Ij48L3BhdGg+CiAgICAgIDwvc3ZnPg==`
-        //   }
-        // })
+          // }
+          op.el.src = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3R5bGU9ImZpbGw6IHJnYmEoMCwwLDAsMC4xNSk7IHRyYW5zZm9ybTogc2NhbGUoMC43NSkiPgogICAgICAgIDxwYXRoIGQ9Ik0yLjI4IDNMMSA0LjI3bDIgMlYxOWMwIDEuMS45IDIgMiAyaDEyLjczbDIgMkwyMSAyMS43MiAyLjI4IDNtMi41NSAwTDIxIDE5LjE3VjVhMiAyIDAgMCAwLTItMkg0LjgzTTguNSAxMy41bDIuNSAzIDEtMS4yNUwxNC43MyAxOEg1bDMuNS00LjV6Ij48L3BhdGg+CiAgICAgIDwvc3ZnPg==`
+        })
       },
     },
     model: {
       defaults: {
+        droppable:false,
         tagName: "img",
+        icon:reactToStringMarkup(Icons.image({fill:'white' , width:20 , height:20})),
         attributes: {
           src: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3R5bGU9ImZpbGw6IHJnYmEoMCwwLDAsMC4xNSk7IHRyYW5zZm9ybTogc2NhbGUoMC43NSkiPgogICAgICAgIDxwYXRoIGQ9Ik04LjUgMTMuNWwyLjUgMyAzLjUtNC41IDQuNSA2SDVtMTYgMVY1YTIgMiAwIDAgMC0yLTJINWMtMS4xIDAtMiAuOS0yIDJ2MTRjMCAxLjEuOSAyIDIgMmgxNGMxLjEgMCAyLS45IDItMnoiPjwvcGF0aD4KICAgICAgPC9zdmc+",
-          class : `${classId}`
+          // class : `inf-${classId}`
         },
-        components:html`
-          <style>
-            .${classId}{
+        // components:html`
+        //   <style>
+        //     .inf-${classId}{
              
-              aspect-ratio:33/33;
-            }
-          </style>
-        `,
+        //       aspect-ratio:33/33;
+        //     }
+        //   </style>
+        // `,
         traits: defineTraits([
           {
             type: "media",
-            role: "handler",
+            role: "attribute",
             mediaType: "image",
             label: "Select image",
-            name: "Select image",
+            name: "src",
+            // callback({editor}){
+            //   editor.getSelected().set({
+            //     droppable
+            //   })
+            // }
           },
         ]),
         resizable: true,

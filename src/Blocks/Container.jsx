@@ -23,7 +23,7 @@ export const Container = ({ editor }) => {
             placeholder:'select tag',
             label:'Select tag',
             name:'Select tag',
-            role:'handler',
+            role:'attribute',
             
             keywords: tagNames,
             type: "select",

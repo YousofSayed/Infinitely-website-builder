@@ -10,6 +10,10 @@ import { Input } from "./Input";
 import { db } from "../../../helpers/db";
 import { current_project_id } from "../../../constants/shared";
 import { useEditorMaybe } from "@grapesjs/react";
+import { VirtuosoGrid } from "react-virtuoso";
+import { GridComponents } from "../../Protos/VirtusoGridComponent";
+import { FitTitle } from "./FitTitle";
+import { SmallButton } from "./SmallButton";
 
 export const UploadBlocks = () => {
   const [uploadedBlocks, setUploadedBlocks] = useState(blocksArrayType);
@@ -22,17 +26,29 @@ export const UploadBlocks = () => {
    * @param {HTMLInputElement} input
    */
   const uploadBlocksCallback = async (input) => {
-    const reader = new FileReader();
-    reader.readAsText(input.files[0]);
-    reader.onloadend = async () => {
-      console.log(
-        "uploaded : ",
-        await restoreBlobs(JSON.parse(reader.result || "{}"))
+    /**
+     * @type {File}
+     */
+    const file = input.files[0];
+    const symbolsOrTemplates = await restoreBlobs(
+      JSON.parse((await file.text()) || "{}")
+    );
+    if (
+      !symbolsOrTemplates?.[0]?.type &&
+      (symbolsOrTemplates[0].type != "symbol" ||
+        symbolsOrTemplates[0].type != "template")
+    ) {
+      toast.error(
+        <ToastMsgInfo
+          msg={"Invalid file"}
+          description={
+            "The file you uploaded is not a valid file. Please upload a valid file."
+          }
+        />
       );
-
-      !reader.result && toast.warn(<ToastMsgInfo msg={`Files is empty`} />);
-      setUploadedBlocks(await restoreBlobs(JSON.parse(reader.result || "{}")));
-    };
+      return;
+    }
+    setUploadedBlocks(symbolsOrTemplates);
   };
 
   const saveBlocksToDB = async () => {
@@ -82,7 +98,7 @@ export const UploadBlocks = () => {
   };
 
   return (
-    <section className="p-1 h-full flex justify-center items-center flex-col">
+    <section className="p-1 h-full w-full flex justify-center  flex-col">
       {!uploadedBlocks.length ? (
         <section className=" flex justify-center items-center flex-col gap-2 p-5 rounded-md ">
           <figure>
@@ -104,71 +120,66 @@ export const UploadBlocks = () => {
         </section>
       ) : (
         <section className="h-full flex flex-col gap-2">
-          <header className="flex gap-2 p-2 bg-slate-800 rounded-md">
-            <Input placeholder="Search..." className="w-full bg-slate-950" />
-            <Button
+          <header className="flex gap-2 rounded-md">
+            <Input placeholder="Search..." className="w-full bg-slate-800" />
+            <SmallButton
               title={"save blocks"}
               onClick={() => {
                 saveBlocksToDB();
               }}
             >
-              {Icons.saveData({ fill: "white" })}
-              Save
-            </Button>
+              {Icons.saveData({ fill: "white", height: 17 })}
+            </SmallButton>
           </header>
-          <section className="h-full w-full grid grid-cols-4 gap-2 ">
-            {uploadedBlocks.map((symbol, i) => {
-              return (
-                <section
-                  key={i}
-                  className="p-2 bg-slate-800 max-h-[200px] rounded-lg flex flex-col gap-3"
-                >
-                  <h1 className="font-semibold capitalize text-slate-200 text-lg custom-font-size first-letter:text-blue-400">
-                    {symbol.name}
-                  </h1>
-                  <figure className="w-full p-1 bg-slate-900 max-h-[50%] h-[50%] grid place-content-center rounded-lg">
-                    <img src={URL.createObjectURL(symbol.media)} alt="" />
-                  </figure>
+          <section className="h-full w-full ">
+            <VirtuosoGrid
+              totalCount={uploadedBlocks.length}
+              components={GridComponents}
+              listClassName="p-[unset!important]"
+              itemContent={(i) => {
+                const symbol = uploadedBlocks[i];
+                return (
+                  <section
+                    key={i}
+                    className="p-2 bg-slate-800 max-h-[200px] rounded-lg flex justify-between items-center  gap-2"
+                  >
+                    {/* <section className="bg-slate-900 flex gap-2 items-center  px-2 w-full rounded-md h-full">
+                      {" "}
+                      <figure
+                        className=" h-full py-2 flex justify-center items-center rounded-lg"
+                        dangerouslySetInnerHTML={{ __html: symbol.media }}
+                      ></figure>
+                      <h1 className="font-semibold capitalize text-slate-200 text-lg custom-font-size first-letter:text-blue-400">
+                        {symbol.name}
+                      </h1>
+                    </section> */}
 
-                  {/* <section>
-                            </section> */}
-                  <section className="flex gap-2">
-                    <Button
-                      title={"delete"}
-                      className="p-2 bg-slate-900 hover:bg-blue-600 transition-all"
-                      onClick={() => {
-                        deleteUploadedBlock(symbol.id);
-                      }}
-                    >
-                      {Icons.trash("white")}
-                    </Button>
+                    <FitTitle className="flex items-center gap-2 w-full justify-center">
+                      <figure
+                        className=" h-full py-2 flex justify-center items-center rounded-lg"
+                        dangerouslySetInnerHTML={{ __html: symbol.media }}
+                      ></figure>
+                      <span className="font-semibold capitalize text-slate-200 text-[14px]">
+                        {symbol.name}
+                      </span>
+                    </FitTitle>
+
+                    <section className="flex h-full gap-2">
+                      <SmallButton
+                        title={"delete"}
+                        className="p-2 bg-slate-900  hover:bg-[crimson!important] transition-all"
+                        onClick={() => {
+                          deleteUploadedBlock(symbol.id);
+                        }}
+                      >
+                        {Icons.trash("white")}
+                      </SmallButton>
+                    </section>
                   </section>
-                </section>
-              );
-            })}
+                );
+              }}
+            />
           </section>
-          {/* <SymbolsAndTemplatesHandler
-            noFilter
-            uploadedBlocks={uploadedBlocks}
-            showHeader={false}
-            showDownloadBtn={false}
-            showDeleteBtn={false}
-            setUploadedBlock={setUploadedBlocks}
-            btns={({ id }) => {
-              return (
-                <Button
-                  className="p-2 bg-slate-900 hover:bg-blue-600 transition-all"
-                  onClick={() => {
-                    console.log("delter : id", id);
-
-                   
-                  }}
-                >
-                  {Icons.trash("white")}
-                </Button>
-              );
-            }}
-          ></SymbolsAndTemplatesHandler> */}
         </section>
       )}
     </section>

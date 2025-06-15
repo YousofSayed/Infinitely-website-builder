@@ -1,11 +1,14 @@
 import React from "react";
 import { ReusableCmb } from "../../components/Editor/Modals/ReusableCmb";
-import { addItemInToolBarForEditor } from "../../helpers/functions";
+import { addItemInToolBarForEditor, getInfinitelySymbolInfo } from "../../helpers/functions";
 import { editorIcons } from "../../components/Icons/editorIcons";
 
 export const createReusableCmpTool = (editor) => {
-  addItemInToolBarForEditor({
+  const symbolInfo = getInfinitelySymbolInfo(editor.getSelected());
+
+return  addItemInToolBarForEditor({
     forAll:true,
+    cond:!symbolInfo.isSymbol,
     commandCallback: (ed) => {
       ed.runCommand("open:custom:modal", {
         title: `Create Reusable Component`,

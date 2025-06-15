@@ -8,7 +8,7 @@ import { InstalledFonts } from '../Protos/InstalledFonts'
 
 export const CustomFontsModal = () => {
   return (
-    <MultiTab tabs={[
+    <MultiTab tabs={[ 
       {content:<InstalledFonts /> , title:<TabLabel icon={Icons.export('white')} label='Installed Fonts'/>},
       {content:<CustomFontsInstaller /> , title:<TabLabel icon={Icons.upload({strokeColor:'white'})} label='Upload Fonts'/>},
       {content:<GoogleFontsInstaller /> , title:<TabLabel icon={Icons.google({height:23})} label='Google Fonts'/>},

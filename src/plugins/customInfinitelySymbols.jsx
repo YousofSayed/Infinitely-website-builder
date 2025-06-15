@@ -1,3 +1,4 @@
+import { toast } from "react-toastify";
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
 import {
   current_project_id,
@@ -9,11 +10,9 @@ import {
 } from "../constants/shared";
 import { html, uniqueID } from "../helpers/cocktail";
 import { db } from "../helpers/db";
-import {
-  getInfinitelySymbolInfo,
-  initSymbol,
-} from "../helpers/functions";
+import { getInfinitelySymbolInfo, initSymbol } from "../helpers/functions";
 import { infinitelyWorker } from "../helpers/infinitelyWorker";
+import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
 
 /**
  *
@@ -57,6 +56,7 @@ export const customInfinitelySymbols = (editor) => {
     const sle = editor?.getSelected();
     const symbol = getInfinitelySymbolInfo(cmp);
     // console.log(`is equal : ` , cmp , cmp.getEl() , cmp.getId());
+        const addedComponent = cmp.components().slice(-1)?.[0];
 
     if (
       !symbol.isSymbol ||
@@ -74,7 +74,7 @@ export const customInfinitelySymbols = (editor) => {
     const updateSymbolInDb = () => {
       symbolTimeout && clearTimeout(symbolTimeout);
       setTimeout(async () => {
-        const projectData = await db.projects.get(projectId);
+        // const projectData = await db.projects.get(projectId);
         // const blockId = projectData.symbols[`${symbolId}`].blockId;
         // const blockThumb = await new Promise(async (res, rej) => {
         //   await (
@@ -85,12 +85,24 @@ export const customInfinitelySymbols = (editor) => {
         // });
         // symbol.symbol.changedAttributes();
         // console.log("last : ", cmp.components().slice(-1)[0].getEl());
+        console.log("Component updated: ", cmp, symbol.symbol.getEl());
 
-        const addedComponent = cmp.components().slice(-1)?.[0];
+        const addedCmpSymbolInfo = getInfinitelySymbolInfo(addedComponent);
+        if(addedComponent.getAttributes()[inf_symbol_Id_attribute]){
+          editor.UndoManager.stop();
+          addedComponent.removeAttributes(inf_symbol_Id_attribute);
+          editor.UndoManager.start();
+          // toast.warn(<ToastMsgInfo msg={`Symbols in symbols not allowed`}/>)
+          // return;
+        }
+        
         addedComponent
-          ? addedComponent.addAttributes({
-              [inf_class_name]: `inf-${uniqueID()}`,
-            },{avoidStore:true})
+          ? addedComponent.addAttributes(
+              {
+                [inf_class_name]: `inf-${uniqueID()}`,
+              },
+              { avoidStore: true }
+            )
           : null;
 
         // await db.projects.update(projectId, {
@@ -140,7 +152,7 @@ export const customInfinitelySymbols = (editor) => {
         //             ],
         //             { type: "text/html" }
         //           ),
-        //         }, 
+        //         },
         //       },
         //       blocks: {
         //         ...projectData.blocks,
@@ -157,17 +169,10 @@ export const customInfinitelySymbols = (editor) => {
         //   },
         // });
 
-        sessionStorage.setItem(current_symbol_id , symbolId);
+        sessionStorage.setItem(current_symbol_id, symbolId);
         editor.store();
-        // infinitelyWorker.postMessage({
-        //   command:'updateAllPages',
-        //   props:{ 
-        //     projectId,
 
-        //   }
-        // })
-        editor.trigger("block:add");
-        editor.trigger("block:update");
+        
         editor.trigger(
           `${InfinitelyEvents.symbols.update}:${symbolId}`,
           symbolId,

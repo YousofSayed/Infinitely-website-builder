@@ -26,7 +26,7 @@ import { getProjectData } from "../helpers/functions";
 import { infinitelyWorker } from "../helpers/infinitelyWorker";
 import { swAliveInterval } from "../helpers/keepSwAlive";
 import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
-
+import { pageBuilderWorker } from "../helpers/defineWorkers";
 
 // export const Editor = () => {
 //   const navigate = useNavigate();
@@ -77,9 +77,9 @@ import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
 //     const projectId = +localStorage.getItem(current_project_id);
 //     if (!projectId) {
 //       navigate("/workspace");
-//     } 
+//     }
 //     console.log('navo');
-    
+
 //     // initDBAssetsSw(setDBAssetsSw);
 //   }, []);
 
@@ -179,7 +179,7 @@ import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
 //     </GJEditor>
 //   );
 // };
-export function Editor({params}) {
+export function Editor({ params }) {
   const navigate = useNavigate();
   const showLayers = useRecoilValue(showLayersState);
   const showAnimBuilder = useRecoilValue(showAnimationsBuilderState);
@@ -190,6 +190,20 @@ export function Editor({params}) {
   const setShowCustomModal = useSetRecoilState(showCustomModalState);
   const showCustomModal = useRecoilValue(showCustomModalState);
   // const [dbAssetsSw, setDBAssetsSw] = useRecoilState(dbAssetsSwState);
+
+  useEffect(() => {
+    pageBuilderWorker.postMessage({
+      command: "sendPreviewPagesToServiceWorker",
+      props: {
+        projectId: +localStorage.getItem(current_project_id),
+        editorData: {
+          canvasCss: "",
+          editorCss: "",
+        },
+      },
+    });
+    console.log("i should send preview page");
+  });
 
   useEffect(() => {
     /**
@@ -228,9 +242,9 @@ export function Editor({params}) {
     const projectId = +localStorage.getItem(current_project_id);
     if (!projectId) {
       navigate("/workspace");
-    } 
-    console.log('navo');
-    
+    }
+    console.log("navo");
+
     // initDBAssetsSw(setDBAssetsSw);
   }, []);
 
@@ -242,8 +256,8 @@ export function Editor({params}) {
     const cb = (ev) => {
       const { command, props } = ev.data;
       if (command != "toast") return;
-      const { msg, type } = props;
-      toast[type]?.(<ToastMsgInfo msg={msg} />);
+      const { msg, type, isNotMessage } = props;
+      toast[type]?.(isNotMessage ? msg : <ToastMsgInfo msg={msg} />);
     };
     infinitelyWorker.addEventListener("message", cb);
 
@@ -279,10 +293,10 @@ export function Editor({params}) {
           autoClose={3000}
           draggable={true}
           theme="dark"
-          // limit={3}
+          limit={10}
           pauseOnHover={true}
           position="top-left"
-          stacked={true}
+          // stacked={true}
         />
         {!showPreview && <HomeNav />}
         <section
@@ -330,10 +344,11 @@ export function Editor({params}) {
             {!showPreview && (
               <>
                 <PanelResizeHandle className="w-[5px] bg-blue-600 opacity-0 hover:opacity-[1] transition-all" />
-                <Panel defaultSize={300} className="" id="right" order={3}>
+                <Panel defaultSize={300}  id="right" order={3}>
                   <Aside>
+                   
                     {pathname.pathname != "/add-blocks" && <AsideControllers />}
-                    <Outlet />
+                      <Outlet  />
                   </Aside>
                 </Panel>
               </>
@@ -348,4 +363,3 @@ export function Editor({params}) {
     </GJEditor>
   );
 }
-

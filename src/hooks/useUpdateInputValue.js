@@ -63,15 +63,25 @@ export const useUpdateInputValue = ({
         `${currentSelector}${rule.ruleString}`,
         mediaAccordingToRule
       )?.toJSON()?.style;
-      // console.log("outPut : ", outPut , extractAllRulesWithChildRules());
-      // console.log("rule : ", rule.ruleString);
-      // console.log('sle is heare' , outPut);
+    //   console.log("outPut : ", outPut );
+    //   console.log("rule : ", rule.ruleString);
+    //   console.log('currentSelector is heare' , `${currentSelector}${rule.ruleString}`);
+    //   console.log('rule editor' , editor.Css.getRule(
+    //     `${currentSelector}${rule.ruleString}`,
+    //     // mediaAccordingToRule
+    //   ));
+    //   console.log('media : ' ,{
+    //     atRuleParams: rule.atRuleParams,
+    //     atRuleType: rule.atRuleType,
+    //   }
+    // , { ...Media });
+      
 
       return outPut || {};
     };
 
     if (!slEL || !getRuleStyle()[cssProp]) {
-      console.log('!sadsadsa' , cssProp , getRuleStyle());
+      // console.log('!sadsadsa' , cssProp , getRuleStyle());
       
       setVal("");
       onEffect(cssProp, "");

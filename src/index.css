@@ -1,15 +1,19 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 * {
   box-sizing: border-box;
   scroll-behavior: smooth;
   font-size: 14px;
+  /* scrollbar-gutter: space; */
+
   /* direction: rtl;
   flex-direction: row-reverse;
   text-align: left !important; */
 }
-ul , li{
+ul,
+li {
   list-style: none;
 }
 /* *::selection{
@@ -25,6 +29,7 @@ ul , li{
   --rt-opacity: 0.9;
   --rt-transition-show-delay: 0.15s;
   --rt-transition-closing-delay: 0.15s;
+  --symbol-color-hover: #eb2588;
 }
 /* html,
 body {
@@ -41,14 +46,27 @@ body {
   font-family: system-ui, "roboto", "poppins";
   /* overflow: hidden; */
 }
-[data-slot="indicator"]{
-  transition: .2s;
+[data-slot="indicator"] {
+  transition: 0.2s;
 }
- [data-open="true"] [data-slot="indicator"] {
+[data-open="true"] > [data-slot="indicator"] {
   transform: rotate(90deg);
 }
-[data-orientation="vertical"]{
+[data-orientation="vertical"] {
   padding: 0;
+  will-change: height, width;
+  /* transition: .3s; */
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+}
+
+[data-custom-width] {
+  width: calc(100% - 55px);
+}
+
+[data-slot="base"] {
+  will-change: contents;
 }
 /* svg{
   zoom: .8
@@ -75,15 +93,15 @@ body {
   zoom: 80%;
 
 } */
- nav ul svg {
+nav ul svg {
   width: 22.5px !important;
   height: 22.5px !important;
- }
+}
 
- header ul svg{
+header ul svg {
   width: 19.5px !important;
   height: 19.5px !important;
- }
+}
 input,
 textarea,
 [contenteditable] {
@@ -214,9 +232,26 @@ button.clicked svg path {
   animation: clickframe 0.2s alternate linear;
 }
 
+/* .shadow-bl{
+  box-shadow: 10px 100px 100px 10px #000;
+} */
+
+[data-viewport-type="element"] {
+  /* @apply py-2; */
+}
+
+/* [data-virtuoso-scroller="true"] > div {
+  @apply p-2;
+} */
+.gutter{
+  scrollbar-gutter: space;
+
+}
+
 .custom-font-size {
   font-size: clamp(5px, 0.9vw, 50px);
   text-wrap: nowrap;
+  
 }
 
 .minion::before {
@@ -296,9 +331,14 @@ details summary::before {
   background-size: contain;
   background-repeat: no-repeat;
   margin-right: 0.2em;
-  transform: rotate(-90deg);
-
+  transform: rotate(90deg);
+  position: absolute;
+  right: 0;
   transition: transform 0.3s ease;
+}
+
+details::marker {
+  color: aliceblue;
 }
 
 details[open] summary::before {
@@ -308,6 +348,10 @@ details[open] summary::before {
 details[open] summary {
   margin-bottom: 5px;
 }
+[data-accordion-key]{
+  position: relative !important;
+}
+
 
 #gjs {
   border: none !important;
@@ -355,24 +399,12 @@ details[open] summary {
   @apply text-[13.5px] capitalize  w-full;
 }
 
-.gjs-toolbar {
-  /* bottom: -30px !important; */
-  /* top: calc(100%+30px) !important; */
-  /* border-radius: 20px !important; */
-  /* @apply rounded-bl-lg !important; */
-}
-
 .gjs-badge {
   /* display: none !important; */
-
   align-items: center !important;
-  background-color: unset !important ;
+  /* background-color: unset !important ; */
   padding: unset !important;
   /* @apply text-slate-200 font-bold text-[12px] rounded-lg  bg-blue-500  gap-3 items-center  p-[unset!important]; */
-}
-
-.gjs-badge svg {
-  /* margin-right: 50px !important; */
 }
 
 .gjs-badge div,
@@ -398,12 +430,53 @@ details[open] summary {
   fill: red;
 }
 
+[inf-symbol-id].gjs-selected {
+  outline: 2px solid var(--symbol-color-hover) !important;
+}
+
+/* .gjs-cv-canvas .gjs-highlighter {
+  outline-width: 2px;
+  outline-color: #eb2588 !important;
+} */
+
+.symbol-highlight {
+  outline: 2px solid var(--symbol-color-hover) !important;
+  outline-offset: -2px;
+}
+
+.symbol-bg {
+  background-color:var(--symbol-color-hover) !important;
+}
+
+.badge-symbol-highlight figure{
+  background-color: var(--symbol-color-hover) !important ;
+}
+
+/* .gjs-badge > *{
+  background-color: red;
+} */
+
+.forceRight {
+  left: unset !important;
+  right: 0 !important;
+}
+
+.forceLeft {
+  left: 0 !important;
+  right: unset !important;
+}
+
 .gjs-rte-toolbar span {
   @apply text-[18px] w-[32px] h-[32px] border-gray-700;
 }
 
+.gjs-toolbar {
+  /* left: 0 !important; */
+  @apply bg-blue-600;
+}
+
 .gjs-toolbar-items {
-  @apply items-center gap-3 py-[5px] px-2 flex bg-blue-600;
+  @apply items-center gap-3 py-[5px] px-2 flex ;
 }
 
 .gjs-toolbar svg {

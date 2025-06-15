@@ -210,7 +210,7 @@ export const AnimationsBuilder = memo(() => {
   return (
     <>
       <MiniTitle>Animations Builder</MiniTitle>
-      <section className="flex flex-col gap-2  rounded-lg ">
+      <section className="flex flex-col gap-2 mt-2 rounded-lg ">
         <section className="flex gap-2">
           <Input
             className="bg-slate-800 w-full"

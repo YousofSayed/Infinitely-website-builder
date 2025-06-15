@@ -9,6 +9,8 @@ import { projectState, showCrtModalState } from "../../helpers/atoms.jsx";
 import { Project } from "./Project.jsx";
 import { Loader } from "../Loader.jsx";
 import { projectsType } from "../../helpers/jsDocs.js";
+import { VirtuosoGrid } from "react-virtuoso";
+import { GridComponents } from "../Protos/VirtusoGridComponent.jsx";
 
 export const Projects = memo(() => {
   const setShowCrtModal = useSetRecoilState(showCrtModalState);
@@ -26,15 +28,17 @@ export const Projects = memo(() => {
   return (
     <section className="w-full h-full">
       <section
-        className={`p-2 container m-auto gap-3 h-full bg-slate-950 w-full rounded-lg ${
-          dbProjects?.length
-            ? "grid grid-cols-4 "
-            : "flex items-center justify-center"
+        className={`${dbProjects?.length ? '' : 'p-2'} container m-auto gap-3 h-full bg-slate-950 w-full rounded-lg ${
+          !dbProjects?.length &&
+            "flex items-center justify-center"
         }`}
       >
-        {dbProjects?.map((project) => (
+        {dbProjects?.length && <VirtuosoGrid components={GridComponents} totalCount={Number(dbProjects.length)}  itemClassName="p-2" itemContent={(i)=>{
+          return <Project key={i} project={dbProjects[i]} />
+        }}/>}
+        {/* {dbProjects?.map((project) => (
           <Project key={project.id} project={project} />
-        ))}
+        ))} */}
 
         {!dbProjects?.length && !showLoader && !liveQueryProjects?.length && (
           <figure className="flex flex-col items-center justify-center gap-2">

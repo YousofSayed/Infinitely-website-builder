@@ -3,88 +3,49 @@ import { SmallButton } from "../Editor/Protos/SmallButton";
 import { Icons } from "../Icons/Icons";
 import { Menu } from "../Editor/Protos/Menu";
 import { Popover } from "../Editor/Popover";
+import { Tooltip } from "react-tooltip";
+import { addClickClass, uniqueID } from "../../helpers/cocktail";
 
-export const OptionsButton = ({
-  children,
-  buttonClassName = "",
-  menuClassName = "",
-  menuWidth,
-  menuHight,
-  onClick = (ev, setShowMenu) => {},
-  callbackChildren = ({ setShowMenu }) => {},
-}) => {
-  const [showMenu, setShowMenu] = useState(false);
+/**
+ * @param {import('react').HTMLAttributes<HTMLDivElement>} [props] - All HTML div attributes
+ * @returns {JSX.Element}
+ */
+export const OptionsButton = ({ children, onClick, ...props }) => {
+  const [showTooltip, setShowTooltip] = useState(false);
   const [isPending, setTransition] = useTransition();
   const buttonRef = useRef();
-
-  useEffect(() => {
-    const clickCallback = (ev) => {
-      console.log(ev.target.tagName);
-      setTransition(() => {
-        setShowMenu(false);
-      });
-    };
-    window.addEventListener("click", clickCallback);
-
-    return () => {
-      window.removeEventListener("click", clickCallback);
-      //   document.removeEventListener("focusout", clickCallback);
-    };
-  });
+  const id = useRef(uniqueID());
 
   return (
-    <section
-      className="relative h-full "
-      onClick={(ev) => {
-        ev.stopPropagation();
-      }}
-      ref={buttonRef}
-    >
+    <>
       <SmallButton
-        onBlur={(ev) => {
-          ev.stopPropagation();
-        }}
+        {...props}
+        id={id.current}
         onClick={(ev) => {
-          ev.stopPropagation();
-          console.log(true);
-
-          ev.currentTarget.parentNode.click();
-          setTransition(() => {
-            setShowMenu(!showMenu);
-          });
-          onClick(ev, setShowMenu);
+          addClickClass(ev.currentTarget, "click");
+          onClick?.(ev);
         }}
-        className={`h-full ${
-          buttonClassName ? buttonClassName : "bg-slate-800"
-        }`}
+        className="w-fit bg-transparent hover:bg-transparent border-none"
       >
         {Icons.options({ fill: "#fff" })}
       </SmallButton>
 
-      {showMenu && (
-        // <menu
-
-        //   onClick={(ev) => {
-        //     ev.stopPropagation();
-        //   }}
-        //   className={`flex flex-col gap-2 border-2 border-slate-600  p-2 absolute  shadow-md shadow-gray-950 text-white w-[130px] text-center left-[-65px] rounded-lg z-[500] top-[calc(100%+10px)] ${
-        //     menuClassName ? menuClassName : "bg-slate-800"
-        //   }`}
-        // >
-        //   {children || callbackChildren({setShowMenu})}
-        // </menu>
-        <Popover
-          width={menuWidth || 200}
-          height={menuHight || 200}
-          isOpen={showMenu}
-          setIsOpen={setShowMenu}
-          targetRef={buttonRef}
-        >
-          <menu className="p-2">
-            {children || callbackChildren({ setShowMenu })}
-          </menu>
-        </Popover>
-      )}
-    </section>
+      <Tooltip
+        className="w-fit p-[unset] z-[100]"
+        style={{
+          boxShadow:`0px 0px 10px 1px #0f172a`,
+          padding: "10px 5px",
+        }}
+        anchorSelect={`#${id.current}`}
+        place="bottom-end"
+        clickable
+        opacity={1}
+        isOpen={showTooltip}
+        setIsOpen={setShowTooltip}
+        openOnClick
+      >
+        {children}
+      </Tooltip>
+    </>
   );
 };

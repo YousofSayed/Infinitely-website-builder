@@ -20,20 +20,20 @@ export const GridLayout = () => {
       <Property
         label="Grid template columns"
         cssProp="grid-template-columns"
-        wrap={true}
+        // wrap={true}
       />
       <Property
         label="Grid template rows"
         cssProp="grid-template-rows"
-        wrap={true}
+        // wrap={true}
       />
       <Property
         label="Grid auto columns"
         cssProp="grid-auto-columns"
-        wrap={true}
+        // wrap={true}
       />
 
-      <Property label="Grid auto rows" cssProp="grid-auto-rows" wrap={true} />
+      <Property label="Grid auto rows" cssProp="grid-auto-rows" />
       <Property label="column gap" cssProp="column-gap"  />
       <Property label="row gap" cssProp="row-gap"  />
 

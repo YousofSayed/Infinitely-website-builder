@@ -17,6 +17,12 @@ export const InfinitelyEvents = {
   directives: {
     update: "infinitely:directives:update",
   },
+  preview:{
+    navigate:'infinitely:preview:navigate'
+  },
+  style:{
+    set:'infinitely:style:set'
+  }
 };
 
 

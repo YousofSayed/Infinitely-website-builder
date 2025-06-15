@@ -63,14 +63,14 @@ export function customModal(editor) {
 
   editor.Commands.add(open_files_manager_modal, (editor, sender, options) => {
     editor.runCommand("open:custom:modal", {
-      title: <ModalTitle icon={Icons.gallery()} title={"Files Manager"} />,
+      title: <ModalTitle icon={Icons.gallery('white')} title={"Files Manager"} />,
       JSXModal: <AssetsManager editor={editor} />,
     });
   });
 
   editor.Commands.add(open_pages_manager_modal, (editor, sender, options) => {
     editor.runCommand("open:custom:modal", {
-      title: <ModalTitle icon={Icons.stNote()} title={"Pages Manager"} />,
+      title: <ModalTitle icon={Icons.stNote('white')} title={"Pages Manager"} />,
       JSXModal: <PagesManager />,
       height: "90%",
     });
@@ -104,7 +104,7 @@ export function customModal(editor) {
       editor.runCommand("open:custom:modal", {
         title: (
           <ModalTitle
-            icon={Icons.installLibrary({})}
+            icon={Icons.installLibrary({strokeColor:'white'})}
             title={"Library Installer"}
           />
         ),
@@ -117,7 +117,7 @@ export function customModal(editor) {
 
   editor.Commands.add(open_rest_models_modal, (editor, sender, options) => {
     editor.runCommand("open:custom:modal", {
-      title: <ModalTitle icon={Icons.db()} title={"Rest API Models"} />,
+      title: <ModalTitle icon={Icons.db('white')} title={"Rest API Models"} />,
       JSXModal: <RestAPIModels />,
       width: "70%",
       height: "90%",
@@ -130,7 +130,7 @@ export function customModal(editor) {
       editor.runCommand("open:custom:modal", {
         title: (
           <ModalTitle
-            icon={Icons.fonts({ width: 30, height: 30 })}
+            icon={Icons.fonts({ width: 30, height: 30  , strokeColor:'white'})}
             title={"Custom font Installer"}
           />
         ),
@@ -143,7 +143,7 @@ export function customModal(editor) {
 
   editor.Commands.add(open_settings_modal, (editor, sender, options) => {
     editor.runCommand("open:custom:modal", {
-      title: <ModalTitle icon={Icons.setting()} title={"Settings"} />,
+      title: <ModalTitle icon={Icons.setting('white')} title={"Settings"} />,
       JSXModal: <SettingsModal />,
       width: "65%",
       height: "80%",
@@ -152,7 +152,7 @@ export function customModal(editor) {
 
   editor.Commands.add(open_page_helmet_modal, (editor, sender, options) => {
     editor.runCommand("open:custom:modal", {
-      title: <ModalTitle icon={Icons.helmet({})} title={"Page Helmet"} />,
+      title: <ModalTitle icon={Icons.helmet({fill:'white'})} title={"Page Helmet"} />,
       JSXModal: <PageHelmetModal />,
       width: "55%",
       height: "90%",
@@ -163,7 +163,7 @@ export function customModal(editor) {
     editor.runCommand("open:custom:modal", {
       title: (
         <ModalTitle
-          icon={Icons.code({ strokeWidth: 3 })}
+          icon={Icons.code({ strokeWidth: 3 , strokeColor:'white'})}
           title={"Page Code Manager"}
         />
       ),
@@ -177,7 +177,7 @@ export function customModal(editor) {
     editor.runCommand("open:custom:modal", {
       title: (
         <ModalTitle
-          icon={Icons.file({ strokeWidth: 3 ,width:24 , height:24 })}
+          icon={Icons.file({ strokeWidth: 3 ,width:24 , height:24 , fill: "white" })}
           title={"File Editor"}
         />
       ),
@@ -191,7 +191,7 @@ export function customModal(editor) {
     editor.runCommand("open:custom:modal", {
       title: (
         <ModalTitle
-          icon={Icons.components()}
+          icon={Icons.components('white')}
           title={"Symbols & Templates Manager"}
         />
       ),

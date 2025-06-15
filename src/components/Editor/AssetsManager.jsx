@@ -25,20 +25,34 @@ import {
 } from "../../helpers/functions";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
+  current_page_id,
   current_project_id,
   inf_build_url,
   inf_css_urls,
+  MAX_UPLOAD_SIZE,
 } from "../../constants/shared";
 import { db } from "../../helpers/db";
 import { ViewportList } from "react-viewport-list";
 import { VirtuosoGrid } from "react-virtuoso";
 import { GridComponents } from "../Protos/VirtusoGridComponent";
 import { InfinitelyEvents } from "../../constants/infinitelyEvents";
-import { blobToDataUrlAndClean, getFilesSize } from "../../helpers/bridge";
+import {
+  blobToDataUrlAndClean,
+  cleanMotions,
+  getFileSize,
+  getFilesSize,
+  getStorageDetails,
+} from "../../helpers/bridge";
 import { useEditorMaybe } from "@grapesjs/react";
 import { infinitelyWorker } from "../../helpers/infinitelyWorker";
 import { Loader } from "../Loader";
 import { initDBAssetsSw } from "../../serviceWorkers/initDBAssets-sw";
+import { SmallButton } from "./Protos/SmallButton";
+import noData from "../../assets/images/no-data.svg";
+import { FitTitle } from "./Protos/FitTitle";
+import { storageDetailsType } from "../../helpers/jsDocs";
+import { Hr } from "../Protos/Hr";
+import { FileView } from "../Protos/FileView";
 
 /**
  *
@@ -63,7 +77,7 @@ export const AssetsManager = memo(() => {
   const assetType = useRecoilValue(assetTypeState);
   const setAssetType = useSetRecoilState(assetTypeState);
   const [showLoader, setShowLoader] = useState(true);
-
+  const [storageDetails, setStorageDetails] = useState(storageDetailsType);
   // const editor = useEditorMaybe();
   /**
    * @type {{current : HTMLInputElement}}
@@ -72,26 +86,9 @@ export const AssetsManager = memo(() => {
   // const selec = editor.getSelected();
 
   useLiveQuery(async () => {
-    // const projectData = await await getProjectData();
-    // setFiles(projectData.assets);
-
     getAssetsFromAM();
   });
 
-  useEffect(() => {
-    if (!inputRef.current) return;
-  });
-
-  useEffect(() => {
-    return () => {
-      if (files.length) {
-        for (const file of files) {
-          URL.revokeObjectURL(file.blobUrl);
-        }
-        console.log("revoked");
-      }
-    };
-  }, [files]);
 
   useEffect(() => {
     /**
@@ -109,10 +106,19 @@ export const AssetsManager = memo(() => {
       }
     };
     infinitelyWorker.addEventListener("message", cb);
+    getAndSetStorageDetails();
     return () => {
       infinitelyWorker.removeEventListener("message", cb);
     };
   }, []);
+
+  const getAndSetStorageDetails = async () => {
+    // console.log('current_project_id : ', +localStorage.getItem(current_project_id));
+    
+    setStorageDetails(
+      await getStorageDetails(+localStorage.getItem(current_project_id))
+    );
+  };
 
   const getAssetsFromAM = async () => {
     const projectData = await await getProjectData();
@@ -145,25 +151,31 @@ export const AssetsManager = memo(() => {
    * @param {InputEvent} ev
    */
   const onUploaderLoad = async (ev) => {
-    setShowLoader(true);
+    // setShowLoader(true);
     try {
       /**
        * @type {File[]}
        */
-      const files = ev.target.files;
-      const inputFiles = Array.from(files).map((file) => ({
+      const files = [...ev.target.files];
+      const inputFiles = files.map((file) => ({
         file: file,
         id: uniqueID(),
         // blobUrl: URL.createObjectURL(file),
       }));
+      // const projectData = await getProjectData();
+
       const filesSize = getFilesSize(files);
       console.log(filesSize.MB, filesSize.GB);
-      if (filesSize.MB > 10) {
-        toast.warn(<ToastMsgInfo msg={`Files Size Is Too Large!!`} />);
-        return;
-      }
 
-      const projectData = await getProjectData();
+      // return
+
+      // if (filesSize.MB > 10) {
+      //   toast.warn(<ToastMsgInfo msg={`Files Size Is Too Large!!`} />);
+      //   setShowLoader(false);
+      //   return;
+      // }
+
+      // const projectData = await getProjectData();
       // console.log("itr : ", projectData.assets);
 
       // await db.projects.update(projectId, {
@@ -172,13 +184,14 @@ export const AssetsManager = memo(() => {
       //   ...inputFiles,
       // ],
       // });
-
+      const id = toast.loading(<ToastMsgInfo msg={`Uploading...`} />);
       infinitelyWorker.postMessage({
         command: "uploadAssets",
         props: {
           projectId,
+          toastId: id,
           assets: [
-            ...(Array.isArray(projectData.assets) ? projectData.assets : []),
+            // ...(Array.isArray(projectData.assets) ? projectData.assets : []),
             ...inputFiles,
           ],
         },
@@ -198,44 +211,6 @@ export const AssetsManager = memo(() => {
       // setShowLoader(false);
     }
 
-    // const newFiles = [];
-
-    // inputFiles.forEach((file) => {
-    //   const reader = new FileReader();
-    //   reader.readAsDataURL(file);
-    //   const fileSize = +(file.size / (1024 * 1024)).toFixed(2);
-
-    //   if (fileSize > 30) {
-    //     toast.warn(<ToastMsgInfo msg={"⚠ Maximum file size in 30MB"} />);
-
-    //     setTimeout(() => {
-    //       setWarn("");
-    //     }, 1500);
-    //     return;
-    //   }
-
-    //   const upload = (ev) => {
-    //     newFiles.push({
-    //       src: ev.target.result,
-    //       type: file.type.split("/")[0],
-    //       name: file.name,
-    //       blob: file,
-    //     });
-    //     console.log(newFiles);
-    //     setFiles([...files, ...newFiles]);
-    //     editor.Assets.add({
-    //       type: file.type.split("/")[0],
-    //       src: ev.target.result,
-    //       name: file.name,
-    //       blob: file,
-    //     });
-
-    //     editor.store();
-    //     reader.removeEventListener("load", upload);
-    //   };
-
-    //   reader.addEventListener("load", upload);
-    // });
   };
 
   /**
@@ -252,7 +227,7 @@ export const AssetsManager = memo(() => {
       toast.warn(<ToastMsgInfo msg={`Please select element`} />);
       return;
     }
-    const symbolInfo = getInfinitelySymbolInfo(selectedEl);
+    // const symbolInfo = getInfinitelySymbolInfo(selectedEl);
     console.log(cssPropForAM);
 
     if (cssPropForAM) {
@@ -268,73 +243,30 @@ export const AssetsManager = memo(() => {
         editor.getSelected().getEl(),
         editor.getSelected().getEl() instanceof HTMLDivElement
       );
-      const src = `../assets/${file.name}`;
+      const pageName = localStorage.getItem(current_page_id);
+      const isIndex = pageName.toLowerCase() == "index";
+      const src = `${isIndex ? "." : ".."}/assets/${file.name}`;
       editor.getSelected().addAttributes({ src });
-      const projectSettings =  getProjectSettings();
-      const navigateValue = projectSettings.projectSettings.navigate_to_style_when_Select
+      const projectSettings = getProjectSettings();
+      const navigateValue =
+        projectSettings.projectSettings.navigate_to_style_when_Select;
       // editor.getSelected().getView().render();
       // editor.getSelected().updateView()
       if (!("src" in el)) {
         // el.querySelector(`[src]`).setAttribute("src", src);
-       projectSettings.set({
+        projectSettings.set({
           navigate_to_style_when_Select: false,
         });
-        const newSle = editor.getSelected().replaceWith(editor.getSelected().clone())[0];
+        const newSle = editor
+          .getSelected()
+          .replaceWith(editor.getSelected().clone())[0];
         editor.select(newSle);
-       projectSettings.set({
-          navigate_to_style_when_Select:navigateValue,
+        projectSettings.set({
+          navigate_to_style_when_Select: navigateValue,
         });
       }
       // console.log("nooo", !("src" in el));
     }
-    // const urls = JSON.parse(selectedEl.getAttributes()[inf_css_urls] || "{}");
-    // selectedEl.addAttributes({
-    //   [inf_css_urls]: JSON.stringify({
-    //     ...urls,
-    //     [cssPropForAM]: {
-    //       fileName: file.name,
-    //       media: getCurrentMediaDevice(editor),
-    //       rule: `${getCurrentSelector(selector, selectedEl)}${
-    //         rule.ruleString || ""
-    //       }`,
-    //     },
-    //   }),
-    // });
-
-    //   if (symbolInfo.isSymbol && !symbolInfo.isChild) {
-    //     const projectData = await await getProjectData();
-    //     await db.projects.update(projectId, {
-    //       symbols: {
-    //         ...projectData.symbols,
-    //         [symbolInfo.mainId]: {
-    //           ...projectData.symbols[symbolInfo.mainId],
-    //           content: new Blob(
-    //             [
-    //               symbolInfo.symbol.toHTML({
-    //                 keepInlineStyle: true,
-    //                 withProps: true,
-    //               }),
-    //             ],
-    //             { type: "text/html" }
-    //           ),
-    //         },
-    //       },
-    //     });
-    //   }
-    // } else {
-    //   selectedEl.addAttributes({
-    //     src: URL.createObjectURL(file),
-    //     [inf_build_url]: `infinitely/assets/${file.name}`,
-    //   });
-    //   editor.trigger(InfinitelyEvents.attributes.buildUrl);
-    // }
-
-    // cssPropForAM
-    //   ? setClass({
-    //       cssProp: cssPropForAM,
-    //       value: `url("${URL.createObjectURL(file)}")`,
-    //     })
-    //   : selectedEl.addAttributes({ src: URL.createObjectURL(file) });
 
     setCssPropForAM("");
     setAssetType("");
@@ -348,9 +280,11 @@ export const AssetsManager = memo(() => {
   };
 
   const deleteAll = async () => {
-    db.projects.update(projectId, {
+    await db.projects.update(projectId, {
       assets: [],
     });
+
+    toast.success(<ToastMsgInfo msg={`All assets deleted successfully`} />);
   };
 
   const search = async (value = "") => {
@@ -364,8 +298,8 @@ export const AssetsManager = memo(() => {
 
   return (
     <main className="w-full h-[500px]">
-      <section className=" w-full h-full m-auto  rounded-lg flex flex-col gap-2">
-        <header className="h-[50px!important] flex justify-between items-center gap-5 p-2 rounded-lg rounded-tl-full rounded-tr-2xl rounded-br-2xl rounded-bl-full bg-gray-950 ">
+      <section className=" w-full h-full m-auto  rounded-lg overflow-hidden flex flex-col gap-2">
+        <header className="h-[50px!important] flex justify-between items-center gap-2 p-2  rounded-tl-full rounded-tr-2xl rounded-br-2xl rounded-bl-full bg-slate-800 ">
           <figure>{Icons.logo({ width: 38 })}</figure>
           {warn && (
             <p className="font-semibold text-xl bg-red-700 p-2 rounded-lg">
@@ -379,34 +313,81 @@ export const AssetsManager = memo(() => {
               search(ev.target.value);
             }}
           />
-          <Button
-            onClick={openUploader}
-            // className="py-[7.5px] px-[30px]  font-bold text-lg"
-          >
-            {Icons.upload({ strokeColor: "white" })}
-            Upload
-          </Button>
 
-          <Button
+          <SmallButton
+            title="Delete All"
+            className="h-full flex-shrink-0 bg-slate-900 hover:bg-[crimson!important]"
             onClick={() => {
               deleteAll();
             }}
           >
             {Icons.trash("white")}
-            Delete All
-          </Button>
+          </SmallButton>
+
+          <SmallButton
+            className="h-full flex-shrink-0 bg-slate-900"
+            title={"Upload"}
+            onClick={openUploader}
+            // className="py-[7.5px] px-[30px]  font-bold text-lg"
+          >
+            {Icons.upload({ strokeColor: "white" })}
+          </SmallButton>
         </header>
+
+        {!!files.length && (
+          <section className=" flex items-center justify-between p-2 rounded-lg bg-slate-800">
+            <article className="font-semibold text-[14px] text-slate-200 flex items-center gap-2">
+              <FitTitle>Available Space</FitTitle>{" "}
+              <p className="h-full p-1 bg-slate-900 rounded-lg">
+                {storageDetails.availableSpaceInMB >= MAX_UPLOAD_SIZE
+                  ? (
+                      MAX_UPLOAD_SIZE -
+                      getFilesSize(files.map((file) => file.file)).MB
+                    ).toFixed(2)
+                  : (
+                      storageDetails.availableSpaceInMB -
+                      getFilesSize(files.map((file) => file.file)).MB
+                    ).toFixed(2)}
+                MB
+              </p>{" "}
+            </article>
+
+            <Hr/>
+
+            <article className="font-semibold text-[14px] text-slate-200 flex items-center gap-2">
+              <FitTitle>Used Space</FitTitle>{" "}
+              <p className="h-full p-1 bg-slate-900 rounded-lg">
+                {getFilesSize(files.map((file) => file.file)).MB.toFixed(2)}MB
+              </p>{" "}
+            </article>
+
+            <Hr/>
+
+            <article className="font-semibold text-[14px] text-slate-200 flex items-center gap-2">
+              <FitTitle>Total Space</FitTitle>{" "}
+              <p className="h-full p-1 bg-slate-900 rounded-lg">
+                {storageDetails.availableSpaceInMB >= MAX_UPLOAD_SIZE
+                  ? MAX_UPLOAD_SIZE
+                  : storageDetails.availableSpaceInMB}
+                MB
+              </p>{" "}
+            </article>
+          </section>
+        )}
 
         {/* <section
           className={`w-full h-full  bg-gray-950 rounded-lg p-2 overflow-auto grid grid-cols-[repeat(auto-fill,minmax(25%,1fr))] grid-rows-[repeat(auto-fill,minmax(200px,200px))] justify-start gap-[15px] `}
         > */}
-        {showLoader && <Loader />}
-        {!!files.length && !showLoader && (
+        {showLoader && <Loader />} 
+        {!!files.length && (
           <VirtuosoGrid
             totalCount={files.length}
             components={GridComponents}
+            style={{
+              height: "100%",
+            }}
             // className="h-full"
-            className="p-[unset]"
+            className="p-[unset] h-full"
             // itemClassName="p-[unset]"
             listClassName=" pr-2"
             itemContent={(index) => {
@@ -414,113 +395,22 @@ export const AssetsManager = memo(() => {
                 asset = files[index];
 
               return (
-                <section
-                  key={i}
-                  className={`group relative rounded-lg p-3 bg-slate-800  flex flex-col justify-center items-center gap-2`}
-                >
-                  <button
-                    onClick={(ev) => {
-                      deleteAsset(asset.id);
-                    }}
-                    className="absolute group-hover:flex z-[200] right-0 top-0 bg-blue-600 fill-white cursor-pointer hidden justify-center items-center rounded-full w-[23px] h-[23px]"
-                  >
-                    {/* <Icons.close /> */}
-                    {Icons.close("white", 1.5)}
-                  </button>
-
-                  <figure
-                    onDoubleClick={(ev) => {
-                      // ev.stopPropagation();
-                      onItemClicked(ev, asset.file);
-                    }}
-                    className=" p-2 h-[150px]  cursor-pointer rounded-lg  "
-                  >
-                    {(asset.file.type.includes("video") && (
-                      <section
-                        onClick={(ev) => {
-                          console.log("play");
-                        }}
-                      >
-                        <video
-                          className="w-full h-full object-cover"
-                          onClick={(ev) => {
-                            ev.stopPropagation();
-                            ev.preventDefault();
-                            ev.currentTarget.play();
-                            console.log("play");
-                          }}
-                          onDoubleClick={(ev) => {
-                            ev.preventDefault();
-                            ev.stopPropagation();
-                            console.log("dbplay");
-                            onItemClicked(ev, asset.file);
-                          }}
-                          onLoad={(ev) => {
-                            console.log("video load");
-                          }}
-                          autoPlay={true}
-                          muted={true}
-                          poster=""
-                          // onMouseOver={(ev)=>{
-                          //   ev.currentTarget.controls = true;
-                          // }}
-
-                          // onMouseLeave={(ev)=>{
-                          //   ev.currentTarget.controls = false
-                          // }}
-
-                          // onBlur={(ev)=>{
-                          //   ev.currentTarget.controls = false
-                          // }}
-                          onError={(ev) => {
-                            console.log(
-                              "Video dont load correctly",
-                              asset,
-                              asset.file
-                            );
-                            // ev.currentTarget.load()
-                          }}
-                          // className="w-full h-full"
-                          src={`assets/${asset.file.name}`}
-                          // controls={true}
-                        ></video>
-                        {/* <p className="mt-5 p-1 bg-blue-600 w-fit font-bold rounded-lg">
-                          video
-                        </p> */}
-                      </section>
-                    )) ||
-                      (asset.file.type.includes("audio") && (
-                        <audio
-                          onClick={(ev) => onItemClicked(ev, asset.file)}
-                          className="w-full h-full"
-                          src={asset.blobUrl}
-                          controls={true}
-                        ></audio>
-                      )) ||
-                      (asset.file.type.includes("image") && (
-                        <img
-                          onLoad={(ev) => {
-                            console.log("image load...");
-                          }}
-                          onClick={(ev) => onItemClicked(ev, asset.file)}
-                          className="w-full h-full object-fill"
-                          src={`assets/${asset.file.name}`}
-                        ></img>
-                      ))}
-
-                    {!/image|audio|video/gi.test(asset.file.type) &&
-                      Icons.file({ fill: "white", width: 130, height: 130 })}
-                  </figure>
-                  <p
-                    title={asset.file.name}
-                    className="text-slate-200 p-2 bg-slate-900 rounded-md text-ellipsis max-w-[90%]   text-nowrap overflow-hidden "
-                  >
-                    {asset.file.name}
-                  </p>
-                </section>
+             
+                <FileView asset={asset}   />
               );
             }}
           />
+        )}
+
+        {!files.length && !showLoader && (
+          <section className="w-full h-full flex flex-col gap-2 justify-center items-center">
+            <figure>
+              <img src={noData} className="max-w-full max-h-[300px]" />
+            </figure>
+            <p className="text-slate-300 font-semibold text-2xl">
+              No assets found
+            </p>
+          </section>
         )}
 
         <input

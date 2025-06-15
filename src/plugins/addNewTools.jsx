@@ -3,13 +3,22 @@ import { createSymbolTool } from "./tools/createSymbolTool";
 import { createReusableCmpTool } from "./tools/createReusableCmpTool";
 import { mountAppTool } from "./tools/mountAppTool";
 import { createDynamicTemplate } from "./tools/createDynamicTemplate";
-import { addClickClass, html } from "../helpers/cocktail";
+import { addClickClass, css, html } from "../helpers/cocktail";
 import {
   getInfinitelySymbolInfo,
+  getProjectSettings,
+  initToolbar,
   isDynamicComponent,
 } from "../helpers/functions";
 import { unMountAppTool } from "./tools/unMountAppTool";
 import { cloneDeep } from "lodash";
+import { motionId } from "../constants/shared";
+import { runGsapMotionTool } from "./tools/runGsapMotionTool";
+import { killGsapMotionTool } from "./tools/killGsapMotion";
+import interact from "interactjs";
+import { Infinitely } from "../helpers/Infinitely";
+import { InfinitelyEvents } from "../constants/infinitelyEvents";
+import { styleInfInstance } from "../constants/InfinitelyInstances";
 
 /**
  *
@@ -17,160 +26,160 @@ import { cloneDeep } from "lodash";
  * @returns
  */
 export const addNewTools = (editor) => {
-  let children;
   /**
-   * @type {HTMLElement | undefined}
+   * @type {Interact.Interactable}
    */
-  let resizerEl;
-  console.log(`resizer el out":`, document.querySelector(`.gjs-resizer-c`));
+  let interacter;
+
+  /**
+   *
+   * @param {boolean} value
+   * @param {import('grapesjs').Component} cmp
+   */
+  const disableDragAndDrop = (value = false, cmp) => {
+    const props = cmp.props();
+    cmp.set({
+      draggable: value,
+      droppable: value || false,
+    });
+    // editor.select()
+    cmp.forEachChild((child) => disableDragAndDrop(value, child));
+  };
+
+  editor.on(
+    "component:hovered",
+    /**
+     *
+     * @param { import('grapesjs').Component } component
+     */
+    (component) => {
+      const trg = component && component.getEl();
+      const highlighter = document.querySelector(
+        `.gjs-cv-canvas .gjs-highlighter`
+      );
+      const symbolInfo = getInfinitelySymbolInfo(component);
+      /**
+       * @type {HTMLElement | undefined}
+       */
+      const badgeEl = editor.Canvas.getBadgeEl();
+      // component.getName();
+      // console.log(
+      //   "hover : ",
+      //   badgeEl,
+      //   editor.Canvas.getHighlighter(),
+      //   document.querySelector(`.gjs-cv-canvas .gjs-highlighter`),
+      //   editor.Canvas.getHighlighter(),
+      //   component,
+      //   trg
+      // );
+      if (badgeEl && highlighter && component && symbolInfo.isMain) {
+        highlighter.classList.add("symbol-highlight");
+        badgeEl.classList.add("badge-symbol-highlight");
+      } else {
+        badgeEl.classList.remove("badge-symbol-highlight");
+        highlighter.classList.remove("symbol-highlight");
+      }
+
+      const toolbarEl = editor.Canvas.getToolbarEl();
+      const top = toolbarEl.style.top;
+      const newTopValue = `${toolbarEl.style.top + (top < 0 ? -5 : 5)}px`;
+      toolbarEl.style.top = newTopValue;
+    }
+  );
+
   editor.on("component:selected", (args) => {
- 
     const sle = editor.getSelected();
     const symbolInfo = getInfinitelySymbolInfo(sle);
-    !children && (children = editor.Canvas.getResizerEl().children);
-    // editor.refresh({ tools.: true });
-    // editor.Canvas.refresh({ all: true, spots: true });
-
-    // sle.updateView();
-
-    if (isDynamicComponent(sle)) {
-      createDynamicTemplate(editor);
-      console.log(true, " yes is dynamic");
-
-      // runHsCmdsTool(editor);
-    } else {
-      // createDynamicTemplate(editor);
-      mountAppTool(editor);
-      unMountAppTool(editor);
-      createSymbolTool(editor);
-      !symbolInfo.isSymbol && createReusableCmpTool(editor);
-    }
-
-    const renderTool = () => {
-      const toolbarEl = editor.Canvas.getToolbarEl();
-      const toolbarItemsClass = `gjs-toolbar-items`;
-      const toolbarItemClass = `gjs-toolbar-item`;
-      const toolbarItemsEl = toolbarEl.querySelector(`.${toolbarItemsClass}`);
-      const cmpTools = sle.toolbar;
-      const moveCommand = `tlb-move`;
-      const noTouchClass = `gjs-no-touch-actions`;
-      // tlb-move gjs-no-touch-actions
-      // if (!toolbarItemsEl) {
-      console.log("hahahahahah");
-      toolbarEl.innerHTML = "";
-      const newToolbarItemsEl = document.createElement("menu");
-      newToolbarItemsEl.className = toolbarItemsClass;
-      //====================Append Tools===========
-      cmpTools.forEach((tool) => {
-        const toolEl = document.createElement("li");
-        toolEl.className = toolbarItemClass;
-        if (tool.command == moveCommand) {
-          toolEl.draggable = "true";
-          toolEl.classList.add(noTouchClass);
-        }
-        toolEl.insertAdjacentHTML("beforeend", tool.label);
-        if (tool.command == moveCommand) {
-          toolEl.addEventListener("mousedown", (ev) => {
-            ev.preventDefault();
-            ev.stopPropagation();
-            if (typeof tool.command == "string") {
-              editor.runCommand(tool.command);
-            } else if (typeof tool.command == "function") {
-              tool.command(editor);
-            }
-          });
-        } else {
-          toolEl.addEventListener("click", (ev) => {
-            addClickClass(ev.currentTarget, "click");
-            if (typeof tool.command == "string") {
-              editor.runCommand(tool.command);
-            } else if (typeof tool.command == "function") {
-              tool.command(editor);
-            }
-          });
-        }
-        newToolbarItemsEl.appendChild(toolEl);
-      });
-      toolbarEl.appendChild(newToolbarItemsEl);
-    };
+    interacter && interacter.unset();
     console.log("done render");
-    // };
 
-    renderTool();
-    console.log("resizer : ");
-    // editor.Canvas.getResizerEl().remove()
-
-    // [...children].forEach((el) => editor.Canvas.getResizerEl().appendChild(el));
-    // editor.Canvas.getResizerEl().innerHTML = "";
     if (sle.is("wrapper")) {
       console.log("i am wrapper");
       return;
     }
+    initToolbar(editor, sle);
 
-    // setTimeout(() => {
-      !resizerEl && (resizerEl = document.querySelector(`.gjs-resizer-c`));
-      if (resizerEl) {
-        resizerEl.style.display = "unset";
-        console.log("resizer exist");
+    // const resizerEl = editor.Canvas.getResizerEl();
+    // resizerEl.innerHTML = html`<div
+    //   class="gjs-resizer-c"
+    //   style="display: block;"
+    // >
+    //   <i class="gjs-resizer-h gjs-resizer-h-tl" data-gjs-handler="tl"></i
+    //   ><i class="gjs-resizer-h gjs-resizer-h-tc" data-gjs-handler="tc"></i
+    //   ><i class="gjs-resizer-h gjs-resizer-h-tr" data-gjs-handler="tr"></i
+    //   ><i class="gjs-resizer-h gjs-resizer-h-cl" data-gjs-handler="cl"></i
+    //   ><i class="gjs-resizer-h gjs-resizer-h-cr" data-gjs-handler="cr"></i
+    //   ><i class="gjs-resizer-h gjs-resizer-h-bl" data-gjs-handler="bl"></i
+    //   ><i class="gjs-resizer-h gjs-resizer-h-bc" data-gjs-handler="bc"></i
+    //   ><i class="gjs-resizer-h gjs-resizer-h-br" data-gjs-handler="br"></i>
+    // </div>`;
+    // const resizer = resizerEl.querySelector(`.gjs-resizer-c`)
+    console.log("after set resizer element : ", sle.getEl());
 
-        resizerEl.style.cssText = `
-      display:block!important;
-      `;
-        editor.Canvas.getResizerEl().appendChild(resizerEl);
-      } else if (!document.querySelector(`.gjs-resizer-c`) && resizerEl) {
-        console.log("resizer not exist");
-        editor.Canvas.getResizerEl().appendChild(resizerEl);
-        resizerEl.style.display = "block";
-      }
-      console.log(
-        `resizer el ":`,
-        document.querySelector(`.gjs-resizer-c`),
-        resizerEl
-      );
-    // }, 0);
-    // console.log("resizer element : ", editor.Canvas.getResizerEl());
-    // console.log(
-    //   "resizer children html : ",
-    //   editor.Canvas.getResizerEl().innerHTML
-    // );
-    // console.log(
-    //   "resizer children els : ",
-    //   children,
-    //   sle.getEl().__trackedListeners
-    // );
-    // editor.Canvas.getResizerEl().insertAdjacentHTML(
-    //   "beforeend",
-    //   `<div class="gjs-resizer-c" style="display: block;"><i class="gjs-resizer-h gjs-resizer-h-tl" data-gjs-handler="tl"></i><i class="gjs-resizer-h gjs-resizer-h-tc" data-gjs-handler="tc"></i><i class="gjs-resizer-h gjs-resizer-h-tr" data-gjs-handler="tr"></i><i class="gjs-resizer-h gjs-resizer-h-cl" data-gjs-handler="cl"></i><i class="gjs-resizer-h gjs-resizer-h-cr" data-gjs-handler="cr"></i><i class="gjs-resizer-h gjs-resizer-h-bl" data-gjs-handler="bl"></i><i class="gjs-resizer-h gjs-resizer-h-bc" data-gjs-handler="bc"></i><i class="gjs-resizer-h gjs-resizer-h-br" data-gjs-handler="br"></i></div>`
-    // );
-    // editor.Canvas.refresh({all:true});
-    // editor.refresh({tools:true})
-    // editor.Canvas.removeSpots({
-    //   component: sle,
-    //   type: "resize",
-    // });
-    // editor.Canvas.addSpot({
-    //   component: sle,
-    //   type: "resize",
-    // });
-    // sle.set("resizable", {
-    //   tl: 0, // Top-left
-    //   tc: 0, // Top-center
-    //   tr: 0, // Top-right
-    //   cl: 0, // Center-left
-    //   cr: 1, // Center-right
-    //   bl: 0, // Bottom-left
-    //   br: 0, // Bottom-right
-    //   bc: 0, // Bottom-center
-    //   minDim: 20, // Minimum dimension
-    //   step: 0.2, // Resize step
-    // });
+    interacter = interact(sle.getEl(), {
+      context: editor.Canvas.getWindow().document,
+    })
+    
+    interacter.resizable({
+      // resize from all edges and corners
+      edges: { left: true, right: true, bottom: true, top: true },
 
-    // editor.Canvas.getCanvasView().updateFrames();
-    // editor.refresh();
+      listeners: {
+        start(event) {
+          disableDragAndDrop(false, editor.getWrapper());
+        },
+        move(event) {
+          console.log("moooooove");
+          const target = event.target;
+          if(editor.getSelected() != sle )return
+          disableDragAndDrop(false, editor.getWrapper());
+
+          // Update styles without translation
+          // target.style.width = `${event.rect.width}px`;
+          // target.style.height = `${event.rect.height}px`;
+
+          // Update GrapesJS model
+          // sle.setStyle({
+          //   width: `${event.rect.width}px`,
+          //   height: `${event.rect.height}px`
+          // });
+
+          styleInfInstance.emit(InfinitelyEvents.style.set, {
+            cssProp: ["width", "height"],
+            value: [`${event.rect.width}px`, `${event.rect.height}px`],
+          });
+
+          // event.stopPropagation();
+        },
+        end(event) {
+          disableDragAndDrop(true, editor.getWrapper());
+          editor.select(sle)
+        },
+      },
+      modifiers: [
+        // keep the edges inside the parent
+        interact.modifiers.restrictEdges({
+          outer: "parent",
+        }),
+
+        // minimum size
+        interact.modifiers.restrictSize({
+          min: { width: 100, height: 50 },
+        }),
+      ],
+
+      inertia: true,
+    });
   });
-  // editor.on('component:resize', (component) => {
-  //   const { width, height } = component.getStyle();
-  //   component.setStyle({ width, height }); // Ensure model is updated
-  //   component.view.render(); // Rerender component view
-  // });
+
+  editor.on("component:deselected", 
+    /**
+     * 
+     * @param {import('grapesjs').Component} cmp 
+     */
+    (cmp) => {
+      interacter.unset();
+      console.log('cmp interactjs unseted');
+      
+  });
 };

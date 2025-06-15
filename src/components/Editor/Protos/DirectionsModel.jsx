@@ -138,7 +138,7 @@ export const DirectionsModel = ({
   return (
     <section className="flex flex-col gap-2">
       <SidesControllers option={option} setOption={setOption} />
-      <section className="flex flex-col gap-2 justify-center items-center bg-gray-950 p-2 rounded-lg">
+      <section className="flex flex-col gap-2 justify-center items-center bg-slate-800 p-2 rounded-lg">
         <div className="flex items-center justify-center">
           <SidesInput
             value={vals.tVal}

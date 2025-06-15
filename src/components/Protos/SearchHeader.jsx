@@ -15,7 +15,7 @@ export const SearchHeader = ({
       </i>
       <Input
         placeholder="Search..."
-        className="bg-slate-800 w-full rounded-none focus:border-transparent"
+        className="bg-slate-800 w-full py-3 rounded-none focus:border-transparent"
         onInput={(ev) => {
           if (allowTimeout) {
             searchTimeout.current && clearTimeout(searchTimeout.current);

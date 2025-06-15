@@ -65,6 +65,7 @@ export const HomeNav = () => {
           </Li>
 
           <Li
+          title="Fonts Installer"
             onClick={() => {
               editor.runCommand(open_custom_font_installer_modal);
             }}
@@ -73,7 +74,7 @@ export const HomeNav = () => {
           </Li>
 
           <Li
-            title="Media"
+            title="Files Manager"
             icon={Icons.gallery}
             onClick={() => {
               editor.runCommand(open_files_manager_modal);

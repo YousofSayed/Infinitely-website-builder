@@ -1,11 +1,12 @@
 import React, { memo, useEffect, useRef, useState } from "react";
-import { $a, addClickClass } from "../../helpers/cocktail";
+import { $a, addClickClass, uniqueID } from "../../helpers/cocktail";
 import { Link, useParams, useResolvedPath } from "react-router-dom";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import { removeAllActivesState } from "../../helpers/atoms";
 import { refType } from "../../helpers/jsDocs";
+import { Tooltip } from "react-tooltip";
 
-export const Li = memo(
+export const Li = (
   ({
     children,
     className = "",
@@ -31,44 +32,21 @@ export const Li = memo(
     const [myName, setMyName] = useState("");
     const [isClicked, setIsClicked] = useState();
     const buttonRef = useRef(refType);
-
-    // console.log(path.pathname?.match(to)?.filter(link=>link)?.length);
-
-    // useEffect(() => {
-    //   //   if (!buttonRef || !buttonRef.current) return;
-    //   console.log(isClicked);
-
-    //   if (allActives == title) {
-    //     setMyName(title);
-    //     setIsClicked(true);
-    //     return;
-    //   }
-    //   setMyName("");
-    //   setIsClicked(false);
-    // }, [allActives]);
-
-    // useEffect(() => {
-    //   const handleClickCallback = () => {
-    //     setRemoveActives("");
-    //   };
-    //   window.addEventListener("click", handleClickCallback);
-    //   return () => {
-    //     window.removeEventListener("click", handleClickCallback);
-    //   };
-    // }, []);
+    const uuid = useRef(uniqueID());
 
     return (
       <li
-        className={`group li-btn h-[35px] w-[35px]   rounded-lg cursor-pointer grid place-items-center transition-all ${
+      tooltib-id={uuid.current}
+        className={`group relative li-btn h-[30px] w-[30px]     rounded-lg cursor-pointer grid place-items-center transition-all ${
           to && path.pathname?.match(to)?.filter((link) => link)?.length
             ? "bg-blue-600"
             : ""
-        } ${className}  ${hover ? "hover:bg-blue-700" : ""}`}
+        } ${className}  ${hover ? "hover:bg-blue-600" : ""}`}
       >
         {to ? (
           <Link
             to={to}
-            title={title}
+            // title={title}
             aria-label={title}
             ref={refForward}
             target={target}
@@ -106,7 +84,7 @@ export const Li = memo(
           <button
             ref={refForward}
             aria-label={title}
-            title={title}
+            // title={title}
             className={`w-full h-full  flex justify-center items-center ${
               fillIcon && "[&_path]:hover:fill-white"
             } ${fillStrokeIcon && "[&_path]:hover:stroke-white"}`}
@@ -153,6 +131,8 @@ export const Li = memo(
             {children}
           </button>
         )}
+
+        <Tooltip anchorSelect={`[tooltib-id="${uuid.current}"]`} place="bottom-start" positionStrategy="fixed"  className="z-[100] capitalize font-semibold">{title}</Tooltip>
       </li>
     );
   }

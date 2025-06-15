@@ -97,7 +97,7 @@ export const ColorPicker = memo(
               }}
               onChange={(color) => {
                 // setShowHexColor(true);
-                console.log("color : ", color);
+                // console.log("color : ", color);
                 if (color.toLowerCase().includes("nan")) return;
                 setColor(color);
                 onEffect(color, setColor);

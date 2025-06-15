@@ -4,6 +4,8 @@ import { currentElState } from "../helpers/atoms";
 import { editorIcons } from "../components/Icons/editorIcons";
 import { dynamic_container, dynamic_text } from "../constants/cmpsTypes";
 import { defineTraits } from "../helpers/functions";
+import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
+import { Icons } from "../components/Icons/Icons";
 
 const svgText = html`<svg style="width:24px;height:24px" viewBox="0 0 24 24">
   <path
@@ -26,58 +28,27 @@ const svgImage = html`<svg style="width:24px;height:24px" viewBox="0 0 24 24">
   />
 </svg>`;
 
-const svgVideo = html`
-  <?xml version="1.0" encoding="utf-8"?><svg
-    version="1.1"
-    id="Layer_1"
-    xmlns="http://www.w3.org/2000/svg"
-    xmlns:xlink="http://www.w3.org/1999/xlink"
-    x="0px"
-    y="0px"
-    width="24"
-    height="24"
-    viewBox="0 0 121.78 122.88"
-    style="enable-background:new 0 0 121.78 122.88"
-    xml:space="preserve"
-  >
-    <style type="text/css">
-      .st0 {
-        fill-rule: evenodd;
-        clip-rule: evenodd;
-      }
-    </style>
-    <g>
-      <path
-        class="st0"
-        d="M30.06,0h61.65c3.43,0,6.23,2.81,6.23,6.23v6.47H23.83V6.23C23.83,2.8,26.63,0,30.06,0L30.06,0z M11.23,38.38 h99.32c6.18,0,11.23,5.05,11.23,11.23v62.04c0,6.18-5.05,11.23-11.23,11.23H11.23C5.05,122.88,0,117.83,0,111.65V49.61 C0,43.43,5.05,38.38,11.23,38.38L11.23,38.38z M54.11,58.38L81.4,77.41c0.45,0.29,0.86,0.67,1.18,1.13 c1.28,1.85,0.81,4.39-1.04,5.67L54.37,103c-0.7,0.58-1.6,0.92-2.59,0.92c-2.26,0-4.09-1.83-4.09-4.09V61.72h0.02 c0-0.81,0.24-1.62,0.73-2.33C49.73,57.54,52.27,57.09,54.11,58.38L54.11,58.38z M18.14,18.81h85.49c3.43,0,6.23,2.81,6.23,6.23 v6.72H11.91v-6.72C11.91,21.61,14.71,18.81,18.14,18.81L18.14,18.81z"
-      />
-    </g>
-  </svg>
-`;
-
 /**
  * @type {import('grapesjs').BlockProperties[]}
  */
 export const blocks = [
   {
     id: uniqueID(),
-    label: "Text",
+    label: html`<p class="custom-font-size">Text</p>`,
     category: "Basic",
-    media: svgText,
+    media: reactToStringMarkup(Icons.text({ fill: "currentColor" })),
     // activate: true,
-    content: html`<p class="p-10">Insert your Text Here</p>`,
+    content: { type: "text" },
     select: false,
   },
   {
     id: "link",
-    label: "Link",
+    label: html`<p class="custom-font-size">Link</p>`,
     category: "Basic",
-    media: svgLink,
-    activate: true,
+    media: reactToStringMarkup(Icons.link({ fill: "currentColor" })),
     content: {
       type: "link",
       content: "Insert your link here",
-      // style: { color: "#d983a6" },
     },
     select: false,
   },
@@ -85,7 +56,7 @@ export const blocks = [
     id: "image",
     category: "Basic",
     label: html`<p class="custom-font-size">Image</p>`,
-    media: svgImage,
+    media: reactToStringMarkup(Icons.image({})),
     content: {
       type: "image",
       // traits: defineTraits([
@@ -97,44 +68,79 @@ export const blocks = [
     select: false,
   },
   {
-    id: "video",
+    id: "media",
     category: "Basic",
-    label: html`<p class="custom-font-size">Video</p>`,
-    media: svgVideo,
+    label: html`<p class="custom-font-size">Media</p>`,
+    media: reactToStringMarkup(Icons.video({})),
     content: {
-      type: "video",
+      type: "media",
     },
     select: false,
     // activate: true,
   },
+  // {
+  //   id: "video",
+  //   category: "Basic",
+  //   label: html`<p class="custom-font-size">Video</p>`,
+  //   media: reactToStringMarkup(Icons.video({})),
+  //   content: {
+  //     type: "video",
+  //   },
+  //   select: false,
+  //   // activate: true,
+  // },
+
+  // {
+  //   id: "audio",
+  //   category: "Basic",
+  //   label: html`<p class="custom-font-size">Audio</p>`,
+  //   media: reactToStringMarkup(Icons.headphone("currentColor")),
+  //   content: {
+  //     type: "audio",
+  //   },
+  //   select: false,
+  //   // activate: true,
+  // },
+
+  // {
+  //   id: "iframe-9098",
+  //   category: "Basic",
+  //   label: html`<p class="custom-font-size">Iframe</p>`,
+  //   media: reactToStringMarkup(Icons.iframe({ fill: "currentColor" })),
+  //   content: {
+  //     type: "iframe",
+  //   },
+  //   select: false,
+
+  //   // activate:false,
+  // },
 
   {
     id: "button",
     category: "Basic",
-    media: editorIcons.button,
+    media: reactToStringMarkup(Icons.button({ fill: "currentColor" })),
     label: html`<p class="custom-font-size">Button</p>`,
-    content: html` <button>Click me</button> `,
-    select: false,
+    content: { type: "button" },
   },
-  {
-    id: "columns",
-    category: "Basic",
-    label: html`<p class="custom-font-size ">Columns</p>`,
-    media: editorIcons.columns,
-    content: html`
-      <section class="parent ">
-        <div class="col"></div>
-        <div class="col"></div>
-        <div class="col"></div>
-      </section>
-    `,
-    default: {},
-    select: false,
-  },
+  // {
+  //   id: "columns",
+  //   category: "Layout",
+  //   label: html`<p class="custom-font-size ">Columns</p>`,
+  //   media: editorIcons.columns,
+  //   content: html`
+  //     <section class="parent ">
+  //       <div class="col"></div>
+  //       <div class="col"></div>
+  //       <div class="col"></div>
+  //     </section>
+  //   `,
+  //   default: {},
+  //   select: false,
+  // },
   {
     id: "input",
     label: html`<p class="custom-font-size ">Input</p>`,
-    media: editorIcons.input,
+    media: reactToStringMarkup(Icons.input({ fill: "currentColor" })),
     category: "Basic",
     content: {
       type: "input",
@@ -169,9 +175,43 @@ export const blocks = [
       type: "block",
     },
     select: false,
-    
   },
 
+  {
+    id: "heading",
+    label: html`<p class="custom-font-size ">Heading</p>`,
+    media: reactToStringMarkup(
+      Icons.heading({ fill: "white", width: 25, height: 25 })
+    ),
+    category: "Basic",
+    content: {
+      type: "heading",
+    },
+  },
+
+  {
+    id: "splitter",
+    label: html`<p class="custom-font-size ">Splitter</p>`,
+    media: reactToStringMarkup(
+      Icons.splitter({ strokeColor: "white", width: 25, height: 25 })
+    ),
+    category: "fancy",
+    content: {
+      type: "splitter",
+    },
+  },
+
+  {
+    id: "looper",
+    label: html`<p class="custom-font-size ">Looper</p>`,
+    media: reactToStringMarkup(
+      Icons.looper({ strokeColor: "white", width: 25, height: 25 })
+    ),
+    category: "fancy",
+    content: {
+      type: "looper",
+    },
+  },
   // {
   //   id: dynamic_text,
   //   label: "Dynamic Text",

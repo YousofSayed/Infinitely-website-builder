@@ -16,6 +16,11 @@ import {
 } from "../../../constants/shared";
 import { uniqueID } from "../../../helpers/cocktail";
 import { open_page_helmet_modal } from "../../../constants/InfinitelyCommands";
+import { FitTitle } from "../Protos/FitTitle";
+import { SmallButton } from "../Protos/SmallButton";
+import { toast } from "react-toastify";
+import { ToastMsgInfo } from "../Protos/ToastMsgInfo";
+import { Hr } from "../../Protos/Hr";
 
 export const PagesManager = () => {
   const editor = useEditorMaybe();
@@ -27,20 +32,20 @@ export const PagesManager = () => {
 
   useLiveQuery(async () => {
     const projectData = await getProjectData();
-    console.log(Object.values(projectData.pages) , searchValue);
+    console.log(Object.values(projectData.pages), searchValue);
 
     searchValue
       ? search(searchValue, projectData.pages)
       : setPages(Object.values(await projectData.pages));
     setDbPages(projectData.pages);
     return projectData.pages;
-  },[searchValue]);
+  }, [searchValue]);
 
   const createPage = async (pageName = new String("")) => {
     if (!pageName.toString()) return;
     const projectData = await getProjectData();
     setSearchValue("");
-    const name = pageName.trim().toLowerCase()
+    const name = pageName.trim().toLowerCase();
     await db.projects.update(projectId, {
       pages: {
         ...projectData.pages,
@@ -58,7 +63,7 @@ export const PagesManager = () => {
             robots: "",
           },
           id: uniqueID(),
-          name:name,
+          name: name,
         },
       },
     });
@@ -68,6 +73,7 @@ export const PagesManager = () => {
     //   name: pageName,
     // });
     setPageName(new String(""));
+    toast.success(<ToastMsgInfo msg={`Page created successfully 👍`} />);
     // setPages(await (await getProjectData()).pages);
   };
 
@@ -78,6 +84,8 @@ export const PagesManager = () => {
     await db.projects.update(projectId, {
       pages: clone,
     });
+
+    toast.success(<ToastMsgInfo msg={`Page removed successfully 👍`} />);
     // setPages(await (await getProjectData()).pages);
   };
 
@@ -112,7 +120,7 @@ export const PagesManager = () => {
           value={searchValue}
           onInput={(ev) => {
             console.log(ev.target.value);
-            
+
             setSearchValue(ev.target.value);
             search(ev.target.value);
           }}
@@ -146,40 +154,43 @@ export const PagesManager = () => {
                 key={i}
                 className={`flex items-center justify-between p-1 bg-slate-800 rounded-lg  `}
               >
-                <section className="flex items-center gap-2">
-                  {Icons.stNote()}
+                <FitTitle className="flex items-center gap-2 w-[20%!important] p-1 flex-shrink-0 overflow-hidden text-ellipsis">
+                  {Icons.stNote("white", undefined, 18, 18)}
                   <p className="capitalize font-bold text-slate-200">
                     {page.name}
                   </p>
-                </section>
+                </FitTitle>
 
-                <section className="flex items-center gap-2">
-                  <Button
+                <section className="flex  gap-2  bg-slate-900 rounded-lg">
+                  <SmallButton
                     title={
                       (page.name.toLowerCase() == "index" &&
                         "Not Allowed To Delete Index Page") ||
                       `Delete ${page.name}`
                     }
-                    className={`group bg-transparent transition-all p-2 hover:bg-blue-600 ${
-                      page.name.toLowerCase() == "index" && "cursor-not-allowed"
+                    className={`group h-full w-fit bg-transparent  p-2  hover:bg-[crimson!important] ${
+                      page.name.toLowerCase() == "index" &&
+                      "cursor-[not-allowed!important]"
                     }`}
                     onClick={(ev) => {
                       if (page.name.toLowerCase() == "index") return;
                       deletePage(page.name);
                     }}
                   >
-                    {Icons.trash()}
-                  </Button>
+                    {Icons.trash(undefined, undefined, 18, 18)}
+                  </SmallButton>
+                  
+                  <Hr />
 
-                  <Button
-                    className={`group bg-transparent transition-all p-2 hover:bg-blue-600 `}
+                  <SmallButton
+                    className={`group h-full w-fit bg-transparent p-2  hover:bg-blue-600 `}
                     onClick={() => {
                       sessionStorage.setItem(current_page_helmet, page.name);
                       editor.runCommand(open_page_helmet_modal, {});
                     }}
                   >
-                    {Icons.setting()}
-                  </Button>
+                    {Icons.setting(undefined, undefined, 18, 18)}
+                  </SmallButton>
                 </section>
               </article>
             );

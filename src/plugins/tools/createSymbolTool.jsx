@@ -1,11 +1,16 @@
 import React from "react";
-import { addItemInToolBarForEditor } from "../../helpers/functions";
+import {
+  addItemInToolBarForEditor,
+  getInfinitelySymbolInfo,
+} from "../../helpers/functions";
 import { ReusableSympol } from "../../components/Editor/Modals/ReusableSympol";
 import { editorIcons } from "../../components/Icons/editorIcons";
 
 export const createSymbolTool = (editor) => {
-  addItemInToolBarForEditor({
-    forAll : true,
+  const symbolInfo = getInfinitelySymbolInfo(editor.getSelected());
+  return addItemInToolBarForEditor({
+    forAll: true,
+    cond: !symbolInfo.isSymbol,
     commandCallback: (ed) => {
       ed.runCommand("open:custom:modal", {
         title: `Create Sympol (Global Component)`,

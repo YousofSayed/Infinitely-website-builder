@@ -4,4 +4,5 @@ const infinitelyWorker = new Worker(
     type: "module",
   }
 );
+
 export { infinitelyWorker };

@@ -68,7 +68,7 @@ export const Choices = memo(
       // active ? onActive({ keyword, index: currentIndex.current }) :  onUnActive({ keyword, index: currentIndex.current });
       setKeyword(keywords[index]);
       // setCurrentSelcetor(currentSelector);
-    }, [selector]);
+    }, [selector,active]);
 
     return (
       <section

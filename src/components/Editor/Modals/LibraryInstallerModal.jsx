@@ -5,9 +5,15 @@ import { InstalledLibraries } from "../Protos/InstalledLibraries";
 import { Icons } from "../../Icons/Icons";
 import { LibraryUploader } from "../Protos/LibraryUploader";
 import { TabLabel } from "../Protos/TabLabel";
+import { useLiveQuery } from "dexie-react-hooks";
+import { getProjectData } from "../../../helpers/functions";
 
 
 export const LibraryInstallerModal = () => {
+  useLiveQuery(async()=>{
+    console.log(await getProjectData());
+    
+  })
   return (
     <MultiTab
       tabs={[

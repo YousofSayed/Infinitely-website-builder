@@ -1,41 +1,49 @@
 import React, { useEffect, useState } from "react";
 
 /**
- *
- * @param {{type : string , value:string , autoFocus:boolean, className:string , placeholder:string , onInput:(ev:InputEvent)=>void , onChange:(ev:InputEvent)=>void , onKeyUp: (ev:KeyboardEvent)=>void  , onKeyDown:(ev:KeyboardEvent)=>void} } param0
- * @returns
+ * A small button component with customizable styles and click behavior.
+ * @typedef {Object} Props - Component props
+ * @property {string} className - Custom CSS class for the button.
+ * @property {Function} onClick - Callback function for button click.
+ * @property {boolean} showTooltip - Show popover on button click.
+ * @property {string} tooltipTitle
+ * @property {ReactNode} children - Child components to render inside the button.
+ * @param {React.InputHTMLAttributes<HTMLInputElement> & Props} props
  */
 export const Input = ({
   type = "text",
   autoFocus = false,
-  className = "", 
+  className = "",
   placeholder = "",
   value = "",
   onInput = (_) => {},
   onChange = (_) => {},
   onKeyUp = (ev) => {},
   onKeyDown = (ev) => {},
+  ...props
 }) => {
   const [val, setVal] = useState(value);
 
- 
-    useEffect(() => {
+  useEffect(() => {
     setVal(value != undefined ? value : "");
-    }, [value]);
+  }, [value]);
 
   return (
     <input
+      {...props}
       autoFocus={autoFocus}
       type={type}
       value={val}
       placeholder={placeholder}
-      className={`p-2 outline-none text-white border-2 border-transparent focus:border-blue-600  rounded-lg ${className}`}
+      className={`p-2 outline-none text-white border-2 border-transparent focus:border-blue-600  rounded-lg  ${
+        className ? className : "bg-slate-950"
+      }`}
       onInput={(ev) => {
         setVal(ev.target.value);
         onInput(ev);
-      }} 
+      }}
       onChange={(ev) => {
-        setVal(ev.target.value); 
+        setVal(ev.target.value);
         onChange(ev);
       }}
       onKeyUp={onKeyUp}

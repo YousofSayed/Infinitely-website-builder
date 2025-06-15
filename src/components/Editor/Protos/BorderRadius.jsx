@@ -1,11 +1,12 @@
 import React from "react";
 import { Property } from "./Property";
 import { P } from "../../Protos/P";
+import { FitTitle } from "./FitTitle";
 
 export const BorderRadius = () => {
   return (
     <section className="flex flex-col gap-3 justify-between py-3 ">
-      <P>border raduis:</P>
+      <FitTitle className="capitalize">border raduis</FitTitle>
       <Property label="all" cssProp="border-radius"/>
       <Property label="top left" cssProp="border-top-left-radius"/>
       <Property label="top right" cssProp="border-top-right-radius"/>

@@ -7,17 +7,21 @@ import { Input } from "../Protos/Input";
 import {
   advancedSearchSuggestions,
   getProjectSettings,
+  isProjectSettingPropTrue,
 } from "../../../helpers/functions";
 
 export const SettingsModal = () => {
   const { globalSettings, setGlobalSetting } = useGlobalSettings();
-  const { projectSettings, setProjectSetting } = useProjectSettings();
+  const [ projectSettings, setProjectSetting] = useProjectSettings();
   const [settings, setSettings] = useState(
     getProjectSettings().projectSettings
   );
 
   useEffect(() => {
     setSettings(projectSettings);
+    // isProjectSettingPropTrue('disable_petite_vue',(projectSettings)=>{
+      
+    // })
   }, [projectSettings]);
 
   const search = (value = "") => {
@@ -52,9 +56,10 @@ export const SettingsModal = () => {
           {Object.keys(settings).map((key, i) => (
             <article
               key={i}
+              title={key}
               className="flex justify-between  gap-2 items-center px-2 py-3 rounded-lg bg-slate-800"
             >
-              <h1 className="custom-font-size w-[70%] flex-shrink capitalize">
+              <h1 className="custom-font-size overflow-hidden text-ellipsis  flex-shrink capitalize">
                 {key.replaceAll("_", " ")}
               </h1>
               <SwitchButton

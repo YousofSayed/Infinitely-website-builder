@@ -2,9 +2,18 @@ import React, { memo, useEffect, useRef, useState } from "react";
 import { Input } from "./Protos/Input";
 import { useEditorMaybe } from "@grapesjs/react";
 import { Button } from "../Protos/Button";
-import { componentType, traitsType } from "../../helpers/jsDocs";
+import {
+  assetsType,
+  componentType,
+  refType,
+  traitsType,
+} from "../../helpers/jsDocs";
 import { useRecoilValue, useSetRecoilState } from "recoil";
-import { assetTypeState, currentElState } from "../../helpers/atoms";
+import {
+  assetTypeState,
+  currentElState,
+  showPreviewState,
+} from "../../helpers/atoms";
 import { SmallButton } from "./Protos/SmallButton";
 import { Icons } from "../Icons/Icons";
 import { Select } from "./Protos/Select";
@@ -18,6 +27,7 @@ import { CodeEditor } from "./Protos/CodeEditor";
 import { parseHTML } from "linkedom";
 import {
   doDocument,
+  getProjectData,
   getProjectSettings,
   isValidAttribute,
 } from "../../helpers/functions";
@@ -25,6 +35,17 @@ import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
 import { InfAccordion } from "../Protos/InfAccordion";
 import { AccordionItem } from "@heroui/accordion";
+import { FitTitle } from "./Protos/FitTitle";
+import { SwitchButton } from "../Protos/SwitchButton";
+import { isFunction, isString } from "lodash";
+import { addClickClass, parse, stringify } from "../../helpers/cocktail";
+import { useCmdsContext } from "../../hooks/useCmdsContext";
+import { useLiveQuery } from "dexie-react-hooks";
+import { Popover } from "./Popover";
+import { VirtuosoGrid } from "react-virtuoso";
+import { GridComponents } from "../Protos/VirtusoGridComponent";
+import { FileView } from "../Protos/FileView";
+import { ChooseFile } from "../Protos/ChooseFile";
 
 export const TraitsAside = memo(() => {
   const editor = useEditorMaybe();
@@ -39,6 +60,20 @@ export const TraitsAside = memo(() => {
   const [fileName, setFileName] = useState("");
   const setAssetType = useSetRecoilState(assetTypeState);
   const selectedEl = useRecoilValue(currentElState);
+  const [cmdsContext, setCmdsContext] = useCmdsContext();
+  const [projectData, setProjectData] = useState({});
+
+  const [codeSettings, setCodeSettings] = useState({
+    defaultLanguage: "html" || "javascript",
+    enableTemplateEngine: false,
+    htmlValueState: "",
+    templateEngineValueState: "",
+  });
+
+  useLiveQuery(async () => {
+    const projectData = await getProjectData();
+    setProjectData(projectData);
+  });
 
   useEffect(() => {
     if (!editor || !editor.getSelected()) return;
@@ -47,10 +82,25 @@ export const TraitsAside = memo(() => {
 
     setCmpTextContent(editor.getSelected().getInnerHTML());
     const buildFileName = selectedEl.getAttributes()[inf_build_url];
+    const contentLangType =
+      selectedEl.getAttributes()["content-lang"] || "html";
     setFileName(buildFileName);
     setSelectedCmp(selectedEl);
-    setSelectedValue(selectedEl.getInnerHTML());
+
+    const innerHtml = selectedEl.isInstanceOf("text")
+      ? selectedEl.getInnerHTML()
+      : "";
+    // setSelectedValue(selectedEl.getInnerHTML());
+    setCodeSettings({
+      ...codeSettings,
+      defaultLanguage: contentLangType,
+      htmlValueState: contentLangType == "html" ? innerHtml : "",
+      templateEngineValueState:
+        contentLangType == "javascript" ? innerHtml : "",
+      enableTemplateEngine: contentLangType == "javascript",
+    });
     getAndSetTraits();
+    setCmdsContext();
   }, [selectedEl]);
 
   useEffect(() => {
@@ -60,14 +110,14 @@ export const TraitsAside = memo(() => {
       console.log("trait updated");
       getAndSetTraits();
     };
-    const buildAttrUrlCallback = () => {
-      setFileName(selectedEl.getAttributes()[inf_build_url]);
-    };
+    // const buildAttrUrlCallback = () => {
+    //   setFileName(selectedEl.getAttributes()[inf_build_url]);
+    // };
     editor.on("trait:value", callback);
-    editor.on(InfinitelyEvents.attributes.buildUrl, buildAttrUrlCallback);
+    // editor.on(InfinitelyEvents.attributes.buildUrl, buildAttrUrlCallback);
     return () => {
       editor.off("trait:value", callback);
-      editor.off(InfinitelyEvents.attributes.buildUrl, buildAttrUrlCallback);
+      // editor.off(InfinitelyEvents.attributes.buildUrl, buildAttrUrlCallback);
     };
   }, [editor]);
 
@@ -115,7 +165,7 @@ export const TraitsAside = memo(() => {
 
     const elementAttributes = sle.getAttributes();
 
-    attributesTraits.forEach((trait) => {
+    attributesTraits.concat(handlerTraits).forEach((trait) => {
       delete elementAttributes[trait.name];
     });
     Object.keys(elementAttributes).forEach((key) => {
@@ -143,9 +193,25 @@ export const TraitsAside = memo(() => {
 
   const updateTraitValue = ({ name = "", key = "", value = "" }) => {
     const sle = editor.getSelected();
-    sle.updateTrait(name, { [key]: value });
-    console.log("update should be done");
+    // sle.updateTrait(name, { [key]: value });
+    const trait = sle.getTrait(name);
+
+    trait.set({
+      [key]: value,
+      attributes: {
+        [key]: value,
+      },
+    });
+
+    const role = trait.get("role");
+    if (role == "attribute") {
+      console.log('this is attribute');
+      
+      sle.addAttributes({ [name]: trait.get('value') });
+    }
+    // sle.addAttributes({ [name]: isString(value) ? value : stringify(value) });
     editor.trigger("trait:value");
+    console.log("update should be done");
   };
 
   const addAttribute = ({ key, value }) => {
@@ -165,22 +231,8 @@ export const TraitsAside = memo(() => {
         });
       }
     } else {
-      // const { document } = parseHTML(
-      //   doDocument(sle.toHTML({ withProps: true }))
-      // );
-      // document.body.children[0].setAttribute(key.trim(), "sda");
-      // const newComp = sle.replaceWith(document.body.children[0].outerHTML)[0];
-      // editor.select(newComp);
-      // console.log(document.body.children[0].outerHTML);
       toast.error(<ToastMsgInfo msg={`Attribute has invalid character`} />);
     }
-
-    try {
-    } catch (error) {
-    } finally {
-    }
-
-    console.log(key, value);
   };
 
   const removeAttribute = (key) => {
@@ -204,48 +256,136 @@ export const TraitsAside = memo(() => {
     <InfAccordion>
       {/* <AsideControllers /> */}
       <AccordionItem title={"Type Content"}>
-        <Select
-          isCode
-          className="px-[unset] py-[unset] "
-          value={selectedValue || ""}
-          codeProps={{
-            language: "html",
-            // onMount(mEditor) {
-            //   console.log('mouted' ,  editor
-            //     ?.getSelected?.()
-            //     ?.components()
-            //     ?.models?.[0]?.toHTML?.());
+        <section className="flex flex-col gap-2 p-2">
+          <section className="flex items-center gap-2 justify-between">
+            <FitTitle className="custom-font-size">Type Content</FitTitle>
+            <nav className="flex items-center  gap-3 p-1 px-2 bg-slate-800 w-fit  rounded-lg self-end text-slate-200">
+              <button
+                className={`w-[22.5px] h-[22.5px] cursor-pointer flex items-center justify-center rounded-md transition-colors ${
+                  codeSettings.defaultLanguage == "html" && "bg-blue-600"
+                }`}
+                onClick={(ev) => {
+                  addClickClass(ev.currentTarget, "click");
+                  editor.getSelected().addAttributes({
+                    "content-lang": "html",
+                  });
+                  setCodeSettings({
+                    ...codeSettings,
+                    defaultLanguage: "html",
+                    enableTemplateEngine: false,
+                  });
+                }}
+              >
+                {Icons.html({ width: 16, height: 16 })}
+              </button>
+              <button
+                className={`w-[22.5px] h-[22.5px] cursor-pointer flex items-center justify-center rounded-md transition-colors ${
+                  codeSettings.defaultLanguage == "javascript" && "bg-blue-600"
+                }`}
+                onClick={(ev) => {
+                  addClickClass(ev.currentTarget, "click");
+                  editor.getSelected().addAttributes({
+                    "content-lang": "javascript",
+                  });
+                  setCodeSettings({
+                    ...codeSettings,
+                    defaultLanguage: "javascript",
+                    enableTemplateEngine: true,
+                  });
+                }}
+              >{`\$\{ \}`}</button>
+            </nav>
+          </section>
+          <Select
+            isCode
+            className="px-[unset] py-[unset] "
+            inputClassName="bg-slate-800"
+            containerClassName="bg-slate-800"
+            placeholder="Type Content"
+            allowCmdsContext
+            allowRestAPIModelsContext
+            value={
+              codeSettings.defaultLanguage == "html"
+                ? codeSettings.htmlValueState
+                : codeSettings.templateEngineValueState
+            }
+            codeProps={{
+              language: codeSettings.defaultLanguage,
+              // onMount(mEditor) {
+              //   console.log('mouted' ,  editor
+              //     ?.getSelected?.()
+              //     ?.components()
+              //     ?.models?.[0]?.toHTML?.());
 
-            //   mEditor.setValue(
-            //    selectedValue
-            //   );
-            // },
-            value: selectedValue,
-            onChange(value) {
-              const sle = editor.getSelected();
-              const type = sle.get("type");
-              if (
-                type.toLowerCase() == "text" ||
-                !type ||
-                type.toLowerCase() == "link"
-              ) {
-                console.log(
-                  value,
-                  editor.getSelected().get("type"),
-                  type.toLowerCase() == "text"
-                );
+              //   mEditor.setValue(
+              //    selectedValue
+              //   );
+              // },
+              value: selectedValue,
+              onMount(ed, mon) {
+                // console.log("mouted", ed, mon);
+                setCmdsContext();
+                if (
+                  codeSettings.defaultLanguage == "html" &&
+                  !codeSettings.enableTemplateEngine
+                ) {
+                  ed.setValue(selectedValue);
+                  // setCodeSettings({
+                  //   ...codeSettings,
+                  //   htmlValueState: selectedValue,
+                  // });
+                } else if (
+                  codeSettings.defaultLanguage == "javascript" &&
+                  codeSettings.enableTemplateEngine
+                ) {
+                  const templateEngineValue = `\`${codeSettings.templateEngineValueState}\``;
+                  ed.setValue(templateEngineValue);
+                  // setCodeSettings({
+                  //   ...codeSettings,
+                  //   templateEngineValueState: templateEngineValue,
+                  // });
+                }
+              },
+              onChange(value) {
+                const sle = editor.getSelected();
+                const type = sle.get("type");
+                if (!sle.isInstanceOf("text")) return;
 
-                sle.components(`${value}`);
-                setSelectedValue(value);
+                if (
+                  !codeSettings.enableTemplateEngine &&
+                  codeSettings.defaultLanguage == "html"
+                ) {
+                  sle.components(`${value}`);
+                  // setSelectedValue(value);
+                  setCodeSettings({
+                    ...codeSettings,
+                    htmlValueState: value,
+                  });
+                } else if (
+                  codeSettings.enableTemplateEngine &&
+                  codeSettings.defaultLanguage == "javascript"
+                ) {
+                  if (
+                    value.trim().startsWith("`") &&
+                    value.trim().endsWith("`")
+                  ) {
+                    const newValue = value.trim().slice(1, -1);
+                    sle.components(newValue);
+                    setCodeSettings({
+                      ...codeSettings,
+                      templateEngineValueState: newValue,
+                    });
+                  }
+                }
                 // sle.getEl().innerHTML = `${value}`;
 
                 editor.refresh();
                 editor.Canvas.refresh();
                 editor.Canvas.refreshSpots();
-              }
-            },
-          }}
-        />
+              },
+            }}
+          />
+        </section>
       </AccordionItem>
       {!![...attributesTraits, ...handlerTraits].length && (
         <AccordionItem title={"Traits"}>
@@ -254,20 +394,26 @@ export const TraitsAside = memo(() => {
 
             {[...attributesTraits, ...handlerTraits].map((trait, i) => {
               console.log("trait type:", trait);
+              console.log("is function ? ", isFunction(trait?.showCallback));
 
-              return (
+              const isShow =
+                trait?.showCallback && isFunction(trait?.showCallback)
+                  ? trait?.showCallback?.()
+                  : true;
+              return isShow ? (
                 <li
                   key={i}
-                  className="flex flex-col gap-2 bg-slate-950 p-2 rounded-lg"
+                  className="flex flex-wrap items-center justify-between gap-2 bg-slate-950 p-2 rounded-lg"
                 >
-                  <h1 className="text-[14px!important] px-2 text-white capitalize font-semibold">
+                  {/* <h1 className="text-[14px!important] px-2 text-white capitalize font-semibold">
                     {trait.name}
-                  </h1>
-                  {trait.type == "text" && (
+                  </h1> */}
+                  <FitTitle>{trait.label}</FitTitle>
+                  {trait.type == "text" && isShow && (
                     <Input
-                      value={trait.value}
-                      placeholder={trait.placeholder || trait.name}
-                      className="py-3 w-full bg-slate-800"
+                      value={trait.value || trait.default || ""}
+                      placeholder={trait.placeholder || trait.label}
+                      className="py-2 w-full bg-slate-800"
                       onInput={(ev) => {
                         trait.callback &&
                           trait.callback({
@@ -282,6 +428,7 @@ export const TraitsAside = memo(() => {
                           key: "value",
                           value: ev.target.value,
                         });
+
                         // if (trait.role == "attribute") {
                         //   addAttribute({ [trait.name]: ev.target.value });
                         // }
@@ -289,14 +436,16 @@ export const TraitsAside = memo(() => {
                     />
                   )}
 
-                  {trait.type == "select" && (
+                  {trait.type == "select" && isShow && (
                     <Select
-                      placeholder={trait.placeholder || trait.name}
-                      keywords={trait.keywords}
-                      value={trait.value}
+                      placeholder={trait.placeholder || trait.label}
+                      keywords={
+                        isFunction(trait.keywords)
+                          ? trait.keywords({ projectData })
+                          : trait.keywords || []
+                      }
+                      value={trait.value || trait.default || ""}
                       onAll={(value) => {
-                        console.log(value);
-
                         trait.callback &&
                           trait.callback({
                             editor,
@@ -310,32 +459,343 @@ export const TraitsAside = memo(() => {
                           key: "value",
                           value,
                         });
-                        // if (trait.role == "attribute") {
-                        //   addAttribute({ [trait.name]: value });
-                        // }
                       }}
                     />
                   )}
 
-                  {trait.type.toLowerCase() == "media" && (
-                    <section className="flex gap-2 w-full">
-                      <Input
-                        placeholder="Url"
-                        className="w-full bg-slate-900"
-                        value={fileName}
-                      />
-                      <SmallButton
-                        onClick={(ev) => {
-                          setAssetType(trait.mediaType);
-                          editor.runCommand(open_files_manager_modal);
-                        }}
-                      >
-                        {Icons.gallery("white")}
-                      </SmallButton>
-                    </section>
+                  {trait.type == "textarea" && isShow && (
+                    <Select
+                      placeholder={trait.placeholder || trait.label}
+                      // keywords={trait.keywords}
+                      value={trait.value || trait.default || ""}
+                      // onAll={(value) => {
+                      //   console.log(value);
+
+                      //   trait.callback &&
+                      //     trait.callback({
+                      //       editor,
+                      //       oldValue: trait.value,
+                      //       newValue: value,
+                      //       trait,
+                      //     });
+                      //   trait.command && editor.runCommand(trait.command);
+                      //   updateTraitValue({
+                      //     name: trait.name,
+                      //     key: "value",
+                      //     value,
+                      //   });
+                      //   console.log(
+                      //     "traits vals",
+                      //     editor
+                      //       .getSelected()
+                      //       .getTraits()
+                      //       .map((tr) => tr.attributes),
+                      //     JSON.stringify(editor.getSelected()),
+                      //     {
+                      //       ...editor.getSelected().toJSON(),
+                      //       traits: editor
+                      //         .getSelected()
+                      //         .getTraits()
+                      //         .map((tr) => tr.attributes),
+                      //     },
+                      //     editor.getComponents()
+                      //   );
+                      //   // if (trait.role == "attribute") {
+                      //   //   addAttribute({ [trait.name]: value });
+                      //   // }
+                      // }}
+                      allowCmdsContext={trait?.allowCmdsContext}
+                      allowRestAPIModelsContext={trait?.allowCmdsContext}
+                      isCode
+                      codeProps={{
+                        language: trait.textareaLanguage || "text",
+                        // value: trait.value,
+                        ...(trait?.codeEditorProps || {}),
+                        onMount(ed, mon) {
+                          trait?.onMountHandler?.(ed, mon);
+                        },
+                        onChange(value) {
+                          trait?.onChangeHandler?.(value);
+                          trait.callback &&
+                            trait.callback({
+                              editor,
+                              oldValue: trait.value,
+                              newValue: value,
+                              trait,
+                            });
+
+                          trait.command && editor.runCommand(trait.command);
+                          updateTraitValue({
+                            name: trait.name,
+                            key: "value",
+                            value,
+                          });
+                        },
+                      }}
+                    />
                   )}
+
+                  {trait.type == "add-props" && isShow && (
+                    <>
+                      <section className="flex justify-between gap-2">
+                        <Select
+                          placeholder={trait.placeholder || trait.label}
+                          className="w-full bg-slate-800"
+                          value={trait.stateProp || ""}
+                          keywords={
+                            isFunction(trait.keywords)
+                              ? trait.keywords({ projectData })
+                              : trait.keywords || []
+                          }
+                          onInput={(value) => {
+                            updateTraitValue({
+                              name: trait.name,
+                              key: "stateProp",
+                              value,
+                            });
+                          }}
+                          onEnterPress={(value) => {
+                            const newVal = stringify({
+                              ...parse(trait.value || {}),
+                              [value]: "",
+                            });
+
+                            trait.callback &&
+                              trait.callback({
+                                editor,
+                                oldValue: trait.value,
+                                newValue: newVal,
+                                trait,
+                              });
+                            trait.command && editor.runCommand(trait.command);
+                            updateTraitValue({
+                              name: trait.name,
+                              key: "value",
+                              value: newVal,
+                            });
+                          }}
+                          onItemClicked={(value) => {
+                            const newVal = stringify({
+                              ...parse(trait.value || {}),
+                              [value]: "",
+                            });
+
+                            trait.callback &&
+                              trait.callback({
+                                editor,
+                                oldValue: trait.value,
+                                newValue: newVal,
+                                trait,
+                              });
+
+                            trait.command && editor.runCommand(trait.command);
+
+                            updateTraitValue({
+                              name: trait.name,
+                              key: "value",
+                              value: newVal,
+                            });
+                          }}
+                        />
+                        <SmallButton
+                          onClick={() => {
+                            const newVal = stringify({
+                              ...parse(trait.value || {}),
+                              [trait.stateProp]: "",
+                            });
+
+                            trait.callback &&
+                              trait.callback({
+                                editor,
+                                oldValue: trait.value,
+                                newValue: newVal,
+                                trait,
+                              });
+                            trait.command && editor.runCommand(trait.command);
+                            updateTraitValue({
+                              name: trait.name,
+                              key: "value",
+                              value: newVal,
+                            });
+                          }}
+                        >
+                          {Icons.plus("white")}
+                        </SmallButton>
+                      </section>
+
+                      <section className="flex flex-col">
+                        {Object.entries(
+                          parse(trait.value || trait.default) || {}
+                        ).map(([key, value], i) => {
+                          return (
+                            <section key={i} className="flex flex-col gap-2">
+                              <FitTitle>{key}</FitTitle>
+                              <section className="flex gap-2">
+                                {(trait.addPropsInputType == "text" ||
+                                  !trait.addPropsInputType) && (
+                                  <Input
+                                    placeholder={key}
+                                    className="w-full bg-slate-800"
+                                    value={value || ""}
+                                    onInput={(ev) => {
+                                      const newVal = stringify({
+                                        ...parse(trait.value || {}),
+                                        [key]: ev.target.value,
+                                      });
+
+                                      trait.callback &&
+                                        trait.callback({
+                                          editor,
+                                          oldValue: trait.value,
+                                          newValue: newVal,
+                                          trait,
+                                        });
+
+                                      trait.command &&
+                                        editor.runCommand(trait.command);
+
+                                      updateTraitValue({
+                                        name: trait.name,
+                                        key: "value",
+                                        value: newVal,
+                                      });
+                                    }}
+                                  />
+                                )}
+
+                                {trait.addPropsInputType == "code" && (
+                                  <Select
+                                    placeholder={key}
+                                    // className="w-full bg-slate-800"
+                                    value={value || ""}
+                                    isCode
+                                    allowCmdsContext
+                                    allowRestAPIModelsContext
+                                    codeProps={{
+                                      language:
+                                        trait.addPropsCodeLanguage || "text",
+                                      value,
+                                      onChange: (value) => {
+                                        const newVal = stringify({
+                                          ...parse(trait.value || {}),
+                                          [key]: value,
+                                        });
+
+                                        trait.callback &&
+                                          trait.callback({
+                                            editor,
+                                            oldValue: trait.value,
+                                            newValue: newVal,
+                                            trait,
+                                          });
+
+                                        trait.command &&
+                                          editor.runCommand(trait.command);
+
+                                        updateTraitValue({
+                                          name: trait.name,
+                                          key: "value",
+                                          value: newVal,
+                                        });
+                                      },
+                                    }}
+                                  />
+                                )}
+
+                                <SmallButton
+                                  onClick={() => {
+                                    const parsedVal = parse(trait.value || {});
+                                    delete parsedVal[key];
+                                    const newVal = stringify({
+                                      ...parsedVal,
+                                    });
+                                    trait.callback &&
+                                      trait.callback({
+                                        editor,
+                                        oldValue: trait.value,
+                                        newValue: newVal,
+                                      });
+                                    trait.command &&
+                                      editor.runCommand(trait.command);
+
+                                    updateTraitValue({
+                                      name: trait.name,
+                                      key: "value",
+                                      value: newVal,
+                                    });
+                                  }}
+                                  className="[&_path]:stroke-white bg-slate-800 hover:bg-[crimson!important]"
+                                >
+                                  {Icons.trash()}
+                                </SmallButton>
+                              </section>
+                            </section>
+                          );
+                        })}
+                      </section>
+                    </>
+                  )}
+
+                  {trait.type.toLowerCase() == "switch" && isShow && (
+                    <SwitchButton
+                      defaultValue={Boolean(trait.value || trait.default)}
+                      onActive={() => {
+                        trait?.onSwitch?.(true);
+                        trait.command && editor.runCommand(trait.command);
+                        updateTraitValue({
+                          name: trait.name,
+                          key: "value",
+                          value: true,
+                        });
+                      }}
+                      onUnActive={() => {
+                        trait?.onSwitch?.(false);
+                        trait.command && editor.runCommand(trait.command);
+                        updateTraitValue({
+                          name: trait.name,
+                          key: "value",
+                          value: false,
+                        });
+                      }}
+                    >
+                      {trait.label}
+                    </SwitchButton>
+                  )}
+
+                  {trait.type.toLowerCase() == "button" && isShow && (
+                    <Button
+                      className="flex justify-center items-center py-2 w-full"
+                      {...trait.buttonEvents({ editor, trait })}
+                    >
+                      {trait.label}
+                    </Button>
+                  )}
+
+                  {trait.type.toLowerCase() == "media" && isShow && (
+                    <ChooseFile
+                      value={trait.value}
+                      placeholder={trait.placeholder || trait.label}
+                      mediaType={trait.mediaType}
+                      callback={(asset, url) => {
+                        trait.callback({
+                          editor,
+                          newValue: url,
+                          oldValue: trait.value,
+                          trait,
+                        });
+                        trait?.command && editor.runCommand(trait.command);
+                        updateTraitValue({
+                          name: trait.name,
+                          key: "value",
+                          value: url,
+                        });
+                      }}
+                    />
+                  )}
+
+                  {trait.type.toLowerCase() == 'custom' && isShow ?<trait.component/> : null}
                 </li>
-              );
+              ) : null;
             })}
           </section>
         </AccordionItem>
@@ -348,9 +808,7 @@ export const TraitsAside = memo(() => {
             Object.keys(attributes).map((key, i) => {
               return (
                 <li key={i} className="flex flex-col gap-2">
-                  <h1 className="text-[14px!important] px-2 text-white capitalize font-semibold">
-                    {key}
-                  </h1>
+                  <FitTitle>{key}</FitTitle>
                   <section className="flex gap-2">
                     <Input
                       placeholder={key}

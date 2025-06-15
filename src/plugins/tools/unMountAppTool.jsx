@@ -8,10 +8,11 @@ import { editorIcons } from "../../components/Icons/editorIcons";
  * @returns
  */
 export const unMountAppTool = (editor) => {
-  addItemInToolBarForEditor({
+ return addItemInToolBarForEditor({
     editor,
     label: editorIcons.editGjsComponent({ fill: "white" }),
     forAll: true,
+    cond:Boolean(editor.getSelected().getAttributes()["v-scope"]),
     commandName: `run:pv-unmount`,
     commandCallback(editor) {
       const sle = editor.getSelected();

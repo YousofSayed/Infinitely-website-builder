@@ -11,7 +11,7 @@ import { Select } from "./Select";
  * @returns
  */
 
-export const Adder = memo(
+export const Adder = (
   ({
     id = "",
     children,

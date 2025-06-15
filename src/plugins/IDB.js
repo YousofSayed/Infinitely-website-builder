@@ -5,40 +5,30 @@ import {
   current_symbol_id,
   current_symbol_rule,
   current_template_id,
-  inf_build_url,
-  inf_css_urls,
-  mainScripts,
+  inf_symbol_Id_attribute,
   mainScriptsForEditor,
 } from "../constants/shared";
-import { css, html } from "../helpers/cocktail";
-import { parse as parseCss, stringify as stringifyCss } from "css";
 import { db } from "../helpers/db";
 import {
-  defineFontFace,
   doDocument,
   extractAllRulesWithChildRules,
   getComponentRules,
   getDynamicComponent,
-  getGlobalSymbolRuleInfo,
-  getImgAsBlob,
   getInfinitelySymbolInfo,
   getProjectData,
-  getTemplateInfo,
-  parseInfinitelyURL,
 } from "../helpers/functions";
-import { refType } from "../helpers/jsDocs";
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
 import { changePageName } from "../helpers/customEvents";
 import { infinitelyWorker } from "../helpers/infinitelyWorker";
 import { minify } from "csso";
 import { parseHTML } from "linkedom";
-import { toBlob } from "html-to-image";
-import { parse } from "@wordpress/block-serialization-default-parser";
-import { isChrome, replaceCssURLS } from "../helpers/bridge";
+import { getFonts, sendDataToServiceWorker } from "../helpers/bridge";
+
+import { initDBAssetsSw } from "../serviceWorkers/initDBAssets-sw";
 
 let loadFooterScriptsCallback, loadHeadScriptsCallback, loadMainScriptsCallback;
-let isLoading = 0;
 let storeTimeout;
+let pageBuilderTimeout;
 /**
  *
  * @param {import('grapesjs').Editor} editor
@@ -54,7 +44,7 @@ export const IDB = (editor) => {
   };
 
   async function getAllSymbolsStyles() {
-    const projectData = await await getProjectData();
+    const projectData = await getProjectData();
     const currentPageId = localStorage.getItem(current_page_id); //it will return void so that will make it take second choics : "index"
 
     // const currentPage = projectData.pages[`${currentPageId}`];
@@ -81,19 +71,29 @@ export const IDB = (editor) => {
       const projectData = await db.projects.get(+projectID);
 
       if (!projectData) return;
-      console.log("load");
+      // infinitelyWorker.postMessage
+      await initDBAssetsSw();
+      await sendDataToServiceWorker({
+        projectId: +localStorage.getItem(current_project_id),
+        projectData: projectData,
+      });
 
+      console.time("loading");
       if (
         loadFooterScriptsCallback &&
-        loadHeadScriptsCallback &&
-        loadMainScriptsCallback
+        loadHeadScriptsCallback
+        // &&
+        // loadMainScriptsCallback
       ) {
         editor.off("canvas:frame:load:body", loadFooterScriptsCallback);
         editor.off("canvas:frame:load:body", loadMainScriptsCallback);
         editor.off("canvas:frame:load", loadHeadScriptsCallback);
       }
 
+      editor.UndoManager.stop();
       editor.DomComponents.clear();
+      // editor.UndoManager.clear();
+
       willRevokedURLs.forEach((value, key) => {
         console.log("From revoked map : ", value, key);
         URL.revokeObjectURL(value);
@@ -111,111 +111,21 @@ export const IDB = (editor) => {
           localStorage.setItem(current_page_id, "index");
         }
         const currentPageId = localStorage.getItem(current_page_id); //it will return void so that will make it take second choics : "index"
-        const assets = projectData.assets;
         const currentPage = projectData.pages[`${currentPageId}`];
         const htmlPage = await currentPage.html.text();
         const allSymbolsStyle = await getAllSymbolsStyles();
         const { document } = parseHTML(doDocument(htmlPage));
-        const cssPropsUrlsElsArr = [];
-        const srcElements = [...document.querySelectorAll(`[src]`)];
-
-        // await Promise.all(
-        //   srcElements.map(async (el) => {
-        //     console.error("srccc :", el);
-        //     const url = await (await fetch(el.src)).blob();
-        //     el.src = URL.createObjectURL(url);
-        //     console.error("srccc :", el.src);
-        //     return url;
-        //   })
-        // );
-
-        // console.error(
-        //   "innner :",
-        //   [...document.querySelectorAll(`[src]`)]
-        //     .map((el) => el.outerHTML)
-        //     .join("")
-        // );
-
-        const getFonts = () => {
-          const fonts = Object.values(projectData.fonts);
-          const stringFonts = fonts.map((font) =>
-            defineFontFace({
-              family: font.file.name.split(/\.\w+/gi).join("").trim(),
-              url: font.isCDN ? font.url : `url("../fonts/${font.file.name}") `,
-            })
-          );
-          return stringFonts.join("\n");
-        };
 
         editor.setStyle(``, { avoidStore: true });
         editor.CssComposer.addRules(
           minify(`
-          ${getFonts()}
+          ${getFonts(projectData)}
           ${await currentPage.css.text()}
           ${allSymbolsStyle}
          `).css
         );
-        // const mainIframeFunction = editor.Canvas.getFrameEl().contentDocument.write ;
-        // console.log('mainIframeFunction : ' , mainIframeFunction);
 
-        // editor.setComponents( `<iframe src='../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4'></iframe>` );
-
-        // console.error("innner : ", document.body.innerHTML);
-
-        // editor.once('load',()=>{
-          
-        //   // editor.Canvas.getFrameEl().sandbox =  `allow-top-navigation-by-user-activation allow-top-navigation allow-scripts allow-same-origin allow-presentation`
-        // })
-        // editor.setComponents(document.body.innerHTML);
-       
-        editor.setComponents(
-          `
-          <div id="ied8" data-gjs-type="video" draggable="true" allowfullscreen="allowfullscreen" src="../assets/3173312-hd_1280_720_30fps.mp4" controls="true" class="gjs-selected"></div>
-         ${document.body.innerHTML}
-          `,{
-            // asDocument:true
-          }
-        );
-
-      // const cmps = editor.addComponents(` <img src="SD7000-.png" />`)
-      //   console.log('cppppppps : ' , cmps);
-        
-        // editor.on('canvas:frame:load:body',()=>{
-        //   // editor.select(cmps[0])
-        // })
-
-        // editor.EditorModel.b
-        // editor.addComponents(
-        //   `<video
-        //     src="../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4"
-        //     controls
-        //   ></video>`,
-        //   { }
-        // );
-        // editor.Canvas.
-        // editor.Canvas.config.frameContent=`<video
-        //     src="../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4"
-        //     controls
-        //   ></video>`
-
-        // editor.on('canvas:frame:load',(model)=>{
-        //   console.log('winnnnnnnnnnnn : ' , model);
-
-        //   // editor.Canvas.getFrameEl().srcdoc = `<video
-        //   //   src="../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4"
-        //   //   controls
-        //   // ></video>`
-        //   model.window.navigator.serviceWorker.register(`dbAssets-sw.js` )
-        // })
-
-        //         console.log(
-        //           "csssssss:",
-        //           minify(`
-        //   ${getFonts()}
-        //    ${allSymbolsStyle}
-        //    ${await currentPage.css.text()}
-        //  `).css
-        //         );
+        editor.setComponents(document.body.innerHTML);
 
         const callback = () => {
           // editor.trigger(InfinitelyEvents.pages.select);
@@ -237,67 +147,46 @@ export const IDB = (editor) => {
         (item) => sessionStorage.removeItem(item)
       );
       const currentPageId = localStorage.getItem(current_page_id);
-      console.log("fucken page : ", currentPageId);
+      const attributesAsEntries = Object.entries(
+        projectData.pages[`${currentPageId}`].bodyAttributes || {}
+      );
+
+      const vAttributesFilterd = attributesAsEntries.filter(
+        ([key, value]) => key.startsWith("v-") && value
+      );
+
+      const otherAttributes = attributesAsEntries.filter(
+        ([key, value]) => !key.startsWith("v-")
+      );
+      
       editor
         .getWrapper()
         .addAttributes(
-          Object.fromEntries(
-            Object.entries(
-              projectData.pages[`${currentPageId}`].bodyAttributes || {}
-            ).filter(([key, value]) => key.startsWith("v-") && value)
-          )
+          Object.fromEntries(vAttributesFilterd.concat(otherAttributes)),
+          {avoidStore:true,}
         );
-      // console.log(
-      //   "wrapper attributes : ",
-      //   projectData.pages[`${currentPageId}`].bodyAttributes
-      // );
+    
 
       currentPageId.toLowerCase() != "playground" &&
         sessionStorage.removeItem(current_dynamic_template_id);
-        editor.render();
-        editor.select(null);
-         editor.once('canvas:frame:load:body',()=>{
-          
-         })
+      editor.render();
+      editor.select(null);
 
-         setTimeout(()=>{
-          isChrome((bool) => {
-            console.error("chrome");
-      
-            editor.Canvas.getFrameEl().contentWindow.fetch = fetch;
-            // editor.Canvas.getFrameEl().srcdoc = "about:blank";
-            // editor.Canvas.getFrameEl().sandbox = "allow-same-origin allow-scripts";
-          });
-         },0)
-
-        //  setInterval(()=>{
-          
-        // editor.addComponents(
-        //   `
-        //   <div id="ied8"  data-gjs-type="video" draggable="true" allowfullscreen="allowfullscreen" src="../assets/3173312-hd_1280_720_30fps.mp4" controls="true" class="gjs-selected"></div>
-        //   `,{
-        //     // asDocument:true
-        //   }
-        // );
-        //  },5000)
-        // editor.Canvas.render()
-      // editor.Canvas.getCanvasView().render()
+      editor.UndoManager.start();
       storageManager.setAutosave(originalAutosave);
       editor.clearDirtyCount();
       URL.createObjectURL = mainCreateObjectURLMethod;
+      console.timeEnd("loading");
+      console.log("loading end");
+
       return {};
     },
 
     //Storinggg
     async store() {
-      // if (isLoading >= 1) {
-      //   console.log(isLoading);
-      //   isLoading++;
-      //   return
-      // };
-
       storeTimeout && clearTimeout(storeTimeout);
-
+      pageBuilderTimeout && clearTimeout(pageBuilderTimeout);
+      editor.UndoManager.stop();
       return new Promise((res, rej) => {
         storeTimeout = setTimeout(async () => {
           console.log("storing...");
@@ -310,8 +199,8 @@ export const IDB = (editor) => {
             current_dynamic_template_id
           );
           const projectData = await db.projects.get(+projectID);
-          const grapesjsProjectData = editor.getProjectData();
-          const symbolRuleDetails = getGlobalSymbolRuleInfo();
+          // const grapesjsProjectData = editor.getProjectData();
+          // const symbolRuleDetails = getGlobalSymbolRuleInfo();
           // if(!symbolRuleDetails.rule )
           // const currentRule = editor.Css.getRule(
           //   symbolRuleDetails.ruleName,
@@ -319,11 +208,35 @@ export const IDB = (editor) => {
           // );
 
           const handleGlobalSymbolRule = () => {
-            if (!currentSymbolId || !editor.getSelected()) return {};
+            if (!currentSymbolId) return {};
+            console.log("symbol : ", currentSymbolId, editor.getSelected());
+            const symbolById = editor
+              .getWrapper()
+              .find(`[${inf_symbol_Id_attribute}="${currentSymbolId}"]`)[0];
             const symbolInf = getInfinitelySymbolInfo(editor.getSelected());
+            const symbol = symbolInf?.symbol || symbolById;
+            if (!symbolInf?.symbol && !symbolById) {
+              // sessionStorage.removeItem(current_symbol_id)
+              // console.log(
+              //   "symbol not found : ",
+              //   currentSymbolId,
+              //   symbolInf,
+              //   symbolById
+              // );
+
+              return {};
+            }
+            // console.log(
+            //   "symbol content : ",
+            //   symbol.toHTML({
+            //     withProps: true,
+            //     keepInlineStyle: true,
+            //   })
+            // );
+
             const content = new Blob(
               [
-                symbolInf.symbol.toHTML({
+                symbol.toHTML({
                   withProps: true,
                   keepInlineStyle: true,
                 }),
@@ -335,7 +248,7 @@ export const IDB = (editor) => {
               [
                 getComponentRules({
                   editor,
-                  cmp: symbolInf.symbol,
+                  cmp: symbol,
                   nested: true,
                 }).stringRules,
               ],
@@ -392,37 +305,37 @@ export const IDB = (editor) => {
           //     : { ...projectData.globalRules };
           // };
 
-          const handleGlobalSymbolBlockThumb = async () => {
-            const symbolInfo = getInfinitelySymbolInfo(editor.getSelected());
-            console.log(`###########handleGlobalSymbolBlockThumb`);
+          // const handleGlobalSymbolBlockThumb = async () => {
+          //   const symbolInfo = getInfinitelySymbolInfo(editor.getSelected());
+          //   console.log(`###########handleGlobalSymbolBlockThumb`);
 
-            if (!currentSymbolId || !symbolInfo?.symbol) return {};
-            const thumb = await toBlob(symbolInfo.symbol.getEl(), {
-              type: "image/webp",
-              width: 300,
-              height: 300,
-              quality: 1,
-            });
+          //   if (!currentSymbolId || !symbolInfo?.symbol) return {};
+          //   const thumb = await toBlob(symbolInfo.symbol.getEl(), {
+          //     type: "image/webp",
+          //     width: 300,
+          //     height: 300,
+          //     quality: 1,
+          //   });
 
-            return {
-              [currentSymbolId]: {
-                ...projectData.blocks[currentSymbolId],
-                media: thumb,
-              },
-            };
-          };
+          //   return {
+          //     [currentSymbolId]: {
+          //       ...projectData.blocks[currentSymbolId],
+          //       media: thumb,
+          //     },
+          //   };
+          // };
 
-          const handleBlockTemplateThumb = async () => {
-            if (!currentTemplateId) return {};
-            const templateInfo = getTemplateInfo(editor.getSelected());
-            const thumb = await getImgAsBlob(templateInfo.template.getEl());
-            return {
-              [currentTemplateId]: {
-                ...projectData.blocks[currentTemplateId],
-                media: thumb,
-              },
-            };
-          };
+          // const handleBlockTemplateThumb = async () => {
+          //   if (!currentTemplateId) return {};
+          //   const templateInfo = getTemplateInfo(editor.getSelected());
+          //   const thumb = await getImgAsBlob(templateInfo.template.getEl());
+          //   return {
+          //     [currentTemplateId]: {
+          //       ...projectData.blocks[currentTemplateId],
+          //       media: thumb,
+          //     },
+          //   };
+          // };
 
           const handleDynamicTemplateThumbAndProps = async () => {
             const dynamicTemplate = getDynamicComponent(editor.getSelected());
@@ -567,18 +480,11 @@ export const IDB = (editor) => {
                     editor.getWrapper().getInnerHTML({
                       keepInlineStyle: true,
                       withProps: true,
-                      // attributes:(cmp , attr)=>{
-                      //   console.log('save attrs :' , cmp.get('type') , attr);
-
-                      // attr
-                      // }
-                      // asDocument: true,
-                      // cleanId: true,
                     }),
                   ],
                   { type: "text/html" }
                 ),
-                components: JSON.stringify(editor.getComponents()),
+                // components: JSON.stringify(editor.getComponents().models),
                 css: new Blob(
                   [
                     minify(
@@ -628,34 +534,69 @@ export const IDB = (editor) => {
 
           // await db.projects.update(+projectID,data)
 
+          const props = {
+            data,
+            projectId: +localStorage.getItem(current_project_id),
+            updatePreviewPages: true,
+            pageName: currentPageId,
+            pageUrl: `pages/${currentPageId}.html`,
+            editorData: {
+              canvasCss: editor.config.canvasCss,
+            },
+          };
+
           !currentSymbolId
             ? infinitelyWorker.postMessage({
                 command: "updateDB",
-                props: {
-                  data,
-                  projectId: +localStorage.getItem(current_project_id),
-                },
+                props,
               })
             : infinitelyWorker.postMessage({
                 command: "storeGrapesjsDataIfSymbols",
-                props: {
-                  data,
-                  projectId: +localStorage.getItem(current_project_id),
-                },
+                props,
               });
 
-          currentDynamicTemplateId &&
-            infinitelyWorker.postMessage({
-              command: "updateDynamicTemplates",
-              props: {
-                projectId: +localStorage.getItem(current_project_id),
-                dynamicTemplateId: currentDynamicTemplateId,
-              },
-            });
+          // currentDynamicTemplateId &&
+          //   infinitelyWorker.postMessage({
+          //     command: "updateDynamicTemplates",
+          //     props: {
+          //       projectId: +localStorage.getItem(current_project_id),
+          //       dynamicTemplateId: currentDynamicTemplateId,
+          //     },
+          //   });
           // editor.trigger("block:add");
+
           console.log("store end", data);
           console.timeEnd("storing...");
+          /**
+           *
+           * @param {MessageEvent} ev
+           */
+          const updateCallback = (ev) => {
+            const { command, props } = ev.data;
+            if (
+              (command == "updateDB" ||
+                command == "storeGrapesjsDataIfSymbols") &&
+              props.done &&
+              props.projectId == +projectID
+            ) {
+              infinitelyWorker.removeEventListener("message", updateCallback);
+              // allowWorkerToBuildPageForPreview({
+              //   pageName: localStorage.getItem(current_page_id),
+              //   canvasCss: editor.config.canvasCss,
+              // pageUrl: `pages/${localStorage.getItem(current_page_id)}.html`,
+              //   allowToUpdate: true,
+              // });
+              editor.trigger("block:add");
+              editor.trigger("block:update");
+              console.log("updateDB done");
+              // editor.trigger("block:add");
+            }
+          };
+          infinitelyWorker.addEventListener("message", updateCallback);
+
           res(await db.projects.get(+projectID));
+          // pageBuilderTimeout = setTimeout(() => {}, 70);
+          editor.UndoManager.start();
         }, 300);
       });
     },
@@ -668,51 +609,12 @@ export const IDB = (editor) => {
  * @param {import('../helpers/types').Project } projectData
  */
 const loadScripts = async (editor, projectData) => {
-  const currentPageName = localStorage.getItem(current_page_id) || "index";
-  // console.log("i load now......", editor.getWrapper().getEl());
-
-  // const mainScripts = [
-  //   // "/scripts/hyperscript@0.9.13.js",
-  //   "/scripts/proccesNodeInHS.js",
-  //   "/scripts/p-vue.js",
-  //   // "/scripts/alpine.js",
-  //   // 'https://cdn.tailwindcss.com',
-  //   // 'https://cdnjs.cloudflare.com/ajax/libs/hyperscript/0.9.11/_hyperscript.min.js'
-  // ];
-  // const wrapper = editor.getWrapper().getEl();
-  // const head = editor.Canvas.getDocument().head;
-
-  // const getFonts = () => {
-  //   const fonts = Object.values(projectData.fonts);
-  //   const stringFonts = fonts.map((font) =>
-  //     defineFontFace({
-  //       family: font.file.name,
-  //       url: font.isCDN ? font.url : URL.createObjectURL(font.file),
-  //     })
-  //   );
-  //   return stringFonts.join("\n");
-  // };
+  const currentPageName = localStorage.getItem(current_page_id);
 
   loadHeadScriptsCallback = (ev) => {
-    // const head = editor.Canvas.getDocument().head;
-    // const head = ev.window.document.head;
     console.log("from head event", ev);
 
-    // editor.config.canvas.scripts = [];
-    // editor.config.canvas.styles = [];
-
-    // new Set().
-
-    // const jsHeaderCDN = projectData.jsHeaderCDNLibraries;
-    // const jsHeaderLocal = projectData.jsHeaderLocalLibraries;
-    // // .concat({
-    // //   content: `console.log('I load From Header')`,
-    // //   name: "hedo",
-    // // });
-    // const cssHeaderLocal = projectData.cssHeaderLocalLibraries;
-    // const cssHeaderCDN = projectData.cssHeaderCDNLibraries;
     const jsHeaderLibs = projectData.jsHeaderLibs;
-    // const jsFooterLibs = projectData.jsFooterLibs;
     const cssLibs = projectData.cssLibs;
 
     /**
@@ -722,7 +624,7 @@ const loadScripts = async (editor, projectData) => {
      */
     const getJsLib = (lib) => {
       const newObj = {
-        src: lib.isCDN ? lib.fileUrl : URL.createObjectURL(lib.file), // jsToDataURL(lib.content),
+        src: lib.isCDN ? lib.fileUrl : `libs/js/header/${lib.file.name}`, //URL.createObjectURL(lib.file), // jsToDataURL(lib.content),
         name: lib.name,
         async: lib.async,
         defer: lib.defer,
@@ -730,10 +632,6 @@ const loadScripts = async (editor, projectData) => {
 
       !lib.defer && delete newObj.defer;
       !lib.async && delete newObj.async;
-      // const script = document.createElement('script');
-      // for (const key in newObj) {
-      //   script.setAttribute(key , newObj[key])
-      // }
       return newObj;
     };
 
@@ -743,31 +641,43 @@ const loadScripts = async (editor, projectData) => {
      * @returns
      */
     const getCssLib = (lib) => {
-      console.log("@!lib : ", lib.file);
+      // console.log("@!lib : ", lib.file);
 
-      const url = lib.isCDN ? lib.fileUrl : URL.createObjectURL(lib.file); //newObj;
-      // const link = document.createElement('link');
-      // link.href = url;
-      // link.setAttribute('name' , lib.name)
+      const url = lib.isCDN
+        ? lib.fileUrl
+        : lib.file.name.includes("global.css")
+        ? `/global.css`
+        : `libs/css/${lib.file.name}`; //newObj;
+
       return {
         url,
         libData: lib,
       };
     };
 
+    // console.log("scriiipts : ", jsHeaderLibs, editor.config.canvas.scripts);
+
     jsHeaderLibs.forEach((lib) => {
       const libData = getJsLib(lib);
       // head.appendChild(libData);
 
       const isExist = editor.config.canvas.scripts.filter(
-        (existLib) => existLib.name.toLowerCase() == libData.name.toLowerCase()
+        (existLib) =>
+          existLib && existLib.name.toLowerCase() == libData.name.toLowerCase()
       ).length;
       !isExist && editor.config.canvas.scripts.push(libData);
     });
-    console.log("cssLibs : ", cssLibs);
+    // console.log("cssLibs : ", cssLibs);
 
     cssLibs
-      .concat([{ file: projectData.globalCss, name: "globalCss" }])
+      .concat([
+        {
+          file: new File([projectData.globalCss], "global.css", {
+            type: projectData.globalCss.type,
+          }),
+          name: "globalCss",
+        },
+      ])
       .forEach((lib) => {
         if (typeof lib == "string") {
           return lib;
@@ -783,166 +693,11 @@ const loadScripts = async (editor, projectData) => {
             href: libData.url,
             name: libData.libData.name,
           });
-        console.log(`Libbbbbbbbbbbbbbb@@#: `, libData);
-
-        //For Fonts
-        // const isFontsExist = editor.config.canvas.styles.find(
-        //   (existLib) => existLib.name.toLowerCase() == "fonts"
-        // );
+        // console.log(`Libbbbbbbbbbbbbbb@@#: `, libData);
       });
-
-    // jsHeaderLocal.forEach((lib) => {
-    //   const libData = getJsLib(lib);
-    //   editor.config.canvas.scripts.push(libData);
-    // });
-
-    // editor.off("canvas:frame:load", headCallback);
   };
 
-  //===body
-
-  const loadFooterLibs = (body) => {
-    // const body = editor.Canvas.getBody();
-    // const body = editor.Canvas.getBody();
-    // const jsFooterCDN = projectData.jsFooterCDNLibraries;
-    // const jsFooterLocal = projectData.jsFooterLocalLibraries;
-    // const cssFooterLocal = projectData.cssFooterLocalLibraries;
-    // const cssFooterCDN = projectData.cssFooterCDNLibraries;
-
-    // appendScriptInElForLocal(body, jsFooterLocal);
-
-    // appendStylesForLocal(body, cssFooterLocal);
-    // appendScriptInElForCDN(body, jsFooterCDN);
-    // appendStylesForCDN(body, cssFooterCDN);
-    const jsFooterLibs = projectData.jsFooterLibs;
-    appendFooterScripts(body, jsFooterLibs);
-    console.log("from body event");
-  };
-
-  //====Init
-
-  const appendScriptInEl = (el = refType, scripts = []) => {
-    const mainScripts = [];
-
-    scripts.forEach((script) => {
-      const scriptEl = document.createElement("script");
-      scriptEl.src = script;
-      el.append(scriptEl);
-      // mainScripts.push(scriptEl.outerHTML);
-    });
-    // el.insertAdjacentHTML("beforeend", mainScripts.join("\n"));
-  };
-
-  // const appendScriptInElForCDN = (el = refType, scripts = []) => {
-  //   const scriptsArr = [];
-
-  //   scripts.forEach((scriptConf) => {
-  //     const script = document.createElement("script");
-  //     script.src = scriptConf.fileUrl;
-  //     scriptConf.async && (script.async = scriptConf.async);
-  //     scriptConf.defer && (script.defer = scriptConf.defer);
-  //     editor
-  //       .getWrapper()
-  //       .getEl()
-  //       ?.querySelector(`script["name"=${scriptConf.name}]`)
-  //       ?.remove();
-  //     script.setAttribute("name", scriptConf.name);
-  //     // fragment.appendChild(script);
-  //     // scripts.push(scriptsArr.outerHTML);
-  //     el.append(script);
-  //   });
-  //   // el.insertAdjacentHTML("beforeend", scriptsArr.reverse().join("\n"));
-  // };
-
-  // const appendScriptInElForLocal = (el = refType, scripts = []) => {
-  //   const scriptsArr = [];
-
-  //   scripts.forEach(async (scriptConf) => {
-  //     const script = document.createElement("script");
-  //     script.innerHTML = await scriptConf.blob.text();
-  //     scriptConf.async && (script.async = scriptConf.async);
-  //     scriptConf.defer && (script.defer = scriptConf.defer);
-  //     script.setAttribute("name", scriptConf.name);
-  //     el.appendChild(script);
-  //     // console.log(el.tagName, el, scripts, scriptConf, el.children);
-  //     // scriptsArr.push(script.outerHTML);
-  //   });
-
-  //   // el.insertAdjacentHTML("beforeend", scriptsArr.reverse().join("\n"));
-  // };
-
-  // const appendStylesForLocal = (el = refType, styles = []) => {
-  //   const stylesArr = [];
-
-  //   styles.forEach(async (styleConf) => {
-  //     const style = document.createElement("style");
-  //     style.innerHTML = await styleConf.blob.text();
-  //     style.setAttribute("name", styleConf.name);
-  //     stylesArr.push(style.outerHTML);
-  //   });
-  //   el.insertAdjacentHTML("beforeend", stylesArr.join("\n"));
-  // };
-
-  // const appendStylesForCDN = (el = refType, styles = []) => {
-  //   const stylesArr = [];
-
-  //   styles.forEach((styleConf) => {
-  //     const style = document.createElement("link");
-  //     style.href = styleConf.fileUrl;
-  //     style.setAttribute("name", styleConf.name);
-  //     stylesArr.push(style.outerHTML);
-  //   });
-  //   el.insertAdjacentHTML("beforeend", stylesArr.join("\n"));
-  // };
-
-  const appendLocalPageAndGlobalCssAndJs = (body) => {
-    const currentPageName = localStorage.getItem(current_page_id);
-    const localScript = document.createElement("script");
-    const localStyle = document.createElement("style");
-    const globalScript = document.createElement("script");
-    const globalStyle = document.createElement("style");
-
-    // globalStyle.innerHTML = await projectData.globalCss.text();
-
-    // localStyle.innerHTML = await projectData.pages[
-    //   `${currentPageName}`
-    // ].css.text();
-    globalScript.src = URL.createObjectURL(projectData.globalJs);
-    localScript.src = URL.createObjectURL(
-      projectData.pages[`${currentPageName}`].js
-    );
-
-    // const body = editor.Canvas.getBody();
-    [globalScript, localScript].forEach((item) => body.append(item));
-  };
-
-  /**
-   *
-   * @param {HTMLElement} el
-   * @param {import('../helpers/types').LibraryConfig[]} libs
-   */
-  const appendFooterScripts = async (el, libs) => {
-    const fragment = document.createDocumentFragment();
-    libs.forEach(({ async, defer, file, fileUrl, isCDN }) => {
-      const script = document.createElement("script");
-      async && script.setAttribute("async", "true");
-      defer && script.setAttribute("defer", "true");
-      script.src = isCDN ? fileUrl : URL.createObjectURL(file);
-      script.setAttribute("name", file.name);
-      fragment.appendChild(script);
-    });
-    el.appendChild(fragment);
-  };
-
-  loadMainScriptsCallback = (body) => {
-    // const body = editor.Canvas.getBody();
-    // console.log("body : ", body);
-
-    appendScriptInEl(body, mainScriptsForEditor);
-    // editor.off("canvas:frame:load:body", loadMainScript);
-  };
-
-  loadFooterScriptsCallback = (ev) => {
+  loadFooterScriptsCallback = async (ev) => {
     console.log("evoooooooooooo : ", ev.window.document.body);
     const body = ev.window.document.body;
     const jsFooterLibs = projectData.jsFooterLibs; //.map(lib=>lib.file);
@@ -956,45 +711,60 @@ const loadScripts = async (editor, projectData) => {
       localScript,
       ...mainScriptsForEditor,
     ];
-    // .forEach((url) => {
-    //   const script = document.createElement("script");
-    //   if (url.file && url.file instanceof Blob) {
-    //     script.src = URL.createObjectURL(url.file);
-    //     script.setAttribute("name", url.name);
-    //   } else if (!url.file && url instanceof Blob) {
-    //     script.src = URL.createObjectURL(url);
-    //     // script.setAttribute('name' , 'global')
-    //   } else if (typeof url == "string") {
-    //     script.src = url;
-    //   }
 
-    //   // fragment.appendChild(script);
-    //   body.appendChild(script);
-    // });
-
-    const appendScript = (index) => {
+    /**
+     *
+     * @param {import('../helpers/types').LibraryConfig[] & Blob[] & string[]} array
+     * @param {number} index
+     * @param {(script: HTMLScriptElement , lib : import('../helpers/types').LibraryConfig & Blob & string)=>void} callback
+     * @returns
+     */
+    const appendScript = async (
+      array = [],
+      index,
+      callback = (script, lib) => {}
+    ) => {
       // console.log("index : ", index, allScripts);
 
-      if (index > allScripts.length - 1) return;
+      if (index > array.length - 1) return true;
       const script = document.createElement("script");
-      const url = allScripts[index];
-      if (url.file && url.file instanceof Blob) {
-        script.src = URL.createObjectURL(url.file);
-        script.setAttribute("name", url.name);
-      } else if (!url.file && url instanceof Blob) {
-        script.src = URL.createObjectURL(url);
-        // script.setAttribute('name' , 'global')
-      } else if (typeof url == "string") {
-        script.src = url;
-      }
+      const lib = array[index];
+
+      callback(script, lib);
 
       // fragment.appendChild(script);
       body.appendChild(script);
-      script.onload = (ev) => {
-        appendScript(index + 1);
-      };
+      return await new Promise((res, rej) => {
+        script.onload = (ev) => {
+          res(appendScript(array, index + 1, callback));
+        };
+      });
     };
-    appendScript(0);
+
+    await appendScript(jsFooterLibs, 0, (script, lib) => {
+      if (lib.isCDN) {
+        script.src = lib.fileUrl;
+        script.setAttribute("name", lib.name);
+      } else {
+        script.src = `libs/js/footer/${lib.file.name}`;
+        script.setAttribute("name", lib.name);
+      }
+
+      lib?.async && script.setAttribute("async", "");
+      lib?.defer && script.setAttribute("defer", "");
+    });
+
+    await appendScript([globalScript], 0, (script, lib) => {
+      script.src = `global/global.js`;
+    });
+
+    await appendScript([localScript], 0, (script, lib) => {
+      script.src = `local/local.js?page=${currentPageName}`;
+    });
+
+    await appendScript(mainScriptsForEditor, 0, (script, lib) => {
+      script.src = lib;
+    });
     // loadMainScriptsCallback(body);
     // loadFooterLibs(body);
     // appendLocalPageAndGlobalCssAndJs(body);

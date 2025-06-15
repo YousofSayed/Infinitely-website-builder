@@ -9,6 +9,7 @@ import { useSetClassForCurrentEl } from "../../../hooks/useSetclassForCurrentEl"
 import { useEditorMaybe } from "@grapesjs/react";
 import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
 import { useRemoveCssProp } from "../../../hooks/useRemoveCssProp";
+import { ScrollableToolbar } from "../../Protos/ScrollableToolbar";
 
 /**
  *
@@ -18,6 +19,7 @@ import { useRemoveCssProp } from "../../../hooks/useRemoveCssProp";
 export const MultiChoice = ({
   label,
   icons,
+  rotate = false,
   cssProp,
   choices,
   setChoice = (_) => {},
@@ -26,13 +28,13 @@ export const MultiChoice = ({
   const [currentChoice, setCurrentChoice] = useState(null);
   const lastIndex = useRef(null);
   const [val, setVal] = useState("");
-  const removeProp = useRemoveCssProp(); 
+  const removeProp = useRemoveCssProp();
 
   useUpdateInputValue({ setVal, cssProp });
 
   useEffect(() => {
     const currentElCssIndex = choices.findIndex(
-      ({choice}) => choice.trim() == val?.trim()
+      ({ choice }) => choice.trim() == val?.trim()
     );
 
     setCurrentChoice(currentElCssIndex);
@@ -46,8 +48,9 @@ export const MultiChoice = ({
       // removeProp({cssProp})
       setClass({
         cssProp,
-        value: '',
+        value: "",
       });
+      setChoice("");
       return;
     }
     setChoice(choices[index].choice);
@@ -62,21 +65,30 @@ export const MultiChoice = ({
   };
 
   return (
-    <ul  className="flex ll justify-between flex-nowrap items-center  w-full p-2 bg-slate-800 rounded-lg transition-all">
-      {choices.map(({choice , Icon}, i) => (
+    // <ul  className="flex ll justify-between flex-nowrap items-center  w-full p-2 bg-slate-800 rounded-lg transition-all">
+    <ScrollableToolbar className="w-full h-full items-center justify-between  bg-slate-800 rounded-lg transition-all" space={3}>
+      {choices.map(({ choice, Icon }, i) => (
         <li
           title={choice}
           key={i}
-          className={`group cursor-pointer flex flex-shrink-0 justify-center items-center w-[37.5px] h-[37.5px] rounded-lg ${
-            i == currentChoice ? " bg-blue-500 shadow-md shadow-slate-900 " : ""
+          className={`group ${
+            rotate && "rotate-90"
+          } transition-all cursor-pointer flex flex-shrink-0 justify-center items-center w-[37.5px] h-[37.5px] rounded-lg ${
+            i == currentChoice ? " bg-blue-600 shadow-md shadow-slate-900 " : ""
           }  transition-[background]`}
           onClick={(ev) => {
             handleSelecting(i);
           }}
         >
-          {Icon({fill : i == currentChoice ? "white" : "" , strokeColor: i == currentChoice ? "white" : "", width:19})}
+          {Icon({
+            fill: i == currentChoice ? "white" : "",
+            strokeColor: i == currentChoice ? "white" : "",
+            width: 19,
+          })}
         </li>
       ))}
-    </ul>
+    </ScrollableToolbar>
+
+    // </ul>
   );
 };

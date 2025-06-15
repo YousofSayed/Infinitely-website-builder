@@ -4,6 +4,8 @@ import { Select } from "./Select";
 import { borderStyles } from "../../../constants/cssProps";
 import { P } from "../../Protos/P";
 import { SelectStyle } from "./SelectStyle";
+import { FitTitle } from "./FitTitle";
+import { ScrollableToolbar } from "../../Protos/ScrollableToolbar";
 
 export const BorderStyle = () => {
   const [option, setOption] = useState("");
@@ -47,8 +49,8 @@ export const BorderStyle = () => {
 
   return (
     <section className={`flex flex-col gap-3`}>
-      <P>border style: </P>
-      <section className="flex justify-between gap-1 p-2 bg-gray-950 rounded-lg">
+      <FitTitle className="capitalize">border style</FitTitle>
+      <ScrollableToolbar className="flex justify-between gap-1 p-2 bg-slate-800 rounded-lg" space="3">
         <SelectedBorder
           borderName={"border-t-2"}
           borderDir="top"
@@ -79,8 +81,8 @@ export const BorderStyle = () => {
           option={option}
           setOption={setOption}
         />
-      </section>
-      <SelectStyle cssProp={cssProps} keywords={borderStyles} label="border style"/>
+      </ScrollableToolbar>
+      <SelectStyle cssProp={cssProps} keywords={borderStyles} placeholder="border style"/>
     </section>
   );
 };

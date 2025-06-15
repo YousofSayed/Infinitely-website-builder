@@ -17,13 +17,16 @@ export const LibraryUploader = () => {
     name: "",
     file: null,
   });
+
   const filesTypes = {
     "application/x-javascript": "js",
     "text/css": "css",
   };
+
   useEffect(() => {
     console.log("effect : ", files);
   }, [files]);
+
   /**
    *
    * @param {HTMLInputElement} input
@@ -33,18 +36,7 @@ export const LibraryUploader = () => {
     const newFiles = files.map((file, i) => {
       file.fileType = filesTypes[file.type];
       console.log("type : ", file.fileType, file.type);
-      // const reader = new FileReader();
-      // reader.readAsText(file);
-      // reader.addEventListener("loadend", async () => {
-      //   file.content = reader.result;
-
-      //   if (file.fileType == "js") {
-      //     file.latest = jsToDataURL(reader.result);
-      //   } else if (file.fileType == "css") {
-      //     file.latest = cssToDataURL(reader.result);
-      //   }
-
-      // });
+     
       file.latest = URL.createObjectURL(file);
       return file;
     });
@@ -59,8 +51,8 @@ export const LibraryUploader = () => {
   };
 
   return (
-    <section className="p-2 rounded-lg border-2 border-slate-600 min-h-full h-fit">
-      <header className="flex items-center justify-between gap-2 p-2 mb-2 bg-slate-950 rounded-lg">
+    <section className="p-1 rounded-lg min-h-full h-fit">
+      <header className="flex items-center justify-between gap-2 p-2 mb-2 bg-slate-800 rounded-lg">
         <Input
           placeholder="Add Library Url"
           className="w-full bg-slate-900"
@@ -71,6 +63,7 @@ export const LibraryUploader = () => {
         <Input
           placeholder="Add Library Name"
           className="w-full bg-slate-900"
+          
           onInput={(ev) => {
             onInput("name", ev.target.value);
           }}
@@ -129,12 +122,13 @@ export const LibraryUploader = () => {
 
         <input
           ref={inputFileRef}
+          accept=".js , .css"
           type="file"
-          className="hidden"
+          hidden
           onChange={(ev) => {
             loadFiles(ev.target);
           }}
-          multiple
+          // multiple
         />
       </header>
 

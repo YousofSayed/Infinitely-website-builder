@@ -1,17 +1,23 @@
-import { Canvas, useNode } from "@craftjs/core";
-import React from "react";
-import { uniqueID } from "../helpers/cocktail";
+import { Icons } from '../components/Icons/Icons'
+import { reactToStringMarkup } from '../helpers/reactToStringMarkup'
 
-export const MyText = ({ text }) => {
-  const {
-    connectors: { connect, drag },
-  } = useNode();
-
-  return (
-    // <div ref={drag}>
-        <p id={uniqueID()} draggable={true} className="no-user-select" ref={(ref) => connect(drag(ref))}>
-          {text}
-        </p>
-    // </div>
-  );
-};
+/**
+ * 
+ * @param {{editor:import('grapesjs').Editor}} param0 
+ */
+export const Text = ({editor}) => {
+  editor.Components.addType('text',{
+    extend:'text',
+    model:{
+        defaults:{
+            icon:reactToStringMarkup(Icons.text({fill:'white'})),
+            droppable:false,
+            tagName:'p',
+            components:`Insert your text here`,
+            attributes:{
+                class:'p-10'
+            }
+        }
+    }
+  })
+}

@@ -1,5 +1,14 @@
 import parseObjectLiteral from "object-literal-parse";
 import { parse as parseCss, stringify as stringifyCss } from "css";
+import { cloneDeep, isPlainObject } from "lodash";
+import serializeJavascript from "serialize-javascript";
+import {
+  MAX_FILE_SIZE,
+  MAX_UPLOAD_SIZE,
+  motionId,
+  preivewScripts,
+} from "../constants/shared";
+import { db } from "./db";
 
 export const html = String.raw;
 export const css = String.raw;
@@ -116,8 +125,12 @@ export function getDirectiveContext(
         const oldValue = value || "";
         const newValue = {
           value,
-          suffixes: key?.match?.(/\:\w+/gi),
-          modifires: key?.match?.(/\.\w+/gi),
+          suffixes: key
+            ?.match?.(/\:\w+/gi)
+            ?.map?.((modifire) => modifire.replace(":", "")),
+          modifires: key
+            ?.match?.(/\.\w+/gi)
+            ?.map?.((modifire) => modifire.replace(".", "")),
         };
         return [key, newValue];
       })
@@ -200,7 +213,7 @@ export function parseForDirective(xForDirective = "") {
     const secondPart = xForDirective
       .split(/\(.+\)/gi)
       .join("")
-      .replace(/in/gi, "");
+      .replace(/(\s+)in(\s+)/gi, "");
     return {
       varName: firstPart[0].trim(),
       index: firstPart[1].trim(),
@@ -338,6 +351,26 @@ export function defineFontFace({ family, url }) {
 
 /**
  *
+ * @param {import('./types').Project} projectData
+ * @returns
+ */
+export const getFonts = (projectData) => {
+  const fonts = Object.values(projectData.fonts);
+  const stringFonts = fonts.map((font) =>
+    defineFontFace({
+      family: font.isCDN
+        ? font.name
+        : font.file.name.split(/\.\w+/gi).join("").trim(),
+      url: font.isCDN
+        ? `url("${font.url}")`
+        : `url("../fonts/${font.file.name}") `,
+    })
+  );
+  return stringFonts.join("\n");
+};
+
+/**
+ *
  * @param {File} file
  * @returns {Promise<Blob>}
  */
@@ -449,17 +482,23 @@ export async function minifyBlobJSAndCssStream(blob, type = "") {
   }
 
   // Minify the accumulated code
-  const minified = await minify(code);
+  console.log(
+    "code : ",
+    code,
+    type == "css" && (await import("csso")).minify(code).css
+  );
+
+  const minified =
+    type == "js"
+      ? (await (await import("terser")).minify(code)).code
+      : (await import("csso")).minify(code).css;
   if (minified.error) {
     throw new Error("Minification failed: " + minified.error);
   }
 
   // Return as a new Blob
-  return new Blob([minified.code], {
-    type:
-      (type == "js" && "application/javascript") ||
-      (type == "css" && "text/css") ||
-      "",
+  return new Blob([minified], {
+    type: type == "js" ? "application/javascript" : "text/css",
   });
 }
 
@@ -472,34 +511,793 @@ export function isDevMode(resolve = (result) => {}, reject = (result) => {}) {
   }
 }
 
+export function toMB(bytes = 0, toFixed = 2) {
+  const bytesPerMB = 1048576; // 1 MB = 2^20 bytes
+  const totalSizeInMB = bytes / bytesPerMB;
+  return +totalSizeInMB.toFixed(toFixed);
+}
+
+export function toGB(bytes = 0, toFixed = 2) {
+  const bytesPerGB = 1073741824; // 1 GB = 2^30 bytes
+  const totalSizeInGB = (bytes / bytesPerGB).toFixed(toFixed);
+  return +totalSizeInGB;
+}
+
+/**
+ * @param {File} file
+ */
+export function getFileSize(file, fixed = 2) {
+  // const bytesPerMB = 1048576; // 1 MB = 2^20 bytes
+  // const bytesPerGB = 1073741824; // 1 GB = 2^30 bytes
+  // const totalSizeInMB = file.size / bytesPerMB;
+  // const totalSizeInGB = (file.size / bytesPerGB).toFixed(2);
+  if (!file) {
+    console.warn("No file provided or file is invalid.");
+    return {
+      MB: 0,
+      GB: 0,
+    };
+  }
+
+  return {
+    MB: toMB(file.size, fixed),
+    GB: toGB(file.size, fixed),
+  };
+}
+
 /**
  *
  * @param {File[]} files
  */
-export function getFilesSize(files) {
-  const bytesPerMB = 1048576; // 1 MB = 2^20 bytes
-  const bytesPerGB = 1073741824; // 1 GB = 2^30 bytes
+export function getFilesSize(files, fixed = 2) {
+  // const bytesPerMB = 1048576; // 1 MB = 2^20 bytes
+  // const bytesPerGB = 1073741824; // 1 GB = 2^30 bytes
+  console.log("files : ", files, files?.length);
+
+  if (!files?.filter(Boolean)?.length) {
+    console.warn("No files provided or all files are invalid.");
+    return {
+      MB: 0,
+      GB: 0,
+    };
+  }
   const totalSizeInBytes = Array.from(files).reduce(
     (prev, current, currentIndex, arr) => {
-      console.log("files : ", prev, current.size);
       return prev + current.size;
     },
     0
   );
-  const totalSizeInMB = totalSizeInBytes / bytesPerMB;
-  const totalSizeInGB = (totalSizeInBytes / bytesPerGB).toFixed(2);
+  // const totalSizeInMB = totalSizeInBytes / bytesPerMB;
+  // const totalSizeInGB = (totalSizeInBytes / bytesPerGB).toFixed(2);
 
   return {
-    MB: +(totalSizeInMB).toFixed(2),
-    GB: +totalSizeInGB,
+    MB: toMB(totalSizeInBytes, fixed),
+    GB: toGB(totalSizeInBytes, fixed),
   };
 }
 
-
-export function isChrome( callback=  (bool = false)=>{}) {
-  const cond = navigator.userAgent.toLowerCase().includes('chrome');
-  if(cond){
-    callback(cond)
+export function isChrome(callback = (bool = false) => {}) {
+  const cond = navigator.userAgent.toLowerCase().includes("chrome");
+  if (cond) {
+    callback(cond);
   }
-  return cond
+  return cond;
+}
+
+export function editNestedObject(obj, keys, newValue) {
+  let current = obj;
+
+  // Traverse the object until the second-to-last key
+  for (let i = 0; i < keys.length - 1; i++) {
+    const key = keys[i];
+    // Ensure the key exists, if not create an empty object
+    if (!current[key]) {
+      current[key] = {};
+    }
+    !isPlainObject(current[key]) && (current[key] = {});
+    current = current[key];
+  }
+
+  // Set the new value at the final key
+  const finalKey = keys[keys.length - 1];
+  // const prevFinalKey = keys[keys.length - 2];
+  console.log(current, current[finalKey], newValue, keys);
+  // if(!current[finalKey]){
+  //   current[prevFinalKey] = {}
+  // }
+  // !isPlainObject( current) && (current={})
+  console.log(current, current[finalKey], newValue, keys);
+
+  current[finalKey] = newValue;
+
+  return obj;
+}
+
+export function getNestedValue(obj, keys) {
+  let current = obj;
+
+  // Traverse the object using all keys
+  for (const key of keys) {
+    if (!current || typeof current !== "object" || !(key in current)) {
+      return undefined; // Return undefined if the path is invalid
+    }
+    current = current[key];
+  }
+
+  return current;
+}
+
+export function removeNestedKey(obj, keys) {
+  if (
+    !obj ||
+    typeof obj !== "object" ||
+    !Array.isArray(keys) ||
+    keys.length === 0
+  ) {
+    return obj;
+  }
+
+  let current = obj;
+
+  // Traverse to the parent of the final key
+  for (let i = 0; i < keys.length - 1; i++) {
+    const key = keys[i];
+    if (!current || typeof current !== "object" || !(key in current)) {
+      return obj; // Path doesn't exist, return unchanged object
+    }
+    current = current[key];
+  }
+
+  // Delete the final key
+  const finalKey = keys[keys.length - 1];
+  if (current && typeof current === "object" && finalKey in current) {
+    delete current[finalKey];
+  }
+
+  return obj;
+}
+
+/**
+ *
+ * @param {import('./types').MotionType} motion
+ * @param {Boolean} paused
+ * @returns
+ */
+export function CompileMotion(motion, paused = false) {
+  /**
+   * @type {{timeline:object , fromTo : {
+   * selector:string,
+   * fromValue:CSSStyleDeclaration,
+   * toValue:CSSStyleDeclaration,
+   * positionParameter:string,
+   * name:string | undefined
+   * }[]
+   * }}
+   */
+  const output = {
+    timeline: {},
+    fromTo: [],
+  };
+
+  const parseObjValue = (obj = {}) => {
+    return Object.fromEntries(
+      Object.entries(obj).map(([key, value]) => {
+        if (typeof value === "object") {
+          return [key, parseObjValue(value)];
+        } else if (key.startsWith("on") && /on[A-Z]/gi.test(key)) {
+          return [key, new Function(`return (()=>{${value}})`)()];
+        }
+        return [
+          key,
+          typeof value === "string"
+            ? value.replaceAll?.("self", `[motion-id="${motion.id}"]`)
+            : value,
+        ];
+      })
+    );
+  };
+
+  if (motion.isTimeLine) {
+    output.timeline = {
+      ...parseObjValue(motion.timeLineSingleOptions),
+      ...parseObjValue(motion.timeLineMultiOptions),
+      paused,
+    };
+    if (motion.isTimelineHasScrollTrigger) {
+      output.timeline.scrollTrigger = {
+        ...parseObjValue(motion.timelineScrollTriggerOptions.singleOptions),
+        ...parseObjValue(motion.timelineScrollTriggerOptions.multiOptions),
+      };
+    }
+    motion.timeLineName && (output.timeline.name = motion.timeLineName);
+  }
+
+  motion.animations.forEach((animation) => {
+    const { selector, positionParameter, name } = animation;
+    let fromValue = {
+      ...animation.from,
+    };
+
+    let toValue = {
+      ...animation.to,
+    };
+
+    if (animation.fromOptions) {
+      fromValue = {
+        ...fromValue,
+        ...parseObjValue(animation.fromOptions),
+        paused,
+      };
+    }
+
+    if (animation.toOptions) {
+      toValue = {
+        ...toValue,
+        ...parseObjValue(animation.toOptions),
+        paused,
+      };
+    }
+    output.fromTo.push({
+      selector: selector.replaceAll("self", `[motion-id="${motion.id}"]`),
+      fromValue,
+      toValue,
+      positionParameter,
+
+      name,
+      //   options,
+    });
+  });
+  return output;
+}
+
+/**
+ *
+ * @param {{[key:string] : import('./types').MotionType}} motions
+ */
+export function buildGsapMotionsScript(motions) {
+  const built = Object.values(motions).map((motion) => {
+    const compiledMotion = CompileMotion(motion);
+    let tween = "";
+    if (motion.isTimeLine) {
+      tween += `let ${motion.timeLineName} = gsap.timeline(${JSON.stringify(
+        compiledMotion.timeline
+      )})`;
+    }
+    if (compiledMotion.fromTo.length) {
+      for (const item of compiledMotion.fromTo) {
+        const toObject = `new Function(\`return (${serializeJavascript(
+          item.toValue,
+          { space: 2 }
+        ).replaceAll("\\", "\\\\")})\`)()`;
+        const fromObject = `new Function(\`return (${serializeJavascript(
+          item.fromValue,
+          { space: 2 }
+        ).replaceAll("\\", "\\\\")})\`)()`;
+        tween += `${
+          motion.isTimeLine ? "" : `let ${item.name} = gsap`
+        }.fromTo(\`${item.selector}\`, {...${fromObject}}, {...${toObject}} , ${
+          item.positionParameter || ""
+        });\n\n`;
+
+        // console.log(new Function(`return ${serializeJavascript(item.toValue , {space:2, })}`)());
+      }
+    }
+
+    return tween;
+  });
+
+  return built.join(`\n\n\n`);
+}
+
+/**
+ *
+ * @param {{[key : string] : import('./types').MotionType}} motions
+ * @param {{[key:string] : import('./types').InfinitelyPage}} pages
+ */
+export async function cleanMotions(motions, pages) {
+  await Promise.all(
+    Object.entries(motions).map(async ([key, motion]) => {
+      return await Promise.all(
+        Object.values(pages).map(async (page) => {
+          // const pageContent = await page.html.text();
+          console.log(page, page.helmet);
+
+          const stream = page.html.stream();
+          const reader = stream.getReader();
+          const decoder = new TextDecoder();
+          const buffer = [];
+          let isMotionFounded = false;
+          while (true) {
+            const { value, done } = await reader.read();
+            const pageContent = decoder.decode(value, { stream: true });
+            if (!pageContent) break;
+            buffer.push(pageContent);
+            console.log("page content is : ", pageContent, buffer.join(""));
+            buffer.length > 20 && buffer.shift();
+            if (buffer.join("").includes(`[${motionId}="${motion.id}"]`)) {
+              isMotionFounded = true;
+              break;
+            }
+            if (isMotionFounded || done) {
+              !isMotionFounded && delete motions[key];
+              break;
+            }
+          }
+          // if (!pageContent.includes(`[${motionId}="${motion.id}"]`)) {
+          //   delete motions[key];
+          // }
+          return page;
+        })
+      );
+    })
+  );
+
+  return motions;
+}
+
+/**
+ *
+ * @param {import('./types').LibraryConfig[]} libs
+ */
+export async function installLibs(libs) {
+  const mime = await (await import("mime/lite")).default;
+  for (const lib of libs) {
+    // console.log(lib);
+    if (lib.isCDN) continue;
+    // const loadedFile = await fonts[value.path].async("blob");
+    if (!navigator.onLine) {
+      lib.file = null;
+      lib.waitToInstall = true;
+      continue;
+    }
+    lib.file = new File([await (await fetch(lib.fileUrl)).blob()], lib.name, {
+      type: mime.getType(lib.name),
+    });
+  }
+}
+
+/**
+ *
+ * @param {import('./types').InfinitelyFonts} fonts
+ */
+export async function installFonts(fonts) {
+  const mime = await (await import("mime/lite")).default;
+
+  for (const key in fonts) {
+    const value = fonts[key];
+    if (value.isCDN) continue;
+    if (!navigator.onLine) {
+      value.file = null;
+      value.waitToInstall = true;
+      continue;
+    }
+    const loadedFile = await (await fetch(value.url)).blob();
+    // console.log("value : ", loadedFile, value.name);
+
+    value.file = new File([loadedFile], key, {
+      type: mime.getType(value.path),
+    });
+  }
+}
+/**
+ *
+ * @param {import('./types').RestAPIModel[]} rModels
+ */
+export async function installRestModelsAPI(rModels) {
+  return await Promise.all(
+    rModels.map(async (model) => {
+      if (!navigator.onLine) {
+        console.log('you offline');
+        
+        model.response = null;
+        model.waitToInstall = true;
+        return await new Promise((res,rej)=>res(model));
+      }
+
+      try {
+        const response = await fetch(model.url, {
+          method: model.method,
+          headers: Object.keys(model.headers).length
+            ? model.headers
+            : undefined,
+          body: Object.keys(model.body).length ? model.body : undefined,
+        });
+        const data = await response.json();
+        model.response = JSON.stringify(data);
+        model.waitToInstall = false;
+      } catch (error) {
+        console.error(`Error fetching ${model.name}:`, error);
+        model.response = null;
+        model.waitToInstall = true;
+      }
+    })
+  );
+}
+
+/**
+ *
+ * @param {import('./types').Project} projectData
+ */
+export async function getTotalSizeProject(projectData) {
+  return (
+    getFilesSize(
+      [
+        ...Object.values(projectData.fonts),
+        ...projectData.assets,
+        ...projectData.jsHeaderLibs,
+        ...projectData.jsFooterLibs,
+        ...projectData.cssLibs,
+      ]
+        .filter((asset) => !asset?.isCDN)
+        .map?.((asset) => asset.file) || []
+    ).MB || 0
+  );
+}
+
+/**
+ *
+ * @param {import('./types').InfinitelyAsset[]} assets
+ * @param {number} projectId
+ */
+export async function handleFilesSize(assets, projectId) {
+  // const clone = [...assets];
+  const projectData = await db.projects.get(+projectId);
+  const storageDetails = await getStorageDetails(+projectId);
+  const previousSize = (await getTotalSizeProject(projectData)) || 0;
+  const igonredFiles = [];
+  assets = assets.filter((asset) => {
+    const fileSizeByMB = getFileSize(asset.file).MB;
+    const condition = fileSizeByMB <= MAX_FILE_SIZE;
+    if (!condition) igonredFiles.push(asset);
+    return condition;
+  });
+
+  /**
+   *
+   * @param {import('./types').InfinitelyAsset[]} assets
+   * @returns
+   */
+  const handler = (assets) => {
+    const size = getFilesSize(assets.map((asset) => asset.file)).MB;
+    if (
+      previousSize + size >
+      (storageDetails.availableSpaceInMB >= MAX_UPLOAD_SIZE
+        ? MAX_UPLOAD_SIZE
+        : storageDetails.availableSpaceInMB)
+    ) {
+      igonredFiles.push(assets.pop());
+      return handler(assets);
+    } else {
+      return {
+        igonredFiles, //:igonredFiles.push(...newIgonred),
+        assets,
+      };
+    }
+  };
+
+  return handler(assets);
+}
+
+/**
+ *
+ * @param {import('./types').LibraryConfig[]} libs
+ */
+export async function getScripts(libs) {
+  const scripts = Promise.all(
+    libs.map(
+      async (lib) =>
+        lib.isCDN
+          ? html`
+              <script
+                src="${lib.fileUrl}"
+                ${lib.defer && `defer=${lib.defer}`}
+                ${lib.async && `async=${lib.async}`}
+                name="${lib.name}"
+              ></script>
+            `
+          : html`
+              <script
+                src="libs/js/${lib.header ? "header" : "footer"}/${lib.file
+                  .name}"
+                ${lib.defer && `defer=${lib.defer}`}
+                ${lib.async && `async=${lib.async}`}
+                name="${lib.name}"
+              ></script>
+            `
+      // ${await lib.file.text()};
+    )
+  );
+
+  return (await scripts).join("\n");
+}
+
+/**
+ *
+ * @param {import('./types').LibraryConfig[]} libs
+ */
+export async function getStyles(libs) {
+  const styles = Promise.all(
+    libs.map(async (lib) =>
+      lib.isCDN
+        ? html`
+            <link href="${lib.fileUrl}" name="${lib.name}" rel="stylesheet" />
+          `
+        : html`
+            <link
+              href="libs/css/${lib.file.name}"
+              name="${lib.name}"
+              rel="stylesheet"
+            />
+          `
+    )
+    // ${await lib.file.text()};
+  );
+
+  return (await styles).join("\n");
+}
+
+export const buildHeadFromEditorCanvasHeader = ({
+  canvasCss = "",
+  editorCss = "",
+}) => {
+  return html` <style id="global-rules">
+    ${canvasCss}
+    ${editorCss}
+  </style>`;
+};
+
+/**
+ *
+ * @param {string} page
+ * @param {import('./types').Project} projectData
+ * @returns
+ */
+export const buildPageData = async (page = "", projectData) => {
+  console.log(`from buildPageData callback : `, page);
+
+  const currentPageId = page;
+  const currentPage = projectData.pages[`${currentPageId}`];
+
+  const data = {
+    helmet: "",
+    headerScripts: "",
+    footerScripts: "",
+    cssLibs: "",
+    mainScripts: "",
+    localScript: "",
+    globalScript: "",
+    content: "",
+    pageStyle: "",
+    // editorStyles: "",
+    fonts: "",
+    bodyAttributes: projectData.pages[`${currentPageId}`].bodyAttributes || {},
+    motions:
+      `<script>${buildGsapMotionsScript(projectData.motions)}</script>` || "",
+  };
+  // console.log("motions : ", buildGsapMotionsScript(projectData.motions));
+
+  const helmet = currentPage.helmet;
+
+  const headerScrtips = getScripts(projectData.jsHeaderLibs);
+
+  const footerScritps = getScripts(projectData.jsFooterLibs);
+
+  const cssLibs = getStyles(projectData.cssLibs);
+
+  const viewMainScripts = preivewScripts
+    .map((src) => html` <script src="${src}"></script> `)
+    .join("\n");
+
+  const globalScrtip = html`
+    <script>
+      ${await projectData.globalJs.text()};
+    </script>
+  `;
+
+  const localScript = html`
+    <script>
+      ${await currentPage.js.text()};
+    </script>
+  `;
+
+  data.helmet += html`
+    <meta name="author" content="${helmet.author || ""}" />
+    <meta name="description" content="${helmet.description || ""}" />
+    <meta name="keywords" content="${helmet.keywords || ""}" />
+    <title>${helmet.title || ""}</title>
+    <link
+      rel="icon"
+      href="${projectData.logo ? URL.createObjectURL(projectData.logo) : ""}"
+    />
+    ${(await helmet?.customMetaTags?.text?.()) || ""}
+  `;
+
+  data.headerScripts = (await headerScrtips) || "";
+  data.footerScripts = (await footerScritps) || "";
+  data.cssLibs = (await cssLibs) || "";
+  data.mainScripts = viewMainScripts || "";
+  data.content = (await currentPage.html.text()) || "";
+  data.pageStyle = (await currentPage.css.text()) || "";
+  data.globalScript = globalScrtip || "";
+  data.localScript = localScript || "";
+  data.fonts = getFonts(projectData) || "";
+  return data;
+};
+
+/**
+ *
+ * @param {{page:string , projectData:import('./types').Project , editorData:{
+ * canvasCss:string,
+ * editorCss:string
+ * }}} param0
+ */
+export async function buildPageContentFromData({
+  page,
+  projectData,
+  editorData,
+}) {
+  const pageData = await buildPageData(page, projectData);
+  const content = html`
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        ${buildHeadFromEditorCanvasHeader({
+          canvasCss: editorData.canvasCss,
+          editorCss: editorData.editorCss,
+        })}
+        <link href="/styles/style.css" rel="stylesheet" />
+        <style id="page-style">
+          ${pageData.pageStyle}
+        </style>
+        <style id="fonts">
+          ${pageData.fonts}
+        </style>
+        ${pageData.helmet} ${pageData.cssLibs} ${pageData.headerScripts}
+      </head>
+
+      <body
+        style="height:100%;"
+        ${Object.keys(pageData.bodyAttributes || {})
+          .filter((key) => Boolean(pageData.bodyAttributes[key]))
+          .map((key) => `${key}="${pageData.bodyAttributes[key]}"`)
+          .join(" ")}
+      >
+        ${pageData.content} ${pageData.footerScripts} ${pageData.mainScripts}
+        ${pageData.motions} ${pageData.globalScript} ${pageData.localScript}
+      </body>
+    </html>
+  `;
+
+  return content;
+}
+
+/**
+ *
+ * @param {{ projectData:import('./types').Project , editorData:{
+ * canvasCss:string,
+ * editorCss:string
+ * }}} param0
+ */
+export async function buildPagesAsBlobForSecrviceWorker({
+  projectData,
+  editorData,
+}) {
+  const pages = projectData.pages;
+  const pagesAsBlob = {};
+  for (const key in pages) {
+    const pageKey = new URL(
+      `/pages/${key}.html`,
+      self?.origin || window?.origin
+    ).pathname
+      .split("/")
+      .pop();
+
+    pagesAsBlob[pageKey] = new Blob(
+      [
+        await buildPageContentFromData({
+          page: key,
+          projectData,
+          editorData,
+        }),
+      ],
+      { type: "text/html" }
+    );
+  }
+  return pagesAsBlob;
+
+  // return Object.fromEntries(
+  //   await Promise.all(
+  //     Object.entries(pages).map(async ([key, value]) => {
+  //       return await [
+  //         key,
+  //         new Blob(
+  //           [
+  //             await buildPageContentFromData({
+  //               page: key,
+  //               projectData,
+  //               editorData,
+  //             }),
+  //           ],
+  //           { type: "text/html" }
+  //         ),
+  //       ];
+  //     })
+  //   )
+  // );
+}
+
+/**
+ *
+ * @param {{
+ * projectData:import('./types').Project ,
+ * pageName:string,
+ * editorData:{
+ * canvasCss:string,
+ * editorCss:string
+ * }}} param0
+ */
+export async function buildPageAsBlobForSecrviceWorker({
+  projectData,
+  editorData,
+  pageName,
+}) {
+  if (!pageName) {
+    console.error(
+      `From pages builder worker buildPageAsBlobForSecrviceWorker : no page name founded`
+    );
+  }
+  // const page = projectData.pages[pageName];
+  const pageContent = await buildPageContentFromData({
+    page: pageName,
+    projectData,
+    editorData,
+  });
+  const pageKey = new URL(
+    `/pages/${pageName}.html`,
+    self?.origin || window?.origin
+  ).pathname
+    .split("/")
+    .pop();
+
+  return {
+    [pageKey]: new Blob([pageContent], { type: "text/html" }),
+  };
+}
+
+/**
+ * @param {number} projectId
+ * @returns {Promise<import('./types').StorageDetails>}
+ */
+export async function getStorageDetails(projectId) {
+  const storageDetails = await navigator.storage.estimate();
+  const projectLength = await db.projects.count();
+  const quotaPerProject = toMB(storageDetails.quota) / projectLength;
+  const currentProject = await db.projects.get(projectId);
+  const currentProjectSize = await getTotalSizeProject(currentProject)
+  //  getFilesSize(
+  //   currentProject?.assets?.map?.((asset) => asset.file) || []
+  // ).MB;
+  const availableSize = +(quotaPerProject - currentProjectSize).toFixed(2);
+
+  return {
+    usage: storageDetails.usage,
+    quota: storageDetails.quota,
+    usageInMB: toMB(storageDetails.usage),
+    usageInGB: toGB(storageDetails.usage),
+    quotaInMB: toMB(storageDetails.quota),
+    quotaInGB: toGB(storageDetails.quota),
+    availableSpaceInMB: availableSize,
+    availableSpaceInGB: toGB(availableSize),
+  };
+}
+
+export async function sendDataToServiceWorker(data) {
+  navigator.serviceWorker.controller.postMessage({
+    command: "setVar",
+    props: {
+      obj: data,
+    },
+  });
 }

@@ -9,6 +9,22 @@ import { chunkSplitPlugin } from "vite-plugin-chunk-split";
 // import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
+  define: {
+    global: "globalThis",
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      // Node.js global to browser globalThis
+      define: {
+        global: "globalThis",
+      },
+    },
+  },
+  resolve: {
+    alias: {
+      global: "global-this",
+    },
+  },
   plugins: [
     react(),
     // tailwindcss(),
@@ -16,7 +32,7 @@ export default defineConfig({
     // removeConsole(),
     VitePWA({
       registerType: "autoUpdate",
-      // minify: true,
+      minify: true,
       // devOptions: {
       //   enabled: true, // Enable SW in dev mode
       //   type: "classic", // Use module type for SW
@@ -30,7 +46,9 @@ export default defineConfig({
           {
             urlPattern: ({ url }) => url.pathname.includes("assets/"),
             handler: ({ url, request, event }) => {
-              // const url = new URL(event.request.url);
+              const params = url.searchParams;
+              url.search;
+              // console.log("from db sw : ", url, url.origin);
 
               // Handle /keep-alive first
               if (url.pathname.includes("/keep-alive")) {
@@ -39,103 +57,222 @@ export default defineConfig({
                 );
                 return;
               }
-              console.log(
-                `fetch from db assets url : ${url.pathname} ,rororor`
-              );
+              // console.log(`fetch from db assets url : ${url.pathname} ,rororor`);
               (async () => {
                 const splittedUrl = url.pathname.split("/");
-                const fileName = splittedUrl[splittedUrl.length - 1];
+                const fileName = new URL(event.request.url).pathname
+                  .split("/")
+                  .pop();
                 const projectId = vars["projectId"];
                 let fileNameFromAssets = "";
                 if (projectId) {
+                  /**
+                   * @type {import('../src/helpers/types').Project}
+                   */
                   const projectData = vars["projectData"];
                   /**
-                   * @type {import('../src/helpers/types').InfinitelyAsset[] | undefined}
+                   * @type {import('../src/helpers/types').InfinitelyAsset[] }
                    */
                   const assets = projectData.assets;
                   /**
-                   * @type {import('../src/helpers/types').InfinitelyAsset | undefined}
+                   * @type {import('../src/helpers/types').InfinitelyAsset }
                    */
-                  const fileFromDB = assets
-                    .concat(Object.values(projectData.fonts || {}))
-                    .find((asset) => {
-                      if (
-                        encodeURIComponent(asset.file.name.toLowerCase()) ==
-                        fileName.toLowerCase()
-                      ) {
-                        fileNameFromAssets = asset.file.name.toLowerCase();
-                      }
-                      return encodeURIComponent(asset.file.name) == fileName;
-                    });
-                  console.log(
-                    "sw worker 2m : ",
-                    projectId,
-                    projectData,
-                    fileFromDB,
+                  if (
+                    splittedUrl.lastIndexOf("assets") != -1 ||
+                    splittedUrl.lastIndexOf("fonts") != -1
+                  ) {
+                    const fileFromDB = assets
+                      .concat(Object.values(projectData.fonts || {}))
+                      .find((asset) => {
+                        const assetUrl = new URL(
+                          `/assets/${asset.file.name}`,
+                          url.origin
+                        ).pathname
+                          .split("/")
+                          .pop();
 
-                    fileName.toLowerCase()
-                  );
-                  console.log(
-                    "files name :",
-                    assets.map((asset) => asset.file.name),
-                    fileName
-                  );
-                  if (fileFromDB) {
-                    console.log("sw file:", fileFromDB.file.name);
-                    event.respondWith(
-                      new Response(fileFromDB.file, {
-                        status: 200,
-                        headers: { "Content-Type": fileFromDB.file.type },
-                      })
+                        // console.log("sw file data:", encodeURI(asset.file.name), fileName, encodeURI(asset.file.name) == fileName );
+                        // console.log("sw file 2:", asset.file.name , fileName , encodeURIComponent(asset.file.name) == fileName );
+                        // console.log("sw file data sd:", assetUrl, fileName, assetUrl == fileName );
+
+                        if (!asset?.isCDN && assetUrl == fileName) {
+                          fileNameFromAssets = assetUrl;
+                        }
+                        return !asset?.isCDN && assetUrl == fileName;
+                      });
+
+                    console.log(
+                      `got it from ${
+                        splittedUrl.lastIndexOf("fonts") != -1 && "fonts"
+                      } ${splittedUrl.lastIndexOf("assets") != -1 && "assets"}`
                     );
-                    // return ;
-                  } else {
-                    // try {
-                    //   console.error(`sw noooooo res:`);
-                    //   const res = await fetch(event.request)
-                    //   return res
-                    // } catch (error) {
-                    //   console.error('Fucken sw error');
-                    //   const res = await fetch(url);
-                    //   return res
-                    // }
+
+                    if (fileFromDB) {
+                      // console.log("sw file:", fileFromDB.file.name);
+                      event.respondWith(
+                        new Response(fileFromDB.file, {
+                          status: 200,
+                          headers: {
+                            "Content-Type":
+                              fileFromDB.file.type ||
+                              "application/octet-stream",
+                            "Access-Control-Allow-Origin": "*", // For cross-origin iframes
+                          },
+                        })
+                      );
+                    }
+                  } else if (splittedUrl.lastIndexOf("libs") != -1) {
+                    /**
+                     *
+                     * @param {keyof import('../src/helpers/types').Project} key
+                     */
+                    const handleLib = (key) => {
+                      const file = projectData[key].find(
+                        (lib) =>
+                          new URL(lib.file.name, self.origin).pathname
+                            .split("/")
+                            .pop() == fileName
+                      );
+                      if (!file) return;
+                      event.respondWith(
+                        new Response(file.file, {
+                          status: 200,
+                          headers: {
+                            "Content-Type": file.file.type,
+                            "Access-Control-Allow-Origin": "*", // For cross-origin iframes
+                          },
+                        })
+                      );
+                    };
+                    if (url.href.includes("libs/js")) {
+                      if (url.href.includes("libs/js/header")) {
+                        handleLib("jsHeaderLibs");
+                      } else if (url.href.includes("libs/js/footer")) {
+                        handleLib("jsFooterLibs");
+                      }
+                    } else if (url.href.includes("libs/css")) {
+                      handleLib("cssLibs");
+                    } else {
+                      console.error(`From sw : no libs founded`);
+                    }
+                  } else if (
+                    splittedUrl.includes("pages") ||
+                    fileName.includes("index.html")
+                  ) {
+                    // const pageName = fileName.replace(".html", "");
+                    /**
+                     * @type {{[key:string]:Blob}}
+                     */
+                    const previewPages = vars.previewPages;
+                    if (!previewPages) {
+                      console.error("No Preview Pages Founded..");
+
+                      event.respondWith(
+                        new Response(
+                          new Blob([`<h1>404 Page Not Founded</h1>`], {
+                            type: "text/html",
+                          }),
+                          {
+                            status: 200,
+                            headers: {
+                              "Content-Type": `text/html`,
+                              "Access-Control-Allow-Origin": "*", // For cross-origin iframes
+                            },
+                          }
+                        )
+                      );
+                      return;
+                    }
+                    const previewPage = previewPages[fileName || ""];
+                    console.log(
+                      "file page name : ",
+                      event.request.url,
+                      url.pathname,
+                      splittedUrl,
+                      fileName,
+                      previewPage
+                    );
+
+                    if (previewPage) {
+                      event.respondWith(
+                        new Response(previewPage, {
+                          status: 200,
+                          headers: {
+                            "Content-Type": `text/html`,
+                            "Access-Control-Allow-Origin": "*", // For cross-origin iframes
+                          },
+                        })
+                      );
+                    } else {
+                      event.respondWith(
+                        new Response(
+                          new Blob([`<h1>404 Page Not Founded</h1>`], {
+                            type: "text/html",
+                          }),
+                          {
+                            status: 200,
+                            headers: {
+                              "Content-Type": `text/html`,
+                              "Access-Control-Allow-Origin": "*", // For cross-origin iframes
+                            },
+                          }
+                        )
+                      );
+                    }
+                  } else if (splittedUrl.lastIndexOf("global") != -1) {
+                    if (fileName == parseTextToURI("global.js").pop()) {
+                      event.respondWith(
+                        new Response(projectData.globalJs, {
+                          status: 200,
+                          headers: {
+                            "Content-Type": projectData.globalJs.type,
+                            "Access-Control-Allow-Origin": "*", // For cross-origin iframes
+                          },
+                        })
+                      );
+                    } else if (fileName == parseTextToURI("global.css").pop()) {
+                      event.respondWith(
+                        new Response(projectData.globalCss, {
+                          status: 200,
+                          headers: {
+                            "Content-Type": projectData.globalCss.type,
+                            "Access-Control-Allow-Origin": "*", // For cross-origin iframes
+                          },
+                        })
+                      );
+                    } else {
+                      console.error(
+                        `From sw : global not founded `,
+                        fileName,
+                        parseTextToURI("global.css").pop()
+                      );
+                    }
+                  } else if (splittedUrl.lastIndexOf("local") != -1) {
+                    const pageName = params.get("page");
+                    if (!pageName) {
+                      console.error(`From sw : No page name founded...!`);
+                      return;
+                    }
+                    const handleLocalEntry = (key) => {
+                      event.respondWith(
+                        new Response(projectData.pages[pageName][key], {
+                          status: 200,
+                          headers: {
+                            "Content-Type":
+                              projectData.pages[pageName][key].type,
+                            "Access-Control-Allow-Origin": "*", // For cross-origin iframes
+                          },
+                        })
+                      );
+                    };
+                    if (fileName == "local.js") {
+                      handleLocalEntry("js");
+                    } else if (fileName == "local.css") {
+                      handleLocalEntry("css");
+                    }
                   }
                 }
-                // Fallback to fetch if no projectId or no file found
-                // caches.match(event.request).then((cachedResponse) => {
-                //   if (cachedResponse) {
-                //     return cachedResponse;
-                //   }
-                //   return fetch(event.request);
-                // });
-                // try {
-
-                //   const res = await fetch(url);
-                //   return res;
-                // } catch (error) {
-                //   console.error(`error from db assets : ${error}`);
-                //   return;
-                // }
               })();
-
-              // Cache or fetch with offline fallback
-              // event.respondWith(
-              //   caches.match(request).then((cached) => {
-              //     if (cached) return cached;
-              //     return fetch(request)
-              //       .then((response) => {
-              //         caches
-              //           .open("assets-cache")
-              //           .then((cache) => cache.put(request, response.clone()));
-              //         return response;
-              //       })
-              //       .catch(() => {
-              //         return new Response("Offline and no cache", {
-              //           status: 503,
-              //         });
-              //       });
-              //   })
-              // );
             },
           },
           {
@@ -164,11 +301,12 @@ export default defineConfig({
         importScripts: ["/custom-sw.js"],
       },
       manifest: {
-        name: "Infinitely",
-        description: "Infinitely website builder",
+        name: "Infinitely Studio",
+        description: "Infinitely Studio",
         theme_color: "#1e293b",
         background_color: "#1e293b",
         display: "standalone",
+        short_name: "Infinitely",
         start_url: "/",
         ...icons,
       },
@@ -181,22 +319,35 @@ export default defineConfig({
     chunkSplitPlugin({
       strategy: "default",
       customSplitting: {
-        vendor0: [/react/, /react-dom/, /react-router-dom/],
-        vendor1: [/grapesjs/, /\@grapesjs\/react/],
+        vendor0: [/\breact\b/],
+        vendor1: [/\bgrapesjs\b/],
         vendor2: [
           /\@monaco-editor\/react/,
           /react-resizable-panels/,
           /react-virtuoso/,
         ],
-        vendor3: [
-          /html-to-image/,
-          /react-sortablejs/,
-          /linkedom/,
+        vendor3: [/react-sortablejs/, /linkedom/, /csso/, /css/],
+        vendor4: [
           /lodash/,
-          /html2canvas-pro/,
-          /csso/,
-          /css/,
+          /js-beautify/,
+          /interactjs/,
+          /react-error-boundary/,
+
+          /mime/,
         ],
+        vendor5: [
+          /react-sticky-el/,
+          // /react-syntax-highlighter/,
+          /react-toastify/,
+          /react-tooltip/,
+          /react-virtuoso/,
+          /recoil/,
+          /serialize-javascript/,
+        ],
+        vendor6: [/react-dom/, /react-router-dom/],
+        vendor7: [/\@grapesjs\/react/],
+        vendor8: [/html-to-image/, /lodash/, /html2canvas-pro/],
+        icons: [/Icons\.jsx/],
       },
     }),
     // mergePrecacheIntoDbAssetsSw(),

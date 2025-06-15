@@ -52,6 +52,8 @@ export const FileEditorModal = () => {
       await db.projects.update(projectId, {
         [key]: editedLibs,
       });
+      // console.log('project from saved : ' , await(await(await getProjectData())[key][0].file).text() , fileInfo.fileContent);
+      
       editor.load();
       toast.success(<ToastMsgInfo msg={"File Save Successfully"} />);
     } else {

@@ -8,14 +8,15 @@ import { Select } from "./Select";
 import { Property } from "./Property";
 import { SelectStyle } from "./SelectStyle";
 import { Icons } from "../../Icons/Icons";
+import { FitTitle } from "./FitTitle";
 
 export const FlexLayout = () => {
   const [dir, setDir] = useState("");
 
   return (
-    <section className="flex flex-col gap-3">
-      <section className="flex flex-col gap-3">
-        <P>flex direction: </P>
+    <section className="flex flex-col gap-2">
+      <section className="flex flex-col gap-2">
+        <FitTitle>flex direction </FitTitle>
         <MultiChoice
           choices={[
             { choice: "column", Icon: Icons.columnDir },
@@ -32,7 +33,7 @@ export const FlexLayout = () => {
         />
       </section>
 
-      <SharedBetweenFlexAndGridLayout />
+      <SharedBetweenFlexAndGridLayout isFlex={dir.includes('column')}/>
 
       <SelectStyle
         label="flex wrap"
@@ -42,7 +43,7 @@ export const FlexLayout = () => {
       />
       <Property label="column gap" cssProp="column-gap" />
       <Property label="row gap" cssProp="row-gap" />
-      <Property label="flex grow" cssProp="flex-grow" special={true} />
+      {/* <Property label="flex grow" cssProp="flex-grow" special={true} />
       <Property label="flex shrink" cssProp="flex-shrink" special={true} />
       <SelectStyle
         label="flex basis"
@@ -50,7 +51,7 @@ export const FlexLayout = () => {
         keywords={["auto", "content"]}
         splitHyphen={false}
       />
-      <Property label="order" cssProp="order" special={true} />
+      <Property label="order" cssProp="order" special={true} /> */}
 
       {/* <Details label={"more options"}> */}
       {/* <section className="flex flex-col gap-3"> */}

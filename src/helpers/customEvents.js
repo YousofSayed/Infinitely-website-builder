@@ -1,4 +1,5 @@
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
+import { getProjectData } from "./functions";
 
 /**
  *
@@ -97,6 +98,15 @@ export const changePageName = ({ pageName }) => {
   });
 };
 
+export const naviagatePreview = ({pageName , href})=>{
+  return new CustomEvent(InfinitelyEvents.preview.navigate, {
+    detail: {
+      pageName,
+      href
+    }, 
+  })
+}
+
 /**
  *
  * @param {HTMLElement} el
@@ -110,7 +120,6 @@ export const pvMount = (el) => {
   window.dispatchEvent(pvMountCm);
 };
 
-
 /**
  *
  * @param {HTMLElement} el
@@ -122,4 +131,43 @@ export const pvUnMount = (el) => {
     },
   });
   window.dispatchEvent(pvUnMountCm);
+};
+
+/**
+ *
+ * @param {string[]} methodName
+ * @param {import('./types').MotionType} motion
+ */
+export const runGsapMethod = (methods, motion, props = []) => {
+  const runGsapCm = new CustomEvent("gsap:run", {
+    detail: {
+      methods,
+      motion,
+      props,
+    },
+  });
+  window.dispatchEvent(runGsapCm);
+};
+
+export const runAllGsapMotions = (motions) => {
+  window.dispatchEvent(
+    new CustomEvent("gsap:all:run", {
+      detail: {
+        motions,
+        methods:[],
+        props:{}
+      },
+    })
+  );
+};
+
+export const killAllGsapMotions = (motions) => {
+  window.dispatchEvent(
+    new CustomEvent("gsap:all:kill", {
+      detail: {
+        motions,
+        methods:[]
+      },
+    })
+  );
 };

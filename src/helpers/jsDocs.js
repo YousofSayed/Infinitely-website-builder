@@ -1,3 +1,5 @@
+import { uniqueId } from 'lodash';
+
 /**
  * @type {import('grapesjs').Editor}
  */
@@ -191,7 +193,7 @@ export let projectSettingsType = {
   is_defer_graped_header_script: false,
   enable_prettier_for_file_editor: true,
   include_canvas_styles_in_build_file: true,
-  disable_petite_vue_in_build: false,
+  disable_petite_vue: false,
   // purge_css: false,
 };
 
@@ -219,3 +221,64 @@ export let blocksArrayType = [];
  * @type {import('react-tooltip').TooltipRefProps}
  */
 export let tooltipDataType = {};
+
+/**
+ * @type {import('./types').MotionType}
+ */
+export let motionType = {
+  id: "",
+  isTimeLine: false,
+  name: "",
+  numberTimeOfUses:1,
+  pages:[],
+  instances:{},
+  timeLineSingleOptions: {},
+  timeLineMultiOptions: {},
+  isTimelineHasScrollTrigger: false,
+  timelineScrollTriggerOptions: {
+    multiOptions: {},
+    singleOptions: {},
+  },
+  animations: [
+    // {
+    //   from: {},
+    //   to: {},
+    //   multiOptions: {},
+    //   singleOptions: {},
+    //   isScrollTrigger: false,
+    //   scrollTriggerOptions: { multiOptions: {}, singleOptions: {} },
+    // },
+  ],
+};
+
+/**
+ * @type {import('./types').InfinitelyAsset}
+ */
+export let assetType = {};
+
+/**
+ * @type {import('./types').InfinitelyAsset[]}
+ */
+export let assetsType = [];
+
+/**
+ * @type {import('./types').MotionAnimationType}
+ */
+export let motionAnimationType = {};
+
+/**
+ * @type {import('./types').StorageDetails}
+ */
+export let storageDetailsType = {
+ usage: 0,
+  quota: 0,
+  qoutaPerProjectMB: 0,
+  qoutaPerProjectGB: 0,
+  usageInMB: 0,
+  quotaInMB: 0,
+  usageInGB: 0,
+  quotaInGB: 0,
+  availableSpaceInMB: 0,
+  availableSpaceInGB: 0,
+  isStorageFull: false,
+}

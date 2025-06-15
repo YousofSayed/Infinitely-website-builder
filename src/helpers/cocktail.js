@@ -311,7 +311,18 @@ export function OTP(length) {
 }
 
 export function uniqueID() {
-  return hash(random(20) + random(500) + crypto.randomUUID() + random(20) + random(500)).replaceAll("=", "");
+  return (
+    hash(
+      random(20) +
+        random(500) +
+        crypto.randomUUID() +
+        random(20) +
+        random(500) +
+        crypto.randomUUID()
+    ).replaceAll("=", "") +
+    random(20) +
+    random(500)
+  );
 }
 
 /**
@@ -1210,10 +1221,6 @@ export class CocktailDB {
         }
       };
 
-    
-
-    
-
       // After the object store is created (or already exists), use the db
       localStorage.setItem("IDBV", this.updateI);
 
@@ -1436,17 +1443,25 @@ export class TelegramBot {
  * @param {object} obj
  * @returns
  */
-export function stringify(obj) {
-  return JSON.stringify(obj);
+export function stringify(value , space) {
+  try {
+    return JSON.stringify(value , undefined , space);
+  } catch (error) {
+    return undefined;
+  }
 }
 
 /**
  * Returns object from string
  * @param {string} obj
- * @returns {object}
+ * @returns {any | undefined}
  */
-export function parse(obj) {
-  return JSON.parse(obj);
+export function parse(value) {
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    return undefined;
+  }
 }
 
 /**

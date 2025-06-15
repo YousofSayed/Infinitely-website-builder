@@ -131,10 +131,10 @@ const GradientHandler = ({ values, setValues, index, type , deleteAllContainer=(
   };
 
   return (
-    <section className="flex flex-col gap-2 bg-gray-950 p-2 rounded-lg">
+    <section className="flex flex-col gap-2 bg-slate-950 p-2 rounded-lg">
       {/* <h1 className="pl-2 border-l-[3px] border-l-blue-600 rounded-l-md text-slate-300 font-semibold">{values[index].type}:</h1> */}
       <Input
-        className={`bg-slate-900 b0rder border-l-[3px] border-l-blue-600`}
+        className={`bg-slate-800  border-l-[3px] border-l-blue-600`}
         value={values[index].type}
         placeholder={values[index].type}
         onInput={(ev) => {
@@ -188,7 +188,7 @@ const GradientHandler = ({ values, setValues, index, type , deleteAllContainer=(
               deleteColor(i);
             }}
           >
-            <section className="flex items-center  gap-2 bg-slate-800 p-1 rounded-lg">
+            <section className="flex items-center  gap-2 bg-slate-900 p-1 rounded-lg">
               <ColorPicker
                 color={values[index].colors[i].color}
                 setColor={(color) => {
@@ -200,7 +200,7 @@ const GradientHandler = ({ values, setValues, index, type , deleteAllContainer=(
               />
 
               <Input
-                className={`bg-gray-950 w-[70%] text-center text-[${values[index].colors[i].color}]`}
+                className={`bg-slate-800 w-[70%] text-center text-[${values[index].colors[i].color}]`}
                 value={values[index].colors[i].color}
                 placeholder="Color"
                 onInput={(ev) => {
@@ -209,7 +209,7 @@ const GradientHandler = ({ values, setValues, index, type , deleteAllContainer=(
               />
 
               <Input
-                className="bg-gray-950 w-[30%]"
+                className="bg-slate-800 w-[30%]"
                 value={values[index].colors[i].opacity}
                 placeholder="Opacity"
                 onInput={(ev) => {
@@ -284,7 +284,7 @@ export const Gradient = () => {
 
   return (
     <section className="flex flex-col gap-2 bg-slate-800 p-1 rounded-lg">
-      <section className="flex gap-2 p-2 bg-gray-950 rounded-lg">
+      <section className="flex gap-2  rounded-lg">
         <Select
           className="p-[unset] px-[unset]"
           placeholder="chose type"

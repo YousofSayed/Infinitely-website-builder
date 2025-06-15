@@ -1,3 +1,12 @@
+import {
+  EditorProps,
+  Monaco,
+  MonacoDiffEditor,
+  OnChange,
+  OnMount,
+} from "@monaco-editor/react";
+import { HTMLButtonElement } from "linkedom";
+
 export type gradientValues = {
   direction: string;
   type: "linear" | "radial";
@@ -21,20 +30,41 @@ export type PreviewData = {
   css: string;
 };
 
+type TraitCallProps = {
+  editor: import("grapesjs").Editor;
+  trait: InfinitelyTrait;
+  oldValue: string;
+  newValue: string;
+};
+
 export type TraitCallback = ({
   editor,
   trait,
   oldValue,
   newValue,
-}: {
-  editor: import("grapesjs").Editor;
-  trait: InfinitelyTrait;
-  oldValue: string;
-  newValue: string;
-}) => void;
+}: TraitCallProps) => void;
 
 export type InfinitelyTrait = {
-  type: "text" | "select" | "textarea" | "media";
+  type:
+    | "text"
+    | "select"
+    | "textarea"
+    | "media"
+    | "button"
+    | "switch"
+    | "custom"
+    | "object"
+    | "add-props";
+  // propsType: "text" | "code";
+  //For add-props type
+  addPropsInputType: "text" | "code";
+  addPropsCodeLanguage: "html" | "javascript" | "css";
+  //End
+  //For Textarea and Code
+  onMountHandler: OnMount;
+  onChangeHandler: OnChange;
+  codeEditorProps: EditorProps;
+  //End
   label: string;
   name: string;
   unit: string;
@@ -44,13 +74,27 @@ export type InfinitelyTrait = {
   placeholder: string;
   category: string;
   changeProp: boolean;
+  stateProp: any;
   options: string[];
-  keywords: string[];
+  keywords:
+    | string[]
+    | (({ projectData }: { projectData: Project }) => string[]);
   command: string;
+  component: import("react").JSX.Element;
+  textareaLanguage: string;
+  allowCmdsContext: boolean;
   callback: TraitCallback;
+  onSwitch: (value: boolean) => void;
+  buttonEvents: (
+    handlers: TraitCallProps
+  ) => import("react").HTMLAttributes<HTMLButtonElement>;
+  showCallback: () => boolean;
+  hideCallback: () => boolean;
   role: "attribute" | "handler";
   mediaType?: "image" | "video" | "audio";
+  bindToAttribute: boolean;
 };
+
 export interface StatesType {
   id: string;
   rule: string;
@@ -126,7 +170,7 @@ export interface Directive {
   nestedInputType: "select" | "code" | "input";
   nestedCodeLang: "html" | "javascript" | "css";
   nestedInputKeywords: string[];
-  nestedMaybeObjectModel:boolean,
+  nestedMaybeObjectModel: boolean;
   codeLang: "html" | "javascript" | "css";
   suffixes: string[];
   modifiers: string[];
@@ -143,6 +187,7 @@ export interface Directive {
   value: string;
   suffixValue: string;
   modifierValue: string;
+  showInAllComponents: boolean;
   callback: ({
     value,
     suffix,
@@ -214,6 +259,8 @@ export interface LibraryConfig {
   version: string;
   isLocal: boolean;
   isCDN: boolean;
+  isLocalAsset: boolean;
+  localAssetId: string;
   file: File;
   type: "js" | "css";
   id: string;
@@ -222,6 +269,8 @@ export interface LibraryConfig {
   async: boolean;
   defer: boolean;
   jsType: string;
+  sort: number;
+  path: string;
 }
 
 type Component = import("grapesjs").Component;
@@ -275,15 +324,15 @@ export type PageHelmet = {
 };
 
 export type InfinitelyPage = {
-  html: string | Blob;
-  css: string | Blob;
-  js: string | Blob;
+  html: Blob;
+  css: Blob;
+  js: Blob;
   cmds: { [key: string]: CMD[] };
   components: Component[];
   id: string;
   name: string;
   symbols: string[];
-  bodyAttributes:{},
+  bodyAttributes: {};
   helmet: PageHelmet;
 };
 
@@ -298,72 +347,23 @@ export type InfinitelyBlock = {
   category: string;
 };
 
-// export interface ProjectData {
-//   jsHeaderCDNLibraries: LibraryConfig[];
-//   jsFooterCDNLibraries: LibraryConfig[];
-//   jsHeaderLocalLibraries: LibraryConfig[];
-//   jsFooterLocalLibraries: LibraryConfig[];
-//   cssHeaderCDNLibraries: LibraryConfig[];
-//   cssFooterCDNLibraries: LibraryConfig[];
-//   cssHeaderLocalLibraries: LibraryConfig[];
-//   cssFooterLocalLibraries: LibraryConfig[];
-//   blocks: { [key: string]: import("grapesjs").Block };
-//   symbolBlocks: { name: string; media: string; id: string; category: string }[];
-//   restAPIModels: RestAPIModel[];
-//   dynamicTemplates: { [key: string]: DynamicTemplatesType };
-//   assets: {
-//     url: string;
-//     blob: Blob;
-//     blobUrl: string;
-//     dataUrlSrc: string;
-//     id: string;
-//   }[];
-//   pages: { [key: string]: InfinitelyPage };
-//   symbols: { [key: string]: InfinitelySymbol };
-//   globalRules: {
-//     [ruleKey: string]: import("grapesjs").CssRule;
-//   };
-
-//   fonts: {
-//     [key: string]: {
-//       name: string;
-//       id: string;
-//       url: string;
-//       blob: Blob;
-//       fromat: string;
-//       dataUrl: string;
-//       blobUrl: string;
-//       content: string;
-//       isCDN: boolean;
-//     };
-//   };
-//   // gjsProjectData: {
-//   //   pages: import("grapesjs").Page[];
-//   //   symbols: import("grapesjs").Component[];
-//   //   assets: import("grapesjs").Asset[];
-//   //   dataSources: import("grapesjs").DataSource[];
-//   // };
-// }
-
 export type InfinitelyAsset = {
   buildUrl: string;
   file: File;
   blobUrl: string;
   dataUrlSrc: string;
-  id: string;
+  id: number;
 };
 
 export type InfinitelyFont = {
   name: string;
   id: string;
   url: string;
-  blob: Blob;
   file: File;
   fromat: string;
-  dataUrl: string;
-  blobUrl: string;
-  content: string;
   isCDN: boolean;
+  isLocalAsset: boolean;
+  localAssetId: string;
 };
 
 export type InfinitelyFonts = {
@@ -396,6 +396,7 @@ export interface Project {
     [ruleKey: string]: import("grapesjs").CssRule;
   };
   fonts: InfinitelyFonts;
+  motions: { [key: string]: MotionType };
 }
 
 export type GlobalSettings = {
@@ -420,7 +421,7 @@ export type ProjectSetting = {
   is_defer_graped_header_script: boolean;
   is_async_graped_footer_script: boolean;
   is_defer_graped_footer_script: boolean;
-  include_canvas_styles_in_build_file:boolean;
+  include_canvas_styles_in_build_file: boolean;
   purge_css: boolean;
 };
 
@@ -463,4 +464,76 @@ export type GlobalSymbolRule = {
   currentSelector: string;
   states: string;
   media: { atRuleType?: string | undefined; atRuleParams?: string | undefined };
+};
+
+export type MotionAnimationType = {
+  selector: string;
+  name: string;
+  from: CSSStyleDeclaration;
+  to: CSSStyleDeclaration;
+  useSameFromOptions: boolean;
+  useSameToOptions: boolean;
+  useSameFromScrollTrigger: boolean;
+  useSameToScrollTrigger: boolean;
+  positionParameter: string | number;
+  fromOptions: {
+    singleOptions: { [key: string]: string[] };
+    multiOptions: { [key: string]: string[] };
+    isScrollTrigger: boolean;
+
+    scrollTriggerOptions: {
+      singleOptions: { [key: string]: string[] };
+      multiOptions: { [key: string]: string[] };
+    };
+  };
+  toOptions: {
+    singleOptions: { [key: string]: string[] };
+    multiOptions: { [key: string]: string[] };
+    isScrollTrigger: boolean;
+
+    scrollTriggerOptions: {
+      singleOptions: { [key: string]: string[] };
+      multiOptions: { [key: string]: string[] };
+    };
+  };
+
+  // singleOptions:  { [key: string]: string[] };
+  // multiOptions: { [key: string]: string[] };
+};
+
+export type MotionType = {
+  name: string;
+  id: string;
+  numberTimeOfUses: number;
+  pages: string[];
+  instances: {
+    [key: string]: {
+      id: string;
+      page: string;
+    };
+  };
+  isTimeLine: boolean;
+  timeLineName: string;
+  timeLineSingleOptions: {};
+  timeLineMultiOptions: {};
+  isTimelineHasScrollTrigger: boolean;
+  timelineScrollTriggerOptions: {
+    singleOptions: { [key: string]: string[] };
+    multiOptions: { [key: string]: string[] };
+  };
+  animations: MotionAnimationType[];
+};
+
+export type StorageDetails = {
+  usage: number;
+  quota: number;
+  qoutaPerProjectMB: number;
+  qoutaPerProjectGB: number;
+  usageInMB: number;
+  quotaInMB: number;
+  usageInGB: number;
+  quotaInGB: number;
+  availableSpaceInMB: number;
+  availableSpaceInGB: number;
+  isStorageFull: boolean;
 };

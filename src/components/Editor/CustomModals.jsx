@@ -8,6 +8,7 @@ import { useEditorMaybe } from "@grapesjs/react";
 import { RestAPIModels } from "./Modals/RestAPIModels";
 import { LibraryInstaller } from "./Protos/LibraryInstaller";
 import { LibraryInstallerModal } from "./Modals/LibraryInstallerModal";
+import { FitTitle } from "./Protos/FitTitle";
 
 export const CustomModals = memo(() => {
   const editor = useEditorMaybe();
@@ -40,7 +41,7 @@ export const CustomModals = memo(() => {
       onClick={(ev) => {
         editor.Commands.run("close:custom:modal");
       }}
-      className={`fixed  z-[55] bg-blur right-0 left-0  w-full h-full flex justify-center items-center`}
+      className={`fixed  z-[55] backdrop-blur-sm right-0 left-0  w-full h-full flex justify-center items-center`}
     >
       <main
         style={{
@@ -51,13 +52,14 @@ export const CustomModals = memo(() => {
           ev.stopPropagation();
           document.body.click();
         }}
-        className="z-[55] rounded-lg flex flex-col justify-between bg-slate-900"
+        className="z-[55] rounded-lg flex flex-col justify-between bg-slate-900 shadow-md shadow-[#020617]"
       >
-        <header className="w-full flex items-center rounded-lg rounded-br-none  h-[60px] border-l-[5px] border-l-blue-600 border-b-2 bg-slate-900 border-b-slate-600">
+        <header className="w-full flex items-center rounded-lg rounded-br-none  h-[60px]  border-b-2 bg-slate-900 border-b-slate-600">
           <section className="w-full flex justify-between  items-center p-2">
-            <p className="text-slate-300 text-lg capitalize select-none font-semibold flex items-center gap-2">
+            {/* <p className="text-slate-300 text-lg capitalize select-none font-semibold flex items-center gap-2">
               {modalData.title}
-            </p>
+            </p> */}
+            <FitTitle className="flex items-center gap-2">{modalData.title}</FitTitle>
             <button
               onClick={(ev) => {
                 addClickClass(ev.currentTarget, "click");

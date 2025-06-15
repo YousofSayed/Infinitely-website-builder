@@ -50,7 +50,7 @@ export const LibraryInstaller = () => {
   };
 
   return (
-    <section className="p-2">
+    <section className="p-1">
       {/* <header className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-extrabold text-center mb-10 text-blue-600">
           JavaScript Library Installer

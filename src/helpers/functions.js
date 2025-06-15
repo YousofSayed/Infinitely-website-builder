@@ -1,6 +1,6 @@
 import { Icons } from "../components/Icons/Icons";
 import { filterUnits } from "../constants/cssProps";
-import { css, html, random, uniqueID } from "./cocktail";
+import { addClickClass, css, hash, html, random, uniqueID } from "./cocktail";
 import { dynamic_container, dynamic_text } from "../constants/cmpsTypes";
 import {
   projectDataType,
@@ -9,6 +9,7 @@ import {
   restModelType,
 } from "./jsDocs";
 import {
+  current_page_id,
   current_project_id,
   current_symbol_rule,
   global_settings,
@@ -16,6 +17,7 @@ import {
   inf_class_name,
   inf_symbol_Id_attribute,
   inf_template_id,
+  motionId,
   project_settings,
 } from "../constants/shared";
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
@@ -24,12 +26,24 @@ import html2canvas from "html2canvas-pro";
 import { jsURLRgx } from "../constants/rgxs";
 import { pvMount, pvUnMount } from "./customEvents";
 import { toBlob } from "html-to-image";
+import serializeJavascript from "serialize-javascript";
+import { pageBuilderWorker } from "./defineWorkers";
+import { mountAppTool } from "../plugins/tools/mountAppTool";
+import { unMountAppTool } from "../plugins/tools/unMountAppTool";
+import { runGsapMotionTool } from "../plugins/tools/runGsapMotionTool";
+import { killGsapMotionTool } from "../plugins/tools/killGsapMotion";
+import { createReusableCmpTool } from "../plugins/tools/createReusableCmpTool";
+import { createSymbolTool } from "../plugins/tools/createSymbolTool";
 export {
   replaceBlobs,
   base64ToBlob,
   blobToBase64,
   restoreBlobs,
+  buildGsapMotionsScript,
+  getScripts,
+  getStyles,
 } from "./bridge";
+
 export const isValidCssUnit = (value) => {
   // Updated regex to match valid CSS units, calc(), or var(), but not single numbers
   const cssUnitRegex =
@@ -225,7 +239,7 @@ export function isValidAttribute(key = "", value = "") {
 
 /**
  *
- * @param {{commandName:string , editor : import('grapesjs').Editor , forAll:boolean, showInDynamic:boolean ,  commandCallback:(editor:import('grapesjs').Editor)=>void , label:string , cmpType:string}} param0
+ * @param {{commandName:string , cond:boolean, editor : import('grapesjs').Editor , forAll:boolean, showInDynamic:boolean ,  commandCallback:(editor:import('grapesjs').Editor)=>void , label:string , cmpType:string}} param0
  */
 export function addItemInToolBarForEditor({
   commandName,
@@ -234,12 +248,16 @@ export function addItemInToolBarForEditor({
   commandCallback = (_) => {},
   showInDynamic = false,
   label,
+  cond = true,
   toolId = "",
   forAll = true,
 }) {
   const selectedEl = editor.getSelected();
   const sleType = selectedEl.get("type");
-  const toolbar = selectedEl.get("toolbar");
+  const toolbar = selectedEl.get("toolbar").map((tb) => {
+    tb.id = hash(tb.label);
+    return tb;
+  });
   const isExist = toolbar.find((item) => item.command == commandName);
   if (selectedEl.tagName == "body") return;
 
@@ -251,6 +269,7 @@ export function addItemInToolBarForEditor({
       label: label,
       category: "custom",
       command: commandName,
+      id: hash(label),
     };
 
     // if( JSON.stringify([newTool, ...toolbar]) ==  JSON.stringify(toolbar)){
@@ -258,23 +277,150 @@ export function addItemInToolBarForEditor({
     //   return;
     // }
 
-    if (!isExist) {
-      selectedEl.set({
-        toolbar: newTool ? [newTool, ...toolbar] : toolbar,
-      });
-      console.log("another 1");
-    } else {
-      selectedEl.set({
-        toolbar: toolbar,
-      });
-      console.log("another 2");
+    // if (!isExist) {
 
-      selectedEl.initToolbar();
-    }
+    //   console.log("another 1");
+    // } else {
+    //   selectedEl.set({
+    //     toolbar: toolbar,
+    //   });
+    // console.log("another 2");
+    selectedEl.set({
+      toolbar: [
+        cond ? newTool : null,
+        ...toolbar.filter((tb) => tb.id && !tb.id.includes(newTool.id)),
+      ].filter(Boolean),
+    });
+
+    // console.log("cond for add new tools : ", newTool, cond, selectedEl.toolbar);
+
+    // selectedEl.initToolbar();
+    // }
+
+    return newTool.command;
+    //  selectedEl.set({
+    //     toolbar: (newTool ? [cond ? newTool : null, ...toolbar] : toolbar).filter(Boolean),
+    //   });
   };
 
   // if (!showInDynamic) return;
-  setToolbar();
+  return setToolbar();
+}
+
+/**
+ *
+ * @param {import('grapesjs').Editor} editor
+ */
+export function renderToolbar(editor) {
+  const toolbarEl = editor.Canvas.getToolbarEl();
+  const sle = editor.getSelected();
+  const symbolInfo = getInfinitelySymbolInfo(sle);
+  const toolbarItemsClass = `gjs-toolbar-items`;
+  const toolbarItemClass = `gjs-toolbar-item`;
+  const toolbarItemsEl = toolbarEl.querySelector(`.${toolbarItemsClass}`);
+  const cmpTools = sle.toolbar;
+  const moveCommand = `tlb-move`;
+  const noTouchClass = `gjs-no-touch-actions`;
+  const rect = sle.getEl().getBoundingClientRect();
+  const realRight = Math.round(
+    editor.Canvas.getWindow().innerWidth - rect.right
+  );
+  console.log(
+    realRight,
+    rect.right,
+    window.innerWidth,
+    editor.Canvas.getWindow().innerWidth,
+    "real right"
+  );
+
+  if (realRight <= 10) {
+    toolbarEl.classList.remove("forceLift");
+    toolbarEl.classList.add("forceRight");
+    // toolbarEl.style.left = "unset";
+    // toolbarEl.style.right = "0px";
+  } else {
+    toolbarEl.classList.remove("forceRight");
+    toolbarEl.classList.add("forceLeft");
+    // toolbarEl.style.left = `0px`;
+    // toolbarEl.style.right = "unset";
+  }
+
+  // const sheet =document.styleSheets[0];
+
+  // sheet.insertRule(`.tb-top{top:${newTopValue}!important}`);
+  // toolbarEl.classList.add("tb-top");
+  toolbarEl.innerHTML = "";
+  const newToolbarItemsEl = document.createElement("menu");
+  newToolbarItemsEl.className = toolbarItemsClass;
+  //====================Append Tools===========
+  cmpTools.forEach((tool) => {
+    const toolEl = document.createElement("li");
+    toolEl.className = toolbarItemClass;
+    if (tool.command == moveCommand) {
+      toolEl.draggable = "true";
+      toolEl.classList.add(noTouchClass);
+    }
+    toolEl.insertAdjacentHTML("beforeend", tool.label);
+    if (tool.command == moveCommand) {
+      toolEl.addEventListener("mousedown", (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (typeof tool.command == "string") {
+          editor.runCommand(tool.command);
+        } else if (typeof tool.command == "function") {
+          tool.command(editor);
+        }
+      });
+    } else {
+      toolEl.addEventListener("click", (ev) => {
+        addClickClass(ev.currentTarget, "click");
+        if (typeof tool.command == "string") {
+          editor.runCommand(tool.command);
+        } else if (typeof tool.command == "function") {
+          tool.command(editor);
+        }
+      });
+    }
+    newToolbarItemsEl.appendChild(toolEl);
+  });
+
+  toolbarEl.appendChild(newToolbarItemsEl);
+  const toolbarItemsEls = toolbarEl.querySelector(`.${toolbarItemsClass}`);
+  console.log("toolbar items els : ", toolbarItemsEls);
+
+  if (symbolInfo.isSymbol) {
+    console.log("i am symbol");
+    toolbarEl.classList.add("symbol-bg");
+  } else {
+    toolbarEl.classList.remove("symbol-bg");
+  }
+
+  //   const top = toolbarEl.style.top;
+  // const newTopValue = `${toolbarEl.style.top + (top < 0 ? -5 : 5)}px!important`;
+  // toolbarEl.style.top = newTopValue
+
+  // setTimeout(() => {
+
+  //  }, 0);
+}
+
+export function initToolbar(editor, cmp) {
+  const sle = cmp || editor.getSelected();
+  if (!sle) {
+    console.error(`No element selected to init toolbar`);
+    return;
+  }
+
+  mountAppTool(editor);
+  unMountAppTool(editor);
+
+  runGsapMotionTool(editor);
+  killGsapMotionTool(editor);
+
+  createReusableCmpTool(editor);
+  createSymbolTool(editor);
+
+  renderToolbar(editor);
 }
 
 export function getCloneArray(array = []) {
@@ -1178,16 +1324,18 @@ export function transformToJSX(htmlString) {
 /**
  *
  * @param {import('grapesjs').Component} gjsCmp
- * @returns {{isSymbol:boolean , isChild:boolean , mainId:string, childId:string, symbol:import('grapesjs').Component , attrVal:string}}
+ * @returns {{isSymbol:boolean , isChild:boolean , isMain : boolean, mainId:string, childId:string, symbol:import('grapesjs').Component , attrVal:string}}
  */
 export function getInfinitelySymbolInfo(gjsCmp) {
   const output = {
     isSymbol: false,
     isChild: false,
+    isMain: false,
     symbol: undefined,
     mainId: "",
     childId: "",
   };
+
   if (!gjsCmp) return output;
   const attrVal = gjsCmp.getAttributes()[inf_symbol_Id_attribute];
   const parentSymbol = gjsCmp
@@ -1197,12 +1345,14 @@ export function getInfinitelySymbolInfo(gjsCmp) {
     output.isSymbol = true;
     output.symbol = gjsCmp;
     output.mainId = attrVal;
+    output.isMain = true;
   } else if (parentSymbol) {
     output.isSymbol = true;
     output.isChild = true;
     output.symbol = parentSymbol;
     output.mainId = parentSymbol.getAttributes()[inf_symbol_Id_attribute];
     output.childId = gjsCmp.getAttributes()[inf_bridge_id];
+    output.isMain = false;
   }
   return output;
 }
@@ -1500,57 +1650,6 @@ export function getGlobalSymbolRuleInfo() {
   return globalSymbolRuleInfo;
 }
 
-/**
- *
- * @param {import('./types').LibraryConfig[]} libs
- */
-export async function getScripts(libs) {
-  const scripts = Promise.all(
-    libs.map(async (lib) =>
-      lib.isCDN
-        ? html`
-            <script
-              src="${lib.fileUrl}"
-              ${lib.defer && `defer=${lib.defer}`}
-              ${lib.async && `async=${lib.async}`}
-              name="${lib.name}"
-            ></script>
-          `
-        : html`
-            <script
-              ${lib.defer && `defer=${lib.defer}`}
-              ${lib.async && `async=${lib.async}`}
-              name="${lib.name}"
-            >
-              ${await lib.file.text()};
-            </script>
-          `
-    )
-  );
-
-  return (await scripts).join("\n");
-}
-
-/**
- *
- * @param {import('./types').LibraryConfig[]} libs
- */
-export async function getStyles(libs) {
-  const styles = Promise.all(
-    libs.map(async (lib) =>
-      lib.isCDN
-        ? html` <link href="${lib.fileUrl}" name="${lib.name}" /> `
-        : html`
-            <style name="${lib.name}">
-              ${await lib.file.text()};
-            </style>
-          `
-    )
-  );
-
-  return (await styles).join("\n");
-}
-
 export function jsonToHtml(components) {
   if (!components) return "";
 
@@ -1728,7 +1827,7 @@ export function executeAndExtractFunctions(jsCode) {
  */
 export async function getImgAsBlob(el, mimeType = "image/webp") {
   if (!el) {
-    throw new Error("No Elememt Founded...")
+    throw new Error("No Elememt Founded...");
     // return null;
   }
   return await new Promise(async (res, rej) => {
@@ -1739,8 +1838,8 @@ export async function getImgAsBlob(el, mimeType = "image/webp") {
         useCORS: true,
         // imageTimeout: 200,
         windowWidth: window.innerWidth,
-        windowHeight:window.innerHeight,
-        
+        windowHeight: window.innerHeight,
+
         // windowHeight: 300,
         // width:300,
         // height: 300,
@@ -1749,10 +1848,9 @@ export async function getImgAsBlob(el, mimeType = "image/webp") {
       (blob) => {
         res(blob);
       },
-      mimeType,
+      mimeType
       // 0.5
     );
-
   });
   // return await toBlob(el)
 }
@@ -1825,6 +1923,112 @@ export function getMatchedCSS(html, css) {
 
   return matchedCSS;
 }
+
+// export function getGsapCssProperties() {
+//  // Get all style properties from document.documentElement.style
+//  const style = document.documentElement.style;
+//  const rawProperties = [];
+
+//  // Collect all valid CSS properties (camelCase, no vendor prefixes, no hyphens)
+//  for (const prop in style) {
+//    if (
+//      typeof style[prop] === 'string' &&
+//      /^[a-zA-Z]/.test(prop) &&
+//      !prop.match(/^(webkit|moz|ms|o)/i) && // Exclude vendor prefixes
+//      !prop.includes('-') // Exclude hyphenated properties
+//      && !prop.startsWith('animation') // Exclude animations properties
+//    ) {
+//      rawProperties.push(prop);
+//    }
+//  }
+
+//  // GSAP transform property mappings
+//  const transformProps = {
+//    translateX: 'x',
+//    translateY: 'y',
+//    translateZ: 'z',
+//    scaleX: 'scaleX',
+//    scaleY: 'scaleY',
+//    scaleZ: 'scaleZ',
+//    rotateX: 'rotateX',
+//    rotateY: 'rotateY',
+//    rotateZ: 'rotateZ',
+//    skewX: 'skewX',
+//    skewY: 'skewY'
+//  };
+
+//  // Normalize transform properties
+//  const normalizedProperties = rawProperties.map(prop => transformProps[prop] || prop);
+
+//  // Add all GSAP-specific transform properties (including rotateX, rotateY, etc.)
+//  const gsapTransformProps = [
+//    'transform',
+//    'x', 'y', 'z',
+//    'scale', 'scaleX', 'scaleY', 'scaleZ',
+//    'rotate', 'rotateX', 'rotateY', 'rotateZ',
+//    'skewX', 'skewY'
+//  ];
+
+//  // Combine and deduplicate
+//  const finalProperties = [...new Set([...normalizedProperties, ...gsapTransformProps])];
+
+//  // Sort for consistency
+//  return finalProperties.sort();
+// }
+
+// Export function to get all CSS properties GSAP can animate
+export function getGsapCssProperties() {
+  // Grab the style object from the root element
+  const style = document.documentElement.style;
+  const rawProperties = [];
+
+  // Loop through all properties in the style object
+  for (const prop in style) {
+    if (
+      // Ensure the property value is a string (standard for CSS props in JS)
+      typeof style[prop] === "string" &&
+      // Must start with a letter (valid CSS prop names)
+      /^[a-zA-Z]/.test(prop) &&
+      // Exclude vendor-prefixed props like 'webkitTransform', but not 'opacity'
+      !prop.match(/^(webkit|moz|ms|-o-)[A-Z]/i) &&
+      // No hyphens, since JS uses camelCase (e.g., 'backgroundColor')
+      !prop.includes("-") &&
+      // Skip animation-related props, since GSAP handles those differently
+      !prop.startsWith("animation")
+    ) {
+      rawProperties.push(prop);
+    }
+  }
+
+  // GSAP-specific transform properties to always include
+  const gsapTransformProps = [
+    "transform", // Standard transform property
+    "x",
+    "y",
+    "z", // GSAP shorthand for translations
+    "scale",
+    "scaleX",
+    "scaleY",
+    "scaleZ", // Scaling properties
+    "rotate",
+    "rotateX",
+    "rotateY",
+    "rotateZ", // Rotation properties
+    "skewX",
+    "skewY", // Skewing properties
+  ];
+
+  // Combine raw properties with GSAP transform props and remove duplicates
+  const finalProperties = [
+    ...new Set([...rawProperties, ...gsapTransformProps]),
+  ];
+
+  // Return sorted list for consistency
+  return finalProperties.sort();
+}
+
+// Example usage
+// Example usage
 
 /**
  *
@@ -1926,40 +2130,66 @@ export function doDocument(content = "") {
   `;
 }
 
+export function preventSelectNavigation(editor, cmp = null) {
+  const projectSettings = getProjectSettings();
+  const navigation =
+    projectSettings.projectSettings.navigate_to_style_when_Select;
+  projectSettings.set({
+    navigate_to_style_when_Select: false,
+  });
+  editor.select(null);
+  editor.select(cmp);
+  projectSettings.set({
+    navigate_to_style_when_Select: navigation,
+  });
+}
+
 // let pVueApp = createApp()
 let vComponents = [],
   vAttributes = {},
-  vWrapperAttributes = {};
-
+  vWrapperAttributes = {},
+  originalComponents = {};
 /**
  *
  * @param {{editor : import('grapesjs').Editor , all:boolean , specificCmp:import('grapesjs').Component}} param0
  */
 export const mount = ({ editor, all, specificCmp }) => {
-  // if (app) {
-  //   app.unmount();
-  //   app = null;
-  // }
-  // app = createApp();
+  const sle = editor?.getSelected?.();
+  if (sle) {
+    sle.addAttributes({ "mount-id": uniqueID() });
+  }
+
   if (all) {
-    const original = editor
-      .getWrapper()
-      .find("*")
-      .filter(
-        (cmp) =>
-          Object.keys(cmp.getAttributes() || {}).some((key) =>
-            key.startsWith("v-")
-          ) || /\{\{.+\}\}/gi.test(cmp.getInnerHTML())
-      );
+    const original = editor.getWrapper().find("*");
+    const sle = editor.getSelected();
+    // sle.addAttributes({ "mount-id": uniqueID() });
+    // const original = editor
+    //   .getWrapper()
+    //   .find("*")
+    //   .filter(
+    //     (cmp) =>
+    //       Object.keys(cmp.getAttributes() || {}).some((key) =>
+    //         key.startsWith("v-")
+    //       ) ||
+    //       (cmp.parents().some((parent) => parent.getAttributes()["v-scope"]) &&
+    //         /\{\{.+\}\}/gi.test(cmp.getInnerHTML()))
+    //   )
+    // .map(cmp=>{
+    //   const attributes = cmp.getAttrToHTML();
+    //   if(cmp['v-for.'] || attributes['v-if'])
+    // });
     // editor.getWrapper().addAttributes({ "v-scope": "" });
     const wrapperAttrs = editor.getWrapper().getAttributes();
     vComponents = original;
     vAttributes = original.map((cmp) => cmp.getAttributes());
     vWrapperAttributes = wrapperAttrs;
     console.log("rogs : ", original);
+    originalComponents = editor.getComponents().toJSON();
     // console.log("PetiteVue.reactiveEffect : ",  , );
 
     // pVueApp.mount(editor.getWrapper().getEl());
+    // editor.select(null);
+    // preventSelectNavigation(editor)
     pvMount(editor.getWrapper().getEl());
     // setTimeout(() => {
     //   editor.getWrapper().addAttributes(wrapperAttrs);
@@ -1967,8 +2197,28 @@ export const mount = ({ editor, all, specificCmp }) => {
     // }, 0);
   } else {
     const cmpAttrs = specificCmp.getAttributes();
-    pvMount(specificCmp.getEl());
-    specificCmp.addAttributes(cmpAttrs);
+    const sle = editor?.getSelected?.();
+    // sle.addAttributes({ "mount-id": uniqueID() });
+    // sle.removeClass('gjs-selected');
+    // sle.getEl().classList.remove('gjs-selected')
+    // console.log(sle,sle.getEl());
+
+    // editor.select(null);
+    // const removeSelectedClass = (el) => {
+    //   el.classList.remove("gjs-selected");
+    //   if (!el.children.length) return;
+    //   [...el.children].forEach((el) => {
+    //     removeSelectedClass(el);
+    //   });
+    // };
+    const el = specificCmp.getEl();
+    // removeSelectedClass(el);
+    // console.log(sle.getEl() ,el.innerHTML);
+    // editor.select(null);
+    // preventSelectNavigation(editor)
+    pvMount(el);
+    // specificCmp.addAttributes(cmpAttrs);
+    // sle && editor.select(sle);
   }
   // reCreatePvApp()
   // if (pVueApp) {
@@ -1982,8 +2232,10 @@ export const mount = ({ editor, all, specificCmp }) => {
  */
 export const unMount = ({ editor, all, specificCmp, selectAfterUnMout }) => {
   if (all) {
-    pvUnMount(editor.getWrapper().getEl());
     // editor.render();
+
+    // try {
+    pvUnMount(editor.getWrapper().getEl());
     const wrapper = editor.getWrapper();
     /**
      *
@@ -1996,101 +2248,152 @@ export const unMount = ({ editor, all, specificCmp, selectAfterUnMout }) => {
       attributes,
       timeout = 15,
     }) => {
-      // if (components.length <= 100) {
-      //   console.log('less than 100');
+      setTimeout(
+        () => {
+          console.log("render start");
+          if (!components.length) return;
+          editor.Storage.setAutosave(false);
 
-      //   components.forEach((cmp) => cmp.replaceWith(cmp.clone()));
-      // } else {
-      setTimeout(() => {
-        console.log("render start");
-        if (!components.length) return;
-        editor.Storage.setAutosave(false);
-
-        const relEnder = starter + 101;
-        const slices = components.slice(starter, relEnder);
-        slices.forEach((cmp) => cmp.replaceWith(cmp.clone()));
-        if (relEnder >= components.length) {
-          console.log("render end");
-          editor.Storage.setAutosave(true);
-          editor.clearDirtyCount();
-          vComponents = [];
-          vAttributes = {};
-          vWrapperAttributes = {};
-          return;
-        }
-        console.log("start new one");
-        render({
-          starter: relEnder,
-          components,
-        });
-      }, timeout);
+          const relEnder = starter + 101;
+          const slices = components.slice(starter, relEnder);
+          slices.forEach((cmp) => {
+            cmp.replaceWith(cmp.clone());
+          });
+          if (relEnder >= components.length) {
+            console.log("render end");
+            editor.Storage.setAutosave(true);
+            editor.clearDirtyCount();
+            vComponents = [];
+            vAttributes = {};
+            vWrapperAttributes = {};
+            const targetSelect = editor.getWrapper().find(`[mount-id]`)[0];
+            if (targetSelect) {
+              console.log("targetSelect : ", targetSelect);
+              preventSelectNavigation(editor, targetSelect);
+              targetSelect.removeAttributes("mount-id");
+            }
+            return;
+          }
+          console.log("start new one");
+          render({
+            starter: relEnder,
+            components,
+          });
+        },
+        starter >= 101 ? 15 : 0
+      );
       // }
     };
 
     editor.Storage.setAutosave(false);
+
     render({
       components: vComponents,
     });
-    editor
-      .getWrapper()
-      .addAttributes(vWrapperAttributes, { avoidStore: true, addStyle: true });
+
+    editor.getWrapper().addAttributes(vWrapperAttributes, {
+      avoidStore: true,
+      addStyle: true,
+    });
     const el = wrapper.getEl();
     for (const key in vWrapperAttributes) {
       if (!el) continue;
+      console.log(key);
+
       el.setAttribute(key, vWrapperAttributes[key]);
     }
     console.log(vAttributes, vComponents, "warppaer", vWrapperAttributes);
 
+    editor.Storage.setAutosave(false);
+    editor.clearDirtyCount();
     editor.Storage.setAutosave(true);
-    // editor.store();
-    //     const original = editor
-    //       .getWrapper()
-    //       .components()
-    //       .models.filter((cmp) =>
-    //         Object.keys(cmp.getAttributes() || {}).some((key) =>
-    //           key.startsWith("v-")
-    //         )
-    //       );
-    // console.log('orgs : ' ,editor
-    //   .getWrapper()
-    //   .components()
-    //   .models.map(el=>el.getAttributes()));
-
-    //   editor.getWrapper()
-    //   .components()
-    //   .models.forEach((cmp) => {
-    //       // console.log("re el : ", cmp.getEl(), cmp);
-    //       if(cmp.toHTML({withProps:true , keepInlineStyle:true}) == cmp.getEl().outerHTML){
-    //         console.log('equal');
-
-    //         return
-    //       }
-    //       cmp.replaceWith(cmp.clone());
-    //     });
-    //     editor
-    //       .getWrapper()
-    //       .addAttributes(
-    //         { ...editor.getWrapper().getAttributes() },
-    //         { silent: false, avoidStore: true }
-    //       );
-    //     Object.entries(editor.getWrapper().getAttributes()).forEach(
-    //       ([key, value]) => {
-    //         editor.getWrapper().getEl().setAttribute(key, value);
-    //       }
-    //     );
-    //     console.log(
-    //       "wrapper attrs : ",
-    //       editor.getWrapper().getAttributes(),
-    //       editor.getWrapper().getEl()
-    //     );
-    // editor.Storage.setAutosave(false);
-    // editor.render();
-    // editor.Storage.setAutosave(true);
-    // editor.clearDirtyCount()
-    // editor.getWrapper().replaceWith(editor.getWrapper().clone())
   } else {
-    const newCmp = specificCmp.replaceWith(specificCmp.clone())[0];
+    const sle = editor?.getSelected?.();
+
     pvUnMount(specificCmp.getEl());
-    selectAfterUnMout && editor.select(newCmp);
+    const newCmp = specificCmp.replaceWith(specificCmp.clone())[0];
+    // const targetSelect = editor.getWrapper().find(`[mount-id]`)[0];
+    // targetSelect && preventSelectNavigation(editor , targetSelect);
+
+    selectAfterUnMout && preventSelectNavigation(editor, newCmp);
+    editor.refresh();
+    // editor.Canvas.refresh({all:true,spots:true});
   }
 };
+
+export function getCurrentPageName() {
+  const pageName = localStorage.getItem(current_page_id);
+
+  const urlSrc =
+    pageName.toLowerCase() == "index"
+      ? "./index.html"
+      : `../pages/${pageName}.html`;
+
+  return urlSrc;
+}
+
+export function allowWorkerToBuildPagesForPreview({
+  canvasCss = "",
+  editorCss = "",
+  allowToUpdate = false,
+  pageUrl = "",
+}) {
+  pageBuilderWorker.postMessage({
+    command: "sendPreviewPagesToServiceWorker",
+    props: {
+      projectId: +localStorage.getItem(current_project_id),
+      allowToUpdate,
+      pageUrl,
+      editorData: {
+        canvasCss: canvasCss,
+        editorCss: editorCss,
+      },
+    },
+  });
+}
+
+export function allowWorkerToBuildPageForPreview({
+  canvasCss = "",
+  editorCss = "",
+  allowToUpdate = false,
+  pageName = "",
+  pageUrl = "",
+}) {
+  pageBuilderWorker.postMessage({
+    command: "sendPreviewPageToServiceWorker",
+    props: {
+      projectId: +localStorage.getItem(current_project_id),
+      // allowToUpdate,
+      pageName,
+      pageUrl,
+      editorData: {
+        canvasCss: canvasCss,
+        editorCss: editorCss,
+      },
+    },
+  });
+}
+
+/**
+ *
+ * @param {HTMLElement} el
+ */
+export function isOverflowedHiddenEl(el) {
+  return Boolean(window.getComputedStyle(el).overflow == "hidden");
+}
+
+/**
+ *
+ * @param {HTMLElement} el
+ */
+export function isElementScrollable(el) {
+  const hasVerticalScroll = el.scrollHeight > el.clientHeight;
+  const hasHorizontalScroll = el.scrollWidth > el.clientWidth;
+  const isOverflowEnabled = window.getComputedStyle(el).overflow !== "visible";
+
+  return {
+    vertical: hasVerticalScroll && isOverflowEnabled,
+    horizontal: hasHorizontalScroll && isOverflowEnabled,
+    any: (hasVerticalScroll || hasHorizontalScroll) && isOverflowEnabled,
+  };
+}

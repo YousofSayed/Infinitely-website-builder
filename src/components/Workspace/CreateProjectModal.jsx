@@ -42,7 +42,7 @@ export const CreateProjectModal = ({
           css: new Blob([``], { type: "text/css" }),
           js: new Blob([``], { type: "text/javascript" }),
           cmds:{},
-          id: "index",
+          id: "index", 
           name: "index",
           symbols: [],
           components: {},
@@ -72,7 +72,10 @@ export const CreateProjectModal = ({
       globalRules: {},
       fonts: {},
       imgSrc: "",
+      motions:{},
     });
+
+    // db.assets.add({} , id)
   };
 
   return (

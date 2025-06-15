@@ -34,7 +34,7 @@ export const Background = memo(() => {
   useUpdateInputValue({
     cssProp: "background-image",
     onEffect(cssProp, value) {
-      console.log("effecte for bg image", value);
+      // console.log("effecte for bg image", value);
 
       setBgImage(value.replace(/url\(|\)|\'|\"/gi, ""));
     },
@@ -42,11 +42,11 @@ export const Background = memo(() => {
 
   useEffect(() => {
     if (!bgImage) {
-      console.log("removing : ", bgImage);
+      // console.log("removing : ", bgImage);
 
       removeProp({ cssProp: "background-image" });
     }
-    console.log(editor.getCss());
+    // console.log(editor.getCss());
   }, [bgImage]);
 
   useEffect(() => {

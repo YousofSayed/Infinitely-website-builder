@@ -50,6 +50,15 @@ export const AsideControllers = () => {
         {Icons.setting("white")}
       </Li>
 
+      <Li
+        title="motion"
+        to={"/edite/motion"}
+        className={`w-[50%] h-[40.5px!important] hover:bg-blue-600 `}
+        isObjectParamsIcon
+        fillObjIcon={undefined}
+        icon={Icons.motion}
+      />
+
       {/* {cmp && isDynamicComponent(cmp) && (
         <Li
           title="choose-and-write-model"

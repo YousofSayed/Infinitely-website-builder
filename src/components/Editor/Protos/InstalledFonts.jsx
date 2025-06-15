@@ -10,8 +10,12 @@ import { Button } from "../../Protos/Button";
 import { Icons } from "../../Icons/Icons";
 import { current_project_id } from "../../../constants/shared";
 import { Input } from "./Input";
+import { useEditorMaybe } from "@grapesjs/react";
+import { FitTitle } from "./FitTitle";
+import { getFileSize } from "../../../helpers/bridge";
 
 export const InstalledFonts = () => {
+  const editor = useEditorMaybe();
   const [fonts, setFonts] = useState([]);
   const allfontsRef = useRef([]);
 
@@ -73,6 +77,8 @@ export const InstalledFonts = () => {
     await db.projects.update(projectId, {
       fonts: clone,
     });
+
+    editor.load();
   };
 
   const filterFonts = (value = "") => {
@@ -97,13 +103,17 @@ export const InstalledFonts = () => {
   return (
     <section className="flex flex-col h-full gap-2 p-1">
       <header className="sticky top-0 flex justify-between gap-4 mb-2 bg-slate-900">
-        <h1 className="text-slate-200 font-bold px-[60px] py-2   border-b-2 border-b-slate-600 w-fit flex-shrink-0 ">
+        {/* <h1 className="text-slate-200 font-bold px-[60px] py-2   border-b-2 border-b-slate-600 w-fit flex-shrink-0 ">
           Fonts : {Object.keys(fonts || {}).length || undefined}
-        </h1>
+        </h1> */}
+
+        <FitTitle className="flex-shrink-0 flex items-center justify-center">
+          Fonts : {Object.keys(fonts || {}).length || undefined}
+        </FitTitle>
 
         <section className="w-full">
           <Input
-            className="w-full bg-slate-800"
+            className="w-full bg-slate-800 p-1"
             placeholder="Search..."
             onInput={(ev) => {
               filterFonts(ev.target.value);
@@ -111,15 +121,20 @@ export const InstalledFonts = () => {
           />
         </section>
 
-        <section className="w-fit border-b-2 border-b-slate-600 px-[20px] py-2 flex items-center gap-2 flex-shrink-0">
+        <section className="w-fit bg-slate-800 rounded-lg px-[20px]  flex items-center gap-2 flex-shrink-0">
           <section className="px-2 border-r-2 border-r-slate-600">
             <input
+              id="select-all"
               type="checkbox"
+              name="select-all"
               className="cursor-pointer"
               onChange={selectAll}
             />
           </section>
-          <h1>Select All</h1>
+          <label htmlFor="select-all" className="cursor-pointer">
+            Select All
+          </label>
+          {/* <h1>Select All</h1> */}
         </section>
       </header>
 
@@ -132,7 +147,7 @@ export const InstalledFonts = () => {
                 className="bg-slate-800 px-2 py-3 rounded-md flex justify-between items-center"
               >
                 <section className="flex gap-2">
-                  <section className="border-r-2 border-r-slate-600 px-2">
+                  <section className="border-r-2 border-r-slate-600 px-2 ">
                     <input
                       type="checkbox"
                       className="cursor-pointer"
@@ -143,6 +158,17 @@ export const InstalledFonts = () => {
                   <h1>{key}</h1>
                 </section>
 
+                {
+                  <FitTitle>
+                    {!fonts[key].isCDN
+                      ? `${getFileSize(fonts[key].file).MB}MB`
+                      : Icons.installAsCDN({
+                          fill: "white",
+                          strokeColor: "white",
+                          arrowStrokeColor: "#2563eb ",
+                        })}
+                  </FitTitle>
+                }
                 {/* <section>
                   <button className="cursor-pointer group">{Icons.edite({fill:'white  ', width:23})}</button>
                 </section> */}

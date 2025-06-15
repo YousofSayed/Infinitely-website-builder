@@ -1,8 +1,20 @@
-import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { StyleAside } from "./components/Editor/StyleAside";
 import { Blocks } from "./components/Editor/Blocks";
 import { TraitsAside } from "./components/Editor/TraitsAside";
-import React, { lazy, Suspense, useEffect, useLayoutEffect, useState } from "react";
+import React, {
+  lazy,
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from "react";
 import { Loader } from "./components/Loader";
 import { Workspace } from "./views/Workspace";
 import { Commands } from "./components/Editor/Commands";
@@ -13,11 +25,16 @@ import { infinitelyWorker } from "./helpers/infinitelyWorker";
 import { dbAssetsSwState } from "./helpers/atoms";
 import { initDBAssetsSw } from "./serviceWorkers/initDBAssets-sw";
 import { useRecoilState } from "recoil";
-import "react-toastify/dist/ReactToastify.css";
+// import "react-toastify/dist/ReactToastify.css";
 import { current_project_id } from "./constants/shared";
 import { getProjectData } from "./helpers/functions";
 import { swAliveInterval } from "./helpers/keepSwAlive";
 import { Editor } from "./views/Editor";
+import { Motion } from "./components/Editor/Protos/Motion";
+import { pageBuilderWorker } from "./helpers/defineWorkers";
+import { Preview } from "./views/Preview";
+import { useLiveQuery } from "dexie-react-hooks";
+import { useOfflineHandler } from "./hooks/useOfflineHandler";
 
 function App() {
   // const Editor = lazy(async () => ({
@@ -27,46 +44,70 @@ function App() {
 
   const [dbAssetsSw, setDBAssetsSw] = useRecoilState(dbAssetsSwState);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useOfflineHandler()
 
   useEffect(() => {
     /**
      *
      * @param {MessageEvent} ev
      */
-    const callback = (ev) => {
+    const messageCallback = (ev) => {
       const { command, props } = ev.data;
-      if (command != "exportProject") return;
-      const a = document.createElement("a");
-      a.classList.add("hidden");
-      a.download = props.name;
-      const url = URL.createObjectURL(props.file);
-      a.href = url;
-      document.body.append(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      if (command == "exportProject") {
+        const a = document.createElement("a");
+        a.classList.add("hidden");
+        a.download = props.name;
+        const url = URL.createObjectURL(props.file);
+        a.href = url;
+        document.body.append(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } else if (command == "varsToServiceWorker") {
+        console.log("recived preview pages from worker , props : ", props);
+
+        navigator.serviceWorker.controller.postMessage({
+          command: "setVar",
+          props: {
+            obj: props.vars,
+          },
+        });
+
+        // setTimeout(async()=>{
+        //   console.log(await(await fetch('../pages/contac us.html')).text());
+
+        // },100)
+      } else if (command == "initSevrviceWorker") {
+        console.log(
+          "recived preview pages from initSevrviceWorker , props : ",
+          props
+        );
+        initDBAssetsSw(setDBAssetsSw);
+      }
     };
-    infinitelyWorker.addEventListener("message", callback);
-    // test();
+
+    infinitelyWorker.addEventListener("message", messageCallback);
+    pageBuilderWorker.addEventListener("message", messageCallback);
+
     return () => {
-      infinitelyWorker.removeEventListener("message", callback);
-      clearInterval(swAliveInterval)
+      infinitelyWorker.removeEventListener("message", messageCallback);
+      pageBuilderWorker.removeEventListener("message", messageCallback);
+      // clearInterval(swAliveInterval);
     };
   }, []);
 
   useLayoutEffect(() => {
-    console.log('app');
-    
+    console.log("app");
+
     const projectId = localStorage.getItem(current_project_id);
-    if (!projectId) {
-      console.log('workspacce');
+    if (!projectId && !location.pathname.includes("/add-blocks")) {
+      console.log("workspacce");
       navigate("/workspace");
-    } else {
-      console.log('add-blocks');
-      navigate("add-blocks");
     }
     initDBAssetsSw(setDBAssetsSw);
-  }, []);
+  }, [location]);
 
   useEffect(() => {
     if (!dbAssetsSw) return;
@@ -89,25 +130,28 @@ function App() {
 
   return (
     // <Suspense fallback={<Loader />}>
-      <Routes>
-        <Route path="/" element={<Editor />}>
-          <Route path="/add-blocks" element={<Blocks />} />
-          <Route path="/edite">
-            <Route path="styling" element={<StyleAside />} />
-            <Route path="traits" element={<TraitsAside />} />
-            <Route path="commands" element={<Commands />} />
-            {/* <Route path="choose-and-write-model" element={<ChooseModel />}>
+    <Routes>
+      <Route path="/" element={<Editor />}>
+        <Route path="/add-blocks" element={<Blocks />} />
+        <Route path="/edite">
+          <Route path="styling" element={<StyleAside />} />
+          <Route path="traits" element={<TraitsAside />} />
+          <Route path="commands" element={<Commands />} />
+          <Route path="motion" element={<Motion />} />
+          {/* <Route path="choose-and-write-model" element={<ChooseModel />}>
               <Route path="dynamic-content" element={<DynamicContent />} />
               <Route
                 path="dynamic-attributes"
                 element={<DynamicAttributes />}
               />
             </Route> */}
-          </Route>
         </Route>
+      </Route>
 
-        <Route path="/workspace" element={<Workspace />}></Route>
-      </Routes>
+      <Route path="/preview" element={<Preview />} />
+
+      <Route path="/workspace" element={<Workspace />}></Route>
+    </Routes>
     // </Suspense>
   );
 }

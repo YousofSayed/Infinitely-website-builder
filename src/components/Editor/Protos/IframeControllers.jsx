@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Li } from "../../Protos/Li";
 import { Icons } from "../../Icons/Icons";
 import { useEditorMaybe } from "@grapesjs/react";
@@ -8,10 +8,22 @@ import {
   showLayersState,
 } from "../../../helpers/atoms";
 import { useNavigate } from "react-router-dom";
-import { mount, unMount } from "../../../helpers/functions";
+import {
+  getProjectData,
+  getProjectSettings,
+  mount,
+  unMount,
+} from "../../../helpers/functions";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./ToastMsgInfo";
 import { isChrome } from "../../../helpers/bridge";
+import {
+  killAllGsapMotions,
+  runAllGsapMotions,
+} from "../../../helpers/customEvents";
+import { useProjectSettings } from "../../../hooks/useProjectSettings";
+import { Hr } from "../../Protos/Hr";
+
 
 export const IframeControllers = () => {
   const editor = useEditorMaybe();
@@ -21,6 +33,9 @@ export const IframeControllers = () => {
   const undoRef = useRef();
   const redoRef = useRef();
   const isEditorLoad = useRef(true);
+  const [s, setS] = useState("");
+  // const projectSettings = useRef(getProjectSettings());
+  const [projectSetting, setProjectSettings] = useProjectSettings();
 
   useEffect(() => {
     if (!editor) return;
@@ -84,46 +99,20 @@ export const IframeControllers = () => {
   }, [editor]);
 
   const undo = () => {
-    editor.runCommand("core:undo");
+    // editor.runCommand("core:undo");
+    editor.UndoManager.undo();
   };
 
   const redo = () => {
-    console.log("redo");
-
-    editor.runCommand("core:redo");
+    // editor.runCommand("core:redo");
+    editor.UndoManager.redo();
   };
 
   const clearIFrameBody = () => {
-    isChrome((bool) => {
-      // editor.Canvas.getFrameEl().setAttribute("srcdoc" , '');
-      // editor.Canvas.getFrameEl().setAttribute("sandbox" , '');
-      // editor.select(null);
-      
-      // editor.Canvas.getFrameEl().contentWindow.location.reload()
-      // editor.Canvas.getFrameEl().srcdoc = "about:blank";
-      // editor.Canvas.getFrameEl().sandbox = "allow-same-origin allow-scripts";
-      // if(!bool){
-      //   editor.select(null);
-      //   console.log(editor.Components.getComponents().models);
-      //   editor.Components.clear();
-      // }
-    });
-    // editor.select(null);
-    // console.log(editor.Components.getComponents().models);
-    // editor.Components.clear();
-    
-    // // editor.getComponents().models.forEach(cmp=>cmp.remove())
+    editor.select(null);
     editor.Components.clear();
-      console.log('tools : ' , editor.Components.getComponent('sda'));
-      
     editor.refresh({ tools: true });
     editor.Canvas.refresh({ all: true, spots: true });
-    // isChrome((bool) => {
-    //   console.error("chrome");
-
-      // editor.Canvas.getFrameEl().srcdoc = "about:blank";
-      // editor.Canvas.getFrameEl().sandbox = "allow-same-origin allow-scripts";
-    // });
   };
 
   const setComponentsView = () => {
@@ -135,10 +124,11 @@ export const IframeControllers = () => {
   };
 
   return (
-    <ul className="flex w-full gap-2  items-center justify-between border-r-2 pr-2 mr-2 border-slate-800">
+    <>
       <Li
         onClick={clearIFrameBody}
         title="clear canvas"
+        className="flex-shrink-0"
         // icon={Icons.trash}
         justHover={true}
       >
@@ -146,6 +136,7 @@ export const IframeControllers = () => {
       </Li>
       <Li
         refForward={undoRef}
+        className="flex-shrink-0"
         onClick={undo}
         title="undo"
         icon={Icons.undo}
@@ -153,47 +144,86 @@ export const IframeControllers = () => {
       />
       <Li
         refForward={redoRef}
+        className="flex-shrink-0"
         onClick={redo}
         title="redo"
         icon={Icons.redo}
         justHover={true}
       />
 
+      {!projectSetting.disable_petite_vue && (
+        <>
+          <Li
+            // refForward={redoRef}
+            onClick={() => {
+              unMount({
+                editor,
+                all: true,
+              });
+            }}
+            title="edite components"
+            fillIcon
+            fillObjIcon={false}
+            icon={Icons.editGjsComponent}
+            isObjectParamsIcon
+            className="flex-shrink-0"
+            justHover={true}
+          />
+
+          <Li
+            // refForward={redoRef}
+            onClick={() => {
+              mount({
+                editor,
+                all: true,
+              });
+            }}
+            title="mount components"
+            fillIcon
+            className="flex-shrink-0"
+            fillObjIcon={false}
+            icon={Icons.vue}
+            isObjectParamsIcon
+            justHover={true}
+          />
+        </>
+      )}
+
+      <Hr/>
+
       <Li
         // refForward={redoRef}
-        onClick={() => {
-          unMount({
-            editor,
-            all: true,
-          });
+        onClick={async () => {
+          const motions = await (await getProjectData()).motions;
+          killAllGsapMotions(motions);
+          runAllGsapMotions(motions);
         }}
-        title="mount"
+        title="Run All Motions"
         fillIcon
         fillObjIcon={false}
-        icon={Icons.editGjsComponent}
+        icon={Icons.play}
+        className="flex-shrink-0"
         isObjectParamsIcon
         justHover={true}
       />
 
       <Li
         // refForward={redoRef}
-        onClick={() => {
-          mount({
-            editor,
-            all: true,
-          });
+        onClick={async () => {
+          killAllGsapMotions(await (await getProjectData()).motions);
         }}
-        title="edit mounted components"
+        title="Kill All Motions"
         fillIcon
+        className="flex-shrink-0"
         fillObjIcon={false}
-        icon={Icons.vue}
-        isObjectParamsIcon
+        icon={Icons.close}
         justHover={true}
       />
 
       <Li
         onClick={setComponentsView}
         title="hash elements"
+        className="flex-shrink-0"
         icon={Icons.square}
         justHover={true}
       />
@@ -202,8 +232,9 @@ export const IframeControllers = () => {
           setShowLayers((old) => !old);
           setShowAnimBuilder(false);
         }}
+        className="flex-shrink-0"
         icon={Icons.layers}
-        title="show layers"
+        title="layers"
       />
       <Li
         onClick={(ev) => {
@@ -211,36 +242,14 @@ export const IframeControllers = () => {
           setShowLayers(false);
           navigate("edite/styling");
         }}
+        className="flex-shrink-0"
         title="Animation Builder"
         icon={Icons.animation}
       />
       <Li
+        className="flex-shrink-0"
         onClick={async (ev) => {
-          // const canvas = editor.Canvas;
-          // editor.render()
-          // const page = editor.Pages.get('nulsdal');
-          // editor.Pages.select(page);
-          // editor.render();
-          //  editor.Frame
-          // editor.Canvas.render()
-          // editor.EditorModel.getCurrentFrame().renderHead()
-          //  editor.EditorModel.getCurrentFrame().renderBody()
-          //  editor.EditorModel.getCurrentFrame().renderScripts()
-          //  editor.EditorModel.getCurrentFrame().renderStyles()
-          //  editor.editorView.render()
-          // editor.render();
-          // editor.store();
-          // editor.load();
-          // editor.trigger('rerender')
-          // editor.Canvas.getDocument().location.reload()
-          // editor.DomComponents.render()
-          // editor.editorView.setElement()
-
-          // const projectId = +localStorage.getItem(current_project_id);
-          // const projectData = await (await db.projects.get(projectId));
-          // editor.store();
           console.log(editor?.Canvas?.getBody?.());
-          // isEditorLoad.current
           const body = editor?.Canvas?.getBody();
           if (!body && body.getAttribute("loaded") != "true") {
             toast.warn(<ToastMsgInfo msg={`Wait until load end`} />);
@@ -248,18 +257,6 @@ export const IframeControllers = () => {
           }
           isEditorLoad.current = true;
           editor.load();
-          // editor.loadProjectData(projectData..gjsProjectData);
-          // editor.Storage.load();
-          // editor.trigger('canvas:frame:load');
-          // editor.trigger('canvas:frame:load:body');
-          // editor.trigger('canvas:frame:load:head');
-          // editor.Pages.select(localStorage.getItem(current_page_id));
-
-          // editor.load()
-
-          // editor.Canvas.getWindow().location.reload()
-          // canvas.render();
-          // editor.loadData()
         }}
         title="Reload Canvas"
       >
@@ -270,6 +267,6 @@ export const IframeControllers = () => {
           strokWidth: 3,
         })}
       </Li>
-    </ul>
+    </>
   );
 };

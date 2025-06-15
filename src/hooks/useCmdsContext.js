@@ -28,12 +28,12 @@ export const useCmdsContext = () => {
      * 
      * @param {import('grapesjs').Component} cmp 
      */
-    async function setCmdsContext() {
+    async function setCmdsContext(cmp) {
       const sle = editor?.getSelected?.();
       if(editor && sle){
         console.log('sle : ' ,sle);
         
-        const context = getAlpineContext(editor  , sle)
+        const context = getAlpineContext(editor  ,cmp || sle)
         setCmdsContextRv((old) => context);
       }else{
         setCmdsContextRv((old) => '');

@@ -23,22 +23,27 @@ import { customCmps } from "../../plugins/customCmps.jsx";
 import { html } from "../../helpers/cocktail.js";
 import { IDB } from "../../plugins/IDB.js";
 import { updateProjectThumbnail } from "../../plugins/updateProjectThumbnail.js";
-import { customInfinitelySymbols } from "../../plugins/customInfinitelySymbols.js";
+import { customInfinitelySymbols } from "../../plugins/customInfinitelySymbols";
 import { updateDynamicTemplates } from "../../plugins/updateDynamicTemplates.js";
 import { useGlobalSettings } from "../../hooks/useGlobalSettings.js";
 import { current_symbol_id } from "../../constants/shared.js";
 import { cloneDeep } from "lodash";
-import { getProjectSettings } from "../../helpers/functions.js";
+import {
+  getInfinitelySymbolInfo,
+  getProjectSettings,
+  preventSelectNavigation,
+} from "../../helpers/functions.js";
 import { muatationDomElements } from "../../plugins/mutation.js";
 import { isChrome } from "../../helpers/bridge.js";
-// import { infinitelyGrapesjs } from "../../helpers/backbonePacher.js";
+import { motionsRemoverHandler } from "../../plugins/motionsRemoverHandler.js";
+import { motionsCloneHandler } from "../../plugins/motionsCloneHandler.js";
+import { globalTraits } from "../../plugins/globalTraits.jsx";
+import { useSetClassForCurrentEl } from "../../hooks/useSetclassForCurrentEl.js";
+import { toast } from "react-toastify";
+import { handleComponentsOnCreate } from "../../plugins/handleComponentsOnCreate.js";
 
 export const GJEditor = memo(({ children }) => {
-  const setBlocksAtom = useSetRecoilState(blocksStt);
   const setSelectedEl = useSetRecoilState(currentElState);
-  const editorRef = useRef();
-  // const blocks = useRecoilValue(blocksStt);
-  const { globalSettings, setGlobalSetting } = useGlobalSettings();
   // const [cmdsContext, setCmdsContext] = useCmdsContext();
   const setSelector = useSetRecoilState(selectorState);
   const setRule = useSetRecoilState(ruleState);
@@ -46,9 +51,8 @@ export const GJEditor = memo(({ children }) => {
   const currentDynamicTemplateId = useRecoilValue(
     currentDynamicTemplateIdState
   );
-  const setDynamicTemplates = useSetRecoilState(dynamicTemplatesState);
   const dynamicTemplates = useRecoilValue(dynamicTemplatesState);
-  const location = useLocation();
+  // const setStyle = useSetClassForCurrentEl();
   const [plugins, setPlugins] = useState([
     // customColors,
     customCmps,
@@ -60,10 +64,13 @@ export const GJEditor = memo(({ children }) => {
     updateProjectThumbnail,
     customInfinitelySymbols,
     updateDynamicTemplates,
-    muatationDomElements,
+    // motionsRemoverHandler,
+    motionsCloneHandler,
+    globalTraits,
+    handleComponentsOnCreate,
+    // selectionPreventer,
+    // muatationDomElements,
   ]);
-
-  useEffect(() => {}, []);
 
   const onEditor = useCallback(
     /**
@@ -72,124 +79,88 @@ export const GJEditor = memo(({ children }) => {
      */
     async (ev) => {
       ev.Blocks.categories.add({ id: "others", title: "Others" });
-      // setBlocksAtom({
-      //   ...await handleCustomBlock(ev.Blocks.getAll().models.map(block=>block.attributes), ev),
-      //   // symbols: [],
-      // });
-      // ev.on("load", () => {
-      //   console.log("csss ruuuules", ev.CssComposer.getAll().models);
-      // });
-      const editor = ev; // Assuming 'ev' is your GrapesJS editor instance
-      // editor.on("canvas:frame:load:body", ({window}) => {
-      //   console.log("Editor loaded, attempting to override document.write");
 
-      //   // Get the canvas iframe element
-      //   // const iframe = editor.Canvas.getFrameEl();
-      //   // if (!iframe) {
-      //   //   console.error("No iframe found in Canvas.getFrameEl()");
-      //   //   return;
-      //   // }
-
-      //   console.log('wdsads' , window);
-      //   /**
-      //    * @type {Document}
-      //    */
-      //   const doc = window.document;
-
-      //   // iframe.setAttribute('sandbox' , '')
-      //   // console.log(editor.Canvas.getDocument().readyState , 'state');
-      //   console.error(doc.readyState , 'state');
-      //   doc.addEventListener('DOMContentLoaded',()=>{
-          
-      //     console.error(doc.readyState , 'state ev');
-      //   })
-        
-      // });
-
-      //   editor.once('canvas:frame:load', (ev) => {
-      //     // const iframeDoc = window.document;
-      //     console.log('evvvvvvvvv : ' , ev);
-          
-      //   //  isChrome((bool)=>{
-      //   //   console.error('chrome');
-          
-      //   // editor.Canvas.getFrameEl().srcdoc = 'about:blank'
-      //   // ev.el.srcdoc = ''
-      //   //    editor.Canvas.getFrameEl().sandbox = 'allow-same-origin allow-scripts'
-      //   //  })
-      //   // Set base URL
-          
-      // });
-
-      ev.on("storage:end:store", () => {});
-      // setCmdsContext();
-      ev.runCommand("core:component-outline");
-      // blocks.forEach(block=>{
-      //   ev.Blocks.add(block.id , block)
-
-      // })
-      // ev.on(
-      //   "block:add",
+      const editor = ev;
+      // editor.on(
+      //   "component:resize",
       //   /**
       //    *
-      //    * @param {import('grapesjs').Block} block
+      //    * @param {{component:import('grapesjs').Component  , el:HTMLElement}} param0
       //    */
-      //   async (block) => {
-      //     if (!block.attributes.category || !block.attributes.category.id) {
-      //       block.attributes.category = "others";
-      //     }
-      //     const handledBlocks = await handleCustomBlock(ev.Blocks.getAll().models.map(block=>block.attributes), ev);
-      //     setBlocksAtom((old) => ({
-      //       ...old,
-      //       ...handledBlocks,
-      //     }));
+      //   ({ component, el, ...args }) => {
+      //     // const newWidth = el.offsetWidth; // New width in pixels
+      //     // const newHeight = el.offsetHeight;
+      //     // console.log("rule : ", newWidth , newHeight , component.getChangedProps());
+      //     setTimeout(() => {
+      //       const rule = editor.Css.get(
+      //       component
+      //       .getClasses()
+      //       .map((cl) => `.${cl}`)
+      //       .join("")
+      //     );
+      //     if (!rule) return;
+      //     const styles = rule.getStyle() || {};
+      //     console.log(
+      //       "resizing :",
+      //       // ,
+      //       component
+      //       .getClasses()
+      //       .map((cl) => `.${cl}`)
+      //       .join("")
+      //     );
+      //     editor.Css.remove(rule);
+      //     setStyle({
+      //      cssProp:Object.keys(styles),
+      //      value:Object.values(styles)
+      //     })
+      //     }, 0);
+      //     // console.log("rule : ", newWidth , newHeight);
+
       //   }
       // );
-
-      // ev.on("storage:end:load", () => {
-      //   // const cmps = ev.getComponents().models;
-      //   // cmps.forEach((cmp) => {
-      //   // });
-      // });
-      // setCmdsContext(); //cmp
+      ev.on("storage:end:store", () => {});
+      ev.runCommand("core:component-outline");
+      isChrome(() => {
+        editor.on("canvas:frame:load", ({ window, el }) => {
+          /**
+           * @type {HTMLIFrameElement}
+           */
+          const iframe = el;
+          // const doc = iframe.contentDocument;
+          // const originalWrite = doc.write;
+          // doc.write = (html) => {
+          //   const blob = new Blob([html], { type: 'text/html' });
+          //   iframe.src = URL.createObjectURL(blob);
+          // };
+          if (iframe.hasAttribute("src")) return;
+          iframe.setAttribute("referrerpolicy", "same-origin unsafe-url");
+          iframe.setAttribute("src", "about:srcdoc");
+          console.log("iframe work: ", iframe);
+          //  el.setAttribute('sandbox' , 'allow-same-origin allow-scripts')
+          // editor.Canvas.getFrame().setAttribute('srcdoc' , 'about:blank')
+          // editor.Canvas.getFrame().fetch({url:'/'});
+        });
+      });
 
       ev.on("component:deselected", () => {
         setSelectedEl({ currentEl: undefined });
       });
+      // editor.RichTextEditor.hideToolbar();
 
       ev.on("component:selected", () => {
         const selectedEl = ev.getSelected();
-      
-        
+        selectedEl.set({ resizable: false });
         setSelectedEl({ currentEl: selectedEl?.getEl() });
         setRule({ is: false, ruleString: "" });
 
-        console.log(
-          "is Main Symbol ? :",
-          ev.Components.getSymbolInfo(ev.getSelected()).isMain
-        );
-
         const location = window.location;
-        const isBlockedNavigatedPath =
-          location.pathname.includes("traits") ||
-          location.pathname.includes("commands");
-        console.log(
-          isBlockedNavigatedPath,
-          location.pathname,
-          window.location.pathname
-        );
+
         setSelector("");
         sessionStorage.removeItem(current_symbol_id);
         const projectSettings = getProjectSettings().projectSettings;
         if (projectSettings.navigate_to_style_when_Select) {
           navigate("/edite/styling");
         }
-        // console.log((!isBlockedNavigatedPath ||
-        //   !projectSettings.navigate_to_style_when_Select) , getProjectSettings().projectSettings.navigate_to_style_when_Select);
-
-        // (!isBlockedNavigatedPath ||
-        //   !projectSettings.navigate_to_style_when_Select) &&
-        //   navigate("/edite/styling");
       });
 
       ev.on("component:cmds:update", () => {
@@ -219,30 +190,24 @@ export const GJEditor = memo(({ children }) => {
         setSelectedEl({ currentEl: ev?.getSelected()?.getEl() });
       });
 
-      ev.on("canvas:dragover", (eve) => {
-        /**
-         *
-         * @param {import('grapesjs').Component} el
-         */
-        const getSymbol = (el) => {
-          ev.mySymbol = el;
-        };
-        getSymbol(ev.DomComponents.getById(eve.target.id));
-      });
+      // ev.on("canvas:dragover", (eve) => {
+      //   /**
+      //    *
+      //    * @param {import('grapesjs').Component} el
+      //    */
+      //   const getSymbol = (el) => {
+      //     ev.mySymbol = el;
+      //   };
+      //   getSymbol(ev.DomComponents.getById(eve.target.id));
+      // });
     },
     [plugins, dynamicTemplates, currentDynamicTemplateId]
   );
 
-  // useEffect(()=>{
-  //   return ()=>{
-  //     editorRef.current.destroy()
-  //   }
-  // },[])
-
   return (
     <Editor
       grapesjs={grapesjs}
-      options={cloneDeep({
+      options={({
         height: "100%",
         width: "100%",
         multipleSelection: true,
@@ -260,6 +225,11 @@ export const GJEditor = memo(({ children }) => {
         //   pages: ,
         // },
         // exportWrapper: true,
+        richTextEditor:{
+          custom:true,
+          // adjustToolbar:
+          toolbar: []
+        },
         optsHtml: {
           // attributes: true,
           keepInlineStyle: true,
@@ -276,10 +246,10 @@ export const GJEditor = memo(({ children }) => {
         autorender: true,
 
         parser: {
+         
           optionsHtml: {
             allowScripts: true,
             detectDocument: true,
-            // preParser:
             allowUnsafeAttr: true,
 
             allowUnsafeAttrValue: true,
@@ -303,6 +273,8 @@ export const GJEditor = memo(({ children }) => {
           blocks: blocks,
           custom: true,
         },
+        telemetry: false,
+
         keymaps: {
           defaults: {
             // 'core:undo': '', // Unbind Ctrl+Z
@@ -315,8 +287,28 @@ export const GJEditor = memo(({ children }) => {
         // autorender: false,
         // plugins:[mutationPlugin],
         canvas: {
+          // frameContent: (canvas) => {
+          //   const html = canvas.getHtml();
+          //   const css = canvas.getCss();
+          //   const fullHtml = `
+          //     <!DOCTYPE html>
+          //     <html>
+          //     <head>
+          //       <style>${css}</style>
+          //     </head>
+          //     <body>
+          //       ${html}
+          //     </body>
+          //     </html>
+          //   `;
+          //   const blob = new Blob([fullHtml], { type: 'text/html' });
+          //   canvas.getFrame().setAttribute('src', URL.createObjectURL(blob));
+          // },
           scripts: [
-            // { src: `/scripts/initSw.js`, name: "initSw.js" },
+            ...((isChrome() && [
+              { src: `/scripts/initSw.js`, name: "initSw.js" },
+            ]) ||
+              []),
             // {src:`${jsToDataURL(`console.log('data js url.............@')`)}`}
           ],
           styles: [],
@@ -327,8 +319,9 @@ export const GJEditor = memo(({ children }) => {
              * @param {import('grapesjs').Component} cmp
              */
             (cmp) => {
+              const symbolInfo = getInfinitelySymbolInfo(cmp);
               return html`
-                <figure class="flex gap-2 items-center p-1 w-full bg-blue-600">
+                <figure id="inf-badge" class="flex gap-2 items-center p-1 w-full ${symbolInfo.isMain ? 'bg-[var(--symbol-color-hover)]' : 'bg-blue-600' }  ">
                   ${cmp.getIcon()}
                   <figcaption class="text-slate-200 font-semibold ">
                     ${cmp.getName()}

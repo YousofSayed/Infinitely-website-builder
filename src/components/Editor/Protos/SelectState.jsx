@@ -63,23 +63,32 @@ export const SelectState = ({ placeholder }) => {
   const updateCurrentIndex = () => {
     const rules = extractRules(false);
     const media = getCurrentMediaDevice(editor);
-    console.log("rules (device): ", rules);
+    console.log("rules (device): ", rules, media);
+
+    const handleValue = (value = "") => {
+      return value?.replaceAll?.(/\s+/gi, "")?.trim()?.toLowerCase?.() || ''
+    };
 
     const findIndex = rules.findIndex((ruleF) => {
+      console.log( handleValue(ruleF?.atRuleParams) == handleValue(media?.atRuleParams));
+      console.log( handleValue(ruleF?.atRuleType) == handleValue(media?.atRuleType));
+      // console.log( handleValue(ruleF?.atRuleType) == handleValue(media?.atRuleType));
+      
       return (
-        ruleF.atRuleParams == media?.atRuleParams &&
-        ruleF.atRuleType == media?.atRuleType
+        handleValue(ruleF?.atRuleParams) == handleValue(media?.atRuleParams) &&
+        handleValue(ruleF?.atRuleType) == handleValue(media?.atRuleType) 
       );
     });
+
     console.log("findIndex (device): ", Number(findIndex));
     if (findIndex >= 0) {
-      setCurrentStateIndex(Number(findIndex));
+      setCurrentStateIndex(findIndex);
 
       setRule((old) => ({
         ...old,
         is: true,
-        atRuleParams: rules[findIndex].atRuleParams,
-        atRuleType: rules[findIndex].atRuleType,
+        atRuleParams:media.atRuleParams,
+        atRuleType: media.atRuleType,
         ruleString: rules[findIndex].states,
       }));
     } else {
@@ -94,18 +103,21 @@ export const SelectState = ({ placeholder }) => {
       }));
     }
   };
-  
-  
 
   function extractRules(isSetRules = true) {
     const currentSelector = getCurrentSelector(selector, editor.getSelected());
-    
-    const selectorRules = extractRulesByIdWithDetails(
-     minify( editor.getCss({ clearStyles: false, keepUnusedStyles: true })).css,
-      currentSelector
-    ).filter((sdt) =>  sdt.states && sdt.statesAsArray.length);
 
-    console.log("a3aaaa : ", currentSelector, selectorRules , editor.CssComposer.getRules());
+    const selectorRules = extractRulesByIdWithDetails(
+      minify(editor.getCss({ clearStyles: false, keepUnusedStyles: true })).css,
+      currentSelector
+    ).filter((sdt) => sdt.states && sdt.statesAsArray.length);
+
+    console.log(
+      "a3aaaa : ",
+      currentSelector,
+      selectorRules,
+      editor.CssComposer.getRules()
+    );
     isSetRules && setStates([...selectorRules]);
     return selectorRules;
   }
@@ -166,7 +178,7 @@ export const SelectState = ({ placeholder }) => {
     //   addStyles:true
     // });
     // console.log('css rule added : ' , editor.getCss());
-    
+
     setState(new String(""));
     setRule({
       is: true,
@@ -263,8 +275,8 @@ export const SelectState = ({ placeholder }) => {
           // }}
           onEnterPress={(keyword) => {
             // setState(keyword);
-            console.log('keyword : ' , keyword);
-            
+            console.log("keyword : ", keyword);
+
             addState(keyword);
           }}
           onItemClicked={(keyword, i) => {
@@ -280,7 +292,6 @@ export const SelectState = ({ placeholder }) => {
           onClick={(ev) => {
             addState(state);
           }}
-          clas
         >
           {Icons.plus("#fff")}
         </SmallButton>

@@ -28,7 +28,7 @@ self.addEventListener("message", (ev) => {
 
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-console.log('from db sw : ', url , url.origin);
+  console.log("from db sw : ", url, url.origin);
 
   // Handle /keep-alive first
   if (url.pathname.includes("/keep-alive")) {
@@ -40,29 +40,31 @@ console.log('from db sw : ', url , url.origin);
     const splittedUrl = url.pathname.split("/");
     const fileName = splittedUrl[splittedUrl.length - 1];
     const projectId = vars["projectId"];
-    let fileNameFromAssets = ''
+    let fileNameFromAssets = "";
     if (projectId) {
+      /**
+       * @type {import('../src/helpers/types').Project}
+       */
       const projectData = vars["projectData"];
-       /**
-       * @type {import('../src/helpers/types').InfinitelyAsset[] | undefined}
+      /**
+       * @type {import('../src/helpers/types').InfinitelyAsset[] }
        */
       const assets = projectData.assets;
       /**
-       * @type {import('../src/helpers/types').InfinitelyAsset | undefined}
+       * @type {import('../src/helpers/types').InfinitelyAsset }
        */
       const fileFromDB = assets
         .concat(Object.values(projectData.fonts || {}))
-        .find(
-          (asset) =>
-           {
-            if( encodeURIComponent(asset.file.name.toLowerCase()) ==
-            fileName.toLowerCase()){
-              fileNameFromAssets = asset.file.name.toLowerCase()
-            }
-            return  encodeURIComponent(asset.file.name) ==
-            fileName
-           }
-        );
+        .find((asset) => {
+          if (
+            !asset?.isCDN &&
+            encodeURIComponent(asset.file.name.toLowerCase()) ==
+              fileName.toLowerCase()
+          ) {
+            fileNameFromAssets = asset.file.name.toLowerCase();
+          }
+          return !asset?.isCDN && (encodeURIComponent(asset.file.name) == fileName);
+        });
       // console.log(
       //   "sw worker 2m : ",
       //   projectId,
@@ -73,13 +75,13 @@ console.log('from db sw : ', url , url.origin);
       // );
       // console.log('files name :' ,assets.map(asset=>asset.file.name) ,fileName );
       if (fileFromDB) {
-        
         // console.log("sw file:", fileFromDB.file.name);
         event.respondWith(
           new Response(fileFromDB.file, {
             status: 200,
             headers: {
-              "Content-Type": fileFromDB.file.type || "application/octet-stream",
+              "Content-Type":
+                fileFromDB.file.type || "application/octet-stream",
               "Access-Control-Allow-Origin": "*", // For cross-origin iframes
             },
           })

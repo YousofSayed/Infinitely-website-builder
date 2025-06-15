@@ -1,5 +1,5 @@
 import { Path } from "../Protos/Path";
-const mainColor = "#64748B";
+export const mainColor = "#64748B";
 
 export const Icons = {
   components: (strokeColor, strokeWidth) => (
@@ -42,6 +42,117 @@ export const Icons = {
           fill={fill}
         ></path>{" "}
       </g>
+    </svg>
+  ),
+  heading: ({ fill = mainColor, width = 18, height = 18 }) => (
+    <svg
+      width={width}
+      height={height}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+      <g
+        id="SVGRepo_tracerCarrier"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      ></g>
+      <g id="SVGRepo_iconCarrier">
+        {" "}
+        <path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M7 5C7.55228 5 8 5.44772 8 6V11.5H16V6C16 5.44772 16.4477 5 17 5C17.5523 5 18 5.44772 18 6V12.5V19C18 19.5523 17.5523 20 17 20C16.4477 20 16 19.5523 16 19V13.5H8V19C8 19.5523 7.55228 20 7 20C6.44772 20 6 19.5523 6 19V12.5V6C6 5.44772 6.44772 5 7 5Z"
+          fill={fill}
+        ></path>{" "}
+      </g>
+    </svg>
+  ),
+  video: ({ width = 24, height = 24, fill = mainColor }) => (
+    <svg
+      version="1.1"
+      id="Layer_1"
+      xmlns="http://www.w3.org/2000/svg"
+      xmlnsXlink="http://www.w3.org/1999/xlink"
+      x="0px"
+      y="0px"
+      width={width}
+      height={height}
+      viewBox="0 0 121.78 122.88"
+      // style="enable-background:new 0 0 121.78 122.88"
+      fill={fill}
+      xmlSpace="preserve"
+    >
+      <g>
+        <path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M30.06,0h61.65c3.43,0,6.23,2.81,6.23,6.23v6.47H23.83V6.23C23.83,2.8,26.63,0,30.06,0L30.06,0z M11.23,38.38 h99.32c6.18,0,11.23,5.05,11.23,11.23v62.04c0,6.18-5.05,11.23-11.23,11.23H11.23C5.05,122.88,0,117.83,0,111.65V49.61 C0,43.43,5.05,38.38,11.23,38.38L11.23,38.38z M54.11,58.38L81.4,77.41c0.45,0.29,0.86,0.67,1.18,1.13 c1.28,1.85,0.81,4.39-1.04,5.67L54.37,103c-0.7,0.58-1.6,0.92-2.59,0.92c-2.26,0-4.09-1.83-4.09-4.09V61.72h0.02 c0-0.81,0.24-1.62,0.73-2.33C49.73,57.54,52.27,57.09,54.11,58.38L54.11,58.38z M18.14,18.81h85.49c3.43,0,6.23,2.81,6.23,6.23 v6.72H11.91v-6.72C11.91,21.61,14.71,18.81,18.14,18.81L18.14,18.81z"
+        />
+      </g>
+    </svg>
+  ),
+  image: ({ width = 24, height = 24, fill = "currentColor" }) => (
+    <svg width={width} height={height} viewBox="0 0 24 24">
+      <path
+        fill={fill}
+        d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z"
+      />
+    </svg>
+  ),
+  button: ({ fill = mainColor, width = 25, height = 25 }) => (
+    <svg
+      width={width}
+      height={height}
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+      fill={fill}
+    >
+      <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+      <g
+        id="SVGRepo_tracerCarrier"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      ></g>
+      <g id="SVGRepo_iconCarrier">
+        <path d="M20.5 17h-17A2.502 2.502 0 0 1 1 14.5v-4A2.502 2.502 0 0 1 3.5 8h17a2.502 2.502 0 0 1 2.5 2.5v4a2.502 2.502 0 0 1-2.5 2.5zm-17-8A1.502 1.502 0 0 0 2 10.5v4A1.502 1.502 0 0 0 3.5 16h17a1.502 1.502 0 0 0 1.5-1.5v-4A1.502 1.502 0 0 0 20.5 9zM17 12H7v1h10z"></path>
+        <path fill="none" d="M0 0h24v24H0z"></path>
+      </g>
+    </svg>
+  ),
+  link: ({ fill = mainColor, width = 24, height = 24 }) => (
+    <svg width={width} height={height} viewBox="0 0 24 24">
+      <path
+        fill={fill}
+        d="M3.9,12C3.9,10.29 5.29,8.9 7,8.9H11V7H7A5,5 0 0,0 2,12A5,5 0 0,0 7,17H11V15.1H7C5.29,15.1 3.9,13.71 3.9,12M8,13H16V11H8V13M17,7H13V8.9H17C18.71,8.9 20.1,10.29 20.1,12C20.1,13.71 18.71,15.1 17,15.1H13V17H17A5,5 0 0,0 22,12A5,5 0 0,0 17,7Z"
+      />
+    </svg>
+  ),
+  input: ({ fill = mainColor, width = 35, height = 24 }) => (
+    <svg
+      width={width}
+      height={height}
+      viewBox="0 0 65 21"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect
+        width="64.5801"
+        height="19.5697"
+        rx="3.91395"
+        transform="matrix(1 0 0 -1 0.351013 20.443)"
+        fill={fill}
+      />
+      <path d="M7.15305 7.54184V14.6581H6.33302V7.54184H7.15305Z" fill="#000" />
+    </svg>
+  ),
+  text: ({ fill = mainColor, width = 24, height = 24 }) => (
+    <svg width={width} height={height} viewBox="0 0 24 24">
+      <path
+        fill={fill}
+        d="M18.5,4L19.66,8.35L18.7,8.61C18.25,7.74 17.79,6.87 17.26,6.43C16.73,6 16.11,6 15.5,6H13V16.5C13,17 13,17.5 13.33,17.75C13.67,18 14.33,18 15,18V19H9V18C9.67,18 10.33,18 10.67,17.75C11,17.5 11,17 11,16.5V6H8.5C7.89,6 7.27,6 6.74,6.43C6.21,6.87 5.75,7.74 5.3,8.61L4.34,8.35L5.5,4H18.5Z"
+      />
     </svg>
   ),
   vue: ({ fill = mainColor, width = 20, height = 20 }) => (
@@ -238,38 +349,7 @@ export const Icons = {
       </g>
     </svg>
   ),
-  link: ({
-    strokeColor = "#CBD5E1",
-    width = 25,
-    height = 25,
-    strokWidth = "1.472",
-    fill = "#CBD5E1",
-  }) => (
-    <svg
-      viewBox="0 0 24 24"
-      width={width}
-      height={height}
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-      <g
-        id="SVGRepo_tracerCarrier"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      ></g>
-      <g id="SVGRepo_iconCarrier">
-        {" "}
-        <path
-          d="M14 7H16C18.7614 7 21 9.23858 21 12C21 14.7614 18.7614 17 16 17H14M10 7H8C5.23858 7 3 9.23858 3 12C3 14.7614 5.23858 17 8 17H10M8 12H16"
-          stroke={strokeColor}
-          strokeWidth={strokWidth}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        ></path>{" "}
-      </g>
-    </svg>
-  ),
+
   db: (strokeColor, strokeWidth) => (
     <svg
       width="25"
@@ -472,7 +552,12 @@ export const Icons = {
     </svg>
   ),
 
-  logo: ({strokeColor = 'white', strokeWidth = 1.5 , width = 43, height=43 }) => (
+  logo: ({
+    strokeColor = "white",
+    strokeWidth = 1.5,
+    width = 43,
+    height = 43,
+  }) => (
     <svg
       width={width}
       height={height}
@@ -498,11 +583,7 @@ export const Icons = {
       ></Path>
     </svg>
   ),
-  fullscreen: ({
-    width = 20,
-    height = 20,
-    fill = mainColor,
-  }) => (
+  fullscreen: ({ width = 20, height = 20, fill = mainColor }) => (
     <svg
       width={width}
       height={height}
@@ -681,10 +762,10 @@ export const Icons = {
       <path fill="#cbd5e1" d="M18 6v6h-2V8h-4V6h6zM12 18H6v-6h2v4h4v2z" />
     </svg>
   ),
-  stNote: (strokeColor, strokeWidth) => (
+  stNote: (strokeColor, strokeWidth, width = 25, height = 24) => (
     <svg
-      width="25"
-      height="24"
+      width={width}
+      height={height}
       viewBox="0 0 25 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -702,6 +783,40 @@ export const Icons = {
       />
     </svg>
   ),
+  showInFrontEnd: ({
+    width = 18,
+    height = 18,
+    strokWidth = 2,
+    strokeColor = mainColor,
+  }) => (
+    <svg
+      width={width}
+      height={height}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+    >
+      <Path
+        d="M9.25 14.523 23.25 0.75"
+        fill="none"
+        stroke={strokeColor}
+        // strokeLinecap="round"
+        // strokeLinejoin="round"
+        strokeWidth={strokWidth}
+      ></Path>
+      <Path
+        d="m23.25 8.621 0 -7.871 -8 0"
+        fill="none"
+        stroke={strokeColor}
+        strokeWidth={strokWidth}
+      ></Path>
+      <Path
+        d="M12.125 5.75h-10.5a0.875 0.875 0 0 0 -0.875 0.875v15.75a0.875 0.875 0 0 0 0.875 0.875h15.75a0.875 0.875 0 0 0 0.875 -0.875v-10.5"
+        fill="none"
+        stroke={strokeColor}
+        strokeWidth={strokWidth}
+      ></Path>
+    </svg>
+  ),
   git: (strokeColor, strokeWidth) => (
     <svg
       width="25"
@@ -717,12 +832,15 @@ export const Icons = {
       />
     </svg>
   ),
-  headphone: (strokeColor, strokeWidth) => (
+  headphone: (strokeColor, strokeWidth, width = 25, height = 25) => (
     <svg
-      width="25"
-      height="24"
+      width={width}
+      height={height}
       viewBox="0 0 25 24"
       fill="none"
+      style={{
+        fill: "none",
+      }}
       xmlns="http://www.w3.org/2000/svg"
     >
       <Path
@@ -730,6 +848,23 @@ export const Icons = {
         stroke={strokeColor}
         strokeWidth={strokeWidth}
       />
+    </svg>
+  ),
+  iframe: ({fill = mainColor , width=25 , height=25}) => (
+    <svg fill={fill} width={width} height={height} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+      <g
+        id="SVGRepo_tracerCarrier"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      ></g>
+      <g id="SVGRepo_iconCarrier">
+        {" "}
+        <path
+          fillRule="evenodd"
+          d="M13,20 L20,20 L20,4 L4,4 L4,11 L11,11 C12.1045695,11 13,11.8954305 13,13 L13,20 Z M11,20 L11,13 L4,13 L4,20 L11,20 Z M4,2 L20,2 C21.1045695,2 22,2.8954305 22,4 L22,20 C22,21.1045695 21.1045695,22 20,22 L4,22 C2.8954305,22 2,21.1045695 2,20 L2,4 C2,2.8954305 2.8954305,2 4,2 Z"
+        ></path>{" "}
+      </g>
     </svg>
   ),
   setting: (strokeColor, strokeWidth, width = 25, height = 25) => (
@@ -820,7 +955,13 @@ export const Icons = {
       />
     </svg>
   ),
-  prush: ({fill=mainColor , width = 24 , height=24 , strokeColor = mainColor, strokeWidth }) => (
+  prush: ({
+    fill = mainColor,
+    width = 24,
+    height = 24,
+    strokeColor = mainColor,
+    strokeWidth,
+  }) => (
     <svg
       viewBox="0 0 24 24"
       height={height}
@@ -969,10 +1110,15 @@ export const Icons = {
       />
     </svg>
   ),
-  export: (strokeColor = "#64748B", strokeWidth, fill) => (
+  export: (
+    strokeColor = "#64748B",
+    strokeWidth = 2,
+    width = 24,
+    height = 24
+  ) => (
     <svg
-      width="24px"
-      height="24px"
+      width={width}
+      height={height}
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -988,17 +1134,42 @@ export const Icons = {
         <Path
           d="M12 3V16M12 16L16 11.625M12 16L8 11.625"
           stroke={strokeColor}
-          strokeWidth="2"
+          strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeLinejoin="round"
         ></Path>{" "}
         <Path
           d="M15 21H9C6.17157 21 4.75736 21 3.87868 20.1213C3 19.2426 3 17.8284 3 15M21 15C21 17.8284 21 19.2426 20.1213 20.1213C19.8215 20.4211 19.4594 20.6186 19 20.7487"
           stroke={strokeColor}
-          strokeWidth="2"
+          strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeLinejoin="round"
         ></Path>{" "}
+      </g>
+    </svg>
+  ),
+  looper: ({
+    fill = "#ffffff",
+    strokeColor = "#ffffff",
+    width = 24,
+    height = 24,
+  }) => (
+    <svg
+      fill={fill}
+      width={width}
+      height={height}
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+      stroke={strokeColor}
+    >
+      <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+      <g
+        id="SVGRepo_tracerCarrier"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      ></g>
+      <g id="SVGRepo_iconCarrier">
+        <path d="M18,7a7.669,7.669,0,0,0-6,3.19A7.669,7.669,0,0,0,6,7C2.313,7,1,9.583,1,12c0,3.687,2.583,5,5,5a7.669,7.669,0,0,0,6-3.19A7.669,7.669,0,0,0,18,17c2.417,0,5-1.313,5-5C23,9.583,21.687,7,18,7ZM6,15a2.689,2.689,0,0,1-3-3A2.689,2.689,0,0,1,6,9c2.579,0,4.225,2.065,4.837,3C10.225,12.935,8.579,15,6,15Zm12,0c-2.579,0-4.225-2.065-4.837-3,.612-.935,2.258-3,4.837-3a2.689,2.689,0,0,1,3,3A2.689,2.689,0,0,1,18,15Z"></path>
       </g>
     </svg>
   ),
@@ -1123,6 +1294,38 @@ export const Icons = {
       </g>
     </svg>
   ),
+  splitter: ({
+    width = 20,
+    height = 20,
+    fill = mainColor,
+    strokeWidth = 2,
+    strokeColor = mainColor,
+  }) => (
+    <svg
+      viewBox="0 0 24 24"
+      width={width}
+      height={height}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+      <g
+        id="SVGRepo_tracerCarrier"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      ></g>
+      <g id="SVGRepo_iconCarrier">
+        {" "}
+        <path
+          d="M8.15179 15.85L21 4M12.3249 12L8.15 8.15M21 20L15 14.4669M9 6C9 7.65685 7.65685 9 6 9C4.34315 9 3 7.65685 3 6C3 4.34315 4.34315 3 6 3C7.65685 3 9 4.34315 9 6ZM9 18C9 19.6569 7.65685 21 6 21C4.34315 21 3 19.6569 3 18C3 16.3431 4.34315 15 6 15C7.65685 15 9 16.3431 9 18Z"
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        ></path>{" "}
+      </g>
+    </svg>
+  ),
   fonts: ({
     width = "",
     height = "",
@@ -1148,22 +1351,27 @@ export const Icons = {
       <g id="SVGRepo_iconCarrier">
         <defs></defs>
         <Path
+          stroke={strokeColor}
           strokeWidth={strokeWidth}
           d="m6.5694,40.1336c1.7892-10.5623,6.118-34.2263,10.1582-34.6303s5.8294,36.9968,5.8294,36.9968"
         ></Path>
         <Path
+          stroke={strokeColor}
           strokeWidth={strokeWidth}
           d="m6.5694,23.6842c4.6751-2.1355,18.9313-6.4643,24.3567-6.4643"
         ></Path>
         <Path
+          stroke={strokeColor}
           strokeWidth={strokeWidth}
           d="m34.4131,24.382c-3.1985-4.7957-7.0078-2.1985-7.1809,2.6498-.1732,4.8482,4.6831,4.668,6.4723,1.2627"
         ></Path>
         <Path
+          stroke={strokeColor}
           strokeWidth={strokeWidth}
           d="m35.024,21.8372c-1.1543,4.3288-3.3476,15.2374.5195,15.9877s5.8872-7.9938,5.8872-7.9938"
         ></Path>
         <Path
+          stroke={strokeColor}
           strokeWidth={strokeWidth}
           d="m40.2154,13.1202c.207-.6403-.1442-1.3273-.7846-1.5343-.4216-.1363-.8625-.0295-1.1742.2413-.0942-.4021-.3891-.7468-.8107-.8831-.6403-.207-1.3273.1442-1.5343.7846-.0473.1464-.0642.295-.0564.44.0268,1.2267,1.3263,2.9835,1.3263,2.9835,0,0,2.082-.6635,2.8219-1.6423.0912-.113.1646-.2433.2119-.3897Z"
         ></Path>
@@ -1258,15 +1466,21 @@ export const Icons = {
       </g>
     </svg>
   ),
-  copy: ({ width, height, strokeColor, strokWidth, fill }) => {
+  copy: ({
+    width = 20,
+    height = 20,
+    strokeColor = "#ffffff",
+    strokWidth,
+    fill,
+  }) => {
     return (
       <svg
-        width={width || 20}
-        height={height || 20}
+        width={width}
+        height={height}
         viewBox="0 0 24 24"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        stroke="#ffffff"
+        stroke={strokeColor}
       >
         <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
         <g
@@ -1281,14 +1495,14 @@ export const Icons = {
             clipRule="evenodd"
             d="M21 8C21 6.34315 19.6569 5 18 5H10C8.34315 5 7 6.34315 7 8V20C7 21.6569 8.34315 23 10 23H18C19.6569 23 21 21.6569 21 20V8ZM19 8C19 7.44772 18.5523 7 18 7H10C9.44772 7 9 7.44772 9 8V20C9 20.5523 9.44772 21 10 21H18C18.5523 21 19 20.5523 19 20V8Z"
             fill="#ffffff"
-            justFillOnHover={true}
+            // justFillOnHover={true}
             strokeWidth={strokWidth}
             stroke={strokeColor}
           ></path>{" "}
           <path
             d="M6 3H16C16.5523 3 17 2.55228 17 2C17 1.44772 16.5523 1 16 1H6C4.34315 1 3 2.34315 3 4V18C3 18.5523 3.44772 19 4 19C4.55228 19 5 18.5523 5 18V4C5 3.44772 5.44772 3 6 3Z"
             fill={"#fff"}
-            justFillOnHover={true}
+            // justFillOnHover={true}
             stroke={strokeColor}
             strokeWidth={strokWidth}
           ></path>{" "}
@@ -1318,7 +1532,7 @@ export const Icons = {
           clipRule="evenodd"
           d="M12 0C11.2347 0 10.6293 0.125708 10.1567 0.359214C9.9845 0.44429 9.82065 0.544674 9.68861 0.62717L9.59036 0.688808C9.49144 0.751003 9.4082 0.803334 9.32081 0.853848C9.09464 0.984584 9.00895 0.998492 9.00053 0.999859C8.99983 0.999973 9.00019 0.999859 9.00053 0.999859C7.89596 0.999859 7 1.89543 7 3H6C4.34315 3 3 4.34315 3 6V20C3 21.6569 4.34315 23 6 23H18C19.6569 23 21 21.6569 21 20V6C21 4.34315 19.6569 3 18 3H17C17 1.89543 16.1046 1 15 1C15.0003 1 15.0007 1.00011 15 1C14.9916 0.998633 14.9054 0.984584 14.6792 0.853848C14.5918 0.80333 14.5086 0.751004 14.4096 0.688804L14.3114 0.62717C14.1793 0.544674 14.0155 0.44429 13.8433 0.359214C13.3707 0.125708 12.7653 0 12 0ZM16.7324 5C16.3866 5.5978 15.7403 6 15 6H9C8.25972 6 7.61337 5.5978 7.26756 5H6C5.44772 5 5 5.44772 5 6V20C5 20.5523 5.44772 21 6 21H18C18.5523 21 19 20.5523 19 20V6C19 5.44772 18.5523 5 18 5H16.7324ZM11.0426 2.15229C11.1626 2.09301 11.4425 2 12 2C12.5575 2 12.8374 2.09301 12.9574 2.15229C13.0328 2.18953 13.1236 2.24334 13.2516 2.32333L13.3261 2.37008C13.43 2.43542 13.5553 2.51428 13.6783 2.58539C13.9712 2.75469 14.4433 3 15 3V4H9V3C9.55666 3 10.0288 2.75469 10.3217 2.58539C10.4447 2.51428 10.57 2.43543 10.6739 2.37008L10.7484 2.32333C10.8764 2.24334 10.9672 2.18953 11.0426 2.15229Z"
           fill={fill || "#ffffff"}
-          justFillOnHover={true}
+          // justFillOnHover={true}
           strokeWidth={strokWidth}
           stroke={strokeColor}
         ></path>{" "}
@@ -2171,6 +2385,7 @@ export const Icons = {
     strokeWidth,
     width = "24",
     height = "24",
+    fill = mainColor,
   }) => (
     <svg
       width={width}
@@ -2186,7 +2401,161 @@ export const Icons = {
       ></Path>
     </svg>
   ),
-
+  motion: ({ width = 24, height = 24, fill = mainColor }) => (
+    <svg
+      fill={fill}
+      width={width}
+      height={height}
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+      <g
+        id="SVGRepo_tracerCarrier"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      ></g>
+      <g id="SVGRepo_iconCarrier">
+        <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm-1 16v-5H7l6-7v5h4l-6 7z"></path>
+      </g>
+    </svg>
+  ),
+  play: ({ fill = mainColor || "#00e800", width = 24, height = 24 }) => (
+    <svg
+      viewBox="0 0 24 24"
+      width={width}
+      height={height}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+      <g
+        id="SVGRepo_tracerCarrier"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      ></g>
+      <g id="SVGRepo_iconCarrier">
+        {" "}
+        <path
+          d="M21.4086 9.35258C23.5305 10.5065 23.5305 13.4935 21.4086 14.6474L8.59662 21.6145C6.53435 22.736 4 21.2763 4 18.9671L4 5.0329C4 2.72368 6.53435 1.26402 8.59661 2.38548L21.4086 9.35258Z"
+          fill={fill}
+        ></path>{" "}
+      </g>
+    </svg>
+  ),
+  pause: ({ fill = mainColor, width = 24, height = 24 }) => (
+    <svg
+      viewBox="0 0 24 24"
+      width={width}
+      height={height}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+      <g
+        id="SVGRepo_tracerCarrier"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      ></g>
+      <g id="SVGRepo_iconCarrier">
+        {" "}
+        <path
+          d="M2 6C2 4.11438 2 3.17157 2.58579 2.58579C3.17157 2 4.11438 2 6 2C7.88562 2 8.82843 2 9.41421 2.58579C10 3.17157 10 4.11438 10 6V18C10 19.8856 10 20.8284 9.41421 21.4142C8.82843 22 7.88562 22 6 22C4.11438 22 3.17157 22 2.58579 21.4142C2 20.8284 2 19.8856 2 18V6Z"
+          fill={fill}
+        ></path>{" "}
+        <path
+          d="M14 6C14 4.11438 14 3.17157 14.5858 2.58579C15.1716 2 16.1144 2 18 2C19.8856 2 20.8284 2 21.4142 2.58579C22 3.17157 22 4.11438 22 6V18C22 19.8856 22 20.8284 21.4142 21.4142C20.8284 22 19.8856 22 18 22C16.1144 22 15.1716 22 14.5858 21.4142C14 20.8284 14 19.8856 14 18V6Z"
+          fill={fill}
+        ></path>{" "}
+      </g>
+    </svg>
+  ),
+  resume: ({ fill = mainColor, width = 24, height = 24 }) => (
+    <svg
+      viewBox="0 0 15 15"
+      width={width}
+      height={height}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+      <g
+        id="SVGRepo_tracerCarrier"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      ></g>
+      <g id="SVGRepo_iconCarrier">
+        {" "}
+        <path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M3.04995 2.74995C3.04995 2.44619 2.80371 2.19995 2.49995 2.19995C2.19619 2.19995 1.94995 2.44619 1.94995 2.74995V12.25C1.94995 12.5537 2.19619 12.8 2.49995 12.8C2.80371 12.8 3.04995 12.5537 3.04995 12.25V2.74995ZM5.73333 2.30776C5.57835 2.22596 5.39185 2.23127 5.24177 2.32176C5.0917 2.41225 4.99995 2.57471 4.99995 2.74995V12.25C4.99995 12.4252 5.0917 12.5877 5.24177 12.6781C5.39185 12.7686 5.57835 12.7739 5.73333 12.6921L14.7333 7.94214C14.8973 7.85559 15 7.68539 15 7.49995C15 7.31452 14.8973 7.14431 14.7333 7.05776L5.73333 2.30776ZM5.99995 11.4207V3.5792L13.4287 7.49995L5.99995 11.4207Z"
+          fill={fill}
+        ></path>{" "}
+      </g>
+    </svg>
+  ),
+  x: ({ fill = mainColor, width = 24, height = 24 }) => (
+    <svg
+      viewBox="0 0 16 16"
+      xmlns="http://www.w3.org/2000/svg"
+      width={width}
+      height={height}
+      fill={fill}
+    >
+      <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+      <g
+        id="SVGRepo_tracerCarrier"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      ></g>
+      <g id="SVGRepo_iconCarrier">
+        {" "}
+        <path
+          d="m 3 2 c -0.265625 0 -0.519531 0.105469 -0.707031 0.292969 c -0.390625 0.390625 -0.390625 1.023437 0 1.414062 l 4.292969 4.292969 l -4.292969 4.292969 c -0.390625 0.390625 -0.390625 1.023437 0 1.414062 s 1.023437 0.390625 1.414062 0 l 4.292969 -4.292969 l 4.292969 4.292969 c 0.390625 0.390625 1.023437 0.390625 1.414062 0 s 0.390625 -1.023437 0 -1.414062 l -4.292969 -4.292969 l 4.292969 -4.292969 c 0.390625 -0.390625 0.390625 -1.023437 0 -1.414062 c -0.1875 -0.1875 -0.441406 -0.292969 -0.707031 -0.292969 s -0.519531 0.105469 -0.707031 0.292969 l -4.292969 4.292969 l -4.292969 -4.292969 c -0.1875 -0.1875 -0.441406 -0.292969 -0.707031 -0.292969 z m 0 0"
+          fill={fill}
+        ></path>{" "}
+      </g>
+    </svg>
+  ),
+  reverse: ({
+    fill = mainColor,
+    strokeColor = mainColor,
+    width = 24,
+    height = 24,
+  }) => (
+    <svg
+      viewBox="0 0 21 21"
+      xmlns="http://www.w3.org/2000/svg"
+      width={width}
+      height={height}
+      fill={fill}
+    >
+      <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+      <g
+        id="SVGRepo_tracerCarrier"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      ></g>
+      <g id="SVGRepo_iconCarrier">
+        {" "}
+        <g
+          fill="none"
+          fillRule="evenodd"
+          stroke={strokeColor}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          transform="translate(3 3)"
+        >
+          {" "}
+          <path d="m6.5 6.5-4 4 4 4" strokeWidth={1.5}></path>{" "}
+          <path d="m14.5 10.5h-12" strokeWidth={1.5}></path>{" "}
+          <path d="m8.5.5 4 4-4 4" strokeWidth={1.5}></path>{" "}
+          <path d="m12.5 4.5h-12" strokeWidth={1.5}></path>{" "}
+        </g>{" "}
+      </g>
+    </svg>
+  ),
   alignSelfCenter: ({
     strokeColor,
     strokeWidth,

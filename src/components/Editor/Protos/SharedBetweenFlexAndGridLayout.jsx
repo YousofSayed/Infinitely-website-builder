@@ -12,53 +12,56 @@ import { getIconForMultiChoice } from "../../../helpers/functions";
 import { Select } from "./Select";
 import { SelectStyle } from "./SelectStyle";
 import { Icons } from "../../Icons/Icons";
+import { FitTitle } from "./FitTitle";
 
-export const SharedBetweenFlexAndGridLayout = () => {
+export const SharedBetweenFlexAndGridLayout = ({ isFlex = false }) => {
   return (
     <section className="flex flex-col gap-3">
-    
       <section className="flex flex-col gap-2">
-        <P>Align items: </P>
+        <FitTitle>Align items </FitTitle>
         <MultiChoice
           cssProp="align-items"
+          rotate={isFlex}
           choices={[
-            {choice:'start' , Icon:Icons.alignSelfStart},
-            {choice:'center' , Icon:Icons.alignSelfCenter},
-            {choice:'end' , Icon:Icons.alignSelfEnd},
-            {choice:'stretch' , Icon:Icons.alignStrech},
-            {choice:'baseline' , Icon:Icons.alignBaseline},
+            { choice: "start", Icon: Icons.alignSelfStart },
+            { choice: "center", Icon: Icons.alignSelfCenter },
+            { choice: "end", Icon: Icons.alignSelfEnd },
+            { choice: "stretch", Icon: Icons.alignStrech },
+            { choice: "baseline", Icon: Icons.alignBaseline },
           ]}
         />
       </section>
 
       <section className="flex flex-col gap-2">
-        <P>Justify content: </P>
+        <FitTitle>Justify content </FitTitle>
         <MultiChoice
           cssProp="justify-content"
+          rotate={isFlex}
           choices={[
-            {choice:'start' , Icon:Icons.justifyStart},
-            {choice:'center' , Icon:Icons.justifyCenter},
-            {choice:'end' , Icon:Icons.justifyEnd},
-            {choice:'space-between' , Icon:Icons.justifyBetween},
-            {choice:'space-evenly' , Icon:Icons.justifyEvenly},
+            { choice: "start", Icon: Icons.justifyStart },
+            { choice: "center", Icon: Icons.justifyCenter },
+            { choice: "end", Icon: Icons.justifyEnd },
+            { choice: "space-between", Icon: Icons.justifyBetween },
+            { choice: "space-evenly", Icon: Icons.justifyEvenly },
           ]}
         />
       </section>
 
       <section className="flex flex-col gap-2">
-        <P>Algin self: </P>
+        <FitTitle>Algin self </FitTitle>
         <MultiChoice
           cssProp="align-self"
+          rotate={isFlex}
           choices={[
-            {choice:'start' , Icon:Icons.alignSelfStart},
-            {choice:'center' , Icon:Icons.alignSelfEnd},
-            {choice:'end' , Icon:Icons.alignSelfCenter},
-            {choice:'stretch' , Icon:Icons.alignSelfStretch},
-            {choice:'space-evenly' , Icon:Icons.justifyEvenly},
+            { choice: "start", Icon: Icons.alignSelfStart },
+            { choice: "center", Icon: Icons.alignSelfEnd },
+            { choice: "end", Icon: Icons.alignSelfCenter },
+            { choice: "stretch", Icon: Icons.alignSelfStretch },
+            { choice: "space-evenly", Icon: Icons.justifyEvenly },
           ]}
         />
       </section>
-     
+
       {/* <SelectStyle
         splitHyphen={false}
         label="align items"

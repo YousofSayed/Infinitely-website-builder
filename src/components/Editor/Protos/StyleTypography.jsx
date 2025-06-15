@@ -42,7 +42,8 @@ export const StyleTypography = memo(() => {
         currentEl={currentEl}
         keywords={cssFonts
           .concat(customFonts)
-          .map((font) => font.split(/\.\w+/gi).join("").trim())}
+          .map((font) => font.split(/\.\w+/gi).join("").trim())
+        }
       />
       <SelectStyle
         label="weight"

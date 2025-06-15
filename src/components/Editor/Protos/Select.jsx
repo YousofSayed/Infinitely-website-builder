@@ -16,6 +16,7 @@ import { useRecoilValue, useSetRecoilState } from "recoil";
 import { popoverRefState, popoverState } from "../../../helpers/atoms";
 import { Popover } from "../Popover";
 import { CodeEditor } from "./CodeEditor";
+import { FitTitle } from "./FitTitle";
 
 /**
  *
@@ -57,6 +58,7 @@ export const Select = ({
   ignoreCurlyBrackets = false,
   splitHyphen = false,
 }) => {
+  keywords = keywords.map((keyword) => new String(keyword).toString());
   const [showMenu, setMenu] = useState(false);
   const [newKeywords, setNewKeywords] = useState([...keywords]);
   const [isPending, setTransition] = useTransition();
@@ -71,7 +73,6 @@ export const Select = ({
   const editorRef = useRef();
   const btnRef = useRef();
   const popoverRef = useRecoilValue(popoverRefState);
-
 
   useEffect(() => {
     if (
@@ -137,9 +138,9 @@ export const Select = ({
 
   const showMenuCallback = () => {
     // isTextarea ? editorRef.current.focus() : inputRef.current.focus();
-    setTransition(() => {
-      setMenu(!showMenu);
-    });
+    // setTransition(() => {
+    // });
+    setMenu(!showMenu);
   };
 
   function findIndex(keywords = [], serachvalue) {
@@ -266,62 +267,22 @@ export const Select = ({
     // showPopover(true);
   };
 
-  // const setShowPopover = () => {
-  //   showPopover({
-  //     element: selectRef,
-  //     isTextarea,
-  //     content: (
-  //       <>
-  //         {" "}
-  //         <Menu
-  //           // key={uniqueID()}
-  //           isDynamic={isTextarea}
-  //           keywords={newKeywords}
-  //           menuRef={menuRef}
-  //           choosenKeyword={choosenKeyword}
-  //           currentChoose={currentChoose}
-  //           innerStt={value}
-  //           onInput={(ev) => {
-  //             setValue(ev.target.value);
-  //             onInput(ev.target.value);
-  //             onAll(ev.target.value);
-  //             filterKeywords(ev.target.value.trim());
-  //           }}
-  //           onKeyDown={(ev) => {
-  //             handleChooses(ev);
-  //           }}
-  //           onItemClicked={(ev, keyword, i) => {
-  //             ev.stopPropagation();
-  //             const nkeyw = splitHyphen ? keyword.split("-")[0] : keyword;
-  //             setValue(nkeyw);
-  //             onAll(nkeyw);
-  //             onItemClicked(nkeyw, i);
-  //             setKeyword(nkeyw);
-  //             setMenu(false);
-  //             inputRef.current.focus();
-  //           }}
-  //         />
-  //       </>
-  //     ),
-  //   });
-  // };
-
   return (
     <section
       ref={selectRef}
       className={`w-full p-1  h-fit rounded-lg flex ${
         wrap && "flex-wrap gap-3 py-1 pl-2"
-      }  justify-between gap-3 items-center  ${
-        className ? className : "bg-slate-800"
-      } h-full`}
+      }  gap-2  ${className ? className : "bg-slate-800"} h-full flex ${label ? `p-1` : `items-center p-1 `}`}
     >
       {icon}
-      {label ? <P>{label.replaceAll(/(\s+)?\:/ig ,'')} : </P> : null}
+      {label ? (
+        <FitTitle className="capitalize flex items-center justify-center overflow-hidden text-ellipsis custom-font-size w-[30%!important] flex-shrink-0 ">{label.replaceAll(/(\s+)?\:/gi, "")} </FitTitle>
+      ) : null}
       <div
-        className={`h-full ${label ? "w-[55%]" : "w-full"} ${
+        className={`h-full w-full ${
           isRelative ? "relative" : ""
-        }  flex items-center flex-nowrap justify-center  bg-slate-900  rounded-lg ${
-          containerClassName ? containerClassName : ""
+        }  flex items-center flex-nowrap justify-center    rounded-lg ${
+          containerClassName ? containerClassName : "bg-slate-900"
         }`}
         onClick={(ev) => {
           selectRef.current.click();
@@ -340,11 +301,11 @@ export const Select = ({
         <input
           value={value}
           ref={inputRef}
-          className={`w-full h-full  font-semibold   focus:border-blue-600  rounded-lg   p-2   outline-none text-white ${
+          className={`w-full h-full  font-semibold   focus:border-blue-600  rounded-lg   px-2 py-3   outline-none text-white ${
             preventInput ? "pointer-events-none" : ""
           } ${inputClassName ? inputClassName : "bg-slate-900"} `}
           type="text"
-          placeholder={placeholder}
+          placeholder={placeholder || label}
           onClick={(ev) => {
             ev.stopPropagation();
             selectRef.current.click();
@@ -363,7 +324,7 @@ export const Select = ({
 
             // showPopover({ element: selectRef, isTextarea });
             // setShowPopover();
-            isCode && showMenuCallback()
+            isCode && showMenuCallback();
           }}
           onInput={(ev) => {
             setValue(ev.target.value);
@@ -396,9 +357,9 @@ export const Select = ({
             if (index <= -1) {
               choosenKeyword.current = keywords[index];
             } else {
-              choosenKeyword.current = '';
+              choosenKeyword.current = "";
             }
-            setNewKeywords(keywords)
+            setNewKeywords(keywords);
             // filterKeywords(value || "", true);
             showMenuCallback();
             // setShowPopover();
@@ -418,7 +379,15 @@ export const Select = ({
             targetRef={selectRef}
             isTextarea={isTextarea}
             isCode={isCode}
-            width={isCode ? 600 : isTextarea ? 600 : 300}
+            width={
+              isCode
+                ? 600
+                : isTextarea
+                ? 600
+                : selectRef.current.clientWidth <= 300
+                ? 300
+                : selectRef.current.clientWidth
+            }
             height={isCode ? Math.trunc(window.innerHeight * (45 / 100)) : 0}
             isOpen={showMenu}
             setIsOpen={setMenu}
@@ -494,6 +463,7 @@ export const Select = ({
                 isTemplateEngine={isTemplateEngine}
                 allowCmdsContext={allowCmdsContext}
                 allowRestAPIModelsContext={allowRestAPIModelsContext}
+                showEditorState={showMenu}
                 props={{ ...codeProps }}
               />
             )}

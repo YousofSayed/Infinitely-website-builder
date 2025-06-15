@@ -19,6 +19,7 @@ import {
 } from "../../helpers/atoms";
 import {
   buildScriptFromCmds,
+  getCurrentPageName,
   getProjectData,
   getProjectSettings,
 } from "../../helpers/functions";
@@ -27,9 +28,16 @@ import { PagesSelector } from "./PagesSelector";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
 import { open_code_manager_modal } from "../../constants/InfinitelyCommands";
-import { current_project_id } from "../../constants/shared";
+import {
+  current_page_id,
+  current_project_id,
+  preview_url,
+} from "../../constants/shared";
 import { infinitelyWorker } from "../../helpers/infinitelyWorker";
 import { db } from "../../helpers/db";
+import { ScrollableToolbar } from "../Protos/ScrollableToolbar";
+import { Hr } from "../Protos/Hr";
+import { useNavigate } from "react-router-dom";
 
 export const HomeHeader = memo(() => {
   const editor = useEditorMaybe();
@@ -41,6 +49,7 @@ export const HomeHeader = memo(() => {
   const setPreviewContent = useSetRecoilState(previewContentState);
   const setCurrentEl = useSetRecoilState(currentElState);
   const cmds = useRecoilValue(cmdsBuildState);
+  const navigate = useNavigate();
   const [dimansions, setDimaonsion] = useState({
     width: "",
     height: "",
@@ -65,38 +74,13 @@ export const HomeHeader = memo(() => {
     editor.DeviceManager.select(customDevice.current);
   };
 
-  const test = async () => {
-    const projectData = await getProjectData();
-    const res = await await fetch("Frame 4(1).png");
-
-    const blob = res.blob();
-
-    // async function findMatchingBlob(blobsArray, target) {
-    //   const targetText = await target.text();
-    //   for (const blob of blobsArray) {
-    //     if (await blob.text() === targetText) return blob;
-    //   }
-    //   return null;
-    // }
-    console.log(
-      "File is : ",
-      res,
-      await blob,
-      new URL("https://infinitely/Frame 4(1).png").pathname.toLowerCase(),
-      encodeURIComponent("Frame 4(1).png")
-      //  await findMatchingBlob(projectData.assets.map(asset=>asset.file) , file)
-      // await Promise.all(
-
-      // )
-    );
-  };
-
   return (
-    <header className="w-full h-[60px] zoom-80 px-2 bg-slate-900  border-b-[1.5px]  border-slate-400    flex items-center justify-between gap-5">
-      <ul className="flex gap-[25px] w-[90%] h-full flex-grow items-center">
+    <header className="w-full h-[60px] [&_svg]:w-[18px] [&_svg]:h-[18px] zoom-80 px-2 bg-slate-900  border-b-[1.5px]  border-slate-400    flex items-center justify-between gap-5">
+      <ScrollableToolbar className="w-[43.5%] h-full items-center " space={3}>
+        {/* <ul className="flex gap-[25px] flex-shrink  h-full  items-center"> */}
         <Li
           title="desktop size"
-          className="flex-shrink-0"
+          className="max-lg:flex-shrink-0"
           onClick={(ev) => {
             editor.setDevice("Desktop");
             // setCurrentEl({ currentEl: editor?.getSelected()?.getEl() });
@@ -106,7 +90,7 @@ export const HomeHeader = memo(() => {
         />
         <Li
           title="tablet size"
-          className="flex-shrink-0"
+          className="max-lg:flex-shrink-0"
           onClick={(ev) => {
             editor.setDevice("tablet");
             // setCurrentEl({ currentEl: editor?.getSelected()?.getEl() });
@@ -117,7 +101,7 @@ export const HomeHeader = memo(() => {
 
         <Li
           title="mobile size"
-          className="flex-shrink-0"
+          className="max-lg:flex-shrink-0"
           onClick={(ev) => {
             editor.setDevice("mobile");
             // setCurrentEl({ currentEl: editor?.getSelected()?.getEl() });
@@ -126,10 +110,10 @@ export const HomeHeader = memo(() => {
           icon={Icons.mopile}
         />
 
-        <li className="flex items-center h-[70%] gap-4">
+        <li className="flex items-center h-[65%] gap-4 max-lg:flex-shrink-0">
           <Input
             placeholder="Width"
-            className="bg-slate-800 p-1 w-[100px]  h-full font-bold text-sm"
+            className="bg-slate-800 p-1 w-[70px]  h-full font-bold text-sm max-lg:flex-shrink-0"
             value={dimansions.width}
             onInput={(ev) => {
               transformToNumInput(ev.target);
@@ -142,7 +126,7 @@ export const HomeHeader = memo(() => {
           <Input
             value={dimansions.height}
             placeholder="Height"
-            className="bg-slate-800 w-[100px] p-1   h-full font-bold text-sm"
+            className="bg-slate-800 w-[70px] p-1   h-full font-bold text-sm max-lg:flex-shrink-0 "
             onInput={(ev) => {
               transformToNumInput(ev.target);
               setCustomDevice("height", ev.target.value);
@@ -152,24 +136,29 @@ export const HomeHeader = memo(() => {
           />
           <PagesSelector />
         </li>
-      </ul>
+        {/* </ul> */}
+      </ScrollableToolbar>
 
+      {/* <Hr/> */}
       {/* <Select
         className="p-[unset] bg-slate-800 max-w-[30%] h-[calc(100%-15px)] "
         containerClassName="bg-slate-800"
         preventInput={true}
         keywords={pages}
       /> */}
+      {/* <ToolbarComponent style={{width:'50%' }} overflowMode="Popup" > */}
 
-      <section className="flex items-center justify-between gap-2  overflow-auto hideScrollBar flex-shrink w-full px-2">
+      {/* <section className="flex items-center  gap-2    w-[59%] px-2"> */}
+      <ScrollableToolbar className=" w-[54%] h-full items-center" space={1}>
         <IframeControllers />
-
+        <Hr />
         {/* <div className="flex items-center justify-between gap-2 h-full w-full"> */}
-        <ul className="flex justify-between w-[40%]  items-center gap-2">
+        <>
           <Li
             onClick={() => {
               editor.runCommand(open_code_manager_modal);
             }}
+            title="Code manager"
             className="flex-shrink-0"
           >
             {Icons.code({ strokWidth: 3 })}
@@ -178,10 +167,33 @@ export const HomeHeader = memo(() => {
             title="preview mode"
             icon={Icons.watch}
             onClick={(ev) => {
+              // localStorage.setItem(preview_url, getCurrentPageName());
+              // window.open(`/preview/${getCurrentPageName()}`, "_blank");
+
               setShowPreview((old) => !old);
             }}
             className="flex-shrink-0"
           />
+
+          <Li
+            title="show in frontend"
+            icon={Icons.showInFrontEnd}
+            isObjectParamsIcon
+            onClick={(ev) => {
+              localStorage.setItem(preview_url, getCurrentPageName());
+              window.open(
+                `/pages/${localStorage.getItem(current_page_id)}.html`,
+                "_blank",
+                // 'width=800,height=600,top=50,left=50,scrollbars=yes,resizable=yes,location=yes,menubar=no,toolbar=no,status=yes,titlebar=yes'
+              );
+              console.log("navigated to frontend");
+
+              // navigate("/preview" , {});
+              // setShowPreview((old) => !old);
+            }}
+            className="flex-shrink-0"
+          />
+
           <Li
             icon={Icons.save}
             title="save"
@@ -198,16 +210,25 @@ export const HomeHeader = memo(() => {
           />
           <Li
             icon={Icons.export}
-            title="download"
+            title="export"
             justHover={true}
             className="flex-shrink-0"
             onClick={async () => {
               const projectId = +localStorage.getItem(current_project_id);
+              const id = toast.loading(
+                <ToastMsgInfo msg={`Loading files , please wait`} />
+              );
+              //  setTimeout(()=>{
+
+              //   toast.done(id)
+              //  },10)
+
               infinitelyWorker.postMessage({
                 command: "exportProject",
                 props: {
                   projectSetting: getProjectSettings().projectSettings,
                   projectId,
+                  toastId: id,
                 },
               });
             }}
@@ -229,11 +250,13 @@ export const HomeHeader = memo(() => {
             fillObjIcon
             title="add blocks"
           />
-        </ul>
+        </>
 
         {/* <Button>Publish</Button> */}
         {/* </div> */}
-      </section>
+      </ScrollableToolbar>
+      {/* </section> */}
+      {/* </ToolbarComponent> */}
     </header>
   );
 });

@@ -13,7 +13,7 @@ export const Size = () => {
     <section className="flex flex-col gap-2 p-2 rounded-lg bg-slate-900">
             <MiniTitle>size</MiniTitle>
 
-      <ul className="flex flex-col gap-2 pb-3 border-b-2 border-b-slate-600">
+      {/* <ul className="flex flex-col gap-2 pb-3 border-b-2 border-b-slate-600"> */}
         {/* <li className='flex items-center justify-between gap-2'> */}
         <Property label="width" cssProp="width" />
         <Property label="height" cssProp="height" />
@@ -29,7 +29,7 @@ export const Size = () => {
         <Property label="Max H" cssProp="max-height" />
         {/* </li> */}
         <Property label="Aspect ratio" cssProp="aspect-ratio" special={true}  />
-      </ul>
+      {/* </ul> */}
       {/* <section className="flex bg-slate-800 flex-col  rounded-lg  py-1">
         <p className="font-bold text-[14px] pl-2 text-slate-300">Overflow: </p>
         <MultiChoice label="overflow" cssProp="overflow" choices={overflowValues} icons={[
@@ -41,8 +41,8 @@ export const Size = () => {
         ]} />
       </section> */}
       <SelectStyle label="overflow" cssProp="overflow" keywords={overflowValues}/>
-      <SelectStyle label="overflow-X" cssProp="overflow-x" keywords={overflowValues}/>
-      <SelectStyle label="overflow-Y" cssProp="overflow-y" keywords={overflowValues}/>
+      <SelectStyle label="overflow X" cssProp="overflow-x" keywords={overflowValues}/>
+      <SelectStyle label="overflow Y" cssProp="overflow-y" keywords={overflowValues}/>
     </section>
   );
 };

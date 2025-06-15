@@ -15,6 +15,7 @@ import {
 } from "../../../helpers/propertyInputHandlers";
 import { useEditor, useEditorMaybe } from "@grapesjs/react";
 import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
+import { FitTitle } from "./FitTitle";
 
 /**
  *
@@ -68,16 +69,16 @@ export const Property = ({
 
   return (
     <section
-      className={`${sectionClassName} flex ${wrap && 'flex-wrap gap-3 py-2'} justify-between   items-center  bg-slate-800 p-1 px-2 rounded-lg`}
+      className={`${sectionClassName} flex ${wrap && 'flex-wrap gap-3 py-2'} gap-2  bg-slate-800 p-1 rounded-lg`}
     >
-      {label ? <P>{label} : </P> : ""}
+      {label ? <FitTitle className="capitalize flex items-center  justify-center custom-font-size w-[30%!important] flex-shrink-0  overflow-hidden text-ellipsis ">{label}  </FitTitle> : ""}
       <input
         className={`${
-          inputClassName ? inputClassName : `${wrap ? 'w-full' : 'w-[55%]'}`
-        } h-full shadow-inner shadow-gray-950  font-semibold bg-slate-900 rounded-lg px-2 py-2 outline-none border-2 border-transparent focus:border-blue-600 transition-colors text-white`}
+          inputClassName ? inputClassName : `${wrap ? 'w-full' : 'w-full'}`
+        } h-full   font-semibold bg-slate-900 rounded-lg px-2 py-2 outline-none border-2 border-transparent focus:border-blue-600 transition-colors text-white`}
         type="text"
         value={val}
-        placeholder={placeholder}
+        placeholder={placeholder || label}
         onFocus={(ev) => {
           onFocus({
             ev,

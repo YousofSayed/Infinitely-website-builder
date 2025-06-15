@@ -11,6 +11,8 @@ import {
 } from "../../constants/shared";
 import { infinitelyWorker } from "../../helpers/infinitelyWorker";
 import { getProjectSettings } from "../../helpers/functions";
+import { useRecoilState } from "recoil";
+import { dbAssetsSwState } from "../../helpers/atoms";
 
 /**
  *
@@ -19,6 +21,7 @@ import { getProjectSettings } from "../../helpers/functions";
  */
 export const Project = ({ project }) => {
   const navigate = useNavigate();
+  const [swAssset, setSwAsset] = useRecoilState(dbAssetsSwState);
   // console.log(project.imgSrc);
 
   return (
@@ -52,9 +55,19 @@ export const Project = ({ project }) => {
       </figure>
       <ul className="flex gap-2 items-center justify-center p-1 bg-slate-950 rounded-lg">
         <Li
-          onClick={() => {
+          onClick={async() => {
             localStorage.setItem(current_project_id, project.id);
-            navigate("/");
+            localStorage.setItem(current_page_id, "index");
+             swAssset.postMessage({
+                  command: "setVar",
+                  props: {
+                    obj: {
+                      projectId:project.id,
+                      projectData: project,
+                    },
+                  },
+                });
+            navigate("/add-blocks");
           }}
         >
           {Icons.edite({ fill: "white", width: "20" })}

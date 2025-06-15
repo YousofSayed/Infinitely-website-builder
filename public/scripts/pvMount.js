@@ -1,6 +1,8 @@
 // console.log("I work ");
 // const app = PetiteVue.createApp()
-let app = PetiteVue.createApp();
+let app = PetiteVue.createApp({
+  $delimiters: ["${", "}"],
+});
 window.parent.addEventListener(
   "pv:mount",
   (
@@ -14,7 +16,10 @@ window.parent.addEventListener(
       // const el = document.querySelector(ev.detail.selector);
       return;
     }
-    !app && (app = PetiteVue.createApp());
+    !app &&
+      (app = PetiteVue.createApp({
+        $delimiters: ["${", "}"],
+      }));
     app.mount(ev.detail.el);
     // _hyperscript.processNode(ev.detail.el);
   }

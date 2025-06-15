@@ -86,29 +86,29 @@ export const PagesSelector = memo(() => {
       return;
     }
     console.log("editor is now on");
+setPageName(localStorage.getItem(current_page_id));
+    // const pageUpdateCallback = async () => {
+    //   console.log("editor is now on from updater");
 
-    const pageUpdateCallback = async () => {
-      console.log("editor is now on from updater");
+    //   setPageName(localStorage.getItem(current_page_id));
+    //   // localStorage.setItem(current_page_id, currentPage.id);
+    // };
 
-      setPageName(localStorage.getItem(current_page_id));
-      // localStorage.setItem(current_page_id, currentPage.id);
-    };
-
-    const windowCallback = (ev) => {
-      console.log("111111111111: details", ev.detail);
-      setPageName(new String(ev.detail.pageName));
-    };
-    // window.addEventListener(InfinitelyEvents.pages.all, pageUpdateCallback);
-    editor.on(InfinitelyEvents.pages.all, pageUpdateCallback);
-    // window.addEventListener(InfinitelyEvents.pages.all, windowCallback);
-    return () => {
-      // window.removeEventListener(
-      //   InfinitelyEvents.pages.all,
-      //   windowCallback
-      // );
-      editor.off(InfinitelyEvents.pages.all, pageUpdateCallback);
-    };
-    // setPageName(localStorage.getItem(current_page_id))
+    // const windowCallback = (ev) => {
+    //   console.log("111111111111: details", ev.detail);
+    //   setPageName(new String(ev.detail.pageName));
+    // };
+    // // window.addEventListener(InfinitelyEvents.pages.all, pageUpdateCallback);
+    // editor.on(InfinitelyEvents.pages.all, pageUpdateCallback);
+    // // window.addEventListener(InfinitelyEvents.pages.all, windowCallback);
+    // return () => {
+    //   // window.removeEventListener(
+    //   //   InfinitelyEvents.pages.all,
+    //   //   windowCallback
+    //   // );
+    //   editor.off(InfinitelyEvents.pages.all, pageUpdateCallback);
+    // };
+    // // setPageName(localStorage.getItem(current_page_id))
   });
 
   const getAndSetAllPages = async () => {

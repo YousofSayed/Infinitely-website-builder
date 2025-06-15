@@ -1,5 +1,5 @@
-document.addEventListener('DOMContentLoaded',()=>{
+// document.addEventListener('DOMContentLoaded',()=>{
     
-})
-navigator.serviceWorker.register('/dbAssets-sw-ifr.js' ,{scope :'/sa'});
-console.error('complllllleettttttttttet');
+// })
+// navigator.serviceWorker.register('../dbAssets-sw-ifr.js' ,{scope :'/'});
+// console.error('complllllleettttttttttet');

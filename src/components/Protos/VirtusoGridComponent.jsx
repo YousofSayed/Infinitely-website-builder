@@ -7,6 +7,8 @@ export const GridComponents = {
       style={{
         display: "grid",
         gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", // Responsive wrapping
+        // gridTemplateRows: "repeat(auto-fill, minmax(40px, 250px))", // Responsive wrapping
+        // height:'100%',
         gap: "10px",
         // padding: "10px", // Add some padding for breathing room
         ...style, // VirtuosoGrid will override height/width as needed

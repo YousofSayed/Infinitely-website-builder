@@ -15,13 +15,16 @@ export const Aside = ({ children, className = "", dir = "left" , style }) => {
 
   return (
     <aside
+    id="main-aside"
     style={style}
       ref={asideRef}
-      className={`${className} relative zoom-80  backdrop-blur-lg  h-full  bg-slate-900 p-2`}
+      className={`${className}  relative backdrop-blur-lg  h-full  bg-slate-900 p-2 flex flex-col   overflow-y-auto hideScrollBar`}
     >
-      <section className="h-full w-full  flex flex-col gap-3  overflow-y-auto hideScrollBar">
+      {/* <section id="" className="h-full w-full  flex flex-col gap-3  overflow-y-auto hideScrollBar">
         {children}
-      </section>
+      </section> */}
+
+      {children}
 
       {/* {!showCustomModal && (
         <PanelResizeHandle

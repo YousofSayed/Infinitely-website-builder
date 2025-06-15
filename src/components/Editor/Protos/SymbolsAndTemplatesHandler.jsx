@@ -23,6 +23,10 @@ import { infinitelyWorker } from "../../../helpers/infinitelyWorker";
 import { Input } from "./Input";
 import { VirtuosoGrid } from "react-virtuoso";
 import { GridComponents } from "../../Protos/VirtusoGridComponent";
+import { Li } from "../../Protos/Li";
+import noData from "../../../assets/images/no-data.svg";
+import { FitTitle } from "./FitTitle";
+import { SmallButton } from "./SmallButton";
 
 export const SymbolsAndTemplatesHandler = ({
   type = "",
@@ -164,41 +168,59 @@ export const SymbolsAndTemplatesHandler = ({
   };
 
   return (
-    <main className="h-full flex flex-col gap-2 ">
-      {showHeader && (
-        <header className="flex p-2 rounded-lg bg-slate-800 gap-2">
+    <main className="h-full flex p-1 flex-col gap-2 ">
+      {showHeader && !!symbols.length && (
+        <header className="flex items-center  rounded-lg  gap-2">
           <Input
             placeholder="Search..."
-            className="bg-slate-950 w-full"
+            className="bg-slate-800 w-full"
             onInput={(ev) => {
               search(ev.target.value);
             }}
           />
 
-          <Button
+          {/* <Button
             onClick={() => {
               deleteAll();
             }}
           >
             {Icons.trash("white")}
             Delete All
-          </Button>
+          </Button> */}
 
-          <Button
+          <SmallButton
+          
+            onClick={() => {
+              deleteAll();
+            }}
+            title="Delete All"
+            className="flex-shrink-0  h-full hover:bg-[crimson!important] bg-slate-800"
+          >
+            {Icons.trash("white")}
+          </SmallButton>
+
+          <SmallButton
+            onClick={() => {
+              exportAll();
+            }}
+            title="Export All"
+            className="flex-shrink-0 h-full bg-slate-800"
+          >
+            {Icons.export("white")}
+          </SmallButton>
+          {/* <Button
             onClick={() => {
               exportAll();
             }}
           >
             {Icons.export("white")}
             Download All
-          </Button>
+          </Button> */}
         </header>
       )}
 
       <section className="h-full w-full ">
-      
-
-        <VirtuosoGrid
+       {!!symbols.length &&  <VirtuosoGrid
           totalCount={symbols.length}
           components={GridComponents}
           itemClassName="p-[unset!important]"
@@ -210,24 +232,28 @@ export const SymbolsAndTemplatesHandler = ({
                 key={i}
                 className="p-2 bg-slate-800 max-h-[200px] rounded-lg flex justify-between items-center  gap-3"
               >
-                <section className="bg-slate-900 flex gap-2 items-center  px-2 w-full rounded-md h-full">
+                {/* <section className="bg-slate-900 flex gap-2 items-center  px-2 w-full rounded-md h-full">
                   {" "}
-                  <figure
+                 
+                </section> */}
+
+                <FitTitle className="flex gap-2 items-center w-full justify-center">
+                   <figure
                     className=" h-full py-2 flex justify-center items-center rounded-lg"
                     dangerouslySetInnerHTML={{ __html: symbol.media }}
                   >
                     {/* <img src={URL.createObjectURL(symbol.media)} alt="" /> */}
                   </figure>
-                  <h1 className="font-semibold capitalize text-slate-200 text-lg custom-font-size first-letter:text-blue-400">
+                  <span className="font-semibold capitalize text-slate-200 text-[14px] ">
                     {symbol.name}
-                  </h1>
-                </section>
+                  </span>
+                </FitTitle>
 
                 {/* <section>
     </section> */}
                 <section className="flex gap-2">
                   {showDeleteBtn && (
-                    <Button
+                    <SmallButton
                       title={"delete"}
                       className="p-2 bg-slate-900 hover:bg-blue-600 transition-all"
                       onClick={() => {
@@ -235,11 +261,11 @@ export const SymbolsAndTemplatesHandler = ({
                       }}
                     >
                       {Icons.trash("white")}
-                    </Button>
+                    </SmallButton>
                   )}
 
                   {showDownloadBtn && (
-                    <Button
+                    <SmallButton
                       title={"export as json"}
                       className="p-2 bg-slate-900 hover:bg-blue-600 transition-all"
                       onClick={() => {
@@ -247,7 +273,7 @@ export const SymbolsAndTemplatesHandler = ({
                       }}
                     >
                       {Icons.export("white")}
-                    </Button>
+                    </SmallButton>
                   )}
 
                   {children}
@@ -256,7 +282,15 @@ export const SymbolsAndTemplatesHandler = ({
               </section>
             );
           }}
-        />
+        />}
+
+        {!symbols.length && (<section className="h-full w-full flex flex-col gap-2 items-center justify-center">
+          <figure>
+            <img src={noData} className="max-w-[300px] max-h-[300px]" />
+          </figure>
+          {/* <FitTitle>No Data Here</FitTitle> */}
+          <h1 className="text-slate-200 font-semibold">No Data Founded...</h1>
+        </section>)}
       </section>
     </main>
   );

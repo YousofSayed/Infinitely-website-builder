@@ -10,7 +10,11 @@ import { defineTraits } from "../helpers/functions";
  */
 export const Section = ({ editor }) => {
   editor.Components.addType("section", {
+  
     model: {
+      // init(){
+      //   this.updateTrait('tag-name', {value: this.tagName});
+      // },
       defaults: {
         icon: editorIcons.section({ width: 25, height: 25, fill: "white" }),
         
@@ -22,9 +26,9 @@ export const Section = ({ editor }) => {
           {
             placeholder:'select tag',
             label:'Select tag',
-            name:'Select tag',
-            role:'handler',
-            
+            name:'tag-name',
+            role:'attribute',
+            value : '',
             keywords: tagNames,
             type: "select",
             callback({ editor, trait, newValue }) {

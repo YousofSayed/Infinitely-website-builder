@@ -61,107 +61,108 @@ export const StyleAside = memo(({ className }) => {
   });
 
   return (
-    <InfAccordion>
-      {/* <Details label={'content'}>
+    <section className="flex flex-col gap-2 mt-2">
+      {!showAnimeBuilder && (
+        <InfAccordion>
+          <AccordionItem
+            title={"classes"}
+            slotProps={{ transition: { unmountOnExit: true } }}
+          >
+            <SelectClass />
+          </AccordionItem>
+        
+        
+          <AccordionItem
+            title={"states"}
+            slotProps={{ transition: { unmountOnExit: true } }}
+          >
+            <SelectState />
+          </AccordionItem>
+        </InfAccordion>
+      )}
+
+      <InfAccordion>
+        {/* <Details label={'content'}>
         <Content />
       </Details> */}
 
-      {/* <section id="styles"></section> */}
-      {/* <AsideControllers /> */}
-      {!showAnimeBuilder && (
+        {/* <section id="styles"></section> */}
+        {/* <AsideControllers /> */}
+
         <AccordionItem
-          title={"classes"}
+          title={"layout"}
           slotProps={{ transition: { unmountOnExit: true } }}
         >
-          <SelectClass />
+          <Layout />
         </AccordionItem>
-        //         <DetailsNormal label={"classes"}>
-        // <SelectClass />
-        //         </DetailsNormal>
-      )}
 
-      {!showAnimeBuilder && (
         <AccordionItem
-          title={"states"}
+          title={"Typography"}
           slotProps={{ transition: { unmountOnExit: true } }}
         >
-          <SelectState />
+          <StyleTypography />
         </AccordionItem>
-      )}
 
-      <AccordionItem
-        title={"layout"}
-        slotProps={{ transition: { unmountOnExit: true } }}
-      >
-        <Layout />
-      </AccordionItem>
-
-      <AccordionItem
-        title={"Typography"}
-        slotProps={{ transition: { unmountOnExit: true } }}
-      >
-        <StyleTypography />
-      </AccordionItem>
-
-      <AccordionItem
-        title={"border"}
-        slotProps={{ transition: { unmountOnExit: true } }}
-      >
-        <Border />
-      </AccordionItem>
-
-      <AccordionItem
-        title={"background"}
-        slotProps={{ transition: { unmountOnExit: true } }}
-      >
-        <Background />
-      </AccordionItem>
-
-      <AccordionItem
-        title={"backdrop"}
-        slotProps={{ transition: { unmountOnExit: true } }}
-      >
-        <Backdrop />
-      </AccordionItem>
-
-      <AccordionItem
-        title={"Filters"}
-        slotProps={{ transition: { unmountOnExit: true } }}
-      >
-        <MultiFunctionProp
-          cssProp={"filter"}
-          keywords={filterTypes}
-          units={filterUnits}
-          placeholder={"Select Filter"}
-        />
-      </AccordionItem>
-
-      <AccordionItem
-        title={"Transform"}
-        slotProps={{ transition: { unmountOnExit: true } }}
-      >
-        <MultiFunctionProp
-          cssProp={"transform"}
-          keywords={transformValues}
-          placeholder={"Select Prop"}
-        />
-      </AccordionItem>
-
-      {!showAnimeBuilder && (
         <AccordionItem
-          title={"Animation"}
+          title={"border"}
           slotProps={{ transition: { unmountOnExit: true } }}
         >
-          <Animation />
+          <Border />
         </AccordionItem>
-      )}
 
-      <AccordionItem
-        title={"Others"}
-        slotProps={{ transition: { unmountOnExit: true } }}
-      >
-        <Others />
-      </AccordionItem>
-    </InfAccordion>
+        <AccordionItem
+          title={"background"}
+          slotProps={{ transition: { unmountOnExit: true } }}
+        >
+          <Background />
+        </AccordionItem>
+
+        <AccordionItem
+          title={"backdrop"}
+          slotProps={{ transition: { unmountOnExit: true } }}
+        >
+          <Backdrop />
+        </AccordionItem>
+
+        <AccordionItem
+          title={"Filters"}
+          slotProps={{ transition: { unmountOnExit: true } }}
+        >
+          <MultiFunctionProp
+            cssProp={"filter"}
+            keywords={filterTypes}
+            units={filterUnits}
+            placeholder={"Select Filter"}
+          />
+        </AccordionItem>
+
+        <AccordionItem
+          title={"Transform"}
+          slotProps={{ transition: { unmountOnExit: true } }}
+        >
+          <MultiFunctionProp
+            cssProp={"transform"}
+            keywords={transformValues}
+            placeholder={"Select Prop"}
+          />
+        </AccordionItem>
+
+        {!showAnimeBuilder && (
+          <AccordionItem
+            title={"Animation"}
+            slotProps={{ transition: { unmountOnExit: true } }}
+          >
+            <Animation />
+          </AccordionItem>
+        )}
+
+        <AccordionItem
+          title={"Others"}
+          slotProps={{ transition: { unmountOnExit: true } }}
+        >
+          <Others />
+        </AccordionItem>
+      </InfAccordion>
+    </section>
   );
 });

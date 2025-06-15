@@ -14,291 +14,226 @@ import infImport from "/scripts/infImport.js?url&raw";
 
 /**
  *
- * @param {{props : import('@monaco-editor/react').EditorProps , toFormateValue:string, extraLibs:string , allowExtraLibs:boolean , isTemplateEngine:boolean , allowCmdsContext: boolean , allowRestAPIModelsContext:boolean}} param0
+ * @param {{props : import('@monaco-editor/react').EditorProps , showEditorState:boolean, toFormateValue:string, extraLibs:string , allowExtraLibs:boolean , isTemplateEngine:boolean , allowCmdsContext: boolean , allowRestAPIModelsContext:boolean}} param0
  * @returns
  */
-export const CodeEditor = memo(
-  ({
-    props,
-    extraLibs = "",
-    toFormateValue = "",
-    isTemplateEngine = false,
-    allowCmdsContext = false,
-    allowRestAPIModelsContext = false,
-    allowExtraLibs = true,
-  }) => {
-    /**
-     * @type {{current:typeof import("e:/code/infinitely/node_modules/monaco-editor/esm/vs/editor/editor.api")}}
-     */
-    const monacoRef = useRef();
-    const editorRef = useRef();
-    const [cmdsContext, setCmdsContext] = useCmdsContext();
+export const CodeEditor = ({
+  props,
+  extraLibs = "",
+  toFormateValue = "",
+  isTemplateEngine = false,
+  allowCmdsContext = false,
+  allowRestAPIModelsContext = false,
+  showEditorState,
+  allowExtraLibs = true,
+}) => {
+  /**
+   * @type {{current:typeof import("e:/code/infinitely/node_modules/monaco-editor/esm/vs/editor/editor.api")}}
+   */
+  const monacoRef = useRef();
+  const editorRef = useRef();
+  const [cmdsContext, setCmdsContext] = useCmdsContext();
 
-    console.log("from code cmds context", cmdsContext);
+  /**
+   *
+   * @param {any} editor
+   * @param {typeof import("e:/code/infinitely-base/node_modules/monaco-editor/esm/vs/editor/editor.api")} monaco
+   */
+  const loadLibs = async (editor, monaco) => {
+    const currentPageName = localStorage.getItem(current_page_id);
+    const projectData = await await getProjectData();
+    const restAPIModels = projectData.restAPIModels;
+    const globalJs = await projectData.globalJs.text();
+    const localJs = await projectData.pages[`${currentPageName}`].js.text();
+    const libs = await Promise.all(
+      [...projectData.jsHeaderLibs, ...projectData.jsFooterLibs].map(
+        async (lib) => {
+          // console.log("await lib.blob.text() : ", lib, await lib.file.text());
 
-    useEffect(() => {
-      if (!monacoRef?.current) return;
-    }, []);
+          return `${await lib.file.text()};`.replaceAll(
+            /module\.exports(\s+)?=(\s+)?\w+\;/gi,
+            " "
+          );
+        }
+      )
+    );
+    const assetsUrls = projectData.assets
+      .map((asset) => `"${asset.file.name}"`)
+      .join("|");
+    const replacedInfImport = infImport.replace(
+      "#/type-here/#",
+      "InfinitelyURLsType"
+    );
 
-    /**
-     *
-     * @param {any} editor
-     * @param {typeof import("e:/code/infinitely-base/node_modules/monaco-editor/esm/vs/editor/editor.api")} monaco
-     */
-    const loadLibs = async (editor, monaco) => {
-      const currentPageName = localStorage.getItem(current_page_id);
-      const projectData = await await getProjectData();
-      const restAPIModels = projectData.restAPIModels;
-      const globalJs = await projectData.globalJs.text();
-      const localJs = await projectData.pages[`${currentPageName}`].js.text();
-      const libs = await Promise.all(
-        [...projectData.jsHeaderLibs, ...projectData.jsFooterLibs].map(
-          async (lib) => {
-            // console.log("await lib.blob.text() : ", lib, await lib.file.text());
-
-            return `${await lib.file.text()};`.replaceAll(
-              /module\.exports(\s+)?=(\s+)?\w+\;/gi,
-              " "
-            );
-          }
-        )
-      );
-      const assetsUrls = projectData.assets
-        .map((asset) => `"${asset.file.name}"`)
-        .join("|");
-      const replacedInfImport = infImport.replace(
-        "#/type-here/#",
-        "InfinitelyURLsType"
-      );
-
-      const restModelsContext = restAPIModels
-        .map((model) => `var ${model.varName} = ${model.response}`)
-        .join("\n");
-      const finalLibs = [
-        ...libs,
-        `
+    const restModelsContext = restAPIModels
+      .map((model) => `var ${model.varName} = ${model.response}`)
+      .join("\n");
+    const finalLibs = [
+      ...libs,
+      `
         declare type AssetUrl = ${assetsUrls};
         declare function infinitelyImport(url: AssetUrl): string;
       `,
-        // replacedInfImport,
-        globalJs,
-        localJs,
-        extraLibs,
-        allowCmdsContext && restModelsContext,
-        allowCmdsContext && cmdsContext,
+      // replacedInfImport,
+      globalJs,
+      localJs,
+      extraLibs,
+      allowCmdsContext && restModelsContext,
+      allowCmdsContext && cmdsContext,
 
-        ,
-      ];
+      ,
+    ];
 
-      console.log("code context : ", cmdsContext);
+    toFormateValue &&
+      isProjectSettingPropTrue(
+        "enable_prettier_for_file_editor",
+        async () => {
+          const formatedValue =
+            props.language == "js"
+              ? js_beautify(toFormateValue, {
+                  indent_size: 2, // 2 spaces
+                  space_in_empty_paren: true,
+                })
+              : toFormateValue;
+          console.log(formatedValue);
 
-      //========================
-      // monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-      //   target: monaco.languages.typescript.ScriptTarget.ESNext,
-      //   allowNonTsExtensions: true,
-      //   moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
-      //   module: monaco.languages.typescript.ModuleKind.CommonJS,
-      //   noEmit: true,
-      //   typeRoots: []
-      // });
+          editor.setValue(formatedValue);
+          props.language == "css" &&
+            editor.trigger("mySource", "editor.action.formatDocument");
+        },
+        () => {
+          editor.setValue(toFormateValue);
+        }
+      );
 
-      // // Force JSDoc parsing
-      // monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
-      //   noSemanticValidation: false,
-      //   noSyntaxValidation: false,
-      //   diagnosticCodesToIgnore: []
-      // });
-      console.log("frommmmmated : ", toFormateValue);
-
-      toFormateValue &&
-        isProjectSettingPropTrue(
-          "enable_prettier_for_file_editor",
-          async () => {
-            // const prettier = await import("../../../helpers/prettier");
-            // const estree = await import("../../../helpers/estree");
-            // const parseBabel = await import("../../../helpers/bableParser");
-            // const formatedValue = await prettier.format(toFormateValue, {
-            //   parser: "babel",
-            //   plugins: [estree, parseBabel],
-            //   tabWidth: 2,
-            //   useTabs: false,
-            //   semi: true,
-            //   singleQuote: true,
-            // });
-            const formatedValue =
-              props.language == "js"
-                ? js_beautify(toFormateValue, {
-                    indent_size: 2, // 2 spaces
-                    space_in_empty_paren: true,
-                  })
-                : toFormateValue;
-            console.log(formatedValue);
-
-            editor.setValue(formatedValue);
-            props.language == 'css' && editor.trigger('mySource', 'editor.action.formatDocument');
-            // editor.executeEdits("initial-set", [
-            //   {
-            //     range: editor.getModel().getFullModelRange(),
-            //     text: formatedValue,
-            //     forceMoveMarkers: true,
-            //   },
-            // ]);
-          },
-          () => {
-            editor.setValue(toFormateValue);
-          }
-        );
-
-      console.log("replaced :", replacedInfImport, finalLibs.join("\n\n"));
-      allowExtraLibs &&
-        monaco.languages.typescript.javascriptDefaults.addExtraLib(
-          finalLibs.join("\n\n"),
-          "ts:filename/infinitely.d.ts"
-        );
-      //   const libSource = `
-
-      // `;
-
-      // Add to Monaco's global scope
+    // console.log("replaced :", replacedInfImport, finalLibs.join("\n\n"));
+    allowExtraLibs &&
       monaco.languages.typescript.javascriptDefaults.addExtraLib(
-        libSource,
-        "global.d.ts"
-      );
-      monaco.languages.typescript.typescriptDefaults.addExtraLib(
-        libSource,
-        "global.d.ts"
+        finalLibs.join("\n\n"),
+        "ts:filename/infinitely.d.ts"
       );
 
-      // Ensure DOM types are loaded
-      // monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-      //   target: monaco.languages.typescript.ScriptTarget.ESNext,
-      //   lib: ["esnext", "dom"],
-      //   allowNonTsExtensions: true,
-      //   moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
-      //   module: monaco.languages.typescript.ModuleKind.CommonJS,
-      //   noEmit: true,
-      // });
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(
+      libSource,
+      "global.d.ts"
+    );
+    monaco.languages.typescript.typescriptDefaults.addExtraLib(
+      libSource,
+      "global.d.ts"
+    );
+  };
 
-      // isTemplateEngine && editor.setValue(`\` \n\n\n \``)
-      // editor.getAction("editor.action.formatDocument").run();
-    };
+  return (
+    <section className="h-full rounded-md">
+      <Editor
+        theme="vs-dark"
+        className="rounded-[inherit]"
+        height={"100%"}
+        width={"100%"}
+        saveViewState
+        loading={<Loader />}
+        {...props}
+        onMount={(editor, monaco) => {
+          monacoRef.current = monaco;
+          editorRef.current = editor;
+          editor.focus();
 
-    return (
-      <section className="h-full rounded-md">
-        <Editor
-          theme="vs-dark"
-          className="rounded-[inherit]"
-          height={"100%"}
-          width={"100%"}
-          saveViewState
-          loading={<Loader />}
-          {...props}
-          onMount={(editor, monaco) => {
-            monacoRef.current = monaco;
-            editorRef.current = editor;
-            editor.focus();
-            console.log("pos", editor.getPosition().lineNumber);
-            console.log("lllllllllang :", props.language);
-
-            if (props.language == "html") {
-              props?.onMount?.(editor);
-              return;
+          if (props.language == "html") {
+            props?.onMount?.(editor);
+            return;
+          }
+          editor.onKeyDown((e) => {
+            if (
+              e.ctrlKey &&
+              (e.keyCode === monaco.KeyCode.KeyZ ||
+                e.keyCode === monaco.KeyCode.KeyY)
+            ) {
+              console.log(
+                "Monaco ignored:",
+                e.keyCode === monaco.KeyCode.KeyZ ? "Ctrl+Z" : "Ctrl+Y"
+              );
+              e.preventDefault(); // Stop propagation to GrapesJS if needed
+              // e.stopPropagation()
             }
-            editor.onKeyDown((e) => {
-              if (
-                e.ctrlKey &&
-                (e.keyCode === monaco.KeyCode.KeyZ ||
-                  e.keyCode === monaco.KeyCode.KeyY)
-              ) {
-                console.log(
-                  "Monaco ignored:",
-                  e.keyCode === monaco.KeyCode.KeyZ ? "Ctrl+Z" : "Ctrl+Y"
-                );
-                e.preventDefault(); // Stop propagation to GrapesJS if needed
-                // e.stopPropagation()
-              }
+          });
+
+          loadLibs(editor, monaco);
+
+          if (isTemplateEngine) {
+            // Set the value in the editor
+            editor.setValue(
+              `\`\n\n${editor.getValue().slice(1, -1).replaceAll("\n", "")}\n\``
+            );
+
+            // Move the caret to the position of "here"
+            editor.setPosition({
+              lineNumber: 2, // Line 3 (1-based: "`" is line 1, empty line is line 2, "here" is line 3)
+              column: 1, // Column 1 (start of "here")
             });
 
-            loadLibs(editor, monaco);
+            // Optional: Ensure the caret is visible by revealing the position
+            editor.revealPosition({
+              lineNumber: 3,
+              column: 1,
+            });
+          }
+          props?.onMount?.(editor);
+        }}
+        options={{
+          autoClosingQuotes: true,
+          autoClosingBrackets: true,
+          automaticLayout: true,
+          autoClosingOvertype: true,
+          acceptSuggestionOnCommitCharacter: true,
+          autoClosingComments: true,
+          formatOnPaste: true,
+          // smoothScrolling: true,
 
-            if (isTemplateEngine) {
-              // Set the value in the editor
-              editor.setValue(
-                `\`\n\n${editor
-                  .getValue()
-                  .slice(1, -1)
-                  .replaceAll("\n", "")}\n\``
-              );
+          quickSuggestions: true,
+          tabCompletion: "on",
+          wordWrap: true,
+          hover: {
+            sticky: true,
+          },
+          scrollbar: {
+            horizontal: "hidden",
+            useShadows: false, // Simpler scroll UI
+            verticalScrollbarSize: 10, // Thinner, less redraw
+          },
 
-              // Move the caret to the position of "here"
-              editor.setPosition({
-                lineNumber: 2, // Line 3 (1-based: "`" is line 1, empty line is line 2, "here" is line 3)
-                column: 1, // Column 1 (start of "here")
-              });
+          codeLens: true,
+          bracketPairColorization: {
+            enabled: true,
+            independentColorPoolPerBracketType: true,
+          },
 
-              // Optional: Ensure the caret is visible by revealing the position
-              editor.revealPosition({
-                lineNumber: 3,
-                column: 1,
-              });
-            }
-            props?.onMount?.(editor);
-          }}
-          options={{
-            autoClosingQuotes: true,
-            autoClosingBrackets: true,
-            automaticLayout: true,
-            autoClosingOvertype: true,
-            acceptSuggestionOnCommitCharacter: true,
-            autoClosingComments: true,
-            formatOnPaste: true,
-            // smoothScrolling: true,
-            quickSuggestions: true,
-            tabCompletion: "on",
-            wordWrap: true,
-            hover: {
-              sticky: true,
-            },
-            scrollbar: {
-              horizontal: "hidden",
-              useShadows: false, // Simpler scroll UI
-              verticalScrollbarSize: 10, // Thinner, less redraw
-            },
+          // codeActionsOnSaveTimeout: 300,
+          colorDecorators: true,
+          // columnSelection:true,
 
-            codeLens: true,
-            bracketPairColorization: {
-              enabled: true,
-              independentColorPoolPerBracketType: true,
-            },
+          cursorBlinking: "expand",
+          cursorSmoothCaretAnimation: "explicit",
+          fontVariations: true,
+          // formatOnType: true,
+          scrollBeyondLastLine: false,
+          renderLineHighlight: "none",
+          inlineSuggest: { enabled: true },
+          "semanticHighlighting.enabled": true,
 
-            // codeActionsOnSaveTimeout: 300,
-            colorDecorators: true,
-            // columnSelection:true,
+          links: true,
+          parameterHints: {
+            enabled: true,
+            cycle: true,
+          },
 
-            cursorBlinking: "expand",
-            cursorSmoothCaretAnimation: "explicit",
-            fontVariations: true,
-            // formatOnType: true,
-            scrollBeyondLastLine: false,
-            renderLineHighlight: "none",
-            inlineSuggest: { enabled: true },
-            "semanticHighlighting.enabled": true,
-
-            links: true,
-            parameterHints: {
-              enabled: true,
-              cycle: true,
-            },
-
-            mouseWheelZoom: true,
-            fontSize: 20,
-            minimap: {
-              autohide: true,
-              enabled: false,
-            },
-          }}
-        />
-      </section>
-    );
-  }
-);
+          mouseWheelZoom: true,
+          fontSize: 20,
+          minimap: {
+            autohide: true,
+            enabled: false,
+          },
+        }}
+      />
+    </section>
+  );
+};

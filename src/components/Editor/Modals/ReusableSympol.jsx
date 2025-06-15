@@ -11,6 +11,8 @@ import {
   getImgAsBlob,
   getInfinitelySymbolInfo,
   initSymbol,
+  initToolbar,
+  preventSelectNavigation,
 } from "../../../helpers/functions";
 import { db } from "../../../helpers/db";
 import {
@@ -144,6 +146,8 @@ export const ReusableSympol = () => {
       // console.log(instance);
       // console.log("updated");
       // editor.store();
+      // preventSelectNavigation(editor , selectedEl)
+      initToolbar(editor , selectedEl)
       initSymbol(uuid, editor);
     };
     addSymbolBlock();
@@ -168,7 +172,7 @@ export const ReusableSympol = () => {
   }, []);
 
   return (
-    <form className="w-full z-50 p-2 flex flex-col gap-2 h-[500px] overflow-auto bg-slate-800 rounded-lg ">
+    <section  className="w-full z-50 p-2 flex flex-col gap-2 h-[500px] overflow-auto bg-slate-800 rounded-lg ">
       <header className="p-2 z-50 rounded-lg flex gap-4 justify-between bg-slate-900">
         <Input
           value={props.name}
@@ -198,6 +202,6 @@ export const ReusableSympol = () => {
         )}
       </main>
       {/* <footer></footer> */}
-    </form>
+    </section>
   );
 };

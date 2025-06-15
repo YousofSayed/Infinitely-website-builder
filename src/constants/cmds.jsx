@@ -14,8 +14,9 @@ import { InfinitelyEvents } from "./infinitelyEvents";
 import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
 import React from "react";
 import { current_symbol_id } from "./shared";
+import { isArray } from "lodash";
 
-const defaultDirectiveCallback = ({
+const defaultDirectiveCallback = async ({
   editor,
   directive,
   value = "",
@@ -29,17 +30,23 @@ const defaultDirectiveCallback = ({
      * @type {import('grapesjs').Component}
      */
     const sle = editor.getSelected();
-    if (!value.trim()) {
-      sle.removeAttributes([directive]);
-      editor.trigger(InfinitelyEvents.directives.update);
-    }
     const modifiersString =
       modifiers && modifiers.length
         ? modifiers.map((modifier) => `.${modifier}`).join("")
         : "";
     const attribute = `${directive}${
-      (suffix && `:${suffix}`) || ""
+      suffix && isArray(suffix)
+        ? `${suffix.map((sufx) => `:${sufx}`).join()}`
+        : (suffix && `:${suffix}`) || ""
     }${modifiersString}`;
+
+    if (!attribute.trim() || !value.trim()) {
+      console.log('from remover : ' , attribute , value , sle);
+      
+      sle.removeAttributes(attribute );
+      editor.trigger(InfinitelyEvents.directives.update);
+      return;
+    }
     if (isValidAttribute(attribute, value)) {
       sle.addAttributes({ [attribute]: value }, { avoidStore: true });
       editor.trigger(InfinitelyEvents.directives.update);
@@ -53,8 +60,8 @@ const defaultDirectiveCallback = ({
           JSON.stringify(symbolInfo.symbol)
         );
       }
-      editor.store();
-      callback?.();
+      await callback?.();
+      await editor.store();
     } else {
       console.log(attribute);
 
@@ -73,6 +80,7 @@ export const directives = [
     type: "object",
     name: "data",
     preventDefault: false,
+    showInAllComponents: true,
     callback({ editor, value, callback }) {
       defaultDirectiveCallback({
         editor,
@@ -88,6 +96,7 @@ export const directives = [
     directive: "v-effect",
     name: "effect",
     preventDefault: false,
+    showInAllComponents: true,
     id: uniqueID(),
     type: "code",
     callback({ editor, value, callback }) {
@@ -122,14 +131,15 @@ export const directives = [
     directive: "v-bind",
     id: uniqueID(),
     type: "multi",
-    isSuffixRequired:true,
+    isSuffixRequired: true,
+    showInAllComponents: true,
     keywordsForMulti: defaultAttributeNames,
-    codeLang:'javascript',
-    nestedCodeLang:'javascript',
+    codeLang: "javascript",
+    nestedCodeLang: "javascript",
     nestedtype: "code",
-    valueInputType:'code',
-    nestedInputType:'code',
-    nestedMaybeObjectModel:true,
+    valueInputType: "code",
+    nestedInputType: "code",
+    nestedMaybeObjectModel: true,
     name: "bind",
     preventDefault: false,
     preventNestedDefault: false,
@@ -168,6 +178,7 @@ export const directives = [
     isValueRequired: true,
     preventDefault: false,
     preventNestedDefault: false,
+    showInAllComponents: true,
     callback({ editor, suffix, modifiers, value, callback }) {
       defaultDirectiveCallback({
         editor,
@@ -229,6 +240,7 @@ export const directives = [
     type: "code",
     codeLang: "html",
     preventDefault: false,
+    showInAllComponents: true,
     callback({ editor, value, callback }) {
       defaultDirectiveCallback({
         editor,

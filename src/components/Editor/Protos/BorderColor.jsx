@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { P } from "../../Protos/P";
 import { Color } from "./Color";
 import { SelectedBorder } from "./SelectedBorder";
+import { FitTitle } from "./FitTitle";
+import { ScrollableToolbar } from "../../Protos/ScrollableToolbar";
 
 export const BorderColor = () => {
   const [option, setOption] = useState("");
@@ -33,9 +35,9 @@ export const BorderColor = () => {
 
   return (
     <section className="flex flex-col gap-3  justify-between py-3 ">
-      <P>border color: </P>
-
-      <section className="flex justify-between gap-1 bg-gray-950 p-2 rounded-lg">
+      {/* <P> </P> */}
+      <FitTitle className="capitalize">border color</FitTitle>
+      <ScrollableToolbar className="flex justify-between gap-1 bg-slate-800 p-2 rounded-lg" space="3">
         <SelectedBorder
           borderName={"border-t-2"}
           borderDir="top"
@@ -66,7 +68,7 @@ export const BorderColor = () => {
           option={option}
           setOption={setOption}
         />
-      </section>
+      </ScrollableToolbar>
       <div className="flex gap-2">
         <Color cssProp={cssProps} />
       </div>
