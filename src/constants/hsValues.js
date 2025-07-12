@@ -37,7 +37,9 @@ export const eventNames = [
     "mouseleave",
     "contextmenu",
     "wheel",
-
+    "view",
+    "enterView",
+    "leaveView",
     // Keyboard events
     "keydown",
     "keyup",

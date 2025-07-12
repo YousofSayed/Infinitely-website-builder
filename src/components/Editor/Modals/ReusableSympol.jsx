@@ -24,6 +24,8 @@ import { toast } from "react-toastify";
 import { ToastMsgInfo } from "../Protos/ToastMsgInfo";
 import { minify } from "csso";
 import { editorIcons } from "../../Icons/editorIcons";
+import { opfs } from "../../../helpers/initOpfs";
+import { defineRoot, getOPFSProjectDir } from "../../../helpers/bridge";
 
 /**
  *
@@ -75,29 +77,9 @@ export const ReusableSympol = () => {
         !childAttributes[inf_class_name] && child.addClass(`inf-${childUuid}`);
       });
       const projectData = await await db.projects.get(projectId);
-      // const instance = editor.Components.addSymbol(selectedEl);
-      // const mainSybol = editor.Components.getSymbolInfo(instance).main;
-      // const mainSymbolId = mainSybol.getId();
+
       const prevBlocks = projectData?.blocks ? projectData.blocks : {};
-      selectedEl.addAttributes({ [inf_symbol_Id_attribute]: uuid });
-      // selectedEl.forEachChild((child) => {
-      //   const childUuid = uniqueID();
-      //   child.addAttributes({
-      //     [inf_bridge_id]: childUuid,
-      //     [`${inf_symbol_instance_Id_attribute}-${uuid.toLowerCase()}`]:
-      //       childUuid,
-      //   });
-      // });
 
-      // editor.Components.getSymbols().find('')
-      // const clone = selectedEl.clone();
-      // clone.setId(uniqueID());
-
-      // const blockId = uniqueID() + props.name;
-
-      console.log(
-        selectedEl.toHTML({ keepInlineStyle: true, withProps: true })
-      );
       const rules = getComponentRules({
         editor,
         cmp: selectedEl,
@@ -107,7 +89,25 @@ export const ReusableSympol = () => {
       const jsonRules = JSON.stringify(rules.rules);
       const stringRules = rules.stringRules;
       console.log("rules  : ", JSON.stringify(rules));
-
+      const contentPath = `editor/symbols/${uuid}/${uuid}.html`;
+      const stylePath = `editor/symbols/${uuid}/${uuid}.css`;
+      const pathes = {
+        content: contentPath,
+        style: stylePath,
+      };
+      await opfs.writeFiles([
+        {
+          path: defineRoot(contentPath),
+          content: selectedEl.toHTML({
+            keepInlineStyle: true,
+            withProps: true,
+          }),
+        },
+        {
+          path: defineRoot(stylePath),
+          content: minify(stringRules).css,
+        },
+      ]);
       await db.projects.update(+projectId, {
         symbols: {
           ...projectData.symbols,
@@ -115,11 +115,12 @@ export const ReusableSympol = () => {
             id: uuid,
             label: props.name,
             category: props.category || "symbols",
-            style: new Blob([minify(stringRules).css], { type: "text/css" }),
-            content: new Blob(
-              [selectedEl.toHTML({ keepInlineStyle: true, withProps: true })],
-              { type: "text/html" }
-            ),
+            pathes,
+            // style: new Blob([minify(stringRules).css], { type: "text/css" }),
+            // content: new Blob(
+            //   [selectedEl.toHTML({ keepInlineStyle: true, withProps: true })],
+            //   { type: "text/html" }
+            // ),
           },
         },
         blocks: {
@@ -133,21 +134,17 @@ export const ReusableSympol = () => {
               selectedEl.getIcon() ||
               editorIcons.components({ strokeColor: "white", strokeWidth: 2 }), //blobImg,
             type: "symbol",
-            style: new Blob([minify(stringRules).css], { type: "text/css" }),
-            content: new Blob(
-              [selectedEl.toHTML({ withProps: true, keepInlineStyle: true })],
-              { type: "text/html" }
-            ),
+            pathes,
+            // style: new Blob([minify(stringRules).css], { type: "text/css" }),
+            // content: new Blob(
+            //   [selectedEl.toHTML({ withProps: true, keepInlineStyle: true })],
+            //   { type: "text/html" }
+            // ),
           },
         },
       });
       editor.trigger("block:add");
-      // await editor.load();
-      // console.log(instance);
-      // console.log("updated");
-      // editor.store();
-      // preventSelectNavigation(editor , selectedEl)
-      initToolbar(editor , selectedEl)
+      initToolbar(editor, selectedEl);
       initSymbol(uuid, editor);
     };
     addSymbolBlock();
@@ -162,8 +159,8 @@ export const ReusableSympol = () => {
     //   })
     // ).toBlob((blob) => {
     //   setBlobImg(blob);
-  // }, "image/png");
-  setImgSrc(URL.createObjectURL(await getImgAsBlob(selectedEl)));
+    // }, "image/png");
+    setImgSrc(URL.createObjectURL(await getImgAsBlob(selectedEl)));
     // contentRef.current.src = canvas.toDataURL();
   };
 
@@ -172,7 +169,7 @@ export const ReusableSympol = () => {
   }, []);
 
   return (
-    <section  className="w-full z-50 p-2 flex flex-col gap-2 h-[500px] overflow-auto bg-slate-800 rounded-lg ">
+    <section className="w-full z-50 p-2 flex flex-col gap-2 h-[500px] overflow-auto bg-slate-800 rounded-lg ">
       <header className="p-2 z-50 rounded-lg flex gap-4 justify-between bg-slate-900">
         <Input
           value={props.name}

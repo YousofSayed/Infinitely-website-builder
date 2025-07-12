@@ -8,7 +8,7 @@ import {
   getGsapCssProperties,
   getProjectData,
   getProjectSettings,
-  initToolbar,
+  initToolbar, 
   preventSelectNavigation,
 } from "../../../helpers/functions";
 import { Adder } from "./Adder";
@@ -63,7 +63,6 @@ import { ToastMsgInfo } from "./ToastMsgInfo";
 import { OptionsButton } from "../../Protos/OptionsButton";
 import { ScrollableToolbar } from "../../Protos/ScrollableToolbar";
 import { pageBuilderWorker } from "../../../helpers/defineWorkers";
-
 const parseValue = (value) => {
   try {
     return (
@@ -1109,7 +1108,8 @@ export const Motion = memo(() => {
   useEffect(() => {
     if (!editor || !editor?.getSelected?.() || !motion?.animations?.length)
       return;
-
+    console.log('bonbone');
+    
     motion.id && updateDB(motion);
 
     console.log("motion", motion);
@@ -1375,7 +1375,7 @@ export const Motion = memo(() => {
   // };
 
   return (
-    <section className="flex flex-col gap-2 w-full relative">
+    <section className="flex flex-col gap-2 w-full relative mt-2">
       {isInstance && !editeAsMain && (
         <section className="absolute left-0 top-[0] w-full h-full min-h-full backdrop-blur-md z-[50] rounded-lg p-2">
           <section className="flex flex-col gap-3 items-center p-2 py-3 bg-slate-900 rounded-lg">

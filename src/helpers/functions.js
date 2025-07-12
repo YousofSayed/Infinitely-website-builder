@@ -34,6 +34,7 @@ import { runGsapMotionTool } from "../plugins/tools/runGsapMotionTool";
 import { killGsapMotionTool } from "../plugins/tools/killGsapMotion";
 import { createReusableCmpTool } from "../plugins/tools/createReusableCmpTool";
 import { createSymbolTool } from "../plugins/tools/createSymbolTool";
+import { infinitelyWorker } from "./infinitelyWorker";
 export {
   replaceBlobs,
   base64ToBlob,
@@ -286,6 +287,7 @@ export function addItemInToolBarForEditor({
     //   });
     // console.log("another 2");
     selectedEl.set({
+      ...selectedEl.props(),
       toolbar: [
         cond ? newTool : null,
         ...toolbar.filter((tb) => tb.id && !tb.id.includes(newTool.id)),
@@ -314,6 +316,12 @@ export function addItemInToolBarForEditor({
 export function renderToolbar(editor) {
   const toolbarEl = editor.Canvas.getToolbarEl();
   const sle = editor.getSelected();
+  if (!sle) {
+    console.warn("Not selected element to render toolbar!");
+    return;
+  }
+
+  if (!sle.getEl()) return;
   const symbolInfo = getInfinitelySymbolInfo(sle);
   const toolbarItemsClass = `gjs-toolbar-items`;
   const toolbarItemClass = `gjs-toolbar-item`;
@@ -1393,6 +1401,8 @@ export function initSymbol(id, editor) {
         );
         return;
       } else {
+        // console.error(`replaaaaaaaaaaaaaaaaaaaaaaaaaace here`);
+        
         symbol.replaceWith(JSON.parse(newContent));
         console.log("Replaced");
         // symbol.replaceWith(regenerateSymbol(JSON.parse(newContent)));
@@ -1834,6 +1844,7 @@ export async function getImgAsBlob(el, mimeType = "image/webp") {
     await (
       await html2canvas(el, {
         // foreignObjectRendering: true,
+
         // allowTaint: true,
         useCORS: true,
         // imageTimeout: 200,
@@ -2183,9 +2194,9 @@ export const mount = ({ editor, all, specificCmp }) => {
     vComponents = original;
     vAttributes = original.map((cmp) => cmp.getAttributes());
     vWrapperAttributes = wrapperAttrs;
-    console.log("rogs : ", original);
     originalComponents = editor.getComponents().toJSON();
     // console.log("PetiteVue.reactiveEffect : ",  , );
+    console.log("rogs : ", original , editor.getWrapper().getEl());
 
     // pVueApp.mount(editor.getWrapper().getEl());
     // editor.select(null);
@@ -2216,7 +2227,10 @@ export const mount = ({ editor, all, specificCmp }) => {
     // console.log(sle.getEl() ,el.innerHTML);
     // editor.select(null);
     // preventSelectNavigation(editor)
+    console.log('before mount : ', el);
+    
     pvMount(el);
+    renderToolbar(editor);
     // specificCmp.addAttributes(cmpAttrs);
     // sle && editor.select(sle);
   }
@@ -2257,6 +2271,7 @@ export const unMount = ({ editor, all, specificCmp, selectAfterUnMout }) => {
           const relEnder = starter + 101;
           const slices = components.slice(starter, relEnder);
           slices.forEach((cmp) => {
+            // editor.getWrapper().get
             cmp.replaceWith(cmp.clone());
           });
           if (relEnder >= components.length) {
@@ -2286,6 +2301,7 @@ export const unMount = ({ editor, all, specificCmp, selectAfterUnMout }) => {
     };
 
     editor.Storage.setAutosave(false);
+    console.log("vComponents", vComponents);
 
     render({
       components: vComponents,
@@ -2311,12 +2327,17 @@ export const unMount = ({ editor, all, specificCmp, selectAfterUnMout }) => {
     const sle = editor?.getSelected?.();
 
     pvUnMount(specificCmp.getEl());
+    vComponents = vComponents.filter((cmp) => {
+      cmp != specificCmp;
+    });
+
     const newCmp = specificCmp.replaceWith(specificCmp.clone())[0];
     // const targetSelect = editor.getWrapper().find(`[mount-id]`)[0];
     // targetSelect && preventSelectNavigation(editor , targetSelect);
 
     selectAfterUnMout && preventSelectNavigation(editor, newCmp);
     editor.refresh();
+    renderToolbar(editor);
     // editor.Canvas.refresh({all:true,spots:true});
   }
 };
@@ -2396,4 +2417,28 @@ export function isElementScrollable(el) {
     horizontal: hasHorizontalScroll && isOverflowEnabled,
     any: (hasVerticalScroll || hasHorizontalScroll) && isOverflowEnabled,
   };
+}
+
+/**
+ *
+ * @param {(element:HTMLElement)=>boolean} condition
+ * @param {HTMLElement | null} el
+ * @returns
+ */
+export function getParentNode(condition = (el) => true, el = null) {
+  if (!el || el === document.body) return null;
+  if (condition(el)) return el;
+  return getParentNode(condition, el.parentNode);
+}
+
+export function exportProject(params) {
+  const projectId = +localStorage.getItem(current_project_id);
+
+  infinitelyWorker.postMessage({
+    command: "exportProject",
+    props: {
+      projectSetting: getProjectSettings().projectSettings,
+      projectId,
+    },
+  });
 }

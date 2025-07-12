@@ -76,7 +76,7 @@ export function useSetClassForCurrentEl() {
       rule.ruleString.includes("after")
     ) {
       newCssProps.content = " '' ";
-    }
+    } 
 
     const Media = getCurrentMediaDevice(editor);
     const sle = editor.getSelected();

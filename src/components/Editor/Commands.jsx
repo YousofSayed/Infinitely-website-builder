@@ -32,6 +32,8 @@ import { current_symbol_id } from "../../constants/shared";
 import { SearchHeader } from "../Protos/SearchHeader";
 import { commentRgx } from "../../constants/rgxs";
 import { FitTitle } from "./Protos/FitTitle";
+import { SwitchButton } from "../Protos/SwitchButton";
+import { parse } from "../../helpers/cocktail";
 
 export const Commands = memo(() => {
   const editor = useEditorMaybe();
@@ -249,7 +251,7 @@ export const Commands = memo(() => {
   };
 
   return (
-    <section className="flex flex-col gap-2">
+    <section className="flex flex-col gap-2 mt-2">
       <SearchHeader search={search} />
       <InfAccordion>
         {/* {selectedType && (
@@ -426,19 +428,19 @@ export const Commands = memo(() => {
                             cmd.directive
                           )?.[cmd.directive]?.value;
 
-
                           const formatedVal = js_beautify(
                             `(${
-                             attrVal && isStartsAndEndsWithParens(attrVal)  ? attrVal :
-                              `{
+                              attrVal && isStartsAndEndsWithParens(attrVal)
+                                ? attrVal
+                                : `{
                           
                           }`
                             })`
                           );
 
                           console.log(formatedVal);
-                          
-                          return formatedVal
+
+                          return formatedVal;
                         })(),
                         onChange(value) {
                           // typingTimeout.current &&
@@ -447,8 +449,8 @@ export const Commands = memo(() => {
 
                           //   console.log(objectSplitter(value));
                           // }, 300);
-                          if(!value){
-cmd
+                          if (!value) {
+                            cmd;
                           }
 
                           cmd.callback({
@@ -511,14 +513,12 @@ cmd
                         )?.[cmd.directive]?.value
                       }
                       codeProps={{
-                        value: js_beautify(
-                          `${
-                            getDirectiveContext(
-                              selectedAttributes,
-                              cmd.directive
-                            )?.[cmd.directive]?.value || ""
-                          }`
-                        ),
+                        value: `${
+                          getDirectiveContext(
+                            selectedAttributes,
+                            cmd.directive
+                          )?.[cmd.directive]?.value || ""
+                        }`,
                         language: cmd.codeLang ? cmd.codeLang : "javascript",
                         onChange(value) {
                           // typingTimeout.current &&
@@ -556,6 +556,31 @@ cmd
                             column: 1,
                           });
                         },
+                      }}
+                    />
+                  </section>
+                )}
+
+                {cmd.type == "check" && (
+                  <section className="flex items-center justify-between gap-2 p-2 rounded-lg">
+                    <FitTitle>{cmd.name}</FitTitle>
+                    <SwitchButton
+                    defaultValue={parse(getDirectiveContext(
+                          selectedAttributes,
+                          cmd.directive
+                        )?.[cmd.directive]?.value)}
+                      onActive={() => {
+                        cmd.callback({
+                          editor,
+                          value: `true`,
+                        });
+                      }}
+
+                      onUnActive={() => {
+                        cmd.callback({
+                          editor,
+                          value: `false`,
+                        });
                       }}
                     />
                   </section>

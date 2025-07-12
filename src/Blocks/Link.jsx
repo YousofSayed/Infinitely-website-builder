@@ -8,8 +8,15 @@ import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
  * @param {import('grapesjs').Editor} param0
  */
 export const Link = async ({ editor }) => {
+  editor.Components.removeType("link");
   editor.Components.addType("link", {
-    extend: "link",
+    // extend: "link",
+    isComponent: (el) => {
+      if (el.tagName && el.tagName.toLowerCase() == "a") {
+        return { type: "link" };
+      }
+      return false;
+    },
     model: {
       defaults: {
         icon:reactToStringMarkup(Icons.link({strokeColor:'white', fill:'white' , width:20 , height:20})),

@@ -1,5 +1,5 @@
 export function doWorkerPattern(commands) {
-  self.addEventListener("message", async (ev) => {
+  self.addEventListener("message", async (ev) => { 
     const { command, props } = ev.data;
     console.log(`Infinitly worker event got it : ${command}`);
     if (!command) return;

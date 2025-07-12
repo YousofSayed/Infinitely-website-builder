@@ -4,6 +4,7 @@ import { layersType, refType } from "../../../helpers/jsDocs";
 import { uniqueID } from "../../../helpers/cocktail";
 import { Layer } from "./Layer";
 import { Virtuoso } from "react-virtuoso";
+import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
 
 export const Layers = memo(() => {
   const editor = useEditorMaybe();
@@ -18,11 +19,16 @@ export const Layers = memo(() => {
       editor
         .getWrapper()
         .components()
-        .models.filter((lyr) => lyr.getName().toLowerCase() != "box");
+        .models.filter((lyr) => {
+          console.log(lyr.props());
+          
+          return lyr.props().layerable &&  lyr.getName().toLowerCase() != "box"
+        });
 
-    setLayers(newLayers());
+    // setLayers(newLayers());
+    setLayers([editor.getWrapper()]);
 
-    const evCallback = () => setLayers(newLayers());
+    const evCallback = () => setLayers([editor.getWrapper()]);
 
     editor.on("component:add", evCallback);
     editor.on("component:remove", evCallback);
@@ -53,35 +59,25 @@ export const Layers = memo(() => {
 
   //     layerSecRef.current.appendChild(editor.Layers.render())
   // })
-
+//[&>:not(:last-child)]:mb-2
   return (
     <section id="layers" className="h-full hideScrollBar" ref={layerSecRef}>
-      <main id="layer-wrapper" className="h-full  [&>:not(:last-child)]:mb-2">
+      <main id="layer-wrapper" className="h-full  ">
         <Virtuoso
-          className="hideScrollBar"
+          className="hideScrollBar "
           totalCount={layers.length}
+          // components={VirtosuoVerticelWrapper}
           itemContent={(i) => {
             const layer = layers[i];
-            return (
-              // <section
-              //   key={layer.cid}
-              //   id={layer.id}
-              //   className="p-2 select-none rounded-lg flex items-center justify-between bg-slate-800 text-slate-200 mb-2"
-              // >
-              //   {layer.components().models.length || ""}
-              //   <span>{layer.getName().toUpperCase()}</span>
-              //   {layer.components().models.length && (
-              //     <figure>{Icons.arrow()}</figure>
-              //   )}
-              //   <figure className="handle cursor-grab">{Icons.plus()}</figure>
-              // </section>
+            
+            return layer.props().layerable ?  (
               <Layer
                 layers={layers}
                 setLayers={setLayers}
                 layer={layer}
                 key={i}
               />
-            );
+            ):null;
           }}
         />
         {/* {layers.map((layer, i) => {

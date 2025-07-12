@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { MultiTab } from "../../Protos/Multitabs";
 import { TabLabel } from "../Protos/TabLabel";
 import { Icons } from "../../Icons/Icons";
@@ -14,6 +14,9 @@ import { useEditorMaybe } from "@grapesjs/react";
 import { db } from "../../../helpers/db";
 import { random } from "../../../helpers/cocktail";
 import { infinitelyWorker } from "../../../helpers/infinitelyWorker";
+import { opfs } from "../../../helpers/initOpfs";
+import { defineRoot } from "../../../helpers/bridge";
+import { css_beautify, html_beautify, js_beautify } from "js-beautify";
 
 export const CodeManagerModal = () => {
   const timeoutRef = useRef();
@@ -25,70 +28,185 @@ export const CodeManagerModal = () => {
   const currentPageName = localStorage.getItem(current_page_id);
   const projectId = +localStorage.getItem(current_project_id);
   const editor = useEditorMaybe();
-  const [pageStructure, setPageStructure] = useState({
-    html: "",
-    css: "",
-    js: "",
+  // const [pageStructure, setPageStructure] = useState({
+  //   html: {
+  //     path: `editor/pages/${currentPageName}.html`,
+  //     content: "",
+  //   },
+  //   css: {
+  //     path: `css/${currentPageName}.css`,
+  //     content: "",
+  //   },
+  //   js: {
+  //     path: `js/${currentPageName}.js`,
+  //     content: "",
+  //   },
+  // });
+
+  // const [globals, setGlobals] = useState({
+  //   globalCss: {
+  //     path:'global/global.css',
+  //     content:''
+  //   },
+  //   globalJs: {
+  //     path:'global/global.js'
+  //   },
+  // });
+
+  const htmlPath = `editor/pages/${currentPageName}.html`;
+  const cssPath = `css/${currentPageName}.css`;
+  const jsPath = `js/${currentPageName}.js`;
+  const [filesData, setFilesData] = useState({
+    [htmlPath]: "",
+    [cssPath]: "",
+    [jsPath]: "",
+    [`global/global.css`]: "",
+    [`global/global.js`]: "",
   });
 
-  const [globals, setGlobals] = useState({
-    globalCss: "",
-    globalJs: "",
-  });
+  const [changed, setChanged] = useState({});
 
-  useLiveQuery(async () => {
-    const projectData = await await getProjectData();
-    const currnetPage = projectData.pages[`${currentPageName}`];
+  useEffect(() => {
+    (async () => {
+      // const localFiles = await await opfs.getFiles([
+      //   {
+      //     path: defineRoot(`editor/pages/${currentPageName}.html`),
+      //     as: "Text",
+      //   },
+      //   {
+      //     path: defineRoot(`css/${currentPageName}.css`),
+      //     as: "Text",
+      //   },
+      //   {
+      //     path: defineRoot(`js/${currentPageName}.js`),
+      //     as: "Text",
+      //   },
+      //   {
+      //     path: def,
+      //   },
+      // ]);
 
-    console.log(
-      "Functions : ",
-      executeAndExtractFunctions(await currnetPage.js.text())
-    );
+      // const globalFiles = await opfs.getFiles([
+      //   {
+      //     path: defineRoot(`global/global.css`),
+      //   },
+      //   {
+      //     path: defineRoot(`global/global.js`),
+      //   },
+      // ]);
 
-    setPageStructure({
-      html: await currnetPage.html.text(),
-      css: await currnetPage.css.text(),
-      js: await currnetPage.js.text(),
-    });
+      // setPageStructure({
+      //   html: {
+      //     ...pageStructure.html,
+      //     content: await localFiles[0].text(),
+      //   },
+      //   css: {},
+      //   js: await localFiles[2].text(),
+      // });
 
-    setGlobals({
-      globalCss: await projectData.globalCss.text(),
-      globalJs: await projectData.globalJs.text(),
-    });
-  });
+      // setGlobals({
+      //   globalCss: await globalFiles[0].text(),
+      //   globalJs: await globalFiles[1].text(),
+      // });
 
-  const updateLocals = ({ key, value }) => {
-    setPageStructure({
-      ...pageStructure,
-      [key]: value,
-    });
-  };
+      const filesHandle = await await opfs.getFiles(
+        Object.keys(filesData).map((key) => ({ path: defineRoot(key) }))
+      );
 
-  const updateGlobals = ({ key, value }) => {
-    setGlobals({
-      ...globals,
-      [key]: value,
-    });
-  };
+      for (const handle of filesHandle) {
+        
+      }
 
-  const updateDB = async () => {
-    const projectData = await await getProjectData();
-    // infinitelyWorker.postMessage({
+      const filesAsText = Object.fromEntries(
+        await Promise.all(
+          filesHandle.map(async (handle) => {
+            console.log([handle.path, await handle.text()]);
+            const file =await handle.getOriginFile();
+            const isHtml = file.type.includes('html');
+            const isCss = file.type.includes('css');
+            const isJS = file.type.includes('javascript');
+            const content = isHtml ? html_beautify(await handle.text()) : isCss ? css_beautify(await handle.text()) : isJS ? js_beautify(await handle.text()) : await handle.text()
+            return [handle.path, content];
+          })
+        )
+      );
 
-    // })
-    await db.projects.update(projectId, {
-      pages: {
-        ...projectData.pages,
-        [currentPageName]: {
-          ...projectData.pages[currentPageName],
-          html: new Blob([pageStructure.html], { type: "text/html" }),
-          css: new Blob([pageStructure.css], { type: "text/css" }),
-          js: new Blob([pageStructure.js], { type: "text/javascript" }),
-        },
+      // console.log('Files as text : ' , filesAsText);
+
+      setFilesData(filesAsText);
+    })();
+  }, []);
+
+  const updateLocals = async ({ path, value }) => {
+    await opfs.writeFiles([
+      {
+        path: defineRoot(path),
+        content: value,
+        // options:{
+
+        // }
       },
-      globalCss: new Blob([globals.globalCss], { type: "text/css" }),
-      globalJs: new Blob([globals.globalJs], { type: "text/javascript" }),
+    ]);
+    // setPageStructure({
+    //   ...pageStructure,
+    //   [key]: value,
+    // });
+  };
+
+  const updateFileContentInEditor = async ({ path, value }) => {
+    // await opfs.writeFiles([
+    //   {
+    //     path: defineRoot(path),
+    //     content: value,
+    //   },
+    // ]);
+
+    setFilesData({
+      ...filesData,
+      [defineRoot(path)]: value,
     });
+
+    console.log({
+      ...changed,
+      [defineRoot(path)]: true,
+    });
+    
+    setChanged({
+      ...changed,
+      [defineRoot(path)]: true,
+    });
+
+
+
+    // setGlobals({
+    //   ...globals,
+    //   [key]: value,
+    // });
+  };
+
+  const save = async () => {
+  
+    const newChange = {}
+    for (const key in filesData) {
+      const root = defineRoot(key);
+      const isChanged = changed[root];
+      console.log('chhhhhhhhhhhhhhhhhhhhhhage before : ' ,root,changed, isChanged);
+      if (!isChanged) continue;
+      console.log('chhhhhhhhhhhhhhhhhhhhhhage : ' , isChanged);
+      
+      await opfs.writeFiles([
+        {
+          path: root,
+          content: filesData[root],
+        },
+      ]);
+      newChange[root] = false;
+    }
+
+    setChanged({
+      ...changed,
+      ...newChange
+    })
   };
 
   return (
@@ -96,12 +214,12 @@ export const CodeManagerModal = () => {
       <MultiTab
         style={{ height: "92%" }}
         onTabClick={async () => {
-          await updateDB();
-        //   await editor.load();
-        //   setRandomKeys({
-        //     localJsKey: random(100),
-        //     globalJsKey: random(100),
-        //   });
+          // await updateDB();
+          //   await editor.load();
+          //   setRandomKeys({
+          //     localJsKey: random(100),
+          //     globalJsKey: random(100),
+          //   });
         }}
         preventViewScroll
         tabs={[
@@ -111,9 +229,12 @@ export const CodeManagerModal = () => {
               <CodeEditor
                 props={{
                   language: "html",
-                  value: pageStructure.html,
+                  value: filesData[defineRoot(htmlPath)],
                   onChange: (value) => {
-                    updateLocals({ key: "html", value });
+                    updateFileContentInEditor({
+                      path: `editor/pages/${currentPageName}.html`,
+                      value,
+                    });
                     console.log(value);
                   },
                 }}
@@ -126,9 +247,12 @@ export const CodeManagerModal = () => {
               <CodeEditor
                 props={{
                   language: "css",
-                  value: pageStructure.css,
+                  value: filesData[defineRoot(cssPath)],
                   onChange: (value) => {
-                    updateLocals({ key: "css", value });
+                    updateFileContentInEditor({
+                      path: `css/${currentPageName}.css`,
+                      value,
+                    });
                   },
                 }}
               />
@@ -139,12 +263,15 @@ export const CodeManagerModal = () => {
             content: (
               <CodeEditor
                 key={randomKeys.localJsKey}
-                extraLibs={pageStructure.js}
+                // extraLibs={pageStructure.js}
                 props={{
                   language: "javascript",
-                  value: pageStructure.js,
+                  value: filesData[defineRoot(jsPath)],
                   onChange: (value) => {
-                    updateLocals({ key: "js", value });
+                    updateFileContentInEditor({
+                      path: `js/${currentPageName}.js`,
+                      value,
+                    });
                   },
                 }}
               />
@@ -156,9 +283,12 @@ export const CodeManagerModal = () => {
               <CodeEditor
                 props={{
                   language: "css",
-                  value: globals.globalCss,
+                  value: filesData[defineRoot(`global/global.css`)],
                   onChange: (value) => {
-                    updateGlobals({ key: "globalCss", value });
+                    updateFileContentInEditor({
+                      path: `global/global.css`,
+                      value,
+                    });
                   },
                 }}
               />
@@ -169,14 +299,17 @@ export const CodeManagerModal = () => {
             content: (
               <CodeEditor
                 key={randomKeys.globalJsKey}
-                extraLibs={globals.globalJs}
+                // extraLibs={globals.globalJs}
                 // isTemplateEngine
                 // allowCmdsContext
                 props={{
                   language: "javascript",
-                  value: globals.globalJs,
+                  value: filesData[defineRoot(`global/global.js`)],
                   onChange: (value) => {
-                    updateGlobals({ key: "globalJs", value });
+                    updateFileContentInEditor({
+                      path: `global/global.js`,
+                      value,
+                    });
                   },
                 }}
               />
@@ -187,10 +320,12 @@ export const CodeManagerModal = () => {
       <footer className="h-[8%] flex items-center py-2">
         <Button
           onClick={async () => {
-            await updateDB();
+            // await updateDB();
+            await save()
             await editor.load();
           }}
         >
+          {Icons.save('white' , 0 , 'white')}
           Save
         </Button>
       </footer>

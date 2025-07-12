@@ -17,6 +17,9 @@ import { Virtuoso } from "react-virtuoso";
 import { useRecoilState } from "recoil";
 import { dbAssetsSwState } from "../../../helpers/atoms";
 import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
+import { opfs } from "../../../helpers/initOpfs";
+import { useEditorMaybe } from "@grapesjs/react";
+import { defineRoot, getFileSize } from "../../../helpers/bridge";
 
 const CustomScroller = React.forwardRef(({ style, ...props }, ref) => (
   <div
@@ -31,9 +34,8 @@ const CustomScroller = React.forwardRef(({ style, ...props }, ref) => (
   />
 ));
 
-
-
 export const CustomFontsInstaller = () => {
+  const editor = useEditorMaybe();
   const [fontFiles, setFontFiles] = useState(uploadFontsType);
   const [swDBAssets, setSwDBAssets] = useRecoilState(dbAssetsSwState);
   const inputRef = useRef();
@@ -74,9 +76,30 @@ export const CustomFontsInstaller = () => {
     const projectData = await getProjectData();
     const projectId = +localStorage.getItem(current_project_id);
     const newFontsUploaded = {};
-    fontFiles.forEach((file) => {
-      newFontsUploaded[file.name] = file;
-    });
+    // fontFiles.forEach((file) => {
+    //   newFontsUploaded[file.name] = {
+    //     path: `fonts/${font.name}`,
+    //     isCDN: false,
+    //     name: file.name,
+    //   };
+    // });
+
+    for (const fileData of fontFiles) {
+      newFontsUploaded[fileData.name] = {
+        path: `fonts/${fileData.name}`,
+        isCDN: fileData.isCDN,
+        name: fileData.name,
+        size : getFileSize(fileData.file).MB,
+      };
+
+      // const fontsFolder = await opfs.getFolder(await opfs.root , `projects/project-${opfs.id}/fonts`);
+      await opfs.createFiles([
+        {
+          path: defineRoot(newFontsUploaded[fileData.name].path),
+          content: fileData.file,
+        },
+      ]);
+    }
 
     await db.projects.update(projectId, {
       fonts: {
@@ -85,23 +108,24 @@ export const CustomFontsInstaller = () => {
       },
     });
 
-    swDBAssets.postMessage({
-      command: "setVar",
-      props: {
-        obj: {
-          projectId: +localStorage.getItem(current_project_id),
-          projectData: {
-            ...projectData,
-            fonts: {
-              ...projectData.fonts,
-              ...newFontsUploaded,
-            },
-          },
-        },
-        // value: +localStorage.getItem(current_project_id),
-      },
-    });
+    // swDBAssets.postMessage({
+    //   command: "setVar",
+    //   props: {
+    //     obj: {
+    //       projectId: +localStorage.getItem(current_project_id),
+    //       projectData: {
+    //         ...projectData,
+    //         fonts: {
+    //           ...projectData.fonts,
+    //           ...newFontsUploaded,
+    //         },
+    //       },
+    //     },
+    //     // value: +localStorage.getItem(current_project_id),
+    //   },
+    // });
 
+    editor.load();
     toast.success(
       <ToastMsgInfo
         msg={`${fontFiles.length} Font File Installed Successfully`}
@@ -125,7 +149,7 @@ export const CustomFontsInstaller = () => {
               openInputFile();
             }}
           >
-            {Icons.upload({ width: 150, height: 120 })}
+            {/* {Icons.upload({ strokeColor:,width: 90, height: 110 })} */}
           </figure>
           <Button
             className="px-[60px] py-[12px] text-xl font-bold"
@@ -133,6 +157,7 @@ export const CustomFontsInstaller = () => {
               openInputFile();
             }}
           >
+            {Icons.upload({ strokeColor:'white',})}
             Upload
           </Button>
           <input

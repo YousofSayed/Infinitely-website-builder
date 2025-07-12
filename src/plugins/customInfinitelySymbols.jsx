@@ -27,18 +27,7 @@ export const customInfinitelySymbols = (editor) => {
 
     await db.projects.get(projectId).then((project) => {
       Object.keys(project.symbols).forEach((symbolId) => {
-        // editor
-        //   .getWrapper()
-        //   .find(`[${inf_symbol_Id_attribute}="${symbolId}"]`)
-        //   .forEach(async (symbol) => {
-        //     // console.log("symbol: ", project.data.symbols[symbolId].content);
-        //     symbol.replaceWith(
-        //       // regenerateSymbol(JSON.parse(project.symbols[symbolId].content))
-        //       // regenerateSymbol(await project.symbols[symbolId].content.text())
-        //       await project.symbols[symbolId].content.text()
-        //     );
-        //   });
-
+       
         initSymbol(symbolId, editor);
       });
       // console.log("cmps form load: ", project.data.symbols);
@@ -61,8 +50,7 @@ export const customInfinitelySymbols = (editor) => {
     if (
       !symbol.isSymbol ||
       cmp.get("type").toLowerCase() == "wrapper"
-      // symbol.symbol.get("type").toLowerCase() == "textnode" ||
-      // cmp.get("type").toLowerCase() == "textnode"
+   
     )
       return;
     // console.log('componets addded : ' , cmp , cmp.getEl() , symbol.symbol?.getEl());
@@ -74,23 +62,13 @@ export const customInfinitelySymbols = (editor) => {
     const updateSymbolInDb = () => {
       symbolTimeout && clearTimeout(symbolTimeout);
       setTimeout(async () => {
-        // const projectData = await db.projects.get(projectId);
-        // const blockId = projectData.symbols[`${symbolId}`].blockId;
-        // const blockThumb = await new Promise(async (res, rej) => {
-        //   await (
-        //     await html2canvas(symbol.symbol.getEl())
-        //   ).toBlob((blob) => {
-        //     res(blob);
-        //   }, "image/webp");
-        // });
-        // symbol.symbol.changedAttributes();
-        // console.log("last : ", cmp.components().slice(-1)[0].getEl());
+      
         console.log("Component updated: ", cmp, symbol.symbol.getEl());
 
         const addedCmpSymbolInfo = getInfinitelySymbolInfo(addedComponent);
         if(addedComponent.getAttributes()[inf_symbol_Id_attribute]){
           editor.UndoManager.stop();
-          addedComponent.removeAttributes(inf_symbol_Id_attribute);
+          addedComponent.removeAttributes(inf_symbol_Id_attribute , {avoidStore:true});
           editor.UndoManager.start();
           // toast.warn(<ToastMsgInfo msg={`Symbols in symbols not allowed`}/>)
           // return;
@@ -204,7 +182,7 @@ export const customInfinitelySymbols = (editor) => {
   // });
 
   // editor.on("component:deselected",updateSymbols);
-  editor.on("component:add", (cmp) => {
+  // editor.on("component:add", (cmp) => {
     // const cmp = editor.Canvas.get();
     // if(!cmp || firstLoad)return;
     // updateSymbols(cmp)
@@ -214,7 +192,7 @@ export const customInfinitelySymbols = (editor) => {
     //   initSymbol(symbol.mainId, editor);
     // }
     // addAttributes(cmp);
-  });
+  // });
 
   /**
    *

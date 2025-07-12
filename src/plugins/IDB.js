@@ -16,15 +16,23 @@ import {
   getDynamicComponent,
   getInfinitelySymbolInfo,
   getProjectData,
+  getProjectSettings,
 } from "../helpers/functions";
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
 import { changePageName } from "../helpers/customEvents";
 import { infinitelyWorker } from "../helpers/infinitelyWorker";
 import { minify } from "csso";
 import { parseHTML } from "linkedom";
-import { getFonts, sendDataToServiceWorker } from "../helpers/bridge";
+import {
+  defineRoot,
+  getFileFromHandle,
+  getFonts,
+  getOPFSProjectDir,
+  sendDataToServiceWorker,
+} from "../helpers/bridge";
 
 import { initDBAssetsSw } from "../serviceWorkers/initDBAssets-sw";
+import { opfs } from "../helpers/initOpfs";
 
 let loadFooterScriptsCallback, loadHeadScriptsCallback, loadMainScriptsCallback;
 let storeTimeout;
@@ -42,6 +50,7 @@ export const IDB = (editor) => {
     willRevokedURLs.set(url);
     return url;
   };
+  let isLoadEnd = false;
 
   async function getAllSymbolsStyles() {
     const projectData = await getProjectData();
@@ -53,8 +62,11 @@ export const IDB = (editor) => {
         Object.values(projectData.blocks)
           .filter((block) => block.type && block.type != "symbol")
           .concat(Object.values(projectData.symbols))
-          .filter((block) => block.style && block.style instanceof Blob)
-          .map(async (symbol) => await symbol.style.text())
+          .filter((block) => block.pathes.style)
+          .map(
+            async (symbol) =>
+              await (await opfs.getFile(defineRoot(symbol.pathes.style))).text()
+          )
       )
     ).join("\n");
 
@@ -68,15 +80,20 @@ export const IDB = (editor) => {
 
   editor.Storage.add("infinitely", {
     async load() {
+      isLoadEnd = false;
       const projectData = await db.projects.get(+projectID);
 
       if (!projectData) return;
       // infinitelyWorker.postMessage
+
       await initDBAssetsSw();
-      await sendDataToServiceWorker({
-        projectId: +localStorage.getItem(current_project_id),
-        projectData: projectData,
-      });
+      loadScripts(editor, projectData);
+
+      // await sendDataToServiceWorker({
+      //   projectId: +localStorage.getItem(current_project_id),
+      //   projectData: projectData,
+      // });
+      // await fetch('/keep-live');
 
       console.time("loading");
       if (
@@ -99,12 +116,12 @@ export const IDB = (editor) => {
         URL.revokeObjectURL(value);
       });
       willRevokedURLs.clear();
-      loadScripts(editor, projectData);
       const storageManager = editor.StorageManager;
 
       // Disable autosave temporarily
       const originalAutosave = storageManager.getConfig().autosave;
       storageManager.setAutosave(false);
+      // const projectDir = await getOPFSProjectDir();
 
       const loadCurrentPage = async () => {
         if (!localStorage.getItem(current_page_id)) {
@@ -112,15 +129,22 @@ export const IDB = (editor) => {
         }
         const currentPageId = localStorage.getItem(current_page_id); //it will return void so that will make it take second choics : "index"
         const currentPage = projectData.pages[`${currentPageId}`];
-        const htmlPage = await currentPage.html.text();
+        // const htmlPage = await currentPage.html.text();
+        const htmlPage = await (
+          await opfs.getFile(defineRoot(`editor/pages/${currentPageId}.html`))
+        ).text();
+        const cssStyles = await (
+          await opfs.getFile(defineRoot(`css/${currentPageId}.css`))
+        ).text();
         const allSymbolsStyle = await getAllSymbolsStyles();
         const { document } = parseHTML(doDocument(htmlPage));
+        // const { document } = parseHTML(doDocument(htmlPage));
 
         editor.setStyle(``, { avoidStore: true });
         editor.CssComposer.addRules(
           minify(`
           ${getFonts(projectData)}
-          ${await currentPage.css.text()}
+          ${cssStyles}
           ${allSymbolsStyle}
          `).css
         );
@@ -133,7 +157,10 @@ export const IDB = (editor) => {
           // editor.trigger(InfinitelyEvents.pages.all);
           editor.off("canvas:frame:load", callback);
         };
-        editor.on("canvas:frame:load:body");
+        // editor.on("canvas:frame:load:body",()=>{
+        //   console.log('innnnnnnnner:' , editor.getWrapper().getInnerHTML({withProps:true}));
+
+        // });
         editor.trigger(InfinitelyEvents.pages.select);
         editor.trigger(InfinitelyEvents.pages.update);
         editor.trigger(InfinitelyEvents.pages.all);
@@ -158,39 +185,45 @@ export const IDB = (editor) => {
       const otherAttributes = attributesAsEntries.filter(
         ([key, value]) => !key.startsWith("v-")
       );
-      
+
+      // editor.getWrapper().setAttributes({} , {avoidStore:true});
+      editor.getWrapper().setClass("");
       editor
         .getWrapper()
-        .addAttributes(
+        .setAttributes(
           Object.fromEntries(vAttributesFilterd.concat(otherAttributes)),
-          {avoidStore:true,}
+          { avoidStore: true }
         );
-    
 
       currentPageId.toLowerCase() != "playground" &&
         sessionStorage.removeItem(current_dynamic_template_id);
       editor.render();
       editor.select(null);
-
       editor.UndoManager.start();
-      storageManager.setAutosave(originalAutosave);
-      editor.clearDirtyCount();
       URL.createObjectURL = mainCreateObjectURLMethod;
       console.timeEnd("loading");
-      console.log("loading end");
-
+      editor.clearDirtyCount();
+      console.log("loading end", editor.getDirtyCount());
+      storageManager.setAutosave(originalAutosave);
+      isLoadEnd = editor.getDirtyCount();
       return {};
     },
 
     //Storinggg
     async store() {
+      console.log("storageManager.store", editor.getDirtyCount(), isLoadEnd);
+
+      if (!isLoadEnd) {
+        isLoadEnd = editor.getDirtyCount();
+        return;
+      }
       storeTimeout && clearTimeout(storeTimeout);
       pageBuilderTimeout && clearTimeout(pageBuilderTimeout);
       editor.UndoManager.stop();
       return new Promise((res, rej) => {
         storeTimeout = setTimeout(async () => {
           console.log("storing...");
-          console.time("storing...");
+          console.time("storing end");
 
           const currentPageId = localStorage.getItem(current_page_id);
           const currentSymbolId = sessionStorage.getItem(current_symbol_id);
@@ -207,8 +240,8 @@ export const IDB = (editor) => {
           //   symbolRuleDetails.media
           // );
 
-          const handleGlobalSymbolRule = () => {
-            if (!currentSymbolId) return {};
+          const handleGlobalSymbolRule = async () => {
+            if (!currentSymbolId) return false;
             console.log("symbol : ", currentSymbolId, editor.getSelected());
             const symbolById = editor
               .getWrapper()
@@ -216,254 +249,57 @@ export const IDB = (editor) => {
             const symbolInf = getInfinitelySymbolInfo(editor.getSelected());
             const symbol = symbolInf?.symbol || symbolById;
             if (!symbolInf?.symbol && !symbolById) {
-              // sessionStorage.removeItem(current_symbol_id)
-              // console.log(
-              //   "symbol not found : ",
-              //   currentSymbolId,
-              //   symbolInf,
-              //   symbolById
-              // );
-
-              return {};
+              return false;
             }
-            // console.log(
-            //   "symbol content : ",
-            //   symbol.toHTML({
-            //     withProps: true,
-            //     keepInlineStyle: true,
-            //   })
-            // );
+            const currentSymbol = projectData.symbols[currentSymbolId];
+            const content = symbol.toHTML({
+              withProps: true,
+              keepInlineStyle: true,
+            });
 
-            const content = new Blob(
-              [
-                symbol.toHTML({
-                  withProps: true,
-                  keepInlineStyle: true,
-                }),
-              ],
-              { type: "text/html" }
-            );
+            const style = getComponentRules({
+              editor,
+              cmp: symbol,
+              nested: true,
+            }).stringRules;
 
-            const style = new Blob(
-              [
-                getComponentRules({
-                  editor,
-                  cmp: symbol,
-                  nested: true,
-                }).stringRules,
-              ],
+            await opfs.writeFiles([
               {
-                type: "text/css",
-              }
-            );
+                path: defineRoot(currentSymbol.pathes.content),
+                content,
+              },
+              {
+                path: defineRoot(currentSymbol.pathes.style),
+                content: style,
+              },
+            ]);
 
             /**
              * @type {{[key : string] : import('../helpers/types').InfinitelySymbol}}
              */
-            const outputSymbol = {
-              [`${currentSymbolId}`]: {
-                ...projectData.symbols[currentSymbolId],
-                content,
-                style,
-              },
-            };
+            // const outputSymbol = {
+            //   [`${currentSymbolId}`]: {
+            //     ...projectData.symbols[currentSymbolId],
+            //     // content,
+            //     // style,
+            //   },
+            // };
 
             /**
              * @type {{[key : string] : import('../helpers/types').InfinitelyBlock}}
              */
-            const outputBlock = {
-              [`${currentSymbolId}`]: {
-                ...projectData.blocks[currentSymbolId],
-                content,
-                style,
-              },
-            };
-
-            return { outputSymbol, outputBlock };
-          };
-          // const handleGlobalSymbolRule = () => {
-          //   currentRule &&
-          //     console.log(
-          //       `current rule from store  : `,
-          //       currentRule,
-          //       currentRule.toCSS()
-          //     );
-
-          //   return currentRule
-          //     ? {
-          //         ...projectData.globalRules,
-          //         [symbolRuleDetails.currentSelector]: {
-          //           media: symbolRuleDetails.media,
-          //           styles: {
-          //             // ...data.globalRules[currentSelector],
-          //             // ...newCssProps,
-          //             ...currentRule.getStyle(),
-          //           },
-          //           states: symbolRuleDetails.states,
-          //         },
-          //       }
-          //     : { ...projectData.globalRules };
-          // };
-
-          // const handleGlobalSymbolBlockThumb = async () => {
-          //   const symbolInfo = getInfinitelySymbolInfo(editor.getSelected());
-          //   console.log(`###########handleGlobalSymbolBlockThumb`);
-
-          //   if (!currentSymbolId || !symbolInfo?.symbol) return {};
-          //   const thumb = await toBlob(symbolInfo.symbol.getEl(), {
-          //     type: "image/webp",
-          //     width: 300,
-          //     height: 300,
-          //     quality: 1,
-          //   });
-
-          //   return {
-          //     [currentSymbolId]: {
-          //       ...projectData.blocks[currentSymbolId],
-          //       media: thumb,
-          //     },
-          //   };
-          // };
-
-          // const handleBlockTemplateThumb = async () => {
-          //   if (!currentTemplateId) return {};
-          //   const templateInfo = getTemplateInfo(editor.getSelected());
-          //   const thumb = await getImgAsBlob(templateInfo.template.getEl());
-          //   return {
-          //     [currentTemplateId]: {
-          //       ...projectData.blocks[currentTemplateId],
-          //       media: thumb,
-          //     },
-          //   };
-          // };
-
-          const handleDynamicTemplateThumbAndProps = async () => {
-            const dynamicTemplate = getDynamicComponent(editor.getSelected());
-            if (!dynamicTemplate || !currentDynamicTemplateId) return {};
-            // const thumb = await toBlob(dynamicTemplate.getEl(), {
-            //   type: "image/webp",
-            //   quality: 1,
-            //   width: 300,
-            //   height: 300,
-            // });
-            // // await getImgAsBlob(dynamicTemplate.getEl());
-            console.log(
-              "stooore all rules dm : ",
-              extractAllRulesWithChildRules(editor.getCss(), dynamicTemplate)
-                .asString
-            );
-
-            /**
-             * @type {{[key:string] : import('../helpers/types').DynamicTemplatesType}}
-             */
-            const output = {
-              // parentRules: extractRulesById(
-              //   editor.getCss(),
-              //   `#${selectedEl.getId()}`
-              // ),
-              // childRuls: extractChildsRules(editor.getCss(), selectedEl),
-              [currentDynamicTemplateId]: {
-                ...projectData.dynamicTemplates[currentDynamicTemplateId],
-                cmp: new Blob(
-                  [
-                    dynamicTemplate.toHTML({
-                      withProps: true,
-                      keepInlineStyle: true,
-                    }),
-                  ],
-                  { type: "text/html" }
-                ),
-                allRules: new Blob(
-                  [
-                    getComponentRules({
-                      cmp: dynamicTemplate,
-                      editor,
-                      nested: true,
-                    }).stringRules,
-                  ],
-                  { type: "text/css" }
-                ),
-                // imgSrc: thumb
-                //   ? thumb
-                //   : projectData.dynamicTemplates[currentDynamicTemplateId]
-                //       .imgSrc,
-              },
-            };
-
-            return output;
+            // const outputBlock = {
+            //   [`${currentSymbolId}`]: {
+            //     ...projectData.blocks[currentSymbolId],
+            //     // content,
+            //     // style,
+            //   },
+            // };
+            return true;
+            // return { outputSymbol, outputBlock };
           };
 
-          // console.log(
-          //   "saved css : ",
-          //   editor.getCss(),
-          //   `\n***nonon***\n`,
-          //   removeDuplicateCSS(editor.getCss())
-          // );
-
-          // await db.projects.update(+projectID, {
-          //   imgSrc: await toBlob(editor.Canvas.getBody(), {
-          //     type: "image/webp",
-          //     quality: 0.1,
-          //   }),
-          //   pages: {
-          //     ...projectData.pages,
-          //     [currentPageId]: {
-          //       ...projectData.pages[currentPageId],
-          //       html: new Blob(
-          //         [
-          //           editor.getWrapper().getInnerHTML({
-          //             keepInlineStyle: true,
-          //             withProps: true,
-
-          //             // asDocument: true,
-          //             // cleanId: true,
-          //           }),
-          //         ],
-          //         { type: "text/html" }
-          //       ),
-          //       components: JSON.stringify(editor.getComponents()),
-          //       css: new Blob(
-          //         [
-          //           minify(
-          //             editor.getCss({
-          //               avoidProtected: true,
-          //               clearStyles: true,
-          //               onlyMatched: true, //complete from here... 23/2/2025 ان شاء الله
-          //               keepUnusedStyles: false,
-          //             })
-          //           ).css,
-          //         ],
-          //         { type: "text/css" }
-          //       ),
-          //     },
-          //   },
-          //   // assets: {
-          //   //   ...grapesjsProjectData.assets,
-          //   // },
-          //   ...(currentSymbolId && {
-          //     blocks: {
-          //       ...projectData.blocks,
-          //       ...(await handleGlobalSymbolBlockThumb()),
-          //       // ...(await handleBlockTemplateThumb()),
-          //     },
-          //   }),
-          //   ...(currentSymbolId && {
-          //     symbols: {
-          //       ...projectData.symbols,
-          //       ...handleGlobalSymbolRule(),
-          //     },
-          //   }),
-          //   ...(currentDynamicTemplateId && {
-          //     dynamicTemplates: {
-          //       ...projectData.dynamicTemplates,
-          //       ...(await handleDynamicTemplateThumbAndProps()),
-          //     },
-          //   }),
-          //   // globalRules: handleGlobalSymbolRule(),
-          //   // gjsProjectData: editor.getProjectData(),
-          // });
-
-          const newBlockAndNewSymbol = handleGlobalSymbolRule();
+          const newBlockAndNewSymbol = await handleGlobalSymbolRule();
 
           /**
            * @type {import('../helpers/types').Project}
@@ -475,67 +311,88 @@ export const IDB = (editor) => {
               [`${currentPageId}`]: {
                 ...projectData.pages[currentPageId],
                 bodyAttributes: editor.getWrapper().getAttributes() || {},
-                html: new Blob(
-                  [
-                    editor.getWrapper().getInnerHTML({
-                      keepInlineStyle: true,
-                      withProps: true,
-                    }),
-                  ],
-                  { type: "text/html" }
-                ),
-                // components: JSON.stringify(editor.getComponents().models),
-                css: new Blob(
-                  [
-                    minify(
-                      editor.getCss({
-                        avoidProtected: true,
-                        clearStyles: true,
-                        onlyMatched: true, //complete from here... 23/2/2025 ان شاء الله
-                        keepUnusedStyles: false,
-                      })
-                    ).css,
-                  ],
-                  { type: "text/css" }
-                ),
+                // html: new Blob(
+                //   [
+                //     editor.getWrapper().getInnerHTML({
+                //       keepInlineStyle: true,
+                //       withProps: true,
+                //     }),
+                //   ],
+                //   { type: "text/html" }
+                // ),
+                // // components: JSON.stringify(editor.getComponents().models),
+                // css: new Blob(
+                //   [
+                //     minify(
+                //       editor.getCss({
+                //         avoidProtected: true,
+                //         clearStyles: true,
+                //         onlyMatched: true, //complete from here... 23/2/2025 ان شاء الله
+                //         keepUnusedStyles: false,
+                //       })
+                //     ).css,
+                //   ],
+                //   { type: "text/css" }
+                // ),
               },
             },
-            // assets: {
-            //   ...grapesjsProjectData.assets,
-            // },
+
+            // ...(currentSymbolId && {
+            //   symbols: {
+            //     ...projectData.symbols,
+            //     ...newBlockAndNewSymbol.outputSymbol,
+            //   },
+            // }),
             // ...(currentSymbolId && {
             //   blocks: {
             //     ...projectData.blocks,
-            //     ...(await handleGlobalSymbolBlockThumb()),
-            //     // ...(await handleBlockTemplateThumb()),
+            //     ...newBlockAndNewSymbol.outputBlock,
             //   },
             // }),
-            ...(currentSymbolId && {
-              symbols: {
-                ...projectData.symbols,
-                ...newBlockAndNewSymbol.outputSymbol,
-              },
-            }),
-            ...(currentSymbolId && {
-              blocks: {
-                ...projectData.blocks,
-                ...newBlockAndNewSymbol.outputBlock,
-              },
-            }),
-            ...(currentDynamicTemplateId && {
-              dynamicTemplates: {
-                ...projectData.dynamicTemplates,
-                ...(await handleDynamicTemplateThumbAndProps()),
-              },
-            }),
+            // ...(currentDynamicTemplateId && {
+            //   dynamicTemplates: {
+            //     ...projectData.dynamicTemplates,
+            //     ...(await handleDynamicTemplateThumbAndProps()),
+            //   },
+            // }),
             // globalRules: handleGlobalSymbolRule(),
             // gjsProjectData: editor.getProjectData(),
           };
 
           // await db.projects.update(+projectID,data)
+          console.log("before props");
+          const projectSetting = getProjectSettings().projectSettings;
+          let tailwindcssStyle;
+          if (projectSetting.enable_tailwind_calsses) {
+            tailwindcssStyle = [
+              ...editor.Canvas.getDocument().head.querySelectorAll(`style`),
+            ].filter((style) =>
+              style.innerHTML.includes(`MIT License | https://tailwindcss.com `)
+            )[0].innerHTML;
+
+            console.log("tailwindcssStyle  : ", tailwindcssStyle);
+          }
 
           const props = {
             data,
+            files: {
+              [`editor/pages/${currentPageId}.html`]: editor
+                .getWrapper()
+                .getInnerHTML({
+                  keepInlineStyle: true,
+                  withProps: true,
+                }),
+              // components: JSON.stringify(editor.getComponents().models),
+              [`css/${currentPageId}.css`]: minify(
+                editor.getCss({
+                  avoidProtected: true,
+                  clearStyles: true,
+                  onlyMatched: true, //complete from here... 23/2/2025 ان شاء الله
+                  keepUnusedStyles: false,
+                })
+              ).css,
+            },
+            tailwindcssStyle,
             projectId: +localStorage.getItem(current_project_id),
             updatePreviewPages: true,
             pageName: currentPageId,
@@ -544,6 +401,8 @@ export const IDB = (editor) => {
               canvasCss: editor.config.canvasCss,
             },
           };
+
+          console.log("after props");
 
           !currentSymbolId
             ? infinitelyWorker.postMessage({
@@ -565,8 +424,6 @@ export const IDB = (editor) => {
           //   });
           // editor.trigger("block:add");
 
-          console.log("store end", data);
-          console.timeEnd("storing...");
           /**
            *
            * @param {MessageEvent} ev
@@ -589,6 +446,8 @@ export const IDB = (editor) => {
               editor.trigger("block:add");
               editor.trigger("block:update");
               console.log("updateDB done");
+              console.log("store end", data);
+              console.timeEnd("storing end");
               // editor.trigger("block:add");
             }
           };
@@ -624,7 +483,7 @@ const loadScripts = async (editor, projectData) => {
      */
     const getJsLib = (lib) => {
       const newObj = {
-        src: lib.isCDN ? lib.fileUrl : `libs/js/header/${lib.file.name}`, //URL.createObjectURL(lib.file), // jsToDataURL(lib.content),
+        src: lib.isCDN ? lib.fileUrl : lib.path, //URL.createObjectURL(lib.file), // jsToDataURL(lib.content),
         name: lib.name,
         async: lib.async,
         defer: lib.defer,
@@ -645,9 +504,9 @@ const loadScripts = async (editor, projectData) => {
 
       const url = lib.isCDN
         ? lib.fileUrl
-        : lib.file.name.includes("global.css")
-        ? `/global.css`
-        : `libs/css/${lib.file.name}`; //newObj;
+        : // : lib.file.name.includes("global.css")
+          // ? `/global.css`
+          lib.path; //newObj;
 
       return {
         url,
@@ -670,14 +529,14 @@ const loadScripts = async (editor, projectData) => {
     // console.log("cssLibs : ", cssLibs);
 
     cssLibs
-      .concat([
-        {
-          file: new File([projectData.globalCss], "global.css", {
-            type: projectData.globalCss.type,
-          }),
-          name: "globalCss",
-        },
-      ])
+      // .concat([
+      //   {
+      //     file: new File([projectData.globalCss], "global.css", {
+      //       type: projectData.globalCss.type,
+      //     }),
+      //     name: "globalCss",
+      //   },
+      // ])
       .forEach((lib) => {
         if (typeof lib == "string") {
           return lib;
@@ -695,71 +554,117 @@ const loadScripts = async (editor, projectData) => {
           });
         // console.log(`Libbbbbbbbbbbbbbb@@#: `, libData);
       });
+
+    //For Global Css
+    const globalCss = editor.config.canvas.styles.find(
+      (lib) => lib && typeof lib != "string" && lib?.name == "global-css"
+    );
+    !globalCss &&
+      editor.config.canvas.styles.push({
+        href: `/global/global.css`,
+        name: "global-css",
+      });
+
+    const projectSetting = getProjectSettings().projectSettings;
+    if (projectSetting.enable_tailwind_calsses) {
+      // const tScript = document.createElement('script');
+      // tScript.src = `/scripts/tailwindcss.v4.js`
+      // editor.Canvas.getDocument().head.appendChild
+      editor.config.canvas.scripts.push({
+        src: `/scripts/tailwindcss.v4.js`,
+        name: "tailwindcss.js",
+      });
+    }
   };
 
   loadFooterScriptsCallback = async (ev) => {
     console.log("evoooooooooooo : ", ev.window.document.body);
+    /**
+     * @type {HTMLBodyElement}
+     */
     const body = ev.window.document.body;
     const jsFooterLibs = projectData.jsFooterLibs; //.map(lib=>lib.file);
-    const globalScript = projectData.globalJs;
-    const localScript = projectData.pages[`${currentPageName}`].js;
-    const fragment = document.createDocumentFragment();
-    let lastScripts;
-    const allScripts = [
-      ...jsFooterLibs,
-      globalScript,
-      localScript,
-      ...mainScriptsForEditor,
-    ];
-
+    // const globalScript = projectData.globalJs;
+    // const localScript = projectData.pages[`${currentPageName}`].js;
+    // const fragment = document.createDocumentFragment();
+    // let lastScripts;
+    // const allScripts = [
+    //   ...jsFooterLibs,
+    //   globalScript,
+    //   localScript,
+    //   ...mainScriptsForEditor,
+    // ];
     /**
-     *
      * @param {import('../helpers/types').LibraryConfig[] & Blob[] & string[]} array
      * @param {number} index
-     * @param {(script: HTMLScriptElement , lib : import('../helpers/types').LibraryConfig & Blob & string)=>void} callback
-     * @returns
+     * @param {(script: HTMLScriptElement, lib: import('../helpers/types').LibraryConfig & Blob & string) => void} callback
+     * @returns {Promise<boolean>}
      */
     const appendScript = async (
       array = [],
-      index,
+      index = 0,
       callback = (script, lib) => {}
     ) => {
-      // console.log("index : ", index, allScripts);
-
       if (index > array.length - 1) return true;
       const script = document.createElement("script");
       const lib = array[index];
 
-      callback(script, lib);
+      try {
+        callback(script, lib);
+        console.log(await (await fetch(`/keep-alive`)).text());
+        console.log("Appending script:", script.src, lib);
 
-      // fragment.appendChild(script);
-      body.appendChild(script);
-      return await new Promise((res, rej) => {
-        script.onload = (ev) => {
-          res(appendScript(array, index + 1, callback));
-        };
-      });
+        if (!script.src) {
+          console.warn("Skipping script with empty src:", lib);
+          return await appendScript(array, index + 1, callback);
+        }
+
+        if (!body) {
+          console.error("Body element is undefined");
+          return false;
+        }
+
+        body.appendChild(script);
+
+        return await new Promise((res) => {
+          const loadCb = async () => {
+            console.log(`Script loaded: ${script.src}`);
+            script.removeEventListener("load", loadCb);
+            res(await appendScript(array, index + 1, callback));
+          };
+          script.addEventListener("load", loadCb);
+
+          const errCb = async (ev) => {
+            console.error(`Error loading script: ${script.src}`, ev);
+            script.removeEventListener("error", errCb);
+            res(await appendScript(array, index + 1, callback)); // Continue on error
+          };
+          script.addEventListener("error", errCb);
+        });
+      } catch (err) {
+        console.error(
+          `Unexpected error in appendScript for ${script.src}:`,
+          err
+        );
+        return await appendScript(array, index + 1, callback); // Continue on error
+      }
     };
 
+    // Usage example
     await appendScript(jsFooterLibs, 0, (script, lib) => {
       if (lib.isCDN) {
         script.src = lib.fileUrl;
         script.setAttribute("name", lib.name);
       } else {
-        script.src = `libs/js/footer/${lib.file.name}`;
+        script.src = lib.path;
         script.setAttribute("name", lib.name);
       }
-
       lib?.async && script.setAttribute("async", "");
       lib?.defer && script.setAttribute("defer", "");
     });
 
-    await appendScript([globalScript], 0, (script, lib) => {
-      script.src = `global/global.js`;
-    });
-
-    await appendScript([localScript], 0, (script, lib) => {
-      script.src = `local/local.js?page=${currentPageName}`;
+    await appendScript(["/global/global.js"], 0, (script, lib) => {
+      script.src = lib;
     });
 
     await appendScript(mainScriptsForEditor, 0, (script, lib) => {

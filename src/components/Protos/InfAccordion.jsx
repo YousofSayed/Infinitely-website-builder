@@ -9,7 +9,7 @@ export const InfAccordion = ({attributes = {} , children }) => {
       // keepContentMounted
         {...attributes}
       itemClasses={{
-        trigger: "flex items-center justify-between ",
+        trigger: "flex items-center justify-[between!important] text-[start!important] [&_div]:text-start p-[unset!important]",
         base: "bg-slate-800 p-3  rounded-lg text-slate-200 font-semibold relative ",
         content: `bg-slate-900 p-[unset!important] mt-2 rounded-md will-change-[height,width]`,
         title: `capitalize custom-font-size`,

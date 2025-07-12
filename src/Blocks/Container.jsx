@@ -13,10 +13,11 @@ export const Container = ({ editor }) => {
     model: {
 
       defaults: {
+        resizable:true,
         icon: editorIcons.container({width:20 , height:20 , fill:'white'}),
         tagName: "section",
         attributes: {
-          class: "container",
+          class: "inf-container",
         },
         traits: defineTraits([
           {

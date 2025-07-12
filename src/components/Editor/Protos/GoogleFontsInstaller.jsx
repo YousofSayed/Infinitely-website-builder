@@ -21,6 +21,8 @@ import { useRecoilState } from "recoil";
 import { dbAssetsSwState } from "../../../helpers/atoms";
 import { FitTitle } from "./FitTitle";
 import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
+import { opfs } from "../../../helpers/initOpfs";
+import { defineRoot, getFileSize, toMB } from "../../../helpers/bridge";
 
 export const GoogleFontsInstaller = () => {
   const editor = useEditorMaybe();
@@ -71,7 +73,7 @@ export const GoogleFontsInstaller = () => {
 
   const installFiles = async (isCDN = false) => {
     const files = fontFilesWillInstalled.current;
-    const mime = await (await import('mime')).default
+    const mime = await (await import("mime")).default;
     if (!files.length) {
       toast.warn(<ToastMsgInfo msg={`Select Files To Install`} />);
       return;
@@ -96,20 +98,21 @@ export const GoogleFontsInstaller = () => {
           const res = await response.blob();
           console.log("name : ", name, currentFileName.current, key);
           const ext = mime.getExtension(res.type);
-          const fileName =  `${name.replace(`.${ext}`,'')}.${ext}`;
+          const fileName = `${name.replace(`.${ext}`, "")}.${ext}`;
           console.log("font name : ", name, ext);
+          const file = new File([res], fileName, { type: res.type });
           return {
             url: fontFiles[key],
             // dataUrl: reader.result,
             // blob: res,
-            file: new File([res],fileName, { type: res.type }),
+            file,
             id: uniqueID(),
             name: `${name}`,
             fileName,
-            path:`fonts/${fileName}`,
+            path: `fonts/${fileName}`,
             isCDN,
+            size:getFileSize(file).MB
           };
-
         } else {
           return {
             url: fontFiles[key],
@@ -122,9 +125,29 @@ export const GoogleFontsInstaller = () => {
     );
 
     const fontsIntoDB = {};
-    installedFonts.forEach((fontInfo) => {
-      fontsIntoDB[fontInfo.isCDN ? fontInfo.name : fontInfo.fileName] = fontInfo;
-    });
+    // installedFonts.forEach((fontInfo) => {
+    //   fontsIntoDB[fontInfo.isCDN ? fontInfo.name : fontInfo.fileName] =
+    //     fontInfo;
+    // });
+    for (const fontInfo of installedFonts) {
+      const key =fontInfo.isCDN ? fontInfo.name : fontInfo.fileName; 
+      fontsIntoDB[key] =
+        fontInfo;
+      if (!fontInfo.isCDN) {
+        // const fontsFolder = await opfs.getFolder(
+        //   await opfs.root,
+        //   `projects/project-${opfs.id}/fonts`
+        // );
+        await opfs.createFiles([
+          {
+            path: defineRoot(`${fontInfo.path}`),
+            content: fontInfo.file,
+          },
+        ]);
+
+      }
+      delete fontsIntoDB[key].file
+    }
     console.log(installedFonts, fontsIntoDB);
 
     const updater = async () => {
@@ -136,16 +159,16 @@ export const GoogleFontsInstaller = () => {
           ...fontsIntoDB,
         },
       });
-      const newProjectData = await getProjectData();
-      swDBAssets.postMessage({
-        command: "setVar",
-        props: {
-          obj: {
-            projectId: +localStorage.getItem(current_project_id),
-            projectData: newProjectData,
-          },
-        },
-      });
+      // const newProjectData = await getProjectData();
+      // swDBAssets.postMessage({
+      //   command: "setVar",
+      //   props: {
+      //     obj: {
+      //       projectId: +localStorage.getItem(current_project_id),
+      //       projectData: newProjectData,
+      //     },
+      //   },
+      // });
       updateFiles();
     };
     await updater();
@@ -236,39 +259,36 @@ export const GoogleFontsInstaller = () => {
         {!showLoader &&
           !Object.keys(fontFiles).length &&
           !!googlFontsRespons?.items?.length && (
-           
-
             <section className="h-full overflow-auto flex flex-col">
-
               <Virtuoso
-              // scrolling="none"
-              // className="h-[100%!important] flex flex-col hideScrollBar"
-            components={{Item:VirtosuoVerticelWrapper}}
-              totalCount={googlFontsRespons.items.length}
-              itemContent={(i) => {
-                const font = googlFontsRespons.items[i];
-                return (
-                  <section
-                    key={i}
-                    onClick={(ev)=>{
-                      onNavigateToFiles(font)
-                    }}
-                    className="p-2  text-slate-200 font-semibold bg-slate-800 rounded-md flex items-center justify-between [&:hover_path]:stroke-white cursor-pointer"
-                  >
-                    {/* <p className="cursor-pointer">{font.family}</p> */}
-                    <FitTitle>{font.family}</FitTitle>
-                    <button
-                      className="rotate-[-90deg] cursor-pointer group"
-                      // onClick={(ev) => {
-                      //   onNavigateToFiles(font);
-                      // }}
+                // scrolling="none"
+                // className="h-[100%!important] flex flex-col hideScrollBar"
+                components={{ Item: VirtosuoVerticelWrapper }}
+                totalCount={googlFontsRespons.items.length}
+                itemContent={(i) => {
+                  const font = googlFontsRespons.items[i];
+                  return (
+                    <section
+                      key={i}
+                      onClick={(ev) => {
+                        onNavigateToFiles(font);
+                      }}
+                      className="p-2  text-slate-200 font-semibold bg-slate-800 rounded-md flex items-center justify-between [&:hover_path]:stroke-white cursor-pointer"
                     >
-                      {Icons.arrow()}
-                    </button>
-                  </section>
-                );
-              }}
-            />
+                      {/* <p className="cursor-pointer">{font.family}</p> */}
+                      <FitTitle>{font.family}</FitTitle>
+                      <button
+                        className="rotate-[-90deg] cursor-pointer group"
+                        // onClick={(ev) => {
+                        //   onNavigateToFiles(font);
+                        // }}
+                      >
+                        {Icons.arrow()}
+                      </button>
+                    </section>
+                  );
+                }}
+              />
             </section>
           )}
 
@@ -296,7 +316,9 @@ export const GoogleFontsInstaller = () => {
                   onChange={onSelectAll}
                 />
               </span>
-              <label htmlFor="select-all" className="px-2 cursor-pointer">Select All</label>
+              <label htmlFor="select-all" className="px-2 cursor-pointer">
+                Select All
+              </label>
               {/* <p className="px-2">Select All</p> */}
             </button>
           </section>

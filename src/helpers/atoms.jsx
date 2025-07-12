@@ -276,10 +276,10 @@ export const IDBState = atom({
   default: IDBType,
 });
 
-export const globalSettingsState = atom({
-  key: "globalSettingsState",
-  default: getGlobalSettings().globalSettings,
-});
+// export const globalSettingsState = atom({
+//   key: "globalSettingsState",
+//   default:getProjectSettings().projectSettings //getGlobalSettings().globalSettings,
+// });
 
 export const projectSettingsState = atom({
   key: "projectSettings",
@@ -294,13 +294,7 @@ export const tooltipDataState = atom({
 export const fileInfoState = atom({
   key: "fileInfoState",
   default: {
-    fileType: "",
-    fileName: "",
-    fileContent: "",
-    isHeader: false,
-    isFooter: true,
-    id: "",
-    file:new File([''] , 'empty.txt' , {type:'plain/text'})
+    path:''
   },
 });
 
@@ -331,3 +325,8 @@ export const newProjectData = atom({
     descreption: "",
   },
 });
+
+export const isProjectInitedState = atom({
+  key:'isProjectInitedState',
+  default:true
+})

@@ -17,6 +17,7 @@ import { Text } from "../Blocks/Text";
 import { Audio } from "../Blocks/Audio";
 import { Iframe } from "../Blocks/Iframe";
 import { Media } from "../Blocks/Media";
+import { Svg } from "../Blocks/Svg";
 
 /**
  *
@@ -41,4 +42,5 @@ export const customCmps = (editor) => {
   // Audio({ editor });
   // Iframe({ editor });
   Media({ editor });
+  Svg(editor)
 };

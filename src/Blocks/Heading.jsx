@@ -10,15 +10,26 @@ import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
  */
 export const Heading = ({ editor }) => {
   editor.Components.addType("heading", {
-    extend: "text",
+    isComponent:(el)=>el.tagName && heading_tags.includes(el.tagName.toLowerCase()),
+    // extend: "text",
+    view:{
+      onRender({model}){
+        model.set({
+          droppable:false,
+        })
+      }
+    },
     model: {
+      
       defaults: {
+        droppable: false,
+        resizable:true,
         icon:reactToStringMarkup(Icons.heading({fill:'white'})),
-        tagName:'h1',
+        // tagName:'h1',
         attributes: {
           class: "p-10",
         },
-        components:'Heading',
+        // components:'Heading',
         traits: defineTraits([
           {
             name: "level",
@@ -39,6 +50,7 @@ export const Heading = ({ editor }) => {
           },
         ]),
         droppable: false,
+        resizable:true,
       },
     },
   });

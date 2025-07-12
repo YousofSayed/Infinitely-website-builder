@@ -311,12 +311,11 @@ details[open] {
   @apply border-blue-600;
 }
 
-details summary {
+/* details summary {
   cursor: pointer;
   list-style: none;
   display: flex;
   align-items: center;
-  /* justify-content: space-between; */
   gap: 0;
   user-select: none;
   font-weight: 600;
@@ -335,7 +334,7 @@ details summary::before {
   position: absolute;
   right: 0;
   transition: transform 0.3s ease;
-}
+} */
 
 details::marker {
   color: aliceblue;

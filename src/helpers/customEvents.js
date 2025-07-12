@@ -98,20 +98,26 @@ export const changePageName = ({ pageName }) => {
   });
 };
 
-export const naviagatePreview = ({pageName , href})=>{
+export const naviagatePreview = ({ pageName, href }) => {
   return new CustomEvent(InfinitelyEvents.preview.navigate, {
     detail: {
       pageName,
-      href
-    }, 
-  })
-}
+      href,
+    },
+  });
+};
 
 /**
  *
  * @param {HTMLElement} el
  */
 export const pvMount = (el) => {
+  // const mountBc = new BroadcastChannel(`pv:mount`);
+  // mountBc.postMessage({
+  //   el,
+  // });
+
+  // mountBc.close();
   const pvMountCm = new CustomEvent("pv:mount", {
     detail: {
       el,
@@ -125,6 +131,12 @@ export const pvMount = (el) => {
  * @param {HTMLElement} el
  */
 export const pvUnMount = (el) => {
+  // const unMountBc = new BroadcastChannel(`pv:unmount`);
+  // unMountBc.postMessage({
+  //   el,
+  // });
+
+  // unMountBc.close();
   const pvUnMountCm = new CustomEvent("pv:unmount", {
     detail: {
       el,
@@ -154,8 +166,8 @@ export const runAllGsapMotions = (motions) => {
     new CustomEvent("gsap:all:run", {
       detail: {
         motions,
-        methods:[],
-        props:{}
+        methods: [],
+        props: {},
       },
     })
   );
@@ -166,7 +178,7 @@ export const killAllGsapMotions = (motions) => {
     new CustomEvent("gsap:all:kill", {
       detail: {
         motions,
-        methods:[]
+        methods: [],
       },
     })
   );

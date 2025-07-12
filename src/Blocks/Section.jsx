@@ -10,17 +10,17 @@ import { defineTraits } from "../helpers/functions";
  */
 export const Section = ({ editor }) => {
   editor.Components.addType("section", {
-  
+    isComponent:(el)=>el.tagName == 'SECTION',
     model: {
       // init(){
       //   this.updateTrait('tag-name', {value: this.tagName});
       // },
       defaults: {
         icon: editorIcons.section({ width: 25, height: 25, fill: "white" }),
-        
+        resizable:true,
         tagName: "section",
         attributes: {
-          class: "parent minh-60",
+          class: "section",
         },
         traits: defineTraits([
           {

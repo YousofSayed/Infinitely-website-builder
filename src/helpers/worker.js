@@ -1,6 +1,6 @@
 import { exportProject } from "./exportProject";
 import { loadProject } from "./loadProject";
-import { deleteAllSymbolsById, getDataFromDB, sendPreviewPagesToServiceWorker, storeGrapesjsDataIfSymbols, updateAllPages, updateDB, uploadAssets, varsToServiceWorker, } from "./workerCommands";
+import { createProject, deleteAllSymbolsById, getDataFromDB, initOPFS, sendPreviewPagesToServiceWorker, storeGrapesjsDataIfSymbols, updateAllPages, updateDB, uploadAssets, varsToServiceWorker, } from "./workerCommands";
 import { doWorkerPattern } from "./workersPattern";
 // import { getProjectData } from "./functions";
 
@@ -16,6 +16,8 @@ const commands = {
     uploadAssets,
     varsToServiceWorker,
     sendPreviewPagesToServiceWorker,
+    createProject,
+    initOPFS,
 };
 
 doWorkerPattern(commands)

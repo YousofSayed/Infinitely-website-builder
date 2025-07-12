@@ -187,14 +187,19 @@ export let projectSettingsType = {
   grap_all_footer_scripts_in_single_file: false,
   grap_all_header_scripts_in_single_file: false,
   grap_all_css_libs_in_single_file: false,
-  is_async_graped_footer_script: false,
+  is_async_graped_footer_script: false, 
   is_async_graped_header_script: false,
   is_defer_graped_footer_script: false,
   is_defer_graped_header_script: false,
+  disable_gsap_core:false,
+  disable_gsap_scrollTrigger:false,
   enable_prettier_for_file_editor: true,
   include_canvas_styles_in_build_file: true,
   disable_petite_vue: false,
+  enable_tailwind_calsses:false,
   // purge_css: false,
+  include_symbols_in_export:true,
+  include_templates_in_export:true,
 };
 
 /**
@@ -252,7 +257,7 @@ export let motionType = {
 };
 
 /**
- * @type {import('./types').InfinitelyAsset}
+ * @type {File}
  */
 export let assetType = {};
 
@@ -270,6 +275,7 @@ export let motionAnimationType = {};
  * @type {import('./types').StorageDetails}
  */
 export let storageDetailsType = {
+  filsLength: 0,
  usage: 0,
   quota: 0,
   qoutaPerProjectMB: 0,

@@ -1,0 +1,11 @@
+directories:
+  output: release
+  buildResources: build
+appId: com.infinitely.app
+productName: Infinitely Studio
+files:
+  - filter:
+      - dist/**/*
+      - electron-main.cjs
+      - preload.js
+electronVersion: 37.2.0

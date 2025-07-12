@@ -270,13 +270,13 @@ export const Select = ({
   return (
     <section
       ref={selectRef}
-      className={`w-full p-1  h-fit rounded-lg flex ${
+      className={`w-full p-1  h-fit rounded-lg flex  ${
         wrap && "flex-wrap gap-3 py-1 pl-2"
-      }  gap-2  ${className ? className : "bg-slate-800"} h-full flex ${label ? `p-1` : `items-center p-1 `}`}
+      }  gap-2  ${className ? className : "bg-slate-800"} h-full flex ${label ? `p-1 flex-col` : `items-center p-1 `}`}
     >
       {icon}
       {label ? (
-        <FitTitle className="capitalize flex items-center justify-center overflow-hidden text-ellipsis custom-font-size w-[30%!important] flex-shrink-0 ">{label.replaceAll(/(\s+)?\:/gi, "")} </FitTitle>
+        <FitTitle className="capitalize flex items-center justify-center overflow-hidden text-ellipsis custom-font-size w-fit flex-shrink-0 ">{label.replaceAll(/(\s+)?\:/gi, "")} </FitTitle>
       ) : null}
       <div
         className={`h-full w-full ${
@@ -301,7 +301,7 @@ export const Select = ({
         <input
           value={value}
           ref={inputRef}
-          className={`w-full h-full  font-semibold   focus:border-blue-600  rounded-lg   px-2 py-3   outline-none text-white ${
+          className={`w-full h-full  font-semibold   focus:border-blue-600  rounded-lg   px-2 py-2   outline-none text-white ${
             preventInput ? "pointer-events-none" : ""
           } ${inputClassName ? inputClassName : "bg-slate-900"} `}
           type="text"

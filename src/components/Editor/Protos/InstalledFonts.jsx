@@ -161,7 +161,7 @@ export const InstalledFonts = () => {
                 {
                   <FitTitle>
                     {!fonts[key].isCDN
-                      ? `${getFileSize(fonts[key].file).MB}MB`
+                      ? `${fonts[key].size}MB`
                       : Icons.installAsCDN({
                           fill: "white",
                           strokeColor: "white",

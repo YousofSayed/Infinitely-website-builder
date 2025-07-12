@@ -1,81 +1,47 @@
-// public/dbAssets-sw.js
-
-// import { db } from "./helpers/db";
-
-// const bridgeMap = new Map(); 
-var vars = {};
-// console.log('db is : ' ,db);
-
-// self.addEventListener("install", (event) => {
-//   console.log("SW: Installing...");
-//   // self.skipWaiting();
-// });
-
-// self.addEventListener("activate", (event) => {
-//   console.log("SW: Activating...");
-//   // self.skipWaiting();
-//   // event.waitUntil(self.clients.claim());
-// });
-
-console.log("Precache manifest:", self.__WB_MANIFEST);
-console.log("Precache manifest 222:", self.__WB_MANIFEST);
+let vars = {};
 
 self.addEventListener("message", (ev) => {
   const { command, props } = ev.data;
+  console.log(`Sw : data : `, command, props);
   const cond = command?.toLowerCase?.() === "setVar".toLowerCase();
+  if (
+    Object.keys(props?.obj || {}).includes("previewPage") &&
+    props?.obj?.updateOnce
+  ) {
+    vars = {
+      ...vars,
+      previewPages: {
+        ...(vars?.previewPages || {}),
+        ...props.obj.previewPage,
+      },
+    };
+
+    const previewBroadCastChannel = new BroadcastChannel("preview");
+    previewBroadCastChannel.postMessage({
+      command: "setPreviewUrl",
+      props: {
+        url: `${props?.obj?.pageUrl}`,
+      },
+    });
+    console.log(
+      `Send Preview URL to Broadcast Channel Is Done 👍`,
+      props?.obj?.pageUrl,
+      "vars is :",
+      props.obj.previewPage,
+      vars
+    );
+
+    return;
+  }
   vars = { ...vars, ...props.obj };
+
   if (cond) {
-    console.log("a3aaaaaaaaaaaaaaaa", vars);
+    console.log("Got Vars", vars, props.obj);
   }
   // self.skipWaiting();
   // event.waitUntil(clients.claim());
 });
 
-// self.addEventListener("fetch", (event) => {
-//   const url = new URL(event.request.url);
-
-//   // Handle /keep-alive first
-//   if (url.pathname.includes("/keep-alive")) {
-//     event.respondWith(new Response(new Blob(["ok"], { type: "text/plain" })));
-//     return;
-//   }
-//   console.log(`fetch from db assets url : ${url.pathname} ,rororor`);
-//   const splittedUrl = url.pathname.split("/");
-//   const fileName = splittedUrl[splittedUrl.length - 1];
-//   const projectId = vars["projectId"];
-  
-//   if (projectId) {
-//       const projectData = vars["projectData"];
-//       const assets = projectData.assets;
-//       const fileFromDB = assets
-//       .concat(Object.values(projectData.fonts || {}))
-//       .find(
-//           (asset) =>
-//             encodeURIComponent(asset.file.name).toLowerCase() ===
-//           fileName.toLowerCase()
-//         );
-//         console.log('from fetch id: ' ,projectId );
-//     console.log(
-//       "sw worker 2m : ",
-//       projectId,
-//       projectData,
-//       fileFromDB,
-//       fileName.toLowerCase()
-//     );
-//     if (fileFromDB) {
-//       event.respondWith(
-//         new Response(fileFromDB.file, {
-//           status: 200,
-//           headers: { "Content-Type": fileFromDB.file.type },
-//         })
-//       );
-//       return
-//     }
-//     return
-//   }
-//   // Single response logic
-
-//   //   self.skipWaiting();
-
-//   // clients.claim();
-// });
+function parseTextToURI(text = "") {
+  return new URL(text, self.origin).pathname.split("/");
+}

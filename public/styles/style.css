@@ -16,6 +16,14 @@ video {
   padding: 10px;
   width: 100%;
 }
+
+.section {
+  padding: 10px;
+  width: 100%;
+  height: 60px;
+  min-height: 60px;
+}
+
 .row {
   min-height: 75px;
   flex-grow: 1;
@@ -40,53 +48,60 @@ video {
 .inf-block {
   display: block;
   padding: 10px;
-  height: 70px;
- width: 300px;
+  min-height: 100%;
+  width: 300px;
 }
 
 /* Container Class */
-.container {
+.inf-container {
   margin-left: auto;
   margin-right: auto;
   padding-left: 15px; /* Consistent edge spacing */
   padding-right: 15px;
   max-width: 1140px; /* Sweet spot for readability */
-  width: 100%; /* Fluid up to the max */
+  width: 100%; 
+  min-height:100%;
   box-sizing: border-box; /* Padding stays in bounds */
-  min-height: 65px;
+  /* min-height: 65px; */
 }
 
 /* Responsive Breakpoints */
+@media (min-width: 320px) {
+  .inf-container {
+    max-width: 300px; /* Small screens */
+  }
+}
+
 @media (min-width: 576px) {
-  .container {
+  .inf-container {
     max-width: 540px; /* Small screens */
   }
 }
 
 @media (min-width: 768px) {
-  .container {
+  .inf-container {
     max-width: 720px; /* Medium screens */
   }
 }
 
 @media (min-width: 992px) {
-  .container {
+  .inf-container {
     max-width: 960px; /* Large screens */
   }
 }
 
 @media (min-width: 1200px) {
-  .container {
+  .inf-container {
     max-width: 1140px; /* Extra large screens */
   }
 }
 
 /* Optional Variants */
-.container--full {
+.inf-container--full {
   max-width: none; /* Full width option */
 }
 
-.container--fluid {
+.inf-container--fluid {
   padding-left: 15px;
   padding-right: 15px;
   max-width: none; /* Edge padding, no max-width */
@@ -100,19 +115,19 @@ video {
   display: inline-block;
 }
 
-.block{
+.block {
   display: block;
 }
 
-.flex{
+.flex {
   display: flex;
 }
 
-.w-full{
+.w-full {
   width: 100%;
 }
 
-.h-full{
+.h-full {
   height: 100%;
 }
 
@@ -124,39 +139,39 @@ video {
   height: fit-content;
 }
 
-.min-h-300{
+.min-h-300 {
   min-height: 300px;
 }
 
-.h-300{
+.h-300 {
   height: 300px;
 }
 
-.h-60{
+.h-60 {
   height: 60px;
 }
 
-.no-pointer{
+.no-pointer {
   pointer-events: none;
 }
 
-.flex-center{
+.flex-center {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.choose-media{
+.choose-media {
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
   align-items: center;
-  gap: .5rem;
+  gap: 0.5rem;
   height: 100%;
   width: 100%;
 }
 
-.choose-media img{
+.choose-media img {
   max-height: 100%;
   max-width: 100%;
   width: 100%;
@@ -167,7 +182,7 @@ video {
   position: relative;
 }
 
-.preventer::before{
+.preventer::before {
   content: '""';
   position: absolute;
   left: 0;
@@ -187,3 +202,27 @@ video {
   border-color: #eb2588 !important;
   /* outline: 2px solid #eb2588 !important; */
 }
+
+[data-gjs-type="media"] {
+  width: fit-content;
+  height: fit-content;
+  display: block;
+}
+[data-gjs-type="media"] > * {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  /* max-width: 100% !important; */
+  display: block;
+  pointer-events: none;
+}
+[data-gjs-type="media"] > audio {
+  /* width: 100% !important; */
+  /* height: auto !important; */
+  /* min-height: 40px; */
+}
+/* [data-gjs-type="media"] > audio[controls] {
+  width: 100% !important;
+ 
+} */

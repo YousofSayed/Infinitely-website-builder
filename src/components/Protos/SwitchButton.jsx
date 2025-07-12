@@ -6,6 +6,8 @@ export const SwitchButton = ({
   defaultValue = false,
 }) => {
   const [active, setActive] = useState(defaultValue);
+  // console.log('default : ' , defaultValue);
+  
   return (
     <button
       className={`relative overflow-hidden w-[40px] flex p-[2px] flex-shrink-0  items-center h-[20px] rounded-full ${

@@ -1,14 +1,16 @@
 import parseObjectLiteral from "object-literal-parse";
 import { parse as parseCss, stringify as stringifyCss } from "css";
-import { cloneDeep, isPlainObject } from "lodash";
+import { cloneDeep, isPlainObject, random, uniqueId } from "lodash";
 import serializeJavascript from "serialize-javascript";
 import {
   MAX_FILE_SIZE,
+  MAX_FILES_COUNT,
   MAX_UPLOAD_SIZE,
   motionId,
   preivewScripts,
 } from "../constants/shared";
 import { db } from "./db";
+import { opfs } from "./initOpfs";
 
 export const html = String.raw;
 export const css = String.raw;
@@ -29,6 +31,7 @@ export function doDocument(content = "") {
   `;
 }
 
+
 /**
  *
  * @param {import('grapesjs').Editor} editor
@@ -38,6 +41,19 @@ export function getAlpineContext(editor, cmp) {
   const wrapper = editor.getWrapper();
   console.log("cmp : ", cmp);
 
+  function getElementType(selectorOrElement) {
+    // Get the element (handle both selector string and element)
+    const element = typeof selectorOrElement === 'string' 
+        ? document.querySelector(selectorOrElement) 
+        : selectorOrElement;
+
+    if (!element || !(element instanceof HTMLElement)) {
+        return 'Element not found or not an HTMLElement';
+    }
+
+    // Return the constructor name (e.g., HTMLBodyElement, HTMLDivElement)
+    return element.constructor.name;
+}
   // const wrapperAttributes = Object.fromEntries(
   //   Object.entries(wrapper.getAttributes()).filter(([key, value]) =>
   //     key.startsWith(`x-`)
@@ -82,21 +98,21 @@ export function getAlpineContext(editor, cmp) {
   }
   forWillContenx = [...new Set(forWillContenx.reverse())].reverse().join("\n");
 
-  //extract x-ref scope :
-  // const xRefScope = allAttributes
-  //   .map((attrs) => attrs["x-ref"])
-  //   .filter(Boolean);
-  // let refWillContenx = ``;
-  // for (let i = 0; i < xRefScope.length; i++) {
-  //   refWillContenx += `${i == 0 ? "var $refs = {" : ""} ${xRefScope[i]} : $el ${
-  //     i == xRefScope.length - 1 ? "}" : ","
-  //   }`;
-  // }
+  //extract v-ref scope :
+  const vRefScope = editor.getWrapper().find(`[v-ref]`);
+  let refWillContenx = ``;
+  for (let cmp of vRefScope) {
+    const elType = getElementType(cmp.getEl());
+    refWillContenx += `var $${cmp.getAttributes()['v-ref']} : ${elType};`
+   
+  }
 
   return `
  ${dataWillContenx || ""}
 
  ${forWillContenx || ""}
+
+ ${refWillContenx || ""}
 
  `;
   //  ${refWillContenx || ""}
@@ -360,10 +376,10 @@ export const getFonts = (projectData) => {
     defineFontFace({
       family: font.isCDN
         ? font.name
-        : font.file.name.split(/\.\w+/gi).join("").trim(),
+        : font.path,
       url: font.isCDN
         ? `url("${font.url}")`
-        : `url("../fonts/${font.file.name}") `,
+        : `url("${font.path}") `,
     })
   );
   return stringFonts.join("\n");
@@ -502,6 +518,23 @@ export async function minifyBlobJSAndCssStream(blob, type = "") {
   });
 }
 
+export function getProjectRoot(id) {
+  return `projects/project-${id || opfs.id}`;
+}
+
+export async function getOPFSProjectDir() {
+  const projectDir = await opfs.getFolder(getProjectRoot());
+  return projectDir;
+}
+
+/**
+ *
+ * @param {string} path
+ */
+export async function getFileFromHandle(path) {
+  return await (await opfs.getFile(await getOPFSProjectDir(), path)).getFile();
+}
+
 export function isDevMode(resolve = (result) => {}, reject = (result) => {}) {
   const isDev = import.meta.env.MODE === "development";
   if (isDev) {
@@ -509,6 +542,8 @@ export function isDevMode(resolve = (result) => {}, reject = (result) => {}) {
   } else {
     reject(isDev);
   }
+
+  return isDev;
 }
 
 export function toMB(bytes = 0, toFixed = 2) {
@@ -801,8 +836,8 @@ export async function cleanMotions(motions, pages) {
         Object.values(pages).map(async (page) => {
           // const pageContent = await page.html.text();
           console.log(page, page.helmet);
-
-          const stream = page.html.stream();
+          const pageFile = await (await opfs.getFile(defineRoot(page.pathes.html))).getOriginFile()
+          const stream = pageFile.stream();
           const reader = stream.getReader();
           const decoder = new TextDecoder();
           const buffer = [];
@@ -887,20 +922,20 @@ export async function installRestModelsAPI(rModels) {
   return await Promise.all(
     rModels.map(async (model) => {
       if (!navigator.onLine) {
-        console.log('you offline');
-        
+        console.log("you offline");
+
         model.response = null;
         model.waitToInstall = true;
-        return await new Promise((res,rej)=>res(model));
+        return await new Promise((res, rej) => res(model));
       }
 
       try {
         const response = await fetch(model.url, {
           method: model.method,
-          headers: Object.keys(model.headers).length
+          headers: Object.keys(model.headers || {}).length
             ? model.headers
             : undefined,
-          body: Object.keys(model.body).length ? model.body : undefined,
+          body: Object.keys(model.body || {}).length ? model.body : undefined,
         });
         const data = await response.json();
         model.response = JSON.stringify(data);
@@ -918,35 +953,26 @@ export async function installRestModelsAPI(rModels) {
  *
  * @param {import('./types').Project} projectData
  */
-export async function getTotalSizeProject(projectData) {
-  return (
-    getFilesSize(
-      [
-        ...Object.values(projectData.fonts),
-        ...projectData.assets,
-        ...projectData.jsHeaderLibs,
-        ...projectData.jsFooterLibs,
-        ...projectData.cssLibs,
-      ]
-        .filter((asset) => !asset?.isCDN)
-        .map?.((asset) => asset.file) || []
-    ).MB || 0
-  );
+export async function getTotalSizeProject(projectId, projectData) {
+  return toMB(await opfs.getFolderSize(`projects/project-${projectId}`));
+
 }
 
 /**
  *
- * @param {import('./types').InfinitelyAsset[]} assets
+ * @param {File[]} assets
  * @param {number} projectId
  */
 export async function handleFilesSize(assets, projectId) {
   // const clone = [...assets];
-  const projectData = await db.projects.get(+projectId);
+  // const projectData = await db.projects.get(+projectId);
   const storageDetails = await getStorageDetails(+projectId);
-  const previousSize = (await getTotalSizeProject(projectData)) || 0;
+  // storageDetails. 
+  const previousSize = (await getTotalSizeProject(+projectId)) || 0;
   const igonredFiles = [];
-  assets = assets.filter((asset) => {
-    const fileSizeByMB = getFileSize(asset.file).MB;
+  const assetsFilesLength = (await ((await opfs.getFolder(defineRoot('assets'))).children())).length
+  assets = assets.slice(0,(MAX_FILES_COUNT+1)-assetsFilesLength).filter((asset) => {
+    const fileSizeByMB = getFileSize(asset).MB;
     const condition = fileSizeByMB <= MAX_FILE_SIZE;
     if (!condition) igonredFiles.push(asset);
     return condition;
@@ -954,11 +980,11 @@ export async function handleFilesSize(assets, projectId) {
 
   /**
    *
-   * @param {import('./types').InfinitelyAsset[]} assets
+   * @param {File[]} assets
    * @returns
    */
   const handler = (assets) => {
-    const size = getFilesSize(assets.map((asset) => asset.file)).MB;
+    const size = getFilesSize(assets).MB;
     if (
       previousSize + size >
       (storageDetails.availableSpaceInMB >= MAX_UPLOAD_SIZE
@@ -985,8 +1011,13 @@ export async function handleFilesSize(assets, projectId) {
 export async function getScripts(libs) {
   const scripts = Promise.all(
     libs.map(
-      async (lib) =>
-        lib.isCDN
+      async (lib) => {
+        // const projectDir = await opfs.getFolder(
+        //   await opfs.root,
+        //   `projects/project-${opfs.id}`
+        // );
+        // const file = await (await opfs.getFile(projectDir, lib.path)).getFile();
+        return lib.isCDN
           ? html`
               <script
                 src="${lib.fileUrl}"
@@ -997,13 +1028,13 @@ export async function getScripts(libs) {
             `
           : html`
               <script
-                src="libs/js/${lib.header ? "header" : "footer"}/${lib.file
-                  .name}"
+                src="${lib.path}"
                 ${lib.defer && `defer=${lib.defer}`}
                 ${lib.async && `async=${lib.async}`}
                 name="${lib.name}"
               ></script>
-            `
+            `;
+      }
       // ${await lib.file.text()};
     )
   );
@@ -1017,23 +1048,37 @@ export async function getScripts(libs) {
  */
 export async function getStyles(libs) {
   const styles = Promise.all(
-    libs.map(async (lib) =>
-      lib.isCDN
+    libs.map(async (lib) => {
+      // const projectDir = await opfs.getFolder(
+      //   await opfs.root,
+      //   `projects/project-${opfs.id}`
+      // );
+      // const file = await (await opfs.getFile(projectDir, lib.path)).getFile();
+      return lib.isCDN
         ? html`
             <link href="${lib.fileUrl}" name="${lib.name}" rel="stylesheet" />
           `
         : html`
             <link
-              href="libs/css/${lib.file.name}"
+              href="${lib.path}"
               name="${lib.name}"
               rel="stylesheet"
             />
-          `
-    )
+          `;
+    })
     // ${await lib.file.text()};
   );
 
   return (await styles).join("\n");
+}
+
+/**
+ *
+ * @param {FileSystemFileHandle[]} handles
+ */
+export async function filesGetterFromHandles(handles) {
+  const handlers = await handles.map(async (handle) => await handle.getFile());
+  return await Promise.all(handlers);
 }
 
 export const buildHeadFromEditorCanvasHeader = ({
@@ -1056,7 +1101,22 @@ export const buildPageData = async (page = "", projectData) => {
   console.log(`from buildPageData callback : `, page);
 
   const currentPageId = page;
+  const projectId = projectData.id;
   const currentPage = projectData.pages[`${currentPageId}`];
+  const mainRoot = await opfs.root;
+  // const projectDir = await opfs.getFolder(
+  //   mainRoot,
+  //   `projects/project-${projectId}` //OR opfs.id
+  // );
+  const pageContent = await (
+    await opfs.getFile(defineRoot(`editor/pages/${currentPageId}.html`))
+  ).text();
+  // const libsFolder = await opfs.getFolder(projectDir, "libs");
+  // const libsFolders = await opfs.getFolders(libsFolder, ["js", "css"]);
+  // const jsFolders = await opfs.getFolders(libsFolders[0], ["header", "footer"]);
+  // const jsHeaderLibs = await filesGetterFromHandles(opfs.getAllFiles(jsFolders[0]));
+  // const jsFooterLibs = await filesGetterFromHandles(opfs.getAllFiles(jsFolders[1]));
+  // const cssLibs = await filesGetterFromHandles(opfs.getAllFiles(libsFolders[1]));
 
   const data = {
     helmet: "",
@@ -1088,17 +1148,9 @@ export const buildPageData = async (page = "", projectData) => {
     .map((src) => html` <script src="${src}"></script> `)
     .join("\n");
 
-  const globalScrtip = html`
-    <script>
-      ${await projectData.globalJs.text()};
-    </script>
-  `;
+  const globalScrtip = html` <script src="/global/global.js"></script> `;
 
-  const localScript = html`
-    <script>
-      ${await currentPage.js.text()};
-    </script>
-  `;
+  const localScript = html` <script src="/js/${currentPageId}.js"></script> `;
 
   data.helmet += html`
     <meta name="author" content="${helmet.author || ""}" />
@@ -1107,7 +1159,7 @@ export const buildPageData = async (page = "", projectData) => {
     <title>${helmet.title || ""}</title>
     <link
       rel="icon"
-      href="${projectData.logo ? URL.createObjectURL(projectData.logo) : ""}"
+      href="${projectData.logo}"
     />
     ${(await helmet?.customMetaTags?.text?.()) || ""}
   `;
@@ -1116,8 +1168,8 @@ export const buildPageData = async (page = "", projectData) => {
   data.footerScripts = (await footerScritps) || "";
   data.cssLibs = (await cssLibs) || "";
   data.mainScripts = viewMainScripts || "";
-  data.content = (await currentPage.html.text()) || "";
-  data.pageStyle = (await currentPage.css.text()) || "";
+  data.content = pageContent || "";
+  // data.pageStyle = (await currentPage.css.text()) || "";
   data.globalScript = globalScrtip || "";
   data.localScript = localScript || "";
   data.fonts = getFonts(projectData) || "";
@@ -1143,14 +1195,16 @@ export async function buildPageContentFromData({
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        
         ${buildHeadFromEditorCanvasHeader({
           canvasCss: editorData.canvasCss,
           editorCss: editorData.editorCss,
         })}
+
         <link href="/styles/style.css" rel="stylesheet" />
-        <style id="page-style">
-          ${pageData.pageStyle}
-        </style>
+        <link href="/css/${page}.css" id="page-style" rel="stylesheet" />
+        <link href="/css/tailwind/${page}.css" id="tailwind-style" rel="stylesheet" />
+        
         <style id="fonts">
           ${pageData.fonts}
         </style>
@@ -1254,15 +1308,17 @@ export async function buildPageAsBlobForSecrviceWorker({
     projectData,
     editorData,
   });
-  const pageKey = new URL(
-    `/pages/${pageName}.html`,
-    self?.origin || window?.origin
-  ).pathname
-    .split("/")
-    .pop();
+  // const pageKey = new URL(
+  //   `/pages/${pageName}.html`,
+  //   self?.origin || window?.origin
+  // ).pathname
+  //   .split("/")
+  //   .pop();
 
   return {
-    [pageKey]: new Blob([pageContent], { type: "text/html" }),
+    [`${pageName}.html`]: new File([pageContent], `${pageName}.html`, {
+      type: "text/html",
+    }),
   };
 }
 
@@ -1272,14 +1328,31 @@ export async function buildPageAsBlobForSecrviceWorker({
  */
 export async function getStorageDetails(projectId) {
   const storageDetails = await navigator.storage.estimate();
-  const projectLength = await db.projects.count();
-  const quotaPerProject = toMB(storageDetails.quota) / projectLength;
-  const currentProject = await db.projects.get(projectId);
-  const currentProjectSize = await getTotalSizeProject(currentProject)
+  // const projectLength = await db.projects.count();
+  // const quotaPerProject = toMB(storageDetails.quota) / projectLength;
+  // const currentProject = await db.projects.get(projectId);
+  // const currentProjectSize = await getTotalSizeProject(currentProject);
+
+  const quotaInMB = toMB(storageDetails.quota);
+  const usageInMB = toMB(storageDetails.usage);
+
+  // const projectsFolder = await opfs.getFolder(await opfs.root, "projects");
+  const projectsLength = (await opfs.getAllFolders("projects")).length;
+  const availableInStorageMB = quotaInMB - usageInMB;
+
+  // const projectsFolderSize = await opfs.getFolderSize(getProjectRoot());
+  const quotaPerProject = MAX_UPLOAD_SIZE;
+
+  const currentProjectSize = await getTotalSizeProject(+projectId);
+  const assetsRoot = await opfs.getFolder(defineRoot(`assets`));
+  const filesLength =  (await assetsRoot.children()).length;
+
   //  getFilesSize(
   //   currentProject?.assets?.map?.((asset) => asset.file) || []
   // ).MB;
-  const availableSize = +(quotaPerProject - currentProjectSize).toFixed(2);
+  const projectSpace = availableInStorageMB > quotaPerProject ? quotaPerProject : availableInStorageMB ;
+  const availableSize = projectSpace - currentProjectSize 
+  const totalAviableSpace = availableSize < 0 ? 0 : availableSize  
 
   return {
     usage: storageDetails.usage,
@@ -1288,8 +1361,11 @@ export async function getStorageDetails(projectId) {
     usageInGB: toGB(storageDetails.usage),
     quotaInMB: toMB(storageDetails.quota),
     quotaInGB: toGB(storageDetails.quota),
-    availableSpaceInMB: availableSize,
-    availableSpaceInGB: toGB(availableSize),
+    availableSpaceInMB: Math.ceil(totalAviableSpace),
+    availableSpaceInGB: toGB(Math.ceil(totalAviableSpace)),
+    usedSpace : currentProjectSize,
+    projectSpace,
+    filesLength,
   };
 }
 
@@ -1300,4 +1376,147 @@ export async function sendDataToServiceWorker(data) {
       obj: data,
     },
   });
+}
+
+export function inlineWorker(callback = () => {}, scope = {}) {
+  let strScope = ``;
+  for (const key in scope) {
+    strScope += `const  ${key} = ${serializeJavascript(scope[key])};\n`;
+  }
+  const code = `${strScope} (${callback.toString()})()`;
+  console.log("code  : ", code);
+
+  const urlCode = URL.createObjectURL(
+    new Blob([code], {
+      type: "application/javascript",
+    })
+  );
+
+  const worker = new Worker(urlCode, { credentials: "omit" });
+  return {
+    worker,
+    revoker() {
+      URL.revokeObjectURL(urlCode);
+      worker.terminate();
+    },
+  };
+}
+
+/**
+ *
+ * @param {string} path
+ * @param {import('jszip').JSZipObject} file
+ */
+
+/**
+ *
+ * @param {{
+ * pageName:string,
+ * file:import('jszip').JSZipObject | Blob | File,
+ * css : {
+ *  [key : string]:import('jszip').JSZipObject
+ * } | undefined,
+ * js : {
+ *  [key : string]:import('jszip').JSZipObject
+ * } | undefined,
+ * }} param0
+ * @returns
+ */
+export async function buildPage({ pageName, file, css, js }) {
+  const { parseHTML } =  await import("linkedom");
+  const isJSZipObject = file.async && file.async instanceof Function;
+  const isBlobOrFile = file instanceof Blob || file instanceof File;
+  const name = pageName.toLowerCase();
+  console.log(
+    "is instance from : ",
+    file.async && file.async instanceof Function,
+    file instanceof Blob,
+    file instanceof File
+  );
+  const content = isJSZipObject
+    ? await file.async("text")
+    : isBlobOrFile
+    ? await file.text()
+    : file; // Assuming file is a string if not a Blob or JSZipObject
+  if (!content) {
+    throw new Error(`File is empty`);
+  }
+  const pageCss = css
+    ? new Blob([await css[`css/${pageName}.css`].async("blob")], {
+        type: "text/css",
+      })
+    : new Blob([""], { type: "text/css" });
+
+  const pageJs = js
+    ? new Blob([await js[`js/${pageName}.js`].async("blob")], {
+        type: "application/js",
+      })
+    : new Blob([""], { type: "application/js" });
+
+  const { document } = parseHTML(content);
+  const pageTitle = document.title;
+  const bodyAttributes = document.body.getAttributeNames().length
+    ? Object.fromEntries(
+        document.body
+          .getAttributeNames()
+          .map((attr) => [attr, document.body.getAttribute(attr)])
+      )
+    : {};
+
+  const descMetaEl = document.querySelector('meta[name="description"]');
+  const descMeta = descMetaEl?.getAttribute?.("content") || "";
+
+  const authorMetaEl = document.querySelector('meta[name="author"]');
+  const authorMeta = authorMetaEl?.getAttribute?.("content") || "";
+
+  const keywordsMetaEl = document.querySelector('meta[name="keywords"]');
+  const keywordsMeta = keywordsMetaEl?.getAttribute?.("content") || "";
+
+  //Remove none important els
+  descMetaEl?.remove?.();
+  authorMetaEl?.remove?.();
+  keywordsMetaEl?.remove?.();
+  document.body.querySelectorAll("script").forEach((el) => el.remove());
+  document.body.querySelectorAll("style").forEach((el) => el.remove());
+  document.body.querySelectorAll("link").forEach((el) => el.remove());
+
+  console.log("helmet : ", pageTitle, descMeta, authorMeta, keywordsMeta);
+  const allMeta = new Blob(
+    [
+      [...document.querySelectorAll("meta")]
+        .map((el) => el.outerHTML)
+        .join("\n"),
+    ],
+    { type: "text/html" }
+  );
+
+  /**
+   * @type {import('./types').InfinitelyPage}
+   */
+  const page = {
+    html: new Blob([document.body.innerHTML], { type: "text/html" }),
+    css: pageCss,
+    js: pageJs,
+    pathes: {
+      html: `editor/pages/${name}.html`,
+      css: `css/${name}.css`,
+      js: `js/${name}.js`,
+    },
+    name,
+    bodyAttributes,
+    id: uniqueId(`page-id-${random(1000, 9999)}`),
+    helmet: {
+      description: descMeta,
+      author: authorMeta,
+      keywords: keywordsMeta,
+      title: pageTitle,
+      customMetaTags: allMeta,
+    },
+  };
+  return page;
+}
+
+export function defineRoot(root = "") {
+  const projectRoot = getProjectRoot()
+  return `${projectRoot}/${root.replace(`${projectRoot}/` , '')}`;
 }

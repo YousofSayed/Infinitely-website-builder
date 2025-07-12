@@ -7,11 +7,18 @@ import { inf_cmds_id, inf_symbol_Id_attribute } from "../constants/shared";
 import {
   buildPageAsBlobForSecrviceWorker,
   buildPagesAsBlobForSecrviceWorker,
+  defineRoot,
   doDocument,
   getFileSize,
+  getOPFSProjectDir,
+  getProjectRoot,
   handleFilesSize,
   installRestModelsAPI,
 } from "./bridge";
+import { uniqueId, isPlainObject, random } from "lodash";
+import { opfs } from "./initOpfs";
+import { tailwindClasses } from "../constants/tailwindClasses";
+import { css_beautify } from "js-beautify";
 // import { initDBAssetsSw } from "../serviceWorkers/initDBAssets-sw";
 // import Dexie from "dexie";
 //
@@ -81,23 +88,51 @@ export async function updateAllPages(props) {
 
 /**
  *
- * @param {{data : import('./types').Project ,
+ * @param {{
+ * data : import('./types').Project ,
+ * files:{[key:string] : File},
  *  projectId : number ,
- *  updatePreviewPages : boolean,
- * pageName:string,
+ *  updatePreviewPages : boolean ,
+ *  pageName:string,
  * pageUrl:string,
+ * tailwindcssStyle:string | undefined;
  * editorData: { canvasCss:string , editorCss:string },
  * }} props
  */
 export async function storeGrapesjsDataIfSymbols(props) {
   // try {
+  const projectDataFromDB = await db.projects.get(props.projectId);
   const projectData = await props.data;
   const pages = structuredClone(Object.values(projectData.pages));
   const updatedPages = {};
+if (props.files && isPlainObject(props.files)) {
+    await opfs.writeFiles(
+      Object.entries(props.files).map(([key, file]) => ({
+        path: defineRoot(key),
+        content: file,
+      }))
+    );
+  }
+
+  if(props.tailwindcssStyle){
+    console.log('from worker : ' , props.tailwindcssStyle);
+    
+    await opfs.writeFiles([
+      {
+        path:defineRoot(`css/tailwind/${props.pageName}.css`),
+        content:props.tailwindcssStyle,
+      }
+    ])
+  }
+
+
+
   await Promise.all(
     pages.map(async (page) => {
       const pageSymbols = [];
-      const pageContent = await page.html.text();
+      const pageContent = await (
+        await opfs.getFile(defineRoot(page.pathes.html))
+      ).text();
       if (!pageContent) {
         page.symbols = pageSymbols;
         updatedPages[page.name] = page;
@@ -119,15 +154,23 @@ export async function storeGrapesjsDataIfSymbols(props) {
         [...oldSymbols].map(async (oldSybmol) => {
           const symbolId = oldSybmol.getAttribute(inf_symbol_Id_attribute);
           pageSymbols.push(symbolId);
-          const dbSymbol = projectData.symbols[`${symbolId}`];
+          const dbSymbol = projectDataFromDB.symbols[`${symbolId}`];
 
-          oldSybmol.outerHTML = await dbSymbol.content.text();
+          oldSybmol.outerHTML = await (
+            await opfs.getFile(defineRoot(dbSymbol.pathes.content))
+          ).text();
 
           return await oldSybmol;
         })
       );
 
-      page.html = new Blob([document.body.innerHTML], { type: "text/html" });
+      await opfs.writeFiles([
+        {
+          path: defineRoot(page.pathes.html),
+          content: document.body.innerHTML,
+        },
+      ]);
+      // page.html = new Blob([document.body.innerHTML], { type: "text/html" });
       page.symbols = pageSymbols;
       updatedPages[page.name] = page;
       return page;
@@ -141,23 +184,10 @@ export async function storeGrapesjsDataIfSymbols(props) {
     },
   };
 
-  if (props.updatePreviewPages) {
-    varsToServiceWorker({
-      pageUrl: props.pageUrl,
-      updateOnce: true,
-      previewPage: await buildPageAsBlobForSecrviceWorker({
-        editorData: props.editorData,
-        projectData: {
-          ...(await db.projects.get(props.projectId)),
-          ...newData,
-        },
-        pageName: props.pageName,
-      }),
-    });
-  }
-
   await db.projects.update(props.projectId, newData);
-
+  if (props.updatePreviewPages) {
+    await writePreviewPage(props);
+  }
   self.postMessage({
     command: "storeGrapesjsDataIfSymbols",
     props: {
@@ -182,7 +212,7 @@ export async function storeGrapesjsDataIfSymbols(props) {
 
 /**
  *
- * @param {{projectId : string , symbolId:string ,}} props
+ * @param {{projectId : string , symbolId:string , unlink : boolean , deleteAll:boolean}} props
  */
 export async function deleteAllSymbolsById(props) {
   const projectData = await db.projects.get(props.projectId);
@@ -191,12 +221,22 @@ export async function deleteAllSymbolsById(props) {
 
   await Promise.all(
     Object.values(pages).map(async (page) => {
-      const { document } = parseHTML(doDocument(await page.html.text()));
+      const { document } = parseHTML(
+        doDocument(
+          await (await opfs.getFile(defineRoot(page.pathes.html))).text()
+        )
+      );
       const deleteSymbol = (id) => {
         const symbolsById = document.body.querySelectorAll(
           `[${inf_symbol_Id_attribute}="${id}"]`
         );
-        symbolsById.forEach((symbol) => symbol.remove());
+        symbolsById.forEach((symbol) => {
+          if (props.unlink && !props.deleteAll) {
+            symbol.removeAttribute(inf_symbol_Id_attribute);
+          } else if (props.deleteAll) {
+            symbol.remove();
+          }
+        });
       };
 
       Array.isArray(props.symbolId)
@@ -207,7 +247,13 @@ export async function deleteAllSymbolsById(props) {
         ...document.body.querySelectorAll(`[${inf_symbol_Id_attribute}]`),
       ].map((symbol) => symbol.getAttribute(`[${inf_symbol_Id_attribute}]`));
 
-      page.html = new Blob([document.body.innerHTML], { type: "text/html" });
+      await opfs.writeFiles([
+        {
+          path: defineRoot(page.pathes.html),
+          content: document.body.innerHTML,
+        },
+      ]);
+      // page.html = new Blob([document.body.innerHTML], { type: "text/html" });
       page.symbols = pageSymbols;
       updatedPages[page.name] = page;
       return page;
@@ -224,7 +270,85 @@ export async function deleteAllSymbolsById(props) {
 
 /**
  *
- * @param {{data : import('./types').Project ,
+ * @param {{
+ * data : import('./types').Project ,
+ * files:{[key:string] : File},
+ *  projectId : number ,
+ *  updatePreviewPages : boolean ,
+ *  pageName:string,
+ * pageUrl:string,
+ * tailwindcssStyle:string | undefined;
+ * editorData: { canvasCss:string , editorCss:string },
+ * }} props
+ */
+export async function updateDB(props) {
+  console.log("From updateDB ");
+
+  // try {
+
+  if (!opfs.id) {
+    throw new Error(`OPFS Id not founded!`);
+  }
+  // const projectDir = await getOPFSProjectDir();
+  // const projectRoot = `projects/project-${opfs.id}`;
+  console.log(
+    "From worker : Update project is done"
+    // props.projectId,
+    // props.data
+  );
+
+  console.warn("Before save to db", props.files);
+
+  if (props.files && isPlainObject(props.files)) {
+    await opfs.writeFiles(
+      Object.entries(props.files).map(([key, file]) => ({
+        path: defineRoot(key),
+        content: file,
+      }))
+    );
+  }
+
+  if(props.tailwindcssStyle){
+    console.log('from worker : ' , props.tailwindcssStyle);
+    
+    await opfs.writeFiles([
+      {
+        path:defineRoot(`css/tailwind/${props.pageName}.css`),
+        content:props.tailwindcssStyle,
+      }
+    ])
+  }
+
+  const resp = await db.projects.update(props.projectId, props.data);
+  if (props.updatePreviewPages) {
+    await writePreviewPage(props);
+  }
+  console.warn("after save to db");
+  self.postMessage({
+    command: "updateDB",
+    props: {
+      done: true,
+      projectId: props.projectId,
+    },
+  });
+  return resp;
+  // } catch (error) {
+  //   console.error(`From worker command updateDB: ${error}`);
+  //   self.postMessage({
+  //     command: "updateDB",
+  //     props: {
+  //       done: false,
+  //       projectId: props.projectId,
+  //     },
+  //   });
+  //   return false;
+  // }
+}
+
+/**
+ *
+ * @param {{
+ * data : import('./types').Project ,
  *  projectId : number ,
  *  updatePreviewPages : boolean ,
  *  pageName:string,
@@ -232,47 +356,36 @@ export async function deleteAllSymbolsById(props) {
  * editorData: { canvasCss:string , editorCss:string },
  * }} props
  */
-export async function updateDB(props) {
-  try {
-    console.log(
-      "From worker : Update project is done",
-      props.projectId,
-      props.data
-    );
-    if (props.updatePreviewPages) {
-      varsToServiceWorker({
-        pageUrl: props.pageUrl,
-        updateOnce: true,
-        previewPage: await buildPageAsBlobForSecrviceWorker({
-          editorData: props.editorData,
-          projectData: {
-            ...(await db.projects.get(props.projectId)),
-            ...props.data,
-          },
-          pageName: props.pageName,
-        }),
-      });
-    }
-    const resp = await db.projects.update(props.projectId, props.data);
-    self.postMessage({
-      command: "updateDB",
-      props: {
-        done: true,
-        projectId: props.projectId,
+export async function writePreviewPage(props) {
+  const pageFile = (
+    await buildPageAsBlobForSecrviceWorker({
+      editorData: props.editorData,
+      projectData: {
+        ...(await db.projects.get(props.projectId)),
+        ...props.data,
       },
-    });
-    return resp;
-  } catch (error) {
-    console.error(`From worker command updateDB: ${error}`);
-    self.postMessage({
-      command: "updateDB",
-      props: {
-        done: false,
-        projectId: props.projectId,
-      },
-    });
-    return false;
-  }
+      pageName: props.pageName,
+    })
+  )[`${props.pageName}.html`];
+
+  await opfs.writeFiles([
+    {
+      path: defineRoot(
+        `${props.pageName == "index" ? "" : "pages"}/${props.pageName}.html`
+      ),
+      content: pageFile,
+    },
+  ]);
+
+  const previewBraodcast = new BroadcastChannel("preview");
+  previewBraodcast.postMessage({
+    command: "preview",
+    props: {
+      url: `${props.pageName == "index" ? "" : "pages"}/${props.pageName}.html`,
+    },
+  });
+
+  previewBraodcast.close();
 }
 
 /**
@@ -430,30 +543,17 @@ export async function getDataFromDB(props) {
 
 /**
  *
- * @param {{projectId:number , toastId:string, assets : import('./types').InfinitelyAsset[]}} props
+ * @param {{projectId:number , toastId:string, assets : File[]}} props
  */
 export async function uploadAssets(props) {
   console.log("from worker assets update starting: ", props.assets);
+  const toastId = uniqueId("upload-toast-id-");
+  workerSendToast({
+    msg: "Uploading Files...",
+    type: "loading",
+    dataProps: { toastId },
+  });
   try {
-    const getProjectData = async () => await db.projects.get(props.projectId);
-
-    const updateAssets = async (assets = []) => {
-      const projectData = await getProjectData();
-      // ...projectData.assets,
-      // const newAssets = [...projectData.assets, ...(assets || [])];
-      if (assets?.length) {
-        projectData.assets.push(...assets);
-      }
-      await db.projects.update(props.projectId, {
-        assets: projectData.assets || [],
-      });
-
-      // .where('id').equals(props.projectId).modify((project)=>(project.assets || []).push(newAssets))
-      console.log("updated assets from updater : ", projectData.assets);
-
-      return projectData.assets;
-    };
-
     const filesHandled = await handleFilesSize(props.assets, props.projectId);
 
     let isFilesUploaded = false;
@@ -461,7 +561,7 @@ export async function uploadAssets(props) {
     /**
      *
      * @param {number} starterLoopIndex
-     * @param {import('./types').InfinitelyAsset[]} assetsFiles
+     * @param {File[]} assetsFiles
      * @param {Function} endCallback
      * @returns
      */
@@ -472,14 +572,22 @@ export async function uploadAssets(props) {
     ) => {
       console.log("uploading files : ", assetsFiles, "from worker");
       if (!assetsFiles.length) return;
-      const ender = starterLoopIndex + 3;
-      const slicedFiles = assetsFiles.slice(starterLoopIndex, ender);
+      const ender = starterLoopIndex + 15;
+      const slicedFiles = assetsFiles.slice(starterLoopIndex, ender + 1);
 
       slicedFiles.length &&
         (await new Promise((res, rej) => {
           setTimeout(
             async () => {
-              const dbResponse = await updateAssets(slicedFiles);
+              const dbResponse = await (
+                await opfs.createFiles(
+                  slicedFiles.map((file) => ({
+                    path: defineRoot(`assets/${file.name}`),
+                    content: file,
+                  })),
+                  true
+                )
+              ).length;
               // slicedFiles.forEach(async file=>{
               //   const stream = file.file.stream();
               //   const reader = stream.getReader();
@@ -502,19 +610,9 @@ export async function uploadAssets(props) {
                 );
 
                 res(dbResponse);
-                const newProjectData = await db.projects.get(props.projectId);
-                self.postMessage({
-                  command: "setVar",
-                  props: {
-                    obj: {
-                      projectId: props.projectId,
-                      projectData: newProjectData,
-                    },
-                  },
-                });
               }
             },
-            starterLoopIndex == 0 ? 0 : 2
+            starterLoopIndex == 0 ? 0 : 50
           );
         }));
 
@@ -543,68 +641,48 @@ export async function uploadAssets(props) {
         },
       });
 
+    // await uploadFiles(0, filesHandled.assets, () => {
+    //   isFilesUploaded = true;
+    // });
+    // const assetsNew = await (await getProjectData()).assets;
+    // assetsNew.push(...filesHandled.assets);
+    // await db.projects.update(props.projectId, {
+    //   assets: assetsNew, // update assets in db
+    // });
+    // const willUploadAssets = filesHandled.assets.map((asset) => ({
+    //   path: defineRoot(`assets/${asset.name}`),
+    //   content: asset,
+    // }));
+
+    // await opfs.createFiles(willUploadAssets);
+
     await uploadFiles(0, filesHandled.assets, () => {
       isFilesUploaded = true;
     });
 
-    const newProjectData = await db.projects.get(props.projectId);
-
-    self.postMessage({
-      command: "toast",
-      props: {
-        isNotMessage: true,
-        msg: props.toastId,
-        type: "dismiss",
-      },
+    workerSendToast({
+      isNotMessage: true,
+      msg: toastId,
+      type: "done",
     });
 
     isFilesUploaded &&
-      self.postMessage({
-        command: "toast",
-        props: {
-          msg: "Files Uploaded Successfully",
-          type: "success",
-        },
+      workerSendToast({
+        msg: "Files Uploaded Successfully",
+        type: "success",
       });
 
     self.postMessage({
       command: "initSevrviceWorker",
     });
-
-    // !isNoramlFilesUploaded &&
-    //   !isBigFilesUploaded &&
-    //   notAllowedFiles.length &&
-    //   self.postMessage({
-    //     command: "toast",
-    //     props: {
-    //       msg: "Big Files Not Allowed",
-    //       type: "error",
-    //     },
-    //   });
-
-    // (isNoramlFilesUploaded || isBigFilesUploaded) &&
-    //   notAllowedFiles.length &&
-    //   self.postMessage({
-    //     command: "toast",
-    //     props: {
-    //       msg: `There are ${notAllowedFiles.length} files not allowed to upload`,
-    //       type: "warn",
-    //     },
-    //   });
-
-    // (isNoramlFilesUploaded || isBigFilesUploaded) &&
-    //   self.postMessage({
-    //     command: "toast",
-    //     props: {
-    //       msg: "Files Uploaded Successfully",
-    //       type: "success",
-    //     },
-    //   });
-    console.log("new assets : ", newProjectData.assets);
   } catch (error) {
-    await updateDB({ projectId: props.projectId, data: props.assets });
+    // await updateDB({ projectId: props.projectId, data: props.assets });
     console.error(`From worker command uploadAssets: ${error}`);
-
+    workerSendToast({
+      isNotMessage: true,
+      msg: toastId,
+      type: "dismiss",
+    });
     self.postMessage({
       command: "toast",
       props: {
@@ -660,7 +738,8 @@ export async function sendPreviewPageToServiceWorker(props) {
     updateOnce: true,
     previewPage: await buildPageAsBlobForSecrviceWorker({
       editorData: props.editorData,
-      projectData: props.projectData || await db.projects.get(+props.projectId),
+      projectData:
+        props.projectData || (await db.projects.get(+props.projectId)),
       pageName: props.pageName,
     }),
   });
@@ -700,6 +779,7 @@ export function workerSendToast({
  */
 export async function offlineInstaller(props) {
   try {
+    await initOPFS({ id: props.projectId });
     const projectData = await db.projects.get(props.projectId);
     const mime = (await import("mime")).default;
     await installRestModelsAPI(projectData.restAPIModels);
@@ -710,15 +790,24 @@ export async function offlineInstaller(props) {
         // .concat(Object.values(projectData.fonts))
         .map(async (lib) => {
           if (!lib.isCDN) return lib;
-          if (lib.file) return lib;
+          if (lib.isInstallDone) return lib;
           const res = await fetch(lib.fileUrl);
           const blob = await res.blob();
           const ext = mime.getExtension(blob.type);
-          lib.file = new File(
+          const file = new File(
             [blob],
             `${lib.name.replace(`.${ext}`, "")}.${ext}`,
             { type: blob.type }
           );
+
+          await opfs.writeFiles([
+            {
+              path: defineRoot(lib.path),
+              content: file,
+            },
+          ]);
+          lib.size = getFileSize(file).MB;
+          lib.isInstallDone = true;
           return lib;
         })
     );
@@ -745,5 +834,385 @@ export async function offlineInstaller(props) {
         update: false,
       },
     });
+  }
+}
+
+/**
+ *
+ * @param {{
+ * projectId : number ,
+ * inlineStylesInners : string[],
+ * editorCss:string,
+ * projectSettings : import('./types').ProjectSetting
+ * }} props
+ * @returns
+ */
+export const getAllStyleSheetClasses = async (props) => {
+  //   const myLol = 'myLol'
+  //  console.log(eval(` console.log(myLol)`));
+  await initOPFS({ id: props.projectId });
+  const per1 = performance.now();
+  console.log(per1, defineRoot(`libs/css`));
+  const calssRgx = /(?<!\/\*.*)\.[a-zA-Z_][a-zA-Z0-9_-]*(?=[,{\s:])/gi; ///(?<=\s|^)\.[a-zA-Z_][a-zA-Z0-9_-]*(?=\s*{)/g;
+  const commentRgx = /\/\*[\s\S]*?\*\//g;
+  const prjectData = await db.projects.get(props.projectId);
+  const cssLibsClasses = css_beautify(
+    (
+      (await Promise.all(
+        (
+          await opfs.getAllFiles(defineRoot(`libs/css`), { recursive: true })
+        ).map((handle) => handle.text())
+      )) || []
+    ).join("\n")
+  )
+    .replaceAll(commentRgx, "")
+    .match(calssRgx);
+
+  const editorClasses =
+    css_beautify(props.editorCss).replaceAll(commentRgx, "").match(calssRgx) ||
+    [];
+
+  const inlineStyles = css_beautify(
+    props.inlineStylesInners.map((styleEl) => styleEl.innerHTML).join("\n")
+  )
+    .replaceAll(commentRgx, "")
+    .match(calssRgx);
+
+  // let tailwindClasses = [];
+  // if (props.projectSettings.enable_tailwind_calsses) {
+  //   // const tailwindStyles = await (await fetch("/styles/tailwind.min.css")).text();
+
+  //   tailwindClasses = tailwindStyles.replaceAll(commentRgx, "").match(calssRgx);
+  //   console.log('tailwind response : ', tailwindStyles , tailwindClasses);
+  // }
+  console.log("libs", cssLibsClasses, inlineStyles);
+
+  const allClasses = [
+    ...new Set([
+      ...(cssLibsClasses || []),
+      ...(editorClasses || []),
+      ...(inlineStyles || []),
+      ...(props.projectSettings.enable_tailwind_calsses ? tailwindClasses : []),
+    ]),
+  ].sort();
+
+  const per2 = performance.now();
+  console.log(per2);
+  // console.log("Classes : ", allClasses);
+  const classes =
+    allClasses.map((className) => className.replace(".", "")) || [];
+  console.log("classes", classes);
+
+  self.postMessage({ command: "classes", props: { classes } });
+  return classes;
+};
+
+/**
+ *
+ * @param {{data : {
+ * name:string,
+ * description:string,
+ * }}} param0
+ */
+export async function createProject({ data }) {
+  const tId = uniqueId("toast-");
+  try {
+    workerSendToast({
+      msg: "Init Project",
+      type: "loading",
+      dataProps: {
+        toastId: tId,
+      },
+    });
+
+    const id = await db.projects.add({
+      name: data.name,
+      description: data.description,
+      logo: "",
+      blocks: {},
+      // cssLibraries: [],
+      // jsHeaderLocalLibraries: [],
+      // jsHeaderCDNLibraries: [],
+      // jsFooterLocalLibraries: [],
+      // jsFooterCDNLibraries: [],
+      // cssFooterCDNLibraries: [],
+      // cssFooterLocalLibraries: [],
+      // cssHeaderCDNLibraries: [],
+      // cssHeaderLocalLibraries: [],
+      cssLibs: [],
+      jsHeaderLibs: [],
+      jsFooterLibs: [],
+      pages: {
+        index: {
+          // html: new Blob([``], { type: "text/html" }),
+          // css: new Blob([``], { type: "text/css" }),
+          // js: new Blob([``], { type: "text/javascript" }),
+          pathes: {
+            html: "editor/pages/index.html",
+            css: "css/index.css",
+            js: "js/index.js",
+          },
+          cmds: {},
+          id: "index",
+          name: "index",
+          symbols: [],
+          components: {},
+          helmet: {},
+          bodyAttributes: {},
+        },
+        playground: {
+          // html: new Blob([``], { type: "text/html" }),
+          // css: new Blob([``], { type: "text/css" }),
+          // js: new Blob([``], { type: "text/javascript" }),
+          pathes: {
+            html: "editor/pages/playground.html",
+            css: "css/playground.css",
+            js: "js/playground.js",
+          },
+          id: "playground",
+          symbols: [],
+          cmds: {},
+          name: "playground",
+          components: {},
+          helmet: {},
+          bodyAttributes: {},
+        },
+      },
+      // globalCss: new Blob([``], { type: "text/css" }),
+      // globalJs: new Blob([``], { type: "text/javascript" }),
+      symbols: {},
+      assets: [],
+      dynamicTemplates: {},
+      restAPIModels: [],
+      symbolBlocks: [],
+      globalRules: {},
+      fonts: {},
+      imgSrc: "",
+      motions: {},
+      inited: false,
+    });
+    const mainPath = `/projects/project-${id}`;
+
+    // await dir(mainPath).create()
+
+    const mainRoot = await opfs.root;
+    // const projectsRoot = await opfs.getFolder(mainRoot, "projects");
+    // const projectDir = await opfs.createFolder(projectsRoot, `project-${id}`);
+    const dirs = [
+      `${mainPath}/pages`,
+      `${mainPath}/css`,
+      `${mainPath}/js`,
+      `${mainPath}/assets`,
+      `${mainPath}/fonts`,
+      `${mainPath}/libs`,
+      `${mainPath}/editor`,
+      `${mainPath}/editor/pages`,
+      `${mainPath}/editor/symbols`,
+      `${mainPath}/editor/templates`,
+      `${mainPath}/global`,
+      `${mainPath}/libs/js`,
+      `${mainPath}/libs/css`,
+      `${mainPath}/libs/js/header`,
+      `${mainPath}/libs/js/footer`,
+    ];
+
+    const files = [
+      {
+        path: `${mainPath}/screenshot.webp`,
+        content: "",
+      },
+      {
+        path: `${mainPath}/index.html`,
+        content: "",
+      },
+      {
+        path: `${mainPath}/global/global.js`,
+        content: "",
+      },
+
+      {
+        path: `${mainPath}/global/global.css`,
+        content: "",
+      },
+      {
+        path: `${mainPath}/editor/pages/index.html`,
+        content: "",
+      },
+      {
+        path: `${mainPath}/editor/pages/playground.html`,
+        content: "",
+      },
+      {
+        path: `${mainPath}/js/index.js`,
+        content: "",
+      },
+      {
+        path: `${mainPath}/js/playground.js`,
+        content: "",
+      },
+      {
+        path: `${mainPath}/css/index.css`,
+        content: "",
+      },
+      {
+        path: `${mainPath}/css/playground.css`,
+        content: "",
+      },
+    ];
+    // await write()
+    // for (const dirTx of dirs) {
+    //   await dir(`${mainPath}/${dirTx}`).create()
+    // }
+
+    // for (const fileDetails of files) {
+    //   await write(`${mainPath}/${fileDetails.path}` , fileDetails.content)
+    // }
+
+    await opfs.createFolders(dirs);
+    await opfs.createFiles(files);
+
+    await db.projects.update(id, { inited: true });
+    workerSendToast({
+      isNotMessage: true,
+      msg: tId,
+      type: "done",
+    });
+
+    self.postMessage({
+      command: "createProject",
+      props: {
+        done: true,
+      },
+    });
+  } catch (error) {
+    workerSendToast({
+      isNotMessage: true,
+      msg: tId,
+      type: "dismiss",
+    });
+
+    self.postMessage({
+      command: "createProject",
+      props: {
+        done: false,
+      },
+    });
+    throw new Error(error);
+  }
+}
+
+export async function initOPFS({ id }) {
+  await opfs.init(id);
+}
+
+export async function listenToOPFSBroadcastChannel({ id }) {
+  console.log("INited listenToOPFSBroadcastChannel");
+
+  await initOPFS({ id });
+  const opfsBc = new BroadcastChannel("opfs");
+  opfsBc.addEventListener("message", (ev) => {
+    console.log(`opfcBc : `, ev.data);
+  });
+  const broadCastCleaner = opfs.onBroadcast(
+    "getFile",
+    async (data) => {
+      const path = `${data.folderPath}/${data.fileName}`;
+      console.log(
+        "recived getFile event from boadcast",
+        opfs.id,
+        data.projectId,
+        path
+      );
+      try {
+        if (!opfs.id) {
+          opfs.opfsBraodcast.postMessage({
+            type: "sendFile",
+            file: undefined,
+            isExisit: false,
+            fileName: undefined,
+            filePath: undefined,
+          });
+          throw new Error(`Project id not found`);
+        }
+
+        const fileHandle = await opfs.getFile(
+          `${getProjectRoot(id)}/${data.folderPath}/${data.fileName}`
+        );
+        const file = await fileHandle.getOriginFile();
+
+        console.log(
+          "recived path : ",
+          `projects/project-${opfs.id || data.projectId}/${data.folderPath}/${
+            data.fileName
+          }`,
+          file
+        );
+        if (!file) {
+          throw new Error(`File not founded`);
+        }
+        const fileBraodcast = new BroadcastChannel(path);
+        fileBraodcast.postMessage({
+          type: "sendFile",
+          file: file,
+          isExisit: file ? true : false,
+          fileName: fileHandle.name,
+          filePath: fileHandle.path,
+        });
+      } catch (error) {
+        const fileBraodcast = new BroadcastChannel(path);
+        fileBraodcast.postMessage({
+          type: "sendFile",
+          file: undefined,
+          isExisit: false,
+          fileName: undefined,
+          filePath: undefined,
+        });
+        throw new Error(error);
+      }
+    }
+    // { once: true }
+  );
+
+  self.postMessage({
+    command: "listenToOPFSBroadcastChannel",
+    props: {
+      done: true,
+    },
+  });
+  return broadCastCleaner;
+}
+
+export async function removeOPFSEntry({
+  path = "",
+  toastMsg = "Deleting...",
+  isFill = false,
+}) {
+  const toastId = uniqueId(`toast-${random(999, 1000)}`);
+  try {
+    workerSendToast({
+      msg: toastMsg,
+      type: "loading",
+      dataProps: {
+        toastId,
+      },
+    });
+    const handle = isFill
+      ? await opfs.getFile(path)
+      : await opfs.getFolder(path);
+    await opfs.remove({
+      dirOrFile: handle,
+    });
+    workerSendToast({
+      msg: toastId,
+      type: "done",
+      isNotMessage: true,
+    });
+  } catch (error) {
+    workerSendToast({
+      msg: toastId,
+      type: "dismiss",
+      isNotMessage: true,
+    });
+    throw new Error(error);
   }
 }

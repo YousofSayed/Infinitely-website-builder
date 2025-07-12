@@ -7,6 +7,8 @@ import { offlineInstallerWorker } from "../helpers/defineWorkers";
 
 export const useOfflineHandler = () => {
   useEffect(() => {
+    const projectId = +localStorage.getItem(current_project_id);
+    if(!projectId)return;
     offlineInstallerWorker.postMessage({
       command: "offlineInstaller",
       props: {

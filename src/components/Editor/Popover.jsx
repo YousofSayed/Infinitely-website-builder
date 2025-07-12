@@ -317,16 +317,7 @@ export const Popover = ({
             onClick={(ev) => {
               ev.stopPropagation();
             }}
-            // onResize={(ev) => {
-            //   console.log(ev.target);
-            // }}
-            // onTransitionEnd={(ev)=>{
-            //   console.log('end');
-            //   setTimeout(() => {
-
-            //     setShowMe(false)
-            //   }, 100);
-            // }}
+            
             id="popover"
             className={`${
               isResize && `[&_*]:select-none`

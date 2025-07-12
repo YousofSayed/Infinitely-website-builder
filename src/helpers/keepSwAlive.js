@@ -22,34 +22,34 @@ export const swAliveInterval = setInterval(() => {
     }
     // if(sw){
     //   console.log('sw is here');
-    isDevMode(
-      async (isDev) => {
-        if (!sw) {
-          console.log("Not sw here");
-          return;
-        }
-        sw.postMessage({
-          command: "setVar",
-          props: {
-            obj: {
-              projectId: +localStorage.getItem(current_project_id),
-              projectData: await getProjectData(),
-            },
-          },
-        });
-      },
-      async (isDev) => {
-        navigator.serviceWorker.controller.postMessage({
-          command: "setVar",
-          props: {
-            obj: {
-              projectId: +localStorage.getItem(current_project_id),
-              projectData: await getProjectData(),
-            },
-          },
-        });
-      }
-    );
+    // isDevMode(
+    //   async (isDev) => {
+    //     if (!sw) {
+    //       console.log("Not sw here");
+    //       return;
+    //     }
+    //     sw.postMessage({
+    //       command: "setVar",
+    //       props: {
+    //         obj: {
+    //           projectId: +localStorage.getItem(current_project_id),
+    //           projectData: await getProjectData(),
+    //         },
+    //       },
+    //     });
+    //   },
+    //   async (isDev) => {
+    //     navigator.serviceWorker.controller.postMessage({
+    //       command: "setVar",
+    //       props: {
+    //         obj: {
+    //           projectId: +localStorage.getItem(current_project_id),
+    //           projectData: await getProjectData(),
+    //         },
+    //       },
+    //     });
+    //   }
+    // );
 
     // }
   });

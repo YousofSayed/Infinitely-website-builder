@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import blankImg from "../../assets/images/blank.jpg";
 import { Li } from "../Protos/Li";
 import { Icons } from "../Icons/Icons";
@@ -12,7 +12,11 @@ import {
 import { infinitelyWorker } from "../../helpers/infinitelyWorker";
 import { getProjectSettings } from "../../helpers/functions";
 import { useRecoilState } from "recoil";
-import { dbAssetsSwState } from "../../helpers/atoms";
+import { dbAssetsSwState, isProjectInitedState } from "../../helpers/atoms";
+import { opfs } from "../../helpers/initOpfs";
+import { toast } from "react-toastify";
+import { getProjectRoot } from "../../helpers/bridge";
+import { random } from "lodash";
 
 /**
  *
@@ -22,13 +26,37 @@ import { dbAssetsSwState } from "../../helpers/atoms";
 export const Project = ({ project }) => {
   const navigate = useNavigate();
   const [swAssset, setSwAsset] = useRecoilState(dbAssetsSwState);
+  const [img, setImg] = useState("");
+  const [isProjectInited, setIsProjectInited] =
+    useRecoilState(isProjectInitedState);
+  const urlsRef = useRef([]);
   // console.log(project.imgSrc);
+  useEffect(() => { 
+    (async () => {
+      const root = `projects/project-${project.id}`;
+      const file = await (
+        await opfs.getFile(`${root}/screenshot.webp`)
+      ).getOriginFile();
+      if(!(file?.size > 0))return;
+      const url = URL.createObjectURL(file);
+      setImg(url);
+      urlsRef.current.push(url);
+      // URL.revokeObjectURL(url);
+    })();
+
+    return () => {
+      urlsRef.current.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+    };
+  }, [project]);
 
   return (
     <article className="p-2 bg-slate-900  rounded-lg flex flex-col h-[320px] justify-evenly  gap-2">
       <figure className="flex flex-col gap-2 h-[70%]  items-center ">
         <img
-          src={project.imgSrc ? URL.createObjectURL(project.imgSrc) : '/images/blank.jpg'}
+        key={`random-${random(999,1000)}`}
+          src={img ? img : "/images/blank.jpg"}
           className={`max-w-full max-h-full ${
             project.imgSrc ? "h-full " : "h-full  object-cover"
           }  w-full   max-h-[190px!important] rounded`}
@@ -55,18 +83,20 @@ export const Project = ({ project }) => {
       </figure>
       <ul className="flex gap-2 items-center justify-center p-1 bg-slate-950 rounded-lg">
         <Li
-          onClick={async() => {
+          onClick={async () => {
+            if (!project.inited) return;
+            opfs.id = project.id;
             localStorage.setItem(current_project_id, project.id);
             localStorage.setItem(current_page_id, "index");
-             swAssset.postMessage({
-                  command: "setVar",
-                  props: {
-                    obj: {
-                      projectId:project.id,
-                      projectData: project,
-                    },
-                  },
-                });
+            swAssset.postMessage({
+              command: "setVar",
+              props: {
+                obj: {
+                  projectId: project.id,
+                  projectData: project,
+                },
+              },
+            });
             navigate("/add-blocks");
           }}
         >
@@ -74,11 +104,18 @@ export const Project = ({ project }) => {
         </Li>
 
         <Li
-          onClick={() => {
-            db.projects.delete(project.id);
+          onClick={async () => {
+            if (!project.inited) return;
+            const tId = toast.loading("Deleting project");
+            await opfs.remove({
+              dirOrFile:await opfs.getFolder(`projects/project-${project.id}`)
+            })
+          
+            await db.projects.delete(project.id);
             sessionStorage.removeItem(current_dynamic_template_id);
             localStorage.removeItem(current_page_id);
             localStorage.removeItem(current_project_id);
+            toast.done(tId);
           }}
         >
           {Icons.trash("white", undefined, 20)}
@@ -86,11 +123,12 @@ export const Project = ({ project }) => {
 
         <Li
           onClick={() => {
+            if (!project.inited) return;
             infinitelyWorker.postMessage({
               command: "exportProject",
               props: {
                 projectSetting: getProjectSettings().projectSettings,
-                projectId:+project.id,
+                projectId: +project.id,
               },
             });
           }}

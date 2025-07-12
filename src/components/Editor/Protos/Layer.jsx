@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useState } from "react";
+import React, { memo, useCallback, useEffect, useState } from "react";
 import { Icons } from "../../Icons/Icons";
 import { useEditorMaybe } from "@grapesjs/react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
@@ -31,10 +31,13 @@ export const Layer = ({
   const editor = useEditorMaybe();
   const [tools, setTools] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [layerProps, setLayerProps] = useState(layer.props() || {});
 
   useEffect(() => {
-    setLayerStt(layers);
-  }, [layers]);
+    if(!editor)return;
+    setLayerStt([editor.getWrapper()]);
+    // openCurrentLayer()
+  }, [editor , layers]);
 
   useEffect(() => {
     const callback = () => {
@@ -50,13 +53,17 @@ export const Layer = ({
 
   useEffect(() => {
     const sleCallback = () => {
-      const sle = editor.getSelected();
-      const childs = layer.forEachChild((child) => {
-        const cond = Boolean(editor.getSelected().getId() == child.getId());
-        console.log("from open  cond: ", cond);
+      console.log("should fired");
 
-        setOpenNested(cond);
-      });
+      const sle = editor.getSelected();
+      // const childs = layer.forEachChild((child) => {
+      //   const cond = Boolean(editor.getSelected().getId() == child.getId());
+      //   console.log("from open  cond: ", cond);
+
+      //   cond && setOpenNested(cond);
+      // });
+
+      openCurrentLayer();
       if (sle.getId() == layer.getId()) {
         setSelected(true);
         setSelectedEl(sle);
@@ -76,12 +83,13 @@ export const Layer = ({
   useEffect(() => {
     if (!editor || !editor?.getSelected?.()) return;
     console.log("layer should work");
- const childs = layer.forEachChild(child=>{
-      const cond = Boolean(editor.getSelected().getId() == child.getId())
-      console.log('from open  cond: ',cond);
-      
-      setOpenNested(cond)
-    });
+    // const childs = layer.forEachChild((child) => {
+    //   const cond = Boolean(editor.getSelected().getId() == child.getId());
+    //   console.log("from open  cond: ", cond);
+
+    //   cond && setOpenNested(cond);
+    // });
+    openCurrentLayer()
     setSelected(
       editor?.getSelected?.() && editor.getSelected().getId() == layer.getId()
         ? true
@@ -111,6 +119,15 @@ export const Layer = ({
     setOpenNested(!isOpentNested);
   };
 
+  const openCurrentLayer = useCallback(() => {
+    const childs = layer.forEachChild((child) => {
+      const cond = Boolean(editor.getSelected().getId() == child.getId());
+      console.log("from open  cond: ", cond);
+
+      cond && setOpenNested(cond);
+    });
+  },[editor]);
+
   /**
    *
    * @param {DragEvent} ev
@@ -131,35 +148,51 @@ export const Layer = ({
 
   const dropCallback = ({ isAfter = false, ev }) => {
     removeOpacity(ev);
-    const movedCmp = editor.getWrapper().find(`#${sharedLayer.id}`)[0];
+    const draggedBlock = editor.Blocks.getDragBlock();
+    const draggedBlockContent = draggedBlock?.getContent?.();
+    const movedCmp =
+      draggedBlock && draggedBlockContent
+        ? draggedBlockContent
+        : editor.getWrapper().find(`#${sharedLayer.id}`)[0];
     if (layer.getId() == sharedLayer || layer.isChildOf(movedCmp)) {
       toast.warn(<ToastMsgInfo msg={"Not allowed"} />);
       return;
     }
     const index = layer.index();
     const parent = layer.parent().components();
-    const sympolInfo = editor.Components.getSymbolInfo(movedCmp);
+    // const sympolInfo = editor.Components.getSymbolInfo(movedCmp);
     // const oldId = movedCmp.getId();
-    const instance = sympolInfo.isSymbol
-      ? editor.Components.addSymbol(movedCmp)
-      : movedCmp;
-    movedCmp.remove();
-    parent.add(instance, { at: isAfter ? index + 1 : index });
-    instance.setId(uniqueID());
+    // const instance = sympolInfo.isSymbol
+    //   ? editor.Components.addSymbol(movedCmp)
+    //   : movedCmp;
+    console.log('indexooo : ' , index , movedCmp.index());
+    
+    if(!isAfter && index == movedCmp.index()+1){
+      // toast.warn('ahahha');
+      return
+    }
+    const instance = draggedBlockContent ? movedCmp : movedCmp.clone();
+    !draggedBlockContent && movedCmp.remove();
+    const newCmp = parent.add(instance, { at: isAfter ? index + 1 : index });
+    newCmp.setId(uniqueID());
 
     !layer.components().models.length && setOpenNested(false);
     setLayers(
-      editor
-        .getWrapper()
-        .components()
-        .models.filter((lyr) => lyr.getName().toLowerCase() != "box")
+      [editor
+        .getWrapper()]
+        // .components()
+        // .models.filter((lyr) => lyr.getName().toLowerCase() != "box")
     );
   };
 
   return (
     <section
       id={layer.getId()}
-      className={` flex flex-col  gap-2  items-center justify-between mb-1 rounded-lg   border-transparent transition-all  `}
+      className={` flex flex-col  gap-2  items-center justify-between mb-2 rounded-lg   border-transparent transition-all  `}
+      style={{
+        opacity: !layerProps.draggable && layerProps.type != 'wrapper' ? 0.5 : 1,
+        pointerEvents: !layerProps.draggable && layerProps.type != 'wrapper' ? "none" : "auto",
+      }}
     >
       <section
         draggable={true}
@@ -178,6 +211,8 @@ export const Layer = ({
         }}
         onClick={(ev) => {
           const el = ev.currentTarget;
+          const myId = el.id;
+
           setSelected(!selected);
 
           !selected
@@ -185,8 +220,8 @@ export const Layer = ({
             : editor.Layers.setLayerData(layer, { selected: false });
 
           const desCb = () => {
-            editor.off("component:deselected", desCb);
             setSelected(false);
+            editor.off("component:deselected", desCb);
           };
           editor.on("component:deselected", desCb);
         }}
@@ -212,9 +247,12 @@ export const Layer = ({
             removeOpacity(ev);
           }}
           onDrop={(ev) => {
+            // if()
+            // console.log(ev.detail , ev.dataTransfer , editor.Canvas.getLastDragResult() , editor.Blocks.getDragBlock());
+
             dropCallback({ ev });
           }}
-          className="absolute left-0 top-0 w-full h-[15px] rounded-tl-lg rounded-tr-lg bg-blue-600 opacity-[0] transition-all"
+          className="absolute left-0 top-0 w-full h-[15px] rounded-tl-lg rounded-tr-lg bg-green-500 opacity-[0] transition-all"
         ></div>
 
         <div
@@ -231,11 +269,16 @@ export const Layer = ({
           onDrop={(ev) => {
             dropCallback({ ev, isAfter: true });
           }}
-          className="absolute left-0 bottom-[0] w-full h-[15px] rounded-bl-lg rounded-br-lg bg-blue-600 z-[1] opacity-[0] transition-all"
+          className="absolute left-0 bottom-[0] w-full h-[15px] rounded-bl-lg rounded-br-lg bg-green-600 z-[1] opacity-[0] transition-all"
         ></div>
 
         <div
           id="inside"
+          style={{
+            // opacity: !layerProps.draggable || !layerProps.droppable ? 0.5 : 1,
+            pointerEvents:
+              !layerProps.draggable || !layerProps.droppable ? "none" : "auto",
+          }}
           onDragOver={(ev) => {
             addOpacity(ev);
           }}
@@ -252,33 +295,47 @@ export const Layer = ({
           }}
           onDrop={(ev) => {
             removeOpacity(ev);
-            const movedCmp = editor.getWrapper().find(`#${sharedLayer.id}`)[0];
-            if (layer.getId() == sharedLayer || layer.isChildOf(movedCmp)) {
+            const draggedBlock = editor.Blocks.getDragBlock();
+            const draggedBlockContent = draggedBlock?.getContent?.();
+
+            const movedCmp = draggedBlockContent
+              ? draggedBlockContent
+              : editor.getWrapper().find(`#${sharedLayer.id}`)[0];
+            if (
+              !draggedBlockContent &&
+              (layer.getId() == sharedLayer || layer.isChildOf(movedCmp))
+            ) {
               toast.warn(<ToastMsgInfo msg={"Not allowed"} />);
               return;
             }
-            const parent = layer.components();
-            const movedCmpParent = movedCmp.parent();
 
-            const sympolInfo = editor.Components.getSymbolInfo(movedCmp);
-            const instance = sympolInfo.isSymbol
-              ? editor.Components.addSymbol(movedCmp)
-              : movedCmp;
-            movedCmp.remove();
-            parent.add(instance, { at: 0 });
+            const parent = layer.components();
+
+            // const sympolInfo = editor.Components.getSymbolInfo(movedCmp);
+            // const instance = sympolInfo.isSymbol
+            //   ? editor.Components.addSymbol(movedCmp)
+            //   : movedCmp;
+            const instance = !draggedBlockContent
+              ? movedCmp.clone()
+              : draggedBlockContent;
+            !draggedBlockContent && movedCmp.remove();
+            const newCmp = parent.add(instance, { at: 0 });
+            const movedCmpParent = newCmp.parent();
 
             !movedCmpParent.components().models.length
               ? sharedLayer.setState(false)
               : null;
           }}
-          className="absolute left-0 bottom-[0] w-[85%] h-[15px] rounded-bl-lg rounded-br-lg bg-blue-500 z-[2] opacity-[0]  transition-all"
+          className="absolute left-0 bottom-[0] w-[85%] h-[15px] rounded-bl-lg rounded-br-lg bg-purple-500 z-[2] opacity-[0]  transition-all"
         ></div>
 
         <section className="flex gap-2 items-center">
           {!!layer
             .components()
-            .models.filter((lyr) => lyr.getName().toLowerCase() != "box")
-            .length && (
+            .models.filter(
+              (lyr) =>
+                lyr.props().layerable && lyr.getName().toLowerCase() != "box"
+            ).length && (
             <button
               className={`${
                 isOpentNested && "rotate-[360deg]"
@@ -403,7 +460,10 @@ export const Layer = ({
         >
           {layer
             .components()
-            .models.filter((lyr) => lyr.getName().toLowerCase() != "box")
+            .models.filter(
+              (lyr) =>
+                lyr.props().layerable && lyr.getName().toLowerCase() != "box"
+            )
             .map((lyr, i) => {
               return (
                 <Layer

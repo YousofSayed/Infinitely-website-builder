@@ -10,6 +10,8 @@ import { useEditorMaybe } from "@grapesjs/react";
 import { jsToDataURL } from "../../../helpers/functions";
 import { html, uniqueID } from "../../../helpers/cocktail";
 import { Input } from "./Input";
+import { opfs } from "../../../helpers/initOpfs";
+import { defineRoot, getFileSize } from "../../../helpers/bridge";
 
 export const JsLibrary = ({
   library = JSLibraryType,
@@ -27,120 +29,108 @@ export const JsLibrary = ({
 
   const install = async ({ fileUrl, isHeader = false, isCDN = false }) => {
     try {
-      const projectId = localStorage.getItem(current_project_id);
-      const response = await fetch(fileUrl);
-      const responseStatus = response.status;
-      const resBlob = await response.blob();
-      const isJs = resBlob.type.includes("javascript");
-      const isCss = resBlob.type.includes("css");
-      const ext = (isJs && ".js") || (isCss && ".css") || "";
-      
-      const responseData = new File(
-        [resBlob],
-        `${library.name.replaceAll(
-          ext,
-          ""
-        )}${ext}`,
-        {
-          type: resBlob.type,
-        }
+    const tId = toast.loading(<ToastMsgInfo msg={`Installing ${library.name} library`}/>);
+    const projectId = localStorage.getItem(current_project_id);
+    const response = await fetch(fileUrl);
+    const responseStatus = response.status;
+    const resBlob = await response.blob();
+    const isJs = resBlob.type.includes("javascript");
+    const isCss = resBlob.type.includes("css");
+    const ext = (isJs && ".js") || (isCss && ".css") || "";
+    const fileName = library.name.replaceAll(ext, "") + ext;
+    const path = `libs/${
+      isCss ? "css" : isJs ? (isHeader ? "js/header" : "js/footer") : null
+    }/${fileName}`;
+    
+    const responseData = new File(
+      [resBlob],
+      `${fileName}`,
+      {
+        type: resBlob.type,
+      }
+    );
+    console.log("installing data : ", ext, isJs, isCss, response, responseData);
+    console.log("haha file name : ", responseData.name);
+
+    if (responseStatus != 200 || !response.ok) {
+      toast.dismiss(tId);
+      toast.error(
+        <ToastMsgInfo
+          msg={`Faild To Fetch ${fileUrl} With Status Code : ${response.status}`}
+        />
       );
-      console.log('installing data : ',ext , isJs , isCss , response , responseData );
-      console.log("haha file name : ", responseData.name);
+      throw new Error(
+        `Faild To Fetch ${fileUrl} With Status Code : ${response.status}`
+      );
+    }
+    const projectData = await db.projects.get(+projectId);
 
-      if (responseStatus != 200 || !response.ok) {
-        toast.error(
-          <ToastMsgInfo
-            msg={`Faild To Fetch ${fileUrl} With Status Code : ${response.status}`}
-          />
-        );
-        throw new Error(
-          `Faild To Fetch ${fileUrl} With Status Code : ${response.status}`
-        );
-      }
-      const projectData = await db.projects.get(+projectId);
-      // const libraryType = library.latest.endsWith("js") ? "js" : "css";
-      let libraryType;
-      if (library.fileType) {
-        libraryType = library.fileType;
-      } else {
-        const splited = library.latest.match(/\.\w+/gi);
-        libraryType = splited[splited.length - 1].replace(".", " ").trim();
-        library.fileType = libraryType;
-      }
+   
+    /**
+     *
+     * @param {keyof import('../../../helpers/types').Project} key
+     * @param {import('../../../helpers/types').LibraryConfig} newContent
+     */
+    const updater = async (key, newContent = {}) => {
+      // const realKey = `${libraryType}${key}`;
+      console.log("from updater :", newContent);
 
-      /**
-       *
-       * @param {keyof import('../../../helpers/types').Project} key
-       * @param {import('../../../helpers/types').LibraryConfig} newContent
-       */
-      const updater = async (key, newContent = {}) => {
-        // const realKey = `${libraryType}${key}`;
-        console.log('from updater :', newContent);
+   
+      await opfs.createFiles([
+        {
+          path:defineRoot(path),
+          content: responseData,
+        },
+      ]);
+      await db.projects.update(+projectId, {
+        [key]: [...projectData[key], { ...newContent }],
+      });
+      editor.load();
+      toast.done(tId)
+      toast.success(<ToastMsgInfo msg={`Library Installed Successfully `} />);
+      afterInstall({ key: key, lib: newContent });
+    };
+   
+    /**
+     * @type {import('../../../helpers/types').LibraryConfig}
+     */
+    const defaultData = {
+      ...installData,
+      type: ext.replace(".", ""),
+      // file: responseData,
+      path,
+      fileType: ext.replace(".", ""),
+      description: library.description,
+      name: fileName,
+      isCDN: isCDN,
+      isLocal: !isCDN,
+      header: isHeader ? "header" : "",
+      footer: isHeader ? "" : "footer",
+      fileUrl: library.latest,
+      version: library.version,
+      size : getFileSize(responseData).MB,
+      id: uniqueID(),
+    };
 
-        await db.projects.update(+projectId, {
-          [key]: [...projectData[key], { ...newContent }],
-        });
+    // console.log("lib type:", libraryType, responseData.type);
 
-        editor.load();
-        toast.success(<ToastMsgInfo msg={`Library Installed Successfully `} />);
-        afterInstall({ key: key, lib: newContent });
-      };
+    if (isHeader && responseData.type.includes("javascript")) {
+      updater("jsHeaderLibs", {
+        ...defaultData,
+      });
+    } else if (!isHeader && responseData.type.includes("javascript")) {
+      updater("jsFooterLibs", {
+        ...defaultData,
+      });
+    } else if (responseData.type.includes("css")) {
+      updater("cssLibs", {
+        ...defaultData,
+      });
+    }
 
-      /**
-       * @type {import('../../../helpers/types').LibraryConfig}
-       */
-      const defaultData = {
-        ...installData,
-        type: ext.replace('.',''),
-        file: responseData,
-        fileType: ext.replace('.',''),
-        description: library.description,
-        name: library.name.replaceAll(ext , '') + ext,
-        isCDN: isCDN,
-        isLocal: !isCDN,
-        header: isHeader ? "header" : "",
-        footer: isHeader ? "" : "footer",
-        fileUrl: library.latest,
-        version: library.version,
-        id: uniqueID(),
-      };
 
-      // console.log("lib type:", libraryType, responseData.type);
 
-      if (isHeader && responseData.type.includes("javascript")) {
-        updater("jsHeaderLibs", {
-          ...defaultData,
-        });
-      } else if (!isHeader && responseData.type.includes("javascript")) {
-        updater("jsFooterLibs", {
-          ...defaultData,
-        });
-      } else if (responseData.type.includes("css")) {
-        updater("cssLibs", {
-          ...defaultData,
-        });
-      }
-
-      // if (isHeader && isCDN) {
-      // updater("HeaderCDNLibraries", {
-      //   ...defaultData,
-      // });
-      // } else if (isHeader && !isCDN) {
-      //   updater("HeaderLocalLibraries", {
-      //     ...defaultData,
-      //   });
-      // } else if (!isHeader && isCDN) {
-      //   updater("FooterCDNLibraries", {
-      //     ...defaultData,
-      //   });
-      // } else if (!isHeader && !isCDN) {
-      //   updater("FooterLocalLibraries", {
-      //     ...defaultData,
-      //   });
-      // }
-
-      console.log(response);
+    console.log(response);
     } catch (error) {
       console.error(
         `Failed To Install Library ${library.name} With Error : ${error}`
@@ -306,7 +296,7 @@ export const JsLibrary = ({
                       });
                     }}
                   >
-                    {Icons.export("white", undefined, "white")}
+                    {Icons.export("white", undefined)}
                     Install
                   </Button>
                   {!fileuploader && (

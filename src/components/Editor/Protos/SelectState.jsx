@@ -70,8 +70,8 @@ export const SelectState = ({ placeholder }) => {
     };
 
     const findIndex = rules.findIndex((ruleF) => {
-      console.log( handleValue(ruleF?.atRuleParams) == handleValue(media?.atRuleParams));
-      console.log( handleValue(ruleF?.atRuleType) == handleValue(media?.atRuleType));
+      // console.log( handleValue(ruleF?.atRuleParams) == handleValue(media?.atRuleParams));
+      // console.log( handleValue(ruleF?.atRuleType) == handleValue(media?.atRuleType));
       // console.log( handleValue(ruleF?.atRuleType) == handleValue(media?.atRuleType));
       
       return (
@@ -112,12 +112,12 @@ export const SelectState = ({ placeholder }) => {
       currentSelector
     ).filter((sdt) => sdt.states && sdt.statesAsArray.length);
 
-    console.log(
-      "a3aaaa : ",
-      currentSelector,
-      selectorRules,
-      editor.CssComposer.getRules()
-    );
+    // console.log(
+    //   "a3aaaa : ",
+    //   currentSelector,
+    //   selectorRules,
+    //   editor.CssComposer.getRules()
+    // );
     isSetRules && setStates([...selectorRules]);
     return selectorRules;
   }

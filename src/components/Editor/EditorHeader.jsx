@@ -19,6 +19,7 @@ import {
 } from "../../helpers/atoms";
 import {
   buildScriptFromCmds,
+  exportProject,
   getCurrentPageName,
   getProjectData,
   getProjectSettings,
@@ -75,12 +76,13 @@ export const HomeHeader = memo(() => {
   };
 
   return (
-    <header className="w-full h-[60px] [&_svg]:w-[18px] [&_svg]:h-[18px] zoom-80 px-2 bg-slate-900  border-b-[1.5px]  border-slate-400    flex items-center justify-between gap-5">
-      <ScrollableToolbar className="w-[43.5%] h-full items-center " space={3}>
+    <header className="w-full h-[60px] [&_svg]:w-[20px] [&_svg]:h-[18px] zoom-80 px-2 bg-slate-900  border-b-[1.5px]  border-slate-400    flex items-center justify-between gap-5">
+      <ScrollableToolbar className="w-[37.5%] h-full items-center flex-shrink-0" space={3}>
         {/* <ul className="flex gap-[25px] flex-shrink  h-full  items-center"> */}
-        <Li
+      <ul className="flex items-center gap-2 justify-between flex-shrink-0 flex-grow bg-slate-800 shadow-2xl shadow-slate-950 rounded-lg w-[120px] p-1">
+          <Li
           title="desktop size"
-          className="max-lg:flex-shrink-0"
+          // className="max-xl:flex-shrink-0"
           onClick={(ev) => {
             editor.setDevice("Desktop");
             // setCurrentEl({ currentEl: editor?.getSelected()?.getEl() });
@@ -90,7 +92,7 @@ export const HomeHeader = memo(() => {
         />
         <Li
           title="tablet size"
-          className="max-lg:flex-shrink-0"
+          // className="max-xl:flex-shrink-0"
           onClick={(ev) => {
             editor.setDevice("tablet");
             // setCurrentEl({ currentEl: editor?.getSelected()?.getEl() });
@@ -101,7 +103,7 @@ export const HomeHeader = memo(() => {
 
         <Li
           title="mobile size"
-          className="max-lg:flex-shrink-0"
+          // className="max-xl:flex-shrink-0"
           onClick={(ev) => {
             editor.setDevice("mobile");
             // setCurrentEl({ currentEl: editor?.getSelected()?.getEl() });
@@ -109,11 +111,12 @@ export const HomeHeader = memo(() => {
           }}
           icon={Icons.mopile}
         />
+      </ul>
 
         <li className="flex items-center h-[65%] gap-4 max-lg:flex-shrink-0">
           <Input
             placeholder="Width"
-            className="bg-slate-800 p-1 w-[70px]  h-full font-bold text-sm max-lg:flex-shrink-0"
+            className="bg-slate-800 p-1 w-[70px] text-center  h-full font-bold text-sm max-lg:flex-shrink-0"
             value={dimansions.width}
             onInput={(ev) => {
               transformToNumInput(ev.target);
@@ -126,7 +129,7 @@ export const HomeHeader = memo(() => {
           <Input
             value={dimansions.height}
             placeholder="Height"
-            className="bg-slate-800 w-[70px] p-1   h-full font-bold text-sm max-lg:flex-shrink-0 "
+            className="bg-slate-800 w-[70px] p-1  text-center  h-full font-bold text-sm max-lg:flex-shrink-0 "
             onInput={(ev) => {
               transformToNumInput(ev.target);
               setCustomDevice("height", ev.target.value);
@@ -149,7 +152,7 @@ export const HomeHeader = memo(() => {
       {/* <ToolbarComponent style={{width:'50%' }} overflowMode="Popup" > */}
 
       {/* <section className="flex items-center  gap-2    w-[59%] px-2"> */}
-      <ScrollableToolbar className=" w-[54%] h-full items-center" space={1}>
+      <ScrollableToolbar className=" w-[61%] h-full items-center" space={1}>
         <IframeControllers />
         <Hr />
         {/* <div className="flex items-center justify-between gap-2 h-full w-full"> */}
@@ -182,7 +185,7 @@ export const HomeHeader = memo(() => {
             onClick={(ev) => {
               localStorage.setItem(preview_url, getCurrentPageName());
               window.open(
-                `/pages/${localStorage.getItem(current_page_id)}.html`,
+                `/${getCurrentPageName()}`,
                 "_blank",
                 // 'width=800,height=600,top=50,left=50,scrollbars=yes,resizable=yes,location=yes,menubar=no,toolbar=no,status=yes,titlebar=yes'
               );
@@ -214,23 +217,18 @@ export const HomeHeader = memo(() => {
             justHover={true}
             className="flex-shrink-0"
             onClick={async () => {
-              const projectId = +localStorage.getItem(current_project_id);
-              const id = toast.loading(
-                <ToastMsgInfo msg={`Loading files , please wait`} />
-              );
-              //  setTimeout(()=>{
+              // const projectId = +localStorage.getItem(current_project_id);
+              
 
-              //   toast.done(id)
-              //  },10)
-
-              infinitelyWorker.postMessage({
-                command: "exportProject",
-                props: {
-                  projectSetting: getProjectSettings().projectSettings,
-                  projectId,
-                  toastId: id,
-                },
-              });
+              // infinitelyWorker.postMessage({
+              //   command: "exportProject",
+              //   props: {
+              //     projectSetting: getProjectSettings().projectSettings,
+              //     projectId,
+              //     toastId: id,
+              //   },
+              // });
+              exportProject()
             }}
           />
           <Li

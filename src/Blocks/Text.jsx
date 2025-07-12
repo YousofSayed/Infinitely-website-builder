@@ -1,23 +1,49 @@
-import { Icons } from '../components/Icons/Icons'
-import { reactToStringMarkup } from '../helpers/reactToStringMarkup'
+import { Icons } from "../components/Icons/Icons";
+import { media_types, text_tags } from "../constants/shared";
+import { getParentNode } from "../helpers/functions";
+import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
 
 /**
- * 
- * @param {{editor:import('grapesjs').Editor}} param0 
+ *
+ * @param {{editor:import('grapesjs').Editor}} param0
  */
-export const Text = ({editor}) => {
-  editor.Components.addType('text',{
-    extend:'text',
-    model:{
-        defaults:{
-            icon:reactToStringMarkup(Icons.text({fill:'white'})),
-            droppable:false,
-            tagName:'p',
-            components:`Insert your text here`,
-            attributes:{
-                class:'p-10'
-            }
-        }
-    }
-  })
-}
+export const Text = ({ editor }) => {
+  editor.Components.addType("text", {
+    extend: "text",
+    view:{
+      onRender({model}){
+        model.set({
+          droppable:false,
+        })
+      }
+    },
+    isComponent: (el) => {
+      const svg = getParentNode((el)=>{
+        el.tagName && el.tagName.toLowerCase() === "svg";
+      } ,el);
+      const isSvg = svg && svg.tagName && svg.tagName.toLowerCase() === "svg";
+      if (isSvg) return false;
+      if (!el.tagName) return false;
+      // Check if the element is a media type
+      if (media_types.includes(el.tagName.toLowerCase())) return false;
+      // If the element is not a media type, return true
+      if (text_tags.includes(el.tagName.toLowerCase())) return true;
+      // // Otherwise, return false
+      // if (el.tagName.toLowerCase() === "p") return true;
+      // // If the element is not a text or p tag, return false
+
+      // return !media_types.includes(el.tagName.toLowerCase());
+    },
+    model: {
+      defaults: {
+        icon: reactToStringMarkup(Icons.text({ fill: "white" })),
+        droppable: false,
+        tagName: "p",
+        components: `Insert your text here`,
+        attributes: {
+          class: "p-10",
+        },
+      },
+    },
+  });
+};

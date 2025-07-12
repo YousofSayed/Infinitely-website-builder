@@ -117,6 +117,7 @@ export const LibraryUploader = () => {
             inputFileRef.current.click();
           }}
         >
+          {Icons.upload({strokeColor:'white'})}
           Upload File
         </Button>
 

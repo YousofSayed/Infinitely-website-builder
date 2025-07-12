@@ -70,7 +70,7 @@ export const HomeNav = () => {
               editor.runCommand(open_custom_font_installer_modal);
             }}
           >
-            {Icons.fonts({})}
+            {Icons.fonts({width:22.5 , height:22.5})}
           </Li>
 
           <Li

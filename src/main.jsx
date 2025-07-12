@@ -17,7 +17,7 @@ makeAppResponsive("#root");
 ReactDOM.createRoot(document.getElementById("root")).render(
   // <React.StrictMode>
   <RecoilRoot>
-    <BrowserRouter>
+    <BrowserRouter basename="/">
       <ErrorBoundary
         fallbackRender={({ error, resetErrorBoundary }) => {
           return (

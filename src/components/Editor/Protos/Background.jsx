@@ -23,6 +23,8 @@ import { useSetClassForCurrentEl } from "../../../hooks/useSetclassForCurrentEl"
 import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
 import { Textarea } from "./Textarea";
 import { useRemoveCssProp } from "../../../hooks/useRemoveCssProp";
+import { ChooseFile } from "../../Protos/ChooseFile";
+import { FitTitle } from "./FitTitle";
 
 export const Background = memo(() => {
   const editor = useEditorMaybe();
@@ -71,7 +73,7 @@ export const Background = memo(() => {
 
       <MiniTitle>Image</MiniTitle>
       <section className="flex gap-2 relative h-[60px] bg-slate-800 p-2 rounded-lg justify-between">
-        <Textarea
+        {/* <Textarea
           value={bgImage}
           cssProp="background-image"
           className="w-full bg-slate-900"
@@ -105,7 +107,20 @@ export const Background = memo(() => {
           }}
         >
           {Icons.gallery("white")}
-        </SmallButton>
+        </SmallButton> */}
+
+        <ChooseFile
+          mediaType="image"
+          placeholder="choose image"
+          value={bgImage}
+          callback={(asset, url) => {
+            setBgImage(url);
+            setClass({
+              cssProp: "background-image",
+              value: `url("${url}")`,
+            });
+          }}
+        />
       </section>
       <Property cssProp="background-position-x" label="position-x" />
       <Property cssProp="background-position-y" label="position-y" />
@@ -113,14 +128,18 @@ export const Background = memo(() => {
         cssProp="background-repeat"
         keywords={backgroundRepeatValues}
         placeholder="Repeat"
+        label="Repeat"
       />
       <SelectStyle
         cssProp="background-size"
         keywords={backgroundSize}
         placeholder="Size"
+        label="Size"
       />
 
+      
       <AddMultiValuestoSingleProp
+        label={<FitTitle>Attachment</FitTitle>}
         placeholder="Attachment"
         cssProp="background-attachment"
         keywords={backgroundAttachmentValues}
@@ -134,16 +153,19 @@ export const Background = memo(() => {
         cssProp="background-clip"
         placeholder="Clip"
         keywords={backgroundClipValues}
+        label="Clip"
       />
       <SelectStyle
         cssProp="background-origin"
         placeholder="Origin"
         keywords={backgroundClipValues.slice(0, -1)}
+        label="Origin"
       />
       <SelectStyle
         cssProp="background-blend-mode"
         placeholder="Blend-mode"
         keywords={backgroundBlendModeValues}
+        label="Blend Mode"
       />
     </section>
   );

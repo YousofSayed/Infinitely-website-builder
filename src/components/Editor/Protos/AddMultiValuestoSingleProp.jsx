@@ -46,8 +46,8 @@ export const AddMultiValuestoSingleProp = ({
   }, [updatedValue]);
 
   return (
-    <section className=" flex flex-col gap-3 p-2 bg-slate-800 rounded-lg">
-      {label ? <P>{label} : </P> : null}
+    <section className=" flex flex-col gap-3 p-1 bg-slate-800 rounded-lg">
+      {label ? label : null}
       <section className="flex justify-between gap-2">
         <Select
           className="p-[unset] px-[unset]"

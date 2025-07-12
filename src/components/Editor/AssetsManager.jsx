@@ -39,6 +39,7 @@ import { InfinitelyEvents } from "../../constants/infinitelyEvents";
 import {
   blobToDataUrlAndClean,
   cleanMotions,
+  defineRoot,
   getFileSize,
   getFilesSize,
   getStorageDetails,
@@ -53,6 +54,8 @@ import { FitTitle } from "./Protos/FitTitle";
 import { storageDetailsType } from "../../helpers/jsDocs";
 import { Hr } from "../Protos/Hr";
 import { FileView } from "../Protos/FileView";
+import { opfs } from "../../helpers/initOpfs";
+import { assetsWorker } from "../../helpers/defineWorkers";
 
 /**
  *
@@ -89,7 +92,6 @@ export const AssetsManager = memo(() => {
     getAssetsFromAM();
   });
 
-
   useEffect(() => {
     /**
      *
@@ -105,39 +107,106 @@ export const AssetsManager = memo(() => {
         console.log("data : ", ev.data);
       }
     };
-    infinitelyWorker.addEventListener("message", cb);
+
+    const getFilesCb = async (data) => {
+      console.log("Files created in OPFS : ", data);
+      // if (!data.folderName.includes("assets")) return;
+      const assets = await Promise.all(
+        (
+          await opfs.getAllFiles(defineRoot(`assets`))
+        ).map(async (handle) => await handle.getOriginFile())
+      );
+
+      // const files = await Promise.all(
+      //   (
+      //     await opfs.getAllFiles(
+      //       assetFolder,
+      //       {recursive:false}
+      //     )
+      //   ).map(async (file) => await file.getFile())
+      // );
+      setFiles(assets);
+    };
+
+    // const opfsCreateCleaner = opfs.on("all",async (data) => {
+    // console.log("Files created in OPFS : ", data);
+    // // if (data?.currentRoot?.name && !data.currentRoot.name.includes("assets")) return;
+    // const files = await Promise.all(
+    //   (
+    //     await opfs.getAllFiles(
+    //       await opfs.root,
+    //       `projects/project-${projectId}/assets`
+    //     )
+    //   ).map(async (file) => await file.getFile())
+    // );
+    // console.log("Files created in OPFS After : ", files);
+
+    // setFiles(
+    //  files
+    // );
+    // });
+
+    const cleaner1 = opfs.on("all", getFilesCb);
+
+    const cleaner2 = opfs.onBroadcast("all", getFilesCb);
+    // const opfsRemovedCleaner = opfs.on("entriesRemoved",getFilesCb);
+    // const opfsRemovedCleaner = opfs.on("entriesRemoved",getFilesCb);
+
+    assetsWorker.addEventListener("message", cb);
+
     getAndSetStorageDetails();
     return () => {
-      infinitelyWorker.removeEventListener("message", cb);
+      assetsWorker.removeEventListener("message", cb);
+      // opfsCreateCleaner();
+      cleaner1();
+      cleaner2();
     };
   }, []);
 
   const getAndSetStorageDetails = async () => {
     // console.log('current_project_id : ', +localStorage.getItem(current_project_id));
-    
+
     setStorageDetails(
       await getStorageDetails(+localStorage.getItem(current_project_id))
     );
   };
 
   const getAssetsFromAM = async () => {
-    const projectData = await await getProjectData();
-    const assets = cssPropForAM
-      ? projectData.assets.filter((asset) =>
-          asset.file.type.toLowerCase().includes("image")
-        )
-      : assetType
-      ? projectData.assets.filter((asset) =>
-          asset.file.type.toLowerCase().includes(assetType)
-        )
-      : projectData.assets;
+    // const projectData = await await getProjectData();
+    // const assets = cssPropForAM
+    //   ? projectData.assets.filter((asset) =>
+    //       asset.file.type.toLowerCase().includes("image")
+    //     )
+    //   : assetType
+    //   ? projectData.assets.filter((asset) =>
+    //       asset.file.type.toLowerCase().includes(assetType)
+    //     )
+    //   : projectData.assets;
+    // console.log("folders : ", await opfs.getAllFolders(await opfs.root));
+    // opfs.getAllFiles
+    // const assetsRoot = await opfs.getFolder(
+    //   defineRoot(`assets`)
+    // );
+
+    // const assets = await Promise.all((await assetsRoot.children()).filter(handle=>handle.kind =='file').map(handle => handle.getOriginFile()))
+    // const files = await opfs.getAllFiles(assetsRoot, { recursive: false });
+    const assetsRoot = await opfs.getAllFiles(defineRoot(`assets`));
+    const assets = (
+      await Promise.all(
+        assetsRoot.map((file) => {
+          return file.getOriginFile();
+        })
+      )
+    ).filter((file) => file != undefined);
+    allFilesRef.current = assets;
+    console.log("files or assets : ", assets);
 
     // if (assets.length) {
     //   for (const asset of assets) {
     //     asset.blobUrl = URL.createObjectURL(asset.file);
     //   }
     // }
-    allFilesRef.current = assets;
+    // allFilesRef.current = assets;
     setFiles(assets);
     setShowLoader(false);
   };
@@ -157,16 +226,15 @@ export const AssetsManager = memo(() => {
        * @type {File[]}
        */
       const files = [...ev.target.files];
-      const inputFiles = files.map((file) => ({
-        file: file,
-        id: uniqueID(),
-        // blobUrl: URL.createObjectURL(file),
-      }));
+      // const inputFiles = files.map((file) => ({
+      //   file: file,
+      //   id: uniqueID(),
+      //   // blobUrl: URL.createObjectURL(file),
+      // }));
       // const projectData = await getProjectData();
 
       const filesSize = getFilesSize(files);
       console.log(filesSize.MB, filesSize.GB);
-
       // return
 
       // if (filesSize.MB > 10) {
@@ -184,16 +252,13 @@ export const AssetsManager = memo(() => {
       //   ...inputFiles,
       // ],
       // });
-      const id = toast.loading(<ToastMsgInfo msg={`Uploading...`} />);
-      infinitelyWorker.postMessage({
+      // const id = toast.loading(<ToastMsgInfo msg={`Uploading...`} />);
+      assetsWorker.postMessage({
         command: "uploadAssets",
         props: {
           projectId,
-          toastId: id,
-          assets: [
-            // ...(Array.isArray(projectData.assets) ? projectData.assets : []),
-            ...inputFiles,
-          ],
+          // toastId: id,
+          assets: files,
         },
       });
 
@@ -210,85 +275,30 @@ export const AssetsManager = memo(() => {
     } finally {
       // setShowLoader(false);
     }
-
-  };
-
-  /**
-   *
-   * @param {MouseEvent} ev
-   * @param {File} file
-   */
-  const onItemClicked = async (ev, file) => {
-    ev.stopPropagation();
-    ev.preventDefault();
-    addClickClass(ev.target, "click");
-    const selectedEl = editor.getSelected();
-    if (!selectedEl) {
-      toast.warn(<ToastMsgInfo msg={`Please select element`} />);
-      return;
-    }
-    // const symbolInfo = getInfinitelySymbolInfo(selectedEl);
-    console.log(cssPropForAM);
-
-    if (cssPropForAM) {
-      setClass({
-        cssProp: cssPropForAM,
-        value: `url("../assets/${file.name}")`, //`url("${URL.createObjectURL(file)}") , url("../assets/${file.name}") /* buildUrl: url("https://example.com/style.css"); prop: background-image */`,
-      });
-    } else {
-      const el = editor.getSelected().getEl();
-      const tagName = el.tagName.toLowerCase();
-      console.log(
-        tagName,
-        editor.getSelected().getEl(),
-        editor.getSelected().getEl() instanceof HTMLDivElement
-      );
-      const pageName = localStorage.getItem(current_page_id);
-      const isIndex = pageName.toLowerCase() == "index";
-      const src = `${isIndex ? "." : ".."}/assets/${file.name}`;
-      editor.getSelected().addAttributes({ src });
-      const projectSettings = getProjectSettings();
-      const navigateValue =
-        projectSettings.projectSettings.navigate_to_style_when_Select;
-      // editor.getSelected().getView().render();
-      // editor.getSelected().updateView()
-      if (!("src" in el)) {
-        // el.querySelector(`[src]`).setAttribute("src", src);
-        projectSettings.set({
-          navigate_to_style_when_Select: false,
-        });
-        const newSle = editor
-          .getSelected()
-          .replaceWith(editor.getSelected().clone())[0];
-        editor.select(newSle);
-        projectSettings.set({
-          navigate_to_style_when_Select: navigateValue,
-        });
-      }
-      // console.log("nooo", !("src" in el));
-    }
-
-    setCssPropForAM("");
-    setAssetType("");
-  };
-
-  const deleteAsset = async (id) => {
-    const newAssets = files.filter((file) => file.id != id);
-    await db.projects.update(projectId, {
-      assets: newAssets,
-    });
   };
 
   const deleteAll = async () => {
-    await db.projects.update(projectId, {
-      assets: [],
-    });
-
-    toast.success(<ToastMsgInfo msg={`All assets deleted successfully`} />);
+    // await db.projects.update(projectId, {
+    //   assets: [],
+    // });
+    
+    // const toastId = toast.loading(<ToastMsgInfo msg={`Deleting Files...`} />);
+    // await opfs.remove({
+    //   dirOrFile: await opfs.getFolder(defineRoot(`assets`)),
+    // });
+    // toast.done(toastId);
+    // toast.success(<ToastMsgInfo msg={`All assets deleted successfully`} />);
+    assetsWorker.postMessage({
+      command:'removeOPFSEntry',
+      props:{
+        path : defineRoot(`assets`),
+        toastMsg : `Deleting Files...`,
+      }
+    })
   };
 
   const search = async (value = "") => {
-    const newArr = files.filter((asset) => asset.file.name.includes(value));
+    const newArr = files.filter((asset) => asset.name.includes(value));
     if (!newArr.length || !value) {
       setFiles(allFilesRef.current);
     } else {
@@ -337,38 +347,43 @@ export const AssetsManager = memo(() => {
         {!!files.length && (
           <section className=" flex items-center justify-between p-2 rounded-lg bg-slate-800">
             <article className="font-semibold text-[14px] text-slate-200 flex items-center gap-2">
-              <FitTitle>Available Space</FitTitle>{" "}
-              <p className="h-full p-1 bg-slate-900 rounded-lg">
-                {storageDetails.availableSpaceInMB >= MAX_UPLOAD_SIZE
-                  ? (
-                      MAX_UPLOAD_SIZE -
-                      getFilesSize(files.map((file) => file.file)).MB
-                    ).toFixed(2)
-                  : (
-                      storageDetails.availableSpaceInMB -
-                      getFilesSize(files.map((file) => file.file)).MB
-                    ).toFixed(2)}
+              <FitTitle className="custom-font-size">Files count</FitTitle>
+              <p className="h-full py-1 px-2 bg-slate-900 rounded-lg custom-font-size">
+                {files.length}
+              </p>
+            </article>
+            <Hr />
+            <article className="font-semibold text-[14px] text-slate-200 flex items-center gap-2">
+              <FitTitle className="custom-font-size">Available Space</FitTitle>{" "}
+              <p className="h-full py-1 px-2 bg-slate-900 rounded-lg custom-font-size">
+                {storageDetails.availableSpaceInMB }
                 MB
               </p>{" "}
             </article>
-
-            <Hr/>
+{/* >= MAX_UPLOAD_SIZE
+                  ? (
+                      MAX_UPLOAD_SIZE -
+                      getFilesSize(files.map((file) => file)).MB
+                    ).toFixed(2)
+                  : (
+                      storageDetails.availableSpaceInMB -
+                      getFilesSize(files.map((file) => file)).MB
+                    ).toFixed(2) */}
+            <Hr />
 
             <article className="font-semibold text-[14px] text-slate-200 flex items-center gap-2">
-              <FitTitle>Used Space</FitTitle>{" "}
-              <p className="h-full p-1 bg-slate-900 rounded-lg">
-                {getFilesSize(files.map((file) => file.file)).MB.toFixed(2)}MB
+              <FitTitle className="custom-font-size">Used Space</FitTitle>{" "}
+              <p className="h-full py-1 px-2 bg-slate-900 rounded-lg custom-font-size">
+                {storageDetails.usedSpace}MB
               </p>{" "}
             </article>
 
-            <Hr/>
+            <Hr />
 
             <article className="font-semibold text-[14px] text-slate-200 flex items-center gap-2">
-              <FitTitle>Total Space</FitTitle>{" "}
-              <p className="h-full p-1 bg-slate-900 rounded-lg">
-                {storageDetails.availableSpaceInMB >= MAX_UPLOAD_SIZE
-                  ? MAX_UPLOAD_SIZE
-                  : storageDetails.availableSpaceInMB}
+              <FitTitle className="custom-font-size">Total Space</FitTitle>{" "}
+              <p className="h-full py-1 px-2 bg-slate-900 rounded-lg custom-font-size">
+                {storageDetails.projectSpace}
                 MB
               </p>{" "}
             </article>
@@ -378,7 +393,7 @@ export const AssetsManager = memo(() => {
         {/* <section
           className={`w-full h-full  bg-gray-950 rounded-lg p-2 overflow-auto grid grid-cols-[repeat(auto-fill,minmax(25%,1fr))] grid-rows-[repeat(auto-fill,minmax(200px,200px))] justify-start gap-[15px] `}
         > */}
-        {showLoader && <Loader />} 
+        {showLoader && <Loader />}
         {!!files.length && (
           <VirtuosoGrid
             totalCount={files.length}
@@ -393,11 +408,9 @@ export const AssetsManager = memo(() => {
             itemContent={(index) => {
               const i = index,
                 asset = files[index];
+              console.log("files from virtuso : ", asset);
 
-              return (
-             
-                <FileView asset={asset}   />
-              );
+              return <FileView asset={asset} />;
             }}
           />
         )}

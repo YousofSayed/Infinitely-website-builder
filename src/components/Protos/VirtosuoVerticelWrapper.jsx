@@ -13,7 +13,7 @@ export const VirtosuoVerticelWrapper = (props) => {
     const scroller = el.parentNode.parentNode.parentNode;
     const isScroller = isElementScrollable(scroller).vertical;
 
-    isScroller && setPadding("0.25rem");
+    isScroller && setPadding("0.25rem"); 
     !isScroller && setPadding("0");
   };
   useLayoutEffect(() => {

@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useEffect } from "react";
 import { Button } from "../../Protos/Button";
 import { Icons } from "../../Icons/Icons";
 import { current_page_id, current_project_id } from "../../../constants/shared";
@@ -12,7 +12,8 @@ import {
 } from "../../../constants/InfinitelyCommands";
 import { useRecoilState } from "recoil";
 import { fileInfoState } from "../../../helpers/atoms";
-import { getFileSize } from "../../../helpers/bridge";
+import { defineRoot, getFileSize } from "../../../helpers/bridge";
+import { opfs } from "../../../helpers/initOpfs";
 
 /**
  *
@@ -30,20 +31,28 @@ export const InstalledLibraryDetails = memo(
         const project = await await db.projects.get(projectId);
         const data = project;
         const newArr = data[dbKey].filter((lib) => lib.id != library.id);
+        await opfs.removeFiles([defineRoot(library.path)]);
         await db.projects.update(projectId, {
           [dbKey]: newArr,
         });
 
         // editor.Pages.select(localStorage.getItem(current_page_id));
         console.log("scripts before : ", editor.config.canvas.scripts);
-        const isJS = library.file.type.includes("javascript");
-        const isCSS = library.file.type.includes("css");
+        const isJS = library.type.includes("js");
+        const isCSS = library.type.includes("css");
         const key = (isJS && "scripts") || (isCSS && "styles");
         const index = editor.config.canvas[key].findIndex(
           (lib) => lib.name.toLowerCase() == library.name.toLowerCase()
         );
-        editor.config.canvas[key].splice(index, 1);
-        console.log("scripts after : ", editor.config.canvas.scripts);
+
+        index != -1 && editor.config.canvas[key].splice(index, 1);
+        console.log(
+          "scripts after : ",
+          editor.config.canvas[key],
+          isCSS,
+          isJS,
+          index
+        );
         editor.load();
         toast.success("Library Removed Successfully");
       } catch (error) {
@@ -63,14 +72,7 @@ export const InstalledLibraryDetails = memo(
             <SmallButton
               onClick={async (ev) => {
                 setFileInfo({
-                  fileName: library.file.name,
-                  fileType: library.file.type,
-                  fileContent: await library.file.text(),
-
-                  isHeader: library.header,
-                  isFooter: library.footer,
-                  id: library.id,
-                  file: library.file,
+                 path:library.path
                 });
                 // console.log(await library.file.text());
 
@@ -147,10 +149,10 @@ export const InstalledLibraryDetails = memo(
             </>
           )}
 
-          {!library.isCDN && (
+          {(
             <p className="max-w-[90%] overflow-hidden text-ellipsis text-nowrap">
               <span className="text-blue-300 font-semibold text-lg">Size</span>{" "}
-              :{getFileSize(library.file, 5).MB}MB
+              :{library.size}MB
             </p>
           )}
         </section>

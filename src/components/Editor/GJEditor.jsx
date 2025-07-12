@@ -25,7 +25,6 @@ import { IDB } from "../../plugins/IDB.js";
 import { updateProjectThumbnail } from "../../plugins/updateProjectThumbnail.js";
 import { customInfinitelySymbols } from "../../plugins/customInfinitelySymbols";
 import { updateDynamicTemplates } from "../../plugins/updateDynamicTemplates.js";
-import { useGlobalSettings } from "../../hooks/useGlobalSettings.js";
 import { current_symbol_id } from "../../constants/shared.js";
 import { cloneDeep } from "lodash";
 import {
@@ -78,9 +77,21 @@ export const GJEditor = memo(({ children }) => {
      * @param {import('grapesjs').Editor} ev
      */
     async (ev) => {
+    //  const types = editor.DomComponents.getTypes();
+
+    //   types.forEach((cy) => {
+    //     editor.DomComponents.addType(cy.id, {
+    //       model: {
+    //         defaults: {
+    //           dropabble: true,
+    //         },
+    //       },
+    //     });
+    //   });
       ev.Blocks.categories.add({ id: "others", title: "Others" });
 
       const editor = ev;
+       
       // editor.on(
       //   "component:resize",
       //   /**
@@ -118,7 +129,6 @@ export const GJEditor = memo(({ children }) => {
 
       //   }
       // );
-      ev.on("storage:end:store", () => {});
       ev.runCommand("core:component-outline");
       isChrome(() => {
         editor.on("canvas:frame:load", ({ window, el }) => {
@@ -142,15 +152,32 @@ export const GJEditor = memo(({ children }) => {
         });
       });
 
+      // editor.on('canvas:frame:load:body', ({ body, el , window }) => {
+      //   console.log('from load body : ', body, el, window);
+      //   /**
+      //    * @type {Window}
+      //    */
+      //   const ifrWindow = window;
+      //   ifrWindow.addEventListener('error' , (event) => {
+      //     console.error('Error in iframe:', event);
+      //     toast.error(`Error in iframe: ${event.message}`);
+      //   });
+      //   ifrWindow.addEventListener('unhandledrejection', (event) => {
+      //     console.error('Unhandled rejection in iframe:', event.reason);
+      //     toast.error(`Unhandled rejection in iframe: ${event.reason}`);
+      //   });
+
+      // });
+
       ev.on("component:deselected", () => {
         setSelectedEl({ currentEl: undefined });
       });
-      // editor.RichTextEditor.hideToolbar();
+      // // editor.RichTextEditor.hideToolbar();
 
       ev.on("component:selected", () => {
         const selectedEl = ev.getSelected();
-        selectedEl.set({ resizable: false });
-        setSelectedEl({ currentEl: selectedEl?.getEl() });
+        // selectedEl.set({ resizable: false });
+        setSelectedEl({ currentEl: JSON.parse(JSON.stringify(selectedEl))}); //Fuck bug which make me like a crazy was fucken here , and it was because i set Dom Element in atom , old Code : selectedEl?.getEl()
         setRule({ is: false, ruleString: "" });
 
         const location = window.location;
@@ -179,7 +206,7 @@ export const GJEditor = memo(({ children }) => {
           currentDynamicTemplateId,
           dynamicTemplates,
         });
-        setSelectedEl({ currentEl: ev?.getSelected()?.getEl() });
+        setSelectedEl({ currentEl: JSON.parse(JSON.stringify(editor.getSelected() || {})) });
       });
 
       ev.on("undo", (args) => {
@@ -187,7 +214,7 @@ export const GJEditor = memo(({ children }) => {
           currentDynamicTemplateId,
           dynamicTemplates,
         });
-        setSelectedEl({ currentEl: ev?.getSelected()?.getEl() });
+        setSelectedEl({ currentEl: JSON.parse(JSON.stringify(editor.getSelected() || {})) });
       });
 
       // ev.on("canvas:dragover", (eve) => {
@@ -207,7 +234,7 @@ export const GJEditor = memo(({ children }) => {
   return (
     <Editor
       grapesjs={grapesjs}
-      options={({
+      options={{
         height: "100%",
         width: "100%",
         multipleSelection: true,
@@ -225,10 +252,10 @@ export const GJEditor = memo(({ children }) => {
         //   pages: ,
         // },
         // exportWrapper: true,
-        richTextEditor:{
-          custom:true,
+        richTextEditor: {
+          custom: true,
           // adjustToolbar:
-          toolbar: []
+          toolbar: [],
         },
         optsHtml: {
           // attributes: true,
@@ -246,7 +273,6 @@ export const GJEditor = memo(({ children }) => {
         autorender: true,
 
         parser: {
-         
           optionsHtml: {
             allowScripts: true,
             detectDocument: true,
@@ -321,9 +347,14 @@ export const GJEditor = memo(({ children }) => {
             (cmp) => {
               const symbolInfo = getInfinitelySymbolInfo(cmp);
               return html`
-                <figure id="inf-badge" class="flex gap-2 items-center p-1 w-full ${symbolInfo.isMain ? 'bg-[var(--symbol-color-hover)]' : 'bg-blue-600' }  ">
+                <figure
+                  id="inf-badge"
+                  class="flex gap-2 items-center p-1 w-full ${symbolInfo.isMain
+                    ? "bg-[var(--symbol-color-hover)]"
+                    : "bg-blue-600"}  "
+                >
                   ${cmp.getIcon()}
-                  <figcaption class="text-slate-200 font-semibold ">
+                  <figcaption class="text-white font-semibold ">
                     ${cmp.getName()}
                   </figcaption>
                 </figure>
@@ -341,7 +372,7 @@ export const GJEditor = memo(({ children }) => {
         },
         jsInHtml: true,
         plugins,
-      })}
+      }}
       onEditor={onEditor}
     >
       {children}

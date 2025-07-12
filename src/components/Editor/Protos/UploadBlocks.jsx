@@ -14,6 +14,8 @@ import { VirtuosoGrid } from "react-virtuoso";
 import { GridComponents } from "../../Protos/VirtusoGridComponent";
 import { FitTitle } from "./FitTitle";
 import { SmallButton } from "./SmallButton";
+import { opfs } from "../../../helpers/initOpfs";
+import { defineRoot } from "../../../helpers/bridge";
 
 export const UploadBlocks = () => {
   const [uploadedBlocks, setUploadedBlocks] = useState(blocksArrayType);
@@ -65,10 +67,28 @@ export const UploadBlocks = () => {
       uploadedBlocks.map(async (block) => {
         // const restoredBlock = restoreBlobs(block);
         console.log("restored block : ", block);
+        await opfs.createFiles([
+          {
+            path: defineRoot(
+              `editor/${block.type}s/${block.id}/${block.id}.html`
+            ),
+            content: block.content,
+          },
+          {
+            path: defineRoot(
+              `editor/${block.type}s/${block.id}/${block.id}.css`
+            ),
+            content: block.style,
+          },
+        ]);
+
+        block.content = '';
+        block.style = '';
 
         blocks[block.id] = block;
         if (block.type == "symbol") {
           symbols[`${block.id}`] = block;
+        } else {
         }
         return block;
       })

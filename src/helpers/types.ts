@@ -35,6 +35,7 @@ type TraitCallProps = {
   trait: InfinitelyTrait;
   oldValue: string;
   newValue: string;
+  asset:InfinitelyAsset | undefined,
 };
 
 export type TraitCallback = ({
@@ -42,6 +43,7 @@ export type TraitCallback = ({
   trait,
   oldValue,
   newValue,
+  asset,
 }: TraitCallProps) => void;
 
 export type InfinitelyTrait = {
@@ -165,7 +167,7 @@ export interface Directive {
   directive: string;
   name: string;
   id: string;
-  type: "object" | "code" | "array" | "multi" | "select";
+  type: "object" | "code" | "array" | "multi" | "select" | "check";
   // inputType: "object" | "code" | "array" | "multi" | "select";
   nestedInputType: "select" | "code" | "input";
   nestedCodeLang: "html" | "javascript" | "css";
@@ -271,6 +273,7 @@ export interface LibraryConfig {
   jsType: string;
   sort: number;
   path: string;
+  size:number;
 }
 
 type Component = import("grapesjs").Component;
@@ -305,13 +308,7 @@ export type JSONComponent = {
   // ];
 };
 
-export type InfinitelySymbol = {
-  id: string;
-  content: Blob;
-  style: Blob;
-  name: string;
-  category: string;
-};
+
 
 export type PageHelmet = {
   title: string;
@@ -324,9 +321,14 @@ export type PageHelmet = {
 };
 
 export type InfinitelyPage = {
-  html: Blob;
-  css: Blob;
-  js: Blob;
+  html: Blob | undefined;
+  css: Blob | undefined;
+  js: Blob | undefined;
+  pathes : {
+    html:string;
+    css:string;
+    js:string;
+  }
   cmds: { [key: string]: CMD[] };
   components: Component[];
   id: string;
@@ -343,6 +345,25 @@ export type InfinitelyBlock = {
   media: Blob;
   content: Blob;
   style: Blob;
+  pathes:{
+    content:string;
+    style:string;
+  }
+  type: "symbol" | "template";
+  category: string;
+};
+
+export type InfinitelySymbol  = {
+  name: string;
+  label: string;
+  id: string;
+  media: Blob;
+  content: Blob;
+  style: Blob;
+  pathes:{
+    content:string;
+    style:string;
+  }
   type: "symbol" | "template";
   category: string;
 };
@@ -364,6 +385,7 @@ export type InfinitelyFont = {
   isCDN: boolean;
   isLocalAsset: boolean;
   localAssetId: string;
+  path:string;
 };
 
 export type InfinitelyFonts = {
@@ -376,7 +398,7 @@ export interface Project {
   description: string;
   type: string;
   imgSrc: string;
-  logo: Blob;
+  logo: Blob | string | undefined;
   jsHeaderLibs: LibraryConfig[];
   jsFooterLibs: LibraryConfig[];
   cssLibs: LibraryConfig[];
@@ -397,6 +419,7 @@ export interface Project {
   };
   fonts: InfinitelyFonts;
   motions: { [key: string]: MotionType };
+  inited : boolean;
 }
 
 export type GlobalSettings = {
@@ -410,19 +433,25 @@ export type ProjectSetting = {
   minify_Js: boolean;
   transform_Image_To_Webp: boolean;
   navigate_to_style_when_Select: boolean;
-  excute_commands_after_page_load: boolean;
+  // excute_commands_after_page_load: boolean;
   delete_symbols_after_delete_from_page: boolean;
   grap_all_css_libs_in_single_file: boolean;
   grap_all_header_scripts_in_single_file: boolean;
   grap_all_footer_scripts_in_single_file: boolean;
   disable_petite_vue: boolean;
+  disable_gsap_core:boolean;
+  disable_gsap_scrollTrigger:boolean;
   enable_prettier_for_file_editor: boolean;
   is_async_graped_header_script: boolean;
   is_defer_graped_header_script: boolean;
   is_async_graped_footer_script: boolean;
   is_defer_graped_footer_script: boolean;
-  include_canvas_styles_in_build_file: boolean;
+
+  enable_tailwind_calsses : boolean;
+  // include_canvas_styles_in_build_file: boolean;
   purge_css: boolean;
+  include_symbols_in_export:boolean;
+  include_templates_in_export:boolean;
 };
 
 export interface JSLibrary {
@@ -536,4 +565,6 @@ export type StorageDetails = {
   availableSpaceInMB: number;
   availableSpaceInGB: number;
   isStorageFull: boolean;
+  filesLength: number;
 };
+

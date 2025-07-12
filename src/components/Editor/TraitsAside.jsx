@@ -99,6 +99,7 @@ export const TraitsAside = memo(() => {
         contentLangType == "javascript" ? innerHtml : "",
       enableTemplateEngine: contentLangType == "javascript",
     });
+    
     getAndSetTraits();
     setCmdsContext();
   }, [selectedEl]);
@@ -193,21 +194,23 @@ export const TraitsAside = memo(() => {
 
   const updateTraitValue = ({ name = "", key = "", value = "" }) => {
     const sle = editor.getSelected();
-    // sle.updateTrait(name, { [key]: value });
+    sle.updateTrait(name, { [key]: value });
     const trait = sle.getTrait(name);
 
-    trait.set({
-      [key]: value,
-      attributes: {
-        [key]: value,
-      },
-    });
+    // trait.set({
+    //   [key]: value,
+    //   attributes: {
+    //     [key]: value,
+    //   },
+    // });
+
+
 
     const role = trait.get("role");
     if (role == "attribute") {
       console.log('this is attribute');
       
-      sle.addAttributes({ [name]: trait.get('value') });
+      sle.addAttributes({ [name]: trait.get('value') } , );
     }
     // sle.addAttributes({ [name]: isString(value) ? value : stringify(value) });
     editor.trigger("trait:value");
@@ -218,7 +221,7 @@ export const TraitsAside = memo(() => {
     const sle = editor.getSelected();
     const type = sle.get("type").toLowerCase();
     if (isValidAttribute(key, value)) {
-      sle.addAttributes({ [key]: value || "" }, { avoidTransformers: true });
+      sle.addAttributes({ [key]: value || "" }, { partial:true });
       setAttributes(getFilterdAttributes());
       if (type == "video" || type == "iframe" || type == "source") {
         const newSle = sle.replaceWith(sle.clone())[0];
@@ -253,7 +256,8 @@ export const TraitsAside = memo(() => {
   };
 
   return (
-    <InfAccordion>
+  <section className="mt-2">
+      <InfAccordion>
       {/* <AsideControllers /> */}
       <AccordionItem title={"Type Content"}>
         <section className="flex flex-col gap-2 p-2">
@@ -321,7 +325,7 @@ export const TraitsAside = memo(() => {
               //    selectedValue
               //   );
               // },
-              value: selectedValue,
+              // value: codeSettings.htmlValueState || codeSettings.templateEngineValueState,
               onMount(ed, mon) {
                 // console.log("mouted", ed, mon);
                 setCmdsContext();
@@ -329,7 +333,7 @@ export const TraitsAside = memo(() => {
                   codeSettings.defaultLanguage == "html" &&
                   !codeSettings.enableTemplateEngine
                 ) {
-                  ed.setValue(selectedValue);
+                  ed.setValue(codeSettings.htmlValueState || codeSettings.templateEngineValueState);
                   // setCodeSettings({
                   //   ...codeSettings,
                   //   htmlValueState: selectedValue,
@@ -623,7 +627,7 @@ export const TraitsAside = memo(() => {
                         </SmallButton>
                       </section>
 
-                      <section className="flex flex-col">
+                      <section className="flex flex-col gap-2">
                         {Object.entries(
                           parse(trait.value || trait.default) || {}
                         ).map(([key, value], i) => {
@@ -781,8 +785,11 @@ export const TraitsAside = memo(() => {
                           editor,
                           newValue: url,
                           oldValue: trait.value,
+                          asset:asset,
                           trait,
                         });
+                        console.log('url : ' , url);
+                        
                         trait?.command && editor.runCommand(trait.command);
                         updateTraitValue({
                           name: trait.name,
@@ -854,5 +861,6 @@ export const TraitsAside = memo(() => {
         </section>
       </AccordionItem>
     </InfAccordion>
+  </section>
   );
 });

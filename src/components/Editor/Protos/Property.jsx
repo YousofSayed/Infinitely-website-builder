@@ -69,9 +69,9 @@ export const Property = ({
 
   return (
     <section
-      className={`${sectionClassName} flex ${wrap && 'flex-wrap gap-3 py-2'} gap-2  bg-slate-800 p-1 rounded-lg`}
+      className={`${sectionClassName} flex flex-col ${wrap && 'flex-wrap gap-3 py-2'} gap-2  bg-slate-800 p-1 rounded-lg`}
     >
-      {label ? <FitTitle className="capitalize flex items-center  justify-center custom-font-size w-[30%!important] flex-shrink-0  overflow-hidden text-ellipsis ">{label}  </FitTitle> : ""}
+      {label ? <FitTitle className="capitalize flex items-center  justify-center custom-font-size w-fit flex-shrink-0  overflow-hidden text-ellipsis ">{label}  </FitTitle> : ""}
       <input
         className={`${
           inputClassName ? inputClassName : `${wrap ? 'w-full' : 'w-full'}`

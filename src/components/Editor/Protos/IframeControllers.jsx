@@ -24,7 +24,6 @@ import {
 import { useProjectSettings } from "../../../hooks/useProjectSettings";
 import { Hr } from "../../Protos/Hr";
 
-
 export const IframeControllers = () => {
   const editor = useEditorMaybe();
   const navigate = useNavigate();
@@ -151,6 +150,67 @@ export const IframeControllers = () => {
         justHover={true}
       />
 
+      <Li
+        refForward={redoRef}
+        className="flex-shrink-0"
+        onClick={() => {
+          editor.Canvas.setZoom(editor.Canvas.getZoom() + 1,{avoidStore: true});
+          // editor.getWrapper().getEl()
+          //   .querySelectorAll("*")
+          //   .forEach((el) => {
+          //     const bodyScale =
+          //       Number(el.style.scale) ||
+          //       1;
+          //     el.style.scale = bodyScale + 0.1;
+          //   });
+          //  editor.getWrapper().setStyle({
+          //   width: `100%`,
+          //   height: `100%`,
+          // })
+        }}
+        title="zoom in"
+        // isObjectParamsIcon
+        // icon={Icons.zoomIn}
+        justHover={false}
+        fillObjectIconOnHover
+        fillObjIconStroke={false}
+        isObjectParamsIcon
+        // hover={false}
+      >
+        {Icons.zoomIn({ height: `100%`, width: 22 })}
+      </Li>
+
+      <Li
+        refForward={redoRef}
+        className="flex-shrink-0"
+        onClick={() => {
+          editor.Canvas.setZoom(editor.Canvas.getZoom() - 1 , {avoidStore: true});
+        
+          // editor.getWrapper().getEl()
+          //   .querySelectorAll("*")
+          //   .forEach((el) => {
+          //     const bodyScale =
+          //       Number(el.style.scale) ||
+          //       1;
+          //     el.style.scale = bodyScale - 0.1;
+          //   });
+          // editor.getWrapper().setStyle({
+          //   width: `100%`,
+          //   height: `100%`,
+          // })
+        }}
+        title="zoom out"
+        // isObjectParamsIcon
+        // icon={Icons.zoomIn}
+        justHover={false}
+        fillObjectIconOnHover
+        fillObjIconStroke={false}
+        isObjectParamsIcon
+        // hover={false}
+      >
+        {Icons.zoomOut({ height: `100%`, width: 22 })}
+      </Li>
+
       {!projectSetting.disable_petite_vue && (
         <>
           <Li
@@ -189,7 +249,7 @@ export const IframeControllers = () => {
         </>
       )}
 
-      <Hr/>
+      <Hr />
 
       <Li
         // refForward={redoRef}

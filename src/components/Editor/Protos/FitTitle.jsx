@@ -55,7 +55,7 @@ export const FitTitle = ({ children, id, className, ...props }) => {
     >
       {children}
     </h1>
-      {showTooltib && <Tooltip place="bottom-start" anchorSelect={`[tooltib-id="${tbId.current}"]`} className="z-10 shadow-sm shadow-slate-950" opacity={1}>{children}</Tooltip>}
+      {showTooltib && <Tooltip place="bottom-start" anchorSelect={`[tooltib-id="${tbId.current}"]`} className="z-10 shadow-sm shadow-slate-950 flex items-center gap-2" opacity={1}>{children}</Tooltip>}
     </>
   );
 };

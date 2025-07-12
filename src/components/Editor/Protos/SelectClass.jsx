@@ -5,9 +5,16 @@ import { SmallButton } from "./SmallButton";
 import { Icons } from "../../Icons/Icons";
 import { Choices } from "./Choices";
 import { useRecoilValue, useSetRecoilState } from "recoil";
-import { currentElState, selectorState } from "../../../helpers/atoms";
+import {
+  currentElState,
+  projectData,
+  selectorState,
+} from "../../../helpers/atoms";
 import { current_project_id } from "../../../constants/shared";
 import { db } from "../../../helpers/db";
+import { inlineWorker } from "../../../helpers/bridge";
+import { classesFinderWorker } from "../../../helpers/defineWorkers";
+import { getProjectSettings } from "../../../helpers/functions";
 
 export const SelectClass = memo(() => {
   const editor = useEditorMaybe();
@@ -62,10 +69,26 @@ export const SelectClass = memo(() => {
 
   useEffect(() => {
     if (!editor) return;
-    const callAsync = async () => {
-      setAllStyleSheetClasses(await getAllStyleSheetClasses());
+    getClassFromInlineWorker();
+
+    /**
+     *
+     * @param {MessageEvent} ev
+     */
+    const callback = async (ev) => {
+      const { command, props } = ev.data;
+      if (command == "classes" && props.classes) {
+        console.log('classes : ' ,props.classes);
+        
+        setAllStyleSheetClasses(props.classes);
+      }
     };
-    callAsync();
+
+    classesFinderWorker.addEventListener("message", callback);
+
+    return () => {
+      classesFinderWorker.removeEventListener("message", callback);
+    };
   }, [editor, selectedEl]);
 
   useEffect(() => {
@@ -98,7 +121,7 @@ export const SelectClass = memo(() => {
     setClassesKeywords(Array.from(new Set(newArr)));
     editor.getSelected().addClass(newArr);
     setvalue(new String(""));
-    editor.getSelected().view.render()
+    editor.getSelected().view.render();
   };
 
   const removeClass = (classNameKeyword = "") => {
@@ -116,9 +139,12 @@ export const SelectClass = memo(() => {
   };
 
   const getAllStyleSheetClasses = async () => {
+    //   const myLol = 'myLol'
+    //  console.log(eval(` console.log(myLol)`));
+
     const per1 = performance.now();
     console.log(per1);
-    const calssRgx = /(?<!\/\*.*)\.[a-zA-Z_][a-zA-Z0-9_-]*(?=[,{\s:])/ig ///(?<=\s|^)\.[a-zA-Z_][a-zA-Z0-9_-]*(?=\s*{)/g;
+    const calssRgx = /(?<!\/\*.*)\.[a-zA-Z_][a-zA-Z0-9_-]*(?=[,{\s:])/gi; ///(?<=\s|^)\.[a-zA-Z_][a-zA-Z0-9_-]*(?=\s*{)/g;
     const commentRgx = /\/\*[\s\S]*?\*\//g;
     const prjectData = await await db.projects.get(projectId);
     const cssLibsClasses = await (
@@ -127,24 +153,13 @@ export const SelectClass = memo(() => {
       )) || []
     )
       .join("\n")
-      .replaceAll(commentRgx , '')
+      .replaceAll(commentRgx, "")
       .match(calssRgx);
-
-    // console.log(
-    //   "cssLibsClasses : ",
-      
-    
-    //   await (
-    //     (await Promise.all(
-    //       [...prjectData.cssLibs].map(async (lib) => await lib.file.text())
-    //     )) || []
-    //   ).join("\n").replaceAll(/\/\*[\s\S]*?\*\//g, '').match(/(?<!\/\*.*)\.[a-zA-Z_][a-zA-Z0-9_-]*(?=[,{\s:])/ig)
-    // );
 
     const editorClasses =
       editor
         .getCss({ clearStyles: false, keepUnusedStyles: true })
-        .replaceAll(commentRgx , '')
+        .replaceAll(commentRgx, "")
         .match(calssRgx) || [];
 
     const inlineStyles = [
@@ -152,22 +167,49 @@ export const SelectClass = memo(() => {
     ]
       .map((styleEl) => styleEl.innerHTML)
       .join("\n")
-      .replaceAll(commentRgx , '')
+      .replaceAll(commentRgx, "")
       .match(calssRgx);
 
     const allClasses = [
-      ...(cssLibsClasses || []),
-      ...(editorClasses || []),
-      ...(inlineStyles || []),
+      ...new Set([
+        ...(cssLibsClasses || []),
+        ...(editorClasses || []),
+        ...(inlineStyles || []),
+      ]),
     ].sort();
 
     const per2 = performance.now();
     console.log(per2);
-    console.log("Classes : ", allClasses);
-
-    return allClasses.map((className) => className.replace(".", "")) || [];
+    // console.log("Classes : ", allClasses);
+    const classes =
+      allClasses.map((className) => className.replace(".", "")) || [];
+    self.postMessage({ command: "classes", props: { classes } });
+    return classes;
   };
 
+  const getClassFromInlineWorker = () => {
+    // const { worker, revoker } = inlineWorker(() => {}, {
+    //   editorCss: editor.getCss({ clearStyles: false, keepUnusedStyles: true }),
+    //   inlineStylesInner: [
+    //     ...(editor?.Canvas?.getDocument?.()?.querySelectorAll?.("style") || []),
+    //   ],
+    // });
+    classesFinderWorker.postMessage({
+      command: "getAllStyleSheetClasses",
+      props: {
+        projectId,
+        editorCss: editor.getCss({
+          clearStyles: false,
+          keepUnusedStyles: true,
+        }),
+        projectSettings : getProjectSettings().projectSettings,
+        inlineStylesInners: [
+          ...(editor?.Canvas?.getDocument?.()?.querySelectorAll?.("style") ||
+            []),
+        ].map((styleEl) => styleEl.innerHTML),
+      },
+    });
+  };
   // const getSh
 
   return (

@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { assetType, refType } from "../../helpers/jsDocs";
 import { useEditorMaybe } from "@grapesjs/react";
-import { current_page_id } from "../../constants/shared";
+import { current_page_id, current_project_id, file_deleted_success_msg } from "../../constants/shared";
 import {
   getProjectData,
   getProjectSettings,
@@ -10,10 +10,12 @@ import {
 import { ToastMsgInfo } from "../Editor/Protos/ToastMsgInfo";
 import { toast } from "react-toastify";
 import { addClickClass } from "../../helpers/cocktail";
-import { getFileSize } from "../../helpers/bridge";
+import { getFileSize, toMB } from "../../helpers/bridge";
 import { FitTitle } from "../Editor/Protos/FitTitle";
 import { Icons } from "../Icons/Icons";
 import { Tooltip } from "react-tooltip";
+import { db } from "../../helpers/db";
+import { opfs } from "../../helpers/initOpfs";
 
 export const FileView = ({
   asset = assetType,
@@ -22,7 +24,7 @@ export const FileView = ({
   const editor = useEditorMaybe();
   const fileNameRef = useRef(refType);
   const [showFilNameTooltib, setShowFileNameTooltib] = useState(false);
-
+  const projectId = +localStorage.getItem(current_project_id);
   useLayoutEffect(() => {
     if (!fileNameRef || !fileNameRef.current) return;
     const handler = (el) => {
@@ -42,7 +44,7 @@ export const FileView = ({
   /**
    *
    * @param {MouseEvent} ev
-   * @param {import('../../helpers/types').InfinitelyAsset} asset
+   * @param {File} asset
    */
   const onItemClicked = async (ev, asset) => {
     ev.stopPropagation();
@@ -71,30 +73,34 @@ export const FileView = ({
     );
     const pageName = localStorage.getItem(current_page_id);
     const isIndex = pageName.toLowerCase() == "index";
-    const src = `${isIndex ? "." : ".."}/assets/${asset.file.name}`;
+    const src = `${isIndex ? "." : ".."}/assets/${asset.name}`;
 
     callback(asset, src);
   };
 
-  const deleteAsset = async (id) => {
-    const newAssets = await (
-      await getProjectData()
-    ).assets.filter((asset) => asset.id != id);
-    await db.projects.update(projectId, {
-      assets: newAssets,
-    });
+  const deleteAsset = async (asset) => {
+    // const newAssets = await (
+    //   await getProjectData()
+    // ).assets.filter((asset) => asset.id != id);
+    // await db.projects.update(projectId, {
+    //   assets: newAssets,
+    // });
+
+    await opfs.deleteEntry(await opfs.root , asset.name,`projects/project-${projectId}/assets`)
+    toast.success(<ToastMsgInfo msg={file_deleted_success_msg}/>)
   };
+console.log('size : ' , toMB(asset.size , 2) , asset.size);
 
   return (
     <section
       className={`group relative rounded-lg p-3 bg-slate-800  flex flex-col justify-center items-center gap-2`}
     >
       <FitTitle className="absolute left-0 top-0">
-        {getFileSize(asset.file).MB.toFixed(2)}MB
+        {toMB(asset.size , 3)}MB
       </FitTitle>
       <button
         onClick={(ev) => {
-          deleteAsset(asset.id);
+          deleteAsset(asset);
         }}
         className="absolute group-hover:flex z-[200] right-0 top-0 bg-blue-600 fill-white cursor-pointer hidden justify-center items-center rounded-full w-[23px] h-[23px]"
       >
@@ -108,7 +114,7 @@ export const FileView = ({
         }}
         className=" p-2 h-[150px]  cursor-pointer rounded-lg  bg-slate-800"
       >
-        {(asset.file.type.includes("video") && (
+        {(asset.type.includes("video") && (
           <section>
             <video
               className="w-full  h-[140px] max-h-full max-w-full "
@@ -127,52 +133,52 @@ export const FileView = ({
               autoPlay={true}
               muted={true}
               poster=""
-              src={`assets/${asset.file.name}`}
+              src={`/assets/${asset.name}`}
             ></video>
           </section>
         )) ||
-          (asset.file.type.includes("audio") && (
+          (asset.type.includes("audio") && (
             <section className="h-full flex justify-between gap-2 items-center flex-col bg-slate-900 rounded-lg overflow-hidden pt-2">
               {Icons.headphone('white' , undefined , 75 , 75)}
               <audio
                 onClick={(ev) => onItemClicked(ev, asset)}
                 className="w-full"
-                src={`assets/${asset.file.name}`}
+                src={`/assets/${asset.name}`}
                 controls={true}
               ></audio>
             </section>
           )) ||
-          (asset.file.type.includes("image") && (
+          (asset.type.includes("image") && (
             <img
               // onLoad={(ev) => {
               //   console.log("image load...");
               // }}
               onClick={(ev) => onItemClicked(ev, asset)}
               className="w-full h-full object-contain"
-              src={`assets/${asset.file.name}`}
+              src={`/assets/${asset.name}`}
             ></img>
           ))}
 
-        {!/image|audio|video/gi.test(asset.file.type) &&
+        {!/image|audio|video/gi.test(asset.type) &&
           Icons.file({ fill: "white", width: 130, height: 130 })}
       </figure>
       <p
-        tooltib-id={asset.id}
+        tooltib-id={asset.name}
         ref={fileNameRef}
-        title={asset.file.name}
+        title={asset.name}
         className="text-slate-200 p-2 bg-slate-900 rounded-md text-ellipsis  max-w-full   text-nowrap overflow-hidden "
       >
-        {asset.file.name}
+        {asset.name}
       </p>
       {showFilNameTooltib && (
         <Tooltip
-          anchorSelect={`[tooltib-id="${asset.id}"]`}
+          anchorSelect={`[tooltib-id="${asset.name}"]`}
           place="bottom-end"
           opacity={1}
           className="shadow-sm shadow-slate-950 z-10"
           positionStrategy="fixed"
         >
-          {asset.file.name}
+          {asset.name}
         </Tooltip>
       )}
     </section>

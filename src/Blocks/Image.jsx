@@ -25,70 +25,74 @@ export const Image = ({ editor }) => {
         editor.runCommand(open_files_manager_modal);
       },
       onAttrUpdate() {},
-      onClick(){
-        console.log('view clicked');
+      // onClick(){
+      //   console.log('view clicked');
         
-      },
+      // },
       onRender(op) {
+        op.model.set({
+          droppable:false,
+        })
         // op.el.addEventListener('click',(ev)=>{
         //   ev.stopPropagation();
         //   ev.preventDefault();
         //   console.log('img click');
         // })
 
-        op.el.addEventListener('click',()=>{
-          console.log('clickckckck');
-          editor.Canvas.getCanvasView().updateFrames()
-    // editor.Canvas.removeSpots({ type: "resize", component: op });
-    // editor.Canvas.addSpot({
-    //   type: "resize",
-    //   component: sle,
-    //   force: true,
-    //   // componentView:sle.view,
-    //   // frame:sle.frame,
-    //   // boxRect:{
-    //   //   height:400,
-    //   //   width:400
-    //   // }
-    // });
-          // op.model.set('resizable' , {
-          //   tl: 0,
-          //   tc: 1,
-          //   tr: 0,
-          //   cl: 1,
-          //   cr: 1,
-          //   bl: 0,
-          //   bc: 1,
-          //   br: 0,
-          //   minDim: 50,
-          //   maxDim: 500,
-          //   ratioDefault: 1,
-          // })
-          // editor.refresh({tools:true});
-          // editor.Canvas.refresh({all:true,spots:true});
-          // editor.Canvas.refreshSpots()
-        })
+    //     op.el.addEventListener('click',()=>{
+    //       console.log('clickckckck');
+    //       editor.Canvas.getCanvasView().updateFrames()
 
-        op.el.addEventListener('dblclick',(ev)=>{
-          ev.stopPropagation();
-          ev.preventDefault();
-          // console.log('img dblckick');
-          // console.log('img el : ' , op.el);
-          editor.runCommand(open_files_manager_modal);
-          // op.model.set('resizable' , {
-          //   tl: 0, // Top-left handle (0 = disabled, 1 = enabled)
-          //   tc: 1, // Top-center
-          //   tr: 0, // Top-right
-          //   cl: 1, // Center-left
-          //   cr: 1, // Center-right
-          //   bl: 0, // Bottom-left
-          //   bc: 1, // Bottom-center
-          //   br: 0, // Bottom-right
-          //   minDim: 50, // Minimum width/height in px
-          //   step: 1, // Resize step in px
-          // })
+    // // editor.Canvas.removeSpots({ type: "resize", component: op });
+    // // editor.Canvas.addSpot({
+    // //   type: "resize",
+    // //   component: sle,
+    // //   force: true,
+    // //   // componentView:sle.view,
+    // //   // frame:sle.frame,
+    // //   // boxRect:{
+    // //   //   height:400,
+    // //   //   width:400
+    // //   // }
+    // // });
+    //       // op.model.set('resizable' , {
+    //       //   tl: 0,
+    //       //   tc: 1,
+    //       //   tr: 0,
+    //       //   cl: 1,
+    //       //   cr: 1,
+    //       //   bl: 0,
+    //       //   bc: 1,
+    //       //   br: 0,
+    //       //   minDim: 50,
+    //       //   maxDim: 500,
+    //       //   ratioDefault: 1,
+    //       // })
+    //       // editor.refresh({tools:true});
+    //       // editor.Canvas.refresh({all:true,spots:true});
+    //       // editor.Canvas.refreshSpots()
+    //     })
+
+        // op.el.addEventListener('dblclick',(ev)=>{
+        //   ev.stopPropagation();
+        //   ev.preventDefault();
+        //   // console.log('img dblckick');
+        //   // console.log('img el : ' , op.el);
+        //   editor.runCommand(open_files_manager_modal);
+        //   // op.model.set('resizable' , {
+        //   //   tl: 0, // Top-left handle (0 = disabled, 1 = enabled)
+        //   //   tc: 1, // Top-center
+        //   //   tr: 0, // Top-right
+        //   //   cl: 1, // Center-left
+        //   //   cr: 1, // Center-right
+        //   //   bl: 0, // Bottom-left
+        //   //   bc: 1, // Bottom-center
+        //   //   br: 0, // Bottom-right
+        //   //   minDim: 50, // Minimum width/height in px
+        //   //   step: 1, // Resize step in px
+        //   // })
           
-        })
+        // })
 
         // op.el.addEventListener("load", (ev) => {
         //   // ev.stopPropagation();
@@ -152,6 +156,8 @@ export const Image = ({ editor }) => {
         //     }
         //   </style>
         // `,
+        resizable: true,
+
         traits: defineTraits([
           {
             type: "media",
@@ -159,14 +165,13 @@ export const Image = ({ editor }) => {
             mediaType: "image",
             label: "Select image",
             name: "src",
-            // callback({editor}){
-            //   editor.getSelected().set({
-            //     droppable
-            //   })
-            // }
+            callback({editor}){
+              // editor.getSelected().set({
+              //   droppable
+              // })
+            }
           },
         ]),
-        resizable: true,
       },
     },
   });

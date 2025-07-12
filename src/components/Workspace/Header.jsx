@@ -43,12 +43,16 @@ export const Header = () => {
      * @type {File}
      */
     const file = ev.target.files[0];
+    console.log('load File start: ' , file);
+    
     infinitelyWorker.postMessage({
       command: "loadProject",
       props: {
         file,
       },
     });
+
+     ev.target.value = ''
     //   const mime = await (await import("mime/lite")).default;
     //   /**
     //    * @type {import('../../helpers/types').Project}
@@ -291,7 +295,7 @@ export const Header = () => {
           <input
             type="file"
             ref={inpFile}
-            hidden
+            className="hidden"
             accept=".zip"
             onChange={loadSite}
           />

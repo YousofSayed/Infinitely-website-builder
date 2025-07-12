@@ -78,6 +78,14 @@ export const blocks = [
     select: false,
     // activate: true,
   },
+
+  {
+    id:'svg',
+    category:'Basic',
+    label : html`<p class="custom-font-size">Svg</p>`,
+    media:reactToStringMarkup(Icons.svg({fill:'currentColor'})),
+    content:reactToStringMarkup(Icons.svg({ fill: "black" ,width:40 , height:50 }))
+  },
   // {
   //   id: "video",
   //   category: "Basic",
@@ -184,9 +192,7 @@ export const blocks = [
       Icons.heading({ fill: "white", width: 25, height: 25 })
     ),
     category: "Basic",
-    content: {
-      type: "heading",
-    },
+    content:  "<h1>Heading</h1>",
   },
 
   {
@@ -207,7 +213,7 @@ export const blocks = [
     media: reactToStringMarkup(
       Icons.looper({ strokeColor: "white", width: 25, height: 25 })
     ),
-    category: "fancy",
+    category: "logic",
     content: {
       type: "looper",
     },

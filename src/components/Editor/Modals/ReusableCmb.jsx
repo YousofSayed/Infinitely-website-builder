@@ -3,15 +3,15 @@ import { Input } from "../Protos/Input";
 import { Button } from "../../Protos/Button";
 import { useEditorMaybe } from "@grapesjs/react";
 import html2canvas from "html2canvas-pro";
-import {
-  getComponentRules,
-} from "../../../helpers/functions";
+import { getComponentRules } from "../../../helpers/functions";
 import { html, uniqueID } from "../../../helpers/cocktail";
 import { db } from "../../../helpers/db";
 import { current_project_id, inf_template_id } from "../../../constants/shared";
 import { minify } from "csso";
 import { Icons } from "../../Icons/Icons";
 import { editorIcons } from "../../Icons/editorIcons";
+import { opfs } from "../../../helpers/initOpfs";
+import { defineRoot } from "../../../helpers/bridge";
 
 export const ReusableCmb = () => {
   const editor = useEditorMaybe();
@@ -46,7 +46,28 @@ export const ReusableCmb = () => {
     // editor.Blocks.add(id, block);
     const projectId = +localStorage.getItem(current_project_id);
     const projectData = await db.projects.get(projectId);
-    const stringStyle = getComponentRules({editor , cmp:selectedEl , nested:true}).stringRules
+    const stringStyle = getComponentRules({
+      editor,
+      cmp: selectedEl,
+      nested: true,
+    }).stringRules;
+    const contentPath = `editor/templates/${id}/${id}.html`;
+    const stylePath = `editor/templates/${id}/${id}.css`;
+    const pathes = {
+      content: contentPath,
+      style: stylePath,
+    };
+
+    await opfs.writeFiles([
+      {
+        path: defineRoot(contentPath),
+        content: selectedEl.toHTML({ withProps: true  }),
+      },
+      {
+        path: defineRoot(stylePath),
+        content: minify(stringStyle).css,
+      },
+    ]);
 
     await db.projects.update(projectId, {
       blocks: {
@@ -56,10 +77,11 @@ export const ReusableCmb = () => {
           name: newProps.name,
           category: newProps.ctg || "templates",
           id,
-          content: new Blob([selectedEl.toHTML({ withProps: true })], {
-            type: "text/html",
-          }),
-          style: minify(stringStyle).css,
+          pathes,
+          // content: new Blob([selectedEl.toHTML({ withProps: true })], {
+          //   type: "text/html",
+          // }),
+          // style: minify(stringStyle).css,
           type: "template",
           media: selectedEl.getIcon() || editorIcons.templates({}),
         },
@@ -99,7 +121,10 @@ export const ReusableCmb = () => {
       </header>
 
       <section className="h-full rounded-lg p-2 bg-slate-800 flex items-center justify-center">
-        <img src={imgSrc} className=" border-2 max-h-[300px] border-slate-400" />
+        <img
+          src={imgSrc}
+          className=" border-2 max-h-[300px] border-slate-400"
+        />
       </section>
     </main>
   );

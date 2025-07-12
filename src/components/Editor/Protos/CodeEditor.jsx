@@ -1,17 +1,19 @@
 import { Editor, useMonaco } from "@monaco-editor/react";
 import React, { memo, useEffect, useRef } from "react";
 import { Loader } from "../../Loader";
-import { current_page_id } from "../../../constants/shared";
+import { codeEditorScripts, current_page_id } from "../../../constants/shared";
 import {
   getProjectData,
+  getProjectSettings,
   isProjectSettingPropTrue,
 } from "../../../helpers/functions";
-import { js_beautify } from "js-beautify";
+import { css_beautify, html_beautify, js_beautify } from "js-beautify";
 
 import { useCmdsContext } from "../../../hooks/useCmdsContext";
 import libSource from "../../../helpers/alpineType?raw";
-import infImport from "/scripts/infImport.js?url&raw";
-
+import { opfs } from "../../../helpers/initOpfs";
+import { defineRoot } from "../../../helpers/bridge";
+// import infImport from "/scripts/infinitely.js?raw";
 /**
  *
  * @param {{props : import('@monaco-editor/react').EditorProps , showEditorState:boolean, toFormateValue:string, extraLibs:string , allowExtraLibs:boolean , isTemplateEngine:boolean , allowCmdsContext: boolean , allowRestAPIModelsContext:boolean}} param0
@@ -40,40 +42,52 @@ export const CodeEditor = ({
    * @param {typeof import("e:/code/infinitely-base/node_modules/monaco-editor/esm/vs/editor/editor.api")} monaco
    */
   const loadLibs = async (editor, monaco) => {
+    
     const currentPageName = localStorage.getItem(current_page_id);
     const projectData = await await getProjectData();
     const restAPIModels = projectData.restAPIModels;
-    const globalJs = await projectData.globalJs.text();
-    const localJs = await projectData.pages[`${currentPageName}`].js.text();
+    const globalJs = await (
+      await opfs.getFile(defineRoot(`global/global.js`))
+    ).text();
+    const localJs = await (
+      await opfs.getFile(defineRoot(`js/${currentPageName}.js`))
+    ).text();
     const libs = await Promise.all(
-      [...projectData.jsHeaderLibs, ...projectData.jsFooterLibs].map(
-        async (lib) => {
-          // console.log("await lib.blob.text() : ", lib, await lib.file.text());
-
-          return `${await lib.file.text()};`.replaceAll(
-            /module\.exports(\s+)?=(\s+)?\w+\;/gi,
-            " "
-          );
-        }
-      )
+      (
+        await opfs.getAllFiles(defineRoot(`libs/js`), { recursive: true })
+      ).map((handle) => handle.text())
     );
+    // const libs = await Promise.all(
+    //   [...projectData.jsHeaderLibs, ...projectData.jsFooterLibs].map(
+    //     async (lib) => {
+    //       // console.log("await lib.blob.text() : ", lib, await lib.file.text());
+
+    //       return `${await lib.file.text()};`.replaceAll(
+    //         /module\.exports(\s+)?=(\s+)?\w+\;/gi,
+    //         " "
+    //       );
+    //     }
+    //   )
+    // );
     const assetsUrls = projectData.assets
       .map((asset) => `"${asset.file.name}"`)
       .join("|");
-    const replacedInfImport = infImport.replace(
-      "#/type-here/#",
-      "InfinitelyURLsType"
-    );
+
+    const devLibs = (
+      await Promise.all(
+        codeEditorScripts.map(async (url) => {
+          const response = await fetch(url);
+          return await response.text();
+        })
+      )
+    ).join("\n");
 
     const restModelsContext = restAPIModels
       .map((model) => `var ${model.varName} = ${model.response}`)
       .join("\n");
     const finalLibs = [
       ...libs,
-      `
-        declare type AssetUrl = ${assetsUrls};
-        declare function infinitelyImport(url: AssetUrl): string;
-      `,
+      devLibs,
       // replacedInfImport,
       globalJs,
       localJs,
@@ -121,6 +135,58 @@ export const CodeEditor = ({
       libSource,
       "global.d.ts"
     );
+
+    monaco.languages.registerCompletionItemProvider("javascript", {
+      // Trigger suggestions on typing 'try' or a space
+      triggerCharacters: ["t", " "],
+      provideCompletionItems: function (model, position) {
+        // Get the text until the cursor position
+        var textUntilPosition = model.getValueInRange({
+          startLineNumber: 1,
+          startColumn: 1,
+          endLineNumber: position.lineNumber,
+          endColumn: position.column,
+        });
+
+        // Check if the user is typing 'try'
+        var word = model.getWordUntilPosition(position);
+        var currentWord = word.word.toLowerCase();
+
+        // Only suggest if the current word starts with 'try'
+        if (!currentWord.startsWith("t")) {
+          return { suggestions: [] };
+        }
+
+        // Define the range for the suggestion
+        var range = {
+          startLineNumber: position.lineNumber,
+          endLineNumber: position.lineNumber,
+          startColumn: word.startColumn,
+          endColumn: word.endColumn,
+        };
+
+        // Define the try...catch snippet
+        var suggestions = [
+          {
+            label: "trycatch",
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: [
+              "try {",
+              "\t${1:// Your code here}",
+              "} catch (error) {",
+              "\tconsole.error(error);",
+              "}",
+            ].join("\n"),
+            insertTextRules:
+              monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            documentation: "Inserts a try...catch block for error handling",
+            range: range,
+          },
+        ];
+
+        return { suggestions: suggestions };
+      },
+    });
   };
 
   return (
@@ -137,11 +203,7 @@ export const CodeEditor = ({
           monacoRef.current = monaco;
           editorRef.current = editor;
           editor.focus();
-
-          if (props.language == "html") {
-            props?.onMount?.(editor);
-            return;
-          }
+          
           editor.onKeyDown((e) => {
             if (
               e.ctrlKey &&
@@ -159,24 +221,23 @@ export const CodeEditor = ({
 
           loadLibs(editor, monaco);
 
-          if (isTemplateEngine) {
-            // Set the value in the editor
-            editor.setValue(
-              `\`\n\n${editor.getValue().slice(1, -1).replaceAll("\n", "")}\n\``
-            );
+          // if (isTemplateEngine) {
+          //   // Set the value in the editor
+          //   editor.setValue(
+          //     `\`\n\n${editor.getValue().slice(1, -1).replaceAll("\n", "")}\n\``
+          //   );
+          //   // Move the caret to the position of "here"
+          //   editor.setPosition({
+          //     lineNumber: 2, // Line 3 (1-based: "`" is line 1, empty line is line 2, "here" is line 3)
+          //     column: 1, // Column 1 (start of "here")
+          //   });
 
-            // Move the caret to the position of "here"
-            editor.setPosition({
-              lineNumber: 2, // Line 3 (1-based: "`" is line 1, empty line is line 2, "here" is line 3)
-              column: 1, // Column 1 (start of "here")
-            });
-
-            // Optional: Ensure the caret is visible by revealing the position
-            editor.revealPosition({
-              lineNumber: 3,
-              column: 1,
-            });
-          }
+          //   // Optional: Ensure the caret is visible by revealing the position
+          //   editor.revealPosition({
+          //     lineNumber: 3,
+          //     column: 1,
+          //   });
+          // }
           props?.onMount?.(editor);
         }}
         options={{
@@ -185,13 +246,31 @@ export const CodeEditor = ({
           automaticLayout: true,
           autoClosingOvertype: true,
           acceptSuggestionOnCommitCharacter: true,
+
           autoClosingComments: true,
           formatOnPaste: true,
-          // smoothScrolling: true,
-
           quickSuggestions: true,
           tabCompletion: "on",
-          wordWrap: true,
+
+          dragAndDrop: true,
+          formatOnType: false,
+          gotoLocation: {
+            multiple: "peek",
+            multipleDefinitions: "peek",
+            multipleTypeDefinitions: "peek",
+            multipleDeclarations: "peek",
+            multipleImplementations: "peek",
+            multipleReferences: "peek",
+          },
+          largeFileOptimizations: true,
+
+          // wordWrap: true,
+          defaultColorDecorators: true,
+          useShadowDOM: true, //experimental feature
+          padding: {
+            top: 15,
+            bottom: 15,
+          },
           hover: {
             sticky: true,
           },

@@ -64,7 +64,7 @@ export const RestAPIModels = memo(() => {
     await db.projects.update(projectId, {
       restAPIModels: newRestModels, //[...restModels, newRestModle],
     });
-    await fetchResponse();
+    // await fetchResponse(newRestModels);
   };
 
   const [vars, setVars] = useRecoilState(varsState);
@@ -97,15 +97,17 @@ export const RestAPIModels = memo(() => {
 
   const deleteModel = (index) => {
     const newArr = structuredClone(restModels).filter((md, i) => i != index);
+    console.log('new mmodels : ' , newArr);
+    
     setRestModels(newArr);
   };
 
-  const fetchResponse = async () => {
+  const fetchResponse = async (newRestModels) => {
     if (!navigator.onLine) {
       toast.warn(<ToastMsgInfo msg={`You are offline!`} />);
       return;
     }
-    const clone = structuredClone(restModels);
+    const clone = structuredClone(newRestModels || restModels);
     if (!clone || !clone.length) return;
     let isAnythingChanged = false;
     const newArr = await Promise.all(
@@ -113,14 +115,16 @@ export const RestAPIModels = memo(() => {
         if (model.response || !model.url || !model.method) return model;
         const res = await fetch(model.url, {
           method: model.method,
-          headers: Object.keys(model.headers).length
+          headers: Object.keys(model.headers || {}).length
             ? model.headers
             : undefined,
-          body: Object.keys(model.body).length ? model.body : undefined,
+          body: Object.keys(model.body || {}).length ? model.body : undefined,
         });
 
+        
         try {
           const resData = await res.json();
+          console.log('ress : ' , resData);
           // if (Array.isArray(resData)) {
           //   toast.error(<ToastMsgInfo msg={"Response Is Not Object"} />);
           //   const newArr = clone.filter((md, nI) => nI != i);
@@ -171,7 +175,7 @@ export const RestAPIModels = memo(() => {
       toast.error(<ToastMsgInfo msg={`Invalid Rest API Model`} />);
       return;
     }
-    setRestModels([
+    await fetchResponse([
       ...restModels,
       {
         ...fileAsJson,
@@ -179,7 +183,16 @@ export const RestAPIModels = memo(() => {
           ? stringify(fileAsJson.response)
           : fileAsJson.response,
       },
-    ]);
+    ])
+    // setRestModels([
+    //   ...restModels,
+    //   {
+    //     ...fileAsJson,
+    //     response: isPlainObject(fileAsJson.response)
+    //       ? stringify(fileAsJson.response)
+    //       : fileAsJson.response,
+    //   },
+    // ]);
   };
 
   useEffect(() => {
@@ -187,7 +200,7 @@ export const RestAPIModels = memo(() => {
     if (!startFetch) return;
     fetchResponse();
     console.log("render");
-  }, []);
+  }, [editor , startFetch]);
 
   return (
     <section className="flex flex-col gap-3 h-full max-h-[800px] ">

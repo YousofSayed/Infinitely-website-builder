@@ -3,13 +3,19 @@ import { useRecoilValue, useSetRecoilState } from "recoil";
 import { blocksStt, editorBlocksType } from "../../helpers/atoms";
 import { DetailsForBlocks } from "./Protos/DetailsForBlocks";
 import { useEditorMaybe } from "@grapesjs/react";
-import { advancedSearchSuggestions, getProjectData, handleCustomBlock } from "../../helpers/functions";
+import {
+  advancedSearchSuggestions,
+  getProjectData,
+  handleCustomBlock,
+} from "../../helpers/functions";
 import { html } from "../../helpers/cocktail";
 import { InfAccordion } from "../Protos/InfAccordion";
 import { AccordionItem } from "@heroui/accordion";
 import { Input } from "./Protos/Input";
 import { SearchHeader } from "../Protos/SearchHeader";
 import { blocksType, blockType } from "../../helpers/jsDocs";
+import { opfs } from "../../helpers/initOpfs";
+import { defineRoot } from "../../helpers/bridge";
 
 export const Blocks = memo(() => {
   const editor = useEditorMaybe();
@@ -54,6 +60,16 @@ export const Blocks = memo(() => {
             `);
           block.content instanceof Blob &&
             (block.content = await block.content.text());
+
+          if (block?.pathes) {
+            block.content = await (
+              await opfs.getFile(defineRoot(block.pathes.content))
+            ).text();
+            block.style = await (
+              await opfs.getFile(defineRoot(block.pathes.style))
+            ).text();
+          }
+
           return block;
         }
       )
@@ -61,12 +77,9 @@ export const Blocks = memo(() => {
     const editorBlocks = editor.Blocks.getAll().models.map(
       (block) => block.attributes
     );
-    const allBlocks = [...editorBlocks, ...blocks]
+    const allBlocks = [...editorBlocks, ...blocks];
     allBlocksAsObject.current = allBlocks;
-    const handledBlocks =  handleCustomBlock(
-      allBlocks,
-      editor
-    );
+    const handledBlocks = handleCustomBlock(allBlocks, editor);
     console.log("update blocks : ", handledBlocks);
 
     setBlocks((old) => ({
@@ -76,10 +89,15 @@ export const Blocks = memo(() => {
   };
 
   const search = (value = "") => {
-    const newBlocks = advancedSearchSuggestions(allBlocksAsObject.current ,value ,false , ['category' , 'name' , 'id','label'] );
-    setBlocks(handleCustomBlock(newBlocks , editor))
+    const newBlocks = advancedSearchSuggestions(
+      allBlocksAsObject.current,
+      value,
+      false,
+      ["category", "name", "id", "label"]
+    );
+    setBlocks(handleCustomBlock(newBlocks, editor));
     // console.log();
-    
+
     // const targetedBlocks = Object.fromEntries(
     //   Object.entries(blocksAtom).filter(([key, blocks]) => {
     //     return (
@@ -90,7 +108,7 @@ export const Blocks = memo(() => {
   };
 
   return (
-    <section className="flex flex-col gap-2">
+    <section className="flex flex-col gap-2 h-full w-full">
       <SearchHeader search={search} />
       <InfAccordion>
         {Object.keys(blocksAtom).map((ctg, i) => {

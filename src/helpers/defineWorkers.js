@@ -1,7 +1,27 @@
-import { defineWorker } from "./defineWorker";
 
- const pageBuilderWorker = defineWorker({url:'./pageBuilderWorker' , origin:import.meta.url , type:'module',});
- const offlineInstallerWorker = defineWorker({url:'./offlineInstallerWorker' ,origin:import.meta.url, type: 'module'});
+const pageBuilderWorker = new Worker(
+  new URL("./pageBuilderWorker", import.meta.url),
+  { type: "module" }
+);
+const offlineInstallerWorker = new Worker(
+  new URL("./offlineInstallerWorker", import.meta.url),
+  { type: "module" }
+);
+const classesFinderWorker = new Worker(
+  new URL("./classesFinderWorker", import.meta.url),
+  { type: "module" }
+);
+const assetsWorker = new Worker(new URL("./assetsWorker.js", import.meta.url), {
+  type: "module",
+});
+const routerWorker = new Worker(new URL("./routerWorker.js", import.meta.url), {
+  type: "module",
+});
 
-
-export { pageBuilderWorker , offlineInstallerWorker };
+export {
+  pageBuilderWorker,
+  offlineInstallerWorker,
+  classesFinderWorker,
+  assetsWorker,
+  routerWorker,
+};

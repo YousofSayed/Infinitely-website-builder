@@ -1,5 +1,6 @@
 import {
   BrowserRouter,
+  Navigate,
   Route,
   Routes,
   useLocation,
@@ -35,6 +36,21 @@ import { pageBuilderWorker } from "./helpers/defineWorkers";
 import { Preview } from "./views/Preview";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useOfflineHandler } from "./hooks/useOfflineHandler";
+import { opfs } from "./helpers/initOpfs";
+import { isDevMode } from "./helpers/bridge";
+import { Opfs } from "./views/Opfs";
+// import { esmToUmd } from "./helpers/initBabel";
+
+const IsProject = ({ children }) => {
+  const projectId = +localStorage.getItem(current_project_id);
+  const navigate = useNavigate();
+  if (!projectId) {
+    console.log("no project id found, navigating to workspace");
+    navigate("workspace");
+    return null;
+  }
+  return projectId ? children : <Navigate to="/workspace" replace />;
+};
 
 function App() {
   // const Editor = lazy(async () => ({
@@ -46,7 +62,7 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  useOfflineHandler()
+  useOfflineHandler();
 
   useEffect(() => {
     /**
@@ -89,31 +105,42 @@ function App() {
     };
 
     infinitelyWorker.addEventListener("message", messageCallback);
-    pageBuilderWorker.addEventListener("message", messageCallback);
-
+    // pageBuilderWorker.addEventListener("message", messageCallback);
+    createProjectFolder();
     return () => {
       infinitelyWorker.removeEventListener("message", messageCallback);
-      pageBuilderWorker.removeEventListener("message", messageCallback);
+      // pageBuilderWorker.removeEventListener("message", messageCallback);
       // clearInterval(swAliveInterval);
     };
   }, []);
 
   useLayoutEffect(() => {
-    console.log("app");
-
-    const projectId = localStorage.getItem(current_project_id);
-    if (!projectId && !location.pathname.includes("/add-blocks")) {
-      console.log("workspacce");
-      navigate("/workspace");
-    }
     initDBAssetsSw(setDBAssetsSw);
   }, [location]);
 
-  useEffect(() => {
-    if (!dbAssetsSw) return;
-    sendVarsToSw();
-    // dbAssetsSw.addEventListener('')
-  }, [dbAssetsSw]);
+  // useEffect(() => {
+  //   if (!dbAssetsSw) return;
+  //   sendVarsToSw();
+  //   // dbAssetsSw.addEventListener('')
+  // }, [dbAssetsSw]);
+
+  const createProjectFolder = async () => {
+    console.log("main rooooot : ", opfs.root);
+    const projectFolder = await opfs.getFolder('projects');
+    const isExisit = projectFolder.exists();
+    if(!isExisit){
+     await projectFolder.create()
+      // await opfs.createFolder(await opfs.root, "projects");
+    }
+  };
+
+  // const projectId = +localStorage.getItem(current_project_id);
+  //   console.log("navo");
+  //   if (!projectId) {
+  //     console.log("no project id found, navigating to workspace");
+
+  //     navigate("workspace");
+  //   }
 
   const sendVarsToSw = async () => {
     dbAssetsSw.postMessage({
@@ -128,12 +155,21 @@ function App() {
     });
   };
 
+  const isProject = Boolean(+localStorage.getItem(current_project_id));
   return (
     // <Suspense fallback={<Loader />}>
-    <Routes>
-      <Route path="/" element={<Editor />}>
-        <Route path="/add-blocks" element={<Blocks />} />
-        <Route path="/edite">
+    <Routes >
+      <Route
+        path="/"
+        element={<Editor />}
+        action={
+          Boolean(+localStorage.getItem(current_project_id))
+            ? null
+            : () => navigate("/workspace")
+        }
+      >
+        <Route path="add-blocks" element={<Blocks />} />
+        <Route path="edite">
           <Route path="styling" element={<StyleAside />} />
           <Route path="traits" element={<TraitsAside />} />
           <Route path="commands" element={<Commands />} />
@@ -151,9 +187,16 @@ function App() {
       <Route path="/preview" element={<Preview />} />
 
       <Route path="/workspace" element={<Workspace />}></Route>
+
+      {isDevMode() && <Route path="opfs-dev" element={<Opfs/>} />}
     </Routes>
     // </Suspense>
   );
 }
 
 export default App;
+
+// (async()=>{
+//   const code  = await(await fetch(`https://cdn.jsdelivr.net/npm/opfs-tools@0.7.2/+esm`)).text()
+//   console.log(`esm to module : `, esmToUmd(code , 'opfs-tools'));
+// })()

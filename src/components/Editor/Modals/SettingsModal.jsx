@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { SwitchButton } from "../../Protos/SwitchButton";
 import { MiniTitle } from "../Protos/MiniTitle";
-import { useGlobalSettings } from "../../../hooks/useGlobalSettings";
 import { useProjectSettings } from "../../../hooks/useProjectSettings";
 import { Input } from "../Protos/Input";
 import {
@@ -11,7 +10,6 @@ import {
 } from "../../../helpers/functions";
 
 export const SettingsModal = () => {
-  const { globalSettings, setGlobalSetting } = useGlobalSettings();
   const [ projectSettings, setProjectSetting] = useProjectSettings();
   const [settings, setSettings] = useState(
     getProjectSettings().projectSettings

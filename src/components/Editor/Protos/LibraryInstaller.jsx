@@ -6,6 +6,8 @@ import { JsLibrary } from "./JsLibrary";
 import { Loader } from "../../Loader";
 import { MultiTab } from "../../Protos/Multitabs";
 import { ViewportList } from "react-viewport-list";
+import { Virtuoso } from "react-virtuoso";
+import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
 
 export const LibraryInstaller = () => {
   const [libraries, setLibraries] = useState(JSLibrariesType);
@@ -25,6 +27,7 @@ export const LibraryInstaller = () => {
        * @type {import('../../../helpers/types').JSLibrary[]}
        */
       const results = await (await response).results;
+      console.log(results);
 
       setLibraries(
         results.filter(
@@ -37,7 +40,7 @@ export const LibraryInstaller = () => {
     } catch (error) {
       toast.error(<ToastMsgInfo msg={"Faild To Get Library"} />);
       setShowLoader(false);
-      setLibraries([])
+      setLibraries([]);
       throw new Error(`From Library Installer : ${error}`);
     }
   };
@@ -50,14 +53,14 @@ export const LibraryInstaller = () => {
   };
 
   return (
-    <section className="p-1">
+    <section className="p-1 h-full">
       {/* <header className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-extrabold text-center mb-10 text-blue-600">
           JavaScript Library Installer
         </h1>
       </header> */}
 
-      <main className="flex flex-col gap-2">
+      <main className="flex flex-col gap-2 h-full">
         <div className=" sticky top-0 left-0">
           <input
             id="search"
@@ -90,9 +93,14 @@ export const LibraryInstaller = () => {
         </div>
 
         <section className="h-full overflow-auto  flex flex-col gap-2">
-         <ViewportList items={libraries} axis="y" >
-         {(lib , i)=>(<JsLibrary key={i} library={lib} />)}
-         </ViewportList>
+          <Virtuoso
+            totalCount={libraries.length}
+            itemContent={(i) => {
+              const lib = libraries[i];
+              return <JsLibrary key={i} library={lib} />;
+            }}
+            components={{ Item: VirtosuoVerticelWrapper  }}
+          />
         </section>
       </main>
     </section>

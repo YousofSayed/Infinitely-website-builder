@@ -252,6 +252,43 @@ export const directives = [
     },
   },
 
+  {
+    directive:'v-view',
+    name:'view',
+    id:uniqueID(),
+    type:'check',
+    showInAllComponents:true,
+    preventDefault:false,
+    callback({ editor, value, callback }) {
+      defaultDirectiveCallback({
+        editor,
+        directive: this.directive,
+        value,
+        preventDefault: this.preventDefault,
+        callback,
+      });
+    },
+  },
+
+  {
+    directive:'v-ref',
+    name:'ref',
+    id:uniqueID(),
+    type:'code',
+    showInAllComponents:true,
+    preventDefault:false,
+    codeLang:'text',
+     callback({ editor, value, callback }) {
+      defaultDirectiveCallback({
+        editor,
+        directive: this.directive,
+        value,
+        preventDefault: this.preventDefault,
+        callback,
+      });
+    },
+  }
+
   // {
   //   directive: "x-modelable",
   //   name: "modelable",

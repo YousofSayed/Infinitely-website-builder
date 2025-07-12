@@ -23,6 +23,9 @@ import { FitTitle } from "../Protos/FitTitle";
 import { SmallButton } from "../Protos/SmallButton";
 import { infinitelyWorker } from "../../../helpers/infinitelyWorker";
 import { projectData } from "../../../helpers/atoms";
+import { opfs } from "../../../helpers/initOpfs";
+import { defineRoot } from "../../../helpers/bridge";
+import { random } from "lodash";
 
 export const PageHelmetModal = () => {
   const [helmet, setHelmet] = useState({
@@ -109,10 +112,10 @@ export const PageHelmetModal = () => {
       helmetFromDB.icon && helmetFromDB.icon instanceof Blob
         ? URL.createObjectURL(helmetFromDB.icon)
         : projectData.logo
-        ? URL.createObjectURL(projectData.logo)
+        ? projectData.logo
         : "";
     setSiteLogo(iconUrl);
-    logosURLs.current.push(iconUrl);
+    // logosURLs.current.push(iconUrl);
 
     console.log(
       helmet,
@@ -140,18 +143,26 @@ export const PageHelmetModal = () => {
    */
   const updatePageHelmet = useCallback(
     async ({ key, value, isBlob = false, mimeType, isLogo = false }) => {
+      if (isLogo) {
+        await opfs.writeFiles([
+          {
+            path: defineRoot(`logo.png`),
+            content: value,
+          },
+        ]);
+        // const url = URL.createObjectURL(value);
+        // logosURLs.current.push(url);
+        setSiteLogo(String(`logo.png`));
+      }
+
       setHelmet({
         ...helmet,
-        logo: isLogo ? value : null,
+        logo: `logo.png`,
         [key]: isBlob ? new Blob([value], { type: mimeType }) : value,
         // ...projectData.pages[currentPageHelmetName].helmet,
       });
 
-      if (isLogo) {
-        const url = URL.createObjectURL(value);
-        logosURLs.current.push(url);
-        setSiteLogo(url);
-      }
+      // isLogo ? value : null
     },
     [projectId, currentPageHelmetName, helmet]
   );
@@ -178,13 +189,17 @@ export const PageHelmetModal = () => {
       </header>
 
       <section className="flex   gap-2 bg-slate-800 p-2 rounded-lg">
-        <FitTitle className="flex  w-[20%!important] items-center flex-shrink-0 ">
+        <FitTitle className="flex  w-[20%!important] items-center justify-center flex-shrink-0 ">
           Site Icon
         </FitTitle>
 
         <section className="flex w-full justify-between items-center   rounded-lg">
           <figure className="rounded-full w-[39px] h-[39px] overflow-hidden">
             <img
+              onClick={() => {
+                inputFileRef.current.click();
+              }}
+              key={siteLogo + random(999, 1000)}
               src={siteLogo ? siteLogo : blankImg}
               className="w-full h-full max-h-full"
             />
@@ -218,7 +233,7 @@ export const PageHelmetModal = () => {
       </section>
 
       <section className="flex  gap-2 bg-slate-800 p-2  rounded-lg">
-        <FitTitle className="flex items-center flex-shrink-0 w-[20%!important]">
+        <FitTitle className="flex items-center justify-center flex-shrink-0 w-[20%!important]">
           Page Title{" "}
         </FitTitle>
         <Input
@@ -235,7 +250,7 @@ export const PageHelmetModal = () => {
       </section>
 
       <section className="flex  gap-2 bg-slate-800 p-2 rounded-lg">
-        <FitTitle className="capitalize w-[20%!important] flex-shrink-0">
+        <FitTitle className="capitalize w-[20%!important] flex justify-center items-center flex-shrink-0">
           author
         </FitTitle>
         <Input
