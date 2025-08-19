@@ -21,11 +21,15 @@ export const initDBAssetsSw = async (setSw = () => {}) => {
     // Register the SW
     // navigator.serviceWorker.controller.state;
     // navigator.serviceWorker.controller.state != "activated";
-    if (
-      !navigator.serviceWorker.controller &&
-      !navigator.serviceWorker.controller?.state &&
-      navigator.serviceWorker.controller?.state != "activated"
-    ) {
+    // if (
+    //   !navigator.serviceWorker.controller &&
+    //   !navigator.serviceWorker.controller?.state &&
+    //   navigator.serviceWorker.controller?.state != "activated"
+    // ) {
+    //   toastId = toast.loading(<ToastMsgInfo msg="App is installing..." />);
+    // }
+
+    if (!navigator.serviceWorker.controller) {
       toastId = toast.loading(<ToastMsgInfo msg="App is installing..." />);
     }
     const reg = await navigator.serviceWorker.register(swPath, {
@@ -54,29 +58,34 @@ export const initDBAssetsSw = async (setSw = () => {}) => {
       );
       setSw(activeSw);
 
-      activeSw.addEventListener("statechange", (ev) => {
-        console.log("from state change ev : ", ev);
-
-        if (activeSw.state == "activated") {
-          console.log("sw activated");
-          if (toastId) toast.done(toastId);
-
-          if (!isDev) {
-            toast.success(<ToastMsgInfo msg="App installed successfully 💙" />);
+      if (activeSw.state === "activated") {
+        onActivated(); // run your success logic immediately
+      } else {
+        activeSw.addEventListener("statechange", () => {
+          if (activeSw.state === "activated") {
+            onActivated();
           }
+        });
+      }
 
-          refresherWorker.postMessage({
-            command: "sw-registration-state",
-            props: { state: "done" },
-          });
+      function onActivated() {
+        console.log("sw activated");
+        if (toastId) toast.done(toastId);
 
-          // Avoid infinite reload loop — reload only once
-          if (!sessionStorage.getItem("swInstalledReloaded")) {
-            sessionStorage.setItem("swInstalledReloaded", "true");
-            setTimeout(() => location.reload(), 100);
-          }
+        if (!isDev) {
+          toast.success(<ToastMsgInfo msg="App installed successfully 💙" />);
         }
-      });
+
+        // refresherWorker.postMessage({
+        //   msg: "sw-registration-state",
+        //   props: { state: "done" },
+        // });
+
+        if (!sessionStorage.getItem("swInstalledReloaded")) {
+          sessionStorage.setItem("swInstalledReloaded", "true");
+          setTimeout(() => location.reload(), 300);
+        }
+      }
 
       return activeSw;
     } else {

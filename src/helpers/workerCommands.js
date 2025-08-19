@@ -1389,8 +1389,8 @@ export async function refreshSW() {
 
   self.addEventListener("message", async (ev) => {
     const { data } = ev;
-    const { command, props } = data;
-    if (command == "sw-registration-state") {
+    const { msg, props } = data;
+    if (msg == "sw-registration-state") {
       swRegistrationState = props.state;
       console.log(
         `From refreshSW worker got Registration state : `,

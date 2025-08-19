@@ -170,7 +170,7 @@ function App() {
   const isProject = Boolean(+localStorage.getItem(current_project_id));
   return (
     // <Suspense fallback={<Loader />}>
-    <Routes>
+    <Routes >
       <Route
         path="/"
         element={<Editor />}
