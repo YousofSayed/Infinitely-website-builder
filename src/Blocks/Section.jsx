@@ -10,25 +10,49 @@ import { defineTraits } from "../helpers/functions";
  */
 export const Section = ({ editor }) => {
   editor.Components.addType("section", {
-    isComponent:(el)=>el.tagName == 'SECTION',
+    isComponent: (el) => {
+      const result =
+        el.tagName == "SECTION" &&
+        ![...(el.querySelectorAll(`*`) || [])].some(
+          (el) => el.tagName == "SPLINE-VIEWER"
+        );
+      // console.log('from section : ' , result);
+      return result;
+    },
+    view: {
+      onRender({ model }) {
+        model.set({
+          droppable: true,
+          draggable: true,
+        });
+      },
+    },
     model: {
       // init(){
       //   this.updateTrait('tag-name', {value: this.tagName});
       // },
+
       defaults: {
         icon: editorIcons.section({ width: 25, height: 25, fill: "white" }),
-        resizable:true,
+        resizable: true,
+        draggable: true,
+        droppable: true,
         tagName: "section",
         attributes: {
-          class: "section",
+          class: "section p-10 drop",
         },
+        // components: [
+        //   {
+        //     type: "drop-area",
+        //   },
+        // ],
         traits: defineTraits([
           {
-            placeholder:'select tag',
-            label:'Select tag',
-            name:'tag-name',
-            role:'attribute',
-            value : '',
+            placeholder: "select tag",
+            label: "Select tag",
+            name: "tag-name",
+            role: "attribute",
+            value: "",
             keywords: tagNames,
             type: "select",
             callback({ editor, trait, newValue }) {

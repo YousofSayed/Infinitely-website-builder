@@ -42,6 +42,10 @@ export const AddMultiValuestoSingleProp = ({
   });
 
   useEffect(() => {
+    if(!updatedValue) {
+      setValues([]);
+      return;
+    }
     setValues(!updatedValue.split(",")[0] ? [] : updatedValue.split(","));
   }, [updatedValue]);
 

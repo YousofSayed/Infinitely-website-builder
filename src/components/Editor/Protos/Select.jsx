@@ -17,6 +17,7 @@ import { popoverRefState, popoverState } from "../../../helpers/atoms";
 import { Popover } from "../Popover";
 import { CodeEditor } from "./CodeEditor";
 import { FitTitle } from "./FitTitle";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 
 /**
  *
@@ -73,6 +74,11 @@ export const Select = ({
   const editorRef = useRef();
   const btnRef = useRef();
   const popoverRef = useRecoilValue(popoverRefState);
+  const [animatRef] = useAutoAnimate();
+
+  useEffect(()=>{
+    selectRef.current && animatRef(selectRef.current)
+  },[selectRef])
 
   useEffect(() => {
     if (
@@ -125,7 +131,7 @@ export const Select = ({
     return () => {
       document.removeEventListener("click", closeMenuCallback);
     };
-  });
+  },[]);
 
   useEffect(() => {
     setValue(value);
@@ -134,7 +140,7 @@ export const Select = ({
   useEffect(() => {
     if (!popoverRef) return;
     popoverRef.innerHTML = "";
-  }, []);
+  }, [popoverRef]);
 
   const showMenuCallback = () => {
     // isTextarea ? editorRef.current.focus() : inputRef.current.focus();
@@ -145,7 +151,7 @@ export const Select = ({
 
   function findIndex(keywords = [], serachvalue) {
     const index = keywords.findIndex((value, i) =>
-      value.toLowerCase().includes(serachvalue)
+      value.toLowerCase().trim() == (serachvalue.toLowerCase() || "").trim()
     );
 
     return index;
@@ -285,6 +291,8 @@ export const Select = ({
           containerClassName ? containerClassName : "bg-slate-900"
         }`}
         onClick={(ev) => {
+                      console.log('clcickckckc');
+
           selectRef.current.click();
           preventInput &&
             setTimeout(() => {
@@ -307,6 +315,8 @@ export const Select = ({
           type="text"
           placeholder={placeholder || label}
           onClick={(ev) => {
+            console.log('clcickckckc');
+            
             ev.stopPropagation();
             selectRef.current.click();
             setNewKeywords(keywords);
@@ -400,6 +410,7 @@ export const Select = ({
                 }
                 menuRef={menuRef}
                 editorRef={editorRef}
+                isOpen={showMenu}
                 choosenKeyword={choosenKeyword}
                 currentChoose={currentChoose}
                 innerStt={value}

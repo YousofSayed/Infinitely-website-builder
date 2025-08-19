@@ -25,8 +25,8 @@ import { Choices } from "./Protos/Choices";
 import { MiniTitle } from "./Protos/MiniTitle";
 import { Tooltip } from "react-tooltip";
 import { useCmdsContext } from "../../hooks/useCmdsContext";
-import { InfAccordion } from "../Protos/InfAccordion";
-import { AccordionItem } from "@heroui/accordion";
+// import { InfAccordion } from "../Protos/InfAccordion";
+// import { AccordionItem } from "@heroui/accordion";
 import { getInfinitelySymbolInfo } from "../../helpers/functions";
 import { current_symbol_id } from "../../constants/shared";
 import { SearchHeader } from "../Protos/SearchHeader";
@@ -34,6 +34,8 @@ import { commentRgx } from "../../constants/rgxs";
 import { FitTitle } from "./Protos/FitTitle";
 import { SwitchButton } from "../Protos/SwitchButton";
 import { parse } from "../../helpers/cocktail";
+import { Accordion } from "../Protos/Accordion";
+import { AccordionItem } from "../Protos/AccordionItem";
 
 export const Commands = memo(() => {
   const editor = useEditorMaybe();
@@ -253,7 +255,7 @@ export const Commands = memo(() => {
   return (
     <section className="flex flex-col gap-2 mt-2">
       <SearchHeader search={search} />
-      <InfAccordion>
+      <Accordion>
         {/* {selectedType && (
          
         )} */}
@@ -261,7 +263,7 @@ export const Commands = memo(() => {
         {editor?.getSelected?.()?.parent?.()?.get?.("type") != "wrapper" &&
           editor?.getSelected?.()?.get?.("type") != "wrapper" && (
             <AccordionItem title={"for"}>
-              <section className="mt-2 flex flex-col  gap-2 p-2 text-[14px]">
+              <section className="mt-2 flex flex-col  gap-2 p-1 text-[14px] bg-slate-900 rounded-lg">
                 <FitTitle>Var </FitTitle>
                 <Input
                   className="bg-slate-800 w-full"
@@ -562,7 +564,7 @@ export const Commands = memo(() => {
                 )}
 
                 {cmd.type == "check" && (
-                  <section className="flex items-center justify-between gap-2 p-2 rounded-lg">
+                  <section className="flex items-center justify-between gap-2 p-1 bg-slate-900 rounded-lg">
                     <FitTitle>{cmd.name}</FitTitle>
                     <SwitchButton
                     defaultValue={parse(getDirectiveContext(
@@ -587,7 +589,7 @@ export const Commands = memo(() => {
                 )}
 
                 {cmd.type == "multi" && (
-                  <section className="flex flex-col gap-2 mt-2 p-2">
+                  <section className="flex flex-col gap-2  p-1 bg-slate-900 rounded-lg">
                     <FitTitle>Suffix</FitTitle>
                     <Select
                       // label="Suffix"
@@ -904,7 +906,7 @@ export const Commands = memo(() => {
             );
           }
         })}
-      </InfAccordion>
+      </Accordion>
     </section>
   );
 });

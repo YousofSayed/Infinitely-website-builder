@@ -33,8 +33,8 @@ import {
 } from "../../helpers/functions";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
-import { InfAccordion } from "../Protos/InfAccordion";
-import { AccordionItem } from "@heroui/accordion";
+// import { InfAccordion } from "../Protos/InfAccordion";
+// import { AccordionItem } from "@heroui/accordion";
 import { FitTitle } from "./Protos/FitTitle";
 import { SwitchButton } from "../Protos/SwitchButton";
 import { isFunction, isString } from "lodash";
@@ -46,6 +46,8 @@ import { VirtuosoGrid } from "react-virtuoso";
 import { GridComponents } from "../Protos/VirtusoGridComponent";
 import { FileView } from "../Protos/FileView";
 import { ChooseFile } from "../Protos/ChooseFile";
+import { AccordionItem } from "../Protos/AccordionItem";
+import { Accordion } from "../Protos/Accordion";
 
 export const TraitsAside = memo(() => {
   const editor = useEditorMaybe();
@@ -87,7 +89,7 @@ export const TraitsAside = memo(() => {
     setFileName(buildFileName);
     setSelectedCmp(selectedEl);
 
-    const innerHtml = selectedEl.isInstanceOf("text")
+    const innerHtml = selectedEl.props().editable
       ? selectedEl.getInnerHTML()
       : "";
     // setSelectedValue(selectedEl.getInnerHTML());
@@ -106,6 +108,8 @@ export const TraitsAside = memo(() => {
 
   useEffect(() => {
     const selectedEl = editor?.getSelected?.();
+    console.log('sldoslso');
+    
     if (!editor || !selectedEl) return;
     const callback = () => {
       console.log("trait updated");
@@ -120,7 +124,7 @@ export const TraitsAside = memo(() => {
       editor.off("trait:value", callback);
       // editor.off(InfinitelyEvents.attributes.buildUrl, buildAttrUrlCallback);
     };
-  }, [editor]);
+  }, [editor , selectedEl]);
 
   const getFilterdAttributes = () => {
     const sle = editor.getSelected();
@@ -194,15 +198,13 @@ export const TraitsAside = memo(() => {
 
   const updateTraitValue = ({ name = "", key = "", value = "" }) => {
     const sle = editor.getSelected();
-    sle.updateTrait(name, { [key]: value });
+    // sle.updateTrait(name, { [key]: value });
     const trait = sle.getTrait(name);
 
-    // trait.set({
-    //   [key]: value,
-    //   attributes: {
-    //     [key]: value,
-    //   },
-    // });
+    trait.set({
+      [key]: value,
+      
+    });
 
 
 
@@ -256,11 +258,11 @@ export const TraitsAside = memo(() => {
   };
 
   return (
-  <section className="mt-2">
-      <InfAccordion>
+  <section className="flex flex-col gap-2 h-full mt-2">
+      <Accordion>
       {/* <AsideControllers /> */}
       <AccordionItem title={"Type Content"}>
-        <section className="flex flex-col gap-2 p-2">
+        <section className="flex flex-col gap-2 p-1 bg-slate-900 rounded-lg">
           <section className="flex items-center gap-2 justify-between">
             <FitTitle className="custom-font-size">Type Content</FitTitle>
             <nav className="flex items-center  gap-3 p-1 px-2 bg-slate-800 w-fit  rounded-lg self-end text-slate-200">
@@ -353,7 +355,9 @@ export const TraitsAside = memo(() => {
               onChange(value) {
                 const sle = editor.getSelected();
                 const type = sle.get("type");
-                if (!sle.isInstanceOf("text")) return;
+                console.log(type,sle.isInstanceOf("text") , sle.props().editable);
+                
+                if (!sle.props().editable) return;
 
                 if (
                   !codeSettings.enableTemplateEngine &&
@@ -393,7 +397,7 @@ export const TraitsAside = memo(() => {
       </AccordionItem>
       {!![...attributesTraits, ...handlerTraits].length && (
         <AccordionItem title={"Traits"}>
-          <section className="p-2 flex flex-col gap-2">
+          <section className="p-1 flex flex-col gap-2 bg-slate-900 rounded-lg">
             <MiniTitle className={`py-3 w-full`}>Traits</MiniTitle>
 
             {[...attributesTraits, ...handlerTraits].map((trait, i) => {
@@ -545,13 +549,15 @@ export const TraitsAside = memo(() => {
                         <Select
                           placeholder={trait.placeholder || trait.label}
                           className="w-full bg-slate-800"
-                          value={trait.stateProp || ""}
+                          value={trait.stateProp}
                           keywords={
                             isFunction(trait.keywords)
                               ? trait.keywords({ projectData })
                               : trait.keywords || []
                           }
                           onInput={(value) => {
+                            console.log('staaaaaaaaaaaaaaaaate props : ' , trait.stateProp , value);
+                            
                             updateTraitValue({
                               name: trait.name,
                               key: "stateProp",
@@ -778,11 +784,12 @@ export const TraitsAside = memo(() => {
                   {trait.type.toLowerCase() == "media" && isShow && (
                     <ChooseFile
                       value={trait.value}
+                      ext={trait.ext}
                       placeholder={trait.placeholder || trait.label}
                       mediaType={trait.mediaType}
                       callback={(asset, url) => {
                         trait.callback({
-                          editor,
+                          editor, 
                           newValue: url,
                           oldValue: trait.value,
                           asset:asset,
@@ -809,7 +816,7 @@ export const TraitsAside = memo(() => {
       )}
 
       <AccordionItem title={"Attributes"}>
-        <section className="p-2 flex flex-col gap-2">
+        <section className="p-1 flex flex-col gap-2 bg-slate-900 rounded-lg">
           <MiniTitle className={`py-3 w-full`}>Attributes</MiniTitle>
           {!!Object.keys(attributes).length &&
             Object.keys(attributes).map((key, i) => {
@@ -860,7 +867,7 @@ export const TraitsAside = memo(() => {
           </section>
         </section>
       </AccordionItem>
-    </InfAccordion>
+    </Accordion>
   </section>
   );
 });

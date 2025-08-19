@@ -34,7 +34,7 @@ export const BorderColor = () => {
   }, [option]);
 
   return (
-    <section className="flex flex-col gap-3  justify-between py-3 ">
+    <section className="flex flex-col gap-3  justify-between ">
       {/* <P> </P> */}
       <FitTitle className="capitalize">border color</FitTitle>
       <ScrollableToolbar className="flex justify-between gap-1 bg-slate-800 p-2 rounded-lg" space="3">

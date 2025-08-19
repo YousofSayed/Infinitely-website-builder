@@ -1,20 +1,176 @@
-import React from "react";
+import React, {
+  useRef,
+  useEffect,
+  useState,
+  useContext,
+  createContext,
+  memo,
+} from "react";
+import { Icons } from "../Icons/Icons";
+import { FitTitle } from "../Editor/Protos/FitTitle";
+import { refType } from "../../helpers/jsDocs";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { AnimatePresence, motion } from 'framer-motion'
+const AccordionContext = createContext();
 
-export const DetailsNormal = ({ children, label, className = ""  ,  allowPopupLength = false, length}) => {
+export const AccordionProvider = ({ children }) => {
+  const [openId, setOpenId] = useState(null);
   return (
-   <section  className={`
-    relative
-    focus:outline-none focus:border-none 
-    ${
-    className ? className : "p-2 bg-slate-800 w-full rounded-lg select-none "
-  }`}>
-     <details
-     
-    > 
-      <summary className="text-slate-200 capitalize text-[16px] focus:outline-none focus:border-none">{label}</summary>
-      {children ? children : "Nothing Here..."}
-    </details>
-      {allowPopupLength && !!length &&<p className="w-[25px] h-[25px] bg-blue-500 text-slate-200 flex justify-center items-center font-semibold rounded-full absolute right-[2px] top-0 ">{length}</p>}
-   </section>
-  ); 
+    <AccordionContext.Provider value={{ openId, setOpenId }}>
+      {children}
+    </AccordionContext.Provider>
+  );
 };
+
+export const DetailsNormal = memo(
+  ({
+    children,
+    label,
+    className = "",
+    labelClass = "bg-slate-800",
+    allowPopupLength = false,
+    length,
+    mode = "independent",
+    id,
+  }) => {
+    const { openId, setOpenId } = useContext(AccordionContext) || {};
+    const [isOpen, setIsOpen] = useState(false);
+    const contentRef = useRef(null);
+    const [parent] = useAutoAnimate({
+      duration: 100,
+      // easing: "ease-in",
+      // disrespectUserMotionPreference: true,
+    });
+
+    const toggle = () => {
+      if (mode === "accordion") {
+        setOpenId(isOpen ? null : id);
+      } else {
+        setIsOpen(!isOpen);
+      }
+    };
+
+    useEffect(() => {
+      if (mode === "accordion") {
+        setIsOpen(openId === id);
+      }
+    }, [openId]);
+
+    // useEffect(() => {
+    //   const el = contentRef.current;
+    //   if (!el) return;
+
+    //   if (isOpen) {
+    //     el.style.display = "block";
+    //     requestAnimationFrame(() => {
+    //       el.style.maxHeight = el.scrollHeight + "px";
+    //     });
+    //   } else {
+    //     el.style.maxHeight = el.scrollHeight + "px";
+    //     requestAnimationFrame(() => {
+    //       el.style.maxHeight = "0px";
+    //     });
+    //   }
+    // }, [isOpen]);
+
+    // Recalculate height when content changes
+    // useEffect(() => {
+    //   const observer = new MutationObserver(() => {
+    //     if (isOpen) {
+    //       const el = contentRef.current;
+    //       if (el) el.style.maxHeight = el.scrollHeight + "px";
+    //     }
+    //   });
+    //   const el = contentRef.current;
+    //   if (el) {
+    //     observer.observe(el, { childList: true, subtree: true });
+    //   }
+    //   return () => observer.disconnect();
+    // }, [isOpen]);
+
+    // useEffect(() => {
+    //   const handleResize = () => {
+    //     if (isOpen && contentRef.current) {
+    //       contentRef.current.style.maxHeight =
+    //         contentRef.current.scrollHeight + "px";
+    //     }
+    //   };
+    //   window.addEventListener("resize", handleResize);
+    //   return () => window.removeEventListener("resize", handleResize);
+    // }, [isOpen]);
+
+    return (
+      <section
+        ref={parent}
+        className={`relative rounded-lg transition-all duration-300 will-change-auto ${
+          className ? className : "p-1 bg-slate-800 w-full select-none"
+        }`}
+      >
+        <div
+          className={`cursor-pointer flex justify-between items-center text-slate-200 capitalize rounded-lg font-semibold text-[16px] p-1 ${labelClass}`}
+          onClick={toggle}
+        >
+          <h1 className="custom-font-size text-slate-200 font-semibold">{label}</h1>
+          {/* <FitTitle className="custom-font-size">{label}</FitTitle> */}
+          <span
+            className={`transition-transform duration-100 ${
+              isOpen ? "rotate-90" : ""
+            }`}
+          >
+            <i className="rotate-[-90deg] block">{Icons.arrow("")}</i>
+          </span>
+        </div>
+
+        {isOpen ? children : null}
+
+        {/* (<AnimatePresence initial={false}  >
+            {isOpen && <motion.div
+              // key="body"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              style={{ overflow: "hidden" , }}
+            >
+              {isOpen && <div className="h-full" ref={contentRef}>{children}</div>}
+            </motion.div>}
+        </AnimatePresence>) */}
+
+        {/* <div
+          ref={contentRef}
+          style={{
+            maxHeight: "0px",
+            overflow: "hidden",
+            transition: "max-height 0.3s ease",
+          }}
+        >
+          <div
+            className={`mt-2 transition-opacity duration-300 ${
+              isOpen ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            {children ? children : "Nothing Here..."}
+          </div>
+        </div> */}
+
+        {allowPopupLength && !!length && (
+          <p className="w-[20px] h-[20px] bg-blue-500 text-white flex justify-center items-center font-semibold rounded-full absolute right-[-5px] top-[-7px]">
+            {length}
+          </p>
+        )}
+      </section>
+
+      // <details open={isOpen} onToggle={(ev)=>{
+      //   // setIsOpen(ev.target.open)
+      //   console.log(ev , ev.target.open);
+
+      // }}>
+      //   <summary onClick={()=>{
+      //   toggle()
+
+      //   }}>{label}</summary>
+      //   {isOpen ? children : null}
+      // </details>
+    );
+  }
+);

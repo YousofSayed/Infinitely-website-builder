@@ -52,6 +52,7 @@ export const Background = memo(() => {
   }, [bgImage]);
 
   useEffect(() => {
+    if(!editor) return;
     const callback = () => {
       const bgImgUrl =
         editor?.getSelected()?.getStyle()["background-image"] || "";
@@ -64,55 +65,22 @@ export const Background = memo(() => {
     return () => {
       editor.off("update", callback);
     };
-  }, []);
+  }, [editor]);
 
   return (
-    <section className="mt-3 flex flex-col gap-3 p-2">
+    <section className=" bg-slate-900 rounded-lg flex flex-col gap-3 p-1">
       <MiniTitle>Color</MiniTitle>
       <Color cssProp="background-color" />
 
       <MiniTitle>Image</MiniTitle>
-      <section className="flex gap-2 relative h-[60px] bg-slate-800 p-2 rounded-lg justify-between">
-        {/* <Textarea
-          value={bgImage}
-          cssProp="background-image"
-          className="w-full bg-slate-900"
-          placeholder="source"
-          inputClassName="w-full"
-          onInput={(ev) => {
-            setBgImage(ev.target.value);
-            setClass({
-              cssProp: "background-image",
-              value: `url('${ev.target.value}')`,
-            });
-          }}
-        />
-        <SmallButton
-          className="bg-slate-900 self-end h-full"
-          onClick={() => {
-            setBgImage("");
-          }}
-        >
-          {Icons.delete()}
-        </SmallButton>
-        <SmallButton
-          className="bg-slate-900 self-end h-full"
-          onClick={(ev) => {
-            setCssPropForAm("background-image");
-            // editor.AssetManager.open();
-            editor.Commands.run("open:custom:modal", {
-              title: "Select File",
-              JSXModal: <AssetsManager editor={editor} />,
-            });
-          }}
-        >
-          {Icons.gallery("white")}
-        </SmallButton> */}
+     
 
-        <ChooseFile
+       <section className="bg-slate-800 rounded-lg flex flex-col gap-2 p-1">
+         <ChooseFile
           mediaType="image"
-          placeholder="choose image"
+          placeholder="Choose image"
           value={bgImage}
+          isCssProp
           callback={(asset, url) => {
             setBgImage(url);
             setClass({
@@ -121,7 +89,7 @@ export const Background = memo(() => {
             });
           }}
         />
-      </section>
+       </section>
       <Property cssProp="background-position-x" label="position-x" />
       <Property cssProp="background-position-y" label="position-y" />
       <SelectStyle
@@ -137,7 +105,6 @@ export const Background = memo(() => {
         label="Size"
       />
 
-      
       <AddMultiValuestoSingleProp
         label={<FitTitle>Attachment</FitTitle>}
         placeholder="Attachment"

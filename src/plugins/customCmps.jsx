@@ -18,6 +18,8 @@ import { Audio } from "../Blocks/Audio";
 import { Iframe } from "../Blocks/Iframe";
 import { Media } from "../Blocks/Media";
 import { Svg } from "../Blocks/Svg";
+import { SplineScene } from "../Blocks/SplineScene";
+import { DropArea } from "../Blocks/DropArea";
 
 /**
  *
@@ -42,5 +44,7 @@ export const customCmps = (editor) => {
   // Audio({ editor });
   // Iframe({ editor });
   Media({ editor });
-  Svg(editor)
+  SplineScene({ editor });
+  DropArea({editor});
+  Svg(editor);
 };

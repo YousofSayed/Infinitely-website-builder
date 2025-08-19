@@ -1,0 +1,455 @@
+import React, { useEffect, useState } from "react";
+import {
+  interactionInDBType,
+  interactionsType,
+  interactionType,
+} from "../../helpers/jsDocs";
+import { Select } from "./Protos/Select";
+import { eventNames } from "../../constants/hsValues";
+import { SmallButton } from "./Protos/SmallButton";
+import { Icons } from "../Icons/Icons";
+import { useLiveQuery } from "dexie-react-hooks";
+import { getProjectData } from "../../helpers/functions";
+import { useRecoilValue } from "recoil";
+import { currentElState } from "../../helpers/atoms";
+import { useEditorMaybe } from "@grapesjs/react";
+import { current_project_id, interactionId } from "../../constants/shared";
+import { cloneDeep, isPlainObject, random, uniqueId } from "lodash";
+import {
+  parse,
+  pushBetween,
+  stringify,
+  uniqueID,
+} from "../../helpers/cocktail";
+import { db } from "../../helpers/db";
+import { infinitelyWorker } from "../../helpers/infinitelyWorker";
+import { toast } from "react-toastify";
+import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
+import { FitTitle } from "./Protos/FitTitle";
+import { Input } from "./Protos/Input";
+import { actions } from "../../constants/actions";
+import { MiniTitle } from "./Protos/MiniTitle";
+import { SwitchButton } from "../Protos/SwitchButton";
+import { InfAccordion } from "../Protos/InfAccordion";
+import { AccordionItem } from "@heroui/accordion";
+
+const actionsKeywords = actions.map((action) => action.label);
+const advancedParse = (value) => {
+  console.log("before parse value : ", value);
+
+  try {
+    return JSON.parse(value); // new Function(`return ${value}`)();
+  } catch (error) {
+    return value == undefined ? `undefined` : `\`${value}\``;
+  }
+};
+const viewEvents = ["enterview", "leaveview", "view"];
+
+export const Interaction = ({
+  interactions = interactionsType,
+  setInteractions = () => {},
+  interaction = interactionType,
+  id,
+  index,
+}) => {
+  const editor = useEditorMaybe();
+  const [actionName, setActionName] = useState("");
+
+  const addAction = (actionName = "") => {
+    if (interaction.actions.some((action) => action.label == actionName)) {
+      toast.warn(<ToastMsgInfo msg={`You already use this action...!`} />);
+      return;
+    }
+    const actionTarget = actions.find(
+      (action) => action.label.toLowerCase() == actionName.toLowerCase()
+    );
+    if (actionTarget) {
+      const clone = cloneDeep(interactions);
+      const newActions = [...clone[index].actions, actionTarget];
+      clone[index].actions = newActions;
+      setInteractions(clone);
+      const sle = editor.getSelected();
+      const functionsFromParams = buildFunctionsFromActions(newActions);
+      sle.addAttributes({ [`v-on:${interaction.event}`]: functionsFromParams });
+    } else {
+      toast.warn(<ToastMsgInfo msg={`Action not founded!`} />);
+    }
+    setActionName("");
+  };
+
+  const addValueToActionParam = (key = "", value = "", actionIndex) => {
+    if (!key) {
+      throw new Error(`No key Founded!`);
+    }
+    if (actionIndex == undefined) {
+      throw new Error(`Action index not founded!`);
+    }
+    // console.log(parse(value) , stringify(value) , advancedParse(value));
+
+    const clone = cloneDeep(interactions);
+    console.log(
+      clone[index].actions[actionIndex].params[key],
+      clone[index].actions[actionIndex].params,
+      key,
+      value
+    );
+
+    if (isPlainObject(clone[index].actions[actionIndex].params[key])) {
+      clone[index].actions[actionIndex].params[key].value = value; //advancedParse(value);
+    } else {
+      clone[index].actions[actionIndex].params[key] = value; //advancedParse(value);
+    }
+
+    const sle = editor.getSelected();
+    const functionsFromParams = buildFunctionsFromActions(clone[0].actions);
+    sle.addAttributes({ [`v-on:${interaction.event}`]: functionsFromParams });
+    setInteractions(clone);
+  };
+
+  const deleteAction = (actionIndex) => {
+    const clone = cloneDeep(interactions);
+    clone[index].actions.splice(actionIndex, 1);
+    const sle = editor.getSelected();
+    const functionsFromParams = buildFunctionsFromActions(clone[index].actions);
+    sle.addAttributes({ [`v-on:${interaction.event}`]: functionsFromParams });
+    setInteractions(clone);
+  };
+
+  const deleteInteraction = () => {
+    const clone = cloneDeep(interactions);
+    clone.splice(index, 1);
+    const sle = editor.getSelected();
+    if (viewEvents.includes(interaction.event)) {
+      sle.removeAttributes([`v-view`], { avoidStore: true });
+    }
+    sle.removeAttributes([`v-on:${interaction.event}`]);
+    setInteractions(clone);
+  };
+
+  /**
+   *
+   * @param {import('../../helpers/types').Actions} actions
+   */
+  const buildFunctionsFromActions = (actions) => {
+    console.log(actions);
+
+    const functionsFromParams = actions
+      .map(
+        (action) =>
+          `${action.function}(${Object.values(action.params)
+            .map((value) => {
+              value = isPlainObject(value) ? value.value : value;
+              value = advancedParse(value);
+              console.log("value", value);
+              return typeof value == "string"
+                ? value.replaceAll(`self`, `[${interactionId}="${id}"]`)
+                : value || "";
+            })
+            .join(",")})`
+      )
+      .join(";");
+
+    return functionsFromParams;
+  };
+
+  return (
+    <section className="flex flex-col gap-2 p-1 bg-slate-950 rounded-lg">
+      <header className="flex flex-col gap-2">
+        {/* <section className="flex gap-2 justify-between ">
+          <FitTitle className="flex-shrink-0 w-full flex gap-2 items-center justify-between bg-slate-800">
+            <div className="flex-shrink-0 ">Interaction ID </div>
+            <div className="text-slate-200 custom-font-size font-bold flex items-center p-2 justify-end w-full bg-slate-800 rounded-lg max-w-[50%]">
+              {interaction.id}
+            </div>
+          </FitTitle>
+        </section> */}
+
+        <section className="flex gap-2 justify-between ">
+          <MiniTitle className=" w-full  flex gap-2 justify-center items-center">
+            {interaction.event}
+          </MiniTitle>
+          <SmallButton
+            onClick={() => {
+              deleteInteraction();
+            }}
+            className="bg-slate-800 hover:bg-[crimson!important] [&:hover_path]:stroke-white"
+            tooltipTitle="Delete Interaction"
+          >
+            {Icons.trash("white")}
+          </SmallButton>
+        </section>
+
+        <section className="flex gap-2 justify-between">
+          <Select
+            value={actionName}
+            setValue={setActionName}
+            placeholder="Add Action"
+            keywords={actionsKeywords}
+            onEnterPress={(value) => {
+              addAction(value);
+            }}
+            onItemClicked={(value) => {
+              addAction(value);
+            }}
+          />
+          <SmallButton
+            tooltipTitle="Add Action"
+            onClick={() => {
+              addAction(actionName);
+            }}
+          >
+            {Icons.plus("white")}
+          </SmallButton>
+        </section>
+      </header>
+
+      {interaction.actions.map((action, i) => {
+        return (
+          <section
+            className="flex flex-col gap-2 p-1 bg-slate-800 rounded-lg"
+            key={i}
+          >
+            <header className="flex gap-2 justify-between">
+              <MiniTitle>{action.label}</MiniTitle>
+              <section className="rounded-lg">
+                <SmallButton
+                  onClick={() => {
+                    deleteAction(i);
+                  }}
+                  className="h-full bg-slate-900 hover:bg-[crimson!important] [&:hover_path]:stroke-white"
+                  tooltipTitle="Delete Action"
+                >
+                  {Icons.trash()}
+                </SmallButton>{" "}
+              </section>
+            </header>
+
+            {Object.entries(action.params).map(([key, value], paramIndex) => {
+              return (
+                <section key={paramIndex} className="flex flex-col gap-2">
+                  <FitTitle>{key}</FitTitle>
+
+                  {isPlainObject(value) ? (
+                    value.type == "select" ? (
+                      <Select
+                        className="p-[unset]"
+                        keywords={value.keywords}
+                        value={value.value}
+                        placeholder={key}
+                        onAll={(value) => {
+                          addValueToActionParam(key, value, i);
+                        }}
+                      />
+                    ) : value.type == "switch" ? (
+                      <div className="flex justify-between  gap-2 p-2 bg-slate-900 rounded-lg items-center">
+                        <p className="text-slate-400 capitalize">{key}</p>
+                        <SwitchButton
+                          className="p-[unset]"
+                          defaultValue={value.value}
+                          placeholder={key}
+                          onActive={(value) => {
+                            addValueToActionParam(key, stringify(value), i);
+                          }}
+                          onUnActive={(value) => {
+                            addValueToActionParam(key, stringify(value), i);
+                          }}
+                        />
+                      </div>
+                    ) : null
+                  ) : (
+                    <Input
+                      required
+                      value={value}
+                      placeholder={key}
+                      className="bg-slate-900"
+                      onInput={(ev) => {
+                        addValueToActionParam(key, ev.target.value, i);
+                      }}
+                    />
+                  )}
+                </section>
+              );
+            })}
+          </section>
+        );
+      })}
+    </section>
+  );
+};
+
+export const Interactions = () => {
+  const [interactionsState, setInteractions] = useState(interactionsType);
+  const [interactionsId, setInteractionsId] = useState("");
+  const [eventName, setEventName] = useState("");
+  const selectedEl = useRecoilValue(currentElState);
+  const editor = useEditorMaybe();
+  const projectId = +localStorage.getItem(current_project_id);
+
+  useEffect(() => {
+    if (!selectedEl && !editor) return;
+    getAndSetIdHandle();
+  }, [selectedEl, editor]);
+
+  //   useLiveQuery(async () => {
+  //     const interactionsFromDB = await (await getProjectData()).interactions;
+  //     setInteractions(interactionsFromDB);
+  //   });
+
+  useEffect(() => {
+    if (interactionsId && Array.isArray(interactionsState)) {
+      (async () => {
+        const projectData = await getProjectData();
+        const allInteractions = {
+          ...(projectData?.interactions || {}),
+          [interactionsId]: interactionsState,
+        };
+        console.log(allInteractions);
+
+        infinitelyWorker.postMessage({
+          command: "updateDB",
+          props: {
+            data: {
+              interactions: {
+                ...(projectData?.interactions || {}),
+                [interactionsId]: interactionsState,
+              },
+            },
+          },
+        });
+      })();
+    }
+  }, [interactionsId, interactionsState]);
+
+  const getAndSetIdHandle = async () => {
+    const projectData = await getProjectData();
+    const sle = editor.getSelected();
+    const sleAttributes = sle.getAttributes();
+    const interactionIdAttr = sleAttributes[interactionId];
+    const uuid = uniqueId(`iN${uniqueID()}-${random(999, 10000)}`);
+
+    if (interactionIdAttr) {
+      setInteractionsId(interactionIdAttr);
+      const interactionFromDB = projectData?.interactions?.[interactionIdAttr];
+      if (!interactionFromDB) {
+        await db.projects.update(projectId, {
+          interactions: {
+            ...(projectData?.interactions || {}),
+            [interactionIdAttr]: [],
+          },
+        });
+        setInteractionsId(interactionIdAttr);
+        setInteractions([]);
+      } else {
+        setInteractions(projectData.interactions[interactionIdAttr]);
+      }
+    } else {
+      sle.addAttributes({ [interactionId]: uuid });
+      await db.projects.update(projectId, {
+        interactions: {
+          ...projectData.interactions,
+          [uuid]: [],
+        },
+      });
+      setInteractionsId(uuid);
+      setInteractions([]);
+    }
+  };
+
+  const addInteraction = (eventName = "") => {
+    if (!eventName) {
+      toast.warn(<ToastMsgInfo msg={`Select event to add`} />);
+      return;
+    }
+    if (
+      interactionsState.some(
+        (interaction) =>
+          interaction.event.toLowerCase() == eventName.toLowerCase()
+      )
+    ) {
+      toast.warn(<ToastMsgInfo msg={`You already use this interaction...!`} />);
+      return;
+    }
+    const sle = editor.getSelected();
+    if (viewEvents.includes(eventName)) {
+      sle.addAttributes({ "v-view": "true" }, { avoidStore: true });
+    }
+    const uuid = uniqueId(`${uniqueID()}-${random(999, 10000)}`);
+    const newInteraction = {
+      id: uuid,
+      name: uuid,
+      event: eventName,
+      actions: [],
+    };
+
+    const newInteractions = [...interactionsState, newInteraction];
+    console.log("new interactions : ", newInteractions);
+    sle.addAttributes({ [`v-on:${eventName}`]: "" });
+    setInteractions([...interactionsState, newInteraction]);
+    setEventName("");
+  };
+  return (
+    <section className="w-full h-full flex flex-col gap-2 my-2 overflow-auto hideScrollBar">
+      <header className="flex gap-2 justify-between">
+        <Select
+          value={eventName}
+          setValue={setEventName}
+          placeholder="Add Interaction"
+          keywords={eventNames}
+          onItemClicked={(value) => {
+            addInteraction(value);
+          }}
+          onEnterPress={(value) => {
+            addInteraction(value);
+          }}
+        />
+        <SmallButton
+          tooltipTitle="Add Interaction"
+          onClick={(ev) => {
+            addInteraction(eventName);
+          }}
+        >
+          {Icons.plus("white")}
+        </SmallButton>
+      </header>
+      <InfAccordion>
+        {Object.values(interactionsState).map((interaction, i) => (
+          <AccordionItem key={i} title={interaction.event}>
+            <Interaction
+              
+              id={interactionsId}
+              index={i}
+              interactions={interactionsState}
+              setInteractions={setInteractions}
+              interaction={interaction}
+            />
+          </AccordionItem>
+        ))}
+      </InfAccordion>
+
+      {interactionsState.length > 2 && (
+        <footer className="flex gap-2 justify-between">
+          <Select
+            value={eventName}
+            setValue={setEventName}
+            placeholder="Add Interaction"
+            keywords={eventNames}
+            onItemClicked={(value) => {
+              addInteraction(value);
+            }}
+            onEnterPress={(value) => {
+              addInteraction(value);
+            }}
+          />
+          <SmallButton
+            tooltipTitle="Add Interaction"
+            onClick={(ev) => {
+              addInteraction(eventName);
+            }}
+          >
+            {Icons.plus("white")}
+          </SmallButton>
+        </footer>
+      )}
+    </section>
+  );
+};

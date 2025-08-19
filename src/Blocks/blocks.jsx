@@ -84,7 +84,10 @@ export const blocks = [
     category:'Basic',
     label : html`<p class="custom-font-size">Svg</p>`,
     media:reactToStringMarkup(Icons.svg({fill:'currentColor'})),
-    content:reactToStringMarkup(Icons.svg({ fill: "black" ,width:40 , height:50 }))
+    // content:reactToStringMarkup(Icons.svg({ width: 40, height: 50, fill: "black" }))
+    content:{
+      type:'inf-svg'
+    }
   },
   // {
   //   id: "video",
@@ -205,6 +208,16 @@ export const blocks = [
     content: {
       type: "splitter",
     },
+  },
+  {
+    id:'spline-viewer',
+    label : html`<p class="custom-font-size ">Spline viewer</p>`,
+    media: reactToStringMarkup(
+      Icons.spline({ strokeColor: "white", width: 25, height: 25 })
+    ),
+    category:'fancy',
+    content:{type:'spline-viewer'}
+    // `<spline-viewer></spline-viewer>`
   },
 
   {

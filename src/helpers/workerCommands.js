@@ -19,11 +19,19 @@ import { uniqueId, isPlainObject, random } from "lodash";
 import { opfs } from "./initOpfs";
 import { tailwindClasses } from "../constants/tailwindClasses";
 import { css_beautify } from "js-beautify";
+import { parse, stringify } from "css";
+import { minify } from "csso";
 // import { initDBAssetsSw } from "../serviceWorkers/initDBAssets-sw";
 // import Dexie from "dexie";
 //
 const html = String.raw;
 const css = String.raw;
+
+let storeTimeout;
+
+export function clearTimeouts(props) {
+  clearTimeout(storeTimeout);
+}
 
 /**
  *
@@ -101,101 +109,103 @@ export async function updateAllPages(props) {
  */
 export async function storeGrapesjsDataIfSymbols(props) {
   // try {
-  const projectDataFromDB = await db.projects.get(props.projectId);
-  const projectData = await props.data;
-  const pages = structuredClone(Object.values(projectData.pages));
-  const updatedPages = {};
-if (props.files && isPlainObject(props.files)) {
-    await opfs.writeFiles(
-      Object.entries(props.files).map(([key, file]) => ({
-        path: defineRoot(key),
-        content: file,
-      }))
-    );
-  }
-
-  if(props.tailwindcssStyle){
-    console.log('from worker : ' , props.tailwindcssStyle);
-    
-    await opfs.writeFiles([
-      {
-        path:defineRoot(`css/tailwind/${props.pageName}.css`),
-        content:props.tailwindcssStyle,
-      }
-    ])
-  }
-
-
-
-  await Promise.all(
-    pages.map(async (page) => {
-      const pageSymbols = [];
-      const pageContent = await (
-        await opfs.getFile(defineRoot(page.pathes.html))
-      ).text();
-      if (!pageContent) {
-        page.symbols = pageSymbols;
-        updatedPages[page.name] = page;
-        return page;
-      }
-
-      const { document } = parseHTML(doDocument(pageContent));
-      const oldSymbols = document.body.querySelectorAll(
-        `[${inf_symbol_Id_attribute}]`
+  storeTimeout && clearTimeout(storeTimeout);
+  storeTimeout = setTimeout(async () => {
+    const projectDataFromDB = await db.projects.get(props.projectId);
+    const projectData = await props.data;
+    const pages = structuredClone(Object.values(projectData.pages));
+    const updatedPages = {};
+    if (props.files && isPlainObject(props.files)) {
+      await opfs.writeFiles(
+        Object.entries(props.files).map(([key, file]) => ({
+          path: defineRoot(key),
+          content: file,
+        }))
       );
+    }
 
-      if (!oldSymbols.length) {
-        page.symbols = pageSymbols;
-        updatedPages[page.name] = page;
-        return page;
-      }
-
-      await Promise.all(
-        [...oldSymbols].map(async (oldSybmol) => {
-          const symbolId = oldSybmol.getAttribute(inf_symbol_Id_attribute);
-          pageSymbols.push(symbolId);
-          const dbSymbol = projectDataFromDB.symbols[`${symbolId}`];
-
-          oldSybmol.outerHTML = await (
-            await opfs.getFile(defineRoot(dbSymbol.pathes.content))
-          ).text();
-
-          return await oldSybmol;
-        })
-      );
+    if (props.tailwindcssStyle) {
+      console.log("from worker : ", props.tailwindcssStyle);
 
       await opfs.writeFiles([
         {
-          path: defineRoot(page.pathes.html),
-          content: document.body.innerHTML,
+          path: defineRoot(`css/tailwind/${props.pageName}.css`),
+          content: props.tailwindcssStyle,
         },
       ]);
-      // page.html = new Blob([document.body.innerHTML], { type: "text/html" });
-      page.symbols = pageSymbols;
-      updatedPages[page.name] = page;
-      return page;
-    })
-  );
+    }
 
-  const newData = {
-    ...props.data,
-    pages: {
-      ...updatedPages,
-    },
-  };
+    await Promise.all(
+      pages.map(async (page) => {
+        const pageSymbols = [];
+        const pageContent = await (
+          await opfs.getFile(defineRoot(page.pathes.html))
+        ).text();
+        if (!pageContent) {
+          page.symbols = pageSymbols;
+          updatedPages[page.name] = page;
+          return page;
+        }
 
-  await db.projects.update(props.projectId, newData);
-  if (props.updatePreviewPages) {
-    await writePreviewPage(props);
-  }
-  self.postMessage({
-    command: "storeGrapesjsDataIfSymbols",
-    props: {
-      done: true,
-      projectId: props.projectId,
-    },
-  });
-  console.log(`pages updated in worker successfully : `, updatedPages);
+        const { document } = parseHTML(doDocument(pageContent));
+        const oldSymbols = document.body.querySelectorAll(
+          `[${inf_symbol_Id_attribute}]`
+        );
+
+        if (!oldSymbols.length) {
+          page.symbols = pageSymbols;
+          updatedPages[page.name] = page;
+          return page;
+        }
+
+        await Promise.all(
+          [...oldSymbols].map(async (oldSybmol) => {
+            const symbolId = oldSybmol.getAttribute(inf_symbol_Id_attribute);
+            pageSymbols.push(symbolId);
+            const dbSymbol = projectDataFromDB.symbols[`${symbolId}`];
+
+            oldSybmol.outerHTML = await (
+              await opfs.getFile(defineRoot(dbSymbol.pathes.content))
+            ).text();
+
+            return await oldSybmol;
+          })
+        );
+
+        await opfs.writeFiles([
+          {
+            path: defineRoot(page.pathes.html),
+            content: document.body.innerHTML,
+          },
+        ]);
+        // page.html = new Blob([document.body.innerHTML], { type: "text/html" });
+        page.symbols = pageSymbols;
+        updatedPages[page.name] = page;
+        return page;
+      })
+    );
+
+    const newData = {
+      ...props.data,
+      pages: {
+        ...updatedPages,
+      },
+    };
+
+    await db.projects.update(props.projectId, newData);
+    if (props.updatePreviewPages) {
+      await writePreviewPage(props);
+    }
+    self.postMessage({
+      command: "storeGrapesjsDataIfSymbols",
+      props: {
+        done: true,
+        projectId: props.projectId,
+      },
+    });
+    console.log(`pages updated in worker successfully : `, updatedPages);
+  }, 15);
+
   // }
 
   // catch (error) {
@@ -289,6 +299,10 @@ export async function updateDB(props) {
   if (!opfs.id) {
     throw new Error(`OPFS Id not founded!`);
   }
+
+  if (!props.projectId && !opfs.id) {
+    throw new Error(`DB Id not founded!`);
+  }
   // const projectDir = await getOPFSProjectDir();
   // const projectRoot = `projects/project-${opfs.id}`;
   console.log(
@@ -297,41 +311,50 @@ export async function updateDB(props) {
     // props.data
   );
 
-  console.warn("Before save to db", props.files);
+  return new Promise((res, rej) => {
+    storeTimeout && clearTimeout(storeTimeout);
+    storeTimeout = setTimeout(async () => {
+      console.warn("Before save to db", props.files);
 
-  if (props.files && isPlainObject(props.files)) {
-    await opfs.writeFiles(
-      Object.entries(props.files).map(([key, file]) => ({
-        path: defineRoot(key),
-        content: file,
-      }))
-    );
-  }
-
-  if(props.tailwindcssStyle){
-    console.log('from worker : ' , props.tailwindcssStyle);
-    
-    await opfs.writeFiles([
-      {
-        path:defineRoot(`css/tailwind/${props.pageName}.css`),
-        content:props.tailwindcssStyle,
+      if (props.files && isPlainObject(props.files)) {
+        await opfs.writeFiles(
+          Object.entries(props.files).map(([key, file]) => ({
+            path: defineRoot(key),
+            content: file,
+          }))
+        );
       }
-    ])
-  }
 
-  const resp = await db.projects.update(props.projectId, props.data);
-  if (props.updatePreviewPages) {
-    await writePreviewPage(props);
-  }
-  console.warn("after save to db");
-  self.postMessage({
-    command: "updateDB",
-    props: {
-      done: true,
-      projectId: props.projectId,
-    },
+      if (props.tailwindcssStyle) {
+        console.log("from worker : ", props.tailwindcssStyle);
+
+        await opfs.writeFiles([
+          {
+            path: defineRoot(`css/tailwind/${props.pageName}.css`),
+            content: props.tailwindcssStyle,
+          },
+        ]);
+      }
+
+      const resp = await db.projects.update(
+        props.projectId || opfs.id,
+        props.data
+      );
+      if (props.updatePreviewPages) {
+        await writePreviewPage(props);
+      }
+      console.warn("after save to db");
+      self.postMessage({
+        command: "updateDB",
+        props: {
+          done: true,
+          projectId: props.projectId,
+        },
+      });
+      res(resp);
+      return resp;
+    }, 15);
   });
-  return resp;
   // } catch (error) {
   //   console.error(`From worker command updateDB: ${error}`);
   //   self.postMessage({
@@ -349,6 +372,7 @@ export async function updateDB(props) {
  *
  * @param {{
  * data : import('./types').Project ,
+ * projectSetting:import('./types').ProjectSetting,
  *  projectId : number ,
  *  updatePreviewPages : boolean ,
  *  pageName:string,
@@ -365,6 +389,7 @@ export async function writePreviewPage(props) {
         ...props.data,
       },
       pageName: props.pageName,
+      projectSetting: props.projectSetting || {},
     })
   )[`${props.pageName}.html`];
 
@@ -837,6 +862,7 @@ export async function offlineInstaller(props) {
   }
 }
 
+let allStyleSheetClasses;
 /**
  *
  * @param {{
@@ -848,63 +874,148 @@ export async function offlineInstaller(props) {
  * @returns
  */
 export const getAllStyleSheetClasses = async (props) => {
-  //   const myLol = 'myLol'
-  //  console.log(eval(` console.log(myLol)`));
-  await initOPFS({ id: props.projectId });
-  const per1 = performance.now();
-  console.log(per1, defineRoot(`libs/css`));
-  const calssRgx = /(?<!\/\*.*)\.[a-zA-Z_][a-zA-Z0-9_-]*(?=[,{\s:])/gi; ///(?<=\s|^)\.[a-zA-Z_][a-zA-Z0-9_-]*(?=\s*{)/g;
-  const commentRgx = /\/\*[\s\S]*?\*\//g;
-  const prjectData = await db.projects.get(props.projectId);
-  const cssLibsClasses = css_beautify(
-    (
-      (await Promise.all(
-        (
-          await opfs.getAllFiles(defineRoot(`libs/css`), { recursive: true })
-        ).map((handle) => handle.text())
-      )) || []
-    ).join("\n")
-  )
-    .replaceAll(commentRgx, "")
-    .match(calssRgx);
+  try {
+    allStyleSheetClasses && clearTimeout(allStyleSheetClasses);
+    allStyleSheetClasses = setTimeout(async () => {
+      //   const myLol = 'myLol'
+      //  console.log(eval(` console.log(myLol)`));
+      !opfs.id && (await initOPFS({ id: props.projectId }));
+      // const per1 = performance.now();
+      console.log(defineRoot(`libs/css`));
+      const calssRgx = /(?<!\/\*.*)\.[a-zA-Z_][a-zA-Z0-9_-]*(?=[,{\s:])/gi; ///(?<=\s|^)\.[a-zA-Z_][a-zA-Z0-9_-]*(?=\s*{)/g;
+      const commentRgx = /\/\*[\s\S]*?\*\//g;
+      const prjectData = await db.projects.get(props.projectId);
+      const getClasses = (value = "") => {
+        return parse(value)
+          .stylesheet.rules.filter(
+            (rule) =>
+              (rule.type == "rule" || rule.type == "media") &&
+              rule.selectors?.length == 1 &&
+              rule.selectors[0].match(calssRgx)
+          )
+          .map((rule) =>
+            rule.selectors[0].startsWith(".")
+              ? rule.selectors[0].slice(1)
+              : rule.selectors[0]
+          );
 
-  const editorClasses =
-    css_beautify(props.editorCss).replaceAll(commentRgx, "").match(calssRgx) ||
-    [];
+        // value = stringify({
+        //   stylesheet: {
+        //     rules: parse(value).stylesheet.rules.filter(
+        //       (rule) =>
+        //         (rule.type == "rule" || rule.type == "media") &&
+        //         rule.selectors?.length == 1 &&
+        //         rule.selectors[0].match(calssRgx)
+        //     ).map(rule=>rule.selectors[0].startsWith(".") ? rule.selectors[0].slice(1) : rule.selectors[0]),
+        //   },
+        // });
 
-  const inlineStyles = css_beautify(
-    props.inlineStylesInners.map((styleEl) => styleEl.innerHTML).join("\n")
-  )
-    .replaceAll(commentRgx, "")
-    .match(calssRgx);
+        // return (
+        //   value
+        //     .replaceAll(commentRgx, "")
+        //     .match(calssRgx)
+        //     ?.map((cls) => (cls.startsWith(".") ? cls.slice(1) : cls)) || []
+        // );
+      };
+      // const cssLibsClasses = (
+      //   (await Promise.all(
+      //     (
+      //       await opfs.getAllFiles(defineRoot(`libs/css`), { recursive: true })
+      //     ).map((handle) => handle.stream())
+      //   )) || []
+      // )
+      //   .join("\n")
+      //   .replaceAll(commentRgx, "")
+      //   .match(calssRgx);
 
-  // let tailwindClasses = [];
-  // if (props.projectSettings.enable_tailwind_calsses) {
-  //   // const tailwindStyles = await (await fetch("/styles/tailwind.min.css")).text();
+      for (const fHandle of await opfs.getAllFiles(defineRoot(`libs/css`), {
+        recursive: true,
+      })) {
+        self.postMessage({
+          command: "classes-chunks",
+          props: {
+            classes: getClasses(await fHandle.text()),
+          },
+        });
+        // const stream = await fHandle.stream();
+        // const reader = stream.getReader();
+        // while (true) {
+        //   const { done, value } = await reader.read();
+        //   if (done) break;
 
-  //   tailwindClasses = tailwindStyles.replaceAll(commentRgx, "").match(calssRgx);
-  //   console.log('tailwind response : ', tailwindStyles , tailwindClasses);
-  // }
-  console.log("libs", cssLibsClasses, inlineStyles);
+        //   const encodedValue = new TextDecoder().decode(value);
+        //   console.log("gettting : ", encodedValue);
+        // self.postMessage({
+        //   command: "classes-chunks",
+        //   props: {
+        //     classes: getClasses(encodedValue),
+        //   },
+        // });
+        // }
+      }
 
-  const allClasses = [
-    ...new Set([
-      ...(cssLibsClasses || []),
-      ...(editorClasses || []),
-      ...(inlineStyles || []),
-      ...(props.projectSettings.enable_tailwind_calsses ? tailwindClasses : []),
-    ]),
-  ].sort();
+      self.postMessage({
+        command: "classes-chunks",
+        props: {
+          classes: getClasses(props.editorCss),
+        },
+      });
 
-  const per2 = performance.now();
-  console.log(per2);
-  // console.log("Classes : ", allClasses);
-  const classes =
-    allClasses.map((className) => className.replace(".", "")) || [];
-  console.log("classes", classes);
+      // const editorClasses =
+      //   css_beautify(props.editorCss).replaceAll(commentRgx, "").match(calssRgx) ||
+      //   [];
+      // for (const inlineStyle of props.inlineStylesInners) {
+      //   self.postMessage({
+      //     command: "classes-chunks",
+      //     props: {
+      //       classes: getClasses(inlineStyle),
+      //     },
+      //   });
+      // }
 
-  self.postMessage({ command: "classes", props: { classes } });
-  return classes;
+      if (props.projectSettings.enable_tailwind) {
+        self.postMessage({
+          command: "classes-chunks",
+          props: {
+            classes: tailwindClasses,
+          },
+        });
+      }
+      // const inlineStyles = css_beautify(props.inlineStylesInners.join("\n"))
+      //   .replaceAll(commentRgx, "")
+      //   .match(calssRgx);
+
+      // let tailwindClasses = [];
+      // if (props.projectSettings.enable_tailwind) {
+      //   // const tailwindStyles = await (await fetch("/styles/tailwind.min.css")).text();
+
+      //   tailwindClasses = tailwindStyles.replaceAll(commentRgx, "").match(calssRgx);
+      //   console.log('tailwind response : ', tailwindStyles , tailwindClasses);
+      // }
+      // console.log("libs", cssLibsClasses, inlineStyles);
+
+      // const allClasses = [
+      //   ...new Set([
+      //     ...(cssLibsClasses || []),
+      //     ...(editorClasses || []),
+      //     ...(inlineStyles || []),
+      //     ...(props.projectSettings.enable_tailwind ? tailwindClasses : []),
+      //   ]),
+      // ].sort();
+
+      const per2 = performance.now();
+      console.log(per2);
+      // console.log("Classes : ", allClasses);
+      // const classes =
+      //   allClasses.map((className) => className.replace(".", "")) || [];
+      // console.log("classes", classes);
+
+      // self.postMessage({ command: "classes", props: { classes } });
+      // return classes;
+    }, 70);
+  } catch (error) {
+    throw new Error(error);
+  }
 };
 
 /**
@@ -987,8 +1098,8 @@ export async function createProject({ data }) {
       symbolBlocks: [],
       globalRules: {},
       fonts: {},
-      imgSrc: "",
       motions: {},
+      interactions: {},
       inited: false,
     });
     const mainPath = `/projects/project-${id}`;
@@ -1215,4 +1326,213 @@ export async function removeOPFSEntry({
     });
     throw new Error(error);
   }
+}
+
+let swRegistrationState = "",
+  refreshSWInterval,
+  refreshSWTimeout,
+  isFirstLoad = true;
+// navigator.serviceWorker.getRegistration
+export async function refreshSW() {
+  const runer = async (delay = 0) => {
+    refreshSWTimeout && clearTimeout(refreshSWTimeout);
+    refreshSWTimeout = setTimeout(async () => {
+      const response = await (await fetch(`/keep-alive`)).text();
+      console.log(response);
+      if (response != "ok") {
+        // swRegistrationState != "done" &&
+        self.postMessage({
+          command: "refreshSW",
+          error: "",
+          props: {},
+        });
+      } else {
+        await runer(15000);
+      }
+    }, delay);
+
+    // refreshSWInterval = setInterval(
+    //   async () => {
+    //     try {
+    //       const response = await (await fetch(`/keep-alive`)).text();
+    //       console.log(response);
+
+    //       if (!response.includes("ok")) {
+    //         // swRegistrationState != "done" &&
+    //         self.postMessage({
+    //           command: "refreshSW",
+    //           error: "",
+    //           props: {},
+    //         });
+    //         clearInterval(refreshSWInterval);
+    //       }
+    //     } catch (error) {
+    //       // swRegistrationState != "done" &&
+    //       self.postMessage({
+    //         command: "refreshSW",
+    //         error,
+    //         props: {},
+    //       });
+    //       clearInterval(refreshSWInterval);
+    //       throw new Error(error);
+    //     } finally {
+    //       // firstCount = 15000
+    //       isFirstLoad = false;
+    //     }
+    //   },
+    //   isFirstLoad ? 0 : 15000
+    // );
+  };
+
+  runer();
+  // isFirstLoad = false;
+
+  self.addEventListener("message", async (ev) => {
+    const { data } = ev;
+    const { command, props } = data;
+    if (command == "sw-registration-state") {
+      swRegistrationState = props.state;
+      console.log(
+        `From refreshSW worker got Registration state : `,
+        props.state
+      );
+      await runer();
+    }
+  });
+
+  return refreshSWInterval;
+}
+
+/**
+ *
+ * @param {{projectId:number , editorCss:string}} param0
+ */
+export async function getKeyFrames({
+  projectId,
+  editorCss = "",
+  pageName = "",
+}) {
+  if (!projectId) {
+    throw new Error("Project ID is required to get keyframes");
+  }
+  !opfs.id && (await initOPFS({ id: projectId }));
+  let projectData = await db.projects.get(projectId);
+
+  const editorKeyframes = parse(`${editorCss}} `).stylesheet.rules.filter(
+    (rule) => rule.type == "keyframes"
+  );
+
+  const libsKeyframes = Object.fromEntries(
+    await Promise.all(
+      projectData.cssLibs
+        .map(async (lib) => [
+          lib.path,
+          parse(
+            await (await opfs.getFile(defineRoot(lib.path))).text()
+          ).stylesheet.rules.filter(
+            (rule) => rule.type == "keyframes" && rule.vendor == undefined
+          ),
+        ])
+        .concat([[`css/${pageName}.css`, editorKeyframes]])
+    )
+  );
+
+  self.postMessage({
+    command: "getKeyFrames",
+    props: Object.entries(libsKeyframes).flatMap(([path, animes]) =>
+      animes.map((anim) => ({ ...anim, path }))
+    ),
+  });
+}
+
+export async function writeFilesToOPFS({ files }) {
+  await opfs.writeFiles(files);
+}
+
+/**
+ *
+ * @param {{[key:string]:import('css').KeyFrames[]}} param0
+ */
+export async function saveAnimations({ animations }) {
+  console.log("ana 3abet we ahbal begaad");
+
+  const tId = uniqueId("toast-");
+
+  // try {
+  workerSendToast({
+    msg: "Saving Animations",
+    type: "loading",
+    dataProps: {
+      toastId: tId,
+    },
+  });
+
+  const result = animations.reduce((acc, item) => {
+    if (!acc[item.path]) {
+      acc[item.path] = [];
+    }
+    acc[item.path].push(item);
+    return acc;
+  }, {});
+
+  console.log("results : ", result);
+
+  for (const key in result) {
+    console.log(
+      "stringify(result[key]) : ",
+      stringify({ stylesheet: { rules: result[key] } })
+    );
+    const fileContent = await (await opfs.getFile(defineRoot(key))).text();
+    await opfs.writeFiles([
+      {
+        path: key,
+        content: minify(
+          `${fileContent} \n ${stringify({
+            stylesheet: { rules: result[key] },
+          })}`,
+          {
+            restructure: true,
+          }
+        ).css,
+      },
+    ]);
+  }
+
+  self.postMessage({
+    command: "saveAnimations",
+    props: {
+      done: true,
+    },
+  });
+
+  workerSendToast({
+    isNotMessage: true,
+    msg: tId,
+    type: "done",
+  });
+  workerSendToast({
+    msg: "Animations Saved Successfully 👍",
+    type: "success",
+  });
+  // } catch (error) {
+  //   self.postMessage({
+  //     command:'saveAnimations',
+  //     props:{
+  //       done:false
+  //     }
+  //   })
+
+  //   workerSendToast({
+  //     isNotMessage:true,
+  //     msg:tId,
+  //     type:'dismiss',
+  //   });
+
+  //   workerSendToast({
+  //     msg:'Faild To Save Animations',
+  //     type:'error'
+  //   });
+
+  //   throw new Error(error)
+  // }
 }

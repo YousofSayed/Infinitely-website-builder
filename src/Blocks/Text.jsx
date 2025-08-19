@@ -1,6 +1,6 @@
 import { Icons } from "../components/Icons/Icons";
 import { media_types, text_tags } from "../constants/shared";
-import { getParentNode } from "../helpers/functions";
+import { doActionAndPreventSaving, getParentNode } from "../helpers/functions";
 import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
 
 /**
@@ -12,9 +12,12 @@ export const Text = ({ editor }) => {
     extend: "text",
     view:{
       onRender({model}){
-        model.set({
+       doActionAndPreventSaving(editor , ()=>{
+         model.set({
           droppable:false,
+          editable:true,
         })
+       })
       }
     },
     isComponent: (el) => {

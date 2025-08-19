@@ -214,6 +214,46 @@ export const flexDirectionValues = [
   "column-reverse",
 ];
 
+export const cursorValues = [
+  "auto",
+  "default",
+  "none",
+  "context-menu",
+  "help",
+  "pointer",
+  "progress",
+  "wait",
+  "cell",
+  "crosshair",
+  "text",
+  "vertical-text",
+  "alias",
+  "copy",
+  "move",
+  "no-drop",
+  "not-allowed",
+  "grab",
+  "grabbing",
+  "all-scroll",
+  "col-resize",
+  "row-resize",
+  "n-resize",
+  "e-resize",
+  "s-resize",
+  "w-resize",
+  "ne-resize",
+  "nw-resize",
+  "se-resize",
+  "sw-resize",
+  "ew-resize",
+  "ns-resize",
+  "nesw-resize",
+  "nwse-resize",
+  "zoom-in",
+  "zoom-out"
+];
+
+
 export const alignSelfValues = [
   "flex-start", // Aligns the item to the start of the container
   "center", // Centers the item in the container
@@ -246,6 +286,31 @@ export const transformValues = [
   "skewY", // Vertical skewing
   "perspective", // Perspective for 3D transformations
 ];
+
+export  const transformUnits = {
+  none: null,         // No value
+  matrix: null,       // Complex value (no unit)
+  matrix3d: null,     // Complex value (no unit)
+  translate: "px",
+  translateX: "px",
+  translateY: "px",
+  translateZ: "px",
+  translate3d: "px",
+  scale: "",          // Unitless
+  scaleX: "",
+  scaleY: "",
+  scaleZ: "",
+  scale3d: "",
+  rotate: "deg",
+  rotateX: "deg",
+  rotateY: "deg",
+  rotateZ: "deg",
+  skew: "deg",
+  skewX: "deg",
+  skewY: "deg",
+  perspective: "px"
+};
+
 
 export const alignItemsValues = [
   "stretch", // Default. Stretches items to fill the container

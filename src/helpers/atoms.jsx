@@ -1,6 +1,7 @@
 import React from "react";
 import { atom } from "recoil";
 import {
+  animationsType,
   animeStylesType,
   cmdsContextType,
   cmdType,
@@ -286,6 +287,11 @@ export const projectSettingsState = atom({
   default: getProjectSettings().projectSettings,
 });
 
+export const zoomValueState = atom({
+  key:'zoomValueState',
+  default:'',
+})
+
 export const tooltipDataState = atom({
   key: "tooltipDataState",
   default: tooltipDataType,
@@ -307,6 +313,16 @@ export const dbAssetsSwState = atom({
   key: "swState",
   default: swType,
 });
+
+export const animationsState = atom({
+  key:'animationsState',
+  default:animationsType
+});
+
+export const isAnimationsChangedState = atom({
+  key:'isAnimationsChanged',
+  default:false,
+})
 
 //============Workspace==============
 export const projectState = atom({

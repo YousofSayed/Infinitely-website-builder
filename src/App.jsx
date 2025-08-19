@@ -29,28 +29,19 @@ import { useRecoilState } from "recoil";
 // import "react-toastify/dist/ReactToastify.css";
 import { current_project_id } from "./constants/shared";
 import { getProjectData } from "./helpers/functions";
-import { swAliveInterval } from "./helpers/keepSwAlive";
+// import { swAliveInterval } from "./helpers/keepSwAlive";
 import { Editor } from "./views/Editor";
 import { Motion } from "./components/Editor/Protos/Motion";
-import { pageBuilderWorker } from "./helpers/defineWorkers";
+import { pageBuilderWorker, refresherWorker } from "./helpers/defineWorkers";
 import { Preview } from "./views/Preview";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useOfflineHandler } from "./hooks/useOfflineHandler";
 import { opfs } from "./helpers/initOpfs";
 import { isDevMode } from "./helpers/bridge";
 import { Opfs } from "./views/Opfs";
+import { Interactions } from "./components/Editor/Interactions";
 // import { esmToUmd } from "./helpers/initBabel";
 
-const IsProject = ({ children }) => {
-  const projectId = +localStorage.getItem(current_project_id);
-  const navigate = useNavigate();
-  if (!projectId) {
-    console.log("no project id found, navigating to workspace");
-    navigate("workspace");
-    return null;
-  }
-  return projectId ? children : <Navigate to="/workspace" replace />;
-};
 
 function App() {
   // const Editor = lazy(async () => ({
@@ -60,7 +51,7 @@ function App() {
 
   const [dbAssetsSw, setDBAssetsSw] = useRecoilState(dbAssetsSwState);
   const navigate = useNavigate();
-  const location = useLocation();
+  // const location = useLocation();
 
   useOfflineHandler();
 
@@ -114,9 +105,30 @@ function App() {
     };
   }, []);
 
-  useLayoutEffect(() => {
-    initDBAssetsSw(setDBAssetsSw);
-  }, [location]);
+  useEffect(() => {
+    refresherWorker.postMessage({
+      command: "refreshSW",
+    });
+
+    /**
+     *
+     * @param {MessageEvent} ev
+     */
+    const messageCallback = (ev) => {
+      const { command, props } = ev.data;
+      if (command == "refreshSW") {
+        console.log('Got refreshSW event from refresher worker!');
+        
+        initDBAssetsSw(setDBAssetsSw);
+      }
+    };
+
+    refresherWorker.addEventListener("message", messageCallback);
+
+    return () => {
+      refresherWorker.removeEventListener("message", messageCallback);
+    };
+  }, []);
 
   // useEffect(() => {
   //   if (!dbAssetsSw) return;
@@ -126,10 +138,10 @@ function App() {
 
   const createProjectFolder = async () => {
     console.log("main rooooot : ", opfs.root);
-    const projectFolder = await opfs.getFolder('projects');
+    const projectFolder = await opfs.getFolder("projects");
     const isExisit = projectFolder.exists();
-    if(!isExisit){
-     await projectFolder.create()
+    if (!isExisit) {
+      await projectFolder.create();
       // await opfs.createFolder(await opfs.root, "projects");
     }
   };
@@ -142,23 +154,23 @@ function App() {
   //     navigate("workspace");
   //   }
 
-  const sendVarsToSw = async () => {
-    dbAssetsSw.postMessage({
-      command: "setVar",
-      props: {
-        obj: {
-          projectId: +localStorage.getItem(current_project_id),
-          projectData: await getProjectData(),
-        },
-        // value: +localStorage.getItem(current_project_id),
-      },
-    });
-  };
+  // const sendVarsToSw = async () => {
+  //   dbAssetsSw.postMessage({
+  //     command: "setVar",
+  //     props: {
+  //       obj: {
+  //         projectId: +localStorage.getItem(current_project_id),
+  //         projectData: await getProjectData(),
+  //       },
+  //       // value: +localStorage.getItem(current_project_id),
+  //     },
+  //   });
+  // };
 
   const isProject = Boolean(+localStorage.getItem(current_project_id));
   return (
     // <Suspense fallback={<Loader />}>
-    <Routes >
+    <Routes>
       <Route
         path="/"
         element={<Editor />}
@@ -173,6 +185,7 @@ function App() {
           <Route path="styling" element={<StyleAside />} />
           <Route path="traits" element={<TraitsAside />} />
           <Route path="commands" element={<Commands />} />
+          <Route path="interactions" element={<Interactions />} />
           <Route path="motion" element={<Motion />} />
           {/* <Route path="choose-and-write-model" element={<ChooseModel />}>
               <Route path="dynamic-content" element={<DynamicContent />} />
@@ -188,7 +201,7 @@ function App() {
 
       <Route path="/workspace" element={<Workspace />}></Route>
 
-      {isDevMode() && <Route path="opfs-dev" element={<Opfs/>} />}
+      {isDevMode() && <Route path="opfs-dev" element={<Opfs />} />}
     </Routes>
     // </Suspense>
   );

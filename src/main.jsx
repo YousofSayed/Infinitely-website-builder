@@ -8,12 +8,14 @@ import { RecoilEnv, RecoilRoot } from "recoil";
 import { ErrorBoundary } from "react-error-boundary";
 import { BrowserRouter } from "react-router-dom";
 import { version } from "./constants/Version.js";
+import { setProjectSettings } from "./helpers/functions.js";
 // import worker from './helpers/worker.js';
 // import './helpers/backbonePacher.js'
 // src/main.js
 // src/main.js
 RecoilEnv.RECOIL_DUPLICATE_ATOM_KEY_CHECKING_ENABLED = false
 makeAppResponsive("#root");
+setProjectSettings();
 ReactDOM.createRoot(document.getElementById("root")).render(
   // <React.StrictMode>
   <RecoilRoot>

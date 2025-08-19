@@ -1,13 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
-export const SwitchButton = ({
+export const SwitchButton = ({ 
   onActive = (ev) => {},
   onUnActive = (ev) => {},
   defaultValue = false,
 }) => {
   const [active, setActive] = useState(defaultValue);
-  // console.log('default : ' , defaultValue);
-  
+  // console.log('default : ' , defaultValue , active);
+    useEffect(() => {
+    setActive(defaultValue);
+  }, [defaultValue]);
   return (
     <button
       className={`relative overflow-hidden w-[40px] flex p-[2px] flex-shrink-0  items-center h-[20px] rounded-full ${

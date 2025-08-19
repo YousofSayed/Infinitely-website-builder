@@ -26,8 +26,9 @@ export const Looper = ({ editor }) => {
           Icons.looper({ fill: "white", width: 20, height: 20 })
         ),
         tagName: "section",
+        // components: [{ type: "drop-area" }],
         attributes: {
-          class: "p-10 m-60",
+          class: "p-10 drop",
         },
         traits: defineTraits([
           {
@@ -37,7 +38,7 @@ export const Looper = ({ editor }) => {
             type: "text",
             placeholder: `Enter loop url`,
             role: "attribute",
-            bindToAttribute:true,
+            bindToAttribute: true,
             callback({ editor, oldValue, newValue, trait }) {
               const sle = editor.getSelected();
               sle.addAttributes({
@@ -56,7 +57,7 @@ export const Looper = ({ editor }) => {
             default: "{}",
             // value: "{}",
             stateProp: "",
-            bindToAttribute:true,
+            bindToAttribute: true,
             keywords: headersProps,
             // callback({editor,oldValue,newValue,trait}){
             //   const sle = editor.getSelected();
@@ -65,8 +66,8 @@ export const Looper = ({ editor }) => {
           {
             name: "loop-name",
             label: "Loop Name",
-            id: "loop-name", 
-            bindToAttribute:true,
+            id: "loop-name",
+            bindToAttribute: true,
             type: "text",
             placeholder: `Loop Name`,
             role: "attribute",
@@ -83,9 +84,9 @@ export const Looper = ({ editor }) => {
               const oldModel = restModels.find(
                 (model) => model.varName == oldValue
               );
-              const headers = loopHeaders ? parse(loopHeaders || {}) : null;
+              const headers = loopHeaders ? parse(loopHeaders || '{}') : null;
               console.log(loopUrl, headers);
-              
+
               const responseData = oldModel?.response
                 ? oldModel.response
                 : stringify(await (await fetch(loopUrl, { headers })).json());
@@ -132,12 +133,11 @@ export const Looper = ({ editor }) => {
               return editor.getSelected().get("type") == "looper";
             },
             buttonEvents: ({ editor, oldValue, newValue, trait }) => {
-             
               return {
                 onClick(ev) {
                   const sle = editor.getSelected();
-                  if(!navigator.onLine){
-                    toast.warn(<ToastMsgInfo msg={`You are offline..!`}/>)
+                  if (!navigator.onLine) {
+                    toast.warn(<ToastMsgInfo msg={`You are offline..!`} />);
                     return;
                   }
                   mount({

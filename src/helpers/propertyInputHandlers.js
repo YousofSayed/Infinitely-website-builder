@@ -19,9 +19,8 @@ export const onInput = ({
   if (isCurrentELChange.current) {
     return;
   }
-  console.log('inputttttttttttttttt');
-  
-  
+  console.log("inputttttttttttttttt", ev.target.value, cssProp);
+
   setClass({
     cssProp: cssProp,
     value: ev.target.value,
@@ -33,34 +32,56 @@ export const onInput = ({
  *
  * @param {{ev:KeyboardEvent , setClass:Function , cssProp:string, setVal:Function , isCurrentELChange:{current:boolean}}} param0
  */
-export const onKeyDown = ({ ev, setClass, setVal ,cssProp  , isCurrentELChange}) => {
+export const onKeyDown = ({
+  ev,
+  setClass,
+  setVal,
+  cssProp,
+  isCurrentELChange,
+}) => {
   /**
    *
    * @param {{ev:KeyboardEvent , increase:boolean}} ev
    */
   const handleChange = ({ ev, increase }) => {
+    const num = +parseInt(ev.target.value || 0);
+
     const finalVal = `${
       increase
-        ? +parseInt(ev.target.value || 0) + 1
-        : +parseInt(ev.target.value || 0) <= 0
-        ? 0
-        : +parseInt(ev.target.value || 0) - 1
+        ? num + 1
+        : // : +parseInt(ev.target.value || 0) <= 0
+          // ? 0
+          num - 1
     }${
-      CSS.supports(cssProp , ev.target.value)
-        ? ev.target.value.split(/\d+/g).join("")
+      CSS.supports(cssProp, ev.target.value)
+        ? ev.target.value.split(/(\-|\+)?\d+/g).pop()
         : "px"
     }`;
 
+    const productionVal = !isNaN(+parseInt(ev.target.value))
+      ? finalVal
+      : isValidCssUnit(ev.target.value)
+      ? ev.target.value
+      : 0;
+    console.log(`-10deg`.split(/(-|\+)?\d+/g).pop());
+
+    console.log(
+      finalVal,
+      isNaN(finalVal),
+      productionVal,
+      CSS.supports(cssProp, ev.target.value)
+        ? ev.target.value.split(/\d+/g).join("")
+        : "px"
+    );
+
+    // return;
+
     setClass({
       cssProp,
-      value: +parseInt(ev.target.value)
-        ? finalVal
-        : isValidCssUnit(ev.target.value)
-        ? ev.target.value
-        : 0,
+      value: productionVal,
     });
 
-    setVal(finalVal);
+    setVal(productionVal);
   };
 
   if (ev.key == "ArrowUp") {
@@ -92,5 +113,4 @@ export const onKeyUp = ({ ev, isCurrentELChange }) => {
  */
 export const onFocus = ({ ev }) => {
   ev.target.select();
-
 };

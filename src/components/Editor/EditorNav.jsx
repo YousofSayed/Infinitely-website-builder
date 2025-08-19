@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Icons } from "../Icons/Icons";
 import { Li } from "../Protos/Li";
 import { useEditorMaybe } from "@grapesjs/react";
@@ -14,12 +14,52 @@ import {
   open_symbols_and_templates_manager_modal,
 } from "../../constants/InfinitelyCommands";
 
+import { refType } from "../../helpers/jsDocs";
+
 export const HomeNav = () => {
   const editor = useEditorMaybe();
   const navigate = useNavigate();
- 
+  const testRef = useRef(refType);
+
+  // useEffect(() => {
+  //   (async () => {
+  //     const currentPagetId = localStorage.getItem(current_page_id);
+  //     const page = await (await getProjectData()).pages[`${currentPagetId}`];
+  //     const pageFile = await(await opfs.getFile(defineRoot(page.pathes.html))).getOriginFile();
+  //     const content =  html_beautify(
+  //         await (
+  //           await Promise.all(
+  //             chunkHtmlElements(await pageFile.text()).map(async (el) => {
+  //               if (!el.includes(inf_symbol_Id_attribute)) return el;
+  //               for (const symbolId of page.symbols) {
+  //                 const symbolHandle = await opfs.getFile(
+  //                   defineRoot(`editor/symbols/${symbolId}/${symbolId}.html`)
+  //                 );
+  //                 if (!symbolHandle.exists()) continue;
+  //                 const symbolContent = await symbolHandle.text();
+  //                 el = symbolContent;
+  //               }
+  //               return el;
+  //             })
+  //           )
+  //         ).join("\n")
+  //       );
+
+  //     console.log(
+  //       'page : html',
+  //       defineRoot(page.pathes.html),
+  //       pageFile,
+  //       content,
+
+  //     );
+
+  //     testRef.current.setAttribute('srcdoc' ,  doDocument(content)) ;
+  //   })();
+  // });
+
   return (
     <nav className="h-full  w-[55px]  p-2 flex flex-col justify-between items-center bg-slate-900 ">
+      {/* <iframe ref={testRef} className="z-[15000] bg-white fixed top-0 left-0 w-full h-full border-2 border-slate-600" ></iframe> */}
       <div className="flex flex-col items-center gap-5">
         <figure className="pb-[20px] pt-1 border-b-[1px] border-slate-400 ">
           {Icons.logo({})}
@@ -30,6 +70,9 @@ export const HomeNav = () => {
             title="Pages"
             icon={Icons.stNote}
             onClick={(ev) => {
+              // console.log(minify(``));
+
+              // return;
               editor.runCommand(open_pages_manager_modal);
             }}
           />
@@ -65,12 +108,12 @@ export const HomeNav = () => {
           </Li>
 
           <Li
-          title="Fonts Installer"
+            title="Fonts Installer"
             onClick={() => {
               editor.runCommand(open_custom_font_installer_modal);
             }}
           >
-            {Icons.fonts({width:22.5 , height:22.5})}
+            {Icons.fonts({ width: 22.5, height: 22.5 })}
           </Li>
 
           <Li
@@ -99,10 +142,18 @@ export const HomeNav = () => {
             icon={Icons.logOut}
             to=""
             onClick={() => {
-              editor.trigger("leave:project");
-              console.log("navigated");
-
-              navigate("workspace");
+              // editor.trigger("leave:project");
+              // console.log("navigated");
+              if (editor.getDirtyCount()) {
+                const cnfrm = confirm(
+                  `There is changes not saved , are you sure to leave ?`
+                );
+                if (cnfrm) {
+                  navigate("workspace");
+                }
+              } else {
+                navigate("workspace");
+              }
             }}
           />
         </ul>

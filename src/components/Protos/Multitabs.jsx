@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { generateBeautifulHexColor } from "../../helpers/functions";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 
 /**
  *
@@ -13,9 +14,11 @@ export const MultiTab = ({
   onTabClick = (ev, i) => {},
 }) => {
   const [activeTab, setActiveTab] = useState(0);
+  const [animatRef] = useAutoAnimate();
 
   return (
     <section
+      ref={animatRef}
       style={style}
       className=" flex   flex-col bg-slate-900 rounded-lg h-full  text-slate-200 border-[1.5px] border-slate-600 "
     >
@@ -45,7 +48,7 @@ export const MultiTab = ({
         ))}
       </nav>
       <div
-      key={activeTab}
+        key={activeTab}
         className={`h-full ${
           preventViewScroll ? "overflow-hidden" : " overflow-y-auto"
         } p-1`}

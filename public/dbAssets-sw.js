@@ -7,19 +7,19 @@ let vars = {};
 
 // console.log("diiiiiiiiiiiiiir", dir);
 
-self.addEventListener("install", (event) => {
-  console.log("SW: Installing...");
-  self.skipWaiting();
-  // console.error(`Service woooooooooooooooooooooooooooooooooooooooooooooooooooooorker`);
-  // clients.claim()
-});
+// self.addEventListener("install", (event) => {
+//   console.log("SW: Installing...");
+//   self.skipWaiting();
+//   // console.error(`Service woooooooooooooooooooooooooooooooooooooooooooooooooooooorker`);
+//   clients.claim()
+// });
 
-self.addEventListener("activate", (event) => {
-  console.log("SW: Activating...");
-  // event.waitUntil(self.clients.claim());
-  // self.skipWaiting();
-  // event.waitUntil(self.clients.claim());
-});
+// self.addEventListener("activate", (event) => {
+//   console.log("SW: Activating...");
+//   // event.waitUntil(self.clients.claim());
+//   // self.skipWaiting();
+//   // event.waitUntil(self.clients.claim());
+// });
 
 self.addEventListener("message", (ev) => {
   const { command, props } = ev.data;

@@ -30,9 +30,9 @@ export const ChoicesForStates = ({
 
   return (
     <section
-      className={`flex gap-2 transition-all rounded-lg relative ${
-        currentStateIndex == keywordsIndex  && rule.is &&
-        "p-1 border-2 border-blue-500 "
+      className={`flex gap-2 transition-all border-2 p-1 rounded-lg relative ${
+        currentStateIndex == keywordsIndex  && rule.is ?
+        " border-blue-500 " :"border-slate-600"
       }`}
     >
      { (atRuleType && atRuleParams) &&
@@ -44,7 +44,7 @@ export const ChoicesForStates = ({
      </section>
      }
       <Choices
-      // className="p-1 bg-slate-800"
+      // className="py-[.2rem!important]"
         keywords={keywords}
         onCloseClick={(ev, keyword, index) => {
           onCloseClick(ev, keyword, index, keywordsIndex);
@@ -52,7 +52,7 @@ export const ChoicesForStates = ({
       />
 
       <SmallButton
-        className="flex-shrink-0 bg-slate-800"
+        className=" bg-slate-800"
         onClick={(ev) => {
           onSelect(ev, keywordsIndex);
         }}
@@ -61,7 +61,7 @@ export const ChoicesForStates = ({
       </SmallButton>
 
       <SmallButton
-        className={` flex-shrink-0 bg-slate-800`}
+        className={`  bg-slate-800`}
         onClick={(ev) => {
           onDelete(ev, keywordsIndex);
         }}

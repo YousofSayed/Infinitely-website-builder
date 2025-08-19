@@ -23,6 +23,7 @@ import { addClickClass, parse, stringify } from "../../../helpers/cocktail";
 import { FitTitle } from "../Protos/FitTitle";
 import { isPlainObject } from "lodash";
 import { CodeEditor } from "../Protos/CodeEditor";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 // import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 // import { PrismAsyncLight as SyntaxHighlighter } from "react-syntax-highlighter";
 // import json from "react-syntax-highlighter/dist/esm/languages/prism/json";
@@ -68,7 +69,8 @@ export const RestAPIModels = memo(() => {
   };
 
   const [vars, setVars] = useRecoilState(varsState);
-
+  const [animatRef] = useAutoAnimate();
+  const [animatContentRef] = useAutoAnimate();
   const initModelValue = {
     name: "",
     method: "",
@@ -81,7 +83,7 @@ export const RestAPIModels = memo(() => {
   // const [methodsKeys , setMethodsKeys] = useState([...httpGetterMethods, ...httpSetterMethods])
   const [modleData, setModelData] = useState(structuredClone(initModelValue));
 
-  const addModel = () => {
+  const addModel = async() => {
     if (
       !modleData.name ||
       !modleData.url ||
@@ -91,14 +93,15 @@ export const RestAPIModels = memo(() => {
       toast.warn(<ToastMsgInfo msg={`Fill all fields`} />);
       return;
     }
-    setRestModels([...restModels, structuredClone(modleData)]);
+    // setRestModels([...restModels, structuredClone(modleData)]);
+    await fetchResponse([...restModels, structuredClone(modleData)]);
     setModelData(structuredClone(initModelValue));
   };
 
   const deleteModel = (index) => {
     const newArr = structuredClone(restModels).filter((md, i) => i != index);
-    console.log('new mmodels : ' , newArr);
-    
+    console.log("new mmodels : ", newArr);
+
     setRestModels(newArr);
   };
 
@@ -121,10 +124,9 @@ export const RestAPIModels = memo(() => {
           body: Object.keys(model.body || {}).length ? model.body : undefined,
         });
 
-        
         try {
           const resData = await res.json();
-          console.log('ress : ' , resData);
+          console.log("ress : ", resData);
           // if (Array.isArray(resData)) {
           //   toast.error(<ToastMsgInfo msg={"Response Is Not Object"} />);
           //   const newArr = clone.filter((md, nI) => nI != i);
@@ -152,6 +154,9 @@ export const RestAPIModels = memo(() => {
     );
 
     isAnythingChanged && (await setRestModels(newArr));
+    !isAnythingChanged &&
+      restModels.length != newRestModels &&
+      (await setRestModels(newArr));
   };
 
   const uploadModel = async (ev) => {
@@ -165,16 +170,16 @@ export const RestAPIModels = memo(() => {
      * @type {import('../../../helpers/types').RestAPIModel}
      */
     const fileAsJson = JSON.parse(fileAsText);
-    if (
-      !fileAsJson &&
-      !fileAsJson.name &&
-      !fileAsJson.method &&
-      !fileAsJson.url &&
-      !fileAsJson.varName
-    ) {
+    console.log("file as json : ", fileAsJson);
+
+    if (fileAsJson.type != "rest-model") {
       toast.error(<ToastMsgInfo msg={`Invalid Rest API Model`} />);
+      ev.target.value = "";
       return;
     }
+
+    console.log("file as json : ", fileAsJson);
+
     await fetchResponse([
       ...restModels,
       {
@@ -183,7 +188,9 @@ export const RestAPIModels = memo(() => {
           ? stringify(fileAsJson.response)
           : fileAsJson.response,
       },
-    ])
+    ]);
+
+    ev.target.value = "";
     // setRestModels([
     //   ...restModels,
     //   {
@@ -200,10 +207,13 @@ export const RestAPIModels = memo(() => {
     if (!startFetch) return;
     fetchResponse();
     console.log("render");
-  }, [editor , startFetch]);
+  }, [editor, startFetch]);
 
   return (
-    <section className="flex flex-col gap-3 h-full max-h-[800px] ">
+    <section
+      className="flex flex-col gap-3 h-full max-h-[800px] will-change-contents"
+      ref={animatRef}
+    >
       {!currentViewModel.show && (
         <header className="flex flex-col gap-3  w-full bg-slate-800 p-2  rounded-lg ">
           <section className="flex flex-col gap-2 w-full">
@@ -275,6 +285,7 @@ export const RestAPIModels = memo(() => {
               >
                 Create
               </Button>
+
               <Button
                 onClick={() => {
                   fileUploader.current.click();
@@ -339,7 +350,8 @@ export const RestAPIModels = memo(() => {
       )}
 
       <main
-        className={`flex flex-col gap-2 w-full h-full overflow-auto ${
+        ref={animatContentRef}
+        className={`flex flex-col gap-2 w-full h-full overflow-auto will-change-contents ${
           restModels?.length && ""
         }`}
       >
@@ -409,6 +421,7 @@ export const RestAPIModels = memo(() => {
                         {
                           ...currentViewModel.model,
                           response: parse(currentViewModel.model.response),
+                          type: "rest-model",
                         },
                         2
                       )}`,
@@ -480,6 +493,7 @@ export const RestAPIModels = memo(() => {
                   // theme:''
                   options: {
                     readOnly: true,
+                    domReadOnly: true,
                   },
                 }}
               />

@@ -21,6 +21,7 @@ export const inf_cmds_id = `inf-cmds-id`;
 export const inf_style_my_child = "inf-style-my-child";
 export const data_disable_scripting = `data-disable-scripting`;
 export const motionId = "motion-id";
+export const interactionId = "interaction-id";
 export const motionInstanceId = "motion-instance-id";
 
 export const global_settings = "global_settings";
@@ -81,9 +82,7 @@ export const mainScripts = [
   "/scripts/test.js",
 ];
 
-export const codeEditorScripts = [
-  "/scripts/infinitely.js",
-];
+export const codeEditorScripts = ["/scripts/infinitely.js"];
 
 export const mainScriptsForEditor = [
   "/scripts/infinitely.js",
@@ -105,6 +104,10 @@ export const preivewScripts = [
   "/scripts/p-vue.js",
   "/scripts/initPVue.js",
   "/scripts/previewHmr.dev.js",
+  // {
+  //   src: "/scripts/spline-viewer.js",
+  //   type: "module",
+  // },
 ];
 
 export const MAX_UPLOAD_SIZE = 250;
@@ -116,9 +119,12 @@ export const project_successfully_build_msg = `Project built successfully`;
 export const project_faild_build_msg = `Project faild to build successfully`;
 export const file_deleted_success_msg = `File deleted successfully`;
 
+
+
 /**
  *
  * @param {{
+ * projectSetting:import('../helpers/types').ProjectSetting
  * disablePvue:boolean,
  * disableGsapCore:boolean,
  * disableGsapScrollTrigger:boolean,
@@ -138,13 +144,15 @@ export const buildScripts = ({
   disablePvue = false,
   disableGsapCore = false,
   disableGsapScrollTrigger = false,
+  projectSetting = {},
   inserts = [],
 }) => {
   let scripts = [
     {
-      name:'infinitely.js',
+      name: "infinitely.js",
       localUrl: "/scripts/infinitely.js",
     },
+
     ...((!disableGsapCore && [
       {
         name: "gsap@3.12.7.js",
@@ -163,8 +171,8 @@ export const buildScripts = ({
 
     ...((!disablePvue && [
       {
-        name:'pVuePlugins.js',
-        localUrl:`/scripts/pVuePlugins.js`
+        name: "pVuePlugins.js",
+        localUrl: `/scripts/pVuePlugins.js`,
       },
       {
         name: "p-vue.js",

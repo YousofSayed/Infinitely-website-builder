@@ -17,6 +17,7 @@ import { infinitelyWorker } from "../../../helpers/infinitelyWorker";
 import { opfs } from "../../../helpers/initOpfs";
 import { defineRoot } from "../../../helpers/bridge";
 import { css_beautify, html_beautify, js_beautify } from "js-beautify";
+import { minify  ,syntax} from "csso";
 
 export const CodeManagerModal = () => {
   const timeoutRef = useRef();
@@ -113,20 +114,36 @@ export const CodeManagerModal = () => {
         Object.keys(filesData).map((key) => ({ path: defineRoot(key) }))
       );
 
-      for (const handle of filesHandle) {
-        
-      }
+      // for (const handle of filesHandle) {
+
+      // }
 
       const filesAsText = Object.fromEntries(
         await Promise.all(
           filesHandle.map(async (handle) => {
             console.log([handle.path, await handle.text()]);
-            const file =await handle.getOriginFile();
-            const isHtml = file.type.includes('html');
-            const isCss = file.type.includes('css');
-            const isJS = file.type.includes('javascript');
-            const content = isHtml ? html_beautify(await handle.text()) : isCss ? css_beautify(await handle.text()) : isJS ? js_beautify(await handle.text()) : await handle.text()
-            return [handle.path, content];
+            const file = await handle.getOriginFile();
+            const isHtml = handle.path.endsWith(".html");
+            const isCss = handle.path.endsWith(".css");
+            const isJS = handle.path.endsWith(".js");
+            const isCssEditorStyles = handle.path.includes(
+              `css/${currentPageName}.css`
+            );
+            let content = "";
+            if (!isCssEditorStyles) {
+              content = isHtml
+                ? html_beautify(await handle.text())
+                : isCss
+                ? css_beautify(await handle.text())
+                : isJS
+                ? js_beautify(await handle.text())
+                : await handle.text();
+            }
+            console.log(`after : ` , content , isCssEditorStyles);
+            
+            return isCssEditorStyles
+              ? [handle.path, css_beautify(editor.getCss({ avoidProtected:true, keepUnusedStyles:false , }))]
+              : [handle.path, content];
           })
         )
       );
@@ -170,13 +187,11 @@ export const CodeManagerModal = () => {
       ...changed,
       [defineRoot(path)]: true,
     });
-    
+
     setChanged({
       ...changed,
       [defineRoot(path)]: true,
     });
-
-
 
     // setGlobals({
     //   ...globals,
@@ -185,28 +200,35 @@ export const CodeManagerModal = () => {
   };
 
   const save = async () => {
-  
-    const newChange = {}
+    const newChange = {};
     for (const key in filesData) {
       const root = defineRoot(key);
       const isChanged = changed[root];
-      console.log('chhhhhhhhhhhhhhhhhhhhhhage before : ' ,root,changed, isChanged);
+      console.log(
+        "chhhhhhhhhhhhhhhhhhhhhhage before : ",
+        root,
+        changed,
+        isChanged
+      );
       if (!isChanged) continue;
-      console.log('chhhhhhhhhhhhhhhhhhhhhhage : ' , isChanged);
-      
+      console.log("chhhhhhhhhhhhhhhhhhhhhhage : ", isChanged);
+
       await opfs.writeFiles([
         {
           path: root,
           content: filesData[root],
         },
       ]);
+
+      console.log(await (await opfs.getFile(root)).text());
+
       newChange[root] = false;
     }
 
     setChanged({
       ...changed,
-      ...newChange
-    })
+      ...newChange,
+    });
   };
 
   return (
@@ -321,11 +343,11 @@ export const CodeManagerModal = () => {
         <Button
           onClick={async () => {
             // await updateDB();
-            await save()
+            await save();
             await editor.load();
           }}
         >
-          {Icons.save('white' , 0 , 'white')}
+          {Icons.save("white", 0, "white")}
           Save
         </Button>
       </footer>

@@ -2,6 +2,10 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { refType } from "../../../helpers/jsDocs";
 import { HighlightContentEditable } from "./HighlightContentEditable";
 import { ViewportList } from "react-viewport-list";
+import { Virtuoso } from "react-virtuoso";
+import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
+import { FitTitle } from "./FitTitle";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 
 /**
  *
@@ -15,6 +19,7 @@ export const Menu = ({
   currentChoose = 0,
   menuRef,
   editorRef,
+  isOpen = false,
   isDynamic = false,
   innerStt = "",
   onInput = (ev) => {},
@@ -34,7 +39,10 @@ export const Menu = ({
   const [scrollValue, setScollValue] = useState();
   const prevNumber = useRef();
   const listRef = useRef();
-
+  const [animatRef] = useAutoAnimate();
+  useEffect(()=>{
+    listRef.current && animatRef(listRef.current)
+  },[listRef])
   // useEffect(() => {
   //   console.log("length ooo : ", keywords.length, keywords.slice(100, 5000));
   //   const newValue = keywordsLengthRef.current + 100;
@@ -93,21 +101,30 @@ export const Menu = ({
   //   }
   // }, [keywords]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     // Ensure the current item is scrolled into view
     // refs.current[currentChoose]?.scrollIntoView({
     //   behavior: "smooth",
     //   block: "start",
     // });
-    console.log('scrolll : ' ,listRef.current);
-    
-    if(!listRef.current)return;
+    console.log("scrolll : ", listRef.current, currentChoose);
+
+    if (!listRef.current) {
+      console.log("Not founded list ref", currentChoose);
+
+      return;
+    }
+    // listRef.current.scrollTo({top: currentChoose * 50, behavior: 'smooth'});
     listRef.current.scrollToIndex({
       index: currentChoose,
+      align: "center", // or 'center', 'end'
+      behavior: "smooth", // or 'auto'
       // offset: 1000,
-      alignToTop: true, // Aligns the item to the top of the viewport
-      offset: 0, //
+      // alignToTop: true, // Aligns the item to the top of the viewport
+      // offset: 0, //
     });
+
+    console.log("keywords : ", keywords);
 
     // document.body.scrollIntoView({
     //   block:'end'
@@ -127,10 +144,11 @@ export const Menu = ({
     // }
 
     // prevNumber.current = currentChoose;
-    
-    choosenKeyword.current = refs.current[currentChoose]?.textContent;
-    console.log('content : ', refs.current[currentChoose]?.textContent);
-  }, [menuRef, choosenRef, currentChoose]);
+
+    // choosenKeyword.current = refs.current[currentChoose]?.textContent;
+    // console.log('content : ', refs.current[currentChoose]?.textContent);
+    // menuRef, choosenRef, currentChoose , isOpen ,
+  });
 
   // useLayoutEffect(() => {
   //   const totalHeight = keywords.length * 50; // Total height = itemCount * itemSize
@@ -146,43 +164,41 @@ export const Menu = ({
 
   return isDynamic ? (
     <section
+    ref={animatRef}
       className={`w-full shadow-lg flex gap-2  shadow-gray-950 border-[1px] max-h-[300px] border-slate-600 rounded-lg   bg-slate-900 overflow-hidden   ${
         className ? className : "w-full"
       }`}
     >
-      {/* <menu
-        onScroll={(ev) => {
-          console.log(ev.target.scrollHeight);
-          console.log(ev.target.scrollTop);
-        }}
-        // style={{clipPath:'inset(2px)' left-0}}
-        className={` h-full  grid grid-cols-1   border-r-[1px] max-h-[300px] overflow-y-auto border-slate-600 rounded-lg   bg-slate-900  p-1 w-[100%]`}
-      >
-        {keywordsState.map((keyword, i) => (
-          <li
-            id={i}
-            ref={currentChoose == i ? choosenRef : unChoosenRef}
-            onClick={(ev) => {
-              onItemClicked(ev, keyword, i, keywordsState.length);
-            }}
-            className={`${
-              currentChoose == i
-                ? "bg-blue-600 hover:bg-blue-600"
-                : "bg-transparent hover:bg-gray-700"
-            } ${
-              keyword.toLowerCase() == "No Items Founded...".toLowerCase()
-                ? "pointer-events-none bg-transparent"
-                : ""
-            }  py-[12px] px-2 text-nowrap w-full  overflow-x-auto   transition-all cursor-pointer [&:not(:last-child)]:border-b-[1px] border-slate-600  text-slate-200 rounded-md  text-[16px] font-semibold `}
-            key={i}
-          >
-            {keyword}
-          </li>
-        ))}
-      </menu> */}
-
       <section className="w-[500px] h-[300px] overflow-y-auto" ref={menuRef}>
-        <ViewportList
+        <Virtuoso
+        ref={listRef}
+          totalCount={keywords.length}
+          itemContent={(index) => {
+            const item = keywords[index];
+            return (
+              <li
+                key={index}
+                id={`list-item-${index}`}
+                ref={(el) => (refs.current[index] = el)}
+                onClick={(ev) => {
+                  onItemClicked(ev, item, index, keywords.length);
+                }}
+                className={`${
+                  currentChoose == index
+                    ? "bg-blue-600 hover:bg-blue-600"
+                    : "bg-transparent hover:bg-gray-700"
+                } ${
+                  item.toLowerCase() == "No Items Founded...".toLowerCase()
+                    ? "pointer-events-none bg-transparent"
+                    : ""
+                }  py-[12px] px-2 text-nowrap w-full  overflow-x-auto   transition-all cursor-pointer [&:not(:last-child)]:border-b-[1px] border-slate-600  text-slate-200  text-[16px] font-semibold `}
+              >
+                {item}
+              </li>
+            );
+          }}
+        />
+        {/* <ViewportList
           items={keywords}
           // itemSize={50}
           viewportRef={menuRef}
@@ -211,43 +227,8 @@ export const Menu = ({
               {item}
             </li>
           )}
-        </ViewportList>
+        </ViewportList> */}
       </section>
-
-      {/* <List
-        width={500} // Width of the list container
-        height={300} // Total height of the list container
-        itemCount={keywords.length} // Number of rows
-        itemSize={50} // Height of each row
-        ref={menuRef}
-        direction="vertical"
-        layout="vertical"
-        // rowRenderer={rowRenderer}
-      >
-        {({ index, style, isScrolling, data }) => (
-          <li
-            key={index}
-            id={`list-item-${index}`}
-            style={style}
-            ref={(el) => (refs.current[index] = el)}
-            onClick={(ev) => {
-              onItemClicked(ev, keywords[index], index, keywords.length);
-            }}
-            className={`${
-              currentChoose == index
-                ? "bg-blue-600 hover:bg-blue-600"
-                : "bg-transparent hover:bg-gray-700"
-            } ${
-              keywords[index].toLowerCase() ==
-              "No Items Founded...".toLowerCase()
-                ? "pointer-events-none bg-transparent"
-                : ""
-            }  py-[12px] px-2 text-nowrap w-full  overflow-x-auto   transition-all cursor-pointer [&:not(:last-child)]:border-b-[1px] border-slate-600  text-slate-200  text-[16px] font-semibold `}
-          >
-            {keywords[index]}
-          </li>
-        )}
-      </List> */}
 
       <HighlightContentEditable
         editorRef={editorRef}
@@ -263,7 +244,54 @@ export const Menu = ({
     </section>
   ) : (
     <section className="w-full h-full overflow-x-auto" ref={menuRef}>
-    <ViewportList
+      <Virtuoso
+        ref={listRef}
+        initialTopMostItemIndex={currentChoose < 0 ? 0 : currentChoose}
+        totalCount={keywords.length}
+        style={{ gap: "unset", marginBottom: "unset" }}
+        components={{ Item: (props) => <div {...props}></div> }}
+        itemContent={(index) => {
+          const item = keywords[index]; // || "No Items Founded...";
+          // console.log("item : ", item, index, currentChoose);
+
+          return (
+            <li
+              key={index}
+              id={`list-item-${index}`}
+              ref={(el) => (refs.current[index] = el)}
+              onClick={(ev) => {
+                onItemClicked(ev, item, index, keywords.length);
+              }}
+              style={
+                {
+                  // height: "50px",
+                  // borderBottom: "1px solid #475569"
+                }
+              }
+              className={`flex items-center ${
+                currentChoose == index
+                  ? "bg-blue-600 hover:bg-blue-600"
+                  : "bg-transparent hover:bg-slate-600"
+              }  p-2 text-nowrap w-full  overflow-x-auto  transition-all cursor-pointer border-b-2 border-[#475569!important]  text-slate-200  text-[16px] font-semibold `}
+            >
+              <FitTitle
+              // style={{
+              //   backgroundColor:currentChoose == index ? 'transparent' : '#2563eb'
+              // }}
+                className={`${
+                  currentChoose == index
+                    ? "bg-slate-900 hover:bg-gray-700"
+                    : "bg-blue-600 hover:bg-blue-600"
+                }`}
+              >
+                {" "}
+                {item}
+              </FitTitle>
+            </li>
+          );
+        }}
+      />
+      {/* <ViewportList
       items={keywords}
       itemSize={50}
       ref={listRef}
@@ -292,72 +320,7 @@ export const Menu = ({
           {item}
         </li>
       )}
-    </ViewportList>
-  </section>
-    // <menu
-    //   ref={menuRef}
-    //   // style={{clipPath:'inset(2px)' left-0}}
-    //   onScroll={(ev) => {
-    //     console.log(ev.target.scrollHeight);
-    //     console.log(ev.target.scrollTop - 300);
-    //   }}
-    //   className={` grid grid-cols-1   max-h-[300px] overflow-y-auto border-slate-600 rounded-lg   bg-slate-900  p-1 ${
-    //     className ? className : "w-full"
-    //   }`}
-    // >
-    //   {keywordsState.map((keyword, i) => (
-    //     <li
-    //       key={i}
-    //       id={i}
-    //       ref={currentChoose == i ? choosenRef : unChoosenRef}
-    //       onClick={(ev) => {
-    //         onItemClicked(ev, keyword, i, keywordsState.length);
-    //       }}
-    //       className={`${
-    //         currentChoose == i
-    //           ? "bg-blue-600 hover:bg-blue-600"
-    //           : "bg-transparent hover:bg-gray-700"
-    //       } ${
-    //         keyword.toLowerCase() == "No Items Founded...".toLowerCase()
-    //           ? "pointer-events-none bg-transparent"
-    //           : ""
-    //       }  py-[12px] px-2 text-nowrap w-full  overflow-x-auto   transition-all cursor-pointer [&:not(:last-child)]:border-b-[1px] border-slate-600  text-slate-200   text-[16px] font-semibold `}
-    //     >
-    //       {keyword}
-    //     </li>
-    //   ))}
-    // </menu>
-    // <List
-    //   width={300} // Width of the list container
-    //   height={300} // Total height of the list container
-    //   itemCount={keywords.length} // Number of rows
-    //   itemSize={50} // Height of each row
-    //   ref={menuRef}
-
-    //   // rowRenderer={rowRenderer}
-    // >
-    //   {({ index, style, isScrolling, data }) => (
-    //     <li
-    //       key={index}
-    //       id={`list-item-${index}`}
-    //       style={style}
-    //       ref={(el) => (refs.current[index] = el)}
-    //       onClick={(ev) => {
-    //         onItemClicked(ev, keywords[index], index, keywords.length);
-    //       }}
-    //       className={`${
-    //         currentChoose == index
-    //           ? "bg-blue-600 hover:bg-blue-600"
-    //           : "bg-transparent hover:bg-gray-700"
-    //       } ${
-    //         keywords[index].toLowerCase() == "No Items Founded...".toLowerCase()
-    //           ? "pointer-events-none bg-transparent"
-    //           : ""
-    //       }  py-[12px] px-2 text-nowrap w-full  overflow-x-auto   transition-all cursor-pointer [&:not(:last-child)]:border-b-[1px] border-slate-600  text-slate-200  text-[16px] font-semibold `}
-    //     >
-    //       {keywords[index]}
-    //     </li>
-    //   )}
-    // </List>
+    </ViewportList> */}
+    </section>
   );
 };

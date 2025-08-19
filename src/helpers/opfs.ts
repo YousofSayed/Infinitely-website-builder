@@ -121,6 +121,20 @@ export class OPFS {
   };
   #broadcast = new BroadcastChannel("opfs");
   #eventTarget = new EventTarget();
+  #openedWriters = new Map<
+    string,
+    {
+      write: (
+        chunk: string | BufferSource,
+        opts?: {
+          at?: number;
+        }
+      ) => Promise<number>;
+      truncate: (size: number) => Promise<void>;
+      flush: () => Promise<void>;
+      close: () => Promise<void>;
+    }
+  >();
 
   #emitAllEvent = async (eventTargetName: OPFSEvents, currentRoot?: OTDir) => {
     console.log("emitted");
@@ -285,7 +299,7 @@ export class OPFS {
 
   async createFile(
     path: string,
-    content: string | BufferSource | ReadableStream<BufferSource> | OTFile,
+    content: string | BufferSource | ReadableStream<BufferSource>,
     offEvents: boolean = false
   ) {
     if (!path) {
@@ -295,6 +309,8 @@ export class OPFS {
     const isExist = await fileHandle.exists();
     if (!isExist) {
       content = content instanceof Blob ? await content.arrayBuffer() : content;
+      // const writer = fileHandle.createWriter();
+      // (await writer).write(content as any)
       await write(fileHandle, content);
       if (!offEvents) {
         const event = {
@@ -317,7 +333,7 @@ export class OPFS {
   async createFiles(
     files: {
       path: string;
-      content?: string | BufferSource | ReadableStream<BufferSource> | OTFile;
+      content?: string | BufferSource | ReadableStream<BufferSource>;
     }[] = [],
     offEventsOnSingleFile: boolean = false
   ) {
@@ -544,15 +560,15 @@ export class OPFS {
     //   // });
     //   console.log(`children.length : `, children.length, options.chunksStart);
     // } else {
-      for (const entry of children) {
-        if (entry.kind === "file") {
-          // const fileHandle = await this.getFile(entry.name);
-          files.push(entry);
-        } else if (entry.kind === "dir" && options.recursive) {
-          const subFiles = await this.getAllFiles(entry.path, options);
-          files.push(...subFiles);
-        }
+    for (const entry of children) {
+      if (entry.kind === "file") {
+        // const fileHandle = await this.getFile(entry.name);
+        files.push(entry);
+      } else if (entry.kind === "dir" && options.recursive) {
+        const subFiles = await this.getAllFiles(entry.path, options);
+        files.push(...subFiles);
       }
+    }
     // }
     return files;
   }
@@ -620,7 +636,17 @@ export class OPFS {
         const bufferContent =
           content instanceof Blob ? await content.arrayBuffer() : content;
         //  const isSameContent =  await file.arrayBuffer()  == content
-        await write(file, bufferContent);
+        const writer = await file.createWriter();
+        const prevWriter = this.#openedWriters.get(file.path);
+        prevWriter && prevWriter.close();
+
+        this.#openedWriters.set(file.path, writer);
+        await writer.truncate(0); // Clear old content
+        await writer.write(bufferContent);
+        await writer.close();
+        this.#openedWriters.delete(file.path);
+
+        // await write(file, bufferContent);
         const event = {
           type: "fileWritten",
           fileName: (file as any).name,
@@ -634,6 +660,12 @@ export class OPFS {
     }
 
     await this.#emitAllEvent("fileWritten");
+  }
+
+  async closeAllOpenedWriters() {
+    for (const writer of this.#openedWriters.values()) {
+      await writer.close();
+    }
   }
 
   async remove({

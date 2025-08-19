@@ -88,15 +88,15 @@ export const Project = ({ project }) => {
             opfs.id = project.id;
             localStorage.setItem(current_project_id, project.id);
             localStorage.setItem(current_page_id, "index");
-            swAssset.postMessage({
-              command: "setVar",
-              props: {
-                obj: {
-                  projectId: project.id,
-                  projectData: project,
-                },
-              },
-            });
+            // swAssset.postMessage({
+            //   command: "setVar",
+            //   props: {
+            //     obj: {
+            //       projectId: project.id,
+            //       projectData: project,
+            //     },
+            //   },
+            // });
             navigate("/add-blocks");
           }}
         >

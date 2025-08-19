@@ -42,14 +42,15 @@ export const customInfinitelySymbols = (editor) => {
    * @returns
    */
   const updateSymbols = (cmp) => {
+    if( cmp.get("type").toLowerCase() == "wrapper")return;
     const sle = editor?.getSelected();
     const symbol = getInfinitelySymbolInfo(cmp);
     // console.log(`is equal : ` , cmp , cmp.getEl() , cmp.getId());
         const addedComponent = cmp.components().slice(-1)?.[0];
 
     if (
-      !symbol.isSymbol ||
-      cmp.get("type").toLowerCase() == "wrapper"
+      !symbol.isSymbol 
+     
    
     )
       return;
@@ -148,7 +149,7 @@ export const customInfinitelySymbols = (editor) => {
         // });
 
         sessionStorage.setItem(current_symbol_id, symbolId);
-        editor.store();
+        // editor.store();
 
         
         editor.trigger(

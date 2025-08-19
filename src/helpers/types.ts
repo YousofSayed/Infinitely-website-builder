@@ -23,19 +23,12 @@ export type Animations = {
   values: { percentage: number; styles: CSSStyleDeclaration }[];
 }[];
 
-export type PreviewData = {
-  scripts: object;
-  styles: object;
-  html: string;
-  css: string;
-};
-
 type TraitCallProps = {
   editor: import("grapesjs").Editor;
   trait: InfinitelyTrait;
   oldValue: string;
   newValue: string;
-  asset:InfinitelyAsset | undefined,
+  asset: InfinitelyAsset | undefined;
 };
 
 export type TraitCallback = ({
@@ -78,6 +71,7 @@ export type InfinitelyTrait = {
   changeProp: boolean;
   stateProp: any;
   options: string[];
+  ext: string;
   keywords:
     | string[]
     | (({ projectData }: { projectData: Project }) => string[]);
@@ -106,14 +100,31 @@ export interface StatesType {
   statesAsArray: string[];
 }
 [];
+// document.addEventListener()
 
-export interface CMDSContext {
-  vars: {};
-  params: string[][];
-  objectsKeys: {};
-  forIndexes: string[];
+export interface Action {
+  name: string;
+  label: string;
+  placeholder: string;
+  params: { [key: string]: string };
+  function: string;
 }
 
+export type Actions = Action[];
+
+export interface Interaction {
+  name: string;
+  id: string | number;
+  event: keyof ElementEventMap;
+  actions:Actions ;
+  // onInteractionSelected: (component: Component) => void;
+  // onInteractionUnSelected: (component: Component) => void;
+}
+
+export type Interactions = Interaction[];
+export type InteractionsInDB = {
+  [key: string]: Interactions;
+};
 export interface CMD {
   cmd: string;
   desc: string;
@@ -273,7 +284,7 @@ export interface LibraryConfig {
   jsType: string;
   sort: number;
   path: string;
-  size:number;
+  size: number;
 }
 
 type Component = import("grapesjs").Component;
@@ -308,8 +319,6 @@ export type JSONComponent = {
   // ];
 };
 
-
-
 export type PageHelmet = {
   title: string;
   // icon: Blob;
@@ -324,10 +333,18 @@ export type InfinitelyPage = {
   html: Blob | undefined;
   css: Blob | undefined;
   js: Blob | undefined;
-  pathes : {
-    html:string;
-    css:string;
-    js:string;
+  pathes: {
+    html: string;
+    css: string;
+    js: string;
+  };
+  libs:{
+    css:LibraryConfig[],
+    jsHeader:LibraryConfig[],
+    jsFooter:LibraryConfig[],
+  }
+  fonts:{
+    [key: string]: InfinitelyFont;
   }
   cmds: { [key: string]: CMD[] };
   components: Component[];
@@ -345,25 +362,25 @@ export type InfinitelyBlock = {
   media: Blob;
   content: Blob;
   style: Blob;
-  pathes:{
-    content:string;
-    style:string;
-  }
+  pathes: {
+    content: string;
+    style: string;
+  };
   type: "symbol" | "template";
   category: string;
 };
 
-export type InfinitelySymbol  = {
+export type InfinitelySymbol = {
   name: string;
   label: string;
   id: string;
   media: Blob;
   content: Blob;
   style: Blob;
-  pathes:{
-    content:string;
-    style:string;
-  }
+  pathes: {
+    content: string;
+    style: string;
+  };
   type: "symbol" | "template";
   category: string;
 };
@@ -385,7 +402,7 @@ export type InfinitelyFont = {
   isCDN: boolean;
   isLocalAsset: boolean;
   localAssetId: string;
-  path:string;
+  path: string;
 };
 
 export type InfinitelyFonts = {
@@ -419,7 +436,8 @@ export interface Project {
   };
   fonts: InfinitelyFonts;
   motions: { [key: string]: MotionType };
-  inited : boolean;
+  interactions: InteractionsInDB;
+  inited: boolean;
 }
 
 export type GlobalSettings = {
@@ -439,19 +457,21 @@ export type ProjectSetting = {
   grap_all_header_scripts_in_single_file: boolean;
   grap_all_footer_scripts_in_single_file: boolean;
   disable_petite_vue: boolean;
-  disable_gsap_core:boolean;
-  disable_gsap_scrollTrigger:boolean;
+  disable_gsap_core: boolean;
+  disable_gsap_scrollTrigger: boolean;
   enable_prettier_for_file_editor: boolean;
   is_async_graped_header_script: boolean;
   is_defer_graped_header_script: boolean;
   is_async_graped_footer_script: boolean;
   is_defer_graped_footer_script: boolean;
-
-  enable_tailwind_calsses : boolean;
+  enable_editor_lazy_loading:boolean;
+  enable_auto_save:boolean;
+  enable_tailwind: boolean;
+  enable_spline_viewer: boolean;
   // include_canvas_styles_in_build_file: boolean;
   purge_css: boolean;
-  include_symbols_in_export:boolean;
-  include_templates_in_export:boolean;
+  include_symbols_in_export: boolean;
+  include_templates_in_export: boolean;
 };
 
 export interface JSLibrary {
@@ -567,4 +587,3 @@ export type StorageDetails = {
   isStorageFull: boolean;
   filesLength: number;
 };
-

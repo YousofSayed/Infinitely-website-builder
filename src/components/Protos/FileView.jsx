@@ -20,6 +20,7 @@ import { opfs } from "../../helpers/initOpfs";
 export const FileView = ({
   asset = assetType,
   callback = (asset = assetType, url = "") => {},
+  isCssProp = false,
 }) => {
   const editor = useEditorMaybe();
   const fileNameRef = useRef(refType);
@@ -73,7 +74,7 @@ export const FileView = ({
     );
     const pageName = localStorage.getItem(current_page_id);
     const isIndex = pageName.toLowerCase() == "index";
-    const src = `${isIndex ? "." : ".."}/assets/${asset.name}`;
+    const src = isCssProp ? `../assets/${asset.name}` : `${isIndex ? "." : ".."}/assets/${asset.name}`;
 
     callback(asset, src);
   };

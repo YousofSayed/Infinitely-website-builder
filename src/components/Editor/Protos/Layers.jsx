@@ -5,12 +5,13 @@ import { uniqueID } from "../../../helpers/cocktail";
 import { Layer } from "./Layer";
 import { Virtuoso } from "react-virtuoso";
 import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 
 export const Layers = memo(() => {
   const editor = useEditorMaybe();
   const layerSecRef = useRef(refType);
   const [layers, setLayers] = useState(layersType);
-
+  const [animtedRef] = useAutoAnimate();
   useEffect(() => {
     if (!editor) return;
     console.log("layers");
@@ -21,8 +22,8 @@ export const Layers = memo(() => {
         .components()
         .models.filter((lyr) => {
           console.log(lyr.props());
-          
-          return lyr.props().layerable &&  lyr.getName().toLowerCase() != "box"
+
+          return lyr.props().layerable && lyr.getName().toLowerCase() != "box";
         });
 
     // setLayers(newLayers());
@@ -59,25 +60,26 @@ export const Layers = memo(() => {
 
   //     layerSecRef.current.appendChild(editor.Layers.render())
   // })
-//[&>:not(:last-child)]:mb-2
+  //[&>:not(:last-child)]:mb-2
   return (
     <section id="layers" className="h-full hideScrollBar" ref={layerSecRef}>
       <main id="layer-wrapper" className="h-full  ">
         <Virtuoso
+          ref={animtedRef}
           className="hideScrollBar "
           totalCount={layers.length}
           // components={VirtosuoVerticelWrapper}
           itemContent={(i) => {
             const layer = layers[i];
-            
-            return layer.props().layerable ?  (
+
+            return layer.props().layerable ? (
               <Layer
                 layers={layers}
                 setLayers={setLayers}
                 layer={layer}
                 key={i}
               />
-            ):null;
+            ) : null;
           }}
         />
         {/* {layers.map((layer, i) => {

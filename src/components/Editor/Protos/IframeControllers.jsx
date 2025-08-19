@@ -2,10 +2,13 @@ import React, { useEffect, useRef, useState } from "react";
 import { Li } from "../../Protos/Li";
 import { Icons } from "../../Icons/Icons";
 import { useEditorMaybe } from "@grapesjs/react";
-import { useSetRecoilState } from "recoil";
+import { useRecoilState, useSetRecoilState } from "recoil";
 import {
+  animationsState,
+  isAnimationsChangedState,
   showAnimationsBuilderState,
   showLayersState,
+  zoomValueState,
 } from "../../../helpers/atoms";
 import { useNavigate } from "react-router-dom";
 import {
@@ -23,21 +26,35 @@ import {
 } from "../../../helpers/customEvents";
 import { useProjectSettings } from "../../../hooks/useProjectSettings";
 import { Hr } from "../../Protos/Hr";
+import { animationsSavingMsg } from "../../../constants/confirms";
+import { editorContainerInstance } from "../../../constants/InfinitelyInstances";
+import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 
 export const IframeControllers = () => {
   const editor = useEditorMaybe();
   const navigate = useNavigate();
-  const setShowLayers = useSetRecoilState(showLayersState);
-  const setShowAnimBuilder = useSetRecoilState(showAnimationsBuilderState);
+  const [showLayers, setShowLayers] = useRecoilState(showLayersState);
+  const [showAnimBuilder, setShowAnimBuilder] = useRecoilState(
+    showAnimationsBuilderState
+  );
+  const [isAnimationsChanged, setAnimationsChanged] = useRecoilState(
+    isAnimationsChangedState
+  );
+  const [animations, setAnimations] = useRecoilState(animationsState);
+  const [zoomValue, setZoomValue] = useRecoilState(zoomValueState);
   const undoRef = useRef();
   const redoRef = useRef();
   const isEditorLoad = useRef(true);
-  const [s, setS] = useState("");
   // const projectSettings = useRef(getProjectSettings());
   const [projectSetting, setProjectSettings] = useProjectSettings();
 
   useEffect(() => {
     if (!editor) return;
+    const cb = () => {
+      isEditorLoad.current = false;
+      editor?.Canvas?.getBody?.()?.setAttribute("loaded", true);
+      console.log("i should load");
+    };
     /**
      *
      * @param {KeyboardEvent} ev
@@ -75,27 +92,19 @@ export const IframeControllers = () => {
       }
     };
 
+    
+
     // window.addEventListener("click", clickCallback);
     window.addEventListener("keyup", callback, { capture: true });
 
+    editor.on("canvas:frame:load:body", cb);
     return () => {
-      // window.removeEventListener("click", clickCallback);
+      editor.off("canvas:frame:load:body", cb);
       window.removeEventListener("keyup", callback, { capture: true });
     };
   }, [editor]);
 
-  useEffect(() => {
-    if (!editor) return;
-    const cb = () => {
-      isEditorLoad.current = false;
-      editor?.Canvas?.getBody?.()?.setAttribute("loaded", true);
-      console.log("i should load");
-    };
-    editor.on("canvas:frame:load:body", cb);
-    return () => {
-      editor.off("canvas:frame:load:body", cb);
-    };
-  }, [editor]);
+
 
   const undo = () => {
     // editor.runCommand("core:undo");
@@ -120,6 +129,15 @@ export const IframeControllers = () => {
     acitveCommand.includes(command)
       ? editor.stopCommand(command)
       : editor.runCommand(command);
+  };
+
+  const emitZoomValue = (decrease = false) => {
+    let value = editor.getContainer().style.zoom;
+    value = decrease ? +value - 0.1 : +value + 0.1;
+    editor.getContainer().style.zoom = value;
+    editorContainerInstance.emit(InfinitelyEvents.editorContainer.update, {
+      value,
+    });
   };
 
   return (
@@ -151,10 +169,12 @@ export const IframeControllers = () => {
       />
 
       <Li
-        refForward={redoRef}
         className="flex-shrink-0"
         onClick={() => {
-          editor.Canvas.setZoom(editor.Canvas.getZoom() + 1,{avoidStore: true});
+          emitZoomValue();
+          // editor.Canvas.setZoom(editor.Canvas.getZoom() + 1, {
+          //   avoidStore: true,
+          // });
           // editor.getWrapper().getEl()
           //   .querySelectorAll("*")
           //   .forEach((el) => {
@@ -181,11 +201,13 @@ export const IframeControllers = () => {
       </Li>
 
       <Li
-        refForward={redoRef}
         className="flex-shrink-0"
         onClick={() => {
-          editor.Canvas.setZoom(editor.Canvas.getZoom() - 1 , {avoidStore: true});
-        
+          emitZoomValue(true);
+          // editor.Canvas.setZoom(editor.Canvas.getZoom() - 1, {
+          //   avoidStore: true,
+          // });
+
           // editor.getWrapper().getEl()
           //   .querySelectorAll("*")
           //   .forEach((el) => {
@@ -298,9 +320,21 @@ export const IframeControllers = () => {
       />
       <Li
         onClick={(ev) => {
-          setShowAnimBuilder((old) => !old);
-          setShowLayers(false);
-          navigate("edite/styling");
+          // console.log(showPreview, isAnimationsChanged);
+
+          if (isAnimationsChanged && showAnimBuilder) {
+            const cnfrm = confirm(animationsSavingMsg);
+            if (cnfrm) {
+              setAnimationsChanged(false);
+              setAnimations([]);
+              setShowAnimBuilder(false);
+            }
+          } else {
+            setShowAnimBuilder(!showAnimBuilder);
+            setShowLayers(false);
+            navigate("edite/styling");
+          }
+          // setShowAnimBuilder((old) => !old);
         }}
         className="flex-shrink-0"
         title="Animation Builder"

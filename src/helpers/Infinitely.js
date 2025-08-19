@@ -10,10 +10,20 @@ export class Infinitely {
         this.#eventTarget.dispatchEvent(event); 
     }
 
+    /**
+     * 
+     * @param {string} eventName 
+     * @param {(event:CustomEvent)=>void} callback 
+     */
     on(eventName, callback) {
         this.#eventTarget.addEventListener(eventName, callback); 
     }
 
+     /**
+     * 
+     * @param {string} eventName 
+     * @param {(event:CustomEvent)=>void} callback 
+     */
     off(eventName, callback) {
         this.#eventTarget.removeEventListener(eventName, callback); 
     }

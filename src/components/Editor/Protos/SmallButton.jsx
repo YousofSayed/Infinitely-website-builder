@@ -22,7 +22,6 @@ export const SmallButton = ({
 }) => {
   const id = React.useId();
 
-
   return (
     <>
       <button
@@ -43,7 +42,7 @@ export const SmallButton = ({
           anchorSelect={`[tooltip-id="${id}"]`}
           place="bottom-end"
           positionStrategy="fixed"
-          className="capitalize font-semibold z-[100]"
+          className="capitalize font-semibold z-[1000]"
         >
           {tooltipTitle || props.title}
         </Tooltip>

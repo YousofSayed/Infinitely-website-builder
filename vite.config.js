@@ -6,6 +6,7 @@ import { VitePWA } from "vite-plugin-pwa";
 import icons from "./public/icons/icons.json";
 // import { manualChunksPlugin } from "vite-plugin-webpackchunkname";
 import { chunkSplitPlugin } from "vite-plugin-chunk-split";
+// import MillionLint from "@million/lint";
 // import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
@@ -30,6 +31,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    // MillionLint.vite({}),
     // tailwindcss(),
 
     // removeConsole(),

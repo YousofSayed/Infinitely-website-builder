@@ -27,9 +27,9 @@ import { toast, ToastContainer } from "react-toastify";
 import { AsideControllers } from "../components/Editor/Protos/AsideControllers";
 import { initDBAssetsSw } from "../serviceWorkers/initDBAssets-sw";
 import { current_project_id } from "../constants/shared";
-import { getProjectData } from "../helpers/functions";
+import { getProjectData, getProjectSettings } from "../helpers/functions";
 import { infinitelyWorker } from "../helpers/infinitelyWorker";
-import { swAliveInterval } from "../helpers/keepSwAlive";
+// import { swAliveInterval } from "../helpers/keepSwAlive";
 import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
 import {
   assetsWorker,
@@ -40,6 +40,9 @@ import { useWorkerToast } from "../hooks/useWorkerToast";
 import { opfs } from "../helpers/initOpfs";
 import { defineRoot, getProjectRoot } from "../helpers/bridge";
 import { Loader } from "../components/Loader";
+import { minify } from "csso";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { Memo } from "../components/Protos/Memo";
 // import { tailwindClasses } from "../constants/tailwindClasses";
 // tailwindClasses
 export function Editor({ params }) {
@@ -53,6 +56,8 @@ export function Editor({ params }) {
   const setShowCustomModal = useSetRecoilState(showCustomModalState);
   const showCustomModal = useRecoilValue(showCustomModalState);
   const [isAssetsWorkerDone, setIsAssetsWorkerDone] = useState(false);
+  const [parent] = useAutoAnimate();
+  const [mainAnimate] = useAutoAnimate({duration:100});
   // const [dbAssetsSw, setDBAssetsSw] = useRecoilState(dbAssetsSwState);
 
   // useEffect(() => {
@@ -109,6 +114,7 @@ export function Editor({ params }) {
       props: { id: +localStorage.getItem(current_project_id) },
     });
 
+    getProjectSettings();
     // const broadCastCleaner = opfs.onBroadcast(
     //   "getFile",
     //   async (data) => {
@@ -212,85 +218,94 @@ export function Editor({ params }) {
 
   useWorkerToast();
   const isProject = Boolean(+localStorage.getItem(current_project_id));
-
+  const [parentForPanelsGroup] = useAutoAnimate();
   return isProject ? (
     isAssetsWorkerDone ? (
-      <GJEditor>
-        <main className="relative w-full h-full bg-slate-950 flex justify-between">
-          <ToastContainer
-            toastStyle={{ background: " #111827 " }}
-            autoClose={3000}
-            draggable={true}
-            theme="dark"
-            limit={10}
-            pauseOnHover={true}
-            position="top-left"
-            // stacked={true}
-          />
-          {!showPreview && <HomeNav />}
-          <section
-            className={`${
-              showPreview
-                ? "w-full"
-                : "w-[calc(100%-55px)] border-l-[1.5px] border-slate-400"
-            } flex flex-col h-full `}
-          >
-            {!showPreview && <HomeHeader />}
-            <PanelGroup
-              tagName="section"
-              className="flex h-full w-full"
-              direction="horizontal"
-              autoSaveId="panels"
+      <Memo className="w-full h-full">
+        <GJEditor>
+          <main className="relative w-full h-full bg-slate-950 flex justify-between" ref={mainAnimate}>
+            <ToastContainer
+              toastStyle={{ background: " #111827 " }}
+              autoClose={3000}
+              draggable={true}
+              theme="dark"
+              limit={10}
+              pauseOnHover={true}
+              position="top-left"
+              // containerId={`main-toast-container`}
+
+              // stacked={true}
+            />
+            {!showPreview && <HomeNav />}
+            <section
+              ref={parent}
+              className={`${
+                showPreview
+                  ? "w-full"
+                  : "w-[calc(100%-55px)] border-l-[1.5px] border-slate-400"
+              } flex flex-col h-full `}
             >
-              {(showAnimBuilder || showLayers) && !showPreview && (
-                <>
-                  <Panel defaultSize={300} id="left" order={1}>
-                    {showLayers && (
-                      <Aside
-                        dir="right"
-                        // style={{ display: showLayers ? "block" : "none" }}
+              {!showPreview && <HomeHeader />}
+              <PanelGroup
+                id={"panels-group"}
+                tagName="section"
+                className="flex h-full w-full"
+                direction="horizontal"
+                autoSaveId="panels"
+                // ref={parentForPanelsGroup}
+              >
+                {(showAnimBuilder || showLayers) && !showPreview && (
+                  <>
+                    <Panel defaultSize={300} id="left-panel" order={1}>
+                      <section
+                        ref={parentForPanelsGroup}
+                        className="h-full w-full"
                       >
-                        <Layers />
+                        {showLayers && (
+                          <Aside dir="right">
+                            <Layers />
+                          </Aside>
+                        )}
+
+                        {showAnimBuilder && (
+                          <Aside>
+                            <AnimationsBuilder />
+                          </Aside>
+                        )}
+                      </section>
+                    </Panel>
+                    <PanelResizeHandle
+                      className={`w-[5px] bg-blue-600  opacity-0 hover:opacity-[1] transition-all`}
+                    />
+                  </>
+                )}
+
+                <Panel id="center" defaultSize={600} order={2}>
+                  <Iframe />
+                </Panel>
+
+                {!showPreview && (
+                  <>
+                    <PanelResizeHandle className="w-[5px] bg-blue-600 opacity-0 hover:opacity-[1] transition-all" />
+                    <Panel defaultSize={300} order={3} id="right-panel">
+                      <Aside>
+                        {pathname.pathname != "/add-blocks" && (
+                          <AsideControllers />
+                        )}
+                        <Outlet />
                       </Aside>
-                    )}
+                    </Panel>
+                  </>
+                )}
+              </PanelGroup>
+            </section>
+            {showCustomModal && <CustomModals />}
 
-                    <Aside
-                      style={{ display: showAnimBuilder ? "block" : "none" }}
-                    >
-                      <AnimationsBuilder />
-                    </Aside>
-                  </Panel>
-                  <PanelResizeHandle
-                    className={`w-[5px] bg-blue-600  opacity-0 hover:opacity-[1] transition-all`}
-                  />
-                </>
-              )}
-
-              <Panel id="center" defaultSize={600} order={2}>
-                <Iframe />
-              </Panel>
-
-              {!showPreview && (
-                <>
-                  <PanelResizeHandle className="w-[5px] bg-blue-600 opacity-0 hover:opacity-[1] transition-all" />
-                  <Panel defaultSize={300} id="right" order={3}>
-                    <Aside>
-                      {pathname.pathname != "/add-blocks" && (
-                        <AsideControllers />
-                      )}
-                      <Outlet />
-                    </Aside>
-                  </Panel>
-                </>
-              )}
-            </PanelGroup>
-          </section>
-          {showCustomModal && <CustomModals />}
-
-          {/* <CustomModals /> */}
-          {/* <Popover /> */}
-        </main>
-      </GJEditor>
+            {/* <CustomModals /> */}
+            {/* <Popover /> */}
+          </main>
+        </GJEditor>
+      </Memo>
     ) : (
       <section className="h-full w-full bg-slate-950">
         <Loader />

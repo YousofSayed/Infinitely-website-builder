@@ -7,4 +7,4 @@ export const MiniTitle = ({ children , className}) => {
       </section>
     );
   };
-  
+   

@@ -1,11 +1,11 @@
 import React, { memo } from "react";
 import { Property } from "./Property";
 import { SelectStyle } from "./SelectStyle";
-import { touchActionValues } from "../../../constants/cssProps";
+import { cursorValues, touchActionValues } from "../../../constants/cssProps";
 
 export const Others = memo(() => {
   return (
-    <section className="mt-3 flex flex-col gap-2 w-full p-2">
+    <section className=" flex flex-col gap-2 w-full p-1 bg-slate-900 rounded-lg">
       <Property label="user-select" cssProp="user-select" />
       <Property label="transition" cssProp="transition" />
       <Property label="tab-size" cssProp="tab-size" />
@@ -20,6 +20,8 @@ export const Others = memo(() => {
         cssProp="touch-action"
         keywords={touchActionValues}
       />
+
+      <SelectStyle label="cursor" cssProp="cursor" keywords={cursorValues}/>
     </section>
   );
 });

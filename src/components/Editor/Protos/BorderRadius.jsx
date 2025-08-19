@@ -5,7 +5,7 @@ import { FitTitle } from "./FitTitle";
 
 export const BorderRadius = () => {
   return (
-    <section className="flex flex-col gap-3 justify-between py-3 ">
+    <section className="flex flex-col gap-3 justify-between ">
       <FitTitle className="capitalize">border raduis</FitTitle>
       <Property label="all" cssProp="border-radius"/>
       <Property label="top left" cssProp="border-top-left-radius"/>

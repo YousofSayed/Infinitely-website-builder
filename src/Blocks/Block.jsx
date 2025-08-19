@@ -10,15 +10,30 @@ import { defineTraits } from "../helpers/functions";
  */
 export const Block = ({ editor }) => {
   editor.Components.addType("block", {
-    isComponent:(el)=>el.tagName == 'DIV',
+    isComponent: (el) => el.tagName == "DIV",
+    view: {
+      onRender({ model }) {
+        model.set({
+          droppable: true,
+          draggable: true,
+        });
+      },
+    },
     model: {
       defaults: {
         icon: editorIcons.block({ width: 25, height: 25, fill: "white" }),
         tagName: "div",
         attributes: {
-          class: " inf-block ",
+          class: "inf-block p-10 drop",
         },
+        // components: [
+        //   {
+        //     type: "drop-area",
+        //   },
+        // ],
         resizable: true,
+        draggable: true,
+        droppable: true,
         // traits: defineTraits([
         //   {
         //     placeholder: "select tag",

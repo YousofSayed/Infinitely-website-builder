@@ -11,6 +11,7 @@ import { pushBetween } from "../../../helpers/cocktail";
 import { useRemoveCssProp } from "../../../hooks/useRemoveCssProp";
 import { useEditorMaybe } from "@grapesjs/react";
 import { Textarea } from "./Textarea";
+import { FitTitle } from "./FitTitle";
 
 export const MultiFunctionProp = memo(
   ({ cssProp, placeholder, keywords, units = {} }) => {
@@ -24,7 +25,7 @@ export const MultiFunctionProp = memo(
     const stringifyFilter = (filtersVals = []) => {
       const value = filtersVals
         .map(
-          ({ name, value }) => `${name}(${value}${units[name] && units[name]})`
+          ({ name, value }) => `${name}(${value}${units?.[name] ?  units[name] : ''})`
         )
         .join(" ");
 
@@ -32,15 +33,18 @@ export const MultiFunctionProp = memo(
     };
 
     const parseFilters = (stringValue = "") => {
-      console.log(stringValue, "dsadasdsa");
-      console.log(
-        editor.Parser.parserCss.parse(stringValue),
-        "parsed form editor"
-      );
-
+      if(!stringValue) return [];
+      // console.log(stringValue, "dsadasdsa");
+      // console.log(
+      //   editor.Parser.parserCss.parse(stringValue),
+      //   "parsed form editor"
+      // );
+      // console.log(stringValue
+      //   .match(/(\w+\([^()]*\))/g));
+      
       const value = stringValue
-        .match(/\w+(\W+\w+)?\((\W+)?\w+(\W+)?\)|/gi)
-        .filter((text) => text)
+        .match(/(\w+\((?:[^()]+|\([^()]*\))*\))/g)
+        .filter(Boolean)
         .map((prop) => {
           const vals = prop.split(/\(|\)/gi);
           return {
@@ -55,7 +59,8 @@ export const MultiFunctionProp = memo(
       const newArr = [...filters];
       newArr[index].value = propValue;
       console.log(stringifyFilter(newArr));
-
+      console.log(propValue , newArr , cssProp);
+      
       setClass({
         cssProp,
         value: stringifyFilter(newArr),
@@ -92,14 +97,14 @@ export const MultiFunctionProp = memo(
       cssProp,
       setVal: setUpdatedValue,
       onEffect(prop, value) {
-        console.log(parseFilters(value), "parsed");
+        console.log(parseFilters(value), value, "parsed");
 
         setFilters(parseFilters(value));
       },
     });
 
     return (
-      <section className=" flex flex-col p-1">
+      <section className=" flex flex-col p-1 bg-slate-900 rounded-lg">
         <section className="flex gap-2">
           <Select
             placeholder={placeholder}
@@ -159,10 +164,13 @@ export const MultiFunctionProp = memo(
                     deleteProp(i);
                   }}
                 >
-                  <section key={i} className="flex  items-center  gap-2">
-                    <p className="font-semibold capitalize border-l-[3px] border-blue-600 bg-slate-900 py-2 px-3 rounded-lg text-slate-200 flex-grow flex-shrink-0">
+                  <section key={i} className="flex flex-col   gap-2">
+                    <FitTitle className="capitalize">
+                      {filterProp.name}
+                    </FitTitle>
+                    {/* <p className="font-semibold capitalize border-l-[3px] border-blue-600 bg-slate-900 py-2 px-3 rounded-lg text-slate-200 flex-grow flex-shrink-0">
                       {filterProp.name} :
-                    </p>
+                    </p> */}
                     <section className="flex  h-[40px] w-full">
                       {filterProp.name &&
                       filterProp.name.toLowerCase() == "url" ? (

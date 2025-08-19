@@ -23,6 +23,7 @@ import { ToastMsgInfo } from "../Protos/ToastMsgInfo";
 import { Hr } from "../../Protos/Hr";
 import { buildPage, defineRoot } from "../../../helpers/bridge";
 import { opfs } from "../../../helpers/initOpfs";
+import { cloneDeep } from "lodash";
 
 export const PagesManager = () => {
   const editor = useEditorMaybe();
@@ -128,8 +129,10 @@ export const PagesManager = () => {
    * @param {import("react").ChangeEvent} ev
    */
   const uploadPages = async (ev) => {
+    ev.target.value='';
     const files = [...ev.target.files];
     if (!files.length) return;
+    
     const pagesUploaded = await Promise.all(
       files.map(async (file) =>
         buildPage({
@@ -146,6 +149,10 @@ export const PagesManager = () => {
     // );
     const projectData = await getProjectData();
     for (const page of pagesUploaded) {
+      // console.log('paaaaaaage : ' , page , await page.html.text());
+      if(page.html.size == 0){
+        toast.warn(<ToastMsgInfo msg={`File is empty , maybe it is corrupted!`}/>)
+      }
       if (projectData.pages[page.name]) {
         toast.error(
           <ToastMsgInfo
@@ -156,25 +163,32 @@ export const PagesManager = () => {
       }
       await opfs.writeFiles([
         {
-          path: defineRoot(`editor/pages/${page.name}.html`),
+          path: defineRoot(page.pathes.html),
           content: page.html,
         },
         {
-          path: defineRoot(`css/${page.name}.css`),
+          path: defineRoot(page.pathes.css),
           content: page.css,
         },
         {
-          path: defineRoot(`js/${page.name}.js`),
+          path: defineRoot(page.pathes.js),
           content: page.js,
         },
       ]);
 
+
+
+      // ["html", "css", "js"].forEach((key) => {
+      //   delete page[key];
+      // });
+      projectData.pages[page.name] = cloneDeep(page);
+    }
+
+    for (const page of Object.values( projectData.pages)) {
       ["html", "css", "js"].forEach((key) => {
         delete page[key];
       });
-      projectData.pages[page.name] = page;
     }
-
     await db.projects.update(projectId, {
       pages: projectData.pages,
     });
@@ -182,6 +196,7 @@ export const PagesManager = () => {
     toast.success(<ToastMsgInfo msg={`Pages uploaded successfully 👍`} />);
 
     console.log("Files to upload: ", pagesUploaded);
+    ev.target.value = '';
   };
 
   return (

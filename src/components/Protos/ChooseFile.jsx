@@ -19,6 +19,8 @@ import { Loader } from "../Loader";
  * placeholder:string,
  * value : string,
  * mediaType: 'audio' | 'video' | 'image',
+ * ext:string;
+ * isCssProp:boolean;
  * callback:(asset:File , url:string)=>void
  * }} param0
  * @returns
@@ -27,6 +29,8 @@ export const ChooseFile = ({
   placeholder = "",
   value = "",
   mediaType = "",
+  ext = "",
+  isCssProp = false,
   callback = () => {},
 }) => {
   const mediaRef = useRef(refType);
@@ -40,7 +44,7 @@ export const ChooseFile = ({
     <section ref={mediaRef} className="flex gap-2 w-full">
       <Input
         placeholder={placeholder}
-        className="w-full bg-slate-900"
+        className="w-full bg-slate-900 "
         value={value}
         onInput={(ev) => {
           const value = ev.target.value;
@@ -51,6 +55,7 @@ export const ChooseFile = ({
         }}
       />
       <SmallButton
+      // className="p-[unset]"
         onClick={async (ev) => {
           ev.preventDefault();
           ev.stopPropagation();
@@ -64,9 +69,36 @@ export const ChooseFile = ({
               ).map((handle) => handle.getOriginFile())
             );
             // const clone = [...assets];
+            console.log(assets,ext, "before");
 
-            if (mediaType) {
-              assets = assets.filter(file=>file.type.includes(mediaType))
+            if (mediaType && !ext) {
+              if (Array.isArray(mediaType)) {
+                assets = assets.filter((file) => {
+                  console.log(file.type);
+                  return mediaType.some((type) => file.type.includes(type));
+                });
+              } else if (typeof mediaType == "string") {
+                assets = assets.filter((file) => {
+                  console.log(file.type);
+
+                  return file.type.includes(mediaType);
+                });
+              }
+            }
+
+            if (ext) {
+              if (Array.isArray(ext)) {
+                assets = assets.filter((file) => {
+                  console.log(file.type);
+                  return ext.some((type) => file.name.endsWith(type));
+                });
+              } else if (typeof ext == "string") {
+                assets = assets.filter((file) => {
+                  console.log(file.type);
+
+                  return file.name.endsWith(ext);
+                });
+              }
             }
             console.log("assets : ", assets);
 
@@ -95,17 +127,23 @@ export const ChooseFile = ({
                 listClassName="px-2"
                 itemContent={(i) => {
                   const asset = mediaForPopover[i];
-                  return <FileView asset={asset} callback={callback} />;
+                  return <FileView asset={asset} callback={callback} isCssProp={isCssProp} />;
                 }}
               />
             )}
 
             {showLoader && <Loader />}
 
-            {!mediaForPopover.length && !showLoader &&  <section className="flex items-center justify-center h-full w-full"><h1 className="font-bold text-slate-300 text-xl">No Files Founded..!</h1></section>}
+            {!mediaForPopover.length && !showLoader && (
+              <section className="flex items-center justify-center h-full w-full">
+                <h1 className="font-bold text-slate-300 text-xl">
+                  No Files Founded..!
+                </h1>
+              </section>
+            )}
           </section>
         </Popover>
-)}
+      )}
     </section>
   );
 };

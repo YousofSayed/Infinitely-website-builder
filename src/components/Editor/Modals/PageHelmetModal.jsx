@@ -40,6 +40,7 @@ export const PageHelmetModal = () => {
   const inputTimeoutRef = useRef(null);
   // const original = useRef(URL.createObjectURL);
   const logosURLs = useRef([]);
+  const firstLoad = useRef(0);
   // URL.createObjectURL = (blob) => {
   //   if (!blob || !(blob instanceof Blob)) {
   //     console.warn("createObjectURL called with non-Blob object:", blob);
@@ -94,10 +95,13 @@ export const PageHelmetModal = () => {
         },
       };
 
-      infinitelyWorker.postMessage({
-        command: "updateDB",
-        props,
-      });
+      console.log("First load  : ", firstLoad.current);
+
+      firstLoad.current > 1 &&
+        infinitelyWorker.postMessage({
+          command: "updateDB",
+          props,
+        });
     };
 
     setHelmetToDB();
@@ -107,14 +111,18 @@ export const PageHelmetModal = () => {
     const projectData = await getProjectData();
     const helmetFromDB = projectData.pages[`${currentPageHelmetName}`].helmet;
     console.log("Helmet Data: ", helmetFromDB);
-
+    const projectLogo = await opfs.getFile(defineRoot(projectData.logo));
+    const isReal =
+      projectLogo &&
+      projectLogo.exists() &&
+      Boolean(await projectLogo.getSize());
     const iconUrl =
       helmetFromDB.icon && helmetFromDB.icon instanceof Blob
         ? URL.createObjectURL(helmetFromDB.icon)
         : projectData.logo
         ? projectData.logo
         : "";
-    setSiteLogo(iconUrl);
+    setSiteLogo(isReal ? iconUrl : "");
     // logosURLs.current.push(iconUrl);
 
     console.log(
@@ -123,7 +131,7 @@ export const PageHelmetModal = () => {
       currentPageHelmetName,
       projectData.pages[`${currentPageHelmetName}`]
     );
-
+    firstLoad.current++;
     setHelmet({
       ...helmet,
       ...helmetFromDB,
@@ -143,6 +151,7 @@ export const PageHelmetModal = () => {
    */
   const updatePageHelmet = useCallback(
     async ({ key, value, isBlob = false, mimeType, isLogo = false }) => {
+      firstLoad.current++;
       if (isLogo) {
         await opfs.writeFiles([
           {
@@ -221,6 +230,8 @@ export const PageHelmetModal = () => {
             accept="image/*"
             ref={inputFileRef}
             onChange={(ev) => {
+              ev.target.value = "";
+
               const file = ev.target.files[0];
               updatePageHelmet({
                 key: "icon",

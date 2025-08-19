@@ -25,7 +25,7 @@ export const ReusableCmb = () => {
 
   useEffect(() => {
     //   setCtgs([...getCategoriesId(editor)]);
-    getImage();
+    // getImage();
   }, []);
 
   const getImage = async () => {

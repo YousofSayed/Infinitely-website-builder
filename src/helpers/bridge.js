@@ -3,6 +3,7 @@ import { parse as parseCss, stringify as stringifyCss } from "css";
 import { cloneDeep, isPlainObject, random, uniqueId } from "lodash";
 import serializeJavascript from "serialize-javascript";
 import {
+  interactionId,
   MAX_FILE_SIZE,
   MAX_FILES_COUNT,
   MAX_UPLOAD_SIZE,
@@ -31,7 +32,6 @@ export function doDocument(content = "") {
   `;
 }
 
-
 /**
  *
  * @param {import('grapesjs').Editor} editor
@@ -43,17 +43,18 @@ export function getAlpineContext(editor, cmp) {
 
   function getElementType(selectorOrElement) {
     // Get the element (handle both selector string and element)
-    const element = typeof selectorOrElement === 'string' 
-        ? document.querySelector(selectorOrElement) 
+    const element =
+      typeof selectorOrElement === "string"
+        ? document.querySelector(selectorOrElement)
         : selectorOrElement;
 
     if (!element || !(element instanceof HTMLElement)) {
-        return 'Element not found or not an HTMLElement';
+      return "Element not found or not an HTMLElement";
     }
 
     // Return the constructor name (e.g., HTMLBodyElement, HTMLDivElement)
     return element.constructor.name;
-}
+  }
   // const wrapperAttributes = Object.fromEntries(
   //   Object.entries(wrapper.getAttributes()).filter(([key, value]) =>
   //     key.startsWith(`x-`)
@@ -103,8 +104,7 @@ export function getAlpineContext(editor, cmp) {
   let refWillContenx = ``;
   for (let cmp of vRefScope) {
     const elType = getElementType(cmp.getEl());
-    refWillContenx += `var $${cmp.getAttributes()['v-ref']} : ${elType};`
-   
+    refWillContenx += `var $${cmp.getAttributes()["v-ref"]} : ${elType};`;
   }
 
   return `
@@ -370,18 +370,18 @@ export function defineFontFace({ family, url }) {
  * @param {import('./types').Project} projectData
  * @returns
  */
-export const getFonts = (projectData) => {
+export const getFonts = (projectData, urlException = "") => {
   const fonts = Object.values(projectData.fonts);
-  const stringFonts = fonts.map((font) =>
-    defineFontFace({
-      family: font.isCDN
-        ? font.name
-        : font.path,
-      url: font.isCDN
-        ? `url("${font.url}")`
-        : `url("${font.path}") `,
-    })
-  );
+
+  const stringFonts = fonts.map((font) => {
+    //  ( async () => {
+    //     console.log('font res' , await fetch(font.path));
+    //   })();
+    return defineFontFace({
+      family: font.name,
+      url: font.isCDN ? `url("${font.url}")` : `url("../${font.path}") `,
+    });
+  });
   return stringFonts.join("\n");
 };
 
@@ -836,7 +836,9 @@ export async function cleanMotions(motions, pages) {
         Object.values(pages).map(async (page) => {
           // const pageContent = await page.html.text();
           console.log(page, page.helmet);
-          const pageFile = await (await opfs.getFile(defineRoot(page.pathes.html))).getOriginFile()
+          const pageFile = await (
+            await opfs.getFile(defineRoot(page.pathes.html))
+          ).getOriginFile();
           const stream = pageFile.stream();
           const reader = stream.getReader();
           const decoder = new TextDecoder();
@@ -849,7 +851,7 @@ export async function cleanMotions(motions, pages) {
             buffer.push(pageContent);
             console.log("page content is : ", pageContent, buffer.join(""));
             buffer.length > 20 && buffer.shift();
-            if (buffer.join("").includes(`[${motionId}="${motion.id}"]`)) {
+            if (buffer.join("").includes(`${motionId}="${motion.id}"`)) {
               isMotionFounded = true;
               break;
             }
@@ -868,6 +870,34 @@ export async function cleanMotions(motions, pages) {
   );
 
   return motions;
+}
+
+/**
+ *
+ * @param {import('../helpers/types').Interactions} interactions
+ * @param {{[key:string] : import('./types').InfinitelyPage}} pages
+ */
+export async function cleanInteractions(interactions, pages) {
+  /**
+   * @type {import('../helpers/types').Interactions}
+   */
+  const newInteractions = {};
+
+  for (const id in interactions) {
+    let isUsed = false;
+    for (const key in pages) {
+      const page = pages[key];
+      const content = await (
+        await opfs.getFile(defineRoot(page.pathes.html))
+      ).text();
+      isUsed = content.includes(`${interactionId}="${id}"`);
+    }
+    if (isUsed) {
+      newInteractions[id] = interactions[id];
+    }
+  }
+
+  return newInteractions;
 }
 
 /**
@@ -955,7 +985,6 @@ export async function installRestModelsAPI(rModels) {
  */
 export async function getTotalSizeProject(projectId, projectData) {
   return toMB(await opfs.getFolderSize(`projects/project-${projectId}`));
-
 }
 
 /**
@@ -967,16 +996,20 @@ export async function handleFilesSize(assets, projectId) {
   // const clone = [...assets];
   // const projectData = await db.projects.get(+projectId);
   const storageDetails = await getStorageDetails(+projectId);
-  // storageDetails. 
+  // storageDetails.
   const previousSize = (await getTotalSizeProject(+projectId)) || 0;
   const igonredFiles = [];
-  const assetsFilesLength = (await ((await opfs.getFolder(defineRoot('assets'))).children())).length
-  assets = assets.slice(0,(MAX_FILES_COUNT+1)-assetsFilesLength).filter((asset) => {
-    const fileSizeByMB = getFileSize(asset).MB;
-    const condition = fileSizeByMB <= MAX_FILE_SIZE;
-    if (!condition) igonredFiles.push(asset);
-    return condition;
-  });
+  const assetsFilesLength = (
+    await (await opfs.getFolder(defineRoot("assets"))).children()
+  ).length;
+  assets = assets
+    .slice(0, MAX_FILES_COUNT + 1 - assetsFilesLength)
+    .filter((asset) => {
+      const fileSizeByMB = getFileSize(asset).MB;
+      const condition = fileSizeByMB <= MAX_FILE_SIZE;
+      if (!condition) igonredFiles.push(asset);
+      return condition;
+    });
 
   /**
    *
@@ -1008,7 +1041,7 @@ export async function handleFilesSize(assets, projectId) {
  *
  * @param {import('./types').LibraryConfig[]} libs
  */
-export async function getScripts(libs) {
+export async function getScripts(libs, urlException = "") {
   const scripts = Promise.all(
     libs.map(
       async (lib) => {
@@ -1028,7 +1061,7 @@ export async function getScripts(libs) {
             `
           : html`
               <script
-                src="${lib.path}"
+                src="${urlException}/${lib.path}"
                 ${lib.defer && `defer=${lib.defer}`}
                 ${lib.async && `async=${lib.async}`}
                 name="${lib.name}"
@@ -1046,7 +1079,7 @@ export async function getScripts(libs) {
  *
  * @param {import('./types').LibraryConfig[]} libs
  */
-export async function getStyles(libs) {
+export async function getStyles(libs, urlException = "") {
   const styles = Promise.all(
     libs.map(async (lib) => {
       // const projectDir = await opfs.getFolder(
@@ -1060,7 +1093,7 @@ export async function getStyles(libs) {
           `
         : html`
             <link
-              href="${lib.path}"
+              href="${urlException}/${lib.path}"
               name="${lib.name}"
               rel="stylesheet"
             />
@@ -1101,6 +1134,7 @@ export const buildPageData = async (page = "", projectData) => {
   console.log(`from buildPageData callback : `, page);
 
   const currentPageId = page;
+  const urlException = page.toLowerCase() == "index" ? `.` : `..`;
   const projectId = projectData.id;
   const currentPage = projectData.pages[`${currentPageId}`];
   const mainRoot = await opfs.root;
@@ -1129,6 +1163,8 @@ export const buildPageData = async (page = "", projectData) => {
     content: "",
     pageStyle: "",
     // editorStyles: "",
+    symbolsStyles: "",
+    templatesStyles: "",
     fonts: "",
     bodyAttributes: projectData.pages[`${currentPageId}`].bodyAttributes || {},
     motions:
@@ -1138,29 +1174,42 @@ export const buildPageData = async (page = "", projectData) => {
 
   const helmet = currentPage.helmet;
 
-  const headerScrtips = getScripts(projectData.jsHeaderLibs);
+  const headerScrtips = getScripts(projectData.jsHeaderLibs, urlException);
 
-  const footerScritps = getScripts(projectData.jsFooterLibs);
+  const footerScritps = getScripts(projectData.jsFooterLibs, urlException);
 
-  const cssLibs = getStyles(projectData.cssLibs);
+  const cssLibs = getStyles(projectData.cssLibs, urlException);
 
   const viewMainScripts = preivewScripts
-    .map((src) => html` <script src="${src}"></script> `)
+    .map((src) => {
+      if (typeof src === "string") {
+        return html` <script src="${src}"></script> `;
+      } else if (isPlainObject(src)) {
+        return html`
+          <script
+            ${Object.entries(src)
+              .map(([key, value]) => `${key}=${value} `)
+              .join(" ")}
+          ></script>
+        `;
+      }
+    })
     .join("\n");
 
-  const globalScrtip = html` <script src="/global/global.js"></script> `;
+  const globalScrtip = html`
+    <script src="${urlException}/global/global.js"></script>
+  `;
 
-  const localScript = html` <script src="/js/${currentPageId}.js"></script> `;
+  const localScript = html`
+    <script src="${urlException}/js/${currentPageId}.js"></script>
+  `;
 
   data.helmet += html`
     <meta name="author" content="${helmet.author || ""}" />
     <meta name="description" content="${helmet.description || ""}" />
     <meta name="keywords" content="${helmet.keywords || ""}" />
     <title>${helmet.title || ""}</title>
-    <link
-      rel="icon"
-      href="${projectData.logo}"
-    />
+    <link rel="icon" href="${urlException}/${projectData.logo}" />
     ${(await helmet?.customMetaTags?.text?.()) || ""}
   `;
 
@@ -1172,13 +1221,30 @@ export const buildPageData = async (page = "", projectData) => {
   // data.pageStyle = (await currentPage.css.text()) || "";
   data.globalScript = globalScrtip || "";
   data.localScript = localScript || "";
-  data.fonts = getFonts(projectData) || "";
+  data.symbolsStyles = currentPage.symbols
+    .map(
+      (id) =>
+        `<link href="${urlException}/editor/symbols/${id}/${id}.css" rel="stylesheet"/>`
+    )
+    .join("\n");
+  data.templatesStyles = Object.values(projectData.blocks)
+    .filter((block) => block.type == "template")
+    .map(
+      (block) =>
+        `<link href="${urlException}/${block.pathes.style}" rel="stylesheet"/>`
+    )
+    .join("\n");
+  // data.fonts = getFonts(projectData, urlException) || "";
   return data;
 };
 
 /**
  *
- * @param {{page:string , projectData:import('./types').Project , editorData:{
+ * @param {{
+ * page:string ,
+ * projectSetting:import('./types').ProjectSetting,
+ * projectData:import('./types').Project ,
+ * editorData:{
  * canvasCss:string,
  * editorCss:string
  * }}} param0
@@ -1187,32 +1253,59 @@ export async function buildPageContentFromData({
   page,
   projectData,
   editorData,
+  projectSetting = {},
 }) {
   const pageData = await buildPageData(page, projectData);
+  const urlException = page.toLowerCase() == "index" ? `.` : `..`;
+  let isTailwindEnabled = false;
+  if (projectSetting.enable_tailwind) {
+    const handle = await opfs.getFile(defineRoot(`css/tailwind/${page}.css`));
+    isTailwindEnabled = handle && handle.exists();
+  }
+
+  // ${buildHeadFromEditorCanvasHeader({
+  //         canvasCss: editorData.canvasCss,
+  //         editorCss: editorData.editorCss,
+  //       })}
   const content = html`
     <!DOCTYPE html>
     <html lang="en">
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        
-        ${buildHeadFromEditorCanvasHeader({
-          canvasCss: editorData.canvasCss,
-          editorCss: editorData.editorCss,
-        })}
 
         <link href="/styles/style.css" rel="stylesheet" />
-        <link href="/css/${page}.css" id="page-style" rel="stylesheet" />
-        <link href="/css/tailwind/${page}.css" id="tailwind-style" rel="stylesheet" />
-        
-        <style id="fonts">
-          ${pageData.fonts}
-        </style>
-        ${pageData.helmet} ${pageData.cssLibs} ${pageData.headerScripts}
+
+        ${isTailwindEnabled
+          ? ` <link
+            href="${urlException}/css/tailwind/${page}.css"
+            id="tailwind-style"
+            rel="stylesheet"
+          />`
+          : `
+          <link
+            href="/styles/global-rules.css"
+            id="global-rules"
+            rel="stylesheet"
+          />
+          `}
+        ${pageData.symbolsStyles} ${pageData.templatesStyles}
+        ${Object.values(projectData.fonts).length
+          ? `<link href="${urlException}/css/fonts.css" rel="stylesheet"/>`
+          : ""}
+        ${pageData.helmet} ${pageData.cssLibs}
+        <link
+          href="${urlException}/css/${page}.css"
+          id="page-style"
+          rel="stylesheet"
+        />
+        ${pageData.headerScripts}
+        ${projectSetting.enable_spline_viewer
+          ? `<script src="https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js" type="module"></script>`
+          : ""}
       </head>
 
       <body
-        style="height:100%;"
         ${Object.keys(pageData.bodyAttributes || {})
           .filter((key) => Boolean(pageData.bodyAttributes[key]))
           .map((key) => `${key}="${pageData.bodyAttributes[key]}"`)
@@ -1229,7 +1322,10 @@ export async function buildPageContentFromData({
 
 /**
  *
- * @param {{ projectData:import('./types').Project , editorData:{
+ * @param {{
+ * projectData:import('./types').Project ,
+ * projectSetting:import('./types').ProjectSetting,
+ * editorData:{
  * canvasCss:string,
  * editorCss:string
  * }}} param0
@@ -1237,6 +1333,7 @@ export async function buildPageContentFromData({
 export async function buildPagesAsBlobForSecrviceWorker({
   projectData,
   editorData,
+  projectSetting = {},
 }) {
   const pages = projectData.pages;
   const pagesAsBlob = {};
@@ -1254,32 +1351,13 @@ export async function buildPagesAsBlobForSecrviceWorker({
           page: key,
           projectData,
           editorData,
+          projectSetting,
         }),
       ],
       { type: "text/html" }
     );
   }
   return pagesAsBlob;
-
-  // return Object.fromEntries(
-  //   await Promise.all(
-  //     Object.entries(pages).map(async ([key, value]) => {
-  //       return await [
-  //         key,
-  //         new Blob(
-  //           [
-  //             await buildPageContentFromData({
-  //               page: key,
-  //               projectData,
-  //               editorData,
-  //             }),
-  //           ],
-  //           { type: "text/html" }
-  //         ),
-  //       ];
-  //     })
-  //   )
-  // );
 }
 
 /**
@@ -1287,6 +1365,7 @@ export async function buildPagesAsBlobForSecrviceWorker({
  * @param {{
  * projectData:import('./types').Project ,
  * pageName:string,
+ * projectSetting:import('./types').ProjectSetting,
  * editorData:{
  * canvasCss:string,
  * editorCss:string
@@ -1296,6 +1375,7 @@ export async function buildPageAsBlobForSecrviceWorker({
   projectData,
   editorData,
   pageName,
+  projectSetting = {},
 }) {
   if (!pageName) {
     console.error(
@@ -1307,6 +1387,7 @@ export async function buildPageAsBlobForSecrviceWorker({
     page: pageName,
     projectData,
     editorData,
+    projectSetting,
   });
   // const pageKey = new URL(
   //   `/pages/${pageName}.html`,
@@ -1345,14 +1426,17 @@ export async function getStorageDetails(projectId) {
 
   const currentProjectSize = await getTotalSizeProject(+projectId);
   const assetsRoot = await opfs.getFolder(defineRoot(`assets`));
-  const filesLength =  (await assetsRoot.children()).length;
+  const filesLength = (await assetsRoot.children()).length;
 
   //  getFilesSize(
   //   currentProject?.assets?.map?.((asset) => asset.file) || []
   // ).MB;
-  const projectSpace = availableInStorageMB > quotaPerProject ? quotaPerProject : availableInStorageMB ;
-  const availableSize = projectSpace - currentProjectSize 
-  const totalAviableSpace = availableSize < 0 ? 0 : availableSize  
+  const projectSpace =
+    availableInStorageMB > quotaPerProject
+      ? quotaPerProject
+      : availableInStorageMB;
+  const availableSize = projectSpace - currentProjectSize;
+  const totalAviableSpace = availableSize < 0 ? 0 : availableSize;
 
   return {
     usage: storageDetails.usage,
@@ -1363,7 +1447,7 @@ export async function getStorageDetails(projectId) {
     quotaInGB: toGB(storageDetails.quota),
     availableSpaceInMB: Math.ceil(totalAviableSpace),
     availableSpaceInGB: toGB(Math.ceil(totalAviableSpace)),
-    usedSpace : currentProjectSize,
+    usedSpace: currentProjectSize,
     projectSpace,
     filesLength,
   };
@@ -1423,7 +1507,7 @@ export function inlineWorker(callback = () => {}, scope = {}) {
  * @returns
  */
 export async function buildPage({ pageName, file, css, js }) {
-  const { parseHTML } =  await import("linkedom");
+  const { parseHTML } = await import("linkedom");
   const isJSZipObject = file.async && file.async instanceof Function;
   const isBlobOrFile = file instanceof Blob || file instanceof File;
   const name = pageName.toLowerCase();
@@ -1472,6 +1556,78 @@ export async function buildPage({ pageName, file, css, js }) {
   const keywordsMetaEl = document.querySelector('meta[name="keywords"]');
   const keywordsMeta = keywordsMetaEl?.getAttribute?.("content") || "";
 
+
+  /**
+   *
+   * @param {import('./types').LibraryConfig} lib
+   * @param {boolean} isHeader
+   * @returns
+   */
+  // const defineJsLibs = (lib, isHeader) => {
+  //   if(lib.src && lib.src.toLowerCase() == `js/${pageName}.js`) return;
+  //   const isInline = !lib.src;
+  //   const inlineContent = isInline ? lib.innerHTML : "";
+
+  //   const isCDN =
+  //     !isInline &&
+  //     (lib.src.startsWith("http://") || lib.src.startsWith("https://"));
+  //   const isDefer = lib.defer ? true : false;
+  //   const isAsync = lib.async ? true : false;
+  //   const name = isCDN
+  //     ? ""
+  //     : lib.getAttribute("name") || !isInline
+  //     ? lib.src.split("/").pop().split(".").shift()
+  //     : "";
+  //   return {
+  //     async: isAsync,
+  //     defer: isDefer,
+  //     header: isHeader,
+  //     footer: !isHeader,
+  //     id: uniqueId(`js-header-lib-${random(10000, 9999999)}`),
+  //     name,
+  //     inlineContent,
+  //     isInline,
+  //     isCDN,
+  //     path: isInline ? "" : lib.src,
+  //     fileUrl: isCDN ? lib.src : "",
+  //     type: "js",
+  //   };
+  // };
+
+  //  /**
+  //  * @type {import('./types').LibraryConfig[]}
+  //  */
+  // const cssLibs = [...document.querySelectorAll('link[rel="stylesheet"]')]
+  //   .map((lib) => {
+  //     if (!lib.href) return;
+  //     // if(lib.href.startsWith("data:")) return;
+  //     if(lib.href.toLowerCase() == `css/${pageName}.css`)return;
+  //     const isCDN =
+  //       lib.href.startsWith("http://") || lib.href.startsWith("https://");
+  //     const path = isCDN ? el.href : el.href; //maybe i will put logic here
+  //     return {
+  //       path,
+  //       isCDN,
+  //     };
+  //   })
+  //   .filter(Boolean);
+
+  // /**
+  //  * @type {import('./types').LibraryConfig[]}
+  //  */
+  // const jsHeaderLibs = [...document.head.querySelectorAll("script")].map(
+  //   (lib) => {
+  //     return defineJsLibs(lib, true);
+  //   }
+  // ).filter(Boolean);
+
+  // const jsFooterLibs = [...document.body.querySelectorAll("script")].map(
+  //   (lib) => {
+  //     return defineJsLibs(lib, false);
+  //   }
+  // ).filter(Boolean);
+ 
+  
   //Remove none important els
   descMetaEl?.remove?.();
   authorMetaEl?.remove?.();
@@ -1494,7 +1650,9 @@ export async function buildPage({ pageName, file, css, js }) {
    * @type {import('./types').InfinitelyPage}
    */
   const page = {
-    html: new Blob([document.body.innerHTML], { type: "text/html" }),
+    html: new File([document.body.innerHTML], `${name}.html`, {
+      type: "text/html",
+    }),
     css: pageCss,
     js: pageJs,
     pathes: {
@@ -1517,6 +1675,97 @@ export async function buildPage({ pageName, file, css, js }) {
 }
 
 export function defineRoot(root = "") {
-  const projectRoot = getProjectRoot()
-  return `${projectRoot}/${root.replace(`${projectRoot}/` , '')}`;
+  const projectRoot = getProjectRoot();
+  return `${projectRoot}/${root.replace(`${projectRoot}/`, "")}`;
+}
+
+export function getPageURLException(pageName = "") {
+  if (!pageName) {
+    throw new Error(`Page name is not founded!`);
+  }
+  return pageName.toLowerCase() == "index" ? `.` : `..`;
+}
+
+/**
+ * 
+ * @param {string} html 
+ * @returns {string[]}
+ */
+export function chunkHtmlElements(html = "") {
+  const pattern = /<([a-zA-Z0-9\-]+)(\s[^>]*)?>([\s\S]*?)<\/\1>/g;
+  return html.match(pattern) || [];
+}
+
+export function getInitProjectData({
+  name = "",
+  description = "This is a new project created with Infinitely Editor.",
+  logo = "",
+  pages = {
+    index: {
+      // html: new Blob([``], { type: "text/html" }),
+      // css: new Blob([``], { type: "text/css" }),
+      // js: new Blob([``], { type: "text/javascript" }),
+      pathes: {
+        html: "editor/pages/index.html",
+        css: "css/index.css",
+        js: "js/index.js",
+      },
+      cmds: {},
+      id: "index",
+      name: "index",
+      symbols: [],
+      components: {},
+      helmet: {},
+      bodyAttributes: {},
+    },
+    playground: {
+      // html: new Blob([``], { type: "text/html" }),
+      // css: new Blob([``], { type: "text/css" }),
+      // js: new Blob([``], { type: "text/javascript" }),
+      pathes: {
+        html: "editor/pages/playground.html",
+        css: "css/playground.css",
+        js: "js/playground.js",
+      },
+      id: "playground",
+      symbols: [],
+      cmds: {},
+      name: "playground",
+      components: {},
+      helmet: {},
+      bodyAttributes: {},
+    },
+  },
+}) {
+  return {
+    name,
+    description,
+    logo,
+    blocks: {},
+    // cssLibraries: [],
+    // jsHeaderLocalLibraries: [],
+    // jsHeaderCDNLibraries: [],
+    // jsFooterLocalLibraries: [],
+    // jsFooterCDNLibraries: [],
+    // cssFooterCDNLibraries: [],
+    // cssFooterLocalLibraries: [],
+    // cssHeaderCDNLibraries: [],
+    // cssHeaderLocalLibraries: [],
+    cssLibs: [],
+    jsHeaderLibs: [],
+    jsFooterLibs: [],
+    pages,
+    // globalCss: new Blob([``], { type: "text/css" }),
+    // globalJs: new Blob([``], { type: "text/javascript" }),
+    symbols: {},
+    assets: [],
+    dynamicTemplates: {},
+    restAPIModels: [],
+    symbolBlocks: [],
+    globalRules: {},
+    fonts: {},
+    motions: {},
+    interactions: {},
+    inited: false,
+  };
 }

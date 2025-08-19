@@ -1,0 +1,94 @@
+/* svg{
+    pointer-events: none;
+} */
+
+[inf-symbol-id].gjs-selected,
+[inf-symbol-id] *.gjs-selected {
+  outline: 2px solid #eb2588 !important;
+  /* outline-offset: 2; */
+}
+
+[inf-symbol-id].gjs-hovered,
+[inf-symbol-id] *.gjs-hovered {
+  border-color: #eb2588 !important;
+  /* outline: 2px solid #eb2588 !important; */
+}
+
+[data-gjs-type="media"] {
+  width: fit-content;
+  height: fit-content;
+  display: block;
+}
+[data-gjs-type="media"] > * {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  /* max-width: 100% !important; */
+  display: block;
+  pointer-events: none;
+}
+
+infinitely-svg {
+  display: inline-block;
+  width: fit-content;
+  height: fit-content;
+}
+
+infinitely-svg svg {
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+}
+
+.screenshot-mode * {
+  animation: none !important;
+  /* transition: none !important; */
+  /* filter: none !important; */
+}
+
+.drop-area {
+  width: 100%;
+  height: 70px;
+  background-color: #eeeeeea1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-transform: capitalize;
+  font-weight: 500;
+}
+
+.drop-area > * {
+  pointer-events: none;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.drop{
+  background-color: #eee;
+  min-height: 70px;
+  position: relative;
+}
+
+.drop::before{
+  content: 'Drop Here';
+  position: absolute;
+  width: fit-content;
+  height: fit-content;
+  top: 50%;
+  left: 50%;
+  font-weight: 500;
+  text-transform: capitalize;
+  transform: translate(-50% , -50%);
+}
+
+.min-h-60{
+  min-height: 60px;
+}
+
+
+spline-viewer{
+  pointer-events: none;
+}

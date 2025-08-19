@@ -34,6 +34,12 @@ export const Layout = memo(({}) => {
      * @returns 
      */
     const getParentDisplayValue = (el)=>{
+      if(!el.parentElement){
+        return {
+          flex:false,
+          grid:false,
+        }
+      }
       const computedChildStyle =  editor.Canvas.getWindow().getComputedStyle(el.parentElement)
       const computedParentStyle =  editor.Canvas.getWindow().getComputedStyle(el.parentElement)
       const displayParent =computedParentStyle.display;
@@ -63,7 +69,7 @@ export const Layout = memo(({}) => {
   }))
 
   return (
-    <section className="mt-3 pb-2 flex flex-col gap-2">
+    <section className=" p-1 flex flex-col gap-2 bg-slate-900 rounded-lg">
       <Size />
 
       <Paddaing />
@@ -72,7 +78,7 @@ export const Layout = memo(({}) => {
       
       <Positioning />
 
-      <section className=" flex flex-col gap-2 px-2 rounded-lg bg-slate-900">
+      <section className=" flex flex-col gap-2  rounded-lg bg-slate-900">
         <MiniTitle>display</MiniTitle>
         <SelectStyle
           label="display"
@@ -82,7 +88,7 @@ export const Layout = memo(({}) => {
         />
       </section>
 
-      {(option.includes("flex") || option.includes("grid")) && (
+      {( option && (option.includes("flex") || option.includes("grid"))) && (
         <section className=" flex flex-col gap-2 p-2 rounded-lg bg-slate-900">
           {option.includes("flex") && <FlexLayout />}
           {option.includes("grid") && <GridLayout />}

@@ -19,9 +19,18 @@ export const Link = async ({ editor }) => {
     },
     model: {
       defaults: {
-        icon:reactToStringMarkup(Icons.link({strokeColor:'white', fill:'white' , width:20 , height:20})),
-        droppable:false,
-        editable:true,
+        icon: reactToStringMarkup(
+          Icons.link({
+            strokeColor: "white",
+            fill: "white",
+            width: 20,
+            height: 20,
+          })
+        ),
+        droppable: false,
+        draggable:true,
+        editable: true,
+        tagName: "a",
         traits: defineTraits([
           {
             name: "href",
@@ -29,10 +38,10 @@ export const Link = async ({ editor }) => {
             placeholder: "Choose link or type custom",
             role: "attribute",
             type: "select",
-            keywords:  ({ projectData }) => {
-                console.log('project Data : ' , projectData);
-                
-                if(!projectData || !Object.keys(projectData).length)return[]
+            keywords: ({ projectData }) => {
+              console.log("project Data : ", projectData);
+
+              if (!projectData || !Object.keys(projectData).length) return [];
               //   const pages = await (await getProjectData()).pages;
               const pagesLinks = Object.keys(projectData.pages)
                 .map((key) => {
@@ -51,7 +60,18 @@ export const Link = async ({ editor }) => {
                 })
                 .filter(Boolean);
 
-                return pagesLinks;
+              return pagesLinks;
+            },
+          },
+          {
+            name: "target",
+            label: "Open in new tap",
+            role: "handler",
+            type: "switch",
+            onSwitch(value) {
+              const sle = editor.getSelected();
+              if (!sle) return;
+              sle.addAttributes({ target: value ? "_blank" : "" });
             },
           },
         ]),

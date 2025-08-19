@@ -22,6 +22,12 @@ export const InfinitelyEvents = {
   },
   style:{
     set:'infinitely:style:set'
+  },
+  keyframe:{
+    set:'infinitely:keyframe:style:set'
+  },
+  editorContainer:{
+    update:`infinitely:editor-container:update`
   }
 };
 

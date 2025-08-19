@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import { refsStt, showCustomModalState, widths } from "../../../helpers/atoms";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 
 export const Aside = ({ children, className = "", dir = "left" , style }) => {
+  const [parent] = useAutoAnimate();
   /**
    * @type {{current:HTMLElement}}
    */
@@ -16,9 +18,10 @@ export const Aside = ({ children, className = "", dir = "left" , style }) => {
   return (
     <aside
     id="main-aside"
+
     style={style}
-      ref={asideRef}
-      className={`${className}  relative backdrop-blur-lg  h-full  bg-slate-900 p-2 flex flex-col   overflow-y-auto hideScrollBar`}
+      ref={parent}
+      className={`${className}  relative backdrop-blur-lg  h-full  bg-slate-900 p-2 flex flex-col will-change-[contents,height]   overflow-y-auto hideScrollBar`}
     >
       {/* <section id="" className="h-full w-full  flex flex-col gap-3  overflow-y-auto hideScrollBar">
         {children}

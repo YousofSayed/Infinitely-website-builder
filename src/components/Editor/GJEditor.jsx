@@ -12,7 +12,7 @@ import {
   selectorState,
 } from "../../helpers/atoms";
 import { blocks } from "../../Blocks/blocks.jsx";
-import gStyles from "../../../public/styles/style.css?raw";
+// import gStyles from "../../../styles/style.css?raw";
 
 import { useLocation, useNavigate } from "react-router-dom";
 import { addDevices } from "../../plugins/addDevices";
@@ -21,7 +21,7 @@ import { addNewTools } from "../../plugins/addNewTools.jsx";
 import { addNewBuiltinCommands } from "../../plugins/addNewBuiltinCommands.jsx";
 import { customCmps } from "../../plugins/customCmps.jsx";
 import { html } from "../../helpers/cocktail.js";
-import { IDB } from "../../plugins/IDB.js";
+import { IDB } from "../../plugins/IDB";
 import { updateProjectThumbnail } from "../../plugins/updateProjectThumbnail.js";
 import { customInfinitelySymbols } from "../../plugins/customInfinitelySymbols";
 import { updateDynamicTemplates } from "../../plugins/updateDynamicTemplates.js";
@@ -47,10 +47,10 @@ export const GJEditor = memo(({ children }) => {
   const setSelector = useSetRecoilState(selectorState);
   const setRule = useSetRecoilState(ruleState);
   const navigate = useNavigate();
-  const currentDynamicTemplateId = useRecoilValue(
-    currentDynamicTemplateIdState
-  );
-  const dynamicTemplates = useRecoilValue(dynamicTemplatesState);
+  // const currentDynamicTemplateId = useRecoilValue(
+  //   currentDynamicTemplateIdState
+  // );
+  // const dynamicTemplates = useRecoilValue(dynamicTemplatesState);
   // const setStyle = useSetClassForCurrentEl();
   const [plugins, setPlugins] = useState([
     // customColors,
@@ -62,11 +62,11 @@ export const GJEditor = memo(({ children }) => {
     IDB,
     updateProjectThumbnail,
     customInfinitelySymbols,
-    updateDynamicTemplates,
+    // updateDynamicTemplates,
     // motionsRemoverHandler,
     motionsCloneHandler,
     globalTraits,
-    handleComponentsOnCreate,
+    // handleComponentsOnCreate,
     // selectionPreventer,
     // muatationDomElements,
   ]);
@@ -77,58 +77,21 @@ export const GJEditor = memo(({ children }) => {
      * @param {import('grapesjs').Editor} ev
      */
     async (ev) => {
-    //  const types = editor.DomComponents.getTypes();
+      //  const types = editor.DomComponents.getTypes();
 
-    //   types.forEach((cy) => {
-    //     editor.DomComponents.addType(cy.id, {
-    //       model: {
-    //         defaults: {
-    //           dropabble: true,
-    //         },
-    //       },
-    //     });
-    //   });
+      //   types.forEach((cy) => {
+      //     editor.DomComponents.addType(cy.id, {
+      //       model: {
+      //         defaults: {
+      //           dropabble: true,
+      //         },
+      //       },
+      //     });
+      //   });
       ev.Blocks.categories.add({ id: "others", title: "Others" });
 
       const editor = ev;
-       
-      // editor.on(
-      //   "component:resize",
-      //   /**
-      //    *
-      //    * @param {{component:import('grapesjs').Component  , el:HTMLElement}} param0
-      //    */
-      //   ({ component, el, ...args }) => {
-      //     // const newWidth = el.offsetWidth; // New width in pixels
-      //     // const newHeight = el.offsetHeight;
-      //     // console.log("rule : ", newWidth , newHeight , component.getChangedProps());
-      //     setTimeout(() => {
-      //       const rule = editor.Css.get(
-      //       component
-      //       .getClasses()
-      //       .map((cl) => `.${cl}`)
-      //       .join("")
-      //     );
-      //     if (!rule) return;
-      //     const styles = rule.getStyle() || {};
-      //     console.log(
-      //       "resizing :",
-      //       // ,
-      //       component
-      //       .getClasses()
-      //       .map((cl) => `.${cl}`)
-      //       .join("")
-      //     );
-      //     editor.Css.remove(rule);
-      //     setStyle({
-      //      cssProp:Object.keys(styles),
-      //      value:Object.values(styles)
-      //     })
-      //     }, 0);
-      //     // console.log("rule : ", newWidth , newHeight);
 
-      //   }
-      // );
       ev.runCommand("core:component-outline");
       isChrome(() => {
         editor.on("canvas:frame:load", ({ window, el }) => {
@@ -136,85 +99,68 @@ export const GJEditor = memo(({ children }) => {
            * @type {HTMLIFrameElement}
            */
           const iframe = el;
-          // const doc = iframe.contentDocument;
-          // const originalWrite = doc.write;
-          // doc.write = (html) => {
-          //   const blob = new Blob([html], { type: 'text/html' });
-          //   iframe.src = URL.createObjectURL(blob);
-          // };
+
           if (iframe.hasAttribute("src")) return;
           iframe.setAttribute("referrerpolicy", "same-origin unsafe-url");
           iframe.setAttribute("src", "about:srcdoc");
           console.log("iframe work: ", iframe);
-          //  el.setAttribute('sandbox' , 'allow-same-origin allow-scripts')
-          // editor.Canvas.getFrame().setAttribute('srcdoc' , 'about:blank')
-          // editor.Canvas.getFrame().fetch({url:'/'});
         });
       });
-
-      // editor.on('canvas:frame:load:body', ({ body, el , window }) => {
-      //   console.log('from load body : ', body, el, window);
-      //   /**
-      //    * @type {Window}
-      //    */
-      //   const ifrWindow = window;
-      //   ifrWindow.addEventListener('error' , (event) => {
-      //     console.error('Error in iframe:', event);
-      //     toast.error(`Error in iframe: ${event.message}`);
-      //   });
-      //   ifrWindow.addEventListener('unhandledrejection', (event) => {
-      //     console.error('Unhandled rejection in iframe:', event.reason);
-      //     toast.error(`Unhandled rejection in iframe: ${event.reason}`);
-      //   });
-
-      // });
 
       ev.on("component:deselected", () => {
         setSelectedEl({ currentEl: undefined });
       });
-      // // editor.RichTextEditor.hideToolbar();
 
       ev.on("component:selected", () => {
         const selectedEl = ev.getSelected();
+        const symbolInfo = getInfinitelySymbolInfo(selectedEl);
         // selectedEl.set({ resizable: false });
-        setSelectedEl({ currentEl: JSON.parse(JSON.stringify(selectedEl))}); //Fuck bug which make me like a crazy was fucken here , and it was because i set Dom Element in atom , old Code : selectedEl?.getEl()
+        setSelectedEl({ currentEl: JSON.parse(JSON.stringify(selectedEl)) }); //Fuck bug which make me like a crazy was fucken here , and it was because i set Dom Element in atom , old Code : selectedEl?.getEl()
         setRule({ is: false, ruleString: "" });
 
-        const location = window.location;
+        // const location = window.location;
 
         setSelector("");
-        sessionStorage.removeItem(current_symbol_id);
+        if (symbolInfo.isSymbol) {
+          sessionStorage.setItem(current_symbol_id, symbolInfo.mainId);
+        } else {
+          sessionStorage.removeItem(current_symbol_id);
+        }
         const projectSettings = getProjectSettings().projectSettings;
         if (projectSettings.navigate_to_style_when_Select) {
           navigate("/edite/styling");
         }
       });
 
-      ev.on("component:cmds:update", () => {
-        console.log("updateeeeeeeeeeeeeeeeeeeeeee 89");
-        const sle = ev.getSelected();
-        if (!sle) {
-          console.warn("No Selected Component");
-          return;
-        } else {
-          setCmdsContext(sle);
-        }
-      });
+      // ev.on("component:cmds:update", () => {
+      //   console.log("updateeeeeeeeeeeeeeeeeeeeeee 89");
+      //   const sle = ev.getSelected();
+      //   if (!sle) {
+      //     console.warn("No Selected Component");
+      //     return;
+      //   } else {
+      //     setCmdsContext(sle);
+      //   }
+      // });
 
       ev.on("redo", (args) => {
-        ev.trigger("component:style:update", {
-          currentDynamicTemplateId,
-          dynamicTemplates,
+        // ev.trigger("component:style:update", {
+        //   currentDynamicTemplateId,
+        //   dynamicTemplates,
+        // });
+        setSelectedEl({
+          currentEl: JSON.parse(JSON.stringify(editor.getSelected() || {})),
         });
-        setSelectedEl({ currentEl: JSON.parse(JSON.stringify(editor.getSelected() || {})) });
       });
 
       ev.on("undo", (args) => {
-        ev.trigger("component:style:update", {
-          currentDynamicTemplateId,
-          dynamicTemplates,
+        // ev.trigger("component:style:update", {
+        //   currentDynamicTemplateId,
+        //   dynamicTemplates,
+        // });
+        setSelectedEl({
+          currentEl: JSON.parse(JSON.stringify(editor.getSelected() || {})),
         });
-        setSelectedEl({ currentEl: JSON.parse(JSON.stringify(editor.getSelected() || {})) });
       });
 
       // ev.on("canvas:dragover", (eve) => {
@@ -228,9 +174,10 @@ export const GJEditor = memo(({ children }) => {
       //   getSymbol(ev.DomComponents.getById(eve.target.id));
       // });
     },
-    [plugins, dynamicTemplates, currentDynamicTemplateId]
+    [plugins]
   );
-
+  console.log('gj-editor : ' , getProjectSettings().projectSettings);
+  
   return (
     <Editor
       grapesjs={grapesjs}
@@ -239,12 +186,15 @@ export const GJEditor = memo(({ children }) => {
         width: "100%",
         multipleSelection: true,
         // avoidDefaults: true,
+        // nativeDnD:true,
+        // showToolbar:true,
         showOffsets: true,
         keepUnusedStyles: true,
         clearStyles: false,
+        
         // stylePrefix:'inf-',
         forceClass: true,
-        canvasCss: gStyles,
+        // canvasCss: gStyles,
 
         // pageManager: {
         //   // selected: "index",
@@ -259,7 +209,7 @@ export const GJEditor = memo(({ children }) => {
         },
         optsHtml: {
           // attributes: true,
-          keepInlineStyle: true,
+          // keepInlineStyle: true,
           altQuoteAttr: true,
 
           withProps: true,
@@ -289,7 +239,7 @@ export const GJEditor = memo(({ children }) => {
         // pStylePrefix:'inf',
         storageManager: {
           autoload: true,
-          autosave: true,
+          autosave: getProjectSettings().projectSettings.enable_auto_save,
           type: "infinitely",
         },
         panels: { defaults: [] },
@@ -337,7 +287,7 @@ export const GJEditor = memo(({ children }) => {
               []),
             // {src:`${jsToDataURL(`console.log('data js url.............@')`)}`}
           ],
-          styles: [],
+          styles: ["/styles/dev.css" , "/styles/style.css"],
 
           customBadgeLabel:
             /**
@@ -349,7 +299,7 @@ export const GJEditor = memo(({ children }) => {
               return html`
                 <figure
                   id="inf-badge"
-                  class="flex gap-2 items-center p-1 w-full ${symbolInfo.isMain
+                  class="flex gap-2 items-center p-1 w-full ${symbolInfo.isSymbol
                     ? "bg-[var(--symbol-color-hover)]"
                     : "bg-blue-600"}  "
                 >

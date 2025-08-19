@@ -41,7 +41,7 @@ export const DetailsForBlocks = memo(({ label, HTMLChildren }) => {
     <section
       id={label}
       ref={blocksContainerRef}
-      className="mt-3 grid custom-grid-col p-2 "
+      className=" grid custom-grid-col p-2 bg-slate-900 rounded-lg"
     ></section>
     // </AccordionItem>
   );

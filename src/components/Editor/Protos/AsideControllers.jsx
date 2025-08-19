@@ -51,6 +51,14 @@ export const AsideControllers = () => {
       </Li>
 
       <Li
+        title="interactions"
+        to={"/edite/interactions"}
+        className={`w-[50%] h-[40.5px!important] hover:bg-blue-600 `}
+      >
+        {Icons.interaction({ fill: "white" })}
+      </Li>
+
+      <Li
         title="motion"
         to={"/edite/motion"}
         className={`w-[50%] h-[40.5px!important] hover:bg-blue-600 `}

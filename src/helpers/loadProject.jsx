@@ -1,5 +1,7 @@
 import JSZip from "jszip";
 import {
+  buildPage,
+  getInitProjectData,
   installFonts,
   installLibs,
   installRestModelsAPI,
@@ -10,6 +12,7 @@ import { random, sortBy, uniqueId } from "lodash";
 import { db } from "./db";
 import { uploadAssets, workerSendToast } from "./workerCommands";
 import { opfs } from "./initOpfs";
+import { preivewScripts } from "../constants/shared";
 
 /**
  *
@@ -45,18 +48,38 @@ export const loadProject = async (props) => {
       // optimizedBinaryString: true,
       // createFolders:true
     });
+
+    const projectFiles = projectZip.files;
+    console.log("projectzip : ", projectZip.files);
+    const notIncludedFiles = ["editor/infinitely.json", "index.html", "pages/"];
+    const isInfinitelyJson = Boolean(projectFiles["editor/infinitely.json"]);
+    let infinitelyJson = {};
+     if (!isInfinitelyJson) {
+      throw new Error(`infinitely.json config file not founded!!`);
+    }
     const projectDBId = await db.projects.add({});
     const projectPath = `projects/project-${projectDBId}`;
     const defineRoot = (root = "") =>
       `${projectPath}/${root.replace(projectPath, "")}`;
-    const projectFiles = projectZip.files;
-    console.log("projectzip : ", projectZip.files);
-    const notIncludedFiles = ["editor/infinitely.json", "index.html", "pages/"];
+
+   
+    // console.log(
+    //   "isInfinitelyJson  :",
+    //   isInfinitelyJson,
+    //   projectFiles["editor/infinitely.json"],
+    //   Boolean(projectFiles["editor/infinitely.json"])
+    // );
+
+    // return;
+   
     /**
      * @type {{[key:string] : JSZip.JSZipObject}}
      */
     const pages = {};
-    let dbJSONData = {};
+    /**
+     * @type {import('./types').Project}
+     */
+    let dbJSONData = getInitProjectData({ pages: {} });
     for (const path in projectFiles) {
       const zipHandle = projectFiles[path];
       if (zipHandle.dir) {
@@ -67,8 +90,91 @@ export const loadProject = async (props) => {
           pages[path] = zipHandle;
         }
         if (path.startsWith("editor/infinitely.json")) {
-          dbJSONData = JSON.parse(await zipHandle.async('text'));
+          dbJSONData = await restoreBlobs(JSON.parse(await zipHandle.async("text")));
         }
+
+        // else {
+        //   dbJSONData = {
+        //     ...dbJSONData,
+        //     inited: true,
+        //     name:file?.name||`Project-${projectDBId}`,
+        //     cssLibs: path.startsWith("libs/css")
+        //       ? dbJSONData.cssLibs.concat({ path, isLocal: true })
+        //       : dbJSONData.cssLibs,
+        //     jsFooterLibs: path.startsWith("libs/js/header")
+        //       ? dbJSONData.jsHeaderLibs.concat({
+        //           path,
+        //           isLocal: true,
+        //           header: true,
+        //         })
+        //       : dbJSONData.jsHeaderLibs,
+        //     jsFooterLibs: path.startsWith("libs/js/footer")
+        //       ? dbJSONData.jsFooterLibs.concat({
+        //           path,
+        //           isLocal: true,
+        //           footer: true,
+        //         })
+        //       : dbJSONData.jsFooterLibs,
+        //     fonts: path.startsWith("fonts/")
+        //       ? {
+        //           ...dbJSONData.fonts,
+        //           [`${path.split("/").pop()}`]: {
+        //             path,
+        //             name: path.split("/").pop(),
+        //             isCDN: false,
+        //           },
+        //         }
+        //       : dbJSONData.fonts,
+        //     blocks: path.startsWith(`editor/blocks`)
+        //       ? {
+        //           ...dbJSONData.blocks,
+        //           [`${path.split("/").pop().split(".").shift()}`]: {
+        //             pathes: {
+        //               ...(path.endsWith(".html") ? { content: path } : {}),
+        //               ...(path.endsWith(".css") ? { style: path } : {}),
+        //             },
+        //             id: path.split("/").pop().split(".").shift(),
+        //             label: path.split("/").pop().split(".").shift(),
+        //             name: path.split("/").pop().split(".").shift(),
+        //             type: "template",
+        //           },
+        //         }
+        //       : path.startsWith(`editor/symbols`)
+        //       ? {
+        //           ...dbJSONData.blocks,
+        //           [`${path.split("/").pop().split(".").shift()}`]: {
+        //             pathes: {
+        //               ...(path.endsWith(".html") ? { content: path } : {}),
+        //               ...(path.endsWith(".css") ? { style: path } : {}),
+        //             },
+        //             id: path.split("/").pop().split(".").shift(),
+        //             label: path.split("/").pop().split(".").shift(),
+        //             name: path.split("/").pop().split(".").shift(),
+        //             type: "symbol",
+        //           },
+        //         }
+        //       : dbJSONData.blocks,
+
+        //     symbols: path.startsWith(`editor/symbols`)
+        //       ? {
+        //           ...dbJSONData.symbols,
+        //           [`${path.split("/").pop().split(".").shift()}`]: {
+        //             pathes: {
+        //               ...(path.endsWith(".html") ? { content: path } : {}),
+        //               ...(path.endsWith(".css") ? { style: path } : {}),
+        //             },
+        //             id: path.split("/").pop().split(".").shift(),
+        //             label: path.split("/").pop().split(".").shift(),
+        //             name: path.split("/").pop().split(".").shift(),
+        //             type: "symbol",
+        //           },
+        //         }
+        //       : dbJSONData.symbols,
+
+        //     logo: path.startsWith("logo") ? path : "",
+        //   };
+        // }
+
         if (notIncludedFiles.some((noPath) => noPath.startsWith(path))) {
           continue;
         }
@@ -83,31 +189,53 @@ export const loadProject = async (props) => {
     //Write Editor Pages
     for (const path in pages) {
       const page = pages[path];
-      const pageName = page.name.split("/").pop() || page.name;
-      const fileContent = await page.async("text");
-      const { document } = parseHTML(fileContent);
-      console.log(`page content : ` , document.body.innerHTML);
-      
-      await opfs.createFile(defineRoot(`editor/pages/${path.replace('pages/','')}`), document.body.innerHTML);
+      const pageName =
+        page.name.split("/").pop().split(".").shift() || page.name;
+      // const fileContent = await page.async("text");
+      if (isInfinitelyJson) {
+        const { document } = parseHTML(await page.async("text"));
+        // console.log(`page content : ` , document.body.innerHTML);
+        document.body.querySelectorAll(`script , link`).forEach((el) => {
+          if (el.src || el.href) {
+            el.remove();
+          }
+        });
+
+        await opfs.createFile(
+          defineRoot(`editor/pages/${path.replace("pages/", "")}`),
+          document.body.innerHTML
+        );
+      } else {
+        // const builtPage = await buildPage({
+        //   pageName,
+        //   file: page,
+        // });
+        // dbJSONData.pages = {
+        //   ...dbJSONData.pages,
+        //   [pageName]: builtPage,
+        // };
+        // await opfs.createFile(
+        //   defineRoot(`editor/pages/${path.replace("pages/", "")}`),
+        //   await builtPage.html.arrayBuffer()
+        // );
+      }
     }
     dbJSONData.id = projectDBId;
     //Write DB Json Data
-    await db.projects.update(projectDBId , dbJSONData);
+    await db.projects.update(projectDBId, dbJSONData);
 
-     workerSendToast({
+    workerSendToast({
       isNotMessage: true,
       msg: proccessProjectId,
       type: "done",
     });
 
     workerSendToast({
-      msg:'Project loaded successfully',
-      type:'success',
+      msg: "Project loaded successfully",
+      type: "success",
+    });
 
-    })
-
-   
-    return true; 
+    return true;
     // workerSendToast({
     //   isNotMessage: true,
     //   msg: proccessProjectId,

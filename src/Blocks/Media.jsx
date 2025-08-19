@@ -3,7 +3,11 @@ import { Icons } from "../components/Icons/Icons";
 import { defaultAttributeNames, tagNames } from "../constants/hsValues";
 import { media_types } from "../constants/shared";
 import { html, parse } from "../helpers/cocktail";
-import { defineTraits, preventSelectNavigation } from "../helpers/functions";
+import {
+  defineTraits,
+  doActionAndPreventSaving,
+  preventSelectNavigation,
+} from "../helpers/functions";
 import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
 import { Button } from "../components/Protos/Button";
 
@@ -18,83 +22,36 @@ export const Media = ({ editor }) => {
   editor.Components.removeType("audio");
   let timeout;
 
-  const traits = ({ mediaType }) => {
-    return defineTraits([
-      {
-        name: "choose-file",
-        label: "Choose file",
-        role: "attribute",
-        type: "media",
-        mediaType,
-        // value:'',
-        bindToAttribute: true,
-        showCallback() {
-          const sle = editor.getSelected();
-          const sleParent = sle.parent();
-          if (!sle || !sleParent) return;
-          const parentType = sleParent.get("type");
-          const trait = sle?.getTrait?.("type");
-          // if (!trait) return;
-          const tagName = sle.tagName.toLowerCase();
-          return (
-            parentType == "media" && (tagName == "video" || tagName == "audio")
-          );
-        },
-        callback({ editor, newValue }) {
-          const sle = editor.getSelected();
-          // const child = sle.components().models[0];
-          if (!sle) return;
-          sle.addAttributes({ src: newValue });
-        },
-      },
-
-      {
-        name: "iframe-src",
-        label: "Iframe src",
-        placeholder: "Type iframe src",
-        role: "attribute",
-        type: "text",
-        bindToAttribute: true,
-        showCallback() {
-          const sle = editor.getSelected();
-          const sleParent = sle.parent();
-          if (!sle || !sleParent) return;
-          const parentType = sleParent.get("type");
-          const trait = sle?.getTrait?.("type");
-          // if (!trait) return;
-          const tagName = sle.tagName.toLowerCase();
-          return parentType == "media" && tagName == "iframe";
-        },
-        callback({ editor, newValue }) {
-          const sle = editor.getSelected?.();
-          // const child = sle.components().models[0];
-          if (!sle) return;
-          sle.addAttributes({ src: newValue });
-        },
-      },
-
-      {
-        name: "access-media",
-        label: "Access media",
-        role: "attribute",
-        type: "switch",
-        onSwitch(value) {
-          const sle = editor.getSelected();
-          // const child = sle.components().models[0];
-          if (!sle) return;
-          //   const parsedValue = Boolean(parse(newValue));
-          value ? sle.removeClass("no-pointer") : sle.addClass("no-pointer");
-        },
-        // callback({ editor, newValue }) {},
-      },
-    ]);
-  };
-
   editor.Components.addType("media", {
+    isComponent: (el) => {
+      // console.log(el, el.tagName);
+      if (!el.tagName) return;
+      if (el.tagName.toLowerCase() == "infinitely-media") return true;
+      if (
+        media_types.includes(el.tagName.toLowerCase()) &&
+        el.parentElement.tagName.toLowerCase() != "infinitely-media"
+      ) {
+        console.log("it is media");
+
+        return {
+          type: "media",
+          tagName: "infinitely-media",
+          components: {
+            tagName: el.tagName,
+            attributes: Object.fromEntries(
+              el
+                .getAttributeNames()
+                .map((attr) => [attr, el.getAttribute(attr)])
+            ),
+          },
+        };
+      }
+    },
     view: {
       events: {
         click: "onClick",
       },
+
       // onAttrUpdate() {
       //   const attributes = this.model.getAttributes();
       //   const traitsNames = ["choose-file", "iframe-src", "access-media" , 'id'];
@@ -111,59 +68,61 @@ export const Media = ({ editor }) => {
       // },
       onRender({ el, model, editor }) {
         try {
-          const typeTraitVal = model.getTrait("type").attributes.value;
-          // const iframeSrc = model.getTrait("iframe-src").attributes.value;
-          // const choosedFile = model.getTrait("choose-file").attributes.value;
-          // const mediaAttributes = parse(
-          //   model.getTrait("media-attributes").attributes.value || {}
-          // );
-          // const mediaAttributes = model.getTrait('media-attributes').attributes.value;
-          const child = model.components().models[0];
+          doActionAndPreventSaving(editor, (ed) => {
+            const typeTraitVal = model.getTrait("type").attributes.value;
+            // const iframeSrc = model.getTrait("iframe-src").attributes.value;
+            // const choosedFile = model.getTrait("choose-file").attributes.value;
+            // const mediaAttributes = parse(
+            //   model.getTrait("media-attributes").attributes.value || {}
+            // );
+            // const mediaAttributes = model.getTrait('media-attributes').attributes.value;
+            const child = model.components().models[0];
 
-          // const childELl = child.getEl();
-          // childELl.style.pointerEvents = "none";
-          // childELl.style.display = "block";
-          // childELl.style.width = "100%";
-          // childELl.style.height = "100%";
-          const attributes = model.getAttributes();
-          delete attributes["id"];
+            // const childELl = child.getEl();
+            // childELl.style.pointerEvents = "none";
+            // childELl.style.display = "block";
+            // childELl.style.width = "100%";
+            // childELl.style.height = "100%";
+            const attributes = model.getAttributes();
+            delete attributes["id"];
 
-          console.log(
-            "from render , :",
-            media_types.includes(child.tagName.toLowerCase()),
-            model.getClasses()
-          );
+            console.log(
+              "from render , :",
+              media_types.includes(child.tagName.toLowerCase()),
+              model.getClasses()
+            );
 
-          if (media_types.includes(child.tagName.toLowerCase())) {
-            child.addAttributes(attributes, { avoidStore: true });
-          }
+            if (media_types.includes(child.tagName.toLowerCase())) {
+              child.addAttributes(attributes, { avoidStore: true });
+            }
 
-          // if (
-          //   media_types.includes(child.tagName.toLowerCase()) &&
-          //   model.getClasses().includes("h-60")
-          // ) {
-          //   model.removeClass(["h-300", "minh-60", "h-60"]);
-          // }
-          // editor.getWrapper().getInnerHTML()
-          // }
-          model.updateTrait("src", {
-            mediaType: typeTraitVal,
-          });
+            // if (
+            //   media_types.includes(child.tagName.toLowerCase()) &&
+            //   model.getClasses().includes("h-60")
+            // ) {
+            //   model.removeClass(["h-300", "minh-60", "h-60"]);
+            // }
+            // editor.getWrapper().getInnerHTML()
+            // }
+            model.updateTrait("src", {
+              mediaType: typeTraitVal,
+            });
 
-          // model.updateTrait("media-attributes", {
-          //   value: JSON.stringify(model.components().models[0].getAttributes()),
-          // });
-          child.set({
-            layerable: false,
-            draggable: false,
-            droppable: false,
-            removable: false,
-            selectable: false,
-            hoverable: false,
-            badgable: false,
-            editable: false,
-            locked: true,
-            resizable: false,
+            // model.updateTrait("media-attributes", {
+            //   value: JSON.stringify(model.components().models[0].getAttributes()),
+            // });
+            child.set({
+              layerable: false,
+              draggable: false,
+              droppable: false,
+              removable: false,
+              selectable: false,
+              hoverable: false,
+              badgable: false,
+              editable: false,
+              locked: true,
+              resizable: false,
+            });
           });
           // child.setTraits(traits({ mediaType: child.tagName.toLowerCase() }));
         } catch (error) {
@@ -189,19 +148,13 @@ export const Media = ({ editor }) => {
           Icons.video({ fill: "white", width: 18, height: 18 })
         ),
         droppable: false,
-        tagName: "section",
+        tagName: "infinitely-media",
         attributes: {
           // class: "h-60 w-full h-full ",
           controls: true,
           poster: "",
         },
-        components: html`
-          <div class="choose-media h-full no-pointer p-10">
-            <h3 style="margin:0; padding:0; height:100%;" class="flex-center">
-              Please select media 💙
-            </h3>
-          </div>
-        `,
+        components: html` Please select media 💙 `,
         traits: defineTraits([
           {
             name: "type",
@@ -266,6 +219,8 @@ export const Media = ({ editor }) => {
               const sle = editor.getSelected();
               const child = sle.components().models[0];
               if (!sle && !child) return;
+              console.log(editor.Storage.getConfig().autosave);
+
               sle.addAttributes({ src: newValue }, { avoidStore: true });
             },
           },
@@ -380,14 +335,8 @@ export const Media = ({ editor }) => {
         const originalAttributes = child.getAttributes();
         const childAttributes = { ...attributes };
         delete childAttributes["id"];
-        // if (child.tagName.toLowerCase() === "audio") {
-        //   childAttributes.style = `width: 100%; height: auto; ${
-        //     childAttributes.style || ""
-        //   }`;
-        //   childAttributes.controls = true;
-        // }
         const allAttributes = { ...originalAttributes, ...childAttributes };
-        const currentSrc = childEl.getAttribute('src');
+        const currentSrc = childEl.getAttribute("src");
 
         console.log(originalAttributes, childAttributes);
 
@@ -433,6 +382,8 @@ export const Media = ({ editor }) => {
       toHTML() {
         const child = this.components().models[0];
         const childEl = child.getEl();
+        console.log(`Exporter fired`);
+
         if (!media_types.includes(child.tagName.toLowerCase())) {
           return this.getEl().outerHTML;
         }
@@ -460,7 +411,10 @@ export const Media = ({ editor }) => {
 
         // clone.removeClass("no-pointers");
         const attributes = this.getAttributes();
+        console.log("attrinutes", attributes);
+
         delete attributes["id"];
+        // const exportedCode = child.getEl().outerHTML;
         const exportedCode = child.toHTML({ attributes });
 
         // clone.toHTML({

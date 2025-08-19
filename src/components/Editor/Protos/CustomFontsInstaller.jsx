@@ -19,7 +19,7 @@ import { dbAssetsSwState } from "../../../helpers/atoms";
 import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
 import { opfs } from "../../../helpers/initOpfs";
 import { useEditorMaybe } from "@grapesjs/react";
-import { defineRoot, getFileSize } from "../../../helpers/bridge";
+import { defineRoot, getFileSize, getFonts } from "../../../helpers/bridge";
 
 const CustomScroller = React.forwardRef(({ style, ...props }, ref) => (
   <div
@@ -89,11 +89,11 @@ export const CustomFontsInstaller = () => {
         path: `fonts/${fileData.name}`,
         isCDN: fileData.isCDN,
         name: fileData.name,
-        size : getFileSize(fileData.file).MB,
+        size: getFileSize(fileData.file).MB,
       };
 
       // const fontsFolder = await opfs.getFolder(await opfs.root , `projects/project-${opfs.id}/fonts`);
-      await opfs.createFiles([
+      await opfs.writeFiles([
         {
           path: defineRoot(newFontsUploaded[fileData.name].path),
           content: fileData.file,
@@ -101,12 +101,20 @@ export const CustomFontsInstaller = () => {
       ]);
     }
 
-    await db.projects.update(projectId, {
+    const dataToUpdate = {
       fonts: {
         ...projectData.fonts,
         ...newFontsUploaded,
       },
-    });
+    };
+
+    await opfs.writeFiles([
+      {
+        path: defineRoot(`css/fonts.css`),
+        content: getFonts(dataToUpdate),
+      },
+    ]);
+    await db.projects.update(projectId, dataToUpdate);
 
     // swDBAssets.postMessage({
     //   command: "setVar",
@@ -157,7 +165,7 @@ export const CustomFontsInstaller = () => {
               openInputFile();
             }}
           >
-            {Icons.upload({ strokeColor:'white',})}
+            {Icons.upload({ strokeColor: "white" })}
             Upload
           </Button>
           <input

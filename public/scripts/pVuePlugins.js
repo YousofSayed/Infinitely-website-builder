@@ -5,11 +5,11 @@ window["vIntersectionObserver"] = new IntersectionObserver((entries) => {
     );
     if (entrie.isIntersecting) {
       entrie.target.dispatchEvent(
-        new CustomEvent(`enterView`, { detail: { interscrt: true } })
+        new CustomEvent(`enterview`, { detail: { interscrt: true } })
       );
     } else {
       entrie.target.dispatchEvent(
-        new CustomEvent(`leaveView`, { detail: { interscrt: false } })
+        new CustomEvent(`leaveview`, { detail: { interscrt: false } })
       );
     }
   });

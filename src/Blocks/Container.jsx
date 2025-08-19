@@ -10,22 +10,32 @@ import { defineTraits } from "../helpers/functions";
  */
 export const Container = ({ editor }) => {
   editor.Components.addType("container", {
+    view: {
+      onRender({ model }) {
+        model.set({
+          droppable: true,
+          draggable: true,
+        });
+      },
+    },
     model: {
-
       defaults: {
-        resizable:true,
-        icon: editorIcons.container({width:20 , height:20 , fill:'white'}),
+        resizable: true,
+        draggable: true,
+        droppable: true,
+        icon: editorIcons.container({ width: 20, height: 20, fill: "white" }),
         tagName: "section",
         attributes: {
-          class: "inf-container",
+          class: "inf-container p-10 drop",
         },
+        // components: [{ type: "drop-area" }],
         traits: defineTraits([
           {
-            placeholder:'select tag',
-            label:'Select tag',
-            name:'Select tag',
-            role:'attribute',
-            
+            placeholder: "select tag",
+            label: "Select tag",
+            name: "Select tag",
+            role: "attribute",
+
             keywords: tagNames,
             type: "select",
             callback({ editor, trait, newValue }) {

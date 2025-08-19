@@ -1,14 +1,14 @@
 import React, { memo, useEffect, useRef, useState, useTransition } from "react";
 import { SwitchButton } from "../../Protos/SwitchButton";
-import { InfAccordion } from "../../Protos/InfAccordion";
-import { Accordion, AccordionItem } from "@heroui/accordion";
+// import { InfAccordion } from "../../Protos/InfAccordion";
+// import { Accordion, AccordionItem } from "@heroui/accordion";
 import { Select } from "./Select";
 import {
   downloadFile,
   getGsapCssProperties,
   getProjectData,
   getProjectSettings,
-  initToolbar, 
+  initToolbar,
   preventSelectNavigation,
 } from "../../../helpers/functions";
 import { Adder } from "./Adder";
@@ -63,6 +63,8 @@ import { ToastMsgInfo } from "./ToastMsgInfo";
 import { OptionsButton } from "../../Protos/OptionsButton";
 import { ScrollableToolbar } from "../../Protos/ScrollableToolbar";
 import { pageBuilderWorker } from "../../../helpers/defineWorkers";
+import { AccordionItem } from "../../Protos/AccordionItem";
+import { Accordion } from "../../Protos/Accordion";
 const parseValue = (value) => {
   try {
     return (
@@ -173,7 +175,7 @@ const AddNestedProps = ({
   return (
     <section className="flex flex-col  ">
       <section
-        className={`${className} flex  gap-2  p-2 sticky top-0 bg-slate-950 ${
+        className={`${className} flex  gap-2  sticky top-0 bg-slate-950 ${
           Object.keys(getNestedValue(animation, destination) || {})?.length
             ? "rounded-tl-lg rounded-tr-lg"
             : "rounded-lg"
@@ -214,9 +216,11 @@ const AddNestedProps = ({
                   key={index}
                   className="relative flex flex-col gap-2  mt-3"
                 >
-                  <h1 className="px-2 py-1  bg-blue-600 rounded-lg w-fit">
+                  {/* <h1 className="px-2 text-slate-200 py-1  bg-blue-600 rounded-lg w-fit">
                     {key}
-                  </h1>
+                  </h1> */}
+
+                  <FitTitle className="capitalize">{key}</FitTitle>
 
                   <section className="flex  gap-2">
                     <Input
@@ -290,21 +294,25 @@ const ObjectComponent = ({
   };
 
   return (
-    <section className="flex flex-col gap-2 p-1">
+    <section className="flex flex-col gap-2 p-1 bg-slate-950 rounded-lg">
       {Object.entries(objectProps).map(([key, value], index) => {
         return (
           <section key={index} className="relative flex flex-col gap-2  ">
-            <FitTitle className={`capitalize font-semibold`}>{key}</FitTitle>
+            <FitTitle
+              className={`capitalize font-semibold text-slate-200 text-ellipsis overflow-hidden max-w-full`}
+            >
+              {key}
+            </FitTitle>
             {isPlainObject(value) && !value._custom ? (
               <Accordion
-                variant="shadow"
-                itemClasses={{
-                  trigger: "flex items-center justify-between ",
-                  base: "bg-slate-800 p-3  rounded-lg text-slate-200 font-semibold relative",
-                  content: `bg-slate-900 p-[unset!important] mt-2 rounded-md`,
-                  title: `capitalize custom-font-size`,
-                  indicator: `text-[18px] transition-all`,
-                }}
+              // variant="shadow"
+              // itemClasses={{
+              //   trigger: "flex items-center justify-between ",
+              //   base: "bg-slate-800 p-3  rounded-lg text-slate-200 font-semibold relative",
+              //   content: `bg-slate-900 p-[unset!important] mt-2 rounded-md`,
+              //   title: `capitalize custom-font-size`,
+              //   indicator: `text-[18px] transition-all`,
+              // }}
               >
                 <AccordionItem title={key}>
                   <ObjectComponent
@@ -533,7 +541,7 @@ const ScrollTriggerOptions = ({
 
   return (
     <section className="flex flex-col gap-3">
-      <InfAccordion>
+      <Accordion>
         <AccordionItem title={singleTitle || "ScrollTrigger options"}>
           <section className=" flex flex-col gap-2 p-1">
             {singleScrollTriggerProps.map((item, index) => {
@@ -619,7 +627,7 @@ const ScrollTriggerOptions = ({
             )}
           </section>
         </AccordionItem>
-      </InfAccordion>
+      </Accordion>
     </section>
   );
 };
@@ -731,7 +739,7 @@ const FromTo = ({
         onUnActive={() => setUnActive("useSameToScrollTrigger")}
       /> */}
 
-      <InfAccordion>
+      <Accordion>
         <AccordionItem title="From">
           {/* <section className="flex  gap-2 p-2 bg-slate-950 rounded-lg">
             <Select
@@ -795,14 +803,16 @@ const FromTo = ({
             </section>
           )} */}
 
-          <AddNestedProps
-            motion={motion}
-            setMotion={setMotion}
-            animation={animation}
-            animationIndex={animationIndex}
-            destination={["from"]}
-            keys={cssProps}
-          />
+          <section className="w-full p-1 bg-slate-950 rounded-lg">
+            <AddNestedProps
+              motion={motion}
+              setMotion={setMotion}
+              animation={animation}
+              animationIndex={animationIndex}
+              destination={["from"]}
+              keys={cssProps}
+            />
+          </section>
         </AccordionItem>
 
         <AccordionItem title="From Options">
@@ -832,18 +842,20 @@ const FromTo = ({
             objectProps={advancedGsapOptions}
           />
         </AccordionItem>
-      </InfAccordion>
+      </Accordion>
 
-      <InfAccordion>
+      <Accordion>
         <AccordionItem title="To">
-          <AddNestedProps
-            motion={motion}
-            setMotion={setMotion}
-            animation={animation}
-            animationIndex={animationIndex}
-            destination={["to"]}
-            keys={cssProps}
-          />
+          <section className="w-full p-1 bg-slate-950 rounded-lg">
+            <AddNestedProps
+              motion={motion}
+              setMotion={setMotion}
+              animation={animation}
+              animationIndex={animationIndex}
+              destination={["to"]}
+              keys={cssProps}
+            />
+          </section>
         </AccordionItem>
 
         <AccordionItem title="To Options">
@@ -873,7 +885,7 @@ const FromTo = ({
             objectProps={advancedGsapOptions}
           />
         </AccordionItem>
-      </InfAccordion>
+      </Accordion>
 
       {/* <SwitcherSection
         title="From ScrollTrigger"
@@ -963,7 +975,7 @@ const Timeline = ({
           className="bg-slate-900 border-[#1e293b!important] w-full"
         />
       </section>
-      <InfAccordion>
+      <Accordion>
         <AccordionItem title="Timeline options">
           <section className=" flex flex-col gap-2 p-1">
             {singleProps.map((item, index) => {
@@ -999,7 +1011,7 @@ const Timeline = ({
             })}
           </section>
         </AccordionItem>
-      </InfAccordion>
+      </Accordion>
 
       <SwitcherSection
         title="ScrollTrigger"
@@ -1108,8 +1120,8 @@ export const Motion = memo(() => {
   useEffect(() => {
     if (!editor || !editor?.getSelected?.() || !motion?.animations?.length)
       return;
-    console.log('bonbone');
-    
+    console.log("bonbone");
+
     motion.id && updateDB(motion);
 
     console.log("motion", motion);
@@ -1262,7 +1274,7 @@ export const Motion = memo(() => {
       if (sle) {
         sle.removeAttributes([motionId]);
         // preventSelectNavigation(editor, sle);
-        initToolbar(editor , sle)
+        initToolbar(editor, sle);
       }
       setMotion({ ...motionType, id: "" });
     } else {
@@ -1287,7 +1299,7 @@ export const Motion = memo(() => {
     const newId = uniqueId(`mt${uniqueID()}`);
     clone.id = newId;
     sle.addAttributes({ [motionId]: newId });
-    initToolbar(editor , sle)
+    initToolbar(editor, sle);
     await updateDB(clone);
     setMotion(clone);
   };
@@ -1324,7 +1336,6 @@ export const Motion = memo(() => {
     setIsInstance(true);
     setEditeAsMain(false);
     setMotion(targetMotion);
-
   };
 
   const downloadMotion = async (targetId) => {

@@ -22,7 +22,7 @@ import { dbAssetsSwState } from "../../../helpers/atoms";
 import { FitTitle } from "./FitTitle";
 import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
 import { opfs } from "../../../helpers/initOpfs";
-import { defineRoot, getFileSize, toMB } from "../../../helpers/bridge";
+import { defineRoot, getFileSize, getFonts, toMB } from "../../../helpers/bridge";
 
 export const GoogleFontsInstaller = () => {
   const editor = useEditorMaybe();
@@ -138,7 +138,7 @@ export const GoogleFontsInstaller = () => {
         //   await opfs.root,
         //   `projects/project-${opfs.id}/fonts`
         // );
-        await opfs.createFiles([
+        await opfs.writeFiles([
           {
             path: defineRoot(`${fontInfo.path}`),
             content: fontInfo.file,
@@ -153,12 +153,20 @@ export const GoogleFontsInstaller = () => {
     const updater = async () => {
       const projectData = await getProjectData();
       const projectId = +localStorage.getItem(current_project_id);
-      await db.projects.update(projectId, {
+      const dataToUpdate = {
         fonts: {
           ...projectData.fonts,
           ...fontsIntoDB,
         },
-      });
+      };
+
+      await opfs.writeFiles([
+        {
+          path:defineRoot(`css/fonts.css`),
+          content:getFonts(dataToUpdate)
+        }
+      ])
+      await db.projects.update(projectId, dataToUpdate);
       // const newProjectData = await getProjectData();
       // swDBAssets.postMessage({
       //   command: "setVar",

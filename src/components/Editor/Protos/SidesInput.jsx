@@ -51,7 +51,7 @@ export const SidesInput = ({
           cssProp: cssProp,
           setClass: handleClass,
           setVal: (val) => {
-            handleVals(val, "tVal");
+            handleVals(val, specificDir);
           },
         });
       }}

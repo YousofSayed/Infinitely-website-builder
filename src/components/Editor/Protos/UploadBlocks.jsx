@@ -32,6 +32,7 @@ export const UploadBlocks = () => {
      * @type {File}
      */
     const file = input.files[0];
+    ev.target.value = '';
     const symbolsOrTemplates = await restoreBlobs(
       JSON.parse((await file.text()) || "{}")
     );
@@ -51,6 +52,7 @@ export const UploadBlocks = () => {
       return;
     }
     setUploadedBlocks(symbolsOrTemplates);
+    ev.target.value = '';
   };
 
   const saveBlocksToDB = async () => {
@@ -121,9 +123,9 @@ export const UploadBlocks = () => {
     <section className="p-1 h-full w-full flex justify-center  flex-col">
       {!uploadedBlocks.length ? (
         <section className=" flex justify-center items-center flex-col gap-2 p-5 rounded-md ">
-          <figure>
+          {/* <figure>
             {Icons.upload({ strokeColor: "white", height: 80, width: 80 })}
-          </figure>
+          </figure> */}
           <Button onClick={() => inputRef.current.click()}>
             {Icons.upload({ strokeColor: "white" })}
             Upload

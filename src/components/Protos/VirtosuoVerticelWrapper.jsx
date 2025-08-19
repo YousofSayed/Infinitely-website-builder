@@ -15,7 +15,7 @@ export const VirtosuoVerticelWrapper = (props) => {
 
     isScroller && setPadding("0.25rem"); 
     !isScroller && setPadding("0");
-  };
+  }; 
   useLayoutEffect(() => {
     if (!elRef || !elRef.current) return;
     handler(elRef.current);

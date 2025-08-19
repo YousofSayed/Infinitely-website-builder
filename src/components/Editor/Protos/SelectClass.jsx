@@ -15,6 +15,7 @@ import { db } from "../../../helpers/db";
 import { inlineWorker } from "../../../helpers/bridge";
 import { classesFinderWorker } from "../../../helpers/defineWorkers";
 import { getProjectSettings } from "../../../helpers/functions";
+import { parse } from "css";
 
 export const SelectClass = memo(() => {
   const editor = useEditorMaybe();
@@ -69,6 +70,7 @@ export const SelectClass = memo(() => {
 
   useEffect(() => {
     if (!editor) return;
+    console.log("effectoooo");
     getClassFromInlineWorker();
 
     /**
@@ -76,11 +78,13 @@ export const SelectClass = memo(() => {
      * @param {MessageEvent} ev
      */
     const callback = async (ev) => {
+      console.log(`from classes finder worker`);
+
       const { command, props } = ev.data;
-      if (command == "classes" && props.classes) {
-        console.log('classes : ' ,props.classes);
-        
-        setAllStyleSheetClasses(props.classes);
+      if (command == "classes-chunks" && props.classes) {
+        console.log("classes : ", props.classes);
+
+        setAllStyleSheetClasses([...allStyleSheetClasses, ...props.classes]);
       }
     };
 
@@ -89,7 +93,7 @@ export const SelectClass = memo(() => {
     return () => {
       classesFinderWorker.removeEventListener("message", callback);
     };
-  }, [editor, selectedEl]);
+  }, [editor , selectedEl]);
 
   useEffect(() => {
     if (!editor) return;
@@ -194,32 +198,37 @@ export const SelectClass = memo(() => {
     //     ...(editor?.Canvas?.getDocument?.()?.querySelectorAll?.("style") || []),
     //   ],
     // });
+
     classesFinderWorker.postMessage({
       command: "getAllStyleSheetClasses",
       props: {
         projectId,
         editorCss: editor.getCss({
-          clearStyles: false,
           keepUnusedStyles: true,
         }),
-        projectSettings : getProjectSettings().projectSettings,
-        inlineStylesInners: [
-          ...(editor?.Canvas?.getDocument?.()?.querySelectorAll?.("style") ||
-            []),
-        ].map((styleEl) => styleEl.innerHTML),
+        projectSettings: getProjectSettings().projectSettings,
+        // inlineStylesInners: [
+        //   ...(editor?.Canvas?.getBody?.()?.querySelectorAll?.("style") || []),
+        // ].map((styleEl) => styleEl.innerHTML),
       },
     });
+    console.log(
+      "postting message",
+    //  parse(editor.getCss({
+    //     keepUnusedStyles: true,
+    //   })).stylesheet.rules
+    );
   };
   // const getSh
 
   return (
-    <section className="mt-3 flex flex-col gap-3 p-2">
+    <section className="mt-3 flex flex-col gap-3 p-1 bg-slate-900 rounded-lg">
       <section className="flex gap-2">
         <Select
           value={value}
           onInput={(value) => {
-            console.log("log classes : ", editor.getCss().match(/\.\w+/gi));
-            console.log("log classes css: ", editor.getCss());
+            // console.log("log classes : ", editor.getCss().match(/\.\w+/gi));
+            // console.log("log classes css: ", editor.getCss());
 
             setvalue(value);
           }}

@@ -35,6 +35,7 @@ import { killGsapMotionTool } from "../plugins/tools/killGsapMotion";
 import { createReusableCmpTool } from "../plugins/tools/createReusableCmpTool";
 import { createSymbolTool } from "../plugins/tools/createSymbolTool";
 import { infinitelyWorker } from "./infinitelyWorker";
+import { isPlainObject } from "lodash";
 export {
   replaceBlobs,
   base64ToBlob,
@@ -605,18 +606,27 @@ export function advancedSearchSuggestions(
  * @returns
  */
 export function getCurrentMediaDevice(editor) {
+  if (!editor) return;
+
   const desktopDevices = ["desktop", "DESKTOP", "Desktop"];
   // console.log(desktopDevices.findIndex((value) => value == editor.getDevice()));
+
+  const targetWidth = editor.Devices.get(editor.getDevice()).attributes
+    .widthMedia;
 
   const Media =
     desktopDevices.findIndex((value) => value == editor.getDevice()) == -1
       ? {
           atRuleType: "media",
-          atRuleParams: `(max-width: ${editor.Devices.get(
-            editor.getDevice()
-          ).getWidthMedia()})`,
+          atRuleParams: `(max-width: ${
+            isPlainObject(targetWidth) ? targetWidth.widthMedia : targetWidth
+          })`,
         }
       : {};
+
+  // const Media = {
+
+  // }
 
   return Media;
 }
@@ -1364,6 +1374,7 @@ export function getInfinitelySymbolInfo(gjsCmp) {
   }
   return output;
 }
+export let initSymbolTimout;
 
 /**
  *
@@ -1376,39 +1387,45 @@ export function initSymbol(id, editor) {
    * @param {import('grapesjs').Component} sle
    */
   const handler = (id = "", cmp, newContent = "") => {
-    if (!id || !newContent) return;
-    const symbols = editor
-      .getWrapper()
-      .find(`[${inf_symbol_Id_attribute}="${id}"]`);
-    const selectedCmp = editor.getSelected() || cmp;
-    const selectedSymbol = getInfinitelySymbolInfo(selectedCmp);
+    initSymbolTimout && clearTimeout(initSymbolTimout);
+    initSymbolTimout = setTimeout(() => {
+      if (!id || !newContent) return;
+      const symbols = editor
+        .getWrapper()
+        .find(`[${inf_symbol_Id_attribute}="${id}"]`);
+      const selectedCmp = editor.getSelected() || cmp;
+      const selectedSymbol = getInfinitelySymbolInfo(selectedCmp);
 
-    if (!selectedSymbol.isSymbol) {
-      console.log("not symbol : ");
-      return;
-    }
-    symbols.forEach((symbol) => {
-      if (
-        symbol.toHTML({ withProps: true, keepInlineStyle: true }) ==
-        selectedSymbol.symbol.toHTML({ withProps: true, keepInlineStyle: true })
-      ) {
-        console.log(
-          "hhhhhaaaanddddlerrrr",
-          symbols,
-          symbol == selectedCmp.symbol,
-          symbol.getEl(),
-          selectedSymbol.symbol.getEl()
-        );
+      if (!selectedSymbol.isSymbol) {
+        console.log("not symbol : ");
         return;
-      } else {
-        // console.error(`replaaaaaaaaaaaaaaaaaaaaaaaaaace here`);
-        
-        symbol.replaceWith(JSON.parse(newContent));
-        console.log("Replaced");
-        // symbol.replaceWith(regenerateSymbol(JSON.parse(newContent)));
-        // symbol.set('content', regenerateSymbol(JSON.parse(newContent)));
       }
-    });
+      symbols.forEach((symbol) => {
+        if (
+          symbol.toHTML({ withProps: true, keepInlineStyle: true }) ==
+          selectedSymbol.symbol.toHTML({
+            withProps: true,
+            keepInlineStyle: true,
+          })
+        ) {
+          console.log(
+            "hhhhhaaaanddddlerrrr"
+            // symbols,
+            // symbol == selectedCmp.symbol,
+            // symbol.getEl(),
+            // selectedSymbol.symbol.getEl()
+          );
+          return;
+        } else {
+          // console.error(`replaaaaaaaaaaaaaaaaaaaaaaaaaace here`);
+
+          symbol.replaceWith(JSON.parse(newContent));
+          console.log("Replaced");
+          // symbol.replaceWith(regenerateSymbol(JSON.parse(newContent)));
+          // symbol.set('content', regenerateSymbol(JSON.parse(newContent)));
+        }
+      });
+    }, 10);
   };
 
   editor.on(`${InfinitelyEvents.symbols.update}:${id}`, handler);
@@ -1586,6 +1603,14 @@ export function getGlobalSettings() {
       );
     },
   };
+}
+
+export function setProjectSettings() {
+  const projectSettingsLS = localStorage.getItem(project_settings);
+  if (!projectSettingsLS) {
+    console.log("No storage setted yet!");
+    localStorage.setItem(project_settings, JSON.stringify(projectSettingsType));
+  }
 }
 
 /**
@@ -1829,39 +1854,44 @@ export function executeAndExtractFunctions(jsCode) {
   return functionNames;
 }
 
+export let screenshotTimout;
+
 /**
  *
  * @param {HTMLElement} el
  * @param {string} mimeType
  * @returns {Promise<Blob> | null}
  */
-export async function getImgAsBlob(el, mimeType = "image/webp") {
+export async function getImgAsBlob(el, mimeType = "image/webp", options = {}) {
   if (!el) {
     throw new Error("No Elememt Founded...");
     // return null;
   }
   return await new Promise(async (res, rej) => {
-    await (
-      await html2canvas(el, {
-        // foreignObjectRendering: true,
+    screenshotTimout && clearTimeout(screenshotTimout);
+    screenshotTimout = setTimeout(async () => {
+      await (
+        await html2canvas(el, {
+          // foreignObjectRendering: true,
 
-        // allowTaint: true,
-        useCORS: true,
-        // imageTimeout: 200,
-        windowWidth: window.innerWidth,
-        windowHeight: window.innerHeight,
-
-        // windowHeight: 300,
-        // width:300,
-        // height: 300,
-      })
-    ).toBlob(
-      (blob) => {
-        res(blob);
-      },
-      mimeType
-      // 0.5
-    );
+          // allowTaint: true,
+          useCORS: true,
+          // imageTimeout: 200,
+          windowWidth: window.innerWidth,
+          windowHeight: window.innerHeight,
+          ...options,
+          // windowHeight: 300,
+          // width:300,
+          // height: 300,
+        })
+      ).toBlob(
+        (blob) => {
+          res(blob);
+        },
+        mimeType
+        // 0.5
+      );
+    }, 10);
   });
   // return await toBlob(el)
 }
@@ -2042,8 +2072,15 @@ export function getGsapCssProperties() {
 // Example usage
 
 /**
+ * Extract CSS rules associated with a GrapesJS component (classes, ID, attributes), optionally recursively.
  *
- * @param {{editor : import('grapesjs').Editor , cmp: import('grapesjs').Component , nested:boolean , stringRules:string[] , rules:import('grapesjs').CssRule[]}} param0
+ * @param {{
+ *   editor: import('grapesjs').Editor,
+ *   cmp: import('grapesjs').Component,
+ *   nested?: boolean,
+ *   rules?: import('grapesjs').CssRule[],
+ *   stringRules?: string[],
+ * }} param0
  */
 export function getComponentRules({
   editor,
@@ -2052,65 +2089,76 @@ export function getComponentRules({
   rules = [],
   stringRules = [],
 }) {
-  // let rules = [];
-  // let stringRules = ``;
-  const classes = cmp.getClasses() || [];
-  const id = cmp.getId() || "";
-  const attributes = cmp.getAttributes() || {};
+  const cssText = editor.getCss(); // Avoid repeated calls
+  const seenSelectors = new Set();
+  const resultRules = new Set();
+  const resultStrings = new Set();
 
-  //For Classes
-  classes.forEach((className) => {
-    const classesRules = extractRulesByIdWithDetails(
-      editor.getCss(),
-      `.${className}`
-    ).filter(Boolean);
-    stringRules.push(...classesRules.map((rule) => rule.fullRule || rule.rule));
-    rules.push(...classesRules);
-  });
+  const stack = [cmp];
 
-  //For Id
-  const rulesById = extractRulesByIdWithDetails(
-    editor.getCss(),
-    `#${id}`
-  ).filter((rule) => rule);
-  rules.push(...rulesById);
-  stringRules.push(...rulesById.map((rule) => rule.fullRule || rule.rule));
+  while (stack.length > 0) {
+    const currentCmp = stack.pop();
+    if (!currentCmp) continue;
 
-  //For Attributes
-  Object.keys(attributes).forEach((key) => {
-    const value = attributes[key];
-    const attributesRule = extractRulesByIdWithDetails(
-      editor.getCss(),
-      `[${key}${value && `="${value}"`}]`
-    ).filter((rule) => rule);
-    rules.push(...(attributesRule || []));
-    stringRules.push(
-      ...attributesRule.map((rule) => rule.fullRule || rule.rule)
-    );
-  });
+    const classes = currentCmp.getClasses?.() || [];
+    const id = currentCmp.getId?.() || "";
+    const attrs = currentCmp.getAttributes?.() || {};
 
-  //IF nested :
-  if (nested && cmp.components().models.length) {
-    // console.log("length : ", cmp.components().models.length);
-    cmp.components().models.forEach((model) => {
-      getComponentRules({
-        editor,
-        stringRules,
-        rules,
-        cmp: model,
-        nested,
-      });
-    });
-    return {
-      stringRules: stringRules.join("\n"),
-      rules,
-    };
-  } else {
-    return {
-      stringRules: stringRules.join("\n"),
-      rules,
-    };
+    // === CLASS RULES ===
+    for (const cls of classes) {
+      const selector = `.${cls}`;
+      if (!seenSelectors.has(selector)) {
+        seenSelectors.add(selector);
+        const rulesForClass = extractRulesByIdWithDetails(cssText, selector);
+        for (const rule of rulesForClass) {
+          if (rule) {
+            resultRules.add(rule);
+            resultStrings.add(rule.fullRule || rule.rule);
+          }
+        }
+      }
+    }
+
+    // === ID RULES ===
+    if (id) {
+      const selector = `#${id}`;
+      if (!seenSelectors.has(selector)) {
+        seenSelectors.add(selector);
+        const rulesForId = extractRulesByIdWithDetails(cssText, selector);
+        for (const rule of rulesForId) {
+          if (rule) {
+            resultRules.add(rule);
+            resultStrings.add(rule.fullRule || rule.rule);
+          }
+        }
+      }
+    }
+
+    // === ATTRIBUTE RULES ===
+    for (const [key, value] of Object.entries(attrs)) {
+      const selector = `[${key}${value ? `="${value}"` : ""}]`;
+      if (!seenSelectors.has(selector)) {
+        seenSelectors.add(selector);
+        const rulesForAttr = extractRulesByIdWithDetails(cssText, selector);
+        for (const rule of rulesForAttr) {
+          if (rule) {
+            resultRules.add(rule);
+            resultStrings.add(rule.fullRule || rule.rule);
+          }
+        }
+      }
+    }
+
+    // === NESTED ===
+    if (nested && currentCmp.components().length) {
+      stack.push(...currentCmp.components().models);
+    }
   }
+
+  return {
+    rules: [...resultRules],
+    stringRules: [...resultStrings].join("\n"),
+  };
 }
 
 export function downloadFile({ filename, content, mimeType }) {
@@ -2196,7 +2244,7 @@ export const mount = ({ editor, all, specificCmp }) => {
     vWrapperAttributes = wrapperAttrs;
     originalComponents = editor.getComponents().toJSON();
     // console.log("PetiteVue.reactiveEffect : ",  , );
-    console.log("rogs : ", original , editor.getWrapper().getEl());
+    console.log("rogs : ", original, editor.getWrapper().getEl());
 
     // pVueApp.mount(editor.getWrapper().getEl());
     // editor.select(null);
@@ -2227,8 +2275,8 @@ export const mount = ({ editor, all, specificCmp }) => {
     // console.log(sle.getEl() ,el.innerHTML);
     // editor.select(null);
     // preventSelectNavigation(editor)
-    console.log('before mount : ', el);
-    
+    console.log("before mount : ", el);
+
     pvMount(el);
     renderToolbar(editor);
     // specificCmp.addAttributes(cmpAttrs);
@@ -2441,4 +2489,21 @@ export function exportProject(params) {
       projectId,
     },
   });
+}
+
+/**
+ *
+ * @param {import('grapesjs').Editor} editor
+ * @param {(editor:import('grapesjs').Editor)=>void} callback
+ */
+export function doActionAndPreventSaving(editor, callback = () => {}) {
+  const originalSave = editor.Storage.config.autosave;
+  editor.Storage.setAutosave(false);
+  callback(editor);
+  editor.Storage.setAutosave(originalSave);
+  setTimeout(() => {
+    editor.clearDirtyCount();
+    editor.StorageManager.setStepsBeforeSave(0);
+  }, 0);
+  // editor.clearDirtyCount();
 }

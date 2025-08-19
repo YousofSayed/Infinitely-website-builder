@@ -10,7 +10,7 @@ import { MiniTitle } from "./MiniTitle";
 
 export const Size = () => {
   return (
-    <section className="flex flex-col gap-2 p-2 rounded-lg bg-slate-900">
+    <section className="flex flex-col gap-2  rounded-lg bg-slate-900">
             <MiniTitle>size</MiniTitle>
 
       {/* <ul className="flex flex-col gap-2 pb-3 border-b-2 border-b-slate-600"> */}

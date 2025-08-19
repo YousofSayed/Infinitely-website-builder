@@ -9,8 +9,8 @@ import { BorderRadius } from "./BorderRadius";
 
 export const Border = memo(() => {
   return (
-    <>
-      <section className="mt-3  flex flex-col gap-3 p-2 rounded-lg bg-slate-900">
+    <section className="flex flex-col gap-3 p-1 rounded-lg bg-slate-900">
+      <section className=" flex flex-col gap-2 rounded-lg bg-slate-900">
         <DirectionsModel
           tProp="border-top-width"
           rProp="border-right-width"
@@ -19,17 +19,17 @@ export const Border = memo(() => {
         />
         {/* <Property label="border left color" cssProp="border-left-color" /> */}
       </section>
-      <section className="  flex flex-col gap-[25px] p-2 rounded-lg bg-slate-900">
+      <section className="  flex flex-col gap-2 rounded-lg bg-slate-900">
         <BorderColor />
       </section>
 
-      <section className="  flex flex-col gap-[25px] p-2 rounded-lg bg-slate-900">
+      <section className="  flex flex-col gap-2 rounded-lg bg-slate-900">
         <BorderStyle />
       </section>
 
-      <section className="  flex flex-col gap-[25px] p-2 rounded-lg bg-slate-900">
+      <section className="  flex flex-col gap-2  rounded-lg bg-slate-900">
         <BorderRadius />
       </section>
-    </>
+    </section>
   );
 });

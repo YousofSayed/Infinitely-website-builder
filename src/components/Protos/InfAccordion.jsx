@@ -1,9 +1,11 @@
-import { Accordion } from "@heroui/accordion";
+import { Accordion, AccordionItem } from "@heroui/accordion";
 import React, { memo } from "react";
 
 export const InfAccordion = ({attributes = {} , children }) => {
+  // console.log('is instance ????' , children instanceof AccordionItem, children) ;
   
   return (
+    // children
     <Accordion
       variant="splitted"
       // keepContentMounted

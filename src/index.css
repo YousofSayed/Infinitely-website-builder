@@ -81,6 +81,7 @@ body {
 } */
 #root {
   height: 100%;
+  overflow: hidden;
   /* transform: scale(0.8);
   transform-origin: top left;
   width: 125%;
@@ -93,12 +94,26 @@ body {
   zoom: 80%;
 
 } */
+
+/* For Chrome, Safari, Edge, and Opera */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* For Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+
 nav ul svg {
   width: 22.5px !important;
   height: 22.5px !important;
 }
 
-header ul svg {
+.tools ul svg , .btn-arrow svg{
   width: 19.5px !important;
   height: 19.5px !important;
 }

@@ -9,7 +9,7 @@ export const SearchHeader = ({
 }) => {
   const searchTimeout = useRef();
   return (
-    <header className=" rounded-md flex overflow-hidden">
+    <header className=" rounded-md flex overflow-hidden flex-shrink-0">
       <i className="w-[50px] flex justify-center items-center bg-slate-800">
         {Icons.search({ fill: "white" })}
       </i>

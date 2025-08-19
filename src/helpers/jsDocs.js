@@ -1,4 +1,4 @@
-import { uniqueId } from 'lodash';
+import { uniqueId } from "lodash";
 
 /**
  * @type {import('grapesjs').Editor}
@@ -48,7 +48,26 @@ export let animeStylesType = {};
 /**
  * @type {{name:string , values : {percentage:number , styles:CSSStyleDeclaration}[]}[]}
  */
-export let animationsType = Array.from([]);
+
+/**
+ *  @type {import('css').KeyFrames}
+ */
+export let animationType = {}
+
+/**
+ * @type {import('css').KeyFrames[]}
+ */
+export let animationsType = [];
+
+/**
+ * @type {{[key:string]:[...animationsType]}}
+ */
+export let keyframesWithPathesType = {};
+
+/**
+ * @type {{editorKeyframes:[...animationsType] , libsKeyframes:{[key:string]:[...animationsType]}}}
+ */
+export let keyframesType = {};
 
 /**
  * @type {import('./types').InfinitelyTrait[]}
@@ -187,19 +206,22 @@ export let projectSettingsType = {
   grap_all_footer_scripts_in_single_file: false,
   grap_all_header_scripts_in_single_file: false,
   grap_all_css_libs_in_single_file: false,
-  is_async_graped_footer_script: false, 
+  is_async_graped_footer_script: false,
   is_async_graped_header_script: false,
   is_defer_graped_footer_script: false,
   is_defer_graped_header_script: false,
-  disable_gsap_core:false,
-  disable_gsap_scrollTrigger:false,
+  disable_gsap_core: false,
+  disable_gsap_scrollTrigger: false,
   enable_prettier_for_file_editor: true,
   include_canvas_styles_in_build_file: true,
   disable_petite_vue: false,
-  enable_tailwind_calsses:false,
+  enable_tailwind: false,
+  enable_spline_viewer: false,
+  enable_editor_lazy_loading:false,
+  enable_auto_save:true,
   // purge_css: false,
-  include_symbols_in_export:true,
-  include_templates_in_export:true,
+  include_symbols_in_export: true,
+  include_templates_in_export: true,
 };
 
 /**
@@ -234,9 +256,9 @@ export let motionType = {
   id: "",
   isTimeLine: false,
   name: "",
-  numberTimeOfUses:1,
-  pages:[],
-  instances:{},
+  numberTimeOfUses: 1,
+  pages: [],
+  instances: {},
   timeLineSingleOptions: {},
   timeLineMultiOptions: {},
   isTimelineHasScrollTrigger: false,
@@ -276,7 +298,7 @@ export let motionAnimationType = {};
  */
 export let storageDetailsType = {
   filsLength: 0,
- usage: 0,
+  usage: 0,
   quota: 0,
   qoutaPerProjectMB: 0,
   qoutaPerProjectGB: 0,
@@ -287,4 +309,19 @@ export let storageDetailsType = {
   availableSpaceInMB: 0,
   availableSpaceInGB: 0,
   isStorageFull: false,
-}
+};
+
+/**
+ * @type {import('./types').Interaction}
+ */
+export let interactionType = {};
+
+/**
+ * @type {import('./types').Interactions}
+ */
+export let interactionsType = [];
+
+/**
+ * @type {import('./types').InteractionsInDB}
+ */
+export let interactionInDBType = {};

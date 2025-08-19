@@ -9,13 +9,15 @@ import {
   handleCustomBlock,
 } from "../../helpers/functions";
 import { html } from "../../helpers/cocktail";
-import { InfAccordion } from "../Protos/InfAccordion";
-import { AccordionItem } from "@heroui/accordion";
+// import { InfAccordion } from "../Protos/InfAccordion";
+// import { AccordionItem } from "@heroui/accordion";
 import { Input } from "./Protos/Input";
 import { SearchHeader } from "../Protos/SearchHeader";
 import { blocksType, blockType } from "../../helpers/jsDocs";
 import { opfs } from "../../helpers/initOpfs";
 import { defineRoot } from "../../helpers/bridge";
+import { Accordion } from "../Protos/Accordion";
+import { AccordionItem } from "../Protos/AccordionItem";
 
 export const Blocks = memo(() => {
   const editor = useEditorMaybe();
@@ -65,12 +67,13 @@ export const Blocks = memo(() => {
             block.content = await (
               await opfs.getFile(defineRoot(block.pathes.content))
             ).text();
-            block.style = await (
-              await opfs.getFile(defineRoot(block.pathes.style))
-            ).text();
-          }
-
-          return block;
+            // block.style = await (
+            //   await opfs.getFile(defineRoot(block.pathes.style))
+            // ).text();
+          } 
+          // console.log('block style : ' , block.style);
+          
+          return block; 
         }
       )
     );
@@ -81,7 +84,9 @@ export const Blocks = memo(() => {
     allBlocksAsObject.current = allBlocks;
     const handledBlocks = handleCustomBlock(allBlocks, editor);
     console.log("update blocks : ", handledBlocks);
-
+    // editor.BlockManager.add('sda',{
+      
+    // })
     setBlocks((old) => ({
       ...handledBlocks,
     }));
@@ -109,8 +114,8 @@ export const Blocks = memo(() => {
 
   return (
     <section className="flex flex-col gap-2 h-full w-full">
-      <SearchHeader search={search} />
-      <InfAccordion>
+      <SearchHeader search={search}  />
+      <Accordion>
         {Object.keys(blocksAtom).map((ctg, i) => {
           return (
             <AccordionItem title={ctg} key={i}>
@@ -122,7 +127,7 @@ export const Blocks = memo(() => {
             </AccordionItem>
           );
         })}
-      </InfAccordion>
+      </Accordion>
     </section>
   );
 });

@@ -110,6 +110,9 @@ export const DirectionsModel = ({
   // })
 
   useEffect(() => {
+    if(!Object.keys(frameStyles).length) return;
+    // console.log('frameStyles :' ,frameStyles );
+    
    handlePropsStates(frameStyles)
   }, [frameStyles ]);
 
@@ -129,8 +132,12 @@ export const DirectionsModel = ({
 
  useUpdateInputValue({
   returnPropsAsIt:true,
+  // cssProp:`position`,
   setVal:setProps,
   onEffect(cssProp , props){
+    if(!Object.keys(props).length) return;
+    // console.log('props : ' , props , cssProp);
+    
     handlePropsStates(props)
   }
  })

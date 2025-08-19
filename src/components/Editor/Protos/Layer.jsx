@@ -8,6 +8,8 @@ import { ToastMsgInfo } from "./ToastMsgInfo";
 import { addClickClass, uniqueID } from "../../../helpers/cocktail";
 import { OptionsButton } from "../../Protos/OptionsButton";
 import { Tooltip } from "react-tooltip";
+import { Input } from "./Input";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 
 /**
  *
@@ -32,12 +34,13 @@ export const Layer = ({
   const [tools, setTools] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [layerProps, setLayerProps] = useState(layer.props() || {});
-
+  const [showInput, setShowInput] = useState(false);
+  const [animatedRef] = useAutoAnimate();
   useEffect(() => {
-    if(!editor)return;
+    if (!editor) return;
     setLayerStt([editor.getWrapper()]);
     // openCurrentLayer()
-  }, [editor , layers]);
+  }, [editor, layers]);
 
   useEffect(() => {
     const callback = () => {
@@ -89,7 +92,7 @@ export const Layer = ({
 
     //   cond && setOpenNested(cond);
     // });
-    openCurrentLayer()
+    openCurrentLayer();
     setSelected(
       editor?.getSelected?.() && editor.getSelected().getId() == layer.getId()
         ? true
@@ -122,11 +125,11 @@ export const Layer = ({
   const openCurrentLayer = useCallback(() => {
     const childs = layer.forEachChild((child) => {
       const cond = Boolean(editor.getSelected().getId() == child.getId());
-      console.log("from open  cond: ", cond);
+      // console.log("from open  cond: ", cond);
 
       cond && setOpenNested(cond);
     });
-  },[editor]);
+  }, [editor]);
 
   /**
    *
@@ -165,11 +168,11 @@ export const Layer = ({
     // const instance = sympolInfo.isSymbol
     //   ? editor.Components.addSymbol(movedCmp)
     //   : movedCmp;
-    console.log('indexooo : ' , index , movedCmp.index());
-    
-    if(!isAfter && index == movedCmp.index()+1){
-      // toast.warn('ahahha');
-      return
+    // console.log("indexooo : ", index, movedCmp.index());
+
+    if (!isAfter && movedCmp && index == movedCmp?.index?.() + 1) {
+      toast.warn("ahahha");
+      return;
     }
     const instance = draggedBlockContent ? movedCmp : movedCmp.clone();
     !draggedBlockContent && movedCmp.remove();
@@ -178,20 +181,24 @@ export const Layer = ({
 
     !layer.components().models.length && setOpenNested(false);
     setLayers(
-      [editor
-        .getWrapper()]
-        // .components()
-        // .models.filter((lyr) => lyr.getName().toLowerCase() != "box")
+      [editor.getWrapper()]
+      // .components()
+      // .models.filter((lyr) => lyr.getName().toLowerCase() != "box")
     );
   };
 
   return (
     <section
+      ref={animatedRef}
       id={layer.getId()}
       className={` flex flex-col  gap-2  items-center justify-between mb-2 rounded-lg   border-transparent transition-all  `}
       style={{
-        opacity: !layerProps.draggable && layerProps.type != 'wrapper' ? 0.5 : 1,
-        pointerEvents: !layerProps.draggable && layerProps.type != 'wrapper' ? "none" : "auto",
+        opacity:
+          !layerProps.draggable && layerProps.type != "wrapper" ? 0.5 : 1,
+        pointerEvents:
+          !layerProps.draggable && layerProps.type != "wrapper"
+            ? "none"
+            : "auto",
       }}
     >
       <section
@@ -349,16 +356,48 @@ export const Layer = ({
             </button>
           )}
 
-          <section className="flex gap-2 items-center">
+          <section
+            className="flex gap-2 items-center"
+            onDoubleClick={(ev) => {
+              setShowInput(!showInput);
+            }}
+          >
             {layer.getIcon() ? (
               <i dangerouslySetInnerHTML={{ __html: layer.getIcon() }}></i>
             ) : null}
 
-            <p
-              className={` select-none  text-slate-200 font-semibold capitalize`}
-            >
-              {layer.getName()}
-            </p>
+            {!showInput ? (
+              <p
+                className={` select-none  text-slate-200  font-semibold capitalize`}
+              >
+                {layer.getName()}
+              </p>
+            ) : (
+              <Input
+                className="w-[calc(100%-30px)] bg-slate-900"
+                onDoubleClick={(ev) => {
+                  ev.stopPropagation();
+                  ev.preventDefault();
+                }}
+                onDrag={(ev) => {
+                  ev.stopPropagation();
+                  ev.preventDefault();
+                }}
+                onClick={(ev) => {
+                  ev.stopPropagation();
+                  ev.preventDefault();
+                }}
+                onBlur={(ev) => {
+                  ev.stopPropagation();
+                  ev.preventDefault();
+                  setShowInput(false);
+                }}
+                value={layer.getName()}
+                onInput={(ev) => {
+                  layer.setName(ev.target.value);
+                }}
+              />
+            )}
           </section>
         </section>
 

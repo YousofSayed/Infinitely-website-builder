@@ -30,6 +30,8 @@ import { FitTitle } from "./FitTitle";
 import { SmallButton } from "./SmallButton";
 import { opfs } from "../../../helpers/initOpfs";
 import { defineRoot } from "../../../helpers/bridge";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { Loader } from "../../Loader";
 
 export const SymbolsAndTemplatesHandler = ({
   type = "",
@@ -48,8 +50,11 @@ export const SymbolsAndTemplatesHandler = ({
   const projectId = +localStorage.getItem(current_project_id);
   const editor = useEditorMaybe();
   const dataRef = useRef(blocksArrayType);
+  const [animatRef] = useAutoAnimate();
+  const [loading, setLoading] = useState(true);
   !noFilter &&
     useLiveQuery(async () => {
+      setLoading(true);
       const projectData = await await getProjectData();
       const blocks = Object.values(projectData.blocks);
       const symbols = noFilter
@@ -58,11 +63,12 @@ export const SymbolsAndTemplatesHandler = ({
             (block) => block.type.toLowerCase() == type.toLowerCase()
           );
       setSymbols(symbols);
+      setLoading(false);
       dataRef.current = symbols;
       return symbols;
     });
 
-  console.log("type : ", type);
+  // console.log("type : ", type);
 
   /**
    *
@@ -70,10 +76,14 @@ export const SymbolsAndTemplatesHandler = ({
    */
   const unlinkSymbol = (ids) => {
     for (const id of ids) {
-    const symbols=  editor.getWrapper().find(`[${inf_symbol_Id_attribute}="${id}"]`);
-    symbols.forEach((symbol)=>{
-      symbol.removeAttributes([inf_symbol_Id_attribute] , {avoidStore:true})
-    })
+      const symbols = editor
+        .getWrapper()
+        .find(`[${inf_symbol_Id_attribute}="${id}"]`);
+      symbols.forEach((symbol) => {
+        symbol.removeAttributes([inf_symbol_Id_attribute], {
+          avoidStore: true,
+        });
+      });
     }
   };
 
@@ -88,12 +98,11 @@ export const SymbolsAndTemplatesHandler = ({
       props: {
         projectId,
         symbolId: ids,
-        unlink:true,
-        deleteAll : prjStng.delete_symbols_after_delete_from_page
+        unlink: true,
+        deleteAll: prjStng.delete_symbols_after_delete_from_page,
       },
     });
 
-    
     /**
      *
      * @param {MessageEvent} ev
@@ -258,7 +267,7 @@ export const SymbolsAndTemplatesHandler = ({
   };
 
   return (
-    <main className="h-full flex p-1 flex-col gap-2 ">
+    <main className="h-full flex p-1 flex-col gap-2 " ref={animatRef}>
       {showHeader && !!symbols.length && (
         <header className="flex items-center  rounded-lg  gap-2">
           <Input
@@ -320,14 +329,14 @@ export const SymbolsAndTemplatesHandler = ({
               return (
                 <section
                   key={i}
-                  className="p-2 bg-slate-800 max-h-[200px] rounded-lg flex justify-between items-center  gap-3"
+                  className="p-1 bg-slate-800 max-h-[200px] rounded-lg flex justify-between items-center  gap-3"
                 >
                   {/* <section className="bg-slate-900 flex gap-2 items-center  px-2 w-full rounded-md h-full">
                   {" "}
                  
                 </section> */}
 
-                  <FitTitle className="flex gap-2 items-center w-full justify-center">
+                  <FitTitle className="flex gap-2 items-center w-full justify-center custom-font-size">
                     <figure
                       className=" h-full py-2 flex justify-center items-center rounded-lg"
                       dangerouslySetInnerHTML={{ __html: symbol.media }}
@@ -375,13 +384,21 @@ export const SymbolsAndTemplatesHandler = ({
           />
         )}
 
-        {!symbols.length && (
+        {!symbols.length && !loading && (
           <section className="h-full w-full flex flex-col gap-2 items-center justify-center">
-            <figure>
-              <img src={noData} className="max-w-[300px] max-h-[300px]" />
-            </figure>
-            {/* <FitTitle>No Data Here</FitTitle> */}
-            <h1 className="text-slate-200 font-semibold">No Data Founded...</h1>
+            {!symbols.length && !loading ? (
+              <>
+                <figure>
+                  <img src={noData} className="max-w-[300px] max-h-[300px]" />
+                </figure>
+                {/* <FitTitle>No Data Here</FitTitle> */}
+                <h1 className="text-slate-200 font-semibold">
+                  No Data Founded...
+                </h1>
+              </>
+            ) : loading ? (
+              <Loader />
+            ) : null}
           </section>
         )}
       </section>

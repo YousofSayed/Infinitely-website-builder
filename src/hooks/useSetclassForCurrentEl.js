@@ -21,6 +21,9 @@ import { dynamicTemplatesType } from "../helpers/jsDocs";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useEffect } from "react";
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
+import { keyBy } from "lodash";
+import { keyframeStylesInstance } from "../constants/InfinitelyInstances";
+let setStyleTimeout = null;
 
 /**
  *
@@ -34,88 +37,112 @@ export function useSetClassForCurrentEl() {
 
   const showAnimationsBuilder = useRecoilValue(showAnimationsBuilderState);
 
-  const setAnimeStyles = useSetRecoilState(animeStylesState);
+  // const setAnimeStyles = useSetRecoilState(animeStylesState);
 
   return ({ cssProp, value }) => {
-    let newCssProps = {};
+    const setter = () => {
+      let newCssProps = {};
 
-    if (Array.isArray(cssProp) && Array.isArray(value)) {
-      cssProp.forEach((prop, i) => {
-        if (!CSS.supports(prop, value[i]) && value[i]) {
-          removeProp({ cssProp: prop });
-          return;
-        }
+      if (Array.isArray(cssProp) && Array.isArray(value)) {
+        cssProp.forEach((prop, i) => {
+          if (!CSS.supports(prop, value[i]) && value[i]) {
+            removeProp({ cssProp: prop });
+            return;
+          }
 
-        newCssProps = { ...newCssProps, [prop]: value[i] };
-      });
-    } else if (Array.isArray(cssProp) && !Array.isArray(value)) {
-      cssProp.forEach((prop, i) => {
-        if (!CSS.supports(prop, value) && value) {
-          removeProp({ cssProp: prop });
-          return;
-        }
+          newCssProps = { ...newCssProps, [prop]: value[i] };
+        });
+      } else if (Array.isArray(cssProp) && !Array.isArray(value)) {
+        cssProp.forEach((prop, i) => {
+          if (!CSS.supports(prop, value) && value) {
+            removeProp({ cssProp: prop });
+            return;
+          }
 
-        newCssProps = { ...newCssProps, [prop]: value };
-      });
-    } else {
-      newCssProps =
-        CSS.supports(cssProp, value) || value
-          ? { ...newCssProps, [cssProp]: value }
-          : { ...newCssProps } && removeProp({ cssProp });
-    }
-
-    if (showAnimationsBuilder) {
-      newCssProps = newCssProps ? newCssProps : { [cssProp]: null };
-      // setAnimeStyles((old) => ({ ...old, ...newCssProps }));
-      setAnimeStyles({ ...newCssProps });
-      return;
-    } //stop any action if animation builder is on
-
-    if (
-      rule.ruleString.includes("before") ||
-      rule.ruleString.includes("after")
-    ) {
-      newCssProps.content = " '' ";
-    } 
-
-    const Media = getCurrentMediaDevice(editor);
-    const sle = editor.getSelected();
-    const currentSelector = getCurrentSelector(selector, sle);
-    const symbolInfo = getInfinitelySymbolInfo(sle);
-
-    editor.CssComposer.setRule(
-      `${currentSelector}${rule.ruleString}`,
-      newCssProps || { [cssProp]: "" },
-      {
-        ...Media,
-        addStyles: true,
+          newCssProps = { ...newCssProps, [prop]: value };
+        });
+      } else {
+        newCssProps =
+          CSS.supports(cssProp, value) && value
+            ? { ...newCssProps, [cssProp]: value }
+            : { ...newCssProps };
+        // !value && removeProp({ cssProp })
+        !value && (newCssProps[cssProp] = "");
+        // console.log("elssssssssssssooooooooooo", newCssProps, !value);
       }
-    );
 
-    editor.trigger("inf:rules:update", {
-      rules: newCssProps,
-    });
+      if (showAnimationsBuilder) {
+        newCssProps = newCssProps ? newCssProps : { [cssProp]: "" };
+        // setAnimeStyles((old) => ({ ...old, ...newCssProps }));
+        // setAnimeStyles({ ...newCssProps });
+        console.log(newCssProps , 'from animations');
+        
+        keyframeStylesInstance.emit(InfinitelyEvents.keyframe.set , newCssProps);
+        return;
+      } //stop any action if animation builder is on
 
-    if (symbolInfo.isSymbol) {
-      console.log("it is symbol");
-      const symbolInfo = getInfinitelySymbolInfo(editor.getSelected());
+      if (
+        rule.ruleString.endsWith("before") ||
+        rule.ruleString.endsWith("after")
+      ) {
+        newCssProps.content = " '' ";
+      }
 
-      const callback = async () => {
-        sessionStorage.setItem(current_symbol_id, symbolInfo.mainId);
-      };
+      const Media = getCurrentMediaDevice(editor);
+      const sle = editor.getSelected();
 
-      callback();
-    } else if (
-      !symbolInfo.isSymbol &&
-      sessionStorage.getItem(current_symbol_id)
-    ) {
-      sessionStorage.removeItem(current_symbol_id);
-    }
 
-    // editor.getSelected().addStyle(newCssProps)
+      const currentSelector = getCurrentSelector(selector, sle);
+      // const symbolInfo = getInfinitelySymbolInfo(sle);
+      // console.log(
+      //   "from updater  : ",
+      //   // editor.getSelectedAll(),
+      //   newCssProps,
+      //   // editor.DeviceManager.get(editor.getDevice()).attributes,
+      //   // `${currentSelector}${rule.ruleString}`,
+      //   // cssProp,
+      //   // newCssProps,
+      //   // {
+      //   //   ...Media,
+      //   //   addStyles: true,
 
-    // console.log(cssProp, rule.ruleString, "%$%%$#$", editor.getCss());
-    // console.log("Editor Css:", editor.getDevice());
-    // console.log(editor.Devices.get("tablet").getWidthMedia());
+      //   //   // addStyle: true,
+      //   // }
+      // );
+
+
+      editor.CssComposer.setRule(
+        `${currentSelector}${rule.ruleString}`,
+        newCssProps || { [cssProp]: "" },
+        {
+          ...Media,
+          addStyles: true,
+          validate: false,
+          // inline:true,
+          addStyle: true,
+        }
+      );
+
+
+
+      editor.trigger("inf:rules:update", {
+        rules: newCssProps,
+      });
+
+      // editor.getSelected().addStyle(newCssProps)
+
+      // console.log(cssProp, rule.ruleString, "%$%%$#$", editor.getCss());
+      // console.log("Editor Css:", editor.getDevice());
+      // console.log(editor.Devices.get("tablet").getWidthMedia());
+    };
+
+    setStyleTimeout && clearTimeout(setStyleTimeout);
+    setStyleTimeout = setTimeout(() => {
+      // if ("requestIdleCallback" in window) {
+      //   requestIdleCallback(setter);
+      // } else {
+      // }
+      setter();
+    }, 100);
   };
 }

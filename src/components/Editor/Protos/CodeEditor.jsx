@@ -311,6 +311,7 @@ export const CodeEditor = ({
             autohide: true,
             enabled: false,
           },
+          ...props.options
         }}
       />
     </section>

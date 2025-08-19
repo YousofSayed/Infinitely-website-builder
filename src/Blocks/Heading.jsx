@@ -15,14 +15,15 @@ export const Heading = ({ editor }) => {
     view:{
       onRender({model}){
         model.set({
-          droppable:false,
+          droppable:true,
+          editable:true,
         })
       }
     },
     model: {
       
       defaults: {
-        droppable: false,
+        // droppable: false,
         resizable:true,
         icon:reactToStringMarkup(Icons.heading({fill:'white'})),
         // tagName:'h1',

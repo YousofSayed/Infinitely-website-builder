@@ -25,6 +25,7 @@ import {
   getCurrentSelector,
 } from "../../../helpers/functions";
 import { minify } from "csso";
+import { cloneDeep } from "lodash";
 
 // console.log({0:[],1:[]});
 
@@ -66,17 +67,17 @@ export const SelectState = ({ placeholder }) => {
     console.log("rules (device): ", rules, media);
 
     const handleValue = (value = "") => {
-      return value?.replaceAll?.(/\s+/gi, "")?.trim()?.toLowerCase?.() || ''
+      return value?.replaceAll?.(/\s+/gi, "")?.trim()?.toLowerCase?.() || "";
     };
 
     const findIndex = rules.findIndex((ruleF) => {
       // console.log( handleValue(ruleF?.atRuleParams) == handleValue(media?.atRuleParams));
       // console.log( handleValue(ruleF?.atRuleType) == handleValue(media?.atRuleType));
       // console.log( handleValue(ruleF?.atRuleType) == handleValue(media?.atRuleType));
-      
+
       return (
         handleValue(ruleF?.atRuleParams) == handleValue(media?.atRuleParams) &&
-        handleValue(ruleF?.atRuleType) == handleValue(media?.atRuleType) 
+        handleValue(ruleF?.atRuleType) == handleValue(media?.atRuleType)
       );
     });
 
@@ -87,7 +88,7 @@ export const SelectState = ({ placeholder }) => {
       setRule((old) => ({
         ...old,
         is: true,
-        atRuleParams:media.atRuleParams,
+        atRuleParams: media.atRuleParams,
         atRuleType: media.atRuleType,
         ruleString: rules[findIndex].states,
       }));
@@ -105,19 +106,60 @@ export const SelectState = ({ placeholder }) => {
   };
 
   function extractRules(isSetRules = true) {
+    const sle = editor.getSelected();
+    if (!sle) {
+      console.warn(`No selected element to extract rules!`);
+      return;
+    }
     const currentSelector = getCurrentSelector(selector, editor.getSelected());
-
+    let filterHandledRules = [];
     const selectorRules = extractRulesByIdWithDetails(
-      minify(editor.getCss({ clearStyles: false, keepUnusedStyles: true })).css,
+      // minify(editor.getCss({ clearStyles: false, keepUnusedStyles: true })).css,
+      editor.getCss({ clearStyles: false, keepUnusedStyles: true }),
       currentSelector
-    ).filter((sdt) => sdt.states && sdt.statesAsArray.length);
+    ).filter((r) => r.states);
 
+    // .filter((sdt) => {
+    //   const output =
+    //     sdt.states &&
+    //     sdt.statesAsArray.length &&
+    //     !filterHandledRules.includes(sdt.states);
+    //   filterHandledRules.push(sdt.states);
+    //   return output;
+    // });
+    console.log("ruuules : ", selectorRules);
+
+    // const selectorRules = editor.CssComposer.getRules(`${currentSelector}`).map(
+    //   (rule) => {
+    //     return {
+    //       states: rule.attributes.state,
+    //       styles: rule.attributes.style,
+    //       id: rule.id,
+    //       atRuleType: rule.attributes.atRuleType,
+    //       atRuleParams: rule.attributes.mediaText,
+    //       rule:`${currentSelector}${rule.attributes.state}`,
+    //       states : rule.attributes.selectors.map(sl=>sl.getFullName())
+    //       // rule: string;
+    //       // fullRule: string | null;
+    //       // styles: {};
+    //       // states: string | null;
+    //       // statesAsArray: RegExpMatchArray | never[] | null;
+    //       // atRuleType: string | null;
+    //       // atRuleParams: string | null;
+    //     };
+    //   }
+    // );
     // console.log(
     //   "a3aaaa : ",
+    //   `${currentSelector}${rule.ruleString}`,
     //   currentSelector,
     //   selectorRules,
-    //   editor.CssComposer.getRules()
+    //   editor.CssComposer.getRules(`${currentSelector}`),
+    //   editor.CssComposer.getRule(
+    //     `${currentSelector}${rule.ruleString}`
+    //   ).styleToString()
     // );
+    // return {rules }
     isSetRules && setStates([...selectorRules]);
     return selectorRules;
   }
@@ -188,29 +230,59 @@ export const SelectState = ({ placeholder }) => {
   }
 
   function removeState(keyword, keywordsIndex) {
-    const clone = structuredClone(states);
-    const currentSelector = selector ? selector : `#${selectedEl.currentEl.id}`;
+    const clone = cloneDeep(states);
+    const currentSelector = getCurrentSelector(selector, editor.getSelected());
     const ruleString = `${currentSelector}${clone[keywordsIndex].states}`;
 
-    const rule = editor.Css.getRule(ruleString, {
-      atRuleParams: clone[keywordsIndex].atRuleParams,
-      atRuleType: clone[keywordsIndex].atRuleType,
+    // const rule = editor.Css.getRule(ruleString, {
+    //   atRuleParams: clone[keywordsIndex].atRuleParams,
+    //   atRuleType: clone[keywordsIndex].atRuleType,
+    // });
+    // const oldRuleStyle = rule.toJSON().style;
+    let oldRuleStyle = {};
+      const rulesWillRemoved = editor.Css.getAll().models.filter((r) => {
+     
+      const device = r.getDevice();
+      // console.log(r.selectorsToString({}), device?.getWidthMedia?.() , r.attributes.mediaText);
+      const response = device
+        ? r.config.atRuleType != "keyframes" &&
+          (`(max-width: ${device.getWidthMedia()})` || "").replaceAll(' ' , '') == (clone[keywordsIndex].atRuleParams || "").replaceAll(' ' , '') &&
+          r.selectorsToString({}) == ruleString
+        : r.config.atRuleType != "keyframes" &&
+          (r.config.atRuleType || "") == (clone[keywordsIndex].atRuleType || "") &&
+          (r.config.mediaText || "") == (clone[keywordsIndex].atRuleParams || "") &&
+          r.selectorsToString({}) == ruleString;
+      return response;
     });
-    const oldRuleStyle = rule.toJSON().style;
 
-    editor.Css.remove(rule);
+    for (const cssRule of rulesWillRemoved) {
+      oldRuleStyle = {
+        ...oldRuleStyle,
+        ...cssRule.getStyle(),
+      };
+      editor.Css.remove(cssRule);
+    }
+    console.log("oldRuleStyle : ", oldRuleStyle);
+    // return;
+    // editor.Css.remove(rule);
 
     clone[keywordsIndex].statesAsArray = clone[
       keywordsIndex
     ].statesAsArray.filter((keywordArr) => keywordArr != keyword);
     clone[keywordsIndex].states = clone[keywordsIndex].statesAsArray.join("");
-    setStates(clone);
 
-    clone[keywordsIndex].statesAsArray.length > 1 &&
+    clone[keywordsIndex].statesAsArray.length >= 1 &&
       editor.Css.setRule(
         `${currentSelector}${clone[keywordsIndex].states}`,
-        oldRuleStyle
+        oldRuleStyle,
+        {
+          addStyles:true,
+          atRuleParams: clone[keywordsIndex].atRuleParams,
+          atRuleType: clone[keywordsIndex].atRuleType,
+        }
       );
+    setStates(clone);
+
     setRule({
       is: true,
       ruleString: `${clone[keywordsIndex].states}`,
@@ -218,21 +290,56 @@ export const SelectState = ({ placeholder }) => {
   }
 
   function removeStateContainer(index) {
-    const clone = structuredClone(states);
-    const rule = `#${editor.getSelected().getEl().id}${clone[index].states}`;
+    const clone = cloneDeep(states);
+    // const sle
+    const currentSelector = getCurrentSelector(selector, editor.getSelected());
+    const rule = `${currentSelector}${clone[index].states}`;
 
-    editor.Css.remove(editor.Css.getRule(rule));
+    // console.log(editor.Css.getRule());
+    const rulesWillRemoved = editor.Css.getAll().models.filter((r) => {
+     
+      const device = r.getDevice();
+      // console.log(r.selectorsToString({}), device?.getWidthMedia?.() , r.attributes.mediaText);
+      const response = device
+        ? r.config.atRuleType != "keyframes" &&
+          (`(max-width: ${device.getWidthMedia()})` || "").replaceAll(' ' , '') == (clone[index].atRuleParams || "").replaceAll(' ' , '') &&
+          r.selectorsToString({}) == rule
+        : r.config.atRuleType != "keyframes" &&
+          (r.config.atRuleType || "") == (clone[index].atRuleType || "") &&
+          (r.config.mediaText || "") == (clone[index].atRuleParams || "") &&
+          r.selectorsToString({}) == rule;
+      return response;
+    });
+    // editor.addStyle(`${rule}{}`, { avoidStore: true });
+    // console.log(
+    //   "clone",
+    //   clone[index],
+    //   currentSelector,
+    //   rule,
+    //   editor.Css.getAll().models
+    // );
+    console.log("all rules will removed", rulesWillRemoved, clone[index]);
+    // return;
+    for (const cssRule of rulesWillRemoved) {
+      editor.Css.remove(cssRule);
+      console.log("removed css rule : ", cssRule);
+    }
+    // return;
+
+    // editor.Css.remove(editor.Css.getRules(rule));
     setRule({
       is: false,
       ruleString: "",
     });
 
-    const newArr = clone.filter((stateD, i) => i != index);
-    setStates(newArr);
+    clone.splice(index, 1);
+    setStates(clone);
 
     currentStateIndex == states.length - 1
-      ? setCurrentStateIndex(newArr.length - 1)
+      ? setCurrentStateIndex(clone.length - 1)
       : null;
+
+    editor.store();
   }
 
   function selectContainer(keywordsIndex) {
@@ -245,10 +352,13 @@ export const SelectState = ({ placeholder }) => {
           ? ""
           : `${states[keywordsIndex].states}`,
     }));
+
     setCurrentStateIndex(keywordsIndex);
+    console.log(states[keywordsIndex].atRuleParams);
+
     editor.Devices.getDevices().forEach((device) => {
-      if (!device.getWidthMedia()) {
-        editor.Devices.select("Desktop");
+      if (!states[keywordsIndex].atRuleParams) {
+        editor.Devices.select("desktop");
         return;
       }
       if (
@@ -260,8 +370,8 @@ export const SelectState = ({ placeholder }) => {
   }
 
   return (
-    <section className="mt-3 flex flex-col gap-4  p-2">
-      <section className="flex gap-2 ">
+    <section className="mt-3 flex flex-col gap-2  p-1 bg-slate-900 rounded-lg">
+      <section className="flex gap-2   rounded-lg items-center justify-between overflow-hidden">
         <Select
           placeholder="state"
           respectParenthesis={true}
@@ -288,7 +398,8 @@ export const SelectState = ({ placeholder }) => {
         />
 
         <SmallButton
-          className="flex-shrink-0 bg-slate-800"
+          className="flex-shrink-0 bg-slate-800 w-[30px!important] h-[30px]"
+          tooltipTitle="Add state"
           onClick={(ev) => {
             addState(state);
           }}
@@ -297,7 +408,8 @@ export const SelectState = ({ placeholder }) => {
         </SmallButton>
 
         <SmallButton
-          className=" flex-shrink-0 bg-slate-800"
+          className=" flex-shrink-0 bg-slate-800 w-[30px!important] h-[30px]"
+          tooltipTitle="Add new line"
           onClick={(ev) => {
             addNewStateContainer();
           }}
@@ -308,7 +420,7 @@ export const SelectState = ({ placeholder }) => {
 
       {/* {getLastIndex(states) >= 0  && states[getLastIndex(states)][0] ? ( */}
       {!!states.length && (
-        <section ref={chicesRefEl} className="flex flex-col gap-3">
+        <section ref={chicesRefEl} className="flex flex-col gap-2 ">
           {states.map(
             ({ rule, states, statesAsArray, atRuleParams, atRuleType }, i) => {
               return (

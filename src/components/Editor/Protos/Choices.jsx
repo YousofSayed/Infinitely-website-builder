@@ -39,9 +39,9 @@ export const Choices = memo(
     const [keyword, setKeyword] = useState("");
     const currentIndex = useRef();
 
-    useEffect(() => {
-      setActive(false);
-    }, [sle]);
+    // useEffect(() => {
+    //   setActive(false);
+    // }, [sle]);
 
     useEffect(() => {
       active
@@ -72,7 +72,7 @@ export const Choices = memo(
 
     return (
       <section
-        className={`w-full min-h-[50px]   overflow-x-auto gap-2 flex items-center py-[5px] px-2 rounded-lg  ${
+        className={`w-full    overflow-x-auto gap-2 flex items-center p-1 rounded-lg  ${
           className ? className : "bg-slate-800"
         }`}
       >
@@ -109,7 +109,7 @@ export const Choices = memo(
                   setSelector(selector.includes(keyword) ? '' : `.${keyword}`);
                 }}
                 key={i}
-                className={`text-wrap break-all relative group px-[20px] w-fit cursor-pointer select-none  flex-shrink-0 py-[10px] text-white ${
+                className={`text-nowrap break-all relative group px-[20px] w-fit cursor-pointer select-none  flex-shrink-0 py-2 text-white ${
                   (active && currentIndex.current == i)
                     ? "bg-blue-600"
                     : enableSelecting
