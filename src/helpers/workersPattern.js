@@ -11,5 +11,5 @@ export function doWorkerPattern(commands) {
   });
   self.addEventListener("unhandledrejection", (ev) => {
     console.error("Worker unhandled rejection:", ev.reason);
-  });
+  }); 
 }

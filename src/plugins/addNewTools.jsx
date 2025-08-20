@@ -50,9 +50,32 @@ export const addNewTools = (editor) => {
     // editor.select()
     cmp.forEachChild((child) => disableDragAndDrop(value, child));
   };
-  editor.on("component:update", (update) => {
-    console.log("update", update, editor.getDirtyCount());
-  });
+  // editor.on("component:update", (update) => {
+  //   console.log("update", update, editor.getDirtyCount());
+  // });
+
+  editor.on(
+    "component:create",
+    /**
+     *
+     * @param {import('grapesjs').Component} model
+     */
+    (model) => {
+      // console.log("component create : ", model);
+      if (model.get("type") == "wrapper") return;
+      const props = model.props();
+      if (props.droppable && model.components().length == 0) {
+        console.log("component create droppp: ", model);
+        doActionAndPreventSaving(
+          editor,
+          () => {
+            model.addClass(["drop"]);
+          },
+          { decreaseSteps: true }
+        );
+      }
+    }
+  );
 
   editor.on(
     "component:add",
@@ -74,16 +97,38 @@ export const addNewTools = (editor) => {
       // );
 
       if (modelClasses.includes("drop")) {
-        // console.log("mod 2", modelClasses);
-        doActionAndPreventSaving(editor, (ed) => {
-          parent.removeClass(["drop"]);
-        });
+        console.log("mod 2", modelClasses);
+        doActionAndPreventSaving(
+          editor,
+          (ed) => {
+            parent.removeClass(["drop"]);
+          },
+          { decreaseSteps: true }
+        );
       }
 
       // console.log(model.parent(), editor.getDirtyCount(), "from adder after");
     }
   );
-  
+
+  editor.on(
+    "component:update:components",
+    /**
+     *
+     * @param {import('grapesjs').Component} model
+     */
+    (model) => {
+      if (!model) {
+        console.warn("no model!!");
+        return;
+      }
+      if(model.get('type') == 'wrapper')return;
+      const props = model.props();
+      if (props.droppable && !model.components().length) {
+        model.addClass(["drop"]);
+      }
+    }
+  );
 
   editor.on(
     "component:remove",
@@ -112,14 +157,45 @@ export const addNewTools = (editor) => {
         //   "from remover inside"
         // );
         // console.log("mod 2", modelClasses);
-        doActionAndPreventSaving(editor, (ed) => {
-          parent.addClass(["drop"]);
-        });
+        doActionAndPreventSaving(
+          editor,
+          (ed) => {
+            parent.addClass(["drop"]);
+          }
+          // { decreaseSteps: true }
+        );
       }
 
       // console.log(model.parent(), editor.getDirtyCount(), "from remover after");
     }
   );
+
+  // editor.on(
+  //   "component:drag",
+  //   /**
+  //    *
+  //    * @param {{parent : import('grapesjs').Component , target : import('grapesjs').Component}} param0
+  //    */
+  //   ({ parent, target }) => {
+  //     if (!parent || !target) {
+  //       console.warn("No Component here");
+  //       return;
+  //     }
+  //     const parentOfParent = parent.parent();
+  //     if (parent.get("type") != "wrapper") {
+
+  //       doActionAndPreventSaving(
+  //         editor,
+  //         () => {
+  //           parent.addClass("p-10");
+  //         },
+  //         { decreaseSteps: true }
+  //       );
+  //     }
+
+  //     if (parentOfParent && parentOfParent.get('type') =='wrapper' )return; 
+  //   }
+  // );
 
   // editor.on('component:update:components',
   //   /**
@@ -170,7 +246,7 @@ export const addNewTools = (editor) => {
      * @param { import('grapesjs').Component } component
      */
     (component) => {
-      if(!component)return;
+      if (!component) return;
       try {
         // const trg = component && component.getEl();
         const highlighter = document.querySelector(

@@ -13,6 +13,7 @@ import { toast } from "react-toastify";
 import { ToastMsgInfo } from "../Editor/Protos/ToastMsgInfo";
 import { restoreBlobs } from "../../helpers/bridge";
 import { infinitelyWorker } from "../../helpers/infinitelyWorker";
+import { loadProject } from "../../helpers/functions";
 
 export const Header = () => {
   const setShowCrtModal = useSetRecoilState(showCrtModalState);
@@ -45,12 +46,7 @@ export const Header = () => {
     const file = ev.target.files[0];
     console.log('load File start: ' , file);
     
-    infinitelyWorker.postMessage({
-      command: "loadProject",
-      props: {
-        file,
-      },
-    });
+    loadProject(file);
 
      ev.target.value = ''
     //   const mime = await (await import("mime/lite")).default;

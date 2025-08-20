@@ -1,3 +1,6 @@
+/**
+ * @type {import('../helpers/types').Action[]}
+ */
 export const actions = [
   //   {
   //     name: "hideMe",
@@ -927,16 +930,21 @@ export const actions = [
         keywords: ["running", "paused"],
         type: "select",
       },
-     once: {
-        type:'switch',
-        value:true
-      }
+      once: {
+        type: "switch",
+        value: true,
+      },
     },
     function: "doAnimation",
+    access: {
+      name: {
+        keyframes: true,
+      },
+    },
   },
   {
     name: "dontObserverMeAgain",
-    label:`Igonre watch element`,
+    label: `Igonre watch element`,
     function: "dontObserverMeAgain",
     placeholder: "Type selector, e.g., .selector",
     params: {

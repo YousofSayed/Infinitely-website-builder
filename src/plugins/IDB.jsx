@@ -418,8 +418,10 @@ export const IDB = (editor) => {
           //   editor.getDirtyCount(),
           //   isLoadEnd
           // );
-          editor.clearDirtyCount();
-          editor.Storage.setStepsBeforeSave(0);
+          setTimeout(() => {
+            editor.clearDirtyCount();
+            editor.Storage.setStepsBeforeSave(0);
+          }, 0);
           editor.off("canvas:frame:load:body", callback);
         };
 
@@ -427,232 +429,230 @@ export const IDB = (editor) => {
 
         // if(timesLoaded >1)timesLoaded=1
 
-        console.log(
-          "loading end",
-          editor.getDirtyCount(),
-          isLoadEnd,
-          editor.Storage.getStepsBeforeSave(),
-          editor.Storage.getRecovery()
-        );
+        console.log("loading end", editor.getDirtyCount(), isLoadEnd);
         setTimeout(() => {
+          // editor.off("canvas:frame:load:body", loadFooterScriptsCallback);
           editor.Storage.setStepsBeforeSave(0);
           editor.clearDirtyCount();
         }, 0);
         return {};
       };
 
-      return new Promise((res, rej) => {
-        loadTimeout && clearTimeout(loadTimeout);
-        loadTimeout = setTimeout(async () => {
-          await callback();
-          res(true);
-        }, 10);
-      });
+      // return new Promise((res, rej) => {
+      //   loadTimeout && clearTimeout(loadTimeout);
+      //   loadTimeout = setTimeout(async () => {
+      //     await callback();
+      //     res(true);
+      //   }, 10);
+      // });
 
-      // return loadTimeout;
+      loadTimeout && clearTimeout(loadTimeout);
+      loadTimeout = setTimeout(async () => {
+        await callback();
+        // res(true);
+      }, 10);
+      return loadTimeout;
     },
 
     //Storinggg
-    store() {
+    store(manually = false) {
       if (storeTimeout) clearTimeout(storeTimeout);
       if (pageBuilderTimeout) clearTimeout(pageBuilderTimeout);
 
       editor.UndoManager.stop();
 
-      return new Promise((res, rej) => {
-        storeTimeout = setTimeout(
-          () => {
-            const runStore = async () => {
-              const projectSettings = getProjectSettings().projectSettings;
-              try {
-                console.log("Before storing:", {
-                  dirty: editor.getDirtyCount(),
-                  steps: editor.StorageManager.getStepsBeforeSave(),
+      // return new Promise((res, rej) => {
+      storeTimeout = setTimeout(
+        () => {
+          const runStore = async () => {
+            const projectSettings = getProjectSettings().projectSettings;
+            console.log("Before storing:", {
+              dirty: editor.getDirtyCount(),
+              steps: editor.StorageManager.getStepsBeforeSave(),
+            });
+            // if (!editor.getDirtyCount()) return;
+            try {
+              toast.clearWaitingQueue({
+                // containerId: `main-toast-container`,
+              });
+              tId && toast.done(tId);
+              if (!projectSettings.enable_auto_save) {
+                tId = toast.loading(<ToastMsgInfo msg={"Saving..."} />);
+              }
+
+              const projectID = +localStorage.getItem(current_project_id);
+              const currentPageId = localStorage.getItem(current_page_id);
+              const currentSymbolId = sessionStorage.getItem(current_symbol_id);
+              const projectData = await db.projects.get(projectID);
+              const files = {};
+              let tailwindcssStyle;
+
+              // Handle global symbol
+              const handleGlobalSymbol = async () => {
+                if (!currentSymbolId) return false;
+
+                const symbolEl = editor
+                  .getWrapper()
+                  .find(`[${inf_symbol_Id_attribute}="${currentSymbolId}"]`)[0];
+
+                const symbolInf = getInfinitelySymbolInfo(editor.getSelected());
+                const symbol = symbolInf?.symbol || symbolEl;
+                const currentSymbol = projectData?.symbols?.[currentSymbolId];
+
+                if (!symbol || !currentSymbol) return false;
+
+                const content = symbol.toHTML({
+                  withProps: true,
+                  keepInlineStyle: true,
                 });
-                toast.clearWaitingQueue({
-                  // containerId: `main-toast-container`,
-                });
-                tId && toast.done(tId);
-                if (!projectSettings.enable_auto_save) {
-                  tId = toast.loading(<ToastMsgInfo msg={"Saving..."} />);
-                }
 
-                const projectID = +localStorage.getItem(current_project_id);
-                const currentPageId = localStorage.getItem(current_page_id);
-                const currentSymbolId =
-                  sessionStorage.getItem(current_symbol_id);
-                const projectData = await db.projects.get(projectID);
-                const files = {};
-                let tailwindcssStyle;
-
-                // Handle global symbol
-                const handleGlobalSymbol = async () => {
-                  if (!currentSymbolId) return false;
-
-                  const symbolEl = editor
-                    .getWrapper()
-                    .find(
-                      `[${inf_symbol_Id_attribute}="${currentSymbolId}"]`
-                    )[0];
-
-                  const symbolInf = getInfinitelySymbolInfo(
-                    editor.getSelected()
-                  );
-                  const symbol = symbolInf?.symbol || symbolEl;
-                  const currentSymbol = projectData?.symbols?.[currentSymbolId];
-
-                  if (!symbol || !currentSymbol) return false;
-
-                  const content = symbol.toHTML({
-                    withProps: true,
-                    keepInlineStyle: true,
-                  });
-
-                  const style = getComponentRules({
-                    editor,
-                    cmp: symbol,
-                    nested: true,
-                  }).stringRules;
-
-                  // minify(
-
-                  //   { restructure: true }
-                  // ).css;
-
-                  files[currentSymbol.pathes.content] = content;
-                  files[currentSymbol.pathes.style] = style;
-
-                  return true;
-                };
-
-                await handleGlobalSymbol();
-
-                // Minify full CSS
-                let cssCode = editor.getCss({
-                  avoidProtected: true,
-                  keepUnusedStyles: false,
-                });
+                const style = getComponentRules({
+                  editor,
+                  cmp: symbol,
+                  nested: true,
+                }).stringRules;
 
                 // minify(
-                //  ,
+
                 //   { restructure: true }
                 // ).css;
 
-                if (projectSettings?.enable_tailwind) {
-                  const tailwindStyle = [
-                    ...editor.Canvas.getDocument().head.querySelectorAll(
-                      "style"
-                    ),
-                  ].find((style) =>
-                    style.innerHTML.includes(
-                      "MIT License | https://tailwindcss.com"
-                    )
-                  );
-                  tailwindcssStyle = tailwindStyle?.innerHTML || "";
-                }
+                files[currentSymbol.pathes.content] = content;
+                files[currentSymbol.pathes.style] = style;
 
-                const data = {
-                  pages: {
-                    ...projectData.pages,
-                    [currentPageId]: {
-                      ...projectData.pages[currentPageId],
-                      bodyAttributes: editor.getWrapper().getAttributes() || {},
-                      symbols: (
-                        editor
-                          .getWrapper()
-                          .find(`[${inf_symbol_Id_attribute}]`) || []
-                      ).map(
-                        (cmp) => cmp.getAttributes()[inf_symbol_Id_attribute]
-                      ),
-                    },
-                  },
-                };
+                return true;
+              };
 
-                files[`editor/pages/${currentPageId}.html`] = editor
-                  .getWrapper()
-                  .getInnerHTML({ withProps: true });
+              await handleGlobalSymbol();
 
-                files[`css/${currentPageId}.css`] = cssCode;
+              // Minify full CSS
+              let cssCode = editor.getCss({
+                avoidProtected: true,
+                keepUnusedStyles: false,
+              });
 
-                const props = {
-                  data,
-                  files,
-                  projectSetting: projectSettings,
-                  tailwindcssStyle,
-                  projectId: projectID,
-                  pageName: currentPageId,
-                  pageUrl: `pages/${currentPageId}.html`,
-                  updatePreviewPages: true,
-                  editorData: {
-                    canvasCss: editor.config.canvasCss,
-                  },
-                };
+              // minify(
+              //  ,
+              //   { restructure: true }
+              // ).css;
 
-                const onWorkerMessage = (ev) => {
-                  const { command, props: resProps } = ev.data;
-                  const isMatch = resProps?.projectId === projectID;
-
-                  if (
-                    isMatch &&
-                    (command === "updateDB" ||
-                      command === "storeGrapesjsDataIfSymbols")
-                  ) {
-                    infinitelyWorker.removeEventListener(
-                      "message",
-                      onWorkerMessage
-                    );
-
-                    if (currentSymbolId) {
-                      editor.trigger("block:add");
-                      editor.trigger("block:update");
-                    }
-
-                    console.log("Store complete:", { pageId: currentPageId });
-                    console.timeEnd("storing end");
-                    if (!projectSettings.enable_auto_save) {
-                      toast.done(tId);
-                      toast.success(
-                        <ToastMsgInfo msg={`Project saved successfully👍`} />
-                      );
-                    }
-                    res(true);
-                  }
-                };
-
-                infinitelyWorker.addEventListener("message", onWorkerMessage);
-
-                console.time("storing end");
-
-                infinitelyWorker.postMessage({
-                  // command: currentSymbolId
-                  //   ? "storeGrapesjsDataIfSymbols"
-                  //   : "updateDB",
-                  command: "updateDB",
-                  props,
-                });
-              } catch (err) {
-                console.error("Storage failed:", err);
-                if (!projectSettings.enable_auto_save) {
-                  tId && toast.dismiss(tId);
-                  toast.error(<ToastMsgInfo msg={`Faild to save project🙁`} />);
-                }
-                res(false);
-              } finally {
-                editor.UndoManager.start();
+              if (projectSettings?.enable_tailwind) {
+                const tailwindStyle = [
+                  ...editor.Canvas.getDocument().head.querySelectorAll("style"),
+                ].find((style) =>
+                  style.innerHTML.includes(
+                    "MIT License | https://tailwindcss.com"
+                  )
+                );
+                tailwindcssStyle = tailwindStyle?.innerHTML || "";
               }
-            };
 
-            // if ("requestIdleCallback" in window) {
-            //   requestIdleCallback(runStore);
-            // } else {
-            // }
-            runStore();
-          },
-          getProjectSettings().projectSettings?.enable_auto_save ? 700 : 0
-        );
-      });
+              const data = {
+                pages: {
+                  ...projectData.pages,
+                  [currentPageId]: {
+                    ...projectData.pages[currentPageId],
+                    bodyAttributes: editor.getWrapper().getAttributes() || {},
+                    symbols: (
+                      editor
+                        .getWrapper()
+                        .find(`[${inf_symbol_Id_attribute}]`) || []
+                    ).map(
+                      (cmp) => cmp.getAttributes()[inf_symbol_Id_attribute]
+                    ),
+                  },
+                },
+              };
 
-      // return storeTimeout;
+              files[`editor/pages/${currentPageId}.html`] = editor
+                .getWrapper()
+                .getInnerHTML({ withProps: true });
+
+              files[`css/${currentPageId}.css`] = cssCode;
+
+              const props = {
+                data,
+                files,
+                projectSetting: projectSettings,
+                tailwindcssStyle,
+                projectId: projectID,
+                pageName: currentPageId,
+                pageUrl: `pages/${currentPageId}.html`,
+                updatePreviewPages: true,
+                editorData: {
+                  canvasCss: editor.config.canvasCss,
+                },
+              };
+
+              const onWorkerMessage = (ev) => {
+                const { command, props: resProps } = ev.data;
+                const isMatch = resProps?.projectId === projectID;
+
+                if (
+                  isMatch &&
+                  (command === "updateDB" ||
+                    command === "storeGrapesjsDataIfSymbols")
+                ) {
+                  infinitelyWorker.removeEventListener(
+                    "message",
+                    onWorkerMessage
+                  );
+
+                  if (currentSymbolId) {
+                    editor.trigger("block:add");
+                    editor.trigger("block:update");
+                  }
+
+                  console.log("Store complete:", { pageId: currentPageId });
+                  console.timeEnd("storing end");
+                  if (!projectSettings.enable_auto_save) {
+                    toast.done(tId);
+                    toast.success(
+                      <ToastMsgInfo msg={`Project saved successfully👍`} />
+                    );
+                  }
+
+                  manually && (
+                    <ToastMsgInfo msg={`Project saved successfully👍`} />
+                  );
+                  // res(true);
+                }
+              };
+
+              infinitelyWorker.addEventListener("message", onWorkerMessage);
+
+              console.time("storing end");
+
+              infinitelyWorker.postMessage({
+                // command: currentSymbolId
+                //   ? "storeGrapesjsDataIfSymbols"
+                //   : "updateDB",
+                command: "updateDB",
+                props,
+              });
+            } catch (err) {
+              console.error("Storage failed:", err);
+              if (!projectSettings.enable_auto_save) {
+                tId && toast.dismiss(tId);
+                toast.error(<ToastMsgInfo msg={`Faild to save project🙁`} />);
+              }
+              res(false);
+            } finally {
+              editor.UndoManager.start();
+            }
+          };
+
+          // if ("requestIdleCallback" in window) {
+          //   requestIdleCallback(runStore);
+          // } else {
+          // }
+          runStore();
+        },
+        getProjectSettings().projectSettings?.enable_auto_save ? 700 : 0
+      );
+      // });
+
+      return storeTimeout;
     },
   });
 };

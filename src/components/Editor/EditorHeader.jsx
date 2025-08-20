@@ -26,6 +26,7 @@ import {
   getCurrentPageName,
   getProjectData,
   getProjectSettings,
+  shareProject,
 } from "../../helpers/functions";
 import { Select } from "./Protos/Select";
 import { PagesSelector } from "./PagesSelector";
@@ -45,6 +46,7 @@ import { useNavigate } from "react-router-dom";
 import { animationsSavingMsg } from "../../constants/confirms";
 import { editorContainerInstance } from "../../constants/InfinitelyInstances";
 import { InfinitelyEvents } from "../../constants/infinitelyEvents";
+import { fetcherWorker } from "../../helpers/defineWorkers";
 
 export const HomeHeader = memo(() => {
   const editor = useEditorMaybe();
@@ -269,6 +271,43 @@ export const HomeHeader = memo(() => {
               editor.store();
             }}
           />
+
+         <section className="relative">
+           <Li
+            icon={Icons.share}
+            title="share"
+            isObjectParamsIcon
+            className="flex-shrink-0"
+            // justHover
+            fillObjIconStroke
+            fillObjectIconOnHover
+            onClick={() => {
+              // editor.store();
+              shareProject();
+              /**
+               *
+               * @param {MessageEvent} ev
+               */
+              const callback = async(ev) => {
+                if (ev.data.command == "shareProject") {
+                  console.log(ev);
+                  const {response} = ev.data;
+                  if(response.status == 'success'){
+                    // "http://tmpfiles.org/11276583/dasd.zip"
+                    const fileUrl = response.data.url.replace("http://tmpfiles.org/" , "https://tmpfiles.org/dl/");
+                    await navigator.clipboard.writeText(`${window.origin}/workspace?file=${btoa(fileUrl)}`);
+                    toast.info(<ToastMsgInfo msg={`Share URL is copied , so you can share now💙`}/>,{progressClassName:'bg-blue-600'});
+                  }
+                  fetcherWorker.removeEventListener("message", callback);
+                }
+              };
+              fetcherWorker.addEventListener("message", callback);
+            }}
+          />
+
+          {/* <p className="absolute top-[100%] left-[-150px] w-[300px] p-2 bg-slate-800 rounded-lg z-[500]">dadsadadl dlas,dlsadlklsakdlaksldksalkdlsalkd</p> */}
+         </section>
+
           <Li
             icon={Icons.export}
             title="export"

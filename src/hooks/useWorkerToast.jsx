@@ -3,7 +3,7 @@ import { infinitelyWorker } from "../helpers/infinitelyWorker";
 import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
 import { toast } from "react-toastify";
 import { parse } from "../helpers/cocktail";
-import { assetsWorker, keyframesGetterWorker } from "../helpers/defineWorkers";
+import { assetsWorker, fetcherWorker, keyframesGetterWorker } from "../helpers/defineWorkers";
 
 export function useWorkerToast() {
     useEffect(() => {
@@ -21,11 +21,13 @@ export function useWorkerToast() {
     infinitelyWorker.addEventListener("message", cb);
     assetsWorker.addEventListener("message", cb);
     keyframesGetterWorker.addEventListener("message", cb);
+    fetcherWorker.addEventListener("message", cb);
 
     return () => {
       infinitelyWorker.removeEventListener("message", cb);
       assetsWorker.removeEventListener("message", cb);
       keyframesGetterWorker.removeEventListener("message", cb);
+      fetcherWorker.removeEventListener("message", cb);
     };
   }, []);
 }

@@ -21,6 +21,7 @@ import {
 } from "../../helpers/atoms";
 import { useEditorMaybe } from "@grapesjs/react";
 import {
+  advancedSearchSuggestions,
   getProjectData,
   rgbStringToHex,
   stringifyKeyframes,
@@ -36,7 +37,11 @@ import { VirtosuoVerticelWrapper } from "../Protos/VirtosuoVerticelWrapper";
 import { DetailsNormal } from "../Protos/DetailsNormal";
 import { keyframesGetterWorker } from "../../helpers/defineWorkers";
 import { comma } from "postcss/lib/list";
-import { current_page_id, current_project_id } from "../../constants/shared";
+import {
+  current_page_id,
+  current_project_id,
+  editorComponentProps,
+} from "../../constants/shared";
 import { Accordion } from "../Protos/Accordion";
 import { AccordionItem } from "../Protos/AccordionItem";
 import { LazyList } from "../Protos/LazyList";
@@ -216,6 +221,7 @@ export const AnimationsBuilder = memo(() => {
   );
   const [load, setLoad] = useState(true);
   const [currentEditing, setCurrentEditing] = useState("");
+  const searchedAnimations = useRef(animationsType);
   // const [currentEditingIndex, setCurrentEditingIndex] = useState(0);
   // const [currentEditingIndexStyles, setCurrentEditingIndexStyles] = useState(0);
   const [indexes, setIndexes] = useState({
@@ -284,9 +290,10 @@ export const AnimationsBuilder = memo(() => {
       //   )
       // );
 
-      console.log(props);
+      // console.log(props);
 
       setAnimations(props);
+      searchedAnimations.current = props;
     }
   };
 
@@ -415,161 +422,6 @@ export const AnimationsBuilder = memo(() => {
     setAnimations(clone);
   };
 
-  // // const removeAnimationRule = (animations = animationsType) => {
-  // //   // animations.forEach(({ name, values }) => {
-  // //   //   values.forEach(({ percentage, styles }) => {
-  // //   //     const oldRule = editor.Css.getRule(`${percentage}%`, {
-  // //   //       atRuleType: "keyframes",
-  // //   //       atRuleParams: name,
-  // //   //     });
-
-  // //   //     editor.Css.remove(oldRule);
-  // //   //   });
-  // //   // });
-
-  // //     for (const animation of animations) {
-  // //         for (const keyframe of animation.keyframes) {
-
-  // //         }
-  // //     }
-
-  // // };
-  // const removeAnimationRule = (animations = animationsType) => {
-  //   // animations.forEach(({ name, values }) => {
-  //   //   values.forEach(({ percentage, styles }) => {
-  //   //     const oldRule = editor.Css.getRule(`${percentage}%`, {
-  //   //       atRuleType: "keyframes",
-  //   //       atRuleParams: name,
-  //   //     });
-
-  //   //     editor.Css.remove(oldRule);
-  //   //   });
-  //   // });
-
-  //   for (const animation of animations) {
-  //     for (const keyframe of animation.keyframes) {
-  //     }
-  //   }
-  // };
-
-  // const removeFrameRule = (animations = animationsType, percentageParam) => {
-  //   for (const { name, values } of animations) {
-  //     for (const { percentage, styles } of values) {
-  //       if (percentage != percentageParam) return;
-  //       const oldRule = editor.Css.getRule(`${percentage}%`, {
-  //         atRuleType: "keyframes",
-  //         atRuleParams: name,
-  //       });
-
-  //       editor.Css.remove(oldRule);
-  //     }
-  //   }
-  //   // animations.forEach(({ name, values }) => {
-  //   //   values.forEach(({ percentage, styles }) => {
-
-  //   //   });
-  //   // });
-  // };
-
-  // const deleteAnimation = (index) => {
-  //   const newArr = cloneDeep(animations).splice(index, 1); // Array.from(animations).filter((anim, i) => i != index);
-  //   oldAnimtaions.current = cloneDeep(animations);
-  //   // oldAnimtaions.current.forEach(({ name, values }) => {
-  //   //   values.forEach(({ percentage, styles }) => {
-  //   //     const oldRule = editor.Css.getRule(`${percentage}%`, {
-  //   //       atRuleType: "keyframes",
-  //   //       atRuleParams: name,
-  //   //     });
-
-  //   //     editor.Css.remove(oldRule);
-  //   //   });
-  //   // });
-  //   // editor.Css.getAll().models.filter(r=>r.get)
-  //   removeAnimationRule(animations);
-  //   console.log(editor.getCss());
-
-  //   setAnimations(newArr);
-  // };
-
-  // const deleteFrame = (i, x) => {
-  //   const clone = structuredClone(animations);
-  //   const percentage = clone[i].values[x].percentage;
-  //   clone[i].values = clone[i].values.filter((val, z) => z != x);
-  //   console.log("clone : ", clone);
-  //   console.log("original : ", animations);
-
-  //   if (currentEditingIndexStyles == x)
-  //     setCurrentEditingIndexStyles(currentEditingIndexStyles - 1);
-  //   removeFrameRule(animations, percentage);
-  //   setAnimations(clone);
-  // };
-
-  // const addPercentage = (index, propsIndex) => {
-  //   const newArr = structuredClone(animations);
-  //   oldAnimtaions.current = structuredClone(animations);
-  //   newArr[index].values = [
-  //     ...newArr[index].values,
-  //     { percentage: 0, styles: {} },
-  //   ];
-  //   setAnimations(newArr);
-  // };
-
-  // const updatePercentageValue = ({ index, propsIndex, newValue }) => {
-  //   const newArr = structuredClone(animations);
-  //   oldAnimtaions.current = structuredClone(animations);
-  //   newArr[index].values[propsIndex].percentage = newValue;
-  //   setAnimations(newArr);
-  //   addAnimationRule(newArr);
-  // };
-
-  // const addAnimationRule = (animationsArr = animationsType) => {
-  //   animationsArr.forEach((animation, i) => {
-  //     if (!oldAnimtaions.current[i]) return;
-  //     animation.values.forEach(({ percentage, styles }, x) => {
-  //       const oldRule = editor.Css.getRule(
-  //         `${oldAnimtaions.current[i].values[x].percentage}%`,
-  //         {
-  //           atRuleType: "keyframes",
-  //           atRuleParams: animation.name,
-  //         }
-  //       );
-
-  //       editor.Css.remove(oldRule);
-  //     });
-
-  //     editor.addStyle(stringifyKeyframes(animation));
-  //     // console.log(editor.getCss(), "after added styles");
-  //   });
-  // };
-
-  // useEffect(() => {
-  //   // if (
-  //   //   // currentEditingIndex == undefined ||
-  //   //   // currentEditingIndexStyles == undefined ||
-  //   //   !animations.length
-  //   // )
-  //   //   return;
-  //   // if (!currentEditing) return;
-  //   // console.log(animeStyles);
-  //   // const newArr = structuredClone(animations);
-  //   // // const newObj = (newArr[currentEditingIndex] = cloneObject(
-  //   // //   newArr[currentEditingIndex]
-  //   // // ));
-  //   // console.log(newArr);
-  //   // const styles =
-  //   //   newArr[currentEditingIndex].values[currentEditingIndexStyles];
-  //   // styles.styles = {
-  //   //   ...styles.styles,
-  //   //   ...animeStyles,
-  //   // };
-  //   // Object.keys(styles.styles).forEach((key) => {
-  //   //   if (!styles.styles[key]) delete styles.styles[key];
-  //   // });
-  //   // oldAnimtaions.current = structuredClone(animations);
-  //   // addAnimationRule(newArr);
-  //   // setAnimations(newArr);
-  // }, [animeStyles]);
-
   useEffect(() => {
     // if (!frameStyles) return;
     // if (!animations.length) return;
@@ -620,22 +472,48 @@ export const AnimationsBuilder = memo(() => {
     };
   }, [showAnimeBuilder, editor]);
 
+  /**
+   *
+   * @param {InputEvent} ev
+   */
+  const search = (ev) => {
+    if (!ev.target.value) {
+      setAnimations(searchedAnimations.current);
+      searchedAnimations.current = [];
+      return;
+    }
+    const searchAnims = advancedSearchSuggestions(
+      animations,
+      ev.target.value,
+      undefined,
+      "name"
+    );
+    setAnimations(searchAnims);
+  };
+
   return (
     <Memo>
       <section className="flex flex-col gap-2  h-full will-change-[contents,height] ">
         <MiniTitle>Animations Builder</MiniTitle>
         <section className="flex flex-col gap-2 rounded-lg will-change-[contents,height]">
+          <Input
+            type="search"
+            placeholder="Search..."
+            className="bg-slate-800"
+            onInput={search}
+          />
           <section className="flex gap-2">
             <Input
               className="bg-slate-800 w-full"
               value={animation}
-              placeholder="Name"
+              placeholder="Enter Name"
               onInput={(ev) => {
                 setAnimation(ev.target.value);
               }}
             />
 
             <SmallButton
+              tooltipTitle="Add Animation"
               onClick={(ev) => {
                 addAnimation(animation);
               }}

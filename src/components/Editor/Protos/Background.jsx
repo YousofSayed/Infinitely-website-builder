@@ -38,7 +38,7 @@ export const Background = memo(() => {
     onEffect(cssProp, value) {
       // console.log("effecte for bg image", value);
 
-      setBgImage(value.replace(/url\(|\)|\'|\"/gi, ""));
+      setBgImage(typeof value == 'string' ? value.replace(/url\(|\)|\'|\"/gi, "") : '');
     },
   });
 

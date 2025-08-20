@@ -39,7 +39,7 @@ export const Project = ({ project }) => {
       ).getOriginFile();
       if(!(file?.size > 0))return;
       const url = URL.createObjectURL(file);
-      setImg(url);
+      setImg(new String(url));
       urlsRef.current.push(url);
       // URL.revokeObjectURL(url);
     })();
@@ -55,7 +55,7 @@ export const Project = ({ project }) => {
     <article className="p-2 bg-slate-900  rounded-lg flex flex-col h-[320px] justify-evenly  gap-2">
       <figure className="flex flex-col gap-2 h-[70%]  items-center ">
         <img
-        key={`random-${random(999,1000)}`}
+        // key={`random-${random(999,1000)}`}
           src={img ? img : "/images/blank.jpg"}
           className={`max-w-full max-h-full ${
             project.imgSrc ? "h-full " : "h-full  object-cover"

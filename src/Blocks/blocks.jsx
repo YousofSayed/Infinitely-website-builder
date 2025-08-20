@@ -80,14 +80,14 @@ export const blocks = [
   },
 
   {
-    id:'svg',
-    category:'Basic',
-    label : html`<p class="custom-font-size">Svg</p>`,
-    media:reactToStringMarkup(Icons.svg({fill:'currentColor'})),
+    id: "svg",
+    category: "Basic",
+    label: html`<p class="custom-font-size">Svg</p>`,
+    media: reactToStringMarkup(Icons.svg({ fill: "currentColor" })),
     // content:reactToStringMarkup(Icons.svg({ width: 40, height: 50, fill: "black" }))
-    content:{
-      type:'inf-svg'
-    }
+    content: {
+      type: "inf-svg",
+    },
   },
   // {
   //   id: "video",
@@ -195,7 +195,48 @@ export const blocks = [
       Icons.heading({ fill: "white", width: 25, height: 25 })
     ),
     category: "Basic",
-    content:  "<h1>Heading</h1>",
+    content: "<h1>Heading</h1>",
+  },
+
+  {
+    id: "table",
+    label: html`<p class="custom-font-size ">Table</p>`,
+    media: reactToStringMarkup(
+      Icons.table({ strokeColor: "white", width: 25, height: 25 })
+    ),
+    category: "Basic",
+    content: html`
+      <table class="w-full">
+        <thead>
+          <tr>
+            <td class="p-10"></td>
+            <td class="p-10"></td>
+            <td class="p-10"></td>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr>
+            <td class="p-10"></td>
+            <td class="p-10"></td>
+            <td class="p-10"></td>
+          </tr>
+          <tr>
+            <td class="p-10"></td>
+            <td class="p-10"></td>
+            <td class="p-10"></td>
+          </tr>
+        </tbody>
+
+        <tfoot>
+          <tr>
+            <td class="p-10"></td>
+            <td class="p-10"></td>
+            <td class="p-10"></td>
+          </tr>
+        </tfoot>
+      </table>
+    `,
   },
 
   {
@@ -210,13 +251,13 @@ export const blocks = [
     },
   },
   {
-    id:'spline-viewer',
-    label : html`<p class="custom-font-size ">Spline viewer</p>`,
+    id: "spline-viewer",
+    label: html`<p class="custom-font-size ">Spline viewer</p>`,
     media: reactToStringMarkup(
       Icons.spline({ strokeColor: "white", width: 25, height: 25 })
     ),
-    category:'fancy',
-    content:{type:'spline-viewer'}
+    category: "fancy",
+    content: { type: "spline-viewer" },
     // `<spline-viewer></spline-viewer>`
   },
 

@@ -9,6 +9,7 @@ import { Tooltip } from "react-tooltip";
  * @property {Function} onClick - Callback function for button click.
  * @property {boolean} showTooltip - Show popover on button click.
  * @property {string} tooltipTitle
+ * @property {string} tooltipClassName
  * @property {ReactNode} children - Child components to render inside the button.
  * @param {React.ButtonHTMLAttributes<HTMLButtonElement> & Props} props
  */
@@ -17,6 +18,7 @@ export const SmallButton = ({
   onClick,
   showTooltip = true,
   tooltipTitle = "",
+  tooltipClassName = '',
   children,
   ...props
 }) => {
@@ -42,7 +44,8 @@ export const SmallButton = ({
           anchorSelect={`[tooltip-id="${id}"]`}
           place="bottom-end"
           positionStrategy="fixed"
-          className="capitalize font-semibold z-[1000]"
+          opacity={1}
+          className={`capitalize font-semibold z-[1000]  ${tooltipClassName}`}
         >
           {tooltipTitle || props.title}
         </Tooltip>

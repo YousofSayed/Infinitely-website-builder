@@ -108,6 +108,11 @@ export interface Action {
   placeholder: string;
   params: { [key: string]: string };
   function: string;
+  access: {
+    [key: string]: {
+      keyframes: boolean;
+    };
+  };
 }
 
 export type Actions = Action[];
@@ -116,7 +121,7 @@ export interface Interaction {
   name: string;
   id: string | number;
   event: keyof ElementEventMap;
-  actions:Actions ;
+  actions: Actions;
   // onInteractionSelected: (component: Component) => void;
   // onInteractionUnSelected: (component: Component) => void;
 }
@@ -338,14 +343,14 @@ export type InfinitelyPage = {
     css: string;
     js: string;
   };
-  libs:{
-    css:LibraryConfig[],
-    jsHeader:LibraryConfig[],
-    jsFooter:LibraryConfig[],
-  }
-  fonts:{
+  libs: {
+    css: LibraryConfig[];
+    jsHeader: LibraryConfig[];
+    jsFooter: LibraryConfig[];
+  };
+  fonts: {
     [key: string]: InfinitelyFont;
-  }
+  };
   cmds: { [key: string]: CMD[] };
   components: Component[];
   id: string;
@@ -464,8 +469,8 @@ export type ProjectSetting = {
   is_defer_graped_header_script: boolean;
   is_async_graped_footer_script: boolean;
   is_defer_graped_footer_script: boolean;
-  enable_editor_lazy_loading:boolean;
-  enable_auto_save:boolean;
+  enable_editor_lazy_loading: boolean;
+  enable_auto_save: boolean;
   enable_tailwind: boolean;
   enable_spline_viewer: boolean;
   // include_canvas_styles_in_build_file: boolean;

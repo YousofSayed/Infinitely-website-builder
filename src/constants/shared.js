@@ -58,6 +58,7 @@ export const text_tags = [
   "pre",
   "article",
 ];
+export const editorComponentProps = ['draggable' , 'droppable' , 'editable' , 'layerable' , 'selectable' , 'hoverable' , 'copyable' , 'removable' , 'badgeable'];
 export const media_types = ["video", "audio", "iframe"];
 export const headersProps = [
   "accept-ranges",

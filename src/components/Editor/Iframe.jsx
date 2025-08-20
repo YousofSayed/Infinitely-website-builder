@@ -418,106 +418,114 @@ export const Iframe = memo(() => {
 
       {/* <FloatingButton/> */}
 
-      {showDragLayer && (
+      {/* {showDragLayer && (
         <section className="absolute top-0 left-0 w-full h-full z-[900]  opacity-[0]"></section>
-      )}
+      )} */}
 
-      {showPreview && (
+      {/* {showPreview && ( */}
         <section
           ref={virtualBrowserWindow}
-          className="w-full h-full rounded-xl overflow-hidden p-1 fixed left-0 top-0 z-[1000] bg-white"
+          style={{display : showPreview ? 'block' : 'none'}}
+          className="w-full h-full rounded-xl overflow-hidden p-1 fixed left-0 top-0 z-[1000] backdrop-blur-md"
           // style={{ display: showPreview ? "block" : "none" }}
         >
-          <header className="w-full h-[60px] flex items-center justify-between p-2 rounded-tl-lg rounded-tr-lg  bg-slate-900">
-            <section className="flex items-center  gap-5 w-[50%]">
-              <FitTitle className=" w-[30%!important] h-full rounded-lg font-semibold capitalize text-xl text-center">
-                {localStorage.getItem(current_page_id)}
-              </FitTitle>
+          {showPreview && (
+            <>
+              <header className="w-full h-[60px] flex items-center justify-between p-2 rounded-tl-lg rounded-tr-lg  bg-slate-900">
+                <section className="flex items-center  gap-5 w-[50%]">
+                  <FitTitle className=" w-[30%!important] h-full rounded-lg font-semibold capitalize text-xl text-center">
+                    {localStorage.getItem(current_page_id)}
+                  </FitTitle>
 
-              <button
-                onClick={(ev) => {
-                  addClickClass(ev.currentTarget, "click");
-                  reloadPreview();
-                }}
+                  <button
+                    onClick={(ev) => {
+                      addClickClass(ev.currentTarget, "click");
+                      reloadPreview();
+                    }}
+                  >
+                    {Icons.refresh({ width: 20, height: 20 })}
+                  </button>
+                </section>
+                <ul className="flex items-center gap-3 flex-wrap">
+                  <li className="group w-[20px] h-[20px] bg-green-600 rounded-full overflow-hidden flex justify-center items-center cursor-pointer">
+                    <button
+                      className="opacity-0 group-hover:opacity-[1] text-white font-bold  scale-[.8]  transition-all  w-full h-full flex justify-center items-center"
+                      onClick={(ev) => {
+                        addClickClass(ev.currentTarget, "click");
+                        document.exitFullscreen();
+                      }}
+                    >
+                      {Icons.minimize({ strokeColor: "white", strokWidth: 2 })}
+                    </button>
+                  </li>
+                  <li className="group w-[20px] h-[20px] bg-yellow-600 rounded-full flex justify-center items-center cursor-pointer">
+                    <button
+                      className="opacity-0 group-hover:opacity-[1] scale-[.7] transition-all text-sm w-full h-full flex justify-center items-center"
+                      onClick={(ev) => {
+                        addClickClass(ev.currentTarget, "click");
+                        virtualBrowserWindow.current.requestFullscreen();
+                      }}
+                    >
+                      {Icons.square("white")}
+                    </button>
+                  </li>
+                  <li
+                    className="group w-[20px] h-[20px] bg-red-600 rounded-full flex justify-center items-center cursor-pointer"
+                    onClick={(ev) => {
+                      addClickClass(ev.currentTarget, "click");
+                      setShowPreview(!showPreview);
+                      setTimeout(() => {
+                        editor.trigger(InfinitelyEvents.pages.all);
+                      }, 0);
+                      // window.dispatchEvent(
+                      //   changePageName({
+                      //     pageName: localStorage.getItem(current_page_id),
+                      //   })
+                      // );
+                      // editor.load();
+                    }}
+                  >
+                    <button className="opacity-0 group-hover:opacity-[1] transition-all text-sm w-full h-full flex justify-center items-center">
+                      {Icons.close("white")}
+                    </button>
+                  </li>
+                </ul>
+              </header>
+
+              <main
+                className="h-[calc(100%-60px)] w-full"
+                ref={iframeContainer}
               >
-                {Icons.refresh({ width: 20, height: 20 })}
-              </button>
-            </section>
-            <ul className="flex items-center gap-3 flex-wrap">
-              <li className="group w-[20px] h-[20px] bg-green-600 rounded-full overflow-hidden flex justify-center items-center cursor-pointer">
-                <button
-                  className="opacity-0 group-hover:opacity-[1] text-white font-bold  scale-[.8]  transition-all  w-full h-full flex justify-center items-center"
-                  onClick={(ev) => {
-                    addClickClass(ev.currentTarget, "click");
-                    document.exitFullscreen();
-                  }}
-                >
-                  {Icons.minimize({ strokeColor: "white", strokWidth: 2 })}
-                </button>
-              </li>
-              <li className="group w-[20px] h-[20px] bg-yellow-600 rounded-full flex justify-center items-center cursor-pointer">
-                <button
-                  className="opacity-0 group-hover:opacity-[1] scale-[.7] transition-all text-sm w-full h-full flex justify-center items-center"
-                  onClick={(ev) => {
-                    addClickClass(ev.currentTarget, "click");
-                    virtualBrowserWindow.current.requestFullscreen();
-                  }}
-                >
-                  {Icons.square("white")}
-                </button>
-              </li>
-              <li
-                className="group w-[20px] h-[20px] bg-red-600 rounded-full flex justify-center items-center cursor-pointer"
-                onClick={(ev) => {
-                  addClickClass(ev.currentTarget, "click");
-                  setShowPreview(!showPreview);
-                  setTimeout(() => {
-                    editor.trigger(InfinitelyEvents.pages.all);
-                  }, 0);
-                  // window.dispatchEvent(
-                  //   changePageName({
-                  //     pageName: localStorage.getItem(current_page_id),
-                  //   })
-                  // );
-                  // editor.load();
-                }}
-              >
-                <button className="opacity-0 group-hover:opacity-[1] transition-all text-sm w-full h-full flex justify-center items-center">
-                  {Icons.close("white")}
-                </button>
-              </li>
-            </ul>
-          </header>
+                {/* {isChrome() && ( */}
+                {/* {showPreview && ( */}
+                <iframe
+                  ref={previewIframe}
+                  id="preview"
+                  allowFullScreen
+                  src={previewSrc || urlSrc}
+                  security="restricted"
+                  about="target"
+                  allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
+                  unselectable="on"
+                  // sandbox=""
+                  // sandbox="allow-same-origin allow-scripts allow-modals allow-forms allow-popups"
+                  // src="about:srcdoc"
+                  // srcDoc=""
+                  // srcDoc={`<video
+                  //    src="../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4"
+                  //    controls
+                  //  ></video>`}
+                  className={`bg-white w-full h-full  transition-all border-[5px] rounded-bl-lg rounded-br-lg border-slate-900`}
+                  // srcDoc={srcDoc}
+                ></iframe>
+                {/* )} */}
 
-          <main className="h-[calc(100%-60px)] w-full" ref={iframeContainer}>
-            {/* {isChrome() && ( */}
-            {/* {showPreview && ( */}
-              <iframe
-                ref={previewIframe}
-                id="preview"
-                allowFullScreen
-                src={previewSrc || urlSrc}
-                security="restricted"
-                about="target"
-                allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
-                unselectable="on"
-                // sandbox=""
-                // sandbox="allow-same-origin allow-scripts allow-modals allow-forms allow-popups"
-                // src="about:srcdoc"
-                // srcDoc=""
-                // srcDoc={`<video
-                //    src="../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4"
-                //    controls
-                //  ></video>`}
-                className={`bg-white w-full h-full  transition-all border-[5px] rounded-bl-lg rounded-br-lg border-slate-900`}
-                // srcDoc={srcDoc}
-              ></iframe>
-            {/* )} */}
-
-            {/* )} */}
-          </main>
+                {/* )} */}
+              </main>
+            </>
+          )}
         </section>
-      )}
+       {/* )} */}
     </section>
   );
 });

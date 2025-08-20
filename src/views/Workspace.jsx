@@ -7,9 +7,36 @@ import { infinitelyWorker } from "../helpers/infinitelyWorker";
 import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
 import { parse } from "../helpers/cocktail";
 import { useWorkerToast } from "../hooks/useWorkerToast";
+import { useParams, useSearchParams } from "react-router-dom";
+import {
+  downloadFile,
+  downloadFileByLink,
+  loadProject,
+} from "../helpers/functions";
 
 export const Workspace = memo(() => {
-  useWorkerToast()
+  const [searchParams] = useSearchParams();
+  const fileParam = searchParams.get("file");
+  const fileUrl = fileParam ? atob(searchParams.get("file")) : null;
+  useEffect(() => {
+    (async () => {
+      if (!fileUrl) return;
+      console.log("url : ", fileUrl);
+
+      try {
+        // const file = await (await fetch(fileUrl));
+        // loadProject(file);
+        
+        downloadFileByLink(fileUrl);
+        toast.success(<ToastMsgInfo msg={`Project downloaded successfully 💙`}/>);
+        
+      } catch (error) {
+        toast.error("Faild to load project");
+        console.error(error);
+      }
+    })();
+  });
+  useWorkerToast();
   return (
     <main className=" h-full bg-slate-900 flex flex-col gap-2 pb-2 overflow-hidden">
       <ToastContainer

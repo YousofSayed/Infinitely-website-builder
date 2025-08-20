@@ -21,7 +21,7 @@ import { HighlightContentEditable } from "./Protos/HighlightContentEditable";
 import { DetailsNormal } from "../Protos/DetailsNormal";
 import { MiniTitle } from "./Protos/MiniTitle";
 import { open_files_manager_modal } from "../../constants/InfinitelyCommands";
-import { inf_build_url } from "../../constants/shared";
+import { editorComponentProps, inf_build_url } from "../../constants/shared";
 import { InfinitelyEvents } from "../../constants/infinitelyEvents";
 import { CodeEditor } from "./Protos/CodeEditor";
 import { parseHTML } from "linkedom";
@@ -101,15 +101,15 @@ export const TraitsAside = memo(() => {
         contentLangType == "javascript" ? innerHtml : "",
       enableTemplateEngine: contentLangType == "javascript",
     });
-    
+    setSelectedCmp(editor?.getSelected?.());
     getAndSetTraits();
     setCmdsContext();
   }, [selectedEl]);
 
   useEffect(() => {
     const selectedEl = editor?.getSelected?.();
-    console.log('sldoslso');
-    
+    console.log("sldoslso");
+
     if (!editor || !selectedEl) return;
     const callback = () => {
       console.log("trait updated");
@@ -124,7 +124,7 @@ export const TraitsAside = memo(() => {
       editor.off("trait:value", callback);
       // editor.off(InfinitelyEvents.attributes.buildUrl, buildAttrUrlCallback);
     };
-  }, [editor , selectedEl]);
+  }, [editor, selectedEl]);
 
   const getFilterdAttributes = () => {
     const sle = editor.getSelected();
@@ -203,16 +203,13 @@ export const TraitsAside = memo(() => {
 
     trait.set({
       [key]: value,
-      
     });
-
-
 
     const role = trait.get("role");
     if (role == "attribute") {
-      console.log('this is attribute');
-      
-      sle.addAttributes({ [name]: trait.get('value') } , );
+      console.log("this is attribute");
+
+      sle.addAttributes({ [name]: trait.get("value") });
     }
     // sle.addAttributes({ [name]: isString(value) ? value : stringify(value) });
     editor.trigger("trait:value");
@@ -223,7 +220,7 @@ export const TraitsAside = memo(() => {
     const sle = editor.getSelected();
     const type = sle.get("type").toLowerCase();
     if (isValidAttribute(key, value)) {
-      sle.addAttributes({ [key]: value || "" }, { partial:true });
+      sle.addAttributes({ [key]: value || "" }, { partial: true });
       setAttributes(getFilterdAttributes());
       if (type == "video" || type == "iframe" || type == "source") {
         const newSle = sle.replaceWith(sle.clone())[0];
@@ -258,272 +255,249 @@ export const TraitsAside = memo(() => {
   };
 
   return (
-  <section className="flex flex-col gap-2 h-full mt-2">
+    <section className="flex flex-col gap-2 h-full mt-2">
       <Accordion>
-      {/* <AsideControllers /> */}
-      <AccordionItem title={"Type Content"}>
-        <section className="flex flex-col gap-2 p-1 bg-slate-900 rounded-lg">
-          <section className="flex items-center gap-2 justify-between">
-            <FitTitle className="custom-font-size">Type Content</FitTitle>
-            <nav className="flex items-center  gap-3 p-1 px-2 bg-slate-800 w-fit  rounded-lg self-end text-slate-200">
-              <button
-                className={`w-[22.5px] h-[22.5px] cursor-pointer flex items-center justify-center rounded-md transition-colors ${
-                  codeSettings.defaultLanguage == "html" && "bg-blue-600"
-                }`}
-                onClick={(ev) => {
-                  addClickClass(ev.currentTarget, "click");
-                  editor.getSelected().addAttributes({
-                    "content-lang": "html",
-                  });
-                  setCodeSettings({
-                    ...codeSettings,
-                    defaultLanguage: "html",
-                    enableTemplateEngine: false,
-                  });
-                }}
-              >
-                {Icons.html({ width: 16, height: 16 })}
-              </button>
-              <button
-                className={`w-[22.5px] h-[22.5px] cursor-pointer flex items-center justify-center rounded-md transition-colors ${
-                  codeSettings.defaultLanguage == "javascript" && "bg-blue-600"
-                }`}
-                onClick={(ev) => {
-                  addClickClass(ev.currentTarget, "click");
-                  editor.getSelected().addAttributes({
-                    "content-lang": "javascript",
-                  });
-                  setCodeSettings({
-                    ...codeSettings,
-                    defaultLanguage: "javascript",
-                    enableTemplateEngine: true,
-                  });
-                }}
-              >{`\$\{ \}`}</button>
-            </nav>
-          </section>
-          <Select
-            isCode
-            className="px-[unset] py-[unset] "
-            inputClassName="bg-slate-800"
-            containerClassName="bg-slate-800"
-            placeholder="Type Content"
-            allowCmdsContext
-            allowRestAPIModelsContext
-            value={
-              codeSettings.defaultLanguage == "html"
-                ? codeSettings.htmlValueState
-                : codeSettings.templateEngineValueState
-            }
-            codeProps={{
-              language: codeSettings.defaultLanguage,
-              // onMount(mEditor) {
-              //   console.log('mouted' ,  editor
-              //     ?.getSelected?.()
-              //     ?.components()
-              //     ?.models?.[0]?.toHTML?.());
-
-              //   mEditor.setValue(
-              //    selectedValue
-              //   );
-              // },
-              // value: codeSettings.htmlValueState || codeSettings.templateEngineValueState,
-              onMount(ed, mon) {
-                // console.log("mouted", ed, mon);
-                setCmdsContext();
-                if (
-                  codeSettings.defaultLanguage == "html" &&
-                  !codeSettings.enableTemplateEngine
-                ) {
-                  ed.setValue(codeSettings.htmlValueState || codeSettings.templateEngineValueState);
-                  // setCodeSettings({
-                  //   ...codeSettings,
-                  //   htmlValueState: selectedValue,
-                  // });
-                } else if (
-                  codeSettings.defaultLanguage == "javascript" &&
-                  codeSettings.enableTemplateEngine
-                ) {
-                  const templateEngineValue = `\`${codeSettings.templateEngineValueState}\``;
-                  ed.setValue(templateEngineValue);
-                  // setCodeSettings({
-                  //   ...codeSettings,
-                  //   templateEngineValueState: templateEngineValue,
-                  // });
-                }
-              },
-              onChange(value) {
-                const sle = editor.getSelected();
-                const type = sle.get("type");
-                console.log(type,sle.isInstanceOf("text") , sle.props().editable);
-                
-                if (!sle.props().editable) return;
-
-                if (
-                  !codeSettings.enableTemplateEngine &&
-                  codeSettings.defaultLanguage == "html"
-                ) {
-                  sle.components(`${value}`);
-                  // setSelectedValue(value);
-                  setCodeSettings({
-                    ...codeSettings,
-                    htmlValueState: value,
-                  });
-                } else if (
-                  codeSettings.enableTemplateEngine &&
-                  codeSettings.defaultLanguage == "javascript"
-                ) {
-                  if (
-                    value.trim().startsWith("`") &&
-                    value.trim().endsWith("`")
-                  ) {
-                    const newValue = value.trim().slice(1, -1);
-                    sle.components(newValue);
+        {/* <AsideControllers /> */}
+        <AccordionItem title={"Type Content"}>
+          <section className="flex flex-col gap-2 p-1 bg-slate-900 rounded-lg">
+            <section className="flex items-center gap-2 justify-between">
+              <FitTitle className="custom-font-size">Type Content</FitTitle>
+              <nav className="flex items-center  gap-3 p-1 px-2 bg-slate-800 w-fit  rounded-lg self-end text-slate-200">
+                <button
+                  className={`w-[22.5px] h-[22.5px] cursor-pointer flex items-center justify-center rounded-md transition-colors ${
+                    codeSettings.defaultLanguage == "html" && "bg-blue-600"
+                  }`}
+                  onClick={(ev) => {
+                    addClickClass(ev.currentTarget, "click");
+                    editor.getSelected().addAttributes({
+                      "content-lang": "html",
+                    });
                     setCodeSettings({
                       ...codeSettings,
-                      templateEngineValueState: newValue,
+                      defaultLanguage: "html",
+                      enableTemplateEngine: false,
                     });
-                  }
-                }
-                // sle.getEl().innerHTML = `${value}`;
-
-                editor.refresh();
-                editor.Canvas.refresh();
-                editor.Canvas.refreshSpots();
-              },
-            }}
-          />
-        </section>
-      </AccordionItem>
-      {!![...attributesTraits, ...handlerTraits].length && (
-        <AccordionItem title={"Traits"}>
-          <section className="p-1 flex flex-col gap-2 bg-slate-900 rounded-lg">
-            <MiniTitle className={`py-3 w-full`}>Traits</MiniTitle>
-
-            {[...attributesTraits, ...handlerTraits].map((trait, i) => {
-              console.log("trait type:", trait);
-              console.log("is function ? ", isFunction(trait?.showCallback));
-
-              const isShow =
-                trait?.showCallback && isFunction(trait?.showCallback)
-                  ? trait?.showCallback?.()
-                  : true;
-              return isShow ? (
-                <li
-                  key={i}
-                  className="flex flex-wrap items-center justify-between gap-2 bg-slate-950 p-2 rounded-lg"
+                  }}
                 >
-                  {/* <h1 className="text-[14px!important] px-2 text-white capitalize font-semibold">
+                  {Icons.html({ width: 16, height: 16 })}
+                </button>
+                <button
+                  className={`w-[22.5px] h-[22.5px] cursor-pointer flex items-center justify-center rounded-md transition-colors ${
+                    codeSettings.defaultLanguage == "javascript" &&
+                    "bg-blue-600"
+                  }`}
+                  onClick={(ev) => {
+                    addClickClass(ev.currentTarget, "click");
+                    editor.getSelected().addAttributes({
+                      "content-lang": "javascript",
+                    });
+                    setCodeSettings({
+                      ...codeSettings,
+                      defaultLanguage: "javascript",
+                      enableTemplateEngine: true,
+                    });
+                  }}
+                >{`\$\{ \}`}</button>
+              </nav>
+            </section>
+            <Select
+              isCode
+              className="px-[unset] py-[unset] "
+              inputClassName="bg-slate-800"
+              containerClassName="bg-slate-800"
+              placeholder="Type Content"
+              allowCmdsContext
+              allowRestAPIModelsContext
+              value={
+                codeSettings.defaultLanguage == "html"
+                  ? codeSettings.htmlValueState
+                  : codeSettings.templateEngineValueState
+              }
+              codeProps={{
+                language: codeSettings.defaultLanguage,
+                // onMount(mEditor) {
+                //   console.log('mouted' ,  editor
+                //     ?.getSelected?.()
+                //     ?.components()
+                //     ?.models?.[0]?.toHTML?.());
+
+                //   mEditor.setValue(
+                //    selectedValue
+                //   );
+                // },
+                value:
+                  codeSettings.defaultLanguage == "html" &&
+                  !codeSettings.enableTemplateEngine
+                    ? codeSettings.htmlValueState ||
+                      codeSettings.templateEngineValueState
+                    : codeSettings.defaultLanguage == "javascript" &&
+                      codeSettings.enableTemplateEngine
+                    ? `\`${codeSettings.templateEngineValueState}\``
+                    : "",
+                // value: codeSettings.htmlValueState || codeSettings.templateEngineValueState,
+                // onMount(ed, mon) {
+                //   // console.log("mouted", ed, mon);
+                //   setCmdsContext();
+                //   if (
+                //     codeSettings.defaultLanguage == "html" &&
+                //     !codeSettings.enableTemplateEngine
+                //   ) {
+                //     ed.setValue(
+                //       codeSettings.htmlValueState ||
+                //         codeSettings.templateEngineValueState
+                //     );
+                //     // setCodeSettings({
+                //     //   ...codeSettings,
+                //     //   htmlValueState: selectedValue,
+                //     // });
+                //   } else if (
+                //     codeSettings.defaultLanguage == "javascript" &&
+                //     codeSettings.enableTemplateEngine
+                //   ) {
+                //     const templateEngineValue = `\`${codeSettings.templateEngineValueState}\``;
+                //     ed.setValue(templateEngineValue);
+                //     // setCodeSettings({
+                //     //   ...codeSettings,
+                //     //   templateEngineValueState: templateEngineValue,
+                //     // });
+                //   }
+                // },
+                onChange(value) {
+                  const sle = editor.getSelected();
+                  const type = sle.get("type");
+                  console.log(
+                    type,
+                    sle.isInstanceOf("text"),
+                    sle.props().editable
+                  );
+
+                  if (!sle.props().editable) return;
+
+                  if (
+                    !codeSettings.enableTemplateEngine &&
+                    codeSettings.defaultLanguage == "html"
+                  ) {
+                    sle.components(`${value}`);
+                    // setSelectedValue(value);
+                    setCodeSettings({
+                      ...codeSettings,
+                      htmlValueState: value,
+                    });
+                  } else if (
+                    codeSettings.enableTemplateEngine &&
+                    codeSettings.defaultLanguage == "javascript"
+                  ) {
+                    if (
+                      value.trim().startsWith("`") &&
+                      value.trim().endsWith("`")
+                    ) {
+                      const newValue = value.trim().slice(1, -1);
+                      sle.components(newValue);
+                      setCodeSettings({
+                        ...codeSettings,
+                        templateEngineValueState: newValue,
+                      });
+                    }
+                  }
+                  // sle.getEl().innerHTML = `${value}`;
+
+                  editor.refresh();
+                  editor.Canvas.refresh();
+                  editor.Canvas.refreshSpots();
+                },
+              }}
+            />
+          </section>
+        </AccordionItem>
+
+        <AccordionItem title={"Props (Advanced)"}>
+          <ul className="flex flex-col gap-2 p-1 bg-slate-900 rounded-lg">
+            {editorComponentProps
+              .map((prop) =>
+                selectedCmp ? [prop, selectedCmp?.props()[prop]] : null
+              )
+              .filter(Boolean)
+              .map(([prop, val], i) => {
+                return (
+                  <li
+                    key={i}
+                    className="p-1 bg-slate-800 rounded-lg flex items-center justify-between gap-2"
+                  >
+                    <FitTitle className="custom-font-size">{prop}</FitTitle>
+                    <SwitchButton
+                      defaultValue={val}
+                      onSwitch={(value) => {
+                        editor.getSelected().set({
+                          ...editor.getSelected().props(),
+                          [prop]: value,
+                        });
+                      }}
+                    />
+                  </li>
+                );
+              })}
+          </ul>
+        </AccordionItem>
+
+        {!![...attributesTraits, ...handlerTraits].length && (
+          <AccordionItem title={"Traits"}>
+            <section className="p-1 flex flex-col gap-2 bg-slate-900 rounded-lg">
+              <MiniTitle className={`py-3 w-full`}>Traits</MiniTitle>
+
+              {[...attributesTraits, ...handlerTraits].map((trait, i) => {
+                console.log("trait type:", trait);
+                console.log("is function ? ", isFunction(trait?.showCallback));
+
+                const isShow =
+                  trait?.showCallback && isFunction(trait?.showCallback)
+                    ? trait?.showCallback?.()
+                    : true;
+                return isShow ? (
+                  <li
+                    key={i}
+                    className="flex flex-wrap items-center justify-between gap-2 bg-slate-950 p-2 rounded-lg"
+                  >
+                    {/* <h1 className="text-[14px!important] px-2 text-white capitalize font-semibold">
                     {trait.name}
                   </h1> */}
-                  <FitTitle>{trait.label}</FitTitle>
-                  {trait.type == "text" && isShow && (
-                    <Input
-                      value={trait.value || trait.default || ""}
-                      placeholder={trait.placeholder || trait.label}
-                      className="py-2 w-full bg-slate-800"
-                      onInput={(ev) => {
-                        trait.callback &&
-                          trait.callback({
-                            editor,
-                            oldValue: trait.value,
-                            newValue: ev.target.value,
-                            trait,
+                    <FitTitle>{trait.label}</FitTitle>
+                    {trait.type == "text" && isShow && (
+                      <Input
+                        value={trait.value || trait.default || ""}
+                        placeholder={trait.placeholder || trait.label}
+                        className="py-2 w-full bg-slate-800"
+                        onInput={(ev) => {
+                          trait.callback &&
+                            trait.callback({
+                              editor,
+                              oldValue: trait.value,
+                              newValue: ev.target.value,
+                              trait,
+                            });
+                          trait.command && editor.runCommand(trait.command);
+                          updateTraitValue({
+                            name: trait.name,
+                            key: "value",
+                            value: ev.target.value,
                           });
-                        trait.command && editor.runCommand(trait.command);
-                        updateTraitValue({
-                          name: trait.name,
-                          key: "value",
-                          value: ev.target.value,
-                        });
 
-                        // if (trait.role == "attribute") {
-                        //   addAttribute({ [trait.name]: ev.target.value });
-                        // }
-                      }}
-                    />
-                  )}
+                          // if (trait.role == "attribute") {
+                          //   addAttribute({ [trait.name]: ev.target.value });
+                          // }
+                        }}
+                      />
+                    )}
 
-                  {trait.type == "select" && isShow && (
-                    <Select
-                      placeholder={trait.placeholder || trait.label}
-                      keywords={
-                        isFunction(trait.keywords)
-                          ? trait.keywords({ projectData })
-                          : trait.keywords || []
-                      }
-                      value={trait.value || trait.default || ""}
-                      onAll={(value) => {
-                        trait.callback &&
-                          trait.callback({
-                            editor,
-                            oldValue: trait.value,
-                            newValue: value,
-                            trait,
-                          });
-                        trait.command && editor.runCommand(trait.command);
-                        updateTraitValue({
-                          name: trait.name,
-                          key: "value",
-                          value,
-                        });
-                      }}
-                    />
-                  )}
-
-                  {trait.type == "textarea" && isShow && (
-                    <Select
-                      placeholder={trait.placeholder || trait.label}
-                      // keywords={trait.keywords}
-                      value={trait.value || trait.default || ""}
-                      // onAll={(value) => {
-                      //   console.log(value);
-
-                      //   trait.callback &&
-                      //     trait.callback({
-                      //       editor,
-                      //       oldValue: trait.value,
-                      //       newValue: value,
-                      //       trait,
-                      //     });
-                      //   trait.command && editor.runCommand(trait.command);
-                      //   updateTraitValue({
-                      //     name: trait.name,
-                      //     key: "value",
-                      //     value,
-                      //   });
-                      //   console.log(
-                      //     "traits vals",
-                      //     editor
-                      //       .getSelected()
-                      //       .getTraits()
-                      //       .map((tr) => tr.attributes),
-                      //     JSON.stringify(editor.getSelected()),
-                      //     {
-                      //       ...editor.getSelected().toJSON(),
-                      //       traits: editor
-                      //         .getSelected()
-                      //         .getTraits()
-                      //         .map((tr) => tr.attributes),
-                      //     },
-                      //     editor.getComponents()
-                      //   );
-                      //   // if (trait.role == "attribute") {
-                      //   //   addAttribute({ [trait.name]: value });
-                      //   // }
-                      // }}
-                      allowCmdsContext={trait?.allowCmdsContext}
-                      allowRestAPIModelsContext={trait?.allowCmdsContext}
-                      isCode
-                      codeProps={{
-                        language: trait.textareaLanguage || "text",
-                        // value: trait.value,
-                        ...(trait?.codeEditorProps || {}),
-                        onMount(ed, mon) {
-                          trait?.onMountHandler?.(ed, mon);
-                        },
-                        onChange(value) {
-                          trait?.onChangeHandler?.(value);
+                    {trait.type == "select" && isShow && (
+                      <Select
+                        placeholder={trait.placeholder || trait.label}
+                        keywords={
+                          isFunction(trait.keywords)
+                            ? trait.keywords({ projectData })
+                            : trait.keywords || []
+                        }
+                        value={trait.value || trait.default || ""}
+                        onAll={(value) => {
                           trait.callback &&
                             trait.callback({
                               editor,
@@ -531,164 +505,200 @@ export const TraitsAside = memo(() => {
                               newValue: value,
                               trait,
                             });
-
                           trait.command && editor.runCommand(trait.command);
                           updateTraitValue({
                             name: trait.name,
                             key: "value",
                             value,
                           });
-                        },
-                      }}
-                    />
-                  )}
+                        }}
+                      />
+                    )}
 
-                  {trait.type == "add-props" && isShow && (
-                    <>
-                      <section className="flex justify-between gap-2">
-                        <Select
-                          placeholder={trait.placeholder || trait.label}
-                          className="w-full bg-slate-800"
-                          value={trait.stateProp}
-                          keywords={
-                            isFunction(trait.keywords)
-                              ? trait.keywords({ projectData })
-                              : trait.keywords || []
-                          }
-                          onInput={(value) => {
-                            console.log('staaaaaaaaaaaaaaaaate props : ' , trait.stateProp , value);
-                            
+                    {trait.type == "textarea" && isShow && (
+                      <Select
+                        placeholder={trait.placeholder || trait.label}
+                        // keywords={trait.keywords}
+                        value={trait.value || trait.default || ""}
+                        // onAll={(value) => {
+                        //   console.log(value);
+
+                        //   trait.callback &&
+                        //     trait.callback({
+                        //       editor,
+                        //       oldValue: trait.value,
+                        //       newValue: value,
+                        //       trait,
+                        //     });
+                        //   trait.command && editor.runCommand(trait.command);
+                        //   updateTraitValue({
+                        //     name: trait.name,
+                        //     key: "value",
+                        //     value,
+                        //   });
+                        //   console.log(
+                        //     "traits vals",
+                        //     editor
+                        //       .getSelected()
+                        //       .getTraits()
+                        //       .map((tr) => tr.attributes),
+                        //     JSON.stringify(editor.getSelected()),
+                        //     {
+                        //       ...editor.getSelected().toJSON(),
+                        //       traits: editor
+                        //         .getSelected()
+                        //         .getTraits()
+                        //         .map((tr) => tr.attributes),
+                        //     },
+                        //     editor.getComponents()
+                        //   );
+                        //   // if (trait.role == "attribute") {
+                        //   //   addAttribute({ [trait.name]: value });
+                        //   // }
+                        // }}
+                        allowCmdsContext={trait?.allowCmdsContext}
+                        allowRestAPIModelsContext={trait?.allowCmdsContext}
+                        isCode
+                        codeProps={{
+                          language: trait.textareaLanguage || "text",
+                          // value: trait.value,
+                          ...(trait?.codeEditorProps || {}),
+                          onMount(ed, mon) {
+                            trait?.onMountHandler?.(ed, mon);
+                          },
+                          onChange(value) {
+                            trait?.onChangeHandler?.(value);
+                            trait.callback &&
+                              trait.callback({
+                                editor,
+                                oldValue: trait.value,
+                                newValue: value,
+                                trait,
+                              });
+
+                            trait.command && editor.runCommand(trait.command);
                             updateTraitValue({
                               name: trait.name,
-                              key: "stateProp",
+                              key: "value",
                               value,
                             });
-                          }}
-                          onEnterPress={(value) => {
-                            const newVal = stringify({
-                              ...parse(trait.value || {}),
-                              [value]: "",
-                            });
+                          },
+                        }}
+                      />
+                    )}
 
-                            trait.callback &&
-                              trait.callback({
-                                editor,
-                                oldValue: trait.value,
-                                newValue: newVal,
-                                trait,
+                    {trait.type == "add-props" && isShow && (
+                      <>
+                        <section className="flex justify-between gap-2">
+                          <Select
+                            placeholder={trait.placeholder || trait.label}
+                            className="w-full bg-slate-800"
+                            value={trait.stateProp}
+                            keywords={
+                              isFunction(trait.keywords)
+                                ? trait.keywords({ projectData })
+                                : trait.keywords || []
+                            }
+                            onInput={(value) => {
+                              console.log(
+                                "staaaaaaaaaaaaaaaaate props : ",
+                                trait.stateProp,
+                                value
+                              );
+
+                              updateTraitValue({
+                                name: trait.name,
+                                key: "stateProp",
+                                value,
                               });
-                            trait.command && editor.runCommand(trait.command);
-                            updateTraitValue({
-                              name: trait.name,
-                              key: "value",
-                              value: newVal,
-                            });
-                          }}
-                          onItemClicked={(value) => {
-                            const newVal = stringify({
-                              ...parse(trait.value || {}),
-                              [value]: "",
-                            });
-
-                            trait.callback &&
-                              trait.callback({
-                                editor,
-                                oldValue: trait.value,
-                                newValue: newVal,
-                                trait,
+                            }}
+                            onEnterPress={(value) => {
+                              const newVal = stringify({
+                                ...parse(trait.value || {}),
+                                [value]: "",
                               });
 
-                            trait.command && editor.runCommand(trait.command);
-
-                            updateTraitValue({
-                              name: trait.name,
-                              key: "value",
-                              value: newVal,
-                            });
-                          }}
-                        />
-                        <SmallButton
-                          onClick={() => {
-                            const newVal = stringify({
-                              ...parse(trait.value || {}),
-                              [trait.stateProp]: "",
-                            });
-
-                            trait.callback &&
-                              trait.callback({
-                                editor,
-                                oldValue: trait.value,
-                                newValue: newVal,
-                                trait,
+                              trait.callback &&
+                                trait.callback({
+                                  editor,
+                                  oldValue: trait.value,
+                                  newValue: newVal,
+                                  trait,
+                                });
+                              trait.command && editor.runCommand(trait.command);
+                              updateTraitValue({
+                                name: trait.name,
+                                key: "value",
+                                value: newVal,
                               });
-                            trait.command && editor.runCommand(trait.command);
-                            updateTraitValue({
-                              name: trait.name,
-                              key: "value",
-                              value: newVal,
-                            });
-                          }}
-                        >
-                          {Icons.plus("white")}
-                        </SmallButton>
-                      </section>
+                            }}
+                            onItemClicked={(value) => {
+                              const newVal = stringify({
+                                ...parse(trait.value || {}),
+                                [value]: "",
+                              });
 
-                      <section className="flex flex-col gap-2">
-                        {Object.entries(
-                          parse(trait.value || trait.default) || {}
-                        ).map(([key, value], i) => {
-                          return (
-                            <section key={i} className="flex flex-col gap-2">
-                              <FitTitle>{key}</FitTitle>
-                              <section className="flex gap-2">
-                                {(trait.addPropsInputType == "text" ||
-                                  !trait.addPropsInputType) && (
-                                  <Input
-                                    placeholder={key}
-                                    className="w-full bg-slate-800"
-                                    value={value || ""}
-                                    onInput={(ev) => {
-                                      const newVal = stringify({
-                                        ...parse(trait.value || {}),
-                                        [key]: ev.target.value,
-                                      });
+                              trait.callback &&
+                                trait.callback({
+                                  editor,
+                                  oldValue: trait.value,
+                                  newValue: newVal,
+                                  trait,
+                                });
 
-                                      trait.callback &&
-                                        trait.callback({
-                                          editor,
-                                          oldValue: trait.value,
-                                          newValue: newVal,
-                                          trait,
-                                        });
+                              trait.command && editor.runCommand(trait.command);
 
-                                      trait.command &&
-                                        editor.runCommand(trait.command);
+                              updateTraitValue({
+                                name: trait.name,
+                                key: "value",
+                                value: newVal,
+                              });
+                            }}
+                          />
+                          <SmallButton
+                            onClick={() => {
+                              const newVal = stringify({
+                                ...parse(trait.value || {}),
+                                [trait.stateProp]: "",
+                              });
 
-                                      updateTraitValue({
-                                        name: trait.name,
-                                        key: "value",
-                                        value: newVal,
-                                      });
-                                    }}
-                                  />
-                                )}
+                              trait.callback &&
+                                trait.callback({
+                                  editor,
+                                  oldValue: trait.value,
+                                  newValue: newVal,
+                                  trait,
+                                });
+                              trait.command && editor.runCommand(trait.command);
+                              updateTraitValue({
+                                name: trait.name,
+                                key: "value",
+                                value: newVal,
+                              });
+                            }}
+                          >
+                            {Icons.plus("white")}
+                          </SmallButton>
+                        </section>
 
-                                {trait.addPropsInputType == "code" && (
-                                  <Select
-                                    placeholder={key}
-                                    // className="w-full bg-slate-800"
-                                    value={value || ""}
-                                    isCode
-                                    allowCmdsContext
-                                    allowRestAPIModelsContext
-                                    codeProps={{
-                                      language:
-                                        trait.addPropsCodeLanguage || "text",
-                                      value,
-                                      onChange: (value) => {
+                        <section className="flex flex-col gap-2">
+                          {Object.entries(
+                            parse(trait.value || trait.default) || {}
+                          ).map(([key, value], i) => {
+                            return (
+                              <section key={i} className="flex flex-col gap-2">
+                                <FitTitle>{key}</FitTitle>
+                                <section className="flex gap-2">
+                                  {(trait.addPropsInputType == "text" ||
+                                    !trait.addPropsInputType) && (
+                                    <Input
+                                      placeholder={key}
+                                      className="w-full bg-slate-800"
+                                      value={value || ""}
+                                      onInput={(ev) => {
                                         const newVal = stringify({
                                           ...parse(trait.value || {}),
-                                          [key]: value,
+                                          [key]: ev.target.value,
                                         });
 
                                         trait.callback &&
@@ -707,167 +717,209 @@ export const TraitsAside = memo(() => {
                                           key: "value",
                                           value: newVal,
                                         });
-                                      },
-                                    }}
-                                  />
-                                )}
+                                      }}
+                                    />
+                                  )}
 
-                                <SmallButton
-                                  onClick={() => {
-                                    const parsedVal = parse(trait.value || {});
-                                    delete parsedVal[key];
-                                    const newVal = stringify({
-                                      ...parsedVal,
-                                    });
-                                    trait.callback &&
-                                      trait.callback({
-                                        editor,
-                                        oldValue: trait.value,
-                                        newValue: newVal,
+                                  {trait.addPropsInputType == "code" && (
+                                    <Select
+                                      placeholder={key}
+                                      // className="w-full bg-slate-800"
+                                      value={value || ""}
+                                      isCode
+                                      allowCmdsContext
+                                      allowRestAPIModelsContext
+                                      codeProps={{
+                                        language:
+                                          trait.addPropsCodeLanguage || "text",
+                                        value,
+                                        onChange: (value) => {
+                                          const newVal = stringify({
+                                            ...parse(trait.value || {}),
+                                            [key]: value,
+                                          });
+
+                                          trait.callback &&
+                                            trait.callback({
+                                              editor,
+                                              oldValue: trait.value,
+                                              newValue: newVal,
+                                              trait,
+                                            });
+
+                                          trait.command &&
+                                            editor.runCommand(trait.command);
+
+                                          updateTraitValue({
+                                            name: trait.name,
+                                            key: "value",
+                                            value: newVal,
+                                          });
+                                        },
+                                      }}
+                                    />
+                                  )}
+
+                                  <SmallButton
+                                    onClick={() => {
+                                      const parsedVal = parse(
+                                        trait.value || {}
+                                      );
+                                      delete parsedVal[key];
+                                      const newVal = stringify({
+                                        ...parsedVal,
                                       });
-                                    trait.command &&
-                                      editor.runCommand(trait.command);
+                                      trait.callback &&
+                                        trait.callback({
+                                          editor,
+                                          oldValue: trait.value,
+                                          newValue: newVal,
+                                        });
+                                      trait.command &&
+                                        editor.runCommand(trait.command);
 
-                                    updateTraitValue({
-                                      name: trait.name,
-                                      key: "value",
-                                      value: newVal,
-                                    });
-                                  }}
-                                  className="[&_path]:stroke-white bg-slate-800 hover:bg-[crimson!important]"
-                                >
-                                  {Icons.trash()}
-                                </SmallButton>
+                                      updateTraitValue({
+                                        name: trait.name,
+                                        key: "value",
+                                        value: newVal,
+                                      });
+                                    }}
+                                    className="[&_path]:stroke-white bg-slate-800 hover:bg-[crimson!important]"
+                                  >
+                                    {Icons.trash()}
+                                  </SmallButton>
+                                </section>
                               </section>
-                            </section>
-                          );
-                        })}
-                      </section>
-                    </>
-                  )}
+                            );
+                          })}
+                        </section>
+                      </>
+                    )}
 
-                  {trait.type.toLowerCase() == "switch" && isShow && (
-                    <SwitchButton
-                      defaultValue={Boolean(trait.value || trait.default)}
-                      onActive={() => {
-                        trait?.onSwitch?.(true);
-                        trait.command && editor.runCommand(trait.command);
-                        updateTraitValue({
-                          name: trait.name,
-                          key: "value",
-                          value: true,
-                        });
-                      }}
-                      onUnActive={() => {
-                        trait?.onSwitch?.(false);
-                        trait.command && editor.runCommand(trait.command);
-                        updateTraitValue({
-                          name: trait.name,
-                          key: "value",
-                          value: false,
-                        });
-                      }}
-                    >
-                      {trait.label}
-                    </SwitchButton>
-                  )}
+                    {trait.type.toLowerCase() == "switch" && isShow && (
+                      <SwitchButton
+                        defaultValue={Boolean(trait.value || trait.default)}
+                        onActive={() => {
+                          trait?.onSwitch?.(true);
+                          trait.command && editor.runCommand(trait.command);
+                          updateTraitValue({
+                            name: trait.name,
+                            key: "value",
+                            value: true,
+                          });
+                        }}
+                        onUnActive={() => {
+                          trait?.onSwitch?.(false);
+                          trait.command && editor.runCommand(trait.command);
+                          updateTraitValue({
+                            name: trait.name,
+                            key: "value",
+                            value: false,
+                          });
+                        }}
+                      >
+                        {trait.label}
+                      </SwitchButton>
+                    )}
 
-                  {trait.type.toLowerCase() == "button" && isShow && (
-                    <Button
-                      className="flex justify-center items-center py-2 w-full"
-                      {...trait.buttonEvents({ editor, trait })}
-                    >
-                      {trait.label}
-                    </Button>
-                  )}
+                    {trait.type.toLowerCase() == "button" && isShow && (
+                      <Button
+                        className="flex justify-center items-center py-2 w-full"
+                        {...trait.buttonEvents({ editor, trait })}
+                      >
+                        {trait.label}
+                      </Button>
+                    )}
 
-                  {trait.type.toLowerCase() == "media" && isShow && (
-                    <ChooseFile
-                      value={trait.value}
-                      ext={trait.ext}
-                      placeholder={trait.placeholder || trait.label}
-                      mediaType={trait.mediaType}
-                      callback={(asset, url) => {
-                        trait.callback({
-                          editor, 
-                          newValue: url,
-                          oldValue: trait.value,
-                          asset:asset,
-                          trait,
-                        });
-                        console.log('url : ' , url);
-                        
-                        trait?.command && editor.runCommand(trait.command);
-                        updateTraitValue({
-                          name: trait.name,
-                          key: "value",
-                          value: url,
-                        });
-                      }}
-                    />
-                  )}
+                    {trait.type.toLowerCase() == "media" && isShow && (
+                      <ChooseFile
+                        value={trait.value}
+                        ext={trait.ext}
+                        placeholder={trait.placeholder || trait.label}
+                        mediaType={trait.mediaType}
+                        callback={(asset, url) => {
+                          trait.callback({
+                            editor,
+                            newValue: url,
+                            oldValue: trait.value,
+                            asset: asset,
+                            trait,
+                          });
+                          console.log("url : ", url);
 
-                  {trait.type.toLowerCase() == 'custom' && isShow ?<trait.component/> : null}
-                </li>
-              ) : null;
-            })}
+                          trait?.command && editor.runCommand(trait.command);
+                          updateTraitValue({
+                            name: trait.name,
+                            key: "value",
+                            value: url,
+                          });
+                        }}
+                      />
+                    )}
+
+                    {trait.type.toLowerCase() == "custom" && isShow ? (
+                      <trait.component />
+                    ) : null}
+                  </li>
+                ) : null;
+              })}
+            </section>
+          </AccordionItem>
+        )}
+
+        <AccordionItem title={"Attributes"}>
+          <section className="p-1 flex flex-col gap-2 bg-slate-900 rounded-lg">
+            <MiniTitle className={`py-3 w-full`}>Attributes</MiniTitle>
+            {!!Object.keys(attributes).length &&
+              Object.keys(attributes).map((key, i) => {
+                return (
+                  <li key={i} className="flex flex-col gap-2">
+                    <FitTitle>{key}</FitTitle>
+                    <section className="flex gap-2">
+                      <Input
+                        placeholder={key}
+                        className="bg-slate-800 w-full"
+                        value={attributes[key]}
+                        onInput={(ev) => {
+                          addAttribute({ key, value: ev.target.value });
+                        }}
+                      />
+                      <Button
+                        onClick={(ev) => {
+                          removeAttribute(key);
+                        }}
+                      >
+                        {Icons.trash("white")}
+                      </Button>
+                    </section>
+                  </li>
+                );
+              })}
+
+            <section className="flex flex-col gap-2 items-center">
+              <Input
+                value={newAttributeName}
+                className="w-full text-center bg-slate-800"
+                placeholder="Add Attribute"
+                onInput={(ev) => {
+                  setNewAttributeName(ev.target.value);
+                }}
+              />
+              <Button
+                onClick={(ev) => {
+                  console.log("RRADA : ", newAttributeName);
+
+                  addAttribute({ key: `${newAttributeName}`, value: "" });
+                  setNewAttributeName("");
+                }}
+              >
+                {Icons.plus("white")}
+                Add
+              </Button>
+            </section>
           </section>
         </AccordionItem>
-      )}
-
-      <AccordionItem title={"Attributes"}>
-        <section className="p-1 flex flex-col gap-2 bg-slate-900 rounded-lg">
-          <MiniTitle className={`py-3 w-full`}>Attributes</MiniTitle>
-          {!!Object.keys(attributes).length &&
-            Object.keys(attributes).map((key, i) => {
-              return (
-                <li key={i} className="flex flex-col gap-2">
-                  <FitTitle>{key}</FitTitle>
-                  <section className="flex gap-2">
-                    <Input
-                      placeholder={key}
-                      className="bg-slate-800 w-full"
-                      value={attributes[key]}
-                      onInput={(ev) => {
-                        addAttribute({ key, value: ev.target.value });
-                      }}
-                    />
-                    <Button
-                      onClick={(ev) => {
-                        removeAttribute(key);
-                      }}
-                    >
-                      {Icons.trash("white")}
-                    </Button>
-                  </section>
-                </li>
-              );
-            })}
-
-          <section className="flex flex-col gap-2 items-center">
-            <Input
-              value={newAttributeName}
-              className="w-full text-center bg-slate-800"
-              placeholder="Add Attribute"
-              onInput={(ev) => {
-                setNewAttributeName(ev.target.value);
-              }}
-            />
-            <Button
-              onClick={(ev) => {
-                console.log("RRADA : ", newAttributeName);
-
-                addAttribute({ key: `${newAttributeName}`, value: "" });
-                setNewAttributeName("");
-              }}
-            >
-              {Icons.plus("white")}
-              Add
-            </Button>
-          </section>
-        </section>
-      </AccordionItem>
-    </Accordion>
-  </section>
+      </Accordion>
+    </section>
   );
 });

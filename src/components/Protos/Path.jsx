@@ -11,11 +11,15 @@ export const Path = ({
   justFillOnHover = false,
   dontFileStroke = false,
   group = true,
+  style={},
+  ...props
 }) => {
   return (
     <path
+      {...props}
       d={d}
       // strokeMiterlimit={strokeMiterlimit}
+      style={style}
       stroke={stroke}
       strokeWidth={strokeWidth}
       fillRule="evenodd"
@@ -33,6 +37,7 @@ export const Path = ({
       strokeLinejoin="round"
       fill={fill}
       transform={transform}
+
     />
   );
 };

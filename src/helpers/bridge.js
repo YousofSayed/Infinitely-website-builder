@@ -12,6 +12,8 @@ import {
 } from "../constants/shared";
 import { db } from "./db";
 import { opfs } from "./initOpfs";
+import { buildProject } from "./exportProject";
+import { tmp } from "../constants/RestAPIEndpoints";
 
 export const html = String.raw;
 export const css = String.raw;
@@ -888,14 +890,26 @@ export async function cleanInteractions(interactions, pages) {
     for (const key in pages) {
       const page = pages[key];
       const content = await (
-        await opfs.getFile(defineRoot(page.pathes.html))
+        await (await opfs.getFile(defineRoot(page.pathes.html))).getOriginFile()
       ).text();
+
       isUsed = content.includes(`${interactionId}="${id}"`);
-    }
-    if (isUsed) {
-      newInteractions[id] = interactions[id];
+      console.log(
+        "interactions cleaner : ",
+        interactionId,
+        id,
+        isUsed,
+        key,
+        "\n\n\n",
+        content
+      );
+      if (isUsed) {
+        newInteractions[id] = interactions[id];
+      }
     }
   }
+
+  console.log(`newInteractions is: `, newInteractions);
 
   return newInteractions;
 }
@@ -1556,7 +1570,6 @@ export async function buildPage({ pageName, file, css, js }) {
   const keywordsMetaEl = document.querySelector('meta[name="keywords"]');
   const keywordsMeta = keywordsMetaEl?.getAttribute?.("content") || "";
 
-
   /**
    *
    * @param {import('./types').LibraryConfig} lib
@@ -1626,8 +1639,7 @@ export async function buildPage({ pageName, file, css, js }) {
   //     return defineJsLibs(lib, false);
   //   }
   // ).filter(Boolean);
- 
-  
+
   //Remove none important els
   descMetaEl?.remove?.();
   authorMetaEl?.remove?.();
@@ -1687,8 +1699,8 @@ export function getPageURLException(pageName = "") {
 }
 
 /**
- * 
- * @param {string} html 
+ *
+ * @param {string} html
  * @returns {string[]}
  */
 export function chunkHtmlElements(html = "") {
@@ -1769,3 +1781,25 @@ export function getInitProjectData({
     inited: false,
   };
 }
+
+/**
+ *
+ * @param {{asJson:boolean , projectId:number , toastId:string, projectSetting : import('./types').ProjectSetting}} props
+ */
+export async function uploadProjectToTMP(props) {
+  const projectData = await db.projects.get(props.projectId);
+  const project = await (
+    await buildProject(props)
+  ).generateAsync({
+    compression: "STORE",
+    type: "blob",
+    streamFiles: true,
+  });
+  const formData = new FormData();
+  formData.append("file", project, `${projectData.name}.zip`);
+  const res = await fetch(tmp, {
+    method: "POST",
+    body: formData,
+  });
+  return res.json();
+};

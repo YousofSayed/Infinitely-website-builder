@@ -117,15 +117,15 @@ export const useUpdateInputValue = ({
         // console.log('valueee : ' , value , getRuleStyle() , cssProp);
 
         setVal(setter(value));
-        onEffect(cssProp, setter(value));
+        onEffect(cssProp, value);
       } else if (Object.keys(slElStyles).length) {
         const value = returnPropsAsIt ? slElStyles : slElStyles[cssProp] || "";
 
         setVal(setter(value));
-        onEffect(cssProp, setter(value));
+        onEffect(cssProp, value);
       } else {
         setVal(setter(""));
-        onEffect(cssProp, setter(""));
+        onEffect(cssProp, value);
       }
     }
 

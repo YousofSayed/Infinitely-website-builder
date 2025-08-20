@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 export const SwitchButton = ({ 
   onActive = (ev) => {},
   onUnActive = (ev) => {},
+  onSwitch = (value = false) => {},
   defaultValue = false,
 }) => {
   const [active, setActive] = useState(defaultValue);
@@ -19,6 +20,7 @@ export const SwitchButton = ({
         const currentValue = !active;
         currentValue ? onActive(ev) : onUnActive(ev);
         setActive(currentValue);
+        onSwitch(currentValue);
       }}
     >
       <div

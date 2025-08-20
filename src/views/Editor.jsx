@@ -13,6 +13,7 @@ import {
   useResolvedPath,
 } from "react-router-dom";
 import {
+  currentElState,
   dbAssetsSwState,
   modalDataState,
   showAnimationsBuilderState,
@@ -47,6 +48,7 @@ import { Memo } from "../components/Protos/Memo";
 // tailwindClasses
 export function Editor({ params }) {
   const navigate = useNavigate();
+  const [currentEl, setCurrentEl] = useRecoilState(currentElState);
   const showLayers = useRecoilValue(showLayersState);
   const showAnimBuilder = useRecoilValue(showAnimationsBuilderState);
   const setModalData = useSetRecoilState(modalDataState);
@@ -57,7 +59,7 @@ export function Editor({ params }) {
   const showCustomModal = useRecoilValue(showCustomModalState);
   const [isAssetsWorkerDone, setIsAssetsWorkerDone] = useState(false);
   const [parent] = useAutoAnimate();
-  const [mainAnimate] = useAutoAnimate({duration:100});
+  const [mainAnimate] = useAutoAnimate({ duration: 100 });
   // const [dbAssetsSw, setDBAssetsSw] = useRecoilState(dbAssetsSwState);
 
   // useEffect(() => {
@@ -211,6 +213,7 @@ export function Editor({ params }) {
     //   });
     // })();
     routerWorker.addEventListener("message", cb);
+    setCurrentEl({ currentEl: null, addStyle: null });
     return () => {
       routerWorker.removeEventListener("message", cb);
     };
@@ -222,21 +225,26 @@ export function Editor({ params }) {
   return isProject ? (
     isAssetsWorkerDone ? (
       <Memo className="w-full h-full">
-        <GJEditor>
-          <main className="relative w-full h-full bg-slate-950 flex justify-between" ref={mainAnimate}>
-            <ToastContainer
-              toastStyle={{ background: " #111827 " }}
-              autoClose={3000}
-              draggable={true}
-              theme="dark"
-              limit={10}
-              pauseOnHover={true}
-              position="top-left"
-              // containerId={`main-toast-container`}
+        <ToastContainer
+          toastStyle={{ background: " #111827 " }}
+          autoClose={3000}
+          draggable={true}
+          theme="dark"
+          limit={10}
+          pauseOnHover={true}
+          position="top-left"
+          className={`z-[1000000000000]`}
+          // containerId={`main-toast-container`}
 
-              // stacked={true}
-            />
-            {!showPreview && <HomeNav />}
+          // stacked={true}
+        />
+        <GJEditor>
+          <main
+            className="relative w-full h-full bg-slate-950 flex justify-between"
+            ref={mainAnimate}
+          >
+            {/* {!showPreview && <HomeNav />} */}
+            <HomeNav />
             <section
               ref={parent}
               className={`${
@@ -245,7 +253,8 @@ export function Editor({ params }) {
                   : "w-[calc(100%-55px)] border-l-[1.5px] border-slate-400"
               } flex flex-col h-full `}
             >
-              {!showPreview && <HomeHeader />}
+              {/* {!showPreview && <HomeHeader />} */}
+              <HomeHeader />
               <PanelGroup
                 id={"panels-group"}
                 tagName="section"
@@ -284,7 +293,7 @@ export function Editor({ params }) {
                   <Iframe />
                 </Panel>
 
-                {!showPreview && (
+                {/* {!showPreview && (
                   <>
                     <PanelResizeHandle className="w-[5px] bg-blue-600 opacity-0 hover:opacity-[1] transition-all" />
                     <Panel defaultSize={300} order={3} id="right-panel">
@@ -296,7 +305,15 @@ export function Editor({ params }) {
                       </Aside>
                     </Panel>
                   </>
-                )}
+                )} */}
+
+                <PanelResizeHandle className="w-[5px] bg-blue-600 opacity-0 hover:opacity-[1] transition-all" />
+                <Panel defaultSize={300} order={3} id="right-panel">
+                  <Aside>
+                    {pathname.pathname != "/add-blocks" && <AsideControllers />}
+                    <Outlet />
+                  </Aside>
+                </Panel>
               </PanelGroup>
             </section>
             {showCustomModal && <CustomModals />}

@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Icons } from "../../Icons/Icons";
 import { useEditorMaybe } from "@grapesjs/react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
@@ -10,6 +10,7 @@ import { OptionsButton } from "../../Protos/OptionsButton";
 import { Tooltip } from "react-tooltip";
 import { Input } from "./Input";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { refType } from "../../../helpers/jsDocs";
 
 /**
  *
@@ -35,12 +36,17 @@ export const Layer = ({
   const [isOpen, setIsOpen] = useState(false);
   const [layerProps, setLayerProps] = useState(layer.props() || {});
   const [showInput, setShowInput] = useState(false);
-  const [animatedRef] = useAutoAnimate();
+  const [autoAnim] = useAutoAnimate();
+  const animatedRef = useRef(refType);
   useEffect(() => {
     if (!editor) return;
     setLayerStt([editor.getWrapper()]);
     // openCurrentLayer()
   }, [editor, layers]);
+
+  useEffect(() => {
+    animatedRef.current && autoAnim(animatedRef.current);
+  }, [animatedRef]);
 
   useEffect(() => {
     const callback = () => {
@@ -70,6 +76,11 @@ export const Layer = ({
       if (sle.getId() == layer.getId()) {
         setSelected(true);
         setSelectedEl(sle);
+        animatedRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+          inline: "center",
+        });
       } else {
         setSelected(false);
         setSelectedEl(null);
@@ -368,6 +379,10 @@ export const Layer = ({
 
             {!showInput ? (
               <p
+                onClick={(ev) => {
+                  ev.preventDefault();
+                  ev.stopPropagation();
+                }}
                 className={` select-none  text-slate-200  font-semibold capitalize`}
               >
                 {layer.getName()}
@@ -386,6 +401,12 @@ export const Layer = ({
                 onClick={(ev) => {
                   ev.stopPropagation();
                   ev.preventDefault();
+                }}
+                onKeyUp={(ev) => {
+                  if (ev.key == "Enter") {
+                    ev.preventDefault();
+                    ev.target.blur();
+                  }
                 }}
                 onBlur={(ev) => {
                   ev.stopPropagation();

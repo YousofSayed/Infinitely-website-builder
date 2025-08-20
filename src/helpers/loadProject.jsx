@@ -54,7 +54,7 @@ export const loadProject = async (props) => {
     const notIncludedFiles = ["editor/infinitely.json", "index.html", "pages/"];
     const isInfinitelyJson = Boolean(projectFiles["editor/infinitely.json"]);
     let infinitelyJson = {};
-     if (!isInfinitelyJson) {
+    if (!isInfinitelyJson) {
       throw new Error(`infinitely.json config file not founded!!`);
     }
     const projectDBId = await db.projects.add({});
@@ -62,7 +62,6 @@ export const loadProject = async (props) => {
     const defineRoot = (root = "") =>
       `${projectPath}/${root.replace(projectPath, "")}`;
 
-   
     // console.log(
     //   "isInfinitelyJson  :",
     //   isInfinitelyJson,
@@ -71,7 +70,7 @@ export const loadProject = async (props) => {
     // );
 
     // return;
-   
+
     /**
      * @type {{[key:string] : JSZip.JSZipObject}}
      */
@@ -90,7 +89,9 @@ export const loadProject = async (props) => {
           pages[path] = zipHandle;
         }
         if (path.startsWith("editor/infinitely.json")) {
-          dbJSONData = await restoreBlobs(JSON.parse(await zipHandle.async("text")));
+          dbJSONData = await restoreBlobs(
+            JSON.parse(await zipHandle.async("text"))
+          );
         }
 
         // else {
@@ -768,6 +769,9 @@ export const loadProject = async (props) => {
         isNotMessage: true,
         type: "dismiss",
         msg: id,
+        dataProps: {
+          progressClassName: "bg-[crimson]",
+        },
       });
     });
     workerSendToast({

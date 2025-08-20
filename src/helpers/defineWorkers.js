@@ -9,6 +9,12 @@ const assetsWorker = new Worker(new URL("./assetsWorker.js", import.meta.url), {
   type: "module",
 });
 
+const fetcherWorker = new Worker(
+  new URL("./fetcherWorker", import.meta.url),
+  { type: "module" }
+);
+
+
 const pageBuilderWorker = new Worker(
   new URL("./pageBuilderWorker", import.meta.url),
   { type: "module" }
@@ -33,6 +39,7 @@ export {
   offlineInstallerWorker,
   classesFinderWorker,
   assetsWorker,
+  fetcherWorker,
   routerWorker,
   refresherWorker,
   keyframesGetterWorker,

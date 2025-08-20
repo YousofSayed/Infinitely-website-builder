@@ -10,7 +10,7 @@ import { Icons } from "../Icons/Icons";
 import { FitTitle } from "../Editor/Protos/FitTitle";
 import { refType } from "../../helpers/jsDocs";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion } from "framer-motion";
 const AccordionContext = createContext();
 
 export const AccordionProvider = ({ children }) => {
@@ -36,12 +36,9 @@ export const DetailsNormal = memo(
     const { openId, setOpenId } = useContext(AccordionContext) || {};
     const [isOpen, setIsOpen] = useState(false);
     const contentRef = useRef(null);
-    const [parent] = useAutoAnimate({
-      duration: 100,
-      // easing: "ease-in",
-      // disrespectUserMotionPreference: true,
-    });
-
+    const [autoAnimate] = useAutoAnimate({ duration: 100 });
+    const parentRef = useRef(refType);
+    const childRef = useRef(refType);
     const toggle = () => {
       if (mode === "accordion") {
         setOpenId(isOpen ? null : id);
@@ -55,6 +52,33 @@ export const DetailsNormal = memo(
         setIsOpen(openId === id);
       }
     }, [openId]);
+
+    useEffect(() => {
+      parentRef.current && autoAnimate(parentRef.current);
+      childRef.current && autoAnimate(childRef.current);
+    }, [parentRef , childRef]);
+
+    useEffect(() => {
+      if (!(parentRef.current && childRef.current)) return;
+      if (isOpen) {
+        // console.log(childRef.current.offsetHeight , childRef.current.scrollHeight);
+        // parentRef.current.style.height = parentRef.current.offsetHeight +  childRef.current.offsetHeight + "px";
+      } else {
+        // parentRef.current.style.height = 'auto';
+        // childRef.current.style.transition = `0.1s`;
+        // childRef.current.style.opacity = 0;
+      }
+      // parentRef.current.style.overflow = "hidden";
+      // childRef.current.style.transition = `0.3s`;
+      // childRef.current.style.opacity = 0;
+      // parentRef.current.style.height = parentRef.current.offsetHeight +  (childRef.current?.offsetHeight || 0) + "px";
+      setTimeout(() => {
+        // parentRef.current.style.overflow = "";
+        // childRef.current.style.opacity = 1;
+        // parentRef.current.style.height = parentRef.current.offsetHeight +  (childRef.current?.offsetHeight || 0) + "px";
+        // parentRef.current.style.height = "";
+      }, 200);
+    }, [isOpen, parentRef, childRef]);
 
     // useEffect(() => {
     //   const el = contentRef.current;
@@ -101,8 +125,13 @@ export const DetailsNormal = memo(
 
     return (
       <section
-        ref={parent}
-        className={`relative rounded-lg transition-all duration-300 will-change-auto ${
+        ref={parentRef}
+        style={{
+          transition: ".1s",
+          // overflow: "hidden",
+          // overflow : !isOpen ? 'hidden' : ''
+        }}
+        className={`relative rounded-lg  will-change-contents ${
           className ? className : "p-1 bg-slate-800 w-full select-none"
         }`}
       >
@@ -110,7 +139,9 @@ export const DetailsNormal = memo(
           className={`cursor-pointer flex justify-between items-center text-slate-200 capitalize rounded-lg font-semibold text-[16px] p-1 ${labelClass}`}
           onClick={toggle}
         >
-          <h1 className="custom-font-size text-slate-200 font-semibold">{label}</h1>
+          <h1 className="custom-font-size text-slate-200 font-semibold">
+            {label}
+          </h1>
           {/* <FitTitle className="custom-font-size">{label}</FitTitle> */}
           <span
             className={`transition-transform duration-100 ${
@@ -120,9 +151,13 @@ export const DetailsNormal = memo(
             <i className="rotate-[-90deg] block">{Icons.arrow("")}</i>
           </span>
         </div>
-
-        {isOpen ? children : null}
-
+        <div
+          // style={{ transition: "5s", transitionDelay: "0", opacity: 0 }}
+          ref={childRef}
+        >
+          {isOpen ? children : null}
+        </div>
+        {/* {isOpen ? children : null} */}
         {/* (<AnimatePresence initial={false}  >
             {isOpen && <motion.div
               // key="body"

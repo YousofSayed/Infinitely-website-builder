@@ -14,6 +14,7 @@ import {
   getProjectRoot,
   handleFilesSize,
   installRestModelsAPI,
+  uploadProjectToTMP,
 } from "./bridge";
 import { uniqueId, isPlainObject, random } from "lodash";
 import { opfs } from "./initOpfs";
@@ -707,6 +708,9 @@ export async function uploadAssets(props) {
       isNotMessage: true,
       msg: toastId,
       type: "dismiss",
+       dataProps:{
+        progressClassName:'bg-[crimson]'
+      }
     });
     self.postMessage({
       command: "toast",
@@ -1039,7 +1043,7 @@ export async function createProject({ data }) {
     const id = await db.projects.add({
       name: data.name,
       description: data.description,
-      logo: "",
+      logo: "logo.png",
       blocks: {},
       // cssLibraries: [],
       // jsHeaderLocalLibraries: [],
@@ -1200,6 +1204,9 @@ export async function createProject({ data }) {
       isNotMessage: true,
       msg: tId,
       type: "dismiss",
+      dataProps:{
+        progressClassName:'bg-[crimson]'
+      }
     });
 
     self.postMessage({
@@ -1323,6 +1330,9 @@ export async function removeOPFSEntry({
       msg: toastId,
       type: "dismiss",
       isNotMessage: true,
+       dataProps:{
+        progressClassName:'bg-[crimson]'
+      }
     });
     throw new Error(error);
   }
@@ -1535,4 +1545,56 @@ export async function saveAnimations({ animations }) {
 
   //   throw new Error(error)
   // }
+}
+
+/**
+ *
+ * @param {{ projectId:number ,  projectSetting : import('./types').ProjectSetting}} props
+ */
+export async function shareProject(props) {
+  let tId = uniqueId("share-project-");
+  try {
+    workerSendToast({
+      msg: "Uploading...",
+      type: "loading",
+      dataProps: { toastId: tId },
+    });
+    const res = await uploadProjectToTMP(props);
+    self.postMessage({
+      command: "shareProject",
+      response: res,
+    });
+
+    workerSendToast({
+      isNotMessage: true,
+      msg: tId,
+      type: "done",
+    });
+
+    workerSendToast({
+      msg: "Project shared successfully 💙",
+      type: "success",
+    });
+
+    workerSendToast({
+      msg: "URL expier after 60 minute",
+      type: "warning",
+    });
+  } catch (error) {
+    workerSendToast({
+      isNotMessage: true,
+      msg: tId,
+      type: "dismiss",
+       dataProps:{
+        progressClassName:'bg-[crimson]'
+      }
+    });
+
+    workerSendToast({
+      msg: "Faild to upload & share project 💙",
+      type: "error",
+    });
+
+    throw new Error(error);
+  }
 }

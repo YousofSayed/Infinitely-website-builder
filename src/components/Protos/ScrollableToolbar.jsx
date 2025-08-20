@@ -11,7 +11,7 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
  * @param {React.HTMLAttributes<HTMLElement>} [props]
  * @returns
  */
-export const ScrollableToolbar = ({
+export const ScrollableToolbar = ({ 
   children,
   className = "",
   space = 1,

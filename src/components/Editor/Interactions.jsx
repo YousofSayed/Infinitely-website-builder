@@ -13,7 +13,11 @@ import { getProjectData } from "../../helpers/functions";
 import { useRecoilValue } from "recoil";
 import { currentElState } from "../../helpers/atoms";
 import { useEditorMaybe } from "@grapesjs/react";
-import { current_project_id, interactionId } from "../../constants/shared";
+import {
+  current_page_id,
+  current_project_id,
+  interactionId,
+} from "../../constants/shared";
 import { cloneDeep, isPlainObject, random, uniqueId } from "lodash";
 import {
   parse,
@@ -32,6 +36,8 @@ import { MiniTitle } from "./Protos/MiniTitle";
 import { SwitchButton } from "../Protos/SwitchButton";
 import { InfAccordion } from "../Protos/InfAccordion";
 import { AccordionItem } from "@heroui/accordion";
+import { keyframesGetterWorker } from "../../helpers/defineWorkers";
+import { ScrollableToolbar } from "../Protos/ScrollableToolbar";
 
 const actionsKeywords = actions.map((action) => action.label);
 const advancedParse = (value) => {
@@ -55,7 +61,113 @@ export const Interaction = ({
   const editor = useEditorMaybe();
   const [actionName, setActionName] = useState("");
 
-  const addAction = (actionName = "") => {
+  const sendToKeyframesGetterWorker = ({ data }) => {
+    /**
+     * @type {{command:string , props : import('css').KeyFrames[]}}
+     */
+    const { command, props } = data;
+    if (data.command == "getKeyFrames") {
+      // setLoad(false);
+      // console.log(
+      //   "props : ",
+      //   Object.entries(props).flatMap(([path, animes]) =>
+      //     animes.map((anim) => ({ ...anim, path }))
+      //   )
+      // );
+
+      console.log(props);
+      const keyFrameNames = props.map((kfrm) => kfrm.name).filter(Boolean);
+      const clone = structuredClone(interactions);
+
+      for (const interaction of clone) {
+        for (const action of interaction.actions) {
+          for (const [key, value] of Object.entries(action.access)) {
+            if (value.keyframes) {
+              action.params[key] = {
+                type: "select",
+                keywords: keyFrameNames,
+              };
+            }
+          }
+        }
+      }
+
+      setInteractions(clone);
+    }
+  };
+
+  useEffect(() => {
+    if (!editor) return;
+    const allSameInteractionsCmps = editor
+      .getWrapper()
+      .find(`[${interactionId}="${id}"]`);
+    for (const cmp of allSameInteractionsCmps) {
+      if (editor.getSelected() == cmp) continue;
+      for (const interaction of interactions) {
+        cmp.addAttributes({
+          [`v-on:${interaction.event}`]: buildFunctionsFromActions(
+            interaction.actions
+          ),
+        });
+      }
+    }
+  }, [interactions, editor]);
+
+  /**
+   *
+   * @returns {Promise<string[]>}
+   */
+  const getKeyFrames = async () => {
+    keyframesGetterWorker.postMessage({
+      command: "getKeyFrames",
+      props: {
+        projectId: +localStorage.getItem(current_project_id),
+        pageName: localStorage.getItem(current_page_id),
+        editorCss: editor.getCss({
+          keepUnusedStyles: false,
+          avoidProtected: true,
+        }),
+      },
+    });
+
+    return new Promise((res, rej) => {
+      const reciver = ({ data }) => {
+        /**
+         * @type {{command:string , props : import('css').KeyFrames[]}}
+         */
+        const { command, props } = data;
+        if (data.command == "getKeyFrames") {
+          console.log(props);
+          const keyFrameNames = props.map((kfrm) => kfrm.name).filter(Boolean);
+          res(keyFrameNames);
+        }
+      };
+
+      keyframesGetterWorker.addEventListener("message", reciver, {
+        once: true,
+      });
+    });
+
+    // return () => {
+    //   keyframesGetterWorker.removeEventListener(
+    //     "message",
+    //     sendToKeyframesGetterWorker
+    //     // { once: true }
+    //   );
+    // };
+
+    // console.log(animes, animationsReady, Object.values(animes));
+  };
+
+  // useEffect(() => {
+  //   if (!editor) return;
+  //   const cleaner = getKeyFrames();
+  //   return () => {
+  //     cleaner();
+  //   };
+  // }, [editor]);
+
+  const addAction = async (actionName = "") => {
     if (interaction.actions.some((action) => action.label == actionName)) {
       toast.warn(<ToastMsgInfo msg={`You already use this action...!`} />);
       return;
@@ -67,6 +179,16 @@ export const Interaction = ({
       const clone = cloneDeep(interactions);
       const newActions = [...clone[index].actions, actionTarget];
       clone[index].actions = newActions;
+      for (const action of actions) {
+        for (const [key, value] of Object.entries(action?.access || {})) {
+          if (value.keyframes) {
+            action.params[key] = {
+              type: "select",
+              keywords: await getKeyFrames(),
+            };
+          }
+        }
+      }
       setInteractions(clone);
       const sle = editor.getSelected();
       const functionsFromParams = buildFunctionsFromActions(newActions);
@@ -152,6 +274,17 @@ export const Interaction = ({
     return functionsFromParams;
   };
 
+  const pasteAction = (action = "") => {
+    const parsedAction = parse(action);
+    if (!(parsedAction && parsedAction?.name)) {
+      toast.error(<ToastMsgInfo msg={`Invalid action!`} />);
+      return;
+    }
+    const clone = structuredClone(interactions);
+    clone[index].actions.push(parsedAction);
+    setInteractions(clone);
+  };
+
   return (
     <section className="flex flex-col gap-2 p-1 bg-slate-950 rounded-lg">
       <header className="flex flex-col gap-2">
@@ -168,6 +301,14 @@ export const Interaction = ({
           <MiniTitle className=" w-full  flex gap-2 justify-center items-center">
             {interaction.event}
           </MiniTitle>
+          <SmallButton
+            tooltipTitle="Copy Interaction"
+            onClick={async (ev) => {
+              await navigator.clipboard.writeText(JSON.stringify(interaction));
+            }}
+          >
+            {Icons.copy({ fill: "white" })}
+          </SmallButton>
           <SmallButton
             onClick={() => {
               deleteInteraction();
@@ -193,6 +334,14 @@ export const Interaction = ({
             }}
           />
           <SmallButton
+            tooltipTitle="Paste Action"
+            onClick={async () => {
+              pasteAction(await navigator.clipboard.readText());
+            }}
+          >
+            {Icons.paste({})}
+          </SmallButton>
+          <SmallButton
             tooltipTitle="Add Action"
             onClick={() => {
               addAction(actionName);
@@ -209,20 +358,35 @@ export const Interaction = ({
             className="flex flex-col gap-2 p-1 bg-slate-800 rounded-lg"
             key={i}
           >
-            <header className="flex gap-2 justify-between">
-              <MiniTitle>{action.label}</MiniTitle>
-              <section className="rounded-lg">
-                <SmallButton
-                  onClick={() => {
-                    deleteAction(i);
-                  }}
-                  className="h-full bg-slate-900 hover:bg-[crimson!important] [&:hover_path]:stroke-white"
-                  tooltipTitle="Delete Action"
-                >
-                  {Icons.trash()}
-                </SmallButton>{" "}
-              </section>
-            </header>
+            <ScrollableToolbar>
+              <header className="w-full flex gap-2 justify-between">
+                <MiniTitle className={` custom-font-size w-full flex-grow-0`}>
+                  {action.label}
+                </MiniTitle>
+                <section className="rounded-lg flex gap-2">
+                  <SmallButton
+                    className="bg-slate-900"
+                    tooltipTitle="Copy Action"
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(
+                        JSON.stringify(action)
+                      );
+                    }}
+                  >
+                    {Icons.copy({ fill: "white" })}
+                  </SmallButton>
+                  <SmallButton
+                    onClick={() => {
+                      deleteAction(i);
+                    }}
+                    className="h-full bg-slate-900 hover:bg-[crimson!important] [&:hover_path]:stroke-white"
+                    tooltipTitle="Delete Action"
+                  >
+                    {Icons.trash("white")}
+                  </SmallButton>{" "}
+                </section>
+              </header>
+            </ScrollableToolbar>
 
             {Object.entries(action.params).map(([key, value], paramIndex) => {
               return (
@@ -387,6 +551,22 @@ export const Interactions = () => {
     setInteractions([...interactionsState, newInteraction]);
     setEventName("");
   };
+
+  const pasteInteraction = (interaction = "") => {
+    const parsedInteraction = parse(interaction);
+    if (
+      !(
+        parsedInteraction &&
+        parsedInteraction?.actions &&
+        parsedInteraction?.id
+      )
+    ) {
+      toast.error(<ToastMsgInfo msg={`Invalid interaction!`} />);
+      return;
+    }
+    setInteractions([...interactionsState, parsedInteraction]);
+  };
+
   return (
     <section className="w-full h-full flex flex-col gap-2 my-2 overflow-auto hideScrollBar">
       <header className="flex gap-2 justify-between">
@@ -403,6 +583,14 @@ export const Interactions = () => {
           }}
         />
         <SmallButton
+          tooltipTitle="Paste Interaction"
+          onClick={async () => {
+            pasteInteraction(await navigator.clipboard.readText());
+          }}
+        >
+          {Icons.paste({ fill: "white" })}
+        </SmallButton>
+        <SmallButton
           tooltipTitle="Add Interaction"
           onClick={(ev) => {
             addInteraction(eventName);
@@ -415,7 +603,6 @@ export const Interactions = () => {
         {Object.values(interactionsState).map((interaction, i) => (
           <AccordionItem key={i} title={interaction.event}>
             <Interaction
-              
               id={interactionsId}
               index={i}
               interactions={interactionsState}

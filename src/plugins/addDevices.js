@@ -26,7 +26,7 @@ export const addDevices = (editor) => {
   deviceManager.add({
     name: "desktop",
     width: "",
-    widthMedia: 1200 + "px",
+    widthMedia: window.outerWidth + "px",
   });
 
   deviceManager.add({
@@ -112,12 +112,12 @@ export const addDevices = (editor) => {
 
     zoomToFit();
   });
-  editor.on("canvas:frame:load:body", () => {
-    // editor.getContainer().style.zoom = 1;
-    zoomToFit();
-  });
+  // editor.on("canvas:frame:load:body", () => {
+  //   // editor.getContainer().style.zoom = 1;
+  //   zoomToFit();
+  // });
 
-  editor.on("canvas:frame:load:body", () => {
+  editor.on("canvas:frame:load", () => {
     // console.log('from load ;' , document.querySelector(`#right-panel`));
     //document.querySelector(`#panel-group`)
     zoomToFit();

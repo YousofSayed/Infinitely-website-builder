@@ -27,7 +27,11 @@ import { jsURLRgx } from "../constants/rgxs";
 import { pvMount, pvUnMount } from "./customEvents";
 import { toBlob } from "html-to-image";
 import serializeJavascript from "serialize-javascript";
-import { pageBuilderWorker } from "./defineWorkers";
+import {
+  fetcherWorker,
+  keyframesGetterWorker,
+  pageBuilderWorker,
+} from "./defineWorkers";
 import { mountAppTool } from "../plugins/tools/mountAppTool";
 import { unMountAppTool } from "../plugins/tools/unMountAppTool";
 import { runGsapMotionTool } from "../plugins/tools/runGsapMotionTool";
@@ -2173,6 +2177,17 @@ export function downloadFile({ filename, content, mimeType }) {
   URL.revokeObjectURL(link.href);
 }
 
+export function downloadFileByLink(link = "") {
+  const linkEl = document.createElement("a");
+  linkEl.style.display = "none";
+  linkEl.href = link;
+  linkEl.download =
+    link.split("/").pop() || link.replace(/https:\/\/|http:\/\//gi, "");
+  document.body.appendChild(linkEl);
+  linkEl.click();
+  document.body.removeChild(linkEl);
+}
+
 export function doDocument(content = "") {
   return html`
     <!DOCTYPE html>
@@ -2316,7 +2331,7 @@ export const unMount = ({ editor, all, specificCmp, selectAfterUnMout }) => {
           if (!components.length) return;
           editor.Storage.setAutosave(false);
 
-          const relEnder = starter + 101;
+          const relEnder = starter + 41;
           const slices = components.slice(starter, relEnder);
           slices.forEach((cmp) => {
             // editor.getWrapper().get
@@ -2479,7 +2494,7 @@ export function getParentNode(condition = (el) => true, el = null) {
   return getParentNode(condition, el.parentNode);
 }
 
-export function exportProject(params) {
+export function exportProject() {
   const projectId = +localStorage.getItem(current_project_id);
 
   infinitelyWorker.postMessage({
@@ -2491,19 +2506,70 @@ export function exportProject(params) {
   });
 }
 
+export function loadProject(file) {
+  infinitelyWorker.postMessage({
+    command: "loadProject",
+    props: {
+      file,
+    },
+  });
+}
+
+export async function shareProject() {
+  const projectId = +localStorage.getItem(current_project_id);
+
+  fetcherWorker.postMessage({
+    command: "shareProject",
+    props: {
+      projectSetting: getProjectSettings().projectSettings,
+      projectId,
+    },
+  });
+}
+
 /**
  *
  * @param {import('grapesjs').Editor} editor
  * @param {(editor:import('grapesjs').Editor)=>void} callback
+ * @param {{clearDirtyCount:boolean , decreaseSteps:boolean}} handlers
  */
-export function doActionAndPreventSaving(editor, callback = () => {}) {
+export function doActionAndPreventSaving(
+  editor,
+  callback = () => {},
+  handlers = { clearDirtyCount: false, decreaseSteps: false }
+) {
   const originalSave = editor.Storage.config.autosave;
   editor.Storage.setAutosave(false);
   callback(editor);
+  // if(!clearDirtyCount)return;
+  handlers.clearDirtyCount &&
+    setTimeout(() => {
+      handlers.clearDirtyCount && editor.clearDirtyCount();
+      if (handlers.decreaseSteps) {
+        const currentSteps = editor.Storage.getStepsBeforeSave();
+        const steps = currentSteps - 1;
+        editor.StorageManager.setStepsBeforeSave(steps >= 0 ? steps : 0);
+      }
+    }, 0);
   editor.Storage.setAutosave(originalSave);
-  setTimeout(() => {
-    editor.clearDirtyCount();
-    editor.StorageManager.setStepsBeforeSave(0);
-  }, 0);
+
   // editor.clearDirtyCount();
 }
+
+/**
+ *
+ * @param {import('grapesjs').Editor} editor
+ */
+export const triggerKeyFramesGetterWorker = (editor) => {
+  keyframesGetterWorker.postMessage({
+    command: "getKeyFrames",
+    props: {
+      projectId: +localStorage.getItem(current_project_id),
+      pageName: localStorage.getItem(current_page_id),
+      editorCss: editor.getCss({
+        keepUnusedStyles: false,
+        avoidProtected: true,
+      }),
+    },
+  });
+};

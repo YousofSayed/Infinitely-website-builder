@@ -69,7 +69,10 @@ infinitely-svg svg {
 .drop{
   background-color: #eee;
   min-height: 70px;
+  height: 70px;
   position: relative;
+  color: black !important;
+  font-weight: bold !important;
 }
 
 .drop::before{
@@ -82,6 +85,8 @@ infinitely-svg svg {
   font-weight: 500;
   text-transform: capitalize;
   transform: translate(-50% , -50%);
+  color: black !important;
+  font-weight: bold !important;
 }
 
 .min-h-60{

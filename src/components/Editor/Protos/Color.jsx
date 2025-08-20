@@ -53,7 +53,9 @@ export const Color = memo(
       useUpdateInputValue({
         cssProp,
         onEffect(cssProp, value) {
-          setColor(rgbStringToHex(value) || value);
+          // console.log('vvaaaaaaal : ' , value , typeof value);
+          
+          setColor(typeof value == 'string' ?  rgbStringToHex(value) :'' );
         },
       });
 

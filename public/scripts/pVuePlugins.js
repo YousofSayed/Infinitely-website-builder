@@ -13,8 +13,7 @@ window["vIntersectionObserver"] = new IntersectionObserver((entries) => {
       );
     }
   });
-});
-
+ } , {threshold:1});
 const vIntersection = (ctx) => {
   // the element the directive is on
   console.log("ctttttttttttttttttttx : ", ctx.get(), ctx.el);
