@@ -1254,7 +1254,7 @@ export async function listenToOPFSBroadcastChannel({ id }) {
         }
 
         const fileHandle = await opfs.getFile(
-          `${getProjectRoot(id)}/${data.folderPath}/${data.fileName}`
+          `${getProjectRoot(id)}/${data.folderPath ? `${data.folderPath}/` : ''}${data.fileName}`
         );
         const file = await fileHandle.getOriginFile();
 
@@ -1263,6 +1263,7 @@ export async function listenToOPFSBroadcastChannel({ id }) {
           `projects/project-${opfs.id || data.projectId}/${data.folderPath}/${
             data.fileName
           }`,
+           `${getProjectRoot(id)}/${data.folderPath ? `data.folderPath/` : ''}${data.fileName}`,
           file
         );
         if (!file) {

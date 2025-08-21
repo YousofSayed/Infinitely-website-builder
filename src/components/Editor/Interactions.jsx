@@ -244,7 +244,7 @@ export const Interaction = ({
   };
 
   const deleteInteraction = () => {
-    const clone = cloneDeep(interactions);
+    const clone = structuredClone(interactions);
     clone.splice(index, 1);
     const sle = editor.getSelected();
     editor
@@ -262,8 +262,20 @@ export const Interaction = ({
         }
       });
 
-    // sle.removeAttributes([`v-on:${interaction.event}`]);
+      // console.log(clone  , 'cloooooooooone',);
+      
+    if (!clone.length) {
+      console.log('id is : ' , id ,  editor
+        .getWrapper()
+        .find(`[${interactionId}="${id}"]`));
+      
+      editor
+        .getWrapper()
+        .find(`[${interactionId}="${id}"]`)
+        .forEach((cmp) => cmp.removeAttributes([interactionId]));
+    }
     setInteractions(clone);
+    // sle.removeAttributes([`v-on:${interaction.event}`]);
   };
 
   /**
@@ -469,7 +481,21 @@ export const Interactions = () => {
 
   useEffect(() => {
     if (!selectedEl && !editor) return;
-    getAndSetIdHandle();
+    // getAndSetIdHandle();
+   (async()=>{
+     const sle = editor.getSelected();
+    const intersectionIdAttr = sle.getAttributes()[interactionId]
+    if(!intersectionIdAttr){
+      setInteractions([]);
+      setInteractionsId(intersectionIdAttr)
+    }else{
+      
+      const projectData = await getProjectData();
+      console.log('elseeee', projectData.interactions[intersectionIdAttr]);
+      setInteractions(projectData.interactions[intersectionIdAttr]);
+      setInteractionsId(intersectionIdAttr)
+    }
+   })()
   }, [selectedEl, editor]);
 
   //   useLiveQuery(async () => {
@@ -520,7 +546,7 @@ export const Interactions = () => {
           },
         });
         setInteractionsId(interactionIdAttr);
-        setInteractions([]);
+        // setInteractions([]);
       } else {
         setInteractions(projectData.interactions[interactionIdAttr]);
       }
@@ -537,11 +563,12 @@ export const Interactions = () => {
     }
   };
 
-  const addInteraction = (eventName = "") => {
+  const addInteraction = async (eventName = "") => {
     if (!eventName) {
       toast.warn(<ToastMsgInfo msg={`Select event to add`} />);
       return;
     }
+    await getAndSetIdHandle();
     if (
       interactionsState.some(
         (interaction) =>
