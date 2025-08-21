@@ -132,7 +132,9 @@ export const IDB = (editor) => {
 
         if (cnfrm) {
           await editor.store();
-          await editor.load();
+          editor.on(InfinitelyEvents.storage.storeEnd, async () => {
+            await editor.load();
+          });
           editor.StorageManager.setStepsBeforeSave(0);
           editor.clearDirtyCount();
           return;
@@ -142,7 +144,7 @@ export const IDB = (editor) => {
       clearTimeouts();
       const callback = async () => {
         isLoadEnd = false;
-
+        editor.trigger(InfinitelyEvents.storage.loadStart);
         const projectData = await db.projects.get(+projectID);
         const projectSettings = getProjectSettings().projectSettings;
         if (!projectData) return;
@@ -434,6 +436,7 @@ export const IDB = (editor) => {
           // editor.off("canvas:frame:load:body", loadFooterScriptsCallback);
           editor.Storage.setStepsBeforeSave(0);
           editor.clearDirtyCount();
+          editor.trigger(InfinitelyEvents.storage.loadEnd);
         }, 0);
         return {};
       };
@@ -466,6 +469,7 @@ export const IDB = (editor) => {
         () => {
           const runStore = async () => {
             const projectSettings = getProjectSettings().projectSettings;
+            editor.trigger(InfinitelyEvents.storage.storeStart);
             console.log("Before storing:", {
               dirty: editor.getDirtyCount(),
               steps: editor.StorageManager.getStepsBeforeSave(),
@@ -605,6 +609,7 @@ export const IDB = (editor) => {
 
                   console.log("Store complete:", { pageId: currentPageId });
                   console.timeEnd("storing end");
+                  editor.trigger(InfinitelyEvents.storage.storeEnd);
                   if (!projectSettings.enable_auto_save) {
                     toast.done(tId);
                     toast.success(
@@ -634,9 +639,11 @@ export const IDB = (editor) => {
               console.error("Storage failed:", err);
               if (!projectSettings.enable_auto_save) {
                 tId && toast.dismiss(tId);
-                toast.error(<ToastMsgInfo msg={`Faild to save project🙁`} />);
+                toast.error(<ToastMsgInfo msg={`Faild to save project🙁`} />, {
+                  progressClassName: "bg-[crimson]",
+                });
               }
-              res(false);
+              // res(false);
             } finally {
               editor.UndoManager.start();
             }

@@ -233,7 +233,7 @@ export const IframeControllers = () => {
         {Icons.zoomOut({ height: `100%`, width: 22 })}
       </Li>
 
-      {!projectSetting.disable_petite_vue && (
+      {/* {!projectSetting.disable_petite_vue && (
         <>
           <Li
             // refForward={redoRef}
@@ -269,7 +269,7 @@ export const IframeControllers = () => {
             justHover={true}
           />
         </>
-      )}
+      )} */}
 
       <Hr />
 

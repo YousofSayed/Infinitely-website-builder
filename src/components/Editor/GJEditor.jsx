@@ -188,7 +188,7 @@ export const GJEditor = memo(({ children }) => {
         // avoidDefaults: true,
         // nativeDnD:true,
         // showToolbar:true,
-        showOffsets: true,
+        showOffsets: false,
         keepUnusedStyles: true,
         clearStyles: false,
         

@@ -194,8 +194,10 @@ export const Iframe = memo(() => {
     editor.Canvas.refresh();
   }, [showAnimBuilder, showLayers]);
 
+  // const getPageName = ()=>{}
+
   const reloadPreview = () => {
-    setPreviewSrc(previewIframe.current.contentDocument.baseURI);
+    setPreviewSrc(new String(getCurrentPageName()));
     // getAndSetPreviewData(previewPageName, false, { firstPreview: false });
   };
 
@@ -214,6 +216,7 @@ export const Iframe = memo(() => {
   //   });
   //   console.log("i should send preview page");
   // },[]);
+
 
   useEffect(() => {
     if (!showPreview) {

@@ -108,6 +108,9 @@ export const Interaction = ({
           [`v-on:${interaction.event}`]: buildFunctionsFromActions(
             interaction.actions
           ),
+          ...(viewEvents.includes(interaction.event)
+            ? { ["v-view"]: true }
+            : {}),
         });
       }
     }
@@ -233,7 +236,10 @@ export const Interaction = ({
     clone[index].actions.splice(actionIndex, 1);
     const sle = editor.getSelected();
     const functionsFromParams = buildFunctionsFromActions(clone[index].actions);
+    // editor.getWrapper().find(`[${interactionId}="${id}"]`).forEach(cmp=>cmp.addAttributes({ [`v-on:${interaction.event}`]: functionsFromParams }))
     sle.addAttributes({ [`v-on:${interaction.event}`]: functionsFromParams });
+    console.log("actions delted");
+
     setInteractions(clone);
   };
 
@@ -241,10 +247,22 @@ export const Interaction = ({
     const clone = cloneDeep(interactions);
     clone.splice(index, 1);
     const sle = editor.getSelected();
-    if (viewEvents.includes(interaction.event)) {
-      sle.removeAttributes([`v-view`], { avoidStore: true });
-    }
-    sle.removeAttributes([`v-on:${interaction.event}`]);
+    editor
+      .getWrapper()
+      .find(`[${interactionId}="${id}"]`)
+      .forEach((cmp) => {
+        cmp.removeAttributes([`v-on:${interaction.event}`]);
+        const viewAttrs = Object.keys(cmp.getAttributes()).filter((key) =>
+          viewEvents.includes(key.replace(/v-on:|@/gi, ""))
+        );
+        console.log("attttttttrs : ", viewAttrs);
+
+        if (!viewAttrs.length) {
+          cmp.removeAttributes([`v-view`], { avoidStore: true });
+        }
+      });
+
+    // sle.removeAttributes([`v-on:${interaction.event}`]);
     setInteractions(clone);
   };
 

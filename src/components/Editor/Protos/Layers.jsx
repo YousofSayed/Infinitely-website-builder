@@ -6,12 +6,17 @@ import { Layer } from "./Layer";
 import { Virtuoso } from "react-virtuoso";
 import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { LazyList } from "../../Protos/LazyList";
 
 export const Layers = memo(() => {
   const editor = useEditorMaybe();
   const layerSecRef = useRef(refType);
   const [layers, setLayers] = useState(layersType);
-  const [animtedRef] = useAutoAnimate();
+  const [autoAnimate] = useAutoAnimate();
+  const layerstRef = useRef(refType);
+  useEffect(()=>{
+    layerstRef.current && autoAnimate(layerstRef.current)
+  },[layerstRef]) 
   useEffect(() => {
     if (!editor) return;
     console.log("layers");
@@ -64,8 +69,23 @@ export const Layers = memo(() => {
   return (
     <section id="layers" className="h-full hideScrollBar" ref={layerSecRef}>
       <main id="layer-wrapper" className="h-full  ">
+        {/* <LazyList list={layers} renderItem={(item , i) => {
+            const layer = layers[i];
+
+            return layer.props().layerable ? (
+              <Layer
+                layers={layers}
+                setLayers={setLayers}
+                layer={layer}
+                layersRef={layerstRef}
+                index={i}
+                key={i}
+              />
+            ) : null;
+          }} /> */}
+
         <Virtuoso
-          ref={animtedRef}
+          ref={layerstRef}
           className="hideScrollBar "
           totalCount={layers.length}
           // components={VirtosuoVerticelWrapper}
@@ -77,6 +97,8 @@ export const Layers = memo(() => {
                 layers={layers}
                 setLayers={setLayers}
                 layer={layer}
+                layersRef={layerstRef}
+                index={i}
                 key={i}
               />
             ) : null;

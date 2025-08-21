@@ -28,6 +28,12 @@ export const InfinitelyEvents = {
   },
   editorContainer:{
     update:`infinitely:editor-container:update`
+  },
+  storage:{
+    storeStart:'infinitely:storage:store:start',
+    storeEnd:'infinitely:storage:store:end',
+    loadStart:'infinitely:storage:load:start',
+    loadEnd:'infinitely:storage:load:end',
   }
 };
 

@@ -45,7 +45,8 @@ export const SmallButton = ({
           place="bottom-end"
           positionStrategy="fixed"
           opacity={1}
-          className={`capitalize font-semibold z-[1000]  ${tooltipClassName}`}
+          
+          className={`capitalize font-semibold z-[11000!important]  ${tooltipClassName}`}
         >
           {tooltipTitle || props.title}
         </Tooltip>

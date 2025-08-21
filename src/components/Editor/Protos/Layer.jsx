@@ -14,7 +14,7 @@ import { refType } from "../../../helpers/jsDocs";
 
 /**
  *
- * @param {{layers:import('grapesjs').Component[] , setLayers:Function ,wrapperId:string ,layer:import('grapesjs').Component , className:string , style : CSSStyleDeclaration}} param0
+ * @param {{layers:import('grapesjs').Component[] , setLayers:Function ,wrapperId:string ,layer:import('grapesjs').Component , layersRef:{current:HTMLElement | null} ,index:number, className:string , style : CSSStyleDeclaration}} param0
  * @returns
  */
 export const Layer = ({
@@ -22,6 +22,8 @@ export const Layer = ({
   layers,
   setLayers,
   wrapperId,
+  layersRef,
+  index,
   style = {},
   className = "",
 }) => {
@@ -62,7 +64,7 @@ export const Layer = ({
 
   useEffect(() => {
     const sleCallback = () => {
-      console.log("should fired");
+      // console.log("should fired");
 
       const sle = editor.getSelected();
       // const childs = layer.forEachChild((child) => {
@@ -76,11 +78,23 @@ export const Layer = ({
       if (sle.getId() == layer.getId()) {
         setSelected(true);
         setSelectedEl(sle);
-        animatedRef.current.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-          inline: "center",
-        });
+        console.log(index, layersRef.current);
+
+        // layersRef.current.scrollToIndex({
+        //   index: index,
+        //   align: "center", // or 'center', 'end'
+        //   behavior: "smooth", // or 'auto'
+        //   // offset: 1000,
+        //   // alignToTop: true, // Aligns the item to the top of the viewport
+        //   // offset: 0, //
+        // });
+        // setTimeout(()=>{
+        //   animatedRef.current.scrollIntoView({
+        //   behavior: "smooth",
+        //   // block: "start",
+        //   // inline: "start",
+        // });
+        // })
       } else {
         setSelected(false);
         setSelectedEl(null);
@@ -96,7 +110,7 @@ export const Layer = ({
 
   useEffect(() => {
     if (!editor || !editor?.getSelected?.()) return;
-    console.log("layer should work");
+    // console.log("layer should work");
     // const childs = layer.forEachChild((child) => {
     //   const cond = Boolean(editor.getSelected().getId() == child.getId());
     //   console.log("from open  cond: ", cond);
@@ -113,14 +127,22 @@ export const Layer = ({
 
   useEffect(() => {
     const callbackSelected = () => {
-      console.log(editor.getSelected().toolbar);
-      
-      setTools(editor.getSelected().toolbar.map(tlb=>{
-        if(typeof tlb.command == 'string' && !tlb.command.includes("tlb-move")){
-          return null
-        }
-        return tlb
-      }).filter(Boolean));
+      // console.log(editor.getSelected().toolbar);
+
+      setTools(
+        editor
+          .getSelected()
+          .toolbar.map((tlb) => {
+            if (
+              typeof tlb.command == "string" &&
+              !tlb.command.includes("tlb-move")
+            ) {
+              return null;
+            }
+            return tlb;
+          })
+          .filter(Boolean)
+      );
       // console.log(editor.getSelected().toolbar);
     };
     const callbackDeSelected = () => {
@@ -148,6 +170,20 @@ export const Layer = ({
       cond && setOpenNested(cond);
     });
   }, [editor]);
+
+  useEffect(() => {
+    layersRef.current &&
+      layersRef.current.scrollToIndex({
+        index: index,
+        align: "center", // or 'center', 'end'
+        behavior: "smooth", // or 'auto'
+        // offset: 1000,
+        // alignToTop: true, // Aligns the item to the top of the viewport
+        // offset: 0, //
+      });
+    animatedRef.current &&
+      animatedRef.current.scrollIntoView({ behavior: "smooth" , block:'center' });
+  }, [isOpentNested, animatedRef, layersRef]);
 
   /**
    *
@@ -561,6 +597,8 @@ export const Layer = ({
                   //     ? `calc(100% -  ${lyr.parents().length * 10}px)`
                   //     : `100%`,
                   // }}
+                  layersRef={layersRef}
+                  index={index}
                   layer={lyr}
                   key={lyr.getId()}
                   layers={layers}
