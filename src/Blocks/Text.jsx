@@ -10,20 +10,20 @@ import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
 export const Text = ({ editor }) => {
   editor.Components.addType("text", {
     extend: "text",
-    view:{
-      onRender({model}){
-       doActionAndPreventSaving(editor , ()=>{
-         model.set({
-          droppable:false,
-          editable:true,
-        })
-       })
-      }
+    view: {
+      // onRender({model}){
+      //  doActionAndPreventSaving(editor , ()=>{
+      //    model.set({
+      //     droppable:false,
+      //     editable:true,
+      //   })
+      //  })
+      // }
     },
     isComponent: (el) => {
-      const svg = getParentNode((el)=>{
+      const svg = getParentNode((el) => {
         el.tagName && el.tagName.toLowerCase() === "svg";
-      } ,el);
+      }, el);
       const isSvg = svg && svg.tagName && svg.tagName.toLowerCase() === "svg";
       if (isSvg) return false;
       if (!el.tagName) return false;
@@ -41,6 +41,7 @@ export const Text = ({ editor }) => {
       defaults: {
         icon: reactToStringMarkup(Icons.text({ fill: "white" })),
         droppable: false,
+        editable: true,
         tagName: "p",
         components: `Insert your text here`,
         attributes: {

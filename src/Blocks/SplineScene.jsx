@@ -53,23 +53,23 @@ export const SplineScene = ({ editor }) => {
     },
     view: {
       onRender({ model }) {
-        model.set(
-          {
-            // draggable: false,
-            droppable: false,
-            // selectable: false,
-            // resizable:true
-          },
-          {
-            avoidStore: true, skipWatcherUpdates: true, avoidTransform: true
-          }
-          // undefined,
-          // {
-          //   avoidStore: true,
-          //   skipWatcherUpdates: true,
-          //   avoidTransformers: true,
-          // }
-        );
+        // model.set(
+        //   {
+        //     // draggable: false,
+        //     droppable: false,
+        //     // selectable: false,
+        //     // resizable:true
+        //   },
+        //   {
+        //     avoidStore: true, skipWatcherUpdates: true, avoidTransform: true
+        //   }
+        //   // undefined,
+        //   // {
+        //   //   avoidStore: true,
+        //   //   skipWatcherUpdates: true,
+        //   //   avoidTransformers: true,
+        //   // }
+        // );
 
         const child = model.components().models[0];
         if (!child) {
@@ -96,6 +96,7 @@ export const SplineScene = ({ editor }) => {
     },
     model: {
       defaults: {
+        droppable: false,
         icon: reactToStringMarkup(Icons.spline({ strokeColor: "white" })),
         tagName: `spline-wrapper`,
         name: "Spline",

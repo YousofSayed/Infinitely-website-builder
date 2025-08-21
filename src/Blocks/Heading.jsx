@@ -10,22 +10,23 @@ import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
  */
 export const Heading = ({ editor }) => {
   editor.Components.addType("heading", {
-    isComponent:(el)=>el.tagName && heading_tags.includes(el.tagName.toLowerCase()),
+    isComponent: (el) =>
+      el.tagName && heading_tags.includes(el.tagName.toLowerCase()),
     // extend: "text",
-    view:{
-      onRender({model}){
-        model.set({
-          droppable:true,
-          editable:true,
-        })
-      }
+    view: {
+      // onRender({ model }) {
+      //   model.set({
+      //     droppable: true,
+      //     editable: true,
+      //   });
+      // },
     },
     model: {
-      
       defaults: {
-        // droppable: false,
-        resizable:true,
-        icon:reactToStringMarkup(Icons.heading({fill:'white'})),
+        droppable: false,
+        resizable: true,
+        droppable: false,
+        icon: reactToStringMarkup(Icons.heading({ fill: "white" })),
         // tagName:'h1',
         attributes: {
           class: "p-10",
@@ -36,7 +37,7 @@ export const Heading = ({ editor }) => {
             name: "level",
             label: "Heading level",
             type: "select",
-            role:'attribute',
+            role: "attribute",
             keywords: heading_tags,
             callback({ editor, newValue }) {
               const sle = editor.getSelected();
@@ -50,8 +51,6 @@ export const Heading = ({ editor }) => {
             },
           },
         ]),
-        droppable: false,
-        resizable:true,
       },
     },
   });

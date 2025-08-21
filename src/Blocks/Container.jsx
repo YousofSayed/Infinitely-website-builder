@@ -11,12 +11,12 @@ import { defineTraits } from "../helpers/functions";
 export const Container = ({ editor }) => {
   editor.Components.addType("container", {
     view: {
-      onRender({ model }) {
-        model.set({
-          droppable: true,
-          draggable: true,
-        });
-      },
+      // onRender({ model }) {
+      //   model.set({
+      //     droppable: true,
+      //     draggable: true,
+      //   });
+      // },
     },
     model: {
       defaults: {

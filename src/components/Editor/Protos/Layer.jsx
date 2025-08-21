@@ -113,7 +113,14 @@ export const Layer = ({
 
   useEffect(() => {
     const callbackSelected = () => {
-      setTools(editor.getSelected().toolbar);
+      console.log(editor.getSelected().toolbar);
+      
+      setTools(editor.getSelected().toolbar.map(tlb=>{
+        if(typeof tlb.command == 'string' && !tlb.command.includes("tlb-move")){
+          return null
+        }
+        return tlb
+      }).filter(Boolean));
       // console.log(editor.getSelected().toolbar);
     };
     const callbackDeSelected = () => {
@@ -203,14 +210,16 @@ export const Layer = ({
       ref={animatedRef}
       id={layer.getId()}
       className={` flex flex-col  gap-2  items-center justify-between mb-2 rounded-lg   border-transparent transition-all  `}
-      style={{
-        opacity:
-          !layerProps.draggable && layerProps.type != "wrapper" ? 0.5 : 1,
-        pointerEvents:
-          !layerProps.draggable && layerProps.type != "wrapper"
-            ? "none"
-            : "auto",
-      }}
+      style={
+        {
+          // opacity:
+          //   !layerProps.draggable && layerProps.type != "wrapper" ? 0.5 : 1,
+          // pointerEvents:
+          //   !layerProps.draggable && layerProps.type != "wrapper"
+          //     ? "none"
+          //     : "auto",
+        }
+      }
     >
       <section
         draggable={true}
@@ -423,6 +432,14 @@ export const Layer = ({
         </section>
 
         <section
+          //   style={{
+          //   opacity:
+          //     !layerProps.draggable && layerProps.type != "wrapper" ? 0.5 : 1,
+          //   pointerEvents:
+          //     !layerProps.draggable && layerProps.type != "wrapper"
+          //       ? "none"
+          //       : "auto",
+          // }}
           className={`flex gap-2 items-center drag-icon-btn`}
           onClick={(ev) => {
             ev.stopPropagation();
@@ -500,7 +517,17 @@ export const Layer = ({
             </Tooltip>
           </>
 
-          <button className="cursor-grab ">
+          <button
+            style={{
+              opacity:
+                !layerProps.draggable && layerProps.type != "wrapper" ? 0.5 : 1,
+              pointerEvents:
+                !layerProps.draggable && layerProps.type != "wrapper"
+                  ? "none"
+                  : "auto",
+            }}
+            className="cursor-grab "
+          >
             {Icons.drag({ fill: selected ? "white" : undefined })}
           </button>
         </section>

@@ -116,11 +116,11 @@ export const Svg = (editor) => {
     view: {
       onRender({ model }) {
         doActionAndPreventSaving(editor, () => {
-          model.set({
-            // draggable: false,
-            droppable: false,
-            resizable: true,
-          });
+          // model.set({
+          //   // draggable: false,
+          //   droppable: false,
+          //   resizable: true,
+          // });
 
           const child = model.components().models[0];
           if (!child) {
@@ -144,6 +144,8 @@ export const Svg = (editor) => {
         icon: reactToStringMarkup(Icons.svg({ fill: "white" })),
         tagName: "infinitely-svg",
         // // content:reactToStringMarkup(Icons.svg({ fill: "white" })),
+        droppable: false,
+        resizable: true,
         attributes: {
           // xmlns: "http://www.w3.org/2000/svg",
           //   ...Object.fromEntries(

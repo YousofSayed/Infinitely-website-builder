@@ -12,12 +12,12 @@ export const Block = ({ editor }) => {
   editor.Components.addType("block", {
     isComponent: (el) => el.tagName == "DIV",
     view: {
-      onRender({ model }) {
-        model.set({
-          droppable: true,
-          draggable: true,
-        });
-      },
+      // onRender({ model }) {
+      //   model.set({
+      //     droppable: true,
+      //     draggable: true,
+      //   });
+      // },
     },
     model: {
       defaults: {

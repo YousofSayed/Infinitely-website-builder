@@ -20,12 +20,12 @@ export const Section = ({ editor }) => {
       return result;
     },
     view: {
-      onRender({ model }) {
-        model.set({
-          droppable: true,
-          draggable: true,
-        });
-      },
+      // onRender({ model }) {
+      //   model.set({
+      //     droppable: true,
+      //     draggable: true,
+      //   });
+      // },
     },
     model: {
       // init(){
