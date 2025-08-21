@@ -27,7 +27,7 @@ window["vIntersectionObserver"] = new IntersectionObserver(
     // rootMargin:'-50% 0% -50% 0%',
     // threshold: 0.5,
   }
-);
+); 
 const vIntersection = (ctx) => {
   // the element the directive is on
   console.log("ctttttttttttttttttttx : ", ctx.get(), ctx.el);
