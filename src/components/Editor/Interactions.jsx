@@ -54,6 +54,7 @@ const viewEvents = ["enterview", "leaveview", "view"];
 export const Interaction = ({
   interactions = interactionsType,
   setInteractions = () => {},
+  setInteractionsId = ()=>{},
   interaction = interactionType,
   id,
   index,
@@ -273,6 +274,7 @@ export const Interaction = ({
         .getWrapper()
         .find(`[${interactionId}="${id}"]`)
         .forEach((cmp) => cmp.removeAttributes([interactionId]));
+        setInteractionsId('');
     }
     setInteractions(clone);
     // sle.removeAttributes([`v-on:${interaction.event}`]);
@@ -528,7 +530,7 @@ export const Interactions = () => {
     }
   }, [interactionsId, interactionsState]);
 
-  const getAndSetIdHandle = async () => {
+  const getAndSetIdHandle = async (newInteractions = []) => {
     const projectData = await getProjectData();
     const sle = editor.getSelected();
     const sleAttributes = sle.getAttributes();
@@ -542,24 +544,25 @@ export const Interactions = () => {
         await db.projects.update(projectId, {
           interactions: {
             ...(projectData?.interactions || {}),
-            [interactionIdAttr]: [],
+            [interactionIdAttr]: newInteractions,
           },
         });
         setInteractionsId(interactionIdAttr);
-        // setInteractions([]);
+        setInteractions(newInteractions);
       } else {
-        setInteractions(projectData.interactions[interactionIdAttr]);
+        setInteractions(newInteractions);
       }
+
     } else {
       sle.addAttributes({ [interactionId]: uuid });
       await db.projects.update(projectId, {
         interactions: {
           ...projectData.interactions,
-          [uuid]: [],
+          [uuid]: newInteractions,
         },
       });
       setInteractionsId(uuid);
-      setInteractions([]);
+      setInteractions(newInteractions);
     }
   };
 
@@ -597,7 +600,7 @@ export const Interactions = () => {
     setEventName("");
   };
 
-  const pasteInteraction = (interaction = "") => {
+  const pasteInteraction = async(interaction = "") => {
     const parsedInteraction = parse(interaction);
     if (
       !(
@@ -609,7 +612,19 @@ export const Interactions = () => {
       toast.error(<ToastMsgInfo msg={`Invalid interaction!`} />);
       return;
     }
-    setInteractions([...interactionsState, parsedInteraction]);
+    console.log('parsed Acttions' , parsedInteraction);
+    
+    if (
+      interactionsState.some(
+        (interaction) =>
+          interaction.event.toLowerCase() == parsedInteraction.event.toLowerCase()
+      )
+    ) {
+      toast.warn(<ToastMsgInfo msg={`You already use this interaction...!`} />);
+      return;
+    }
+    await getAndSetIdHandle([...interactionsState, parsedInteraction])
+    // setInteractions([...interactionsState, parsedInteraction]);
   };
 
   return (
@@ -652,6 +667,7 @@ export const Interactions = () => {
               index={i}
               interactions={interactionsState}
               setInteractions={setInteractions}
+              setInteractionsId={setInteractionsId}
               interaction={interaction}
             />
           </AccordionItem>
