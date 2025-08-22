@@ -97,7 +97,13 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(event.request.url);
   let pathname = parseTextToURI(url.pathname);
-  const routePrefixes = ["/edite/", "/preview/", "/workspace/", "/add-blocks/"];
+  const routePrefixes = [
+    "/edite/",
+    "/preview/",
+    "/workspace/",
+    "/add-blocks/",
+    "motions",
+  ];
   // console.warn("Pathh from sw before", pathname);
   for (const prefix of routePrefixes) {
     if (pathname.startsWith(prefix)) {
@@ -183,6 +189,8 @@ self.addEventListener("fetch", (event) => {
                 file,
                 folderPath,
                 entryPoint,
+                fileName,
+                ev.data.fileName,
                 url.pathname,
                 pathname
               );
@@ -194,8 +202,8 @@ self.addEventListener("fetch", (event) => {
             }
 
             if (isExisit && file) {
-              console.log(`File from sw is : ` , file);
-              
+              console.log(`File from sw is : `, file);
+
               resolve(file);
               fileBraodCastChannel.close();
               opfsBroadcastChannel.close();

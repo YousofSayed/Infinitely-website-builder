@@ -708,9 +708,9 @@ export async function uploadAssets(props) {
       isNotMessage: true,
       msg: toastId,
       type: "dismiss",
-       dataProps:{
-        progressClassName:'bg-[crimson]'
-      }
+      dataProps: {
+        progressClassName: "bg-[crimson]",
+      },
     });
     self.postMessage({
       command: "toast",
@@ -1204,9 +1204,9 @@ export async function createProject({ data }) {
       isNotMessage: true,
       msg: tId,
       type: "dismiss",
-      dataProps:{
-        progressClassName:'bg-[crimson]'
-      }
+      dataProps: {
+        progressClassName: "bg-[crimson]",
+      },
     });
 
     self.postMessage({
@@ -1224,7 +1224,7 @@ export async function initOPFS({ id }) {
 }
 
 export async function listenToOPFSBroadcastChannel({ id }) {
-  console.log("INited listenToOPFSBroadcastChannel");
+  console.log("INited listenToOPFSBroadcastChannel", id);
 
   await initOPFS({ id });
   const opfsBc = new BroadcastChannel("opfs");
@@ -1254,17 +1254,25 @@ export async function listenToOPFSBroadcastChannel({ id }) {
         }
 
         const fileHandle = await opfs.getFile(
-          `${getProjectRoot(id)}/${data.folderPath ? `${data.folderPath}/` : ''}${data.fileName}`
+          `${getProjectRoot(id)}/${
+            data.folderPath ? `${data.folderPath}/` : ""
+          }${data.fileName}`
         );
         const file = await fileHandle.getOriginFile();
 
         console.log(
           "recived path : ",
-          `projects/project-${opfs.id || data.projectId}/${data.folderPath}/${
-            data.fileName
-          }`,
-           `${getProjectRoot(id)}/${data.folderPath ? `data.folderPath/` : ''}${data.fileName}`,
-          file
+          `${getProjectRoot(id)}/${
+            data.folderPath ? `${data.folderPath}/` : ""
+          }${data.fileName}`,
+          file,
+          {
+            type: "sendFile",
+            file: file,
+            isExisit: file ? true : false,
+            fileName: fileHandle.name,
+            filePath: fileHandle.path,
+          }
         );
         if (!file) {
           throw new Error(`File not founded`);
@@ -1291,6 +1299,18 @@ export async function listenToOPFSBroadcastChannel({ id }) {
     }
     // { once: true }
   );
+  /**
+   *
+   * @param {MessageEvent} ev
+   */
+  const clean = (ev) => {
+    if (ev.data.command == "clean-opfs-broadcast") {
+      broadCastCleaner();
+      self.removeEventListener("message", clean);
+    }
+  };
+
+  self.addEventListener("message", clean);
 
   self.postMessage({
     command: "listenToOPFSBroadcastChannel",
@@ -1331,9 +1351,9 @@ export async function removeOPFSEntry({
       msg: toastId,
       type: "dismiss",
       isNotMessage: true,
-       dataProps:{
-        progressClassName:'bg-[crimson]'
-      }
+      dataProps: {
+        progressClassName: "bg-[crimson]",
+      },
     });
     throw new Error(error);
   }
@@ -1586,9 +1606,9 @@ export async function shareProject(props) {
       isNotMessage: true,
       msg: tId,
       type: "dismiss",
-       dataProps:{
-        progressClassName:'bg-[crimson]'
-      }
+      dataProps: {
+        progressClassName: "bg-[crimson]",
+      },
     });
 
     workerSendToast({

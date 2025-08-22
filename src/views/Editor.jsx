@@ -109,13 +109,21 @@ export function Editor({ params }) {
       props: { id: opfs.id },
     });
 
-    console.log("opfs id : ", opfs.id, opfs._id);
+    console.log(
+      "opfs id : ",
+      opfs.id,
+      opfs._id,
+      +localStorage.getItem(current_project_id)
+    );
     opfs.init(+localStorage.getItem(current_project_id));
+    routerWorker.postMessage({
+      command: "clean-opfs-broadcast",
+    });
     routerWorker.postMessage({
       command: "listenToOPFSBroadcastChannel",
       props: { id: +localStorage.getItem(current_project_id) },
     });
-
+    // initDBAssetsSw();
     getProjectSettings();
     // const broadCastCleaner = opfs.onBroadcast(
     //   "getFile",
