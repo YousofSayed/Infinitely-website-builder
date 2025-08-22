@@ -103,7 +103,7 @@ export const Interaction = ({
       .getWrapper()
       .find(`[${interactionId}="${id}"]`);
     for (const cmp of allSameInteractionsCmps) {
-      if (editor.getSelected() == cmp) continue;
+      // if (editor.getSelected() == cmp) continue;
       for (const interaction of interactions) {
         cmp.addAttributes({
           [`v-on:${interaction.event}`]: buildFunctionsFromActions(
@@ -623,6 +623,7 @@ export const Interactions = () => {
       toast.warn(<ToastMsgInfo msg={`You already use this interaction...!`} />);
       return;
     }
+
     await getAndSetIdHandle([...interactionsState, parsedInteraction])
     // setInteractions([...interactionsState, parsedInteraction]);
   };
