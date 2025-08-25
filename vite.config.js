@@ -64,6 +64,7 @@ export default defineConfig({
 
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,tff,webp}"],
+        maximumFileSizeToCacheInBytes:`10485760`,
         runtimeCaching: [
     //       {
     //         handler({event , request , url , params}){
