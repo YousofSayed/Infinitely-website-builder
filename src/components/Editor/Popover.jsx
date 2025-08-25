@@ -16,6 +16,7 @@ import { currentRefType, refType } from "../../helpers/jsDocs";
 import Portal from "./Portal";
 import { Icons } from "../Icons/Icons";
 import interact from "interactjs";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 
 export const Popover = ({
   targetRef = currentRefType,
@@ -39,6 +40,7 @@ export const Popover = ({
    */
   const dragHandleRef = useRef();
   const [isResize, setIsResize] = useState(false);
+  const [autoAnimate] = useAutoAnimate();
   const [showDragLayer, setShowDragLayer] = useRecoilState(showDragLayerState);
   const popoverResizeDataRef = useRef({
     width,
@@ -60,18 +62,21 @@ export const Popover = ({
   });
 
   useLayoutEffect(() => {
-    console.log(
-      "popoverdata : ",
-      popoverData,
-      window.innerWidth,
-      popoverData.left + popoverData.width - window.innerWidth
-    );
+    popoverRef.current && autoAnimate(popoverRef.current);
+  }, [popoverRef]),
+    useLayoutEffect(() => {
+      console.log(
+        "popoverdata : ",
+        popoverData,
+        window.innerWidth,
+        popoverData.left + popoverData.width - window.innerWidth
+      );
 
-    setPopoverData({
-      ...popoverData,
-      isOpen: isOpen,
-    });
-  }, [isOpen]);
+      setPopoverData({
+        ...popoverData,
+        isOpen: isOpen,
+      });
+    }, [isOpen]);
 
   useLayoutEffect(() => {
     const closeMenuCallback = () => {
@@ -278,8 +283,8 @@ export const Popover = ({
   const calcWhereAmI = () => {
     const { top, left, right, bottom } =
       targetRef.current.getBoundingClientRect();
-    console.log(width , height , 'reals');
-    
+    console.log(width, height, "reals");
+
     setPopoverData({
       ...popoverData,
       parentWidth: targetRef.current.offsetWidth,
@@ -317,7 +322,6 @@ export const Popover = ({
             onClick={(ev) => {
               ev.stopPropagation();
             }}
-            
             id="popover"
             className={`${
               isResize && `[&_*]:select-none`

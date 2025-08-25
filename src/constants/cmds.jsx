@@ -2,6 +2,7 @@ import { toast } from "react-toastify";
 import { uniqueID } from "../helpers/cocktail";
 import {
   getInfinitelySymbolInfo,
+  getProjectSettings,
   isValidAttribute,
 } from "../helpers/functions";
 import {
@@ -30,6 +31,8 @@ const defaultDirectiveCallback = async ({
      * @type {import('grapesjs').Component}
      */
     const sle = editor.getSelected();
+    const projectSettings = getProjectSettings();
+
     const modifiersString =
       modifiers && modifiers.length
         ? modifiers.map((modifier) => `.${modifier}`).join("")
@@ -41,9 +44,9 @@ const defaultDirectiveCallback = async ({
     }${modifiersString}`;
 
     if (!attribute.trim() || !value.trim()) {
-      console.log('from remover : ' , attribute , value , sle);
-      
-      sle.removeAttributes(attribute );
+      console.log("from remover : ", attribute, value, sle);
+
+      sle.removeAttributes(attribute);
       editor.trigger(InfinitelyEvents.directives.update);
       return;
     }
@@ -61,7 +64,9 @@ const defaultDirectiveCallback = async ({
         );
       }
       await callback?.();
-      await editor.store();
+
+      projectSettings.projectSettings.enable_auto_save &&
+        (await editor.store());
     } else {
       console.log(attribute);
 
@@ -253,12 +258,12 @@ export const directives = [
   },
 
   {
-    directive:'v-view',
-    name:'view',
-    id:uniqueID(),
-    type:'check',
-    showInAllComponents:true,
-    preventDefault:false,
+    directive: "v-view",
+    name: "view",
+    id: uniqueID(),
+    type: "check",
+    showInAllComponents: true,
+    preventDefault: false,
     callback({ editor, value, callback }) {
       defaultDirectiveCallback({
         editor,
@@ -271,14 +276,14 @@ export const directives = [
   },
 
   {
-    directive:'v-ref',
-    name:'ref',
-    id:uniqueID(),
-    type:'code',
-    showInAllComponents:true,
-    preventDefault:false,
-    codeLang:'text',
-     callback({ editor, value, callback }) {
+    directive: "v-ref",
+    name: "ref",
+    id: uniqueID(),
+    type: "code",
+    showInAllComponents: true,
+    preventDefault: false,
+    codeLang: "text",
+    callback({ editor, value, callback }) {
       defaultDirectiveCallback({
         editor,
         directive: this.directive,
@@ -287,7 +292,7 @@ export const directives = [
         callback,
       });
     },
-  }
+  },
 
   // {
   //   directive: "x-modelable",

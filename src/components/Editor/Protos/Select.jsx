@@ -1,6 +1,7 @@
 import React, {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   useTransition,
@@ -69,6 +70,7 @@ export const Select = ({
   // const [value, setValue] = useState(value);
   const inputRef = useRef();
   const selectRef = useRef();
+  const containerRef = useRef();
   const menuRef = useRef();
   const choosenKeyword = useRef();
   const editorRef = useRef();
@@ -76,9 +78,10 @@ export const Select = ({
   const popoverRef = useRecoilValue(popoverRefState);
   const [animatRef] = useAutoAnimate();
 
-  useEffect(()=>{
-    selectRef.current && animatRef(selectRef.current)
-  },[selectRef])
+  useLayoutEffect(() => {
+    selectRef.current && animatRef(selectRef.current);
+    containerRef.current && animatRef(containerRef.current);
+  }, [selectRef, containerRef]);
 
   useEffect(() => {
     if (
@@ -131,7 +134,7 @@ export const Select = ({
     return () => {
       document.removeEventListener("click", closeMenuCallback);
     };
-  },[]);
+  }, []);
 
   useEffect(() => {
     setValue(value);
@@ -150,8 +153,9 @@ export const Select = ({
   };
 
   function findIndex(keywords = [], serachvalue) {
-    const index = keywords.findIndex((value, i) =>
-      value.toLowerCase().trim() == (serachvalue.toLowerCase() || "").trim()
+    const index = keywords.findIndex(
+      (value, i) =>
+        value.toLowerCase().trim() == (serachvalue.toLowerCase() || "").trim()
     );
 
     return index;
@@ -278,20 +282,25 @@ export const Select = ({
       ref={selectRef}
       className={`w-full p-1  h-fit rounded-lg flex  ${
         wrap && "flex-wrap gap-3 py-1 pl-2"
-      }  gap-2  ${className ? className : "bg-slate-800"} h-full flex ${label ? `p-1 flex-col` : `items-center p-1 `}`}
+      }  gap-2  ${className ? className : "bg-slate-800"} h-full flex ${
+        label ? `p-1 flex-col` : `items-center p-1 `
+      }`}
     >
       {icon}
       {label ? (
-        <FitTitle className="capitalize flex items-center justify-center overflow-hidden text-ellipsis custom-font-size w-fit flex-shrink-0 ">{label.replaceAll(/(\s+)?\:/gi, "")} </FitTitle>
+        <FitTitle className="capitalize flex items-center justify-center overflow-hidden text-ellipsis custom-font-size w-fit flex-shrink-0 ">
+          {label.replaceAll(/(\s+)?\:/gi, "")}{" "}
+        </FitTitle>
       ) : null}
       <div
+        ref={containerRef}
         className={`h-full w-full ${
           isRelative ? "relative" : ""
         }  flex items-center flex-nowrap justify-center    rounded-lg ${
           containerClassName ? containerClassName : "bg-slate-900"
         }`}
         onClick={(ev) => {
-                      console.log('clcickckckc');
+          console.log("clcickckckc");
 
           selectRef.current.click();
           preventInput &&
@@ -315,8 +324,8 @@ export const Select = ({
           type="text"
           placeholder={placeholder || label}
           onClick={(ev) => {
-            console.log('clcickckckc');
-            
+            console.log("clcickckckc");
+
             ev.stopPropagation();
             selectRef.current.click();
             setNewKeywords(keywords);

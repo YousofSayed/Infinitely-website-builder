@@ -510,6 +510,8 @@ export class OPFS {
     const files: OTFile[] = [];
     const dirHandle = await dir(path);
     const children = await dirHandle.children();
+    console.log('childens: ' , children);
+    
     // if (options.chunks) {
     //   const chunk = children.slice(
     //     options.chunksStart,
@@ -566,6 +568,8 @@ export class OPFS {
         files.push(entry);
       } else if (entry.kind === "dir" && options.recursive) {
         const subFiles = await this.getAllFiles(entry.path, options);
+        console.log('sups  : ' , subFiles);
+        
         files.push(...subFiles);
       }
     }

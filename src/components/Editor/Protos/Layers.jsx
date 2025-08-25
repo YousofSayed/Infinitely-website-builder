@@ -69,7 +69,7 @@ export const Layers = memo(() => {
   return (
     <section id="layers" className="h-full hideScrollBar" ref={layerSecRef}>
       <main id="layer-wrapper" className="h-full  ">
-        {/* <LazyList list={layers} renderItem={(item , i) => {
+        <LazyList list={layers} renderItem={(item , i) => {
             const layer = layers[i];
 
             return layer.props().layerable ? (
@@ -82,9 +82,9 @@ export const Layers = memo(() => {
                 key={i}
               />
             ) : null;
-          }} /> */}
+          }} />
 
-        <Virtuoso
+        {/* <Virtuoso
           ref={layerstRef}
           className="hideScrollBar "
           totalCount={layers.length}
@@ -103,7 +103,7 @@ export const Layers = memo(() => {
               />
             ) : null;
           }}
-        />
+        /> */}
         {/* {layers.map((layer, i) => {
           return (
             // <section

@@ -34,6 +34,7 @@ const vIntersection = (ctx) => {
   const val = ctx.get();
 
   val && window["vIntersectionObserver"].observe(ctx.el);
+   window["vIntersectionObserver"].observe(ctx.el);
 
   console.log("intersction plugin actaivated");
 

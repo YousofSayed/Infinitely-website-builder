@@ -40,9 +40,9 @@ export const Menu = ({
   const prevNumber = useRef();
   const listRef = useRef();
   const [animatRef] = useAutoAnimate();
-  useEffect(()=>{
-    listRef.current && animatRef(listRef.current)
-  },[listRef])
+  // useEffect(()=>{
+  //   listRef.current && animatRef(listRef.current)
+  // },[listRef])
   // useEffect(() => {
   //   console.log("length ooo : ", keywords.length, keywords.slice(100, 5000));
   //   const newValue = keywordsLengthRef.current + 100;

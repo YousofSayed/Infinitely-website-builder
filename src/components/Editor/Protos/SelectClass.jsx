@@ -71,7 +71,6 @@ export const SelectClass = memo(() => {
   useEffect(() => {
     if (!editor) return;
     console.log("effectoooo");
-    getClassFromInlineWorker();
 
     /**
      *
@@ -93,7 +92,11 @@ export const SelectClass = memo(() => {
     return () => {
       classesFinderWorker.removeEventListener("message", callback);
     };
-  }, [editor , selectedEl]);
+  }, [allStyleSheetClasses]);
+
+  useEffect(() => {
+    getClassFromInlineWorker();
+  }, [editor, selectedEl]);
 
   useEffect(() => {
     if (!editor) return;
@@ -213,10 +216,10 @@ export const SelectClass = memo(() => {
       },
     });
     console.log(
-      "postting message",
-    //  parse(editor.getCss({
-    //     keepUnusedStyles: true,
-    //   })).stylesheet.rules
+      "postting message"
+      //  parse(editor.getCss({
+      //     keepUnusedStyles: true,
+      //   })).stylesheet.rules
     );
   };
   // const getSh

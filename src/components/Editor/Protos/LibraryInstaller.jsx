@@ -8,6 +8,7 @@ import { MultiTab } from "../../Protos/Multitabs";
 import { ViewportList } from "react-viewport-list";
 import { Virtuoso } from "react-virtuoso";
 import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
+import { Input } from "./Input";
 
 export const LibraryInstaller = () => {
   const [libraries, setLibraries] = useState(JSLibrariesType);
@@ -62,7 +63,7 @@ export const LibraryInstaller = () => {
 
       <main className="flex flex-col gap-2 h-full">
         <div className=" sticky top-0 left-0">
-          <input
+          <Input
             id="search"
             type="text"
             placeholder="Search by library name..."

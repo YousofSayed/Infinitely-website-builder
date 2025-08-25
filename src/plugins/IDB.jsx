@@ -41,6 +41,7 @@ let loadFooterScriptsCallback, loadHeadScriptsCallback, loadMainScriptsCallback;
 let storeTimeout;
 let pageBuilderTimeout;
 let loadTimeout, appenderTimeout;
+let currentPageName = localStorage.getItem(current_page_id);
 
 /**
  *
@@ -182,7 +183,8 @@ export const IDB = (editor) => {
           if (!localStorage.getItem(current_page_id)) {
             localStorage.setItem(current_page_id, "index");
           }
-          const currentPageId = localStorage.getItem(current_page_id); //it will return void so that will make it take second choics : "index"
+          currentPageName = localStorage.getItem(current_page_id);
+          const currentPageId = currentPageName; //it will return void so that will make it take second choics : "index"
           const currentPage = projectData.pages[`${currentPageId}`];
           // const htmlPage = await currentPage.html.text();
           // const htmlPage = await (
@@ -485,7 +487,7 @@ export const IDB = (editor) => {
               }
 
               const projectID = +localStorage.getItem(current_project_id);
-              const currentPageId = localStorage.getItem(current_page_id);
+              const currentPageId = currentPageName;
               const currentSymbolId = sessionStorage.getItem(current_symbol_id);
               const projectData = await db.projects.get(projectID);
               const files = {};

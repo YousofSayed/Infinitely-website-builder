@@ -41,7 +41,7 @@ import { ScrollableToolbar } from "../Protos/ScrollableToolbar";
 
 const actionsKeywords = actions.map((action) => action.label);
 const advancedParse = (value) => {
-  console.log("before parse value : ", value);
+  // console.log("before parse value : ", value);
 
   try {
     return JSON.parse(value); // new Function(`return ${value}`)();
@@ -54,7 +54,7 @@ const viewEvents = ["enterview", "leaveview", "view"];
 export const Interaction = ({
   interactions = interactionsType,
   setInteractions = () => {},
-  setInteractionsId = ()=>{},
+  setInteractionsId = () => {},
   interaction = interactionType,
   id,
   index,
@@ -96,26 +96,6 @@ export const Interaction = ({
       setInteractions(clone);
     }
   };
-
-  useEffect(() => {
-    if (!editor) return;
-    const allSameInteractionsCmps = editor
-      .getWrapper()
-      .find(`[${interactionId}="${id}"]`);
-    for (const cmp of allSameInteractionsCmps) {
-      // if (editor.getSelected() == cmp) continue;
-      for (const interaction of interactions) {
-        cmp.addAttributes({
-          [`v-on:${interaction.event}`]: buildFunctionsFromActions(
-            interaction.actions
-          ),
-          ...(viewEvents.includes(interaction.event)
-            ? { ["v-view"]: true }
-            : {}),
-        });
-      }
-    }
-  }, [interactions, editor]);
 
   /**
    *
@@ -228,7 +208,9 @@ export const Interaction = ({
 
     const sle = editor.getSelected();
     const functionsFromParams = buildFunctionsFromActions(clone[0].actions);
-    sle.addAttributes({ [`v-on:${interaction.event}`]: functionsFromParams });
+    console.log(`functionsFromParams : `, functionsFromParams);
+
+    // sle.addAttributes({ [`v-on:${interaction.event}`]: functionsFromParams });
     setInteractions(clone);
   };
 
@@ -263,18 +245,20 @@ export const Interaction = ({
         }
       });
 
-      // console.log(clone  , 'cloooooooooone',);
-      
+    // console.log(clone  , 'cloooooooooone',);
+
     if (!clone.length) {
-      console.log('id is : ' , id ,  editor
-        .getWrapper()
-        .find(`[${interactionId}="${id}"]`));
-      
+      console.log(
+        "id is : ",
+        id,
+        editor.getWrapper().find(`[${interactionId}="${id}"]`)
+      );
+
       editor
         .getWrapper()
         .find(`[${interactionId}="${id}"]`)
         .forEach((cmp) => cmp.removeAttributes([interactionId]));
-        setInteractionsId('');
+      setInteractionsId("");
     }
     setInteractions(clone);
     // sle.removeAttributes([`v-on:${interaction.event}`]);
@@ -285,7 +269,7 @@ export const Interaction = ({
    * @param {import('../../helpers/types').Actions} actions
    */
   const buildFunctionsFromActions = (actions) => {
-    console.log(actions);
+    // console.log(actions);
 
     const functionsFromParams = actions
       .map(
@@ -297,18 +281,20 @@ export const Interaction = ({
               console.log("value", value);
               return typeof value == "string"
                 ? value.replaceAll(`self`, `[${interactionId}="${id}"]`)
-                : value || "";
+                : value;
             })
             .join(",")})`
       )
       .join(";");
+
+    // console.log('functionsFromParams' , functionsFromParams);
 
     return functionsFromParams;
   };
 
   const pasteAction = (action = "") => {
     const parsedAction = parse(action);
-    if (!(parsedAction && parsedAction?.name)) {
+    if (!(parsedAction && parsedAction?.name && parsedAction?.function)) {
       toast.error(<ToastMsgInfo msg={`Invalid action!`} />);
       return;
     }
@@ -441,14 +427,16 @@ export const Interaction = ({
                         <p className="text-slate-400 capitalize">{key}</p>
                         <SwitchButton
                           className="p-[unset]"
-                          defaultValue={value.value}
+                          defaultValue={parse(value.value)}
                           placeholder={key}
-                          onActive={(value) => {
+                          onSwitch={(value) => {
+                            console.log("switch : ", key, stringify(value), i);
+
                             addValueToActionParam(key, stringify(value), i);
                           }}
-                          onUnActive={(value) => {
-                            addValueToActionParam(key, stringify(value), i);
-                          }}
+                          // onUnActive={(value) => {
+                          //   addValueToActionParam(key, stringify(value), i);
+                          // }}
                         />
                       </div>
                     ) : null
@@ -481,24 +469,76 @@ export const Interactions = () => {
   const editor = useEditorMaybe();
   const projectId = +localStorage.getItem(current_project_id);
 
+  /**
+   *
+   * @param {import('../../helpers/types').Actions} actions
+   */
+  const buildFunctionsFromActions = (actions) => {
+    // console.log(actions);
+
+    const functionsFromParams = actions
+      .map(
+        (action) =>
+          `${action.function}(${Object.values(action.params)
+            .map((value) => {
+              value = isPlainObject(value) ? value.value : value;
+              value = advancedParse(value);
+              console.log("value", value);
+              return typeof value == "string"
+                ? value.replaceAll(
+                    `self`,
+                    `[${interactionId}="${interactionsId}"]`
+                  )
+                : value ;
+            })
+            .join(",")})`
+      )
+      .join(";");
+
+   
+    console.log(`functionsFromParams 222 : `, functionsFromParams);
+
+    return functionsFromParams;
+  };
+
   useEffect(() => {
     if (!selectedEl && !editor) return;
     // getAndSetIdHandle();
-   (async()=>{
-     const sle = editor.getSelected();
-    const intersectionIdAttr = sle.getAttributes()[interactionId]
-    if(!intersectionIdAttr){
-      setInteractions([]);
-      setInteractionsId(intersectionIdAttr)
-    }else{
-      
-      const projectData = await getProjectData();
-      console.log('elseeee', projectData.interactions[intersectionIdAttr]);
-      setInteractions(projectData.interactions[intersectionIdAttr]);
-      setInteractionsId(intersectionIdAttr)
-    }
-   })()
+    (async () => {
+      const sle = editor.getSelected();
+      const intersectionIdAttr = sle.getAttributes()[interactionId];
+      if (!intersectionIdAttr) {
+        setInteractions([]);
+        setInteractionsId(intersectionIdAttr);
+      } else {
+        const projectData = await getProjectData();
+        console.log("elseeee", projectData.interactions[intersectionIdAttr]);
+        setInteractions(projectData.interactions[intersectionIdAttr]);
+        setInteractionsId(intersectionIdAttr);
+      }
+    })();
   }, [selectedEl, editor]);
+
+  useEffect(() => {
+    if (!editor) return;
+    const allSameInteractionsCmps = editor
+      .getWrapper()
+      .find(`[${interactionId}="${interactionsId}"]`);
+    for (const cmp of allSameInteractionsCmps) {
+      // if (editor.getSelected() == cmp) continue;
+      for (const interaction of interactionsState) {
+        cmp.addAttributes({
+          [`v-on:${interaction.event}`]: buildFunctionsFromActions(
+            interaction.actions
+          ),
+          ...(viewEvents.includes(interaction.event)
+            ? { ["v-view"]: true }
+            : {}),
+        });
+      }
+    }
+    console.log("interactions from all effetc : ", interactionsState);
+  }, [interactionsState, interactionsId, editor]);
 
   //   useLiveQuery(async () => {
   //     const interactionsFromDB = await (await getProjectData()).interactions;
@@ -552,9 +592,10 @@ export const Interactions = () => {
       } else {
         setInteractions(newInteractions);
       }
-
     } else {
       sle.addAttributes({ [interactionId]: uuid });
+      console.log("from else");
+
       await db.projects.update(projectId, {
         interactions: {
           ...projectData.interactions,
@@ -600,7 +641,7 @@ export const Interactions = () => {
     setEventName("");
   };
 
-  const pasteInteraction = async(interaction = "") => {
+  const pasteInteraction = async (interaction = "") => {
     const parsedInteraction = parse(interaction);
     if (
       !(
@@ -612,19 +653,20 @@ export const Interactions = () => {
       toast.error(<ToastMsgInfo msg={`Invalid interaction!`} />);
       return;
     }
-    console.log('parsed Acttions' , parsedInteraction);
-    
+    console.log("parsed Acttions", parsedInteraction);
+
     if (
       interactionsState.some(
         (interaction) =>
-          interaction.event.toLowerCase() == parsedInteraction.event.toLowerCase()
+          interaction.event.toLowerCase() ==
+          parsedInteraction.event.toLowerCase()
       )
     ) {
       toast.warn(<ToastMsgInfo msg={`You already use this interaction...!`} />);
       return;
     }
 
-    await getAndSetIdHandle([...interactionsState, parsedInteraction])
+    await getAndSetIdHandle([...interactionsState, parsedInteraction]);
     // setInteractions([...interactionsState, parsedInteraction]);
   };
 

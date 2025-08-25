@@ -68,6 +68,17 @@ body {
 [data-slot="base"] {
   will-change: contents;
 }
+
+.monaco-editor,
+.monaco-editor .overflow-guard {
+  overflow: visible !important;
+}
+.monaco-editor-hover,
+.monaco-hover {
+  z-index: 999999 !important;
+}
+
+
 /* svg{
   zoom: .8
 } */

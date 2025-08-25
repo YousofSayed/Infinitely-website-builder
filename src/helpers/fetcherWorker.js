@@ -1,5 +1,5 @@
-import { shareProject } from "./workerCommands";
+import { installTypes, shareProject } from "./workerCommands";
 import { doWorkerPattern } from "./workersPattern";
 
-const commands = {shareProject};
+const commands = {shareProject,installTypes,};
 doWorkerPattern(commands);

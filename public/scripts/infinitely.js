@@ -851,16 +851,34 @@ function doAnimation(
       return;
     }
     if (el) {
-      if (once && el.hasAttribute("animated")) return;
-      console.log(`From do animtaion`, el);
+      // if (once && el.hasAttribute("animated")) {
+      //   return;
+      // } else if (!once && el.hasAttribute("animated")) {
+      //   el.style.animation = "";
+      //   el.setAttribute("animated", "false");
+      //   el.style.animation = `${name || ""} ${duration || "1s"} ${
+      //     timingFunction || "ease"
+      //   } ${delay || "0s"} ${iterationCount || "1"} ${direction || "normal"} ${
+      //     fillMode || "forwards"
+      //   } ${playState || "running"}`;
+      // }
+      if (!once) {
+        el.style.animation = "none"; // remove animation
+        // force reflow so browser acknowledges the reset
+        void el.offsetWidth;
+      }
+      console.log(`From do animtaion`, el, once);
       el.style.animation = `${name || ""} ${duration || "1s"} ${
         timingFunction || "ease"
       } ${delay || "0s"} ${iterationCount || "1"} ${direction || "normal"} ${
         fillMode || "forwards"
       } ${playState || "running"}`;
-      el.addEventListener("animationstart", (ev) => {
-        el.setAttribute("animated", "true");
-      });
+      // el.addEventListener("animationstart", (ev) => {
+      //   el.setAttribute("animated", "true");
+      // });
+      // el.addEventListener("animationend", () => {
+      //   el.style.animation = "";
+      // });
     }
   });
 }

@@ -831,13 +831,11 @@ export const Commands = memo(() => {
                                     //   console.log("dsa", obj, key);
 
                                     // }, 50);
-
-                                    cmd.callback({
-                                      editor,
-                                      targetAttribute: key,
-                                      modifiers: obj[key]?.modifires,
-                                      suffix: obj[key]?.suffixes,
-                                      value: cmd.nestedMaybeObjectModel
+                                    console.log('vaaaaaaaaaaaaaaaaalls' , value);
+                                     cmd.nestedCallback({
+                                    editor,
+                                    targetAttribute: key,
+                                    value:  cmd.nestedMaybeObjectModel
                                         ? (() => {
                                             const clearedValue =
                                               clearCommnets(value);
@@ -853,7 +851,8 @@ export const Commands = memo(() => {
                                             }
                                           })()
                                         : value,
-                                    });
+                                  });
+                                   
                                   },
                                   onMount(mEditor) {
                                     handleStyleAndClassAttributes(

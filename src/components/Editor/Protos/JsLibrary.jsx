@@ -11,7 +11,9 @@ import { jsToDataURL } from "../../../helpers/functions";
 import { html, uniqueID } from "../../../helpers/cocktail";
 import { Input } from "./Input";
 import { opfs } from "../../../helpers/initOpfs";
-import { defineRoot, getFileSize } from "../../../helpers/bridge";
+import { defineRoot, doGlobalType, getFileSize, hasExportDefault } from "../../../helpers/bridge";
+import { Tooltip } from "react-tooltip";
+import { fetcherWorker } from "../../../helpers/defineWorkers";
 
 export const JsLibrary = ({
   library = JSLibraryType,
@@ -25,112 +27,144 @@ export const JsLibrary = ({
     jsType: "",
     header: false,
     footer: true,
+    globalName: "",
   });
 
   const install = async ({ fileUrl, isHeader = false, isCDN = false }) => {
     try {
-    const tId = toast.loading(<ToastMsgInfo msg={`Installing ${library.name} library`}/>);
-    const projectId = localStorage.getItem(current_project_id);
-    const response = await fetch(fileUrl);
-    const responseStatus = response.status;
-    const resBlob = await response.blob();
-    const isJs = resBlob.type.includes("javascript");
-    const isCss = resBlob.type.includes("css");
-    const ext = (isJs && ".js") || (isCss && ".css") || "";
-    const fileName = library.name.replaceAll(ext, "") + ext;
-    const path = `libs/${
-      isCss ? "css" : isJs ? (isHeader ? "js/header" : "js/footer") : null
-    }/${fileName}`;
-    
-    const responseData = new File(
-      [resBlob],
-      `${fileName}`,
-      {
-        type: resBlob.type,
+      const tId = toast.loading(
+        <ToastMsgInfo msg={`Installing ${library.name} library`} />
+      );
+
+      const projectId = +localStorage.getItem(current_project_id);
+      const projectData = await db.projects.get(+projectId);
+      if (
+        installData.globalName &&
+        [...projectData.jsFooterLibs, ...projectData.jsHeaderLibs].some(
+          (lib) => lib.globalName == installData.globalName
+        )
+      ) {
+        toast.dismiss(tId);
+        toast.error(<ToastMsgInfo msg={`This global name used before`} />);
+        return;
       }
-    );
-    console.log("installing data : ", ext, isJs, isCss, response, responseData);
-    console.log("haha file name : ", responseData.name);
+      const response = await fetch(fileUrl);
+      const responseStatus = response.status;
+      const resBlob = await response.blob();
+      const isJs = resBlob.type.includes("javascript");
+      const isCss = resBlob.type.includes("css");
+      const ext = (isJs && ".js") || (isCss && ".css") || "";
+      const nameWithoutExt = library.name;
+      const fileName = nameWithoutExt.replaceAll(ext, "") + ext;
+      const path = `libs/${
+        isCss ? "css" : isJs ? (isHeader ? "js/header" : "js/footer") : null
+      }/${fileName}`;
 
-    if (responseStatus != 200 || !response.ok) {
-      toast.dismiss(tId);
-      toast.error(
-        <ToastMsgInfo
-          msg={`Faild To Fetch ${fileUrl} With Status Code : ${response.status}`}
-        />
+      const responseData = new File([resBlob], `${fileName}`, {
+        type: resBlob.type,
+      });
+      console.log(
+        "installing data : ",
+        ext,
+        isJs,
+        isCss,
+        response,
+        responseData
       );
-      throw new Error(
-        `Faild To Fetch ${fileUrl} With Status Code : ${response.status}`
-      );
-    }
-    const projectData = await db.projects.get(+projectId);
+      console.log("haha file name : ", responseData.name);
 
-   
-    /**
-     *
-     * @param {keyof import('../../../helpers/types').Project} key
-     * @param {import('../../../helpers/types').LibraryConfig} newContent
-     */
-    const updater = async (key, newContent = {}) => {
-      // const realKey = `${libraryType}${key}`;
-      console.log("from updater :", newContent);
+      if (responseStatus != 200 || !response.ok) {
+        toast.dismiss(tId);
+        toast.error(
+          <ToastMsgInfo
+            msg={`Faild To Fetch ${fileUrl} With Status Code : ${response.status}`}
+          />
+        );
+        throw new Error(
+          `Faild To Fetch ${fileUrl} With Status Code : ${response.status}`
+        );
+      }
 
-   
-      await opfs.createFiles([
-        {
-          path:defineRoot(path),
-          content: responseData,
+      /**
+       *
+       * @param {keyof import('../../../helpers/types').Project} key
+       * @param {import('../../../helpers/types').LibraryConfig} newContent
+       */
+      const updater = async (key, newContent = {}) => {
+        // const realKey = `${libraryType}${key}`;
+        console.log("from updater :", newContent);
+
+        await opfs.createFiles([
+          {
+            path: defineRoot(path),
+            content: responseData,
+          },
+        ]);
+        await db.projects.update(+projectId, {
+          [key]: [...projectData[key], { ...newContent }],
+        });
+        editor.load();
+        toast.done(tId);
+        toast.success(<ToastMsgInfo msg={`Library Installed Successfully `} />);
+        afterInstall({ key: key, lib: newContent });
+      };
+
+      /**
+       * @type {import('../../../helpers/types').LibraryConfig}
+       */
+      const defaultData = {
+        ...installData,
+        type: ext.replace(".", ""),
+        // file: responseData,
+        path,
+        fileType: ext.replace(".", ""),
+        description: library.description,
+        name: fileName,
+        isCDN: isCDN,
+        isLocal: !isCDN,
+        header: isHeader ? "header" : "",
+        footer: isHeader ? "" : "footer",
+        fileUrl: library.latest,
+        version: library.version,
+        nameWithoutExt,
+        size: getFileSize(responseData).MB,
+        // ...(installData.globalName
+        //   ? {
+        //       typesPath: `types/${nameWithoutExt}`,
+        //     }
+        //   : {}),
+        typesPath: `types/${nameWithoutExt}`,
+        id: uniqueID(),
+      };
+
+      // console.log("lib type:", libraryType, responseData.type);
+
+      if (isHeader && responseData.type.includes("javascript")) {
+        updater("jsHeaderLibs", {
+          ...defaultData,
+        });
+      } else if (!isHeader && responseData.type.includes("javascript")) {
+        updater("jsFooterLibs", {
+          ...defaultData,
+        });
+      } else if (responseData.type.includes("css")) {
+        updater("cssLibs", {
+          ...defaultData,
+        });
+      }
+
+      // if(installData.globalName){
+      fetcherWorker.postMessage({
+        command: "installTypes",
+        props: {
+          projectId,
+          libConfig: { ...defaultData },
+          code: doGlobalType(nameWithoutExt, installData.globalName ),
         },
-      ]);
-      await db.projects.update(+projectId, {
-        [key]: [...projectData[key], { ...newContent }],
       });
-      editor.load();
-      toast.done(tId)
-      toast.success(<ToastMsgInfo msg={`Library Installed Successfully `} />);
-      afterInstall({ key: key, lib: newContent });
-    };
-   
-    /**
-     * @type {import('../../../helpers/types').LibraryConfig}
-     */
-    const defaultData = {
-      ...installData,
-      type: ext.replace(".", ""),
-      // file: responseData,
-      path,
-      fileType: ext.replace(".", ""),
-      description: library.description,
-      name: fileName,
-      isCDN: isCDN,
-      isLocal: !isCDN,
-      header: isHeader ? "header" : "",
-      footer: isHeader ? "" : "footer",
-      fileUrl: library.latest,
-      version: library.version,
-      size : getFileSize(responseData).MB,
-      id: uniqueID(),
-    };
+      // }
 
-    // console.log("lib type:", libraryType, responseData.type);
-
-    if (isHeader && responseData.type.includes("javascript")) {
-      updater("jsHeaderLibs", {
-        ...defaultData,
-      });
-    } else if (!isHeader && responseData.type.includes("javascript")) {
-      updater("jsFooterLibs", {
-        ...defaultData,
-      });
-    } else if (responseData.type.includes("css")) {
-      updater("cssLibs", {
-        ...defaultData,
-      });
-    }
-
-
-
-    console.log(response);
+      console.log(response);
     } catch (error) {
       console.error(
         `Failed To Install Library ${library.name} With Error : ${error}`
@@ -182,12 +216,12 @@ export const JsLibrary = ({
                       <legend className="text-lg font-semibold mb-2">
                         Load in:
                       </legend>
-                      <div className="flex items-center space-x-6">
+                      <div className="flex items-center space-x-6 bg-slate-950 p-2 rounded-lg">
                         <label
                           className="flex items-center space-x-3"
                           htmlFor={`${library.name}-header`}
                         >
-                          <input
+                          <Input
                             type="radio"
                             name={`${library.name}-header`}
                             checked={installData.header}
@@ -235,9 +269,9 @@ export const JsLibrary = ({
                       <legend className="text-lg font-semibold mb-2">
                         Attributes:
                       </legend>
-                      <div className="flex items-center space-x-6">
+                      <div className="flex items-center space-x-6 bg-slate-950 p-2 rounded-lg">
                         <label className="flex items-center space-x-3">
-                          <input
+                          <Input
                             type="checkbox"
                             name="defer"
                             onChange={(ev) => {
@@ -265,6 +299,35 @@ export const JsLibrary = ({
                           <span className="text-slate-300">Async</span>
                         </label>
                       </div>
+                    </fieldset>
+
+                    <fieldset>
+                      <legend className="text-lg font-semibold mb-2 flex items-center justify-between w-full gap-2">
+                        <p>Global name:</p>
+                        <i className="cursor-pointer" id="global-name-info">
+                          {Icons.info({ width: 15 })}
+                        </i>
+                      </legend>
+                      <div className="flex items-center space-x-6">
+                        <Input
+                          placeholder="Global name"
+                          onInput={(ev) => {
+                            setInstallData({
+                              ...installData,
+                              globalName: ev.target.value,
+                            });
+                          }}
+                        />
+                      </div>
+                      <Tooltip
+                        anchorSelect="#global-name-info"
+                        place="top-start"
+                        style={{ maxWidth: "200px" }}
+                        className="font-semibold"
+                      >
+                        Global name used for easy code with types like :
+                        globalName.method() or globalName.name
+                      </Tooltip>
                     </fieldset>
                     {/* 
                     <fieldset className="flex flex-col gap-2">

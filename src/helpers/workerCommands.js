@@ -1,6 +1,7 @@
 import { parseHTML } from "linkedom";
 import { db } from "./db";
 import { inf_cmds_id, inf_symbol_Id_attribute } from "../constants/shared";
+import * as ts from "typescript";
 // import { doDocument } from "./functions";
 // import monacoLoader from "@monaco-editor/loader";
 // import { buildDynamicTemplate, buildScriptFromCmds } from "./worker_functions";
@@ -13,15 +14,20 @@ import {
   getOPFSProjectDir,
   getProjectRoot,
   handleFilesSize,
+  hasExportDefault,
   installRestModelsAPI,
+  needsWrapping,
   uploadProjectToTMP,
+  wrapModule,
 } from "./bridge";
 import { uniqueId, isPlainObject, random } from "lodash";
 import { opfs } from "./initOpfs";
 import { tailwindClasses } from "../constants/tailwindClasses";
 import { css_beautify } from "js-beautify";
-import { parse, stringify } from "css";
+import { stringify } from "css";
 import { minify } from "csso";
+import { setupTypeAcquisition } from "@typescript/ata";
+import { walk, parse } from "css-tree";
 // import { initDBAssetsSw } from "../serviceWorkers/initDBAssets-sw";
 // import Dexie from "dexie";
 //
@@ -883,25 +889,39 @@ export const getAllStyleSheetClasses = async (props) => {
     allStyleSheetClasses = setTimeout(async () => {
       //   const myLol = 'myLol'
       //  console.log(eval(` console.log(myLol)`));
-      !opfs.id && (await initOPFS({ id: props.projectId }));
+      await initOPFS({ id: props.projectId });
       // const per1 = performance.now();
       console.log(defineRoot(`libs/css`));
       const calssRgx = /(?<!\/\*.*)\.[a-zA-Z_][a-zA-Z0-9_-]*(?=[,{\s:])/gi; ///(?<=\s|^)\.[a-zA-Z_][a-zA-Z0-9_-]*(?=\s*{)/g;
       const commentRgx = /\/\*[\s\S]*?\*\//g;
       const prjectData = await db.projects.get(props.projectId);
       const getClasses = (value = "") => {
-        return parse(value)
-          .stylesheet.rules.filter(
-            (rule) =>
-              (rule.type == "rule" || rule.type == "media") &&
-              rule.selectors?.length == 1 &&
-              rule.selectors[0].match(calssRgx)
-          )
-          .map((rule) =>
-            rule.selectors[0].startsWith(".")
-              ? rule.selectors[0].slice(1)
-              : rule.selectors[0]
-          );
+        // const parsedValue = parse(value)
+        //   .stylesheet.rules.filter(
+        //     (rule) =>
+        //       (rule.type == "rule" || rule.type == "media") &&
+        //       rule.selectors?.length == 1 &&
+        //       rule.selectors[0].match(calssRgx)
+        //   )
+        //   .map((rule) =>
+        //     rule.selectors[0].startsWith(".")
+        //       ? rule.selectors[0].slice(1)
+        //       : rule.selectors[0]
+        //   )
+
+        // console.log(parsedValue);
+
+        const ast = parse(value);
+        const classes = new Set();
+
+        walk(ast, (node) => {
+          if (node.type === "ClassSelector") {
+            classes.add(node.name); // Set removes duplicates
+          }
+        });
+        console.log("cllassses : ", classes);
+
+        return [...classes].sort();
 
         // value = stringify({
         //   stylesheet: {
@@ -1616,6 +1636,98 @@ export async function shareProject(props) {
       type: "error",
     });
 
+    throw new Error(error);
+  }
+}
+
+/**
+ *
+ * @param {{code:string , projectId:number , libConfig : import('./types').LibraryConfig }} props
+ */
+export async function installTypes({ projectId, code, libConfig }) {
+  if (!code) return;
+  const tId = uniqueId("install-types-id-");
+  const projectData = await db.projects.get(projectId);
+  await initOPFS({ id: +projectId });
+
+  try {
+    const ata = setupTypeAcquisition({
+      projectName: projectData.name,
+      logger: console,
+      typescript: ts,
+      delegate: {
+        errorMessage: (userErrorMessage, error) => {
+          workerSendToast({
+            isNotMessage: true,
+            msg: tId,
+            type: "dismiss",
+            dataProps: {
+              progressClassName: "bg-[crimson]",
+            },
+          });
+          workerSendToast({
+            msg: userErrorMessage,
+            type: "error",
+          });
+          throw new Error(error);
+        },
+
+        started: () => {
+          workerSendToast({
+            msg: "Installing library types...",
+            type: "loading",
+            dataProps: {
+              toastId: tId,
+            },
+          });
+        },
+
+        finished: (files) => {
+          files.forEach((value, path) => {
+            opfs.writeFiles([
+              {
+                path: defineRoot(`types/${libConfig.nameWithoutExt}${path}`),
+                content:
+                  needsWrapping(value) && libConfig.globalName
+                    ? wrapModule(
+                        libConfig.nameWithoutExt,
+                        value
+                        // hasExportDefault(value)
+                        //   ? value.replace("export default", "export")
+                        //   : value
+                      )
+                    : value,
+              },
+            ]);
+          });
+          console.log("Type installed successfully");
+          workerSendToast({
+            isNotMessage: true,
+            msg: tId,
+            type: "done",
+            dataProps: {
+              progressClassName: "bg-green-500",
+            },
+          });
+        },
+      },
+    });
+
+    ata(code);
+  } catch (error) {
+    workerSendToast({
+      isNotMessage: true,
+      msg: tId,
+      type: "dismiss",
+      dataProps: {
+        progressClassName: "bg-[crimson]",
+      },
+    });
+
+    workerSendToast({
+      msg: error.message,
+      type: "error",
+    });
     throw new Error(error);
   }
 }

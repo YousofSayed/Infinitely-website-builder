@@ -17,7 +17,7 @@ import { infinitelyWorker } from "../../../helpers/infinitelyWorker";
 import { opfs } from "../../../helpers/initOpfs";
 import { defineRoot } from "../../../helpers/bridge";
 import { css_beautify, html_beautify, js_beautify } from "js-beautify";
-import { minify  ,syntax} from "csso";
+import { minify, syntax } from "csso";
 
 export const CodeManagerModal = () => {
   const timeoutRef = useRef();
@@ -129,6 +129,9 @@ export const CodeManagerModal = () => {
             const isCssEditorStyles = handle.path.includes(
               `css/${currentPageName}.css`
             );
+            const isHtmlEditorContent = handle.path.includes(
+              `editor/pages/${currentPageName}.html`
+            );
             let content = "";
             if (!isCssEditorStyles) {
               content = isHtml
@@ -139,10 +142,36 @@ export const CodeManagerModal = () => {
                 ? js_beautify(await handle.text())
                 : await handle.text();
             }
-            console.log(`after : ` , content , isCssEditorStyles);
-            
+
+            if (!isHtmlEditorContent) {
+              content = isHtml
+                ? html_beautify(await handle.text())
+                : isCss
+                ? css_beautify(await handle.text())
+                : isJS
+                ? js_beautify(await handle.text())
+                : await handle.text();
+            }
+
+            console.log(`after : `, content, isCssEditorStyles);
+
             return isCssEditorStyles
-              ? [handle.path, css_beautify(editor.getCss({ avoidProtected:true, keepUnusedStyles:false , }))]
+              ? [
+                  handle.path,
+                  css_beautify(
+                    editor.getCss({
+                      avoidProtected: true,
+                      keepUnusedStyles: false,
+                    })
+                  ),
+                ]
+              : isHtmlEditorContent
+              ? [
+                  handle.path,
+                  html_beautify(
+                    editor.getWrapper().getInnerHTML({ withProps: true })
+                  ),
+                ]
               : [handle.path, content];
           })
         )

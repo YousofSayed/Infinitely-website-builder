@@ -273,6 +273,7 @@ export interface LibraryConfig {
   content: string;
   dataUrl: string;
   name: string;
+  nameWithoutExt:string,
   description: string;
   version: string;
   isLocal: boolean;
@@ -286,6 +287,8 @@ export interface LibraryConfig {
   footer: string;
   async: boolean;
   defer: boolean;
+  globalName: string;
+  typesPath:string;
   jsType: string;
   sort: number;
   path: string;

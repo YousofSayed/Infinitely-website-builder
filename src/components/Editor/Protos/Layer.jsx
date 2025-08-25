@@ -11,6 +11,7 @@ import { Tooltip } from "react-tooltip";
 import { Input } from "./Input";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { refType } from "../../../helpers/jsDocs";
+import { Virtuoso } from "react-virtuoso";
 
 /**
  *
@@ -40,6 +41,7 @@ export const Layer = ({
   const [showInput, setShowInput] = useState(false);
   const [autoAnim] = useAutoAnimate();
   const animatedRef = useRef(refType);
+  const nestedLayyersRef = useRef(refType);
   useEffect(() => {
     if (!editor) return;
     setLayerStt([editor.getWrapper()]);
@@ -172,18 +174,18 @@ export const Layer = ({
   }, [editor]);
 
   useEffect(() => {
-    layersRef.current &&
-      layersRef.current.scrollToIndex({
-        index: index,
-        align: "center", // or 'center', 'end'
-        behavior: "smooth", // or 'auto'
-        // offset: 1000,
-        // alignToTop: true, // Aligns the item to the top of the viewport
-        // offset: 0, //
-      });
+    // layersRef.current &&
+    //   layersRef.current.scrollToIndex({
+    //     index: index,
+    //     align: "center", // or 'center', 'end'
+    //     // behavior: "smooth", // or 'auto'
+    //     // offset: 1000,
+    //     // alignToTop: true, // Aligns the item to the top of the viewport
+    //     // offset: 0, //
+    //   });
     animatedRef.current &&
-      animatedRef.current.scrollIntoView({ behavior: "smooth" , block:'center' });
-  }, [isOpentNested, animatedRef, layersRef]);
+      animatedRef.current.scrollIntoView({ behavior: "smooth" , block:'center' , inline:'start'});
+  }, [isOpentNested, animatedRef, layersRef , selectedEl]);
 
   /**
    *
@@ -576,11 +578,62 @@ export const Layer = ({
               ? `calc(100% -  ${layer.components().models.length}px)`
               : `100%`,
           }}
-          className={`child flex ${
+          className={`child flex min-h-full ${
             isOpentNested &&
             "border-l-2 border-l-slate-600 hover:border-l-blue-600 rounded-bl-lg  pl-[8px]"
           } flex-col self-end justify-end  transition-all `}
         >
+          {/* <Virtuoso
+            ref={nestedLayyersRef}
+            // fixedItemHeight={60}
+            totalListHeightChanged={500}
+            height={`${layer
+                .components()
+                .models.filter(
+                  (lyr) =>
+                    lyr.props().layerable &&
+                    lyr.getName().toLowerCase() != "box"
+                ).length * 60}px`}
+                
+            className="hideScrollBar h-full"
+            totalCount={
+              layer
+                .components()
+                .models.filter(
+                  (lyr) =>
+                    lyr.props().layerable &&
+                    lyr.getName().toLowerCase() != "box"
+                ).length
+            }
+            // components={VirtosuoVerticelWrapper}
+            itemContent={(i) => {
+              const lyr = layer
+                .components()
+                .models.filter(
+                  (lyr) =>
+                    lyr.props().layerable &&
+                    lyr.getName().toLowerCase() != "box"
+                )[i];
+
+              return   <Layer
+                  className={`w-full self-end ml-5`}
+                  // style={{
+                  //   // marginLeft:lyr.parents().length? `${lyr.parents().length + 85}px`:`0`,
+                  //   width: lyr.parents().length
+                  //     ? `calc(100% -  ${lyr.parents().length * 10}px)`
+                  //     : `100%`,
+                  // }}
+                  layersRef={nestedLayyersRef}
+                  index={i}
+                  layer={lyr}
+                  key={lyr.getId()}
+                  layers={layers}
+                  setLayers={setLayers}
+                />
+             ;
+            }}
+          /> */}
+
           {layer
             .components()
             .models.filter(

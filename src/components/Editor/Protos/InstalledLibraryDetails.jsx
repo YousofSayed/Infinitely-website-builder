@@ -31,7 +31,10 @@ export const InstalledLibraryDetails = memo(
         const project = await await db.projects.get(projectId);
         const data = project;
         const newArr = data[dbKey].filter((lib) => lib.id != library.id);
-        await opfs.removeFiles([defineRoot(library.path)]);
+        await opfs.removeFiles([
+          defineRoot(library.path),
+          ...(library.typesPath ? [defineRoot(library.typesPath)] : []),
+        ]);
         await db.projects.update(projectId, {
           [dbKey]: newArr,
         });
@@ -72,7 +75,7 @@ export const InstalledLibraryDetails = memo(
             <SmallButton
               onClick={async (ev) => {
                 setFileInfo({
-                 path:library.path
+                  path: library.path,
                 });
                 // console.log(await library.file.text());
 
@@ -149,12 +152,12 @@ export const InstalledLibraryDetails = memo(
             </>
           )}
 
-          {(
+          {
             <p className="max-w-[90%] overflow-hidden text-ellipsis text-nowrap">
               <span className="text-blue-300 font-semibold text-lg">Size</span>{" "}
               :{library.size}MB
             </p>
-          )}
+          }
         </section>
 
         <section className="items-end justify-end flex bg-slate-950 p-2 rounded-lg w-fit self-end">

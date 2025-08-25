@@ -1802,4 +1802,49 @@ export async function uploadProjectToTMP(props) {
     body: formData,
   });
   return res.json();
-};
+}
+
+export function doGlobalType(
+  libName,
+  globalTypeName,
+  isExportDefault = false
+) {
+  if (!libName) {
+    throw new Error(`libName param is required`);
+  }
+
+  const importStatement = isExportDefault
+    ? `import _lf from "${libName}";`
+    : `import * as _lf from "${libName}";`;
+
+  const globalDeclaration =
+    globalTypeName && globalTypeName.trim().length > 0
+      ? `
+declare global {
+  const ${globalTypeName}: typeof _lf;
+}
+export {};`
+      : "";
+
+  return `
+${importStatement}
+${globalDeclaration}
+  `;
+}
+
+
+export function needsWrapping(code) {
+  return (
+    /\bexport\s+(interface|type|class|function|const|enum)/.test(code) &&
+    !/\bdeclare\s+module\s+['"]/.test(code)
+  );
+}
+
+export function wrapModule(libName, code) {
+  return `declare module "${libName}" {\n${code}\n}`;
+}
+
+export function hasExportDefault(code='') {
+  return /export default/ig.test(code);
+}
+
