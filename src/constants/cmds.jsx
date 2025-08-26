@@ -43,15 +43,19 @@ const defaultDirectiveCallback = async ({
         : (suffix && `:${suffix}`) || ""
     }${modifiersString}`;
 
-    if (!attribute.trim() || !value.trim()) {
+    if (!(attribute.trim() && value.trim())) {
       console.log("from remover : ", attribute, value, sle);
 
       sle.removeAttributes(attribute);
       editor.trigger(InfinitelyEvents.directives.update);
       return;
     }
+
     if (isValidAttribute(attribute, value)) {
-      sle.addAttributes({ [attribute]: value }, { avoidStore: true });
+      console.log('attributes',sle.getAttributes());
+      const oldAttrs = sle.getAttributes();
+      sle.addAttributes({ ...oldAttrs, [attribute]: value }, { avoidStore:  projectSettings.projectSettings.enable_auto_save });
+      console.log('attributes',sle.getAttributes());
       editor.trigger(InfinitelyEvents.directives.update);
       const symbolInfo = getInfinitelySymbolInfo(sle);
       if (symbolInfo.isSymbol) {
@@ -67,7 +71,8 @@ const defaultDirectiveCallback = async ({
 
       projectSettings.projectSettings.enable_auto_save &&
         (await editor.store());
-    } else {
+    }
+     else {
       console.log(attribute);
 
       toast.error(<ToastMsgInfo msg={`Directive is not valid`} />);
