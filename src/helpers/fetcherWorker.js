@@ -1,4 +1,5 @@
-import { installTypes, shareProject } from "./workerCommands";
+import { installTypes } from "./installTypes";
+import { shareProject } from "./workerCommands";
 import { doWorkerPattern } from "./workersPattern";
 
 const commands = {shareProject,installTypes,};

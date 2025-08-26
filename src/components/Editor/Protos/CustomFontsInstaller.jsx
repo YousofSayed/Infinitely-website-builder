@@ -3,11 +3,9 @@ import { Icons } from "../../Icons/Icons";
 import { Button } from "../../Protos/Button";
 import { refType, uploadFontsType } from "../../../helpers/jsDocs";
 import { uniqueID } from "../../../helpers/cocktail";
-import { ViewportList } from "react-viewport-list";
 import { Input } from "./Input";
 import {
   getProjectData,
-  isElementScrollable,
 } from "../../../helpers/functions";
 import { current_project_id } from "../../../constants/shared";
 import { db } from "../../../helpers/db";

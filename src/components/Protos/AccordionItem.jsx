@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { DetailsNormal } from "./DetailsNormal";
 import { random, uniqueId } from "lodash";
-import {AccordionItem as RadixAccordionItem , AccordionHeader , AccordionContent} from '@radix-ui/react-accordion'
+// import {AccordionItem as RadixAccordionItem , AccordionHeader , AccordionContent} from '@radix-ui/react-accordion'
 
 export const AccordionItem = memo(({
   label,
@@ -11,7 +11,7 @@ export const AccordionItem = memo(({
   children,
 }) => {
   return (
-    <DetailsNormal
+    <DetailsNormal 
       label={label || title}
       allowPopupLength={allowPopupLength}
       length={length}

@@ -7,8 +7,6 @@ import React, {
 } from "react";
 import { Details } from "./Details";
 import { refType } from "../../../helpers/jsDocs";
-import { InfAccordion } from "../../Protos/InfAccordion";
-import { Accordion, AccordionItem } from "@heroui/accordion";
 
 /**
  *

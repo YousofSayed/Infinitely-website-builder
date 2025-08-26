@@ -194,6 +194,7 @@ export default defineConfig({
         vendor6: [/react-dom/, /react-router-dom/],
         vendor7: [/\@grapesjs\/react/],
         vendor8: [/html-to-image/, /lodash/, /html2canvas-pro/],
+        typescript:[/\btypescript\b/],
         icons: [/Icons\.jsx/],
       },
     }),

@@ -5,7 +5,6 @@ import {
   advancedSearchSuggestions,
   getProjectData,
 } from "../../../helpers/functions";
-import { ViewportList } from "react-viewport-list";
 import { Button } from "../../Protos/Button";
 import { Icons } from "../../Icons/Icons";
 import { current_project_id } from "../../../constants/shared";

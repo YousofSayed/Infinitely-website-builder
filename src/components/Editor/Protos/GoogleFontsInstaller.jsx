@@ -7,7 +7,6 @@ import {
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./ToastMsgInfo";
 import { Loader } from "../../Loader";
-import { ViewportList } from "react-viewport-list";
 import { Icons } from "../../Icons/Icons";
 import { Input } from "./Input";
 import { Button } from "../../Protos/Button";

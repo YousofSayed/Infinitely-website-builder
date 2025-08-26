@@ -4,10 +4,10 @@ import { Input } from "./Input";
 import { Button } from "../../Protos/Button";
 import { filesListType, JSLibrariesType } from "../../../helpers/jsDocs";
 import { cssToDataURL, jsToDataURL } from "../../../helpers/functions";
-import { ViewportList } from "react-viewport-list";
 import { Icons } from "../../Icons/Icons";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./ToastMsgInfo";
+import { Virtuoso } from "react-virtuoso";
 
 export const LibraryUploader = () => {
   const inputFileRef = useRef();
@@ -36,7 +36,7 @@ export const LibraryUploader = () => {
     const newFiles = files.map((file, i) => {
       file.fileType = filesTypes[file.type];
       console.log("type : ", file.fileType, file.type);
-     
+
       file.latest = URL.createObjectURL(file);
       return file;
     });
@@ -51,7 +51,7 @@ export const LibraryUploader = () => {
   };
 
   return (
-    <section className="p-1 rounded-lg min-h-full h-fit">
+    <section className="p-1 rounded-lg min-h-full h-full flex flex-col">
       <header className="flex items-center justify-between gap-2 p-2 mb-2 bg-slate-800 rounded-lg">
         <Input
           placeholder="Add Library Url"
@@ -63,7 +63,6 @@ export const LibraryUploader = () => {
         <Input
           placeholder="Add Library Name"
           className="w-full bg-slate-900"
-          
           onInput={(ev) => {
             onInput("name", ev.target.value);
           }}
@@ -90,7 +89,7 @@ export const LibraryUploader = () => {
                   ...files,
                   {
                     ...remoteLibraryDetail,
-                    
+
                     fileType,
                     file: new File(
                       [blob],
@@ -102,9 +101,8 @@ export const LibraryUploader = () => {
               } else {
                 toast.error(<ToastMsgInfo msg={`It is not css or js lib!`} />);
               }
-            }
-            else{
-              toast.error(<ToastMsgInfo msg={`Faild To Fetch`}/>)
+            } else {
+              toast.error(<ToastMsgInfo msg={`Faild To Fetch`} />);
             }
           }}
         >
@@ -117,7 +115,7 @@ export const LibraryUploader = () => {
             inputFileRef.current.click();
           }}
         >
-          {Icons.upload({strokeColor:'white'})}
+          {Icons.upload({ strokeColor: "white" })}
           Upload File
         </Button>
 
@@ -133,20 +131,24 @@ export const LibraryUploader = () => {
         />
       </header>
 
-      <main>
-        <ViewportList items={files}>
-          {(file, i) => (
-            <JsLibrary
-              key={i}
-              library={file}
-              // fileuploader
-              afterInstall={({ key, lib }) => {
-                const newLibs = files.filter((file) => file.name != lib.name);
-                setFiles(newLibs);
-              }}
-            />
-          )}
-        </ViewportList>
+      <main className="h-full w-full overflow-auto">
+        <Virtuoso
+          totalCount={files.length}
+          itemContent={(i) => {
+            const file = files[i];
+            return (
+              <JsLibrary
+                key={i}
+                library={file}
+                // fileuploader
+                afterInstall={({ key, lib }) => {
+                  const newLibs = files.filter((file) => file.name != lib.name);
+                  setFiles(newLibs);
+                }}
+              />
+            );
+          }}
+        />
       </main>
     </section>
   );

@@ -1,7 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { refType } from "../../../helpers/jsDocs";
 import { HighlightContentEditable } from "./HighlightContentEditable";
-import { ViewportList } from "react-viewport-list";
 import { Virtuoso } from "react-virtuoso";
 import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
 import { FitTitle } from "./FitTitle";

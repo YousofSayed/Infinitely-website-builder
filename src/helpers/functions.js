@@ -25,7 +25,6 @@ import { db } from "./db";
 import html2canvas from "html2canvas-pro";
 import { jsURLRgx } from "../constants/rgxs";
 import { pvMount, pvUnMount } from "./customEvents";
-import { toBlob } from "html-to-image";
 import serializeJavascript from "serialize-javascript";
 import {
   fetcherWorker,
@@ -2573,3 +2572,33 @@ export const triggerKeyFramesGetterWorker = (editor) => {
     },
   });
 };
+
+
+export async function detectGlobalsSandbox(url) {
+  const iframe = document.createElement("iframe");
+  iframe.style.display = "none";
+  document.body.appendChild(iframe);
+
+  const win = iframe.contentWindow;
+  const before = new Set(Object.keys(win));
+
+  await new Promise((resolve, reject) => {
+    const script = win.document.createElement("script");
+    script.src = url;
+    script.onload = resolve;
+    script.onerror = reject;
+    win.document.body.appendChild(script);
+  });
+
+  const after = new Set(Object.keys(win));
+  const newGlobals = [...after].filter(x => !before.has(x));
+
+  // Cleanup iframe if you want
+  document.body.removeChild(iframe);
+
+  return newGlobals;
+}
+
+// Example:
+// detectGlobalsSandbox("https://cdn.jsdelivr.net/npm/vue@3.5.20/dist/vue.global.min.js")
+//   .then(globals => console.log("Detected safely:", globals));

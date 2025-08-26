@@ -7,7 +7,7 @@ import { ToastMsgInfo } from "./ToastMsgInfo";
 import { db } from "../../../helpers/db";
 import { current_page_id, current_project_id } from "../../../constants/shared";
 import { useEditorMaybe } from "@grapesjs/react";
-import { jsToDataURL } from "../../../helpers/functions";
+import { detectGlobalsSandbox, jsToDataURL } from "../../../helpers/functions";
 import { html, uniqueID } from "../../../helpers/cocktail";
 import { Input } from "./Input";
 import { opfs } from "../../../helpers/initOpfs";
@@ -109,11 +109,13 @@ export const JsLibrary = ({
         afterInstall({ key: key, lib: newContent });
       };
 
+      installData.globalName = installData.globalName || (await detectGlobalsSandbox(fileUrl))?.[0] || ""
       /**
        * @type {import('../../../helpers/types').LibraryConfig}
        */
       const defaultData = {
         ...installData,
+        // globalName: installData.globalName || (await detectGlobalsSandbox(fileUrl))?.[0] || "",
         type: ext.replace(".", ""),
         // file: responseData,
         path,
@@ -159,7 +161,7 @@ export const JsLibrary = ({
         props: {
           projectId,
           libConfig: { ...defaultData },
-          code: doGlobalType(nameWithoutExt, installData.globalName ),
+          code: doGlobalType(nameWithoutExt,  installData.globalName  ),
         },
       });
       // }

@@ -32,7 +32,6 @@ import {
   MAX_UPLOAD_SIZE,
 } from "../../constants/shared";
 import { db } from "../../helpers/db";
-import { ViewportList } from "react-viewport-list";
 import { VirtuosoGrid } from "react-virtuoso";
 import { GridComponents } from "../Protos/VirtusoGridComponent";
 import { InfinitelyEvents } from "../../constants/infinitelyEvents";

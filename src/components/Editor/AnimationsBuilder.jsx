@@ -1,5 +1,4 @@
 import React, { memo, useEffect, useRef, useState } from "react";
-import { Aside } from "./Protos/Aside";
 import { MiniTitle } from "./Protos/MiniTitle";
 import { Adder } from "./Protos/Adder";
 import { Input } from "./Protos/Input";
@@ -8,10 +7,8 @@ import { Icons } from "../Icons/Icons";
 import {
   animationsType,
   animationType,
-  keyframesType,
-  keyframesWithPathesType,
 } from "../../helpers/jsDocs";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilState, useRecoilValue } from "recoil";
 import {
   animationsState,
   animeStylesState,
@@ -22,29 +19,16 @@ import {
 import { useEditorMaybe } from "@grapesjs/react";
 import {
   advancedSearchSuggestions,
-  getProjectData,
   rgbStringToHex,
-  stringifyKeyframes,
 } from "../../helpers/functions";
-import { cloneObject } from "../../helpers/cocktail";
-import { InfAccordion } from "../Protos/InfAccordion";
-import { AccordionItem as HeroAccoridonItem } from "@heroui/accordion";
-import { opfs } from "../../helpers/initOpfs";
-import { defineRoot, inlineWorker } from "../../helpers/bridge";
-import { cloneDeep, random, uniqueId } from "lodash";
-import { Virtuoso } from "react-virtuoso";
-import { VirtosuoVerticelWrapper } from "../Protos/VirtosuoVerticelWrapper";
-import { DetailsNormal } from "../Protos/DetailsNormal";
+import { cloneDeep } from "lodash";
 import { keyframesGetterWorker } from "../../helpers/defineWorkers";
-import { comma } from "postcss/lib/list";
 import {
   current_page_id,
   current_project_id,
-  editorComponentProps,
 } from "../../constants/shared";
 import { Accordion } from "../Protos/Accordion";
 import { AccordionItem } from "../Protos/AccordionItem";
-import { LazyList } from "../Protos/LazyList";
 import { IntersectionList } from "../Protos/IntersectionList";
 import { Memo } from "../Protos/Memo";
 import { keyframeStylesInstance } from "../../constants/InfinitelyInstances";

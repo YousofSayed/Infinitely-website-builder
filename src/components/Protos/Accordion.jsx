@@ -1,6 +1,6 @@
 import React from 'react'
 import { AccordionProvider } from './DetailsNormal'
-import {Accordion as RadixAccordion , Root}from '@radix-ui/react-accordion'
+// import {Accordion as RadixAccordion , Root}from '@radix-ui/react-accordion'
 export const Accordion = ({children}) => {
   return (
     <AccordionProvider>
@@ -8,7 +8,7 @@ export const Accordion = ({children}) => {
     </AccordionProvider>
     // <RadixAccordion>
     //   {children}
-    // </RadixAccordion>
+    // </RadixAccordion> 
   )
 }
 // import * as AccordionPrimitive from "@radix-ui/react-accordion";

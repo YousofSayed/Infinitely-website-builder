@@ -34,10 +34,12 @@ import { Input } from "./Protos/Input";
 import { actions } from "../../constants/actions";
 import { MiniTitle } from "./Protos/MiniTitle";
 import { SwitchButton } from "../Protos/SwitchButton";
-import { InfAccordion } from "../Protos/InfAccordion";
-import { AccordionItem } from "@heroui/accordion";
+// import { InfAccordion } from "../Protos/InfAccordion";
+// import { AccordionItem } from "@heroui/accordion";
 import { keyframesGetterWorker } from "../../helpers/defineWorkers";
 import { ScrollableToolbar } from "../Protos/ScrollableToolbar";
+import { Accordion } from "../Protos/Accordion";
+import { AccordionItem } from "../Protos/AccordionItem";
 
 const actionsKeywords = actions.map((action) => action.label);
 const advancedParse = (value) => {
@@ -702,7 +704,7 @@ export const Interactions = () => {
           {Icons.plus("white")}
         </SmallButton>
       </header>
-      <InfAccordion>
+      <Accordion>
         {Object.values(interactionsState).map((interaction, i) => (
           <AccordionItem key={i} title={interaction.event}>
             <Interaction
@@ -715,7 +717,7 @@ export const Interactions = () => {
             />
           </AccordionItem>
         ))}
-      </InfAccordion>
+      </Accordion>
 
       {interactionsState.length > 2 && (
         <footer className="flex gap-2 justify-between">
