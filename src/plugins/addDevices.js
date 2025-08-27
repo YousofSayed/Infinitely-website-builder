@@ -68,21 +68,21 @@ export const addDevices = (editor) => {
       // const iframeBody = iframe.contentDocument.body;
       // iframeBody.style.transition = `.2s`;
       editor.getContainer().style.transformOrigin = "top left";
-      editor.getContainer().style.willChange = "zoom";
+      editor.getContainer().style.willChange = "transform";
       if (wrapperWidth < targetWidth) {
         const scale = wrapperWidth / targetWidth;
 
         iframe.style.width = `100%`;
         editor.getContainer().style.zoom = `${scale}`;
         // editor.getContainer().style.transform = `scale(${scale})`;
-        editor.Canvas.refresh({ all: true, spots: true });
-        editor.refresh({ tools: true });
+        // editor.Canvas.refresh({ all: true, spots: true });
+        // editor.refresh({ tools: true });
       } else {
         iframe.style.width = `${targetWidth}px`;
         editor.getContainer().style.zoom = `1`;
         // editor.getContainer().style.transform = `scale(1)`;
-        editor.Canvas.refresh({ all: true, spots: true });
-        editor.refresh({ tools: true });
+        // editor.Canvas.refresh({ all: true, spots: true });
+        // editor.refresh({ tools: true });
       }
       emitEditorContainerZoom();
     }, 80);

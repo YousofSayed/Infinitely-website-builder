@@ -78,6 +78,11 @@ body {
   z-index: 999999 !important;
 }
 
+.gjs-cv-canvas iframe {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
 
 /* svg{
   zoom: .8
