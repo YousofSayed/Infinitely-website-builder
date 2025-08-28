@@ -63,6 +63,12 @@ export const useUpdateInputValue = ({
     // console.log("rule.is : ", rule.is);
     // console.log("rules : ", rule);
 
+    if(!currentSelector){
+      return {
+        [cssProp]:''
+      }
+    }
+
     const mediaAccordingToRule =
       (rule.atRuleParams && rule.atRuleType && !isDeviceEvent) ||
       (rule.is && !isDeviceEvent)
@@ -89,7 +95,7 @@ export const useUpdateInputValue = ({
     const currentSelector = getCurrentSelector(selector, slEL);
 
     // console.log('styles : ' , getRuleStyle() , framesStyles , !Object.values(framesStyles || {}).length);
-
+    if(!currentSelector)return;
     if (
       !slEL &&
       !getRuleStyle(isDeviceEvent)[cssProp] &&

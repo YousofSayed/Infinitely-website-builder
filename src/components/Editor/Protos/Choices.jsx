@@ -50,29 +50,50 @@ export const Choices = memo(
     }, [active]);
 
     useEffect(() => {
-      const currentSelector = getCurrentSelector(
-        selector,
-        editor.getSelected()
-      );
-      console.log("current   : ", currentSelector, selector);
+      const selectingCallback = () => {
+        if (!enableSelecting) return;
+        const currentSelector = getCurrentSelector(
+          selector,
+          editor.getSelected()
+        );
+        console.log("current   : ", currentSelector, selector);
 
-      const index = keywords.findIndex((item) =>
-        currentSelector.toLowerCase().includes(item.toLowerCase())
-      );
+        const index = keywords.findIndex((item) => {
+          // console.log(currentSelector.replace('.','').toLowerCase() == item.toLowerCase() , currentSelector.toLowerCase() , item.toLowerCase());
+          return (
+            currentSelector.replace(".", "").toLowerCase() == item.toLowerCase()
+          );
+        });
 
-      currentIndex.current = index;
-      const active = index <= -1 ? false : true
-      setActive(Boolean(active));
-      console.log('indexoo : ' , index , currentIndex.current , keywords[index] , active && currentIndex.current == 0);
-      
-      // active ? onActive({ keyword, index: currentIndex.current }) :  onUnActive({ keyword, index: currentIndex.current });
-      setKeyword(keywords[index]);
+        currentIndex.current = index;
+        const active = index <= -1 ? false : true;
+        setActive(Boolean(active));
+        // console.log(
+        //   "indexoo : ",
+        //   index,
+        //   currentIndex.current,
+        //   keywords[index],
+        //   active && currentIndex.current == 0
+        // );
+
+        // active ? onActive({ keyword, index: currentIndex.current }) :  onUnActive({ keyword, index: currentIndex.current });
+        setKeyword(keywords[index]);
+      };
+
+      if (enableSelecting) {
+        selectingCallback();
+        editor.on("component:update:attributes", selectingCallback);
+      }
+
+      return () => {
+        editor.on("component:update:attributes", selectingCallback);
+      };
       // setCurrentSelcetor(currentSelector);
-    }, [selector,active,sle]);
+    }, [selector, active, sle]);
 
     return (
       <section
-        className={`w-full    overflow-x-auto gap-2 flex items-center p-1 rounded-lg  ${
+        className={`w-full    gap-2 flex items-center p-1 rounded-lg  ${
           className ? className : "bg-slate-800"
         }`}
       >
@@ -81,6 +102,7 @@ export const Choices = memo(
             keyword && (
               <p
                 onClick={(ev) => {
+                  ev.preventDefault();
                   ev.stopPropagation();
                   const classNameAttrebute = editor
                     .getSelected()
@@ -106,11 +128,15 @@ export const Choices = memo(
                   // );
                   // currentIndex.current = i;
                   // setKeyword(keyword);
-                  setSelector(selector.includes(keyword) ? '' : `.${keyword}`);
+                  setSelector(
+                    selector.toLowerCase() === keyword.toLowerCase()
+                      ? ""
+                      : `.${keyword}`
+                  );
                 }}
                 key={i}
-                className={`text-nowrap break-all relative group px-[20px] w-fit cursor-pointer select-none  flex-shrink-0 py-2 text-white ${
-                  (active && currentIndex.current == i)
+                className={`text-nowrap break-all relative custom-font-size group px-[20px] w-fit cursor-pointer select-none  flex-shrink-0 py-2 text-white ${
+                  active && currentIndex.current == i
                     ? "bg-blue-600"
                     : enableSelecting
                     ? "bg-slate-900"
@@ -122,7 +148,7 @@ export const Choices = memo(
                   onClick={(ev) => {
                     onCloseClick(ev, keyword, i);
                   }}
-                  className="absolute bg-blue-600 shadow-sm shadow-blue-950 w-[23px]  h-[23px] flex items-center justify-center rounded-full transition-all cursor-pointer opacity-0 group-hover:opacity-[1]  right-[-5px] top-[-5px]"
+                  className="absolute bg-blue-600 shadow-sm shadow-blue-950 w-[23px]  h-[23px] flex items-center justify-center rounded-full transition-all cursor-pointer opacity-0 group-hover:opacity-[1]  right-[-5px] top-[-5px] z-50"
                 >
                   {Icons.close("white", "", "white")}
                 </i>

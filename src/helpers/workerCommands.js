@@ -1,7 +1,6 @@
 import { parseHTML } from "linkedom";
 import { db } from "./db";
 import { inf_cmds_id, inf_symbol_Id_attribute } from "../constants/shared";
-import * as ts from "typescript";
 // import { doDocument } from "./functions";
 // import monacoLoader from "@monaco-editor/loader";
 // import { buildDynamicTemplate, buildScriptFromCmds } from "./worker_functions";
@@ -26,7 +25,6 @@ import { tailwindClasses } from "../constants/tailwindClasses";
 import { css_beautify } from "js-beautify";
 import { stringify } from "css";
 import { minify } from "csso";
-import { setupTypeAcquisition } from "@typescript/ata";
 import { walk, parse } from "css-tree";
 // import { initDBAssetsSw } from "../serviceWorkers/initDBAssets-sw";
 // import Dexie from "dexie";

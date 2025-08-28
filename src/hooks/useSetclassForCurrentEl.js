@@ -15,14 +15,19 @@ import {
   getInfinitelySymbolInfo,
   getProjectData,
 } from "../helpers/functions";
-import { current_project_id, current_symbol_id } from "../constants/shared";
+import {
+  current_project_id,
+  current_symbol_id,
+  inf_class_name,
+} from "../constants/shared";
 import { db } from "../helpers/db";
 import { dynamicTemplatesType } from "../helpers/jsDocs";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useEffect } from "react";
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
-import { keyBy } from "lodash";
+import { keyBy, random, uniqueId } from "lodash";
 import { keyframeStylesInstance } from "../constants/InfinitelyInstances";
+import { uniqueID } from "../helpers/cocktail";
 let setStyleTimeout = null;
 
 /**
@@ -75,9 +80,9 @@ export function useSetClassForCurrentEl() {
         newCssProps = newCssProps ? newCssProps : { [cssProp]: "" };
         // setAnimeStyles((old) => ({ ...old, ...newCssProps }));
         // setAnimeStyles({ ...newCssProps });
-        console.log(newCssProps , 'from animations');
-        
-        keyframeStylesInstance.emit(InfinitelyEvents.keyframe.set , newCssProps);
+        console.log(newCssProps, "from animations");
+
+        keyframeStylesInstance.emit(InfinitelyEvents.keyframe.set, newCssProps);
         return;
       } //stop any action if animation builder is on
 
@@ -91,8 +96,29 @@ export function useSetClassForCurrentEl() {
       const Media = getCurrentMediaDevice(editor);
       const sle = editor.getSelected();
 
+      let currentSelector = getCurrentSelector(selector, sle);
+      console.log("from set style current selector is : ", currentSelector);
+      const classes = [...sle.getClasses()];
+      const isCurrentSelectorAdded = classes.some(
+        (cls) => cls === currentSelector
+      );
 
-      const currentSelector = getCurrentSelector(selector, sle);
+      if (!currentSelector) {
+        const newClassName = uniqueId(
+          `infcls-${uniqueID()}-${random(100, 9999)}-`
+        );
+        sle.addClass(newClassName);
+        sle.addAttributes({ [inf_class_name]: newClassName });
+        const classes = [...sle.getClasses()];
+        const isNewAdded = classes.some((cls) => cls === newClassName);
+        if (isNewAdded) {
+          currentSelector = newClassName;
+        } else {
+          throw new Error(`New class not added!`);
+        }
+      } else if (currentSelector && !isCurrentSelectorAdded) {
+        sle.addClass(currentSelector);
+      }
       // const symbolInfo = getInfinitelySymbolInfo(sle);
       // console.log(
       //   "from updater  : ",
@@ -110,7 +136,6 @@ export function useSetClassForCurrentEl() {
       //   // }
       // );
 
-
       editor.CssComposer.setRule(
         `${currentSelector}${rule.ruleString}`,
         newCssProps || { [cssProp]: "" },
@@ -122,8 +147,6 @@ export function useSetClassForCurrentEl() {
           addStyle: true,
         }
       );
-
-
 
       editor.trigger("inf:rules:update", {
         rules: newCssProps,

@@ -99,6 +99,15 @@ export const HomeHeader = memo(() => {
   useEffect(() => {
     if (!editor) return;
     setZoomValue((editor.getContainer().style.zoom * 100).toFixed(2));
+    const changeDeviceCallback = () => {
+      const currentDeviceName = editor.getDevice();
+      const currentDevice = editor.Devices.get(currentDeviceName);
+      setDimaonsion({
+        height: parseFloat(currentDevice.attributes.height),
+        width: parseFloat(currentDevice.attributes.widthMedia),
+      });
+    };
+    editor.on("change:device", changeDeviceCallback);
   }, [editor]);
 
   useEffect(() => {
@@ -272,41 +281,51 @@ export const HomeHeader = memo(() => {
             }}
           />
 
-         <section className="relative">
-           <Li
-            icon={Icons.share}
-            title="share"
-            isObjectParamsIcon
-            className="flex-shrink-0"
-            // justHover
-            fillObjIconStroke
-            fillObjectIconOnHover
-            onClick={() => {
-              // editor.store();
-              shareProject();
-              /**
-               *
-               * @param {MessageEvent} ev
-               */
-              const callback = async(ev) => {
-                if (ev.data.command == "shareProject") {
-                  console.log(ev);
-                  const {response} = ev.data;
-                  if(response.status == 'success'){
-                    // "http://tmpfiles.org/11276583/dasd.zip"
-                    const fileUrl = response.data.url.replace("http://tmpfiles.org/" , "https://tmpfiles.org/dl/");
-                    await navigator.clipboard.writeText(`${window.origin}/workspace?file=${btoa(fileUrl)}`);
-                    toast.info(<ToastMsgInfo msg={`Share URL is copied , so you can share now💙`}/>,{progressClassName:'bg-blue-600'});
+          <section className="relative">
+            <Li
+              icon={Icons.share}
+              title="share"
+              isObjectParamsIcon
+              className="flex-shrink-0"
+              // justHover
+              fillObjIconStroke
+              fillObjectIconOnHover
+              onClick={() => {
+                // editor.store();
+                shareProject();
+                /**
+                 *
+                 * @param {MessageEvent} ev
+                 */
+                const callback = async (ev) => {
+                  if (ev.data.command == "shareProject") {
+                    console.log(ev);
+                    const { response } = ev.data;
+                    if (response.status == "success") {
+                      // "http://tmpfiles.org/11276583/dasd.zip"
+                      const fileUrl = response.data.url.replace(
+                        "http://tmpfiles.org/",
+                        "https://tmpfiles.org/dl/"
+                      );
+                      await navigator.clipboard.writeText(
+                        `${window.origin}/workspace?file=${btoa(fileUrl)}`
+                      );
+                      toast.info(
+                        <ToastMsgInfo
+                          msg={`Share URL is copied , so you can share now💙`}
+                        />,
+                        { progressClassName: "bg-blue-600" }
+                      );
+                    }
+                    fetcherWorker.removeEventListener("message", callback);
                   }
-                  fetcherWorker.removeEventListener("message", callback);
-                }
-              };
-              fetcherWorker.addEventListener("message", callback);
-            }}
-          />
+                };
+                fetcherWorker.addEventListener("message", callback);
+              }}
+            />
 
-          {/* <p className="absolute top-[100%] left-[-150px] w-[300px] p-2 bg-slate-800 rounded-lg z-[500]">dadsadadl dlas,dlsadlklsakdlaksldksalkdlsalkd</p> */}
-         </section>
+            {/* <p className="absolute top-[100%] left-[-150px] w-[300px] p-2 bg-slate-800 rounded-lg z-[500]">dadsadadl dlas,dlsadlklsakdlaksldksalkdlsalkd</p> */}
+          </section>
 
           <Li
             icon={Icons.export}

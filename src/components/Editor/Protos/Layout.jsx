@@ -89,7 +89,7 @@ export const Layout = memo(({}) => {
       </section>
 
       {( option && (option.includes("flex") || option.includes("grid"))) && (
-        <section className=" flex flex-col gap-2 p-2 rounded-lg bg-slate-900">
+        <section className=" flex flex-col gap-2  rounded-lg bg-slate-900">
           {option.includes("flex") && <FlexLayout />}
           {option.includes("grid") && <GridLayout />}
         </section>

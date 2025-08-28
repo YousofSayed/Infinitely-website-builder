@@ -130,22 +130,13 @@ export const Layer = ({
   useEffect(() => {
     const callbackSelected = () => {
       // console.log(editor.getSelected().toolbar);
-
-      setTools(
-        editor
-          .getSelected()
-          .toolbar.map((tlb) => {
-            if (
-              typeof tlb.command == "string" &&
-              !tlb.command.includes("tlb-move")
-            ) {
-              return null;
-            }
-            return tlb;
-          })
-          .filter(Boolean)
-      );
-      // console.log(editor.getSelected().toolbar);
+      if (editor.getSelected() != layer) return;
+      const toolsWillSetted = editor.getSelected().toolbar.filter((tlb) => {
+        return tlb.command !== "tlb-move";
+      });
+      // .filter(Boolean)
+      setTools(toolsWillSetted);
+      console.log("toooools is : ", toolsWillSetted, layer.toolbar);
     };
     const callbackDeSelected = () => {
       setTools([]);
@@ -174,6 +165,7 @@ export const Layer = ({
   }, [editor]);
 
   useEffect(() => {
+    if(!editor)return;
     // layersRef.current &&
     //   layersRef.current.scrollToIndex({
     //     index: index,
@@ -183,9 +175,14 @@ export const Layer = ({
     //     // alignToTop: true, // Aligns the item to the top of the viewport
     //     // offset: 0, //
     //   });
+    if(editor.getSelected() != layer)return;
     animatedRef.current &&
-      animatedRef.current.scrollIntoView({ behavior: "smooth" , block:'center' , inline:'start'});
-  }, [isOpentNested, animatedRef, layersRef , selectedEl]);
+      animatedRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "start",
+      });
+  }, [isOpentNested, animatedRef, layersRef, selectedEl , editor]);
 
   /**
    *
@@ -430,7 +427,7 @@ export const Layer = ({
                   ev.preventDefault();
                   ev.stopPropagation();
                 }}
-                className={` select-none  text-slate-200  font-semibold capitalize`}
+                className={` select-none custom-font-size   text-slate-200  font-semibold capitalize`}
               >
                 {layer.getName()}
               </p>
@@ -491,13 +488,14 @@ export const Layer = ({
               className="cursor-pointer w-[30px] h-full flex justify-center items-center [&:hover_svg]:fill-white"
               onClick={(ev) => {
                 ev.stopPropagation();
+                ev.preventDefault();
                 addClickClass(ev.currentTarget, "click");
                 document.body.click();
                 setIsOpen(!isOpen);
                 // editor.select(layer , {scroll:true});
                 // editor.select(layer.)
                 console.log("tools : ", tools, layer.toolbar);
-                setTools(layer.toolbar);
+                // setTools(layer.toolbar);
                 editor.Layers.setLayerData(layer, { selected: true });
               }}
             >
@@ -506,53 +504,55 @@ export const Layer = ({
                 ...(selected && { fill: "white" }),
               })}
             </a>
-            <Tooltip
-              isOpen={isOpen}
-              opacity={1}
-              clickable
-              anchorSelect={`#${layer.getId()}-tb`}
-              className="bg-[#1e293b!important] flex flex-col  shadow-lg bg-slate-800 z-[5000]"
-              // float={true}
-              // openEvents={{click:true}}
-              // role="article"
-              place="right-end"
-              openOnClick
-              closeEvents={{ click: true, blur: true, dblclick: true }}
-              globalCloseEvents={{
-                clickOutsideAnchor: true,
-                escape: true,
-                scroll: true,
-                resize: true,
-              }}
-            >
-              {tools.map((tool, i) => {
-                return (
-                  <span
-                    key={i}
-                    onClick={(ev) => {
-                      ev.stopPropagation();
-                      console.log("what happen?");
+            {!!tools.length && (
+              <Tooltip
+                isOpen={isOpen}
+                opacity={1}
+                clickable
+                anchorSelect={`#${layer.getId()}-tb`}
+                className="bg-[#1e293b!important] flex flex-col  shadow-lg bg-slate-800 z-[5000]"
+                // float={true}
+                // openEvents={{click:true}}
+                // role="article"
+                place="right-end"
+                openOnClick
+                closeEvents={{ click: true, blur: true, dblclick: true }}
+                globalCloseEvents={{
+                  clickOutsideAnchor: true,
+                  escape: true,
+                  scroll: true,
+                  resize: true,
+                }}
+              >
+                {tools.map((tool, i) => {
+                  return (
+                    <span
+                      key={i}
+                      onClick={(ev) => {
+                        ev.stopPropagation();
+                        console.log("what happen?");
 
-                      addClickClass(ev.currentTarget, "click");
-                      // copyCmds();
-                      typeof tool.command === "string"
-                        ? editor.runCommand(tool.command)
-                        : tool.command(editor);
-                    }}
-                    className="flex h-full items-center gap-2 cursor-pointer transition-all hover:bg-blue-500 font-semibold p-2 rounded-lg"
-                  >
-                    <i
-                      className="w-[100%] [&_svg]:w-[20px] text-white flex justify-center items-center"
-                      // onClick={(ev) => {
-                      //   ev.stopPropagation();
-                      // }}
-                      dangerouslySetInnerHTML={{ __html: tool.label }}
-                    ></i>
-                    {/* <span></span> */}
-                  </span>
-                );
-              })}
-            </Tooltip>
+                        addClickClass(ev.currentTarget, "click");
+                        // copyCmds();
+                        typeof tool.command === "string"
+                          ? editor.runCommand(tool.command)
+                          : tool.command(editor);
+                      }}
+                      className="flex h-full items-center gap-2 cursor-pointer transition-all hover:bg-blue-500 font-semibold p-2 rounded-lg"
+                    >
+                      <i
+                        className="w-[100%] [&_svg]:w-[20px] text-white flex justify-center items-center"
+                        // onClick={(ev) => {
+                        //   ev.stopPropagation();
+                        // }}
+                        dangerouslySetInnerHTML={{ __html: tool.label }}
+                      ></i>
+                      {/* <span></span> */}
+                    </span>
+                  );
+                })}
+              </Tooltip>
+            )}
           </>
 
           <button

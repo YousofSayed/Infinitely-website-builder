@@ -186,6 +186,8 @@ export const Select = ({
     if (index == -1 && newKeyW.length) {
       setCurrentChoose(0);
       choosenKeyword.current = newKeyW[0]; //no items founded
+      // setCurrentChoose(index);
+      // choosenKeyword.current = ''; //no items founded
     } else {
       setCurrentChoose(index);
       choosenKeyword.current = newKeyW[index];
@@ -265,12 +267,12 @@ export const Select = ({
       setKeyword(textareavalue);
       onAll(!replaceLastWorld ? finalvalue : textareavalue);
       onEnterPress(!replaceLastWorld ? finalvalue : textareavalue);
-      setValue(textareavalue);
+      setValue("");
       console.log("choosen keyword  : ", choosenKeyword.current, finalvalue);
       console.log("finalvalue : ", textareavalue);
       console.log("value : ", value);
 
-      !isTextarea && setMenu(false);
+      // !isTextarea && setMenu(false);
       // inputRef.current.focus();
     }
 
@@ -324,18 +326,18 @@ export const Select = ({
           type="text"
           placeholder={placeholder || label}
           onClick={(ev) => {
-            console.log("clcickckckc");
-
             ev.stopPropagation();
             selectRef.current.click();
             setNewKeywords(keywords);
-            setCurrentChoose(
-              newKeywords.findIndex((keyword) =>
-                keyword
-                  .toLowerCase()
-                  .includes(ev.target.value.trim().toLowerCase())
-              )
+            console.log("clcickckckc", keywords);
+            const index = keywords.findIndex(
+              (keyword) =>
+                keyword.toLowerCase() === ev.target.value.trim().toLowerCase()
             );
+            const choose = index <= -1 ? 0 : index;
+            setCurrentChoose(choose);
+            setKeyword(keywords[choose]);
+            choosenKeyword.current = keywords[choose];
             !isTextarea && !keywords.length
               ? setMenu(false)
               : setMenu(!showMenu);
@@ -354,6 +356,24 @@ export const Select = ({
           }}
           onKeyDown={(ev) => {
             handleChooses(ev);
+            if ((ev.ctrlKey || ev.metaKey) && ev.key === " ") {
+              ev.stopPropagation();
+              selectRef.current.click();
+              setNewKeywords(keywords);
+              const index = keywords.findIndex(
+                (keyword) =>
+                  keyword.toLowerCase() === ev.target.value.trim().toLowerCase()
+                //    ||
+                // keyword
+                //   .toLowerCase()
+                //   .includes(ev.target.value.trim().toLowerCase())
+              );
+              const choose = index <= -1 ? 0 : index;
+              setCurrentChoose(choose);
+              setKeyword(keywords[choose]);
+              choosenKeyword.current = keywords[choose];
+              setMenu(true);
+            }
             // showPopover(true);
           }}
           // onFocus={(ev)=>{
@@ -429,13 +449,16 @@ export const Select = ({
                   ev.stopPropagation();
                   selectRef.current.click();
                   setNewKeywords(keywords);
-                  setCurrentChoose(
-                    newKeywords.findIndex((keyword) =>
-                      keyword
-                        .toLowerCase()
-                        .includes(ev.target.value.trim().toLowerCase())
-                    )
+                  console.log("clcickckckc", keywords);
+                  const index = keywords.findIndex(
+                    (keyword) =>
+                      keyword.toLowerCase() ===
+                      ev.target.value.trim().toLowerCase()
                   );
+                  const choose = index <= -1 ? 0 : index;
+                  setCurrentChoose(choose);
+                  setKeyword(keywords[choose]);
+                  choosenKeyword.current = keywords[choose];
                   setMenu(true);
                 }}
                 onInput={(ev) => {

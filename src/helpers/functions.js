@@ -1490,7 +1490,7 @@ posts : ['post-1' , 'post-2']
 export function getCurrentSelector(selector, cmp) {
   if (!cmp) return "";
   const symbolInfo = getInfinitelySymbolInfo(cmp);
-  let currentSelector = null;
+  let currentSelector ;
   if (selector?.toString()) {
     console.log("selector", selector.toString());
 
@@ -1518,14 +1518,16 @@ export function getCurrentSelector(selector, cmp) {
   else {
     const newClassName = `inf-${uniqueID()}`;
     const infClassName = cmp.getAttributes()[inf_class_name];
-
+    const classes = [...cmp.getClasses()]
     if (!infClassName) {
-      cmp.addAttributes({
-        [inf_class_name]: newClassName,
-      });
+      // cmp.addAttributes({
+      //   [inf_class_name]: newClassName,
+      // });
+      currentSelector = '';
+      return currentSelector;
     }
-    cmp.addClass(infClassName ? infClassName : newClassName);
-    currentSelector = `.${infClassName ? infClassName : newClassName}`;
+    // !classes.some(cls=>cls.toLowerCase() == infClassName.toLowerCase()) && cmp.addClass(infClassName ? infClassName : newClassName);
+    currentSelector = `.${infClassName}`;
     // currentSelector = `#${cmp.getId()}`;
     // console.log("else");
   }
