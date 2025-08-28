@@ -123,7 +123,7 @@ export const Menu = ({
       // offset: 0, //
     });
 
-    console.log("keywords : ", keywords);
+    // console.log("keywords : ", keywords); 
 
     // document.body.scrollIntoView({
     //   block:'end'
@@ -144,10 +144,10 @@ export const Menu = ({
 
     // prevNumber.current = currentChoose;
 
-    // choosenKeyword.current = refs.current[currentChoose]?.textContent;
+    choosenKeyword.current = keywords[currentChoose];
     // console.log('content : ', refs.current[currentChoose]?.textContent);
     // menuRef, choosenRef, currentChoose , isOpen ,
-  });
+  },[currentChoose]);
 
   // useLayoutEffect(() => {
   //   const totalHeight = keywords.length * 50; // Total height = itemCount * itemSize
@@ -249,6 +249,7 @@ export const Menu = ({
         totalCount={keywords.length}
         style={{ gap: "unset", marginBottom: "unset" }}
         components={{ Item: (props) => <div {...props}></div> }}
+        
         itemContent={(index) => {
           const item = keywords[index]; // || "No Items Founded...";
           // console.log("item : ", item, index, currentChoose);

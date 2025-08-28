@@ -230,14 +230,14 @@ export const Select = ({
       // setValue(choosenKeyword.current)
     }
     //Ctrl & Sapce
-    else if (ev.ctrlKey && ev.key == " ") {
-      ev.preventDefault();
-      const values = ev.target.value.split(" ");
-      console.log("value : ", values, values[values.length - 1]);
-      setNewKeywords(keywords);
+    // else if (ev.ctrlKey && ev.key == " ") {
+    //   ev.preventDefault();
+    //   const values = ev.target.value.split(" ");
+    //   console.log("value : ", values, values[values.length - 1]);
+    //   setNewKeywords(keywords);
 
-      !isTextarea && showMenuCallback();
-    }
+    //   !isTextarea && showMenuCallback();
+    // }
     //ArrowUp
     else if (ev.key == "ArrowUp") {
       // if (isTextarea && !ev.ctrlKey) return;
@@ -267,7 +267,7 @@ export const Select = ({
       setKeyword(textareavalue);
       onAll(!replaceLastWorld ? finalvalue : textareavalue);
       onEnterPress(!replaceLastWorld ? finalvalue : textareavalue);
-      setValue("");
+      setValue(textareavalue);
       console.log("choosen keyword  : ", choosenKeyword.current, finalvalue);
       console.log("finalvalue : ", textareavalue);
       console.log("value : ", value);
