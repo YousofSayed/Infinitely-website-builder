@@ -78,7 +78,7 @@ body {
   z-index: 999999 !important;
 }
 
-.gjs-cv-canvas iframe {
+.gjs-cv-canvas iframe , #editor-container {
   transform: translateZ(0);
   will-change: zoom;
   backface-visibility: hidden;

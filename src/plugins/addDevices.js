@@ -71,7 +71,7 @@ export const addDevices = (editor) => {
       editor.getContainer().style.contain = `layout paint size`;
       editor.getContainer().style.backfaceVisibility = `hidden`;
       editor.getContainer().style.transform = `translateZ(0)`;
-      
+
       if (wrapperWidth < targetWidth) {
         const scale = wrapperWidth / targetWidth;
 
@@ -127,9 +127,16 @@ export const addDevices = (editor) => {
   //   zoomToFit();
   // });
 
-  editor.on("canvas:frame:load", () => {
+  editor.on("canvas:frame:load",
+    /**
+     * 
+     * @param {{window:Window}} param0 
+     */
+    ({window}) => {
     // console.log('from load ;' , document.querySelector(`#right-panel`));
     //document.querySelector(`#panel-group`)
+    console.log('from load window' , window);
+    window.document
     zoomToFit();
     mutationsObserver.observe(document.querySelector(`#panels-group`), {
       childList: true,

@@ -337,7 +337,7 @@ export const Iframe = memo(() => {
   // }, [showPreview]);
 
   return (
-    <section className="relative bg-[#aaa]    h-full" ref={autoAnimate}>
+    <section id="editor-container" className="relative bg-[#aaa]    h-full" ref={autoAnimate}>
       {showAnimBuilder && (
         <section className="grid place-items-center p-2 absolute top-0 left-0 z-20 bg-blur-dark w-full h-full">
           <section className="flex flex-col items-center justify-center self-center p-3 bg-slate-900 rounded-lg gap-5">

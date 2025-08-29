@@ -491,20 +491,21 @@ export const Interactions = () => {
                     `self`,
                     `[${interactionId}="${interactionsId}"]`
                   )
-                : value ;
+                : value;
             })
             .join(",")})`
       )
       .join(";");
 
-   
     console.log(`functionsFromParams 222 : `, functionsFromParams);
 
     return functionsFromParams;
   };
 
   useEffect(() => {
-    if (!selectedEl && !editor) return;
+    if (!selectedEl) return;
+    if (!editor) return;
+    if (!editor.getSelected()) return;
     // getAndSetIdHandle();
     (async () => {
       const sle = editor.getSelected();

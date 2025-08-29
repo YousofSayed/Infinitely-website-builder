@@ -122,7 +122,7 @@ export const addNewTools = (editor) => {
         console.warn("no model!!");
         return;
       }
-      if(model.get('type') == 'wrapper')return;
+      if (model.get("type") == "wrapper") return;
       const props = model.props();
       if (props.droppable && !model.components().length) {
         model.addClass(["drop"]);
@@ -193,7 +193,7 @@ export const addNewTools = (editor) => {
   //       );
   //     }
 
-  //     if (parentOfParent && parentOfParent.get('type') =='wrapper' )return; 
+  //     if (parentOfParent && parentOfParent.get('type') =='wrapper' )return;
   //   }
   // );
 
@@ -239,6 +239,72 @@ export const addNewTools = (editor) => {
   //   }
   // );
 
+  // editor.on(
+  //   "component:add",
+  //   /**
+  //    *
+  //    * @param {import('grapesjs').Component} cmp
+  //    */
+  //   (cmp) => {
+  //     const parent = cmp.parent();
+  //     console.log('classes  :' ,parent.getClasses());
+
+  //     if (parent.getClasses().includes("p-10")) {
+  //       console.log("From padding remover", cmp);
+  //       parent.removeClass("p-10", {});
+  //     }
+  //   }
+  // );
+
+  let scrollTimeout,
+    isScrollValue = false;
+  editor.once(
+    "canvas:frame:load:body",
+    /**
+     *
+     * @param {{window:Window}} param0
+     */
+    ({ window }) => {
+      console.log("loaded from scroller");
+      const canvasDoc = editor.Canvas.getDocument();
+      const wrapperEl = editor.getWrapper().getEl();
+      const canvasBody = editor.Canvas.getBody();
+      const scrollCallback = (ev) => {
+        editor.trigger("canvas:frame:scroll", {
+          window,
+          isScroll: true,
+        });
+        scrollTimeout && clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          editor.trigger("canvas:frame:scroll:stop", {
+            window,
+            isScroll: false,
+          });
+        }, 200);
+      };
+      if (!(canvasDoc && canvasBody && wrapperEl)) {
+        console.error("no canvas doc or body or wrapper");
+        return;
+      }
+      // canvasDoc.documentElement.style.contain = `paint layout size`;
+      canvasDoc.addEventListener("scroll", scrollCallback);
+      wrapperEl.addEventListener("scroll", scrollCallback);
+      canvasBody.addEventListener("scroll", scrollCallback);
+    }
+  );
+
+  editor.on("canvas:frame:scroll", ({ window, isScroll }) => {
+    // console.log("is scrollll : ", isScroll , window);
+    isScrollValue = isScroll;
+    editor.Canvas.getBody().classList.add("preventWhenScroll");
+  });
+
+  editor.on("canvas:frame:scroll:stop", ({ window, isScroll }) => {
+    // console.log("is scrollll stop: ", isScroll);
+    isScrollValue = isScroll;
+    editor.Canvas.getBody().classList.remove("preventWhenScroll");
+  });
+
   editor.on(
     "component:hovered",
     /**
@@ -247,6 +313,7 @@ export const addNewTools = (editor) => {
      */
     (component) => {
       if (!component) return;
+      if (!isScrollValue) return;
       try {
         // const trg = component && component.getEl();
         const highlighter = document.querySelector(
@@ -284,23 +351,6 @@ export const addNewTools = (editor) => {
       }
     }
   );
-
-  // editor.on(
-  //   "component:add",
-  //   /**
-  //    *
-  //    * @param {import('grapesjs').Component} cmp
-  //    */
-  //   (cmp) => {
-  //     const parent = cmp.parent();
-  //     console.log('classes  :' ,parent.getClasses());
-
-  //     if (parent.getClasses().includes("p-10")) {
-  //       console.log("From padding remover", cmp);
-  //       parent.removeClass("p-10", {});
-  //     }
-  //   }
-  // );
 
   editor.on("component:selected", (cmp) => {
     const sle = editor.getSelected();

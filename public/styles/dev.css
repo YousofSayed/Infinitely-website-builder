@@ -1,7 +1,15 @@
 /* svg{
     pointer-events: none;
 } */
-
+img,
+video {
+  will-change: auto !important;
+}
+.preventWhenScroll *  {
+  transition: none !important;
+  animation-play-state: paused !important;
+  animation: none !important;
+}
 [inf-symbol-id].gjs-selected,
 [inf-symbol-id] *.gjs-selected {
   outline: 2px solid #eb2588 !important;
@@ -66,7 +74,7 @@ infinitely-svg svg {
   align-items: center;
 }
 
-.drop{
+.drop {
   background-color: #eee;
   min-height: 70px;
   height: 70px;
@@ -75,8 +83,8 @@ infinitely-svg svg {
   font-weight: bold !important;
 }
 
-.drop::before{
-  content: 'Drop Here';
+.drop::before {
+  content: "Drop Here";
   position: absolute;
   width: fit-content;
   height: fit-content;
@@ -84,16 +92,15 @@ infinitely-svg svg {
   left: 50%;
   font-weight: 500;
   text-transform: capitalize;
-  transform: translate(-50% , -50%);
+  transform: translate(-50%, -50%);
   color: black !important;
   font-weight: bold !important;
 }
 
-.min-h-60{
+.min-h-60 {
   min-height: 60px;
 }
 
-
-spline-viewer{
+spline-viewer {
   pointer-events: none;
 }
