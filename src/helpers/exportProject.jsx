@@ -33,7 +33,7 @@ import {
   minifyBlobJSAndCssStream,
   replaceBlobs,
 } from "./bridge";
-import { parseHTML } from "linkedom";
+// import { parseHTML } from "linkedom";
 import {
   buildScripts,
   inf_build_url,
@@ -47,6 +47,7 @@ import { cloneDeep, cloneDeepWith, isPlainObject, uniqueId } from "lodash";
 import { workerSendToast } from "./workerCommands";
 import { opfs } from "./initOpfs";
 import { html_beautify } from "js-beautify";
+import { parseHTML } from "linkedom";
 
 /**
  * @type {{[key:string]:string[]}}
@@ -545,7 +546,6 @@ export const exportProject = async (props) => {
   exportTimeout && clearTimeout(exportTimeout);
   exportTimeout = setTimeout(async () => {
     try {
-
       workerSendToast({
         msg: loading_project_msg,
         type: "loading",
@@ -720,6 +720,17 @@ async function buildPage({
   // };
   // handleSrcBuilds();
 
+  const { document } = parseHTML(doDocument(await pageFile.text()));
+  const els = document.querySelectorAll(`[${inf_symbol_Id_attribute}]`);
+  for (const el of els) {
+    const symbolId = el.getAttribute(inf_symbol_Id_attribute);
+    el.outerHTML = await (
+      await opfs.getFile(
+        defineRoot(`editor/symbols/${symbolId}/${symbolId}.html`)
+      )
+    ).text();
+  }
+
   const pageRaw = html`
     <!DOCTYPE html>
     <html lang="en">
@@ -731,23 +742,7 @@ async function buildPage({
           .map((key) => `${key}="${page.bodyAttributes[key]}"`)
           .join(" ")}
       >
-        ${await (
-          await Promise.all(
-            chunkHtmlElements(await pageFile.text()).map(async (el) => {
-              if (!el.includes(inf_symbol_Id_attribute)) return el;
-              const symbolId = page.symbols.find((sId) =>
-                el.includes(`${inf_symbol_Id_attribute}="${sId}"`)
-              );
-              if (!symbolId) return el;
-              const symbolHandle = await opfs.getFile(
-                defineRoot(`editor/symbols/${symbolId}/${symbolId}.html`)
-              );
-              if (!symbolHandle.exists()) return el;
-              el = await symbolHandle.text();
-              return el;
-            })
-          )
-        ).join("\n")}
+        ${document.body.innerHTML}
         ${grapeFooterScripts
           ? `<script ${(isFooterGrapedDefer && 'defer="true"') || ""} ${
               (isFooterGrapedAsync && 'async="true"') || ""

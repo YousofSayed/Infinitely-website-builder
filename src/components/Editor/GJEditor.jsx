@@ -225,7 +225,7 @@ export const GJEditor = memo(({ children }) => {
         parser: {
           optionsHtml: {
             allowScripts: true,
-            detectDocument: true,
+            // detectDocument: true,
             allowUnsafeAttr: true,
 
             allowUnsafeAttrValue: true,

@@ -36,6 +36,7 @@ import { updateThumbnailTimeout } from "./updateProjectThumbnail";
 import { css_beautify } from "js-beautify";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
+import { parseHTML } from "linkedom";
 
 let loadFooterScriptsCallback, loadHeadScriptsCallback, loadMainScriptsCallback;
 let storeTimeout;
@@ -233,10 +234,10 @@ export const IDB = (editor) => {
 
             editor.addComponents(sliced.join(""), {
               avoidStore: true,
-              merge: true,
-              sort: true,
+              // merge: true,
+              // sort: true,
               // temporary: true,
-              avoidUpdateStyle: true,
+              // avoidUpdateStyle: true,
             });
 
             // paresd = null;
@@ -266,30 +267,49 @@ export const IDB = (editor) => {
           const renderCallback = async () => {
             // 1. Clear styles completely
             // editor.setStyle(css_beautify(cssCode), { avoidStore: true });
-
-            htmlPage = await Promise.all(
-              chunkHtmlElements(
+            const {document} = parseHTML(
+              doDocument(
                 await (
                   await opfs.getFile(
                     defineRoot(`editor/pages/${currentPageId}.html`)
                   )
                 ).text()
-              ).map(async (el) => {
-                if (!el.includes(inf_symbol_Id_attribute)) return el;
-                for (const symbolId of currentPage.symbols || []) {
-                  if (el.includes(`${inf_symbol_Id_attribute}="${symbolId}"`)) {
-                    el = await (
+              )
+            );
+            const els = document.querySelectorAll(`[${inf_symbol_Id_attribute}]`);
+            for (const el of els) {
+              const symbolId = el.getAttribute(inf_symbol_Id_attribute)
+               el.outerHTML = await (
                       await opfs.getFile(
                         defineRoot(
                           `editor/symbols/${symbolId}/${symbolId}.html`
                         )
                       )
                     ).text();
-                  }
-                }
-                return el;
-              })
-            );
+            }
+            // htmlPage = await Promise.all(
+            //   chunkHtmlElements(
+            //     await (
+            //       await opfs.getFile(
+            //         defineRoot(`editor/pages/${currentPageId}.html`)
+            //       )
+            //     ).text()
+            //   ).map(async (el) => {
+            //     if (!el.includes(inf_symbol_Id_attribute)) return el;
+            //     for (const symbolId of currentPage.symbols || []) {
+            //       if (el.includes(`${inf_symbol_Id_attribute}="${symbolId}"`)) {
+            //         el = await (
+            //           await opfs.getFile(
+            //             defineRoot(
+            //               `editor/symbols/${symbolId}/${symbolId}.html`
+            //             )
+            //           )
+            //         ).text();
+            //       }
+            //     }
+            //     return el;
+            //   })
+            // );
 
             if (projectSettings.enable_editor_lazy_loading) {
               editor.setComponents(``, { avoidStore: true });
@@ -305,20 +325,24 @@ export const IDB = (editor) => {
               // editor.addStyle(css_beautify(cssCode) , {avoidStore:true})
               editor.clearDirtyCount();
               storageManager.setStepsBeforeSave(0);
-              const appenderResponse = await appender(htmlPage);
+              const appenderResponse = await appender(document.body.innerHTML);
             } else {
-              editor.setComponents(htmlPage, {
+              const wrapper = editor.getWrapper();
+              // wrapper.components(`${htmlPage}` , {merge:false,skipDomReset:true,sort:false})
+              editor.setComponents(document.body.innerHTML, {
                 avoidStore: true,
-                merge: true,
+                merge: false,
+                sort: false,
                 // temporary: true,
               });
+              // wrapper.a
 
               editor.addComponents(
                 `<style infinitely-style">${cssCode}</style>`,
                 { avoidStore: true }
               );
 
-              htmlPage = null; // For garbage collection
+              // htmlPage = null; // For garbage collection
             }
           };
 
@@ -569,12 +593,20 @@ export const IDB = (editor) => {
                   },
                 },
               };
+              editor.Parser.config.optionsHtml.allowScripts = false;
 
               files[`editor/pages/${currentPageId}.html`] = editor
                 .getWrapper()
                 .getInnerHTML({ withProps: true });
+              editor.Parser.config.optionsHtml.allowScripts = true;
 
               files[`css/${currentPageId}.css`] = cssCode;
+              console.log(
+                "from store",
+                currentPageName,
+                `editor/pages/${currentPageId}.html`,
+                editor.getWrapper().getInnerHTML({ withProps: true })
+              );
 
               const props = {
                 data,

@@ -598,7 +598,7 @@ monaco.languages.registerDocumentFormattingEditProvider({language:'html'}, {
             sticky: true,
           },
           scrollbar: {
-            horizontal: "hidden",
+            horizontal: "auto",
             useShadows: false, // Simpler scroll UI
             verticalScrollbarSize: 10, // Thinner, less redraw
           },

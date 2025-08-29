@@ -41,6 +41,7 @@ export const Layer = ({
   const [showInput, setShowInput] = useState(false);
   const [autoAnim] = useAutoAnimate();
   const animatedRef = useRef(refType);
+  const willScrollRef = useRef(refType);
   const nestedLayyersRef = useRef(refType);
   useEffect(() => {
     if (!editor) return;
@@ -176,13 +177,13 @@ export const Layer = ({
     //     // offset: 0, //
     //   });
     if(editor.getSelected() != layer)return;
-    animatedRef.current &&
-      animatedRef.current.scrollIntoView({
+    willScrollRef.current &&
+      willScrollRef.current.scrollIntoView({
         behavior: "smooth",
         block: "center",
         inline: "start",
       });
-  }, [isOpentNested, animatedRef, layersRef, selectedEl , editor]);
+  }, [isOpentNested, willScrollRef, layersRef, selectedEl , editor]);
 
   /**
    *
@@ -257,6 +258,7 @@ export const Layer = ({
       }
     >
       <section
+      ref={willScrollRef}
         draggable={true}
         onDragOver={(ev) => {
           ev.preventDefault();
