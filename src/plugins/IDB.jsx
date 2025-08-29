@@ -267,7 +267,7 @@ export const IDB = (editor) => {
           const renderCallback = async () => {
             // 1. Clear styles completely
             // editor.setStyle(css_beautify(cssCode), { avoidStore: true });
-            const {document} = parseHTML(
+            const { document } = parseHTML(
               doDocument(
                 await (
                   await opfs.getFile(
@@ -276,16 +276,16 @@ export const IDB = (editor) => {
                 ).text()
               )
             );
-            const els = document.querySelectorAll(`[${inf_symbol_Id_attribute}]`);
+            const els = document.querySelectorAll(
+              `[${inf_symbol_Id_attribute}]`
+            );
             for (const el of els) {
-              const symbolId = el.getAttribute(inf_symbol_Id_attribute)
-               el.outerHTML = await (
-                      await opfs.getFile(
-                        defineRoot(
-                          `editor/symbols/${symbolId}/${symbolId}.html`
-                        )
-                      )
-                    ).text();
+              const symbolId = el.getAttribute(inf_symbol_Id_attribute);
+              el.outerHTML = await (
+                await opfs.getFile(
+                  defineRoot(`editor/symbols/${symbolId}/${symbolId}.html`)
+                )
+              ).text();
             }
             // htmlPage = await Promise.all(
             //   chunkHtmlElements(
@@ -323,9 +323,11 @@ export const IDB = (editor) => {
                 { avoidStore: true }
               );
               // editor.addStyle(css_beautify(cssCode) , {avoidStore:true})
-              editor.clearDirtyCount();
-              storageManager.setStepsBeforeSave(0);
-              const appenderResponse = await appender(document.body.innerHTML);
+              setTimeout(() => {
+                editor.clearDirtyCount();
+                storageManager.setStepsBeforeSave(0);
+              });
+              const appenderResponse = await appender([...document.body.children]);
             } else {
               const wrapper = editor.getWrapper();
               // wrapper.components(`${htmlPage}` , {merge:false,skipDomReset:true,sort:false})

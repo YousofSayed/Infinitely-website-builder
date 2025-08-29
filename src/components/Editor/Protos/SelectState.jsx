@@ -113,6 +113,7 @@ export const SelectState = ({ placeholder }) => {
     }
     const currentSelector = getCurrentSelector(selector, editor.getSelected());
     let filterHandledRules = [];
+    if(!currentSelector)return [];
     const selectorRules = extractRulesByIdWithDetails(
       // minify(editor.getCss({ clearStyles: false, keepUnusedStyles: true })).css,
       editor.getCss({ clearStyles: false, keepUnusedStyles: true }),

@@ -5,8 +5,7 @@ import { editorContainerInstance } from "../constants/InfinitelyInstances";
  * @param {import('grapesjs').Editor} editor
  */
 export const addDevices = (editor) => {
-  let resizerObserver ,
-    mutationsObserver ;
+  let resizerObserver, mutationsObserver;
   const deviceManager = editor.DeviceManager;
   function emitEditorContainerZoom() {
     console.log("i emit !!");
@@ -67,13 +66,24 @@ export const addDevices = (editor) => {
       const wrapperWidth = canvasWrapper.clientWidth;
       // const iframeBody = iframe.contentDocument.body;
       // iframeBody.style.transition = `.2s`;
-      editor.getContainer().style.transformOrigin = "top left";
-      editor.getContainer().style.willChange = "transform";
+      editor.getContainer().style.transformOrigin = "0 0";
+      editor.getContainer().style.willChange = "zoom";
+      editor.getContainer().style.contain = `layout paint size`;
+      editor.getContainer().style.backfaceVisibility = `hidden`;
+      editor.getContainer().style.transform = `translateZ(0)`;
+      
       if (wrapperWidth < targetWidth) {
         const scale = wrapperWidth / targetWidth;
 
         iframe.style.width = `100%`;
         editor.getContainer().style.zoom = `${scale}`;
+
+        // editor.on('component:create',(model)=>{
+        //   model.getEl().style.zoom = scale;
+        // })
+        // editor.getContainer().style.transform = `scale(${scale})`;
+        // editor.getContainer().style.width = `${editor.getContainer().clientWidth + (editor.getContainer().clientWidth * scale)}px`;
+        // editor.getContainer().style.height = `${editor.getContainer().clientHeight + (editor.getContainer().clientHeight * scale)}px`;
         // editor.getContainer().style.transform = `scale(${scale})`;
         // editor.Canvas.refresh({ all: true, spots: true });
         // editor.refresh({ tools: true });
