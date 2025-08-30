@@ -1503,69 +1503,93 @@ export async function writeFilesToOPFS({ files }) {
 
 /**
  *
- * @param {{keyframe : import('css').KeyFrames}} param0
+ * @param {{keyframes : import('css').KeyFrames[]}} param0
  */
-export async function removeAnimation({ path, keyframe }) {
+export async function removeAnimation({ path, keyframes }) {
   let tId = uniqueId("toast-remove-animation-");
+  workerSendToast({
+    msg: "Removing animation...",
+    type: "loading",
+    dataProps: {
+      toastId: tId,
+    },
+  });
+
   try {
-    workerSendToast({
-      msg:'Removing animation...',
-      type:'loading',
-      dataProps:{
-        toastId:tId
+    for (const keyframe of keyframes) {
+      try {
+        const { stringify, parse } = await import("css");
+        const fileContent = await (
+          await opfs.getFile(defineRoot(keyframe.path))
+        ).text();
+        const parsedFile = parse(fileContent);
+        parsedFile.stylesheet.rules = parsedFile.stylesheet.rules.filter(
+          (rule) => !(rule.type == "keyframes" && rule.name == keyframe.name)
+        );
+        console.log("from remover : ", keyframe);
+
+        await opfs.writeFiles([
+          {
+            path: defineRoot(keyframe.path),
+            content: stringify(parsedFile),
+          },
+        ]);
+        self.postMessage({
+          command: "removeAnimation",
+          props: {
+            done: true,
+            keyframeName: keyframe.name,
+            path: keyframe.path,
+          },
+        });
+
+        workerSendToast({
+          msg: `Animation ${keyframe.name} removed successfully💙`,
+          type: "success",
+        });
+      } catch (error) {
+        self.postMessage({
+          command: "removeAnimation",
+          props: {
+            done: false,
+            keyframeName: keyframe.name,
+            path,
+          },
+        });
+        workerSendToast({
+          isNotMessage: true,
+          msg: tId,
+          type: "dismiss",
+          dataProps: {
+            progressClassName: "bg-[crimson]",
+          },
+        });
+        workerSendToast({
+          msg: `Faild to remove ${keyframe.name} animation for path (${
+            keyframe.path || path
+          })`,
+          type: "error",
+        });
+        throw new Error(error);
       }
-    })
-    const { stringify, parse } = await import("css");
-    const fileContent = await (await opfs.getFile(defineRoot(path))).text();
-    const parsedFile = parse(fileContent);
-    parsedFile.stylesheet.rules = parsedFile.stylesheet.rules.filter(
-      (rule) => !(rule.type == "keyframes" && rule.name == keyframe.name)
-    );
-    console.log('from remover : ' , keyframe);
-    
-    await opfs.writeFiles([
-      {
-        path :defineRoot(keyframe.path || path),
-        content: stringify(parsedFile),
-      },
-    ]);
+    }
+    workerSendToast({
+      isNotMessage: true,
+      msg: tId,
+      type: "done",
+    });
     self.postMessage({
-      command: "removeAnimation",
+      command: "animationsRemoved",
       props: {
         done: true,
-        keyframeName: keyframe.name,
-        path,
       },
     });
-    workerSendToast({
-      isNotMessage:true,
-      msg:tId,
-      type:'done'
-    });
-    workerSendToast({
-      msg:`Animation ${keyframe.name} removed successfully💙`,
-      type:'success'
-    })
   } catch (error) {
     self.postMessage({
-      command: "removeAnimation",
+      command: "animationsRemoved",
       props: {
         done: false,
-        keyframeName: keyframe.name,
-        path,
       },
-    });
-     workerSendToast({
-      isNotMessage:true,
-      msg:tId,
-      type:'dismiss',
-      dataProps:{
-        progressClassName:'bg-[crimson]'
-      }
-    });
-    workerSendToast({
-      msg:`Faild to remove ${keyframe.name} animation for path (${keyframe.path || path})`,
-      type:'error'
     });
     throw new Error(error);
   }

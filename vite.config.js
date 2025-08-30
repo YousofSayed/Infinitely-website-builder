@@ -8,6 +8,7 @@ import icons from "./public/icons/icons.json";
 import { chunkSplitPlugin } from "vite-plugin-chunk-split";
 // import MillionLint from "@million/lint";
 // import tailwindcss from '@tailwindcss/vite'
+import million from 'million/compiler'
 
 export default defineConfig({
   base:'/',
@@ -30,6 +31,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    million.vite({auto:true}),
     react(),
     // MillionLint.vite({}),
     // tailwindcss(),

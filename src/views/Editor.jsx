@@ -109,6 +109,13 @@ export function Editor({ params }) {
       props: { id: opfs.id },
     });
 
+    // routerWorker.postMessage({
+    //   command: "initOPFS",
+    //   props: { id: opfs.id },
+    // });
+
+
+
     console.log(
       "opfs id : ",
       opfs.id,
@@ -254,7 +261,7 @@ export function Editor({ params }) {
             {/* {!showPreview && <HomeNav />} */}
             <HomeNav />
             <section
-              ref={parent}
+              // ref={parent}
               className={`${
                 showPreview
                   ? "w-full"
@@ -275,7 +282,7 @@ export function Editor({ params }) {
                   <>
                     <Panel defaultSize={300} id="left-panel" order={1}>
                       <section
-                        ref={parentForPanelsGroup}
+                        // ref={parentForPanelsGroup}
                         className="h-full w-full"
                       >
                         {showLayers && (

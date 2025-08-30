@@ -3,6 +3,7 @@ import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import {
   animationsState,
+  animationsWillRemoveState,
   isAnimationsChangedState,
   projectData,
   showAnimationsBuilderState,
@@ -79,6 +80,9 @@ export const Iframe = memo(() => {
   const [showPreview, setShowPreview] = useRecoilState(showPreviewState);
   const [showDragLayer, setShowDragLayer] = useRecoilState(showDragLayerState);
   const [animations, setAnimations] = useRecoilState(animationsState);
+  const [animationsWillRemove, setAnimationsWillRemove] = useRecoilState(
+    animationsWillRemoveState
+  );
   const [saveLoad, setSaveLoad] = useState(false);
   const [isAnimationsChanged, setAnimationsChanged] = useRecoilState(
     isAnimationsChangedState
@@ -101,12 +105,41 @@ export const Iframe = memo(() => {
     if (isAnimationsChanged) {
       setSaveLoad(true);
       setAnimationsChanged("pendding");
-      keyframesGetterWorker.postMessage({
-        command: "saveAnimations",
-        props: {
-          animations,
-        },
-      });
+
+      if (animationsWillRemove.length) {
+        keyframesGetterWorker.postMessage({
+          command: "removeAnimation",
+          props: {
+            keyframes: animationsWillRemove,
+          },
+        });
+        /**
+         *
+         * @param {MessageEvent} ev
+         */
+        const callback = (ev) => {
+          const { command, props } = ev.data;
+          if (command == "animationsRemoved" && props.done) {
+            setAnimationsWillRemove([]);
+            keyframesGetterWorker.removeEventListener("message", callback);
+            keyframesGetterWorker.postMessage({
+              command: "saveAnimations",
+              props: {
+                animations,
+              },
+            });
+          }
+        };
+
+        keyframesGetterWorker.addEventListener("message", callback);
+      } else {
+        keyframesGetterWorker.postMessage({
+          command: "saveAnimations",
+          props: {
+            animations,
+          },
+        });
+      }
     }
   };
 
@@ -216,7 +249,6 @@ export const Iframe = memo(() => {
   //   });
   //   console.log("i should send preview page");
   // },[]);
-
 
   useEffect(() => {
     if (!showPreview) {
@@ -337,7 +369,10 @@ export const Iframe = memo(() => {
   // }, [showPreview]);
 
   return (
-    <section id="editor-container" className="relative bg-[#aaa]    h-full" ref={autoAnimate}>
+    <section
+      className="relative bg-[#aaa]    h-full"
+      ref={autoAnimate}
+    >
       {showAnimBuilder && (
         <section className="grid place-items-center p-2 absolute top-0 left-0 z-20 bg-blur-dark w-full h-full">
           <section className="flex flex-col items-center justify-center self-center p-3 bg-slate-900 rounded-lg gap-5">
@@ -408,11 +443,12 @@ export const Iframe = memo(() => {
 
       <Canvas
         // key={uniqueID()}
+        id="editor-container"
         label="Canvas"
         aria-label="Editor"
-        className="overflow-auto"
+        className="overflow-auto "
         style={{
-          // display: showPreview ? "none" : "block",
+          display: showPreview ? "none" : "block",
           // scale:showPreview ? 0 : 1,
           overflow: "auto",
         }}
@@ -426,109 +462,106 @@ export const Iframe = memo(() => {
       )} */}
 
       {/* {showPreview && ( */}
-        <section
-          ref={virtualBrowserWindow}
-          style={{display : showPreview ? 'block' : 'none'}}
-          className="w-full h-full rounded-xl overflow-hidden p-1 fixed left-0 top-0 z-[1000] backdrop-blur-md"
-          // style={{ display: showPreview ? "block" : "none" }}
-        >
-          {showPreview && (
-            <>
-              <header className="w-full h-[60px] flex items-center justify-between p-2 rounded-tl-lg rounded-tr-lg  bg-slate-900">
-                <section className="flex items-center  gap-5 w-[50%]">
-                  <FitTitle className=" w-[30%!important] h-full rounded-lg font-semibold capitalize text-xl text-center">
-                    {localStorage.getItem(current_page_id)}
-                  </FitTitle>
+      <section
+        ref={virtualBrowserWindow}
+        style={{ display: showPreview ? "block" : "none" }}
+        className="w-full h-full rounded-xl overflow-hidden p-1 fixed left-0 top-0 z-[1000] backdrop-blur-md"
+        // style={{ display: showPreview ? "block" : "none" }}
+      >
+        {showPreview && (
+          <>
+            <header className="w-full h-[60px] flex items-center justify-between p-2 rounded-tl-lg rounded-tr-lg  bg-slate-900">
+              <section className="flex items-center  gap-5 w-[50%]">
+                <FitTitle className=" w-[30%!important] h-full rounded-lg font-semibold capitalize text-xl text-center">
+                  {localStorage.getItem(current_page_id)}
+                </FitTitle>
 
+                <button
+                  onClick={(ev) => {
+                    addClickClass(ev.currentTarget, "click");
+                    reloadPreview();
+                  }}
+                >
+                  {Icons.refresh({ width: 20, height: 20 })}
+                </button>
+              </section>
+              <ul className="flex items-center gap-3 flex-wrap">
+                <li className="group w-[20px] h-[20px] bg-green-600 rounded-full overflow-hidden flex justify-center items-center cursor-pointer">
                   <button
+                    className="opacity-0 group-hover:opacity-[1] text-white font-bold  scale-[.8]  transition-all  w-full h-full flex justify-center items-center"
                     onClick={(ev) => {
                       addClickClass(ev.currentTarget, "click");
-                      reloadPreview();
+                      document.exitFullscreen();
                     }}
                   >
-                    {Icons.refresh({ width: 20, height: 20 })}
+                    {Icons.minimize({ strokeColor: "white", strokWidth: 2 })}
                   </button>
-                </section>
-                <ul className="flex items-center gap-3 flex-wrap">
-                  <li className="group w-[20px] h-[20px] bg-green-600 rounded-full overflow-hidden flex justify-center items-center cursor-pointer">
-                    <button
-                      className="opacity-0 group-hover:opacity-[1] text-white font-bold  scale-[.8]  transition-all  w-full h-full flex justify-center items-center"
-                      onClick={(ev) => {
-                        addClickClass(ev.currentTarget, "click");
-                        document.exitFullscreen();
-                      }}
-                    >
-                      {Icons.minimize({ strokeColor: "white", strokWidth: 2 })}
-                    </button>
-                  </li>
-                  <li className="group w-[20px] h-[20px] bg-yellow-600 rounded-full flex justify-center items-center cursor-pointer">
-                    <button
-                      className="opacity-0 group-hover:opacity-[1] scale-[.7] transition-all text-sm w-full h-full flex justify-center items-center"
-                      onClick={(ev) => {
-                        addClickClass(ev.currentTarget, "click");
-                        virtualBrowserWindow.current.requestFullscreen();
-                      }}
-                    >
-                      {Icons.square("white")}
-                    </button>
-                  </li>
-                  <li
-                    className="group w-[20px] h-[20px] bg-red-600 rounded-full flex justify-center items-center cursor-pointer"
+                </li>
+                <li className="group w-[20px] h-[20px] bg-yellow-600 rounded-full flex justify-center items-center cursor-pointer">
+                  <button
+                    className="opacity-0 group-hover:opacity-[1] scale-[.7] transition-all text-sm w-full h-full flex justify-center items-center"
                     onClick={(ev) => {
                       addClickClass(ev.currentTarget, "click");
-                      setShowPreview(!showPreview);
-                      setTimeout(() => {
-                        editor.trigger(InfinitelyEvents.pages.all);
-                      }, 0);
-                      // window.dispatchEvent(
-                      //   changePageName({
-                      //     pageName: localStorage.getItem(current_page_id),
-                      //   })
-                      // );
-                      // editor.load();
+                      virtualBrowserWindow.current.requestFullscreen();
                     }}
                   >
-                    <button className="opacity-0 group-hover:opacity-[1] transition-all text-sm w-full h-full flex justify-center items-center">
-                      {Icons.close("white")}
-                    </button>
-                  </li>
-                </ul>
-              </header>
+                    {Icons.square("white")}
+                  </button>
+                </li>
+                <li
+                  className="group w-[20px] h-[20px] bg-red-600 rounded-full flex justify-center items-center cursor-pointer"
+                  onClick={(ev) => {
+                    addClickClass(ev.currentTarget, "click");
+                    setShowPreview(!showPreview);
+                    setTimeout(() => {
+                      editor.trigger(InfinitelyEvents.pages.all);
+                    }, 0);
+                    // window.dispatchEvent(
+                    //   changePageName({
+                    //     pageName: localStorage.getItem(current_page_id),
+                    //   })
+                    // );
+                    // editor.load();
+                  }}
+                >
+                  <button className="opacity-0 group-hover:opacity-[1] transition-all text-sm w-full h-full flex justify-center items-center">
+                    {Icons.close("white")}
+                  </button>
+                </li>
+              </ul>
+            </header>
 
-              <main
-                className="h-[calc(100%-60px)] w-full"
-                ref={iframeContainer}
-              >
-                {/* {isChrome() && ( */}
-                {/* {showPreview && ( */}
-                <iframe
-                  ref={previewIframe}
-                  id="preview"
-                  allowFullScreen
-                  src={previewSrc || urlSrc}
-                  security="restricted"
-                  about="target"
-                  allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
-                  unselectable="on"
-                  // sandbox=""
-                  // sandbox="allow-same-origin allow-scripts allow-modals allow-forms allow-popups"
-                  // src="about:srcdoc"
-                  // srcDoc=""
-                  // srcDoc={`<video
-                  //    src="../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4"
-                  //    controls
-                  //  ></video>`}
-                  className={`bg-white w-full h-full  transition-all border-[5px] rounded-bl-lg rounded-br-lg border-slate-900`}
-                  // srcDoc={srcDoc}
-                ></iframe>
-                {/* )} */}
+            <main className="h-[calc(100%-60px)] w-full" ref={iframeContainer}>
+              {/* {isChrome() && ( */}
+              {/* {showPreview && ( */}
+              <iframe
+                ref={previewIframe}
+                id="preview"
+                allowFullScreen
+                src={previewSrc || urlSrc}
+                security="restricted"
+                about="target"
+                allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
+                unselectable="on"
+                // sandbox=""
+                // sandbox="allow-same-origin allow-scripts allow-modals allow-forms allow-popups"
+                // src="about:srcdoc"
+                // srcDoc=""
+                // srcDoc={`<video
+                //    src="../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4"
+                //    controls
+                //  ></video>`}
+                className={`bg-white w-full h-full  transition-all border-[5px] rounded-bl-lg rounded-br-lg border-slate-900`}
+                // srcDoc={srcDoc}
+              ></iframe>
+              {/* )} */}
 
-                {/* )} */}
-              </main>
-            </>
-          )}
-        </section>
-       {/* )} */}
+              {/* )} */}
+            </main>
+          </>
+        )}
+      </section>
+      {/* )} */}
     </section>
   );
 });

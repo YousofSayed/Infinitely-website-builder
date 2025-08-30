@@ -4,13 +4,11 @@ import { Adder } from "./Protos/Adder";
 import { Input } from "./Protos/Input";
 import { SmallButton } from "./Protos/SmallButton";
 import { Icons } from "../Icons/Icons";
-import {
-  animationsType,
-  animationType,
-} from "../../helpers/jsDocs";
+import { animationsType, animationType } from "../../helpers/jsDocs";
 import { useRecoilState, useRecoilValue } from "recoil";
 import {
   animationsState,
+  animationsWillRemoveState,
   animeStylesState,
   framesStylesState,
   isAnimationsChangedState,
@@ -23,10 +21,7 @@ import {
 } from "../../helpers/functions";
 import { cloneDeep } from "lodash";
 import { keyframesGetterWorker } from "../../helpers/defineWorkers";
-import {
-  current_page_id,
-  current_project_id,
-} from "../../constants/shared";
+import { current_page_id, current_project_id } from "../../constants/shared";
 import { Accordion } from "../Protos/Accordion";
 import { AccordionItem } from "../Protos/AccordionItem";
 import { IntersectionList } from "../Protos/IntersectionList";
@@ -200,6 +195,9 @@ export const AnimationsBuilder = memo(() => {
   const editor = useEditorMaybe();
   const [animation, setAnimation] = useState("");
   const [animations, setAnimations] = useRecoilState(animationsState);
+  const [animationsWillRemove, setAnimationsWillRemove] = useRecoilState(
+    animationsWillRemoveState
+  );
   const [isAnimationsChanged, setAnimationsChanged] = useRecoilState(
     isAnimationsChangedState
   );
@@ -388,7 +386,7 @@ export const AnimationsBuilder = memo(() => {
     // if(!animationIndex)return;
     const clone = structuredClone(animations);
     clone[animationIndex].keyframes.splice(keyframeIndex, 1);
-   
+
     setAnimations(clone);
   };
 
@@ -397,13 +395,17 @@ export const AnimationsBuilder = memo(() => {
     const clone = structuredClone(animations);
     clone.splice(animationIndex, 1);
     setAnimations(clone);
-     keyframesGetterWorker.postMessage({
-     command:'removeAnimation',
-     props:{
-       keyframe:animations[animationIndex],
-       path: animations[animationIndex].path
-     }
-    });
+    //  keyframesGetterWorker.postMessage({
+    //  command:'removeAnimation',
+    //  props:{
+    //    keyframe:animations[animationIndex],
+    //    path: animations[animationIndex].path
+    //  }
+    // });
+    setAnimationsWillRemove([
+      ...animationsWillRemove,
+      structuredClone(animations[animationIndex]),
+    ]);
     setAnimationsChanged(true);
   };
 

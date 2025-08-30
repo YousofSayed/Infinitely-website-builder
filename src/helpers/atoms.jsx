@@ -59,7 +59,7 @@ export const searchWord = atom({
 /**
  * @type {{[categoryName: string]: import('./types').InfinitelyBlock[];}}
  */
- export let editorBlocksType = [];
+export let editorBlocksType = [];
 
 export const blocksStt = atom({
   key: "blocks",
@@ -158,9 +158,9 @@ export const ruleState = atom({
 });
 
 export const showDragLayerState = atom({
-  key : 'showCanvasLayerState',
-  default:false
-})
+  key: "showCanvasLayerState",
+  default: false,
+});
 
 export const selectorState = atom({
   key: "selectorState",
@@ -288,9 +288,9 @@ export const projectSettingsState = atom({
 });
 
 export const zoomValueState = atom({
-  key:'zoomValueState',
-  default:'',
-})
+  key: "zoomValueState",
+  default: "",
+});
 
 export const tooltipDataState = atom({
   key: "tooltipDataState",
@@ -300,7 +300,7 @@ export const tooltipDataState = atom({
 export const fileInfoState = atom({
   key: "fileInfoState",
   default: {
-    path:''
+    path: "",
   },
 });
 
@@ -315,14 +315,19 @@ export const dbAssetsSwState = atom({
 });
 
 export const animationsState = atom({
-  key:'animationsState',
-  default:animationsType
+  key: "animationsState",
+  default: animationsType,
+});
+
+export const animationsWillRemoveState = atom({
+  key: "animationsWillRemove",
+  default: animationsType,
 });
 
 export const isAnimationsChangedState = atom({
-  key:'isAnimationsChanged',
-  default:false,
-})
+  key: "isAnimationsChanged",
+  default: false,
+});
 
 //============Workspace==============
 export const projectState = atom({
@@ -343,6 +348,6 @@ export const newProjectData = atom({
 });
 
 export const isProjectInitedState = atom({
-  key:'isProjectInitedState',
-  default:true
-})
+  key: "isProjectInitedState",
+  default: true,
+});
