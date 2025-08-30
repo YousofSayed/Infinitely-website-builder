@@ -388,6 +388,7 @@ export const AnimationsBuilder = memo(() => {
     // if(!animationIndex)return;
     const clone = structuredClone(animations);
     clone[animationIndex].keyframes.splice(keyframeIndex, 1);
+   
     setAnimations(clone);
   };
 
@@ -396,6 +397,14 @@ export const AnimationsBuilder = memo(() => {
     const clone = structuredClone(animations);
     clone.splice(animationIndex, 1);
     setAnimations(clone);
+     keyframesGetterWorker.postMessage({
+     command:'removeAnimation',
+     props:{
+       keyframe:animations[animationIndex],
+       path: animations[animationIndex].path
+     }
+    });
+    setAnimationsChanged(true);
   };
 
   const setValues = (animationIndex, keyframeIndex, values) => {

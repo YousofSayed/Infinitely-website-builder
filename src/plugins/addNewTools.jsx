@@ -258,7 +258,7 @@ export const addNewTools = (editor) => {
 
   let scrollTimeout,
     isScrollValue = false;
-  editor.once(
+  editor.on(
     "canvas:frame:load:body",
     /**
      *
@@ -270,6 +270,8 @@ export const addNewTools = (editor) => {
       const wrapperEl = editor.getWrapper().getEl();
       const canvasBody = editor.Canvas.getBody();
       const scrollCallback = (ev) => {
+        console.log('scroll call back');
+        // alert('jhahahahahahaahahahaaahahaa')
         editor.trigger("canvas:frame:scroll", {
           window,
           isScroll: true,
@@ -282,19 +284,45 @@ export const addNewTools = (editor) => {
           });
         }, 200);
       };
-      if (!(canvasDoc && canvasBody && wrapperEl)) {
-        console.error("no canvas doc or body or wrapper");
-        return;
-      }
+      console.log("canvasDoc, canvasBody, wrapperEl", canvasDoc, canvasBody, wrapperEl);
+      // editor.Canvas.get 
+      // if (!(canvasDoc && canvasBody && wrapperEl)) {
+      //   console.error("no canvas doc or body or wrapper");
+      //   return;
+      // }
       // canvasDoc.documentElement.style.contain = `paint layout size`;
-      canvasDoc.addEventListener("scroll", scrollCallback);
-      wrapperEl.addEventListener("scroll", scrollCallback);
-      canvasBody.addEventListener("scroll", scrollCallback);
+        const scrollTarget = canvasDoc.scrollingElement || canvasDoc.documentElement;
+      canvasBody.style.overflow = "auto";
+      canvasDoc.documentElement.style.overflow = "auto";
+      canvasDoc.scrollingElement.style.overflow = "auto";
+      // scrollTarget.addEventListener("scroll", scrollCallback,{passive:true});
+      // canvasDoc.documentElement.addEventListener("scroll", scrollCallback,{passive:true});
+      // canvasDoc.scrollingElement.addEventListener("scroll", scrollCallback,{passive:true});
+      // window.document.addEventListener("scroll", scrollCallback,{passive:true});
+      canvasDoc.addEventListener("scroll", scrollCallback,{passive:true});
+      wrapperEl.addEventListener("scroll", scrollCallback , {passive:true});
+      canvasBody.addEventListener("scroll", scrollCallback , {passive:true});
     }
   );
 
+//   editor.on("load", () => {
+//   const frameEl = editor.Canvas.getFrameEl(); // iframe element
+//   const doc = frameEl.contentDocument || frameEl.contentWindow.document;
+
+//   // the container that actually scrolls
+//   const scrollContainer = doc.scrollingElement || doc.documentElement;
+
+//   scrollContainer.addEventListener("scroll", (e) => {
+//     console.log("Canvas scrolled", {
+//       scrollTop: scrollContainer.scrollTop,
+//       scrollLeft: scrollContainer.scrollLeft,
+//     });
+//   });
+// });
+
+
   editor.on("canvas:frame:scroll", ({ window, isScroll }) => {
-    // console.log("is scrollll : ", isScroll , window);
+    console.log("is scrollll : ", isScroll , window);
     isScrollValue = isScroll;
     editor.Canvas.getBody().classList.add("preventWhenScroll");
   });

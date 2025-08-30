@@ -10,22 +10,22 @@ import {
   defineRoot,
   doDocument,
   getFileSize,
-  getOPFSProjectDir,
+  // getOPFSProjectDir,
   getProjectRoot,
   handleFilesSize,
-  hasExportDefault,
+  // hasExportDefault,
   installRestModelsAPI,
-  needsWrapping,
+  // needsWrapping,
   uploadProjectToTMP,
-  wrapModule,
+  // wrapModule,
 } from "./bridge";
 import { uniqueId, isPlainObject, random } from "lodash";
 import { opfs } from "./initOpfs";
-import { tailwindClasses } from "../constants/tailwindClasses";
-import { css_beautify } from "js-beautify";
-import { stringify } from "css";
+// import { tailwindClasses } from "../constants/tailwindClasses";
+// import { css_beautify } from "js-beautify";
+// import { stringify } from "css";
 import { minify } from "csso";
-import { walk, parse } from "css-tree";
+// import { walk, parse } from "css-tree";
 // import { initDBAssetsSw } from "../serviceWorkers/initDBAssets-sw";
 // import Dexie from "dexie";
 //
@@ -887,6 +887,8 @@ export const getAllStyleSheetClasses = async (props) => {
     allStyleSheetClasses = setTimeout(async () => {
       //   const myLol = 'myLol'
       //  console.log(eval(` console.log(myLol)`));
+      const { parse, walk } = await import("css-tree");
+      const { tailwindClasses } = await import("../constants/tailwindClasses");
       await initOPFS({ id: props.projectId });
       // const per1 = performance.now();
       console.log(defineRoot(`libs/css`));
@@ -1464,6 +1466,7 @@ export async function getKeyFrames({
   if (!projectId) {
     throw new Error("Project ID is required to get keyframes");
   }
+  const { parse } = await import("css");
   !opfs.id && (await initOPFS({ id: projectId }));
   let projectData = await db.projects.get(projectId);
 
@@ -1500,12 +1503,83 @@ export async function writeFilesToOPFS({ files }) {
 
 /**
  *
+ * @param {{keyframe : import('css').KeyFrames}} param0
+ */
+export async function removeAnimation({ path, keyframe }) {
+  let tId = uniqueId("toast-remove-animation-");
+  try {
+    workerSendToast({
+      msg:'Removing animation...',
+      type:'loading',
+      dataProps:{
+        toastId:tId
+      }
+    })
+    const { stringify, parse } = await import("css");
+    const fileContent = await (await opfs.getFile(defineRoot(path))).text();
+    const parsedFile = parse(fileContent);
+    parsedFile.stylesheet.rules = parsedFile.stylesheet.rules.filter(
+      (rule) => !(rule.type == "keyframes" && rule.name == keyframe.name)
+    );
+    console.log('from remover : ' , keyframe);
+    
+    await opfs.writeFiles([
+      {
+        path :defineRoot(keyframe.path || path),
+        content: stringify(parsedFile),
+      },
+    ]);
+    self.postMessage({
+      command: "removeAnimation",
+      props: {
+        done: true,
+        keyframeName: keyframe.name,
+        path,
+      },
+    });
+    workerSendToast({
+      isNotMessage:true,
+      msg:tId,
+      type:'done'
+    });
+    workerSendToast({
+      msg:`Animation ${keyframe.name} removed successfully💙`,
+      type:'success'
+    })
+  } catch (error) {
+    self.postMessage({
+      command: "removeAnimation",
+      props: {
+        done: false,
+        keyframeName: keyframe.name,
+        path,
+      },
+    });
+     workerSendToast({
+      isNotMessage:true,
+      msg:tId,
+      type:'dismiss',
+      dataProps:{
+        progressClassName:'bg-[crimson]'
+      }
+    });
+    workerSendToast({
+      msg:`Faild to remove ${keyframe.name} animation for path (${keyframe.path || path})`,
+      type:'error'
+    });
+    throw new Error(error);
+  }
+}
+
+/**
+ *
  * @param {{[key:string]:import('css').KeyFrames[]}} param0
  */
 export async function saveAnimations({ animations }) {
   console.log("ana 3abet we ahbal begaad");
 
   const tId = uniqueId("toast-");
+  const { stringify } = await import("css");
 
   // try {
   workerSendToast({
@@ -1534,7 +1608,7 @@ export async function saveAnimations({ animations }) {
     const fileContent = await (await opfs.getFile(defineRoot(key))).text();
     await opfs.writeFiles([
       {
-        path: key,
+        path: defineRoot(key),
         content: minify(
           `${fileContent} \n ${stringify({
             stylesheet: { rules: result[key] },
@@ -1637,5 +1711,3 @@ export async function shareProject(props) {
     throw new Error(error);
   }
 }
-
-
