@@ -92,7 +92,7 @@ export const ReusableCmb = () => {
   };
 
   return (
-    <main className="flex flex-col gap-3 h-[400px]">
+    <main className="flex flex-col gap-3">
       <header className="flex gap-2 justify-between">
         <Input
           autoFocus={true}
@@ -120,12 +120,12 @@ export const ReusableCmb = () => {
         </Button>
       </header>
 
-      <section className="h-full rounded-lg p-2 bg-slate-800 flex items-center justify-center">
+      {/* <section className="h-full rounded-lg p-2 bg-slate-800 flex items-center justify-center">
         <img
           src={imgSrc}
           className=" border-2 max-h-[300px] border-slate-400"
         />
-      </section>
+      </section> */}
     </main>
   );
 };

@@ -259,7 +259,12 @@ const ObjectComponent = ({
   setMotion = (motion = motionType) => {},
 }) => {
   const addValue = (value, prop) => {
-    console.log(destination.concat(prop));
+    console.log("from destoooo : ", destination.concat(prop));
+    console.log(
+      "from destoooo one and second: ",
+      destination.concat(prop),
+      secondDestination?.concat?.(prop)
+    );
 
     const clone = cloneDeep(animation);
     const editeable = editNestedObject(
@@ -274,10 +279,35 @@ const ObjectComponent = ({
           parseValue(value)
         )
       : {};
+
+    const editableValue = getNestedValue(editeable, destination.concat(prop));
+    const secondEditableValue = isArray(secondDestination)
+      ? getNestedValue(secondEditeable, secondDestination.concat(prop))
+      : null;
+    if (!editableValue) {
+      removeNestedKey(editeable , destination.concat(prop));
+    }
+
+    if (isArray(secondDestination) && !secondEditableValue) {
+      removeNestedKey(secondEditeable , secondDestination.concat(prop));
+    }
+    
+    console.log(
+      "from after set first and second nested : ",
+      editeable,
+      secondEditeable
+    );
+
     setMotion({
       ...motion,
       animations: motion.animations.map((anim, index) => {
         if (index === animationIndex) {
+          console.log("from setting motions satete : ", {
+            ...anim,
+            ...editeable,
+            ...secondEditeable,
+          });
+
           return {
             ...anim,
             ...editeable,
@@ -321,8 +351,12 @@ const ObjectComponent = ({
                     animation={animation}
                     animationIndex={animationIndex}
                     objectProps={value}
-                    destination={destination.concat(key)}
-                    secondDestination={secondDestination}
+                    destination={[...destination, key]}
+                    secondDestination={
+                      secondDestination && isArray(secondDestination)
+                        ? [...secondDestination, key]
+                        : null
+                    }
                   />
                 </AccordionItem>
               </Accordion>
@@ -359,6 +393,12 @@ const ObjectComponent = ({
                 }
                 keywords={value}
                 onAll={(value) => {
+                  console.log(
+                    "from select : ",
+                    [...destination, key],
+                    getNestedValue(animation, [...destination, key])
+                  );
+
                   addValue(value, key);
                 }}
               />
@@ -717,12 +757,14 @@ const FromTo = ({
 
       <SwitcherSection
         title="Use Same From Options"
+        defaultValue={Boolean(animation?.useSameFromOptions)}
         onActive={() => setActive("useSameFromOptions")}
         onUnActive={() => setUnActive("useSameFromOptions")}
       />
 
       <SwitcherSection
         title="Use Same To Options"
+        defaultValue={Boolean(animation?.useSameToOptions)}
         onActive={() => setActive("useSameToOptions")}
         onUnActive={() => setUnActive("useSameToOptions")}
       />

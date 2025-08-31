@@ -1848,3 +1848,10 @@ export function hasExportDefault(code='') {
   return /export default/ig.test(code);
 }
 
+export function styleToString(styleObj = {}) {
+  return Object.entries(styleObj)
+    .map(([k, v]) =>
+      `${k.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase())}:${v}`
+    )
+    .join(";");
+}

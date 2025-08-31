@@ -299,6 +299,10 @@ export const addNewTools = (editor) => {
       // canvasDoc.documentElement.addEventListener("scroll", scrollCallback,{passive:true});
       // canvasDoc.scrollingElement.addEventListener("scroll", scrollCallback,{passive:true});
       // window.document.addEventListener("scroll", scrollCallback,{passive:true});
+      canvasDoc.removeEventListener("scroll", scrollCallback,{passive:true});
+      wrapperEl.removeEventListener("scroll", scrollCallback , {passive:true});
+      canvasBody.removeEventListener("scroll", scrollCallback , {passive:true});
+
       canvasDoc.addEventListener("scroll", scrollCallback,{passive:true});
       wrapperEl.addEventListener("scroll", scrollCallback , {passive:true});
       canvasBody.addEventListener("scroll", scrollCallback , {passive:true});
@@ -322,7 +326,7 @@ export const addNewTools = (editor) => {
 
 
   editor.on("canvas:frame:scroll", ({ window, isScroll }) => {
-    console.log("is scrollll : ", isScroll , window);
+    // console.log("is scrollll : ", isScroll , window);
     isScrollValue = isScroll;
     editor.Canvas.getBody().classList.add("preventWhenScroll");
   });

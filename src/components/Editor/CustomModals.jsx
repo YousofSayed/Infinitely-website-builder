@@ -39,7 +39,13 @@ export const CustomModals = memo(() => {
   return (
     <section
       onClick={(ev) => {
-        editor.Commands.run("close:custom:modal");
+        ev.stopPropagation();
+        ev.preventDefault();
+        if (ev.target === ev.currentTarget) {
+          // Only close if clicked directly on backdrop, not children
+          editor.Commands.run("close:custom:modal");
+        }
+        // editor.Commands.run("close:custom:modal");
       }}
       className={`fixed  z-[55] backdrop-blur-sm right-0 left-0  w-full h-full flex justify-center items-center`}
     >
@@ -50,7 +56,9 @@ export const CustomModals = memo(() => {
         }}
         onClick={(ev) => {
           ev.stopPropagation();
-          document.body.click();
+          ev.preventDefault();
+          console.log("main is me");
+          // document.body.click();
         }}
         className="z-[55] rounded-lg flex flex-col justify-between bg-slate-900 shadow-md shadow-[#020617]"
       >
@@ -59,7 +67,9 @@ export const CustomModals = memo(() => {
             {/* <p className="text-slate-300 text-lg capitalize select-none font-semibold flex items-center gap-2">
               {modalData.title}
             </p> */}
-            <FitTitle className="flex items-center gap-2">{modalData.title}</FitTitle>
+            <FitTitle className="flex items-center gap-2">
+              {modalData.title}
+            </FitTitle>
             <button
               onClick={(ev) => {
                 addClickClass(ev.currentTarget, "click");

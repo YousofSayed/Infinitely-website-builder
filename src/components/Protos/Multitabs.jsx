@@ -20,7 +20,7 @@ export const MultiTab = ({
     <section
       ref={animatRef}
       style={style}
-      className=" flex   flex-col bg-slate-900 rounded-lg h-full  text-slate-200 border-[1.5px] border-slate-600 "
+      className=" flex overflow-hidden  flex-col bg-slate-900 rounded-lg h-full  text-slate-200 border-[1.5px] border-slate-600 "
     >
       <nav
         style={

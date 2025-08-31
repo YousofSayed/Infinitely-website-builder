@@ -5,27 +5,29 @@ import { Menu } from "../Editor/Protos/Menu";
 import { Popover } from "../Editor/Popover";
 import { Tooltip } from "react-tooltip";
 import { addClickClass, uniqueID } from "../../helpers/cocktail";
+import { unwrap }from 'million/react'
 
 /**
  * @param {import('react').HTMLAttributes<HTMLDivElement>} [props] - All HTML div attributes
  * @returns {JSX.Element}
  */
-export const OptionsButton = ({ children, onClick, ...props }) => {
+export const OptionsButton = (({ children, onClick, ...props }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [isPending, setTransition] = useTransition();
   const buttonRef = useRef();
   const id = useRef(uniqueID());
-
+  console.log('id : ' , id);
+  
   return (
     <>
       <SmallButton
-        {...props}
         id={id.current}
         onClick={(ev) => {
           addClickClass(ev.currentTarget, "click");
           onClick?.(ev);
         }}
         className="w-fit bg-transparent hover:bg-transparent border-none"
+        {...props}
       >
         {Icons.options({ fill: "#fff" })}
       </SmallButton>
@@ -48,4 +50,4 @@ export const OptionsButton = ({ children, onClick, ...props }) => {
       </Tooltip>
     </>
   );
-};
+});

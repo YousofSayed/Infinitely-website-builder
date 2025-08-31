@@ -17,11 +17,10 @@ export const Button = ({
 }) => {
   return (
     <button
-      {...props}
-      title={title}
-      type={type}
-      className={`bg-blue-600 rounded-lg flex gap-2 items-center ${
-        className && keepPadding
+    title={title}
+    type={type}
+    className={`bg-blue-600 rounded-lg flex gap-2 items-center ${
+      className && keepPadding
           ? `${className} px-4 py-2`
           : className
           ? className
@@ -31,6 +30,7 @@ export const Button = ({
         addClickClass(ev.currentTarget, "click");
         onClick(ev);
       }}
+      {...props}
     >
       {children}
     </button>

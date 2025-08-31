@@ -27,7 +27,6 @@ export const SmallButton = ({
   return (
     <>
       <button
-        {...props}
         tooltip-id={id}
         className={`w-[48px] outline-none border-2 border-transparent focus:border-blue-600 transition-colors   hover:bg-blue-600 flex rounded-lg cursor-pointer items-center justify-center flex-shrink-0  ${
           className ? className : "bg-slate-800"
@@ -36,6 +35,7 @@ export const SmallButton = ({
           addClickClass(ev.currentTarget, "click");
           onClick?.(ev);
         }}
+        {...props}
       >
         {children}
       </button>

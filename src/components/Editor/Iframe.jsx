@@ -121,13 +121,14 @@ export const Iframe = memo(() => {
           const { command, props } = ev.data;
           if (command == "animationsRemoved" && props.done) {
             setAnimationsWillRemove([]);
-            keyframesGetterWorker.removeEventListener("message", callback);
             keyframesGetterWorker.postMessage({
               command: "saveAnimations",
               props: {
                 animations,
               },
             });
+            keyframesGetterWorker.removeEventListener("message", callback);
+
           }
         };
 
@@ -264,109 +265,7 @@ export const Iframe = memo(() => {
     setPreviewSrc(urlSrc);
   }, [showPreview]);
 
-  // useEffect(() => {
-  //   if (!previewIframe.current) return;
-  //   const iframe = previewIframe.current;
-  //   // iframe.contentWindow.location.replace(currentUrl);
-
-  //   const callback = (ev) => {
-  //     console.log(
-  //       "click event fired",
-  //       ev.target,
-  //       ev.target.contentDocument.baseURI,
-  //       ev.target.origin
-  //     );
-  //     const currentUrl = ev.target.contentDocument.baseURI;
-  //     // const newStack = [
-  //     //   ...historyStack.slice(
-  //     //     0,
-  //     //     currentPageIndexInStack == 0
-  //     //       ? historyStack.length
-  //     //       : currentPageIndexInStack + 1
-  //     //   ),
-  //     //   currentUrl,
-  //     // ];
-  //     // console.log("new stack", newStack, historyStack);
-
-  //     // setHistoryStack(newStack);
-  //     setPreviewPageName(getPreviewPageName(currentUrl));
-  //     // !currentIndexStates.isEnd &&
-  //     // !currentIndexStates.isStart &&
-  //     // currentIndexStates.isBetween &&
-  //     // setCurrentPageIndexInStack(newStack.length - 1);
-
-  //     // currentPageIndexInStack != 0 &&
-  //     //   currentPageIndexInStack != historyStack.length &&
-  //     // (!currentPageIndexInStack ||
-  //     // currentPageIndexInStack == historyStack.length-1) &&
-  //     // setCurrentPageIndexInStack(newStack.length - 1);
-  //     // const hisState = iframe.contentWindow.history.state;
-  //     // !hisState &&
-  //     // iframe.contentWindow.history.pushState(
-  //     //   { pageName: currentUrl },
-  //     //   "",
-  //     //   currentUrl
-  //     // );
-  //   };
-
-  //   iframe.addEventListener("load", callback);
-  //   /**
-  //    *
-  //    * @param {PopStateEvent} ev
-  //    */
-  //   const popCb = (ev) => {
-  //     ev.preventDefault();
-  //     // ev.stopPropagation();
-  //     console.log(`from main pop state callback : `, ev);
-  //     return;
-  //   };
-  //   window.addEventListener("popstate", popCb);
-
-  //   // frameWindow.addEventListener("DOMContentLoaded", callback);
-  //   return () => {
-  //     // previewIframe.current.contentDocument.baseURI;
-  //     iframe.removeEventListener("load", callback);
-  //     window.removeEventListener("popstate", popCb);
-  //     // frameWindow.removeEventListener("click", callback);
-  //   };
-  // }, [
-  //   previewIframe,
-  //   previewIframe?.current,
-  //   historyStack,
-  //   currentPageIndexInStack,
-  // ]);
-
-  // useEffect(() => {
-  //   if (!previewIframe || !previewIframe.current) return;
-  //   const frameWindow = previewIframe.current.contentWindow;
-
-  // }, [previewIframe]);
-
-  // useEffect(() => {
-  //   if (!editor || !showPreview) return;
-  //   setPreviewPageName(localStorage.getItem(current_page_id));
-  //   setHistoryStack([localStorage.getItem(current_page_id)]);
-  //   setCurrentPageIndexInStack(0);
-  //   getAndSetPreviewData("", false, { firstPreview: true });
-  //   console.log(
-  //     (currentPageIndexInStack === historyStack.length - 1) >= 0,
-  //     historyStack,
-  //     currentPageIndexInStack,
-
-  //     Boolean(
-  //       (currentPageIndexInStack === historyStack.length - 1) >= 0 &&
-  //         currentPageIndexInStack ===
-  //           (historyStack.length - 1 < 0 ? 0 : historyStack.length - 1)
-  //     )
-  //   );
-
-  //   return () => {
-  //     setPreviewPageName("");
-  //     setHistoryStack([]);
-  //     setCurrentPageIndexInStack(0);
-  //     // getAndSetPreviewData("", false , {firstPreview:true});
-  //   };
-  // }, [showPreview]);
+  
 
   return (
     <section
@@ -375,7 +274,7 @@ export const Iframe = memo(() => {
     >
       {showAnimBuilder && (
         <section className="grid place-items-center p-2 absolute top-0 left-0 z-20 bg-blur-dark w-full h-full">
-          <section className="flex flex-col items-center justify-center self-center p-3 bg-slate-900 rounded-lg gap-5">
+          <section className="flex flex-col items-center justify-center self-center p-3 bg-slate-900 shadow-2xl shadow-slate-950 rounded-lg gap-5">
             <figure className="relative  w-fit ">
               {Icons.animation(undefined, undefined, "#2563eb", 60, 60)}
             </figure>
@@ -406,26 +305,30 @@ export const Iframe = memo(() => {
               </Button>
 
               <Button
-                disabled={
-                  isAnimationsChanged == "pendding" ||
-                  !Boolean(isAnimationsChanged)
-                    ? true
-                    : false
-                }
-                style={{
-                  opacity:
-                    isAnimationsChanged == "pendding" ||
-                    !Boolean(isAnimationsChanged)
-                      ? ".7"
-                      : "1",
-                  cursor:
-                    isAnimationsChanged == "pendding" ||
-                    !Boolean(isAnimationsChanged)
-                      ? "not-allowed"
-                      : "pointer",
-                }}
-                className="font-semibold"
+                // disabled={
+                //   isAnimationsChanged == "pendding" ||
+                //   !Boolean(isAnimationsChanged)
+                //     ? true
+                //     : false
+                // }
+                // style={{
+                //   backgroundColor:'red !important',
+                //   opacity:
+                //     // isAnimationsChanged == "pendding" ||
+                //     !Boolean(isAnimationsChanged)
+                //       ? ".7"
+                //       : "1",
+                //   cursor:
+                //   'not-allowed'
+                //     // isAnimationsChanged == "pendding" ||
+                //     // Boolean(isAnimationsChanged)
+                //     //   ? "pointer"
+                //     //   : "not-allowed",
+                // }}
+                className={`font-semibold ${!Boolean(isAnimationsChanged)? `opacity-[.7] cursor-not-allowed ` :''}`}
                 onClick={(ev) => {
+                  console.log('isAnimationsChanged: ' , isAnimationsChanged);
+                  
                   if (!isAnimationsChanged) {
                     toast.info(
                       <ToastMsgInfo msg={`You did not do any change!`} />

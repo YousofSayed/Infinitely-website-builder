@@ -169,7 +169,7 @@ export const ReusableSympol = () => {
   }, []);
 
   return (
-    <section className="w-full z-50 p-2 flex flex-col gap-2 h-[500px] overflow-auto bg-slate-800 rounded-lg ">
+    <section className="w-full z-50 p-2 flex flex-col gap-2 overflow-auto bg-slate-800 rounded-lg ">
       <header className="p-2 z-50 rounded-lg flex gap-4 justify-between bg-slate-900">
         <Input
           value={props.name}
@@ -193,11 +193,11 @@ export const ReusableSympol = () => {
         />
         <Button onClick={onSave}>Save</Button>
       </header>
-      <main className="bg-slate-900 overflow-auto grid place-items-center rounded-lg p-2 h-[100%]">
+      {/* <main className="bg-slate-900 overflow-auto grid place-items-center rounded-lg p-2 h-[100%]">
         {!!imgSrc && (
           <img src={imgSrc} className="w-full border-2 border-slate-400"></img>
         )}
-      </main>
+      </main> */}
       {/* <footer></footer> */}
     </section>
   );

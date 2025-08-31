@@ -184,10 +184,10 @@ export const Select = ({
     const index = findIndex(newKeyW, value);
 
     if (index == -1 && newKeyW.length) {
-      setCurrentChoose(0);
-      choosenKeyword.current = newKeyW[0]; //no items founded
+      setCurrentChoose(index);
+      // choosenKeyword.current = newKeyW[0]; //no items founded
       // setCurrentChoose(index);
-      // choosenKeyword.current = ''; //no items founded
+      choosenKeyword.current = value; //no items founded
     } else {
       setCurrentChoose(index);
       choosenKeyword.current = newKeyW[index];

@@ -167,16 +167,17 @@ export const Layer = ({
 
   useEffect(() => {
     if(!editor)return;
+    if(editor.getSelected() != layer)return;
+
     // layersRef.current &&
     //   layersRef.current.scrollToIndex({
     //     index: index,
     //     align: "center", // or 'center', 'end'
-    //     // behavior: "smooth", // or 'auto'
+    //     behavior: "smooth", // or 'auto'
     //     // offset: 1000,
-    //     // alignToTop: true, // Aligns the item to the top of the viewport
+    //     alignToTop: true, // Aligns the item to the top of the viewport
     //     // offset: 0, //
     //   });
-    if(editor.getSelected() != layer)return;
     willScrollRef.current &&
       willScrollRef.current.scrollIntoView({
         behavior: "smooth",

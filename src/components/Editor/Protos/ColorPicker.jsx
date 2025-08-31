@@ -1,3 +1,4 @@
+/** @jsxImportSource react */
 import React, { memo, useEffect, useRef, useState, useTransition } from "react";
 import { HexAlphaColorPicker } from "react-colorful";
 import { addClickClass, uniqueID } from "../../../helpers/cocktail";
@@ -58,13 +59,15 @@ export const ColorPicker = memo(
       if (!colorPickerContainerRef || !colorPickerContainerRef.current) return;
       const resizableObserver = new ResizeObserver((entries) => {
         entries.forEach((entry) => {
-          setWidth(entry.target.offsetWidth - 10);
+          setWidth(entry.target.clientWidth - 10);
         });
       });
-      resizableObserver.observe(colorPickerContainerRef.current.parentNode);
+      const el = colorPickerContainerRef.current.parentNode
+      resizableObserver.observe(el);
 
-      setWidth(colorPickerContainerRef.current.parentNode.offsetWidth - 10);
-
+      setWidth(el.clientWidth - 10);
+      console.log('colorPickerContainerRef.current.parentNode.clientWidth - 10',el.clientWidth - 10);
+      
       return () => {
         resizableObserver.disconnect();
       };
@@ -95,7 +98,7 @@ export const ColorPicker = memo(
               width: `${width - 5}px`,
               maxWidth: `370px`,
             }}
-            className={`absolute left-[0] z-[60]  top-[calc(100%+5px)] flex flex-col h-[400px] shadow-md shadow-slate-950 `}
+            className={` max-w-[370px] absolute left-[0] z-[60]  top-[calc(100%+5px)] flex flex-col h-[400px] shadow-md shadow-slate-950 `}
             ref={hexColorRef}
           >
             <HexAlphaColorPicker

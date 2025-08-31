@@ -31,14 +31,14 @@ export default defineConfig({
     },
   },
   plugins: [
-    million.vite({auto:true}),
+    // million.vite({auto:true , mode:'react'}),
     react(),
     // MillionLint.vite({}),
     // tailwindcss(),
 
     // removeConsole(),
     VitePWA({
-      registerType: "autoUpdate",
+      registerType: "prompt",
       minify: true,
       // devOptions: {
       //   enabled: true, // Enable SW in dev mode
