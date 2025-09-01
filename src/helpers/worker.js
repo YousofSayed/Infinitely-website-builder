@@ -35,12 +35,7 @@ const commands = {
   writeFilesToOPFS,
 };
 
-const url = 'http://tmpfiles.org/dl/11971384/infinitelystudiofrontpage12.zip';
-(async ()=>{
 
-    console.log(await (await fetch(url)).blob());
-})()
- 
 
 doWorkerPattern(commands);
 
