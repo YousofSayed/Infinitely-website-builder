@@ -62,7 +62,7 @@ export const ColorPicker = memo(
           setWidth(entry.target.clientWidth - 10);
         });
       });
-      const el = colorPickerContainerRef.current.parentNode
+      const el = colorPickerContainerRef.current.parentNode.parentNode
       resizableObserver.observe(el);
 
       setWidth(el.clientWidth - 10);

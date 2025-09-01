@@ -31,7 +31,7 @@ export default defineConfig({
     },
   },
   plugins: [
-    // million.vite({auto:true , mode:'react'}),
+    million.vite({auto:true }),
     react(),
     // MillionLint.vite({}),
     // tailwindcss(),

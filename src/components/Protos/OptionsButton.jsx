@@ -1,3 +1,4 @@
+// million-ignore
 import React, { useEffect, useRef, useState, useTransition } from "react";
 import { SmallButton } from "../Editor/Protos/SmallButton";
 import { Icons } from "../Icons/Icons";
@@ -7,6 +8,7 @@ import { Tooltip } from "react-tooltip";
 import { addClickClass, uniqueID } from "../../helpers/cocktail";
 import { unwrap }from 'million/react'
 
+// million-ignore
 /**
  * @param {import('react').HTMLAttributes<HTMLDivElement>} [props] - All HTML div attributes
  * @returns {JSX.Element}
@@ -21,12 +23,16 @@ export const OptionsButton = (({ children, onClick, ...props }) => {
   return (
     <>
       <SmallButton
-        id={id.current}
+        // showTooltip
+        // tooltipTitle="Options"
+        className="w-fit bg-transparent hover:bg-transparent border-none "
+       
         onClick={(ev) => {
           addClickClass(ev.currentTarget, "click");
           onClick?.(ev);
         }}
-        className="w-fit bg-transparent hover:bg-transparent border-none"
+        id={id.current}
+        
         {...props}
       >
         {Icons.options({ fill: "#fff" })}

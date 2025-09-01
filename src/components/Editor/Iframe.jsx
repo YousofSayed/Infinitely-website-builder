@@ -325,6 +325,9 @@ export const Iframe = memo(() => {
                 //     //   ? "pointer"
                 //     //   : "not-allowed",
                 // }}
+                //  style={{
+                //   backgroundColor: 'green',
+                // }}
                 className={`font-semibold ${!Boolean(isAnimationsChanged)? `opacity-[.7] cursor-not-allowed ` :''}`}
                 onClick={(ev) => {
                   console.log('isAnimationsChanged: ' , isAnimationsChanged);
@@ -336,6 +339,7 @@ export const Iframe = memo(() => {
                   }
                   saveAnimations();
                 }}
+               
               >
                 Save
               </Button>

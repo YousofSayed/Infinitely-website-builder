@@ -1,7 +1,9 @@
+// million-ignore
 import React from "react";
 import { addClickClass } from "../../../helpers/cocktail";
 import { Tooltip } from "react-tooltip";
 
+// million-ignore
 /**
  * A small button component with customizable styles and click behavior.
  * @typedef {Object} Props - Component props
@@ -14,12 +16,12 @@ import { Tooltip } from "react-tooltip";
  * @param {React.ButtonHTMLAttributes<HTMLButtonElement> & Props} props
  */
 export const SmallButton = ({
+  children,
   className = "",
-  onClick,
+  // onClick,
   showTooltip = true,
   tooltipTitle = "",
   tooltipClassName = '',
-  children,
   ...props
 }) => {
   const id = React.useId();
@@ -33,7 +35,7 @@ export const SmallButton = ({
         }`}
         onClick={(ev) => {
           addClickClass(ev.currentTarget, "click");
-          onClick?.(ev);
+          props.onClick?.(ev);
         }}
         {...props}
       >

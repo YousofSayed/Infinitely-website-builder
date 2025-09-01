@@ -303,8 +303,8 @@ export const Select = ({
         }`}
         onClick={(ev) => {
           console.log("clcickckckc");
-
           selectRef.current.click();
+          !preventInput && inputRef.current.click();
           preventInput &&
             setTimeout(() => {
               setMenu(!showMenu);
@@ -328,24 +328,28 @@ export const Select = ({
           onClick={(ev) => {
             ev.stopPropagation();
             selectRef.current.click();
-            setNewKeywords(keywords);
-            console.log("clcickckckc", keywords);
-            const index = keywords.findIndex(
-              (keyword) =>
-                keyword.toLowerCase() === ev.target.value.trim().toLowerCase()
-            );
-            const choose = index <= -1 ? 0 : index;
-            setCurrentChoose(choose);
-            setKeyword(keywords[choose]);
-            choosenKeyword.current = keywords[choose];
-            !isTextarea && !keywords.length
-              ? setMenu(false)
-              : setMenu(!showMenu);
+            // setNewKeywords(keywords);
+            // console.log("clcickckckc", keywords);
+            // const index = keywords.findIndex(
+            //   (keyword) =>
+            //     keyword.toLowerCase() === ev.target.value.trim().toLowerCase()
+            // );
+            // const choose = index <= -1 ? 0 : index;
+            // setCurrentChoose(choose);
+            // setKeyword(keywords[choose]);
+            // choosenKeyword.current = keywords[choose];
+            // !isTextarea && !keywords.length
+            //   ? setMenu(false)
+            //   : setMenu(!showMenu);
+            filterKeywords(ev.target.value , false);
+            setMenu(!showMenu)
+            console.log('cslskslss');
+            
             isTextarea && editorRef?.current?.focus();
 
             // showPopover({ element: selectRef, isTextarea });
             // setShowPopover();
-            isCode && showMenuCallback();
+            // isCode && showMenuCallback();
           }}
           onInput={(ev) => {
             setValue(ev.target.value);

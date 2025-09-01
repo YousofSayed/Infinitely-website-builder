@@ -36,6 +36,7 @@ import {
   isObject,
   isPlainObject,
   isString,
+  random,
   uniqueId,
 } from "lodash";
 import { addClickClass, uniqueID } from "../../../helpers/cocktail";
@@ -1340,6 +1341,9 @@ export const Motion = memo(() => {
     const clone = cloneDeep(targetMotion);
     const newId = uniqueId(`mt${uniqueID()}`);
     clone.id = newId;
+    for (const animation of clone.animations) {
+      animation.name = uniqueId(`varName_${uniqueID()}${random(99,999)}`);
+    }
     sle.addAttributes({ [motionId]: newId });
     initToolbar(editor, sle);
     await updateDB(clone);

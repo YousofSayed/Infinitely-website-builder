@@ -12,6 +12,7 @@ import { Input } from "./Input";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { refType } from "../../../helpers/jsDocs";
 import { Virtuoso } from "react-virtuoso";
+import { initToolbar } from "../../../helpers/functions";
 
 /**
  *
@@ -131,13 +132,14 @@ export const Layer = ({
   useEffect(() => {
     const callbackSelected = () => {
       // console.log(editor.getSelected().toolbar);
-      if (editor.getSelected() != layer) return;
-      const toolsWillSetted = editor.getSelected().toolbar.filter((tlb) => {
-        return tlb.command !== "tlb-move";
-      });
-      // .filter(Boolean)
-      setTools(toolsWillSetted);
-      console.log("toooools is : ", toolsWillSetted, layer.toolbar);
+      // if (editor.getSelected() != layer) return;
+      // initToolbar(editor , editor.getSelected())
+      // const toolsWillSetted = editor.getSelected().toolbar.filter((tlb) => {
+      //   return tlb.command !== "tlb-move";
+      // });
+      // // .filter(Boolean)
+      // setTools(toolsWillSetted);
+      // console.log("toooools is : ", toolsWillSetted, layer.toolbar);
     };
     const callbackDeSelected = () => {
       setTools([]);
@@ -166,8 +168,8 @@ export const Layer = ({
   }, [editor]);
 
   useEffect(() => {
-    if(!editor)return;
-    if(editor.getSelected() != layer)return;
+    if (!editor) return;
+    if (editor.getSelected() != layer) return;
 
     // layersRef.current &&
     //   layersRef.current.scrollToIndex({
@@ -184,7 +186,7 @@ export const Layer = ({
         block: "center",
         inline: "start",
       });
-  }, [isOpentNested, willScrollRef, layersRef, selectedEl , editor]);
+  }, [isOpentNested, willScrollRef, layersRef, selectedEl, editor]);
 
   /**
    *
@@ -259,7 +261,7 @@ export const Layer = ({
       }
     >
       <section
-      ref={willScrollRef}
+        ref={willScrollRef}
         draggable={true}
         onDragOver={(ev) => {
           ev.preventDefault();
@@ -485,78 +487,88 @@ export const Layer = ({
             editor.trigger("component:deselected");
           }}
         >
-          <>
-            <a
-              id={`${layer.getId()}-tb`}
-              className="cursor-pointer w-[30px] h-full flex justify-center items-center [&:hover_svg]:fill-white"
-              onClick={(ev) => {
-                ev.stopPropagation();
-                ev.preventDefault();
-                addClickClass(ev.currentTarget, "click");
-                document.body.click();
-                setIsOpen(!isOpen);
-                // editor.select(layer , {scroll:true});
-                // editor.select(layer.)
-                console.log("tools : ", tools, layer.toolbar);
-                // setTools(layer.toolbar);
-                editor.Layers.setLayerData(layer, { selected: true });
+          {/* <> */}
+          <a
+            id={`${layer.getId()}-tb`}
+            className="cursor-pointer w-[30px] h-full flex justify-center items-center [&:hover_svg]:fill-white"
+            onClick={(ev) => {
+              ev.stopPropagation();
+              ev.preventDefault();
+              addClickClass(ev.currentTarget, "click");
+              document.body.click();
+              setIsOpen(!isOpen);
+              // editor.select(layer , {scroll:true});
+              // editor.select(layer.)
+              console.log("tools : ", tools, layer.toolbar);
+              // setTools(layer.toolbar);
+              editor.Layers.setLayerData(layer, { selected: true });
+              if (editor.getSelected() != layer) return;
+              initToolbar(editor, editor.getSelected());
+              const toolsWillSetted = editor
+                .getSelected()
+                .toolbar.filter((tlb) => {
+                  return tlb.command !== "tlb-move";
+                });
+              // .filter(Boolean)
+              setTools(toolsWillSetted);
+              console.log("toooools is : ", toolsWillSetted, layer.toolbar);
+            }}
+          >
+            {Icons.options({
+              fill: "#64748B",
+              ...(selected && { fill: "white" }),
+            })}
+          </a>
+          {!!tools.length && (
+            <Tooltip
+              isOpen={isOpen}
+              opacity={1}
+              clickable
+              anchorSelect={`#${layer.getId()}-tb`}
+              className="bg-[#020617!important]  flex flex-col  shadow-lg shadow-slate-900 border-[2px] rounded-[.5rem!important]   border-slate-600  z-[5000]"
+              // float={true}
+              // openEvents={{click:true}}
+              // role="article"
+              place="right-end"
+              openOnClick
+              closeEvents={{ click: true, blur: true, dblclick: true }}
+              globalCloseEvents={{
+                clickOutsideAnchor: true,
+                escape: true,
+                scroll: true,
+                resize: true,
               }}
             >
-              {Icons.options({
-                fill: "#64748B",
-                ...(selected && { fill: "white" }),
-              })}
-            </a>
-            {!!tools.length && (
-              <Tooltip
-                isOpen={isOpen}
-                opacity={1}
-                clickable
-                anchorSelect={`#${layer.getId()}-tb`}
-                className="bg-[#1e293b!important] flex flex-col  shadow-lg bg-slate-800 z-[5000]"
-                // float={true}
-                // openEvents={{click:true}}
-                // role="article"
-                place="right-end"
-                openOnClick
-                closeEvents={{ click: true, blur: true, dblclick: true }}
-                globalCloseEvents={{
-                  clickOutsideAnchor: true,
-                  escape: true,
-                  scroll: true,
-                  resize: true,
-                }}
-              >
-                {tools.map((tool, i) => {
-                  return (
-                    <span
-                      key={i}
-                      onClick={(ev) => {
-                        ev.stopPropagation();
-                        console.log("what happen?");
+              {tools.map((tool, i) => {
+                return (
+                  <span
+                    key={i}
+                    onClick={(ev) => {
+                      ev.stopPropagation();
+                      console.log("what happen?");
 
-                        addClickClass(ev.currentTarget, "click");
-                        // copyCmds();
-                        typeof tool.command === "string"
-                          ? editor.runCommand(tool.command)
-                          : tool.command(editor);
-                      }}
-                      className="flex h-full items-center gap-2 cursor-pointer transition-all hover:bg-blue-500 font-semibold p-2 rounded-lg"
-                    >
-                      <i
-                        className="w-[100%] [&_svg]:w-[20px] text-white flex justify-center items-center"
-                        // onClick={(ev) => {
-                        //   ev.stopPropagation();
-                        // }}
-                        dangerouslySetInnerHTML={{ __html: tool.label }}
-                      ></i>
-                      {/* <span></span> */}
-                    </span>
-                  );
-                })}
-              </Tooltip>
-            )}
-          </>
+                      addClickClass(ev.currentTarget, "click");
+                      // copyCmds();
+                      typeof tool.command === "string"
+                        ? editor.runCommand(tool.command)
+                        : tool.command(editor);
+                    }}
+                    className="flex h-full items-center gap-2 cursor-pointer transition-all hover:bg-blue-500 font-semibold p-2 rounded-lg"
+                  >
+                    <i
+                      className="w-[100%] [&_svg]:w-[20px] text-white flex justify-center items-center"
+                      // onClick={(ev) => {
+                      //   ev.stopPropagation();
+                      // }}
+                      dangerouslySetInnerHTML={{ __html: tool.label }}
+                    ></i>
+                    {/* <span></span> */}
+                  </span>
+                );
+              })}
+            </Tooltip>
+          )}
+          {/* </> */}
 
           <button
             style={{
