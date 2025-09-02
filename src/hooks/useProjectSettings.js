@@ -10,6 +10,8 @@ export const useProjectSettings = () => {
   const projectSettingsFromLocal = getProjectSettings();
   const [projectSettings , setProjectSettingsRs] = useRecoilState(projectSettingsState);
   // const setProjectSettingsRs = useSetRecoilState(projectSettingsState);
+  console.log('projectSettings : ' , projectSettings);
+  
   /**
    *
    * @param {import('../helpers/types').ProjectSetting} newSettings

@@ -86,6 +86,16 @@ body {
 }
 
 
+/* .gjs-placeholder{
+  border: unset !important;
+  @apply bg-blue-600
+}
+.gjs-placeholder-int{
+  border: unset !important;
+  @apply bg-blue-600
+
+} */
+
 /* svg{
   zoom: .8
 } */

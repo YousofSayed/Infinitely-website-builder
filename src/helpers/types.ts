@@ -476,6 +476,7 @@ export type ProjectSetting = {
   enable_auto_save: boolean;
   enable_tailwind: boolean;
   enable_spline_viewer: boolean;
+  stop_all_animation_on_page: boolean;
   // include_canvas_styles_in_build_file: boolean;
   purge_css: boolean;
   include_symbols_in_export: boolean;

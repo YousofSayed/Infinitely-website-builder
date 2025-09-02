@@ -181,7 +181,8 @@ export const Select = ({
     }
 
     allowSetKeywords && setNewKeywords(newKeyW);
-    const index = findIndex(newKeyW, value);
+    !allowSetKeywords && setNewKeywords(keywords)
+    const index = findIndex(allowSetKeywords ? newKeyW : keywords, value);
 
     if (index == -1 && newKeyW.length) {
       setCurrentChoose(index);
@@ -190,8 +191,10 @@ export const Select = ({
       choosenKeyword.current = value; //no items founded
     } else {
       setCurrentChoose(index);
+      
       choosenKeyword.current = newKeyW[index];
     }
+    // console.log('elslslslssle : ' , index ,newKeyW  , value , newKeywords);
     // setMenu(true);
   };
 
@@ -230,14 +233,25 @@ export const Select = ({
       // setValue(choosenKeyword.current)
     }
     //Ctrl & Sapce
-    // else if (ev.ctrlKey && ev.key == " ") {
-    //   ev.preventDefault();
-    //   const values = ev.target.value.split(" ");
-    //   console.log("value : ", values, values[values.length - 1]);
-    //   setNewKeywords(keywords);
-
-    //   !isTextarea && showMenuCallback();
-    // }
+     if ((ev.ctrlKey || ev.metaKey) && ev.key === " ") {
+              ev.stopPropagation();
+              selectRef.current.click();
+              // setNewKeywords(keywords);
+              // const index = keywords.findIndex(
+              //   (keyword) =>
+              //     keyword.toLowerCase() === ev.target.value.trim().toLowerCase()
+              //   //    ||
+              //   // keyword
+              //   //   .toLowerCase()
+              //   //   .includes(ev.target.value.trim().toLowerCase())
+              // );
+              // const choose = index <= -1 ? 0 : index;
+              // setCurrentChoose(choose);
+              // setKeyword(keywords[choose]);
+              // choosenKeyword.current = keywords[choose];
+              filterKeywords(ev.target.value.trim() , false)
+              setMenu(true);
+            }
     //ArrowUp
     else if (ev.key == "ArrowUp") {
       // if (isTextarea && !ev.ctrlKey) return;
@@ -360,24 +374,7 @@ export const Select = ({
           }}
           onKeyDown={(ev) => {
             handleChooses(ev);
-            if ((ev.ctrlKey || ev.metaKey) && ev.key === " ") {
-              ev.stopPropagation();
-              selectRef.current.click();
-              setNewKeywords(keywords);
-              const index = keywords.findIndex(
-                (keyword) =>
-                  keyword.toLowerCase() === ev.target.value.trim().toLowerCase()
-                //    ||
-                // keyword
-                //   .toLowerCase()
-                //   .includes(ev.target.value.trim().toLowerCase())
-              );
-              const choose = index <= -1 ? 0 : index;
-              setCurrentChoose(choose);
-              setKeyword(keywords[choose]);
-              choosenKeyword.current = keywords[choose];
-              setMenu(true);
-            }
+           
             // showPopover(true);
           }}
           // onFocus={(ev)=>{

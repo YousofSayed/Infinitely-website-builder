@@ -97,6 +97,18 @@ export const SettingsModal = () => {
           editor.load();
         });
 
+        isCurrentChange("stop_all_animation_on_page", (key) => {
+          isProjectSettingPropTrue(
+            "stop_all_animation_on_page",
+            () => {
+              editor.getWrapper().addClass(`inf-stop-all-animations`);
+            },
+            () => {
+              editor.getWrapper().removeClass(`inf-stop-all-animations`);
+            }
+          );
+        });
+
         isCurrentChange("enable_auto_save", () => {
           isProjectSettingPropTrue(
             "enable_auto_save",

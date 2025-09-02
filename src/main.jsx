@@ -13,9 +13,9 @@ import { setProjectSettings } from "./helpers/functions.js";
 // import './helpers/backbonePacher.js'
 // src/main.js
 // src/main.js
+setProjectSettings();
 RecoilEnv.RECOIL_DUPLICATE_ATOM_KEY_CHECKING_ENABLED = false
 makeAppResponsive("#root");
-setProjectSettings();
 ReactDOM.createRoot(document.getElementById("root")).render(
   // <React.StrictMode>
   <RecoilRoot>

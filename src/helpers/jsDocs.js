@@ -219,6 +219,7 @@ export let projectSettingsType = {
   enable_spline_viewer: false,
   enable_editor_lazy_loading:false,
   enable_auto_save:true,
+  stop_all_animation_on_page: false,
   // purge_css: false,
   include_symbols_in_export: true,
   include_templates_in_export: true,

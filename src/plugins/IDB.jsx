@@ -327,7 +327,9 @@ export const IDB = (editor) => {
                 editor.clearDirtyCount();
                 storageManager.setStepsBeforeSave(0);
               });
-              const appenderResponse = await appender([...document.body.children]);
+              const appenderResponse = await appender([
+                ...document.body.children,
+              ]);
             } else {
               const wrapper = editor.getWrapper();
               // wrapper.components(`${htmlPage}` , {merge:false,skipDomReset:true,sort:false})
@@ -404,7 +406,7 @@ export const IDB = (editor) => {
           editor.Storage.setAutosave(false);
           editor.Storage.setStepsBeforeSave(0);
           // editor.getWrapper().setClass("");
-          const classes = editor.getWrapper().getClasses().join(" ");
+          const classes = [...editor.getWrapper().getClasses()].join(" ");
           const attributes = Object.fromEntries(
             vAttributesFilterd.concat(otherAttributes)
           );
@@ -428,18 +430,17 @@ export const IDB = (editor) => {
             validate: true,
             fromDataSource: false,
             partial: true,
-            silent: true,
+            // silent: true,
           });
+          editor.getWrapper().addClass(classes.split(" "));
           const wrapperEl = editor.getWrapper().getEl();
-          for (const key in attributes) {
-            wrapperEl.setAttribute(key, attributes[key]);
-          }
+          // for (const key in attributes) {
+          //   wrapperEl.setAttribute(key, attributes[key]);
+          // }
 
           editor.UndoManager.start();
-          clearTimeout(storeTimeout);
           editor.Storage.store = originalStore;
           isLoadEnd = editor.getDirtyCount();
-          editor.Storage.setAutosave(originalAutosave);
           // console.log(
           //   `Auto save  : `,
           //   originalAutosave,
@@ -449,8 +450,11 @@ export const IDB = (editor) => {
           //   isLoadEnd
           // );
           setTimeout(() => {
+            clearTimeout(storeTimeout);
+
             editor.clearDirtyCount();
             editor.Storage.setStepsBeforeSave(0);
+            editor.Storage.setAutosave(originalAutosave);
           }, 0);
           editor.off("canvas:frame:load:body", callback);
         };
@@ -464,6 +468,9 @@ export const IDB = (editor) => {
           // editor.off("canvas:frame:load:body", loadFooterScriptsCallback);
           editor.Storage.setStepsBeforeSave(0);
           editor.clearDirtyCount();
+          clearTimeout(storeTimeout);
+          editor.Storage.setAutosave(originalAutosave);
+
           editor.trigger(InfinitelyEvents.storage.loadEnd);
         }, 0);
         return {};

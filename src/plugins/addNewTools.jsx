@@ -30,6 +30,7 @@ import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
  * @returns
  */
 export const addNewTools = (editor) => {
+  
   /**
    * @type {Interact.Interactable}
    */

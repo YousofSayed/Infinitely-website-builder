@@ -1612,9 +1612,23 @@ export function getGlobalSettings() {
 
 export function setProjectSettings() {
   const projectSettingsLS = localStorage.getItem(project_settings);
-  if (!projectSettingsLS) {
+  if(Object.keys(JSON.parse(projectSettingsLS || '{}')).toString() == Object.keys(projectSettingsType).toString())return
+  const news = {};
+  let isChange = false
+  for (const key in projectSettingsType) {
+    // if (!(key in news)) {
+    // }
+    
+    news[key] = JSON.parse(projectSettingsLS||'{}')?.[key] || projectSettingsType[key];
+    console.log(key, news[key], projectSettingsType[key]);
+    isChange = true;
+  }
+
+
+
+  if (isChange) {
     console.log("No storage setted yet!");
-    localStorage.setItem(project_settings, JSON.stringify(projectSettingsType));
+    localStorage.setItem(project_settings, JSON.stringify(news));
   }
 }
 
@@ -1622,6 +1636,7 @@ export function setProjectSettings() {
  *
  */
 export function getProjectSettings() {
+  setProjectSettings()
   /**
    * @type {import('./types').ProjectSetting}
    */
@@ -1631,6 +1646,9 @@ export function getProjectSettings() {
         ...projectSettingsType,
       })
   );
+
+  console.log('project sttings , :' , projectSettings);
+  
 
   return {
     projectSettings,

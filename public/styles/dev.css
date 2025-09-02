@@ -101,6 +101,14 @@ infinitely-svg svg {
   min-height: 60px;
 }
 
+.inf-stop-all-animations  , .inf-stop-all-animations  *{
+  animation: none !important;
+  animation-play-state: paused !important;
+  /* transition: none !important; */
+
+  /* all: unset !important; */
+}
+
 spline-viewer {
   pointer-events: none;
 }
