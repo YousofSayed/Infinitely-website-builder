@@ -66,6 +66,11 @@ export const blocksStt = atom({
   default: editorBlocksType,
 });
 
+export const appInstallingState = atom({
+  key: "appInstallingState",
+  default: false,
+});
+
 /**
  * @type {Document}
  */

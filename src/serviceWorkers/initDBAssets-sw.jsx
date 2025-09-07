@@ -81,8 +81,6 @@ import { refresherWorker } from "../helpers/defineWorkers";
 //   }
 // };
 
-
-
 export const initDBAssetsSw = async (setSw = () => {}) => {
   if (!("serviceWorker" in navigator)) {
     console.log("Service workers not supported in this browser");
@@ -109,9 +107,9 @@ export const initDBAssetsSw = async (setSw = () => {}) => {
     //   toastId = toast.loading(<ToastMsgInfo msg="App is installing..." />);
     // }
 
-    if (!navigator.serviceWorker.controller) {
-      toastId = toast.loading(<ToastMsgInfo msg="App is installing..." />);
-    }
+    // if (!navigator.serviceWorker.controller) {
+    //   toastId = toast.loading(<ToastMsgInfo msg="App is installing..." />);
+    // }
     const reg = await navigator.serviceWorker.register(swPath, {
       scope: "/",
       updateViaCache: "all",
@@ -136,7 +134,6 @@ export const initDBAssetsSw = async (setSw = () => {}) => {
         activeSw.state,
         navigator.serviceWorker.controller
       );
-      setSw(activeSw);
 
       if (activeSw.state === "activated") {
         onActivated(); // run your success logic immediately
@@ -150,11 +147,11 @@ export const initDBAssetsSw = async (setSw = () => {}) => {
 
       function onActivated() {
         console.log("sw activated");
-        if (toastId) toast.done(toastId);
+        // if (toastId) toast.done(toastId);
 
-        if (!isDev) {
-          toast.success(<ToastMsgInfo msg="App installed successfully 💙" />);
-        }
+        // if (!isDev) {
+        //   toast.success(<ToastMsgInfo msg="App installed successfully 💙" />);
+        // }
 
         // refresherWorker.postMessage({
         //   msg: "sw-registration-state",
@@ -163,7 +160,12 @@ export const initDBAssetsSw = async (setSw = () => {}) => {
 
         if (!sessionStorage.getItem("swInstalledReloaded")) {
           sessionStorage.setItem("swInstalledReloaded", "true");
-          setTimeout(() => location.reload(), 300);
+        }
+        setSw(activeSw);
+        if (!(prevRegs.length && navigator.serviceWorker.controller)) {
+          setTimeout(() => {
+            location.reload();
+          }, 10);
         }
       }
 

@@ -23,7 +23,7 @@ import { ChooseModel } from "./components/Editor/Protos/ChooseModel";
 // import { DynamicContent } from "./components/Editor/Protos/DynamicContent";
 // import { DynamicAttributes } from "./components/Editor/Protos/DynamicAttributes";
 import { infinitelyWorker } from "./helpers/infinitelyWorker";
-import { dbAssetsSwState } from "./helpers/atoms";
+import { appInstallingState, dbAssetsSwState } from "./helpers/atoms";
 import { initDBAssetsSw } from "./serviceWorkers/initDBAssets-sw";
 import { useRecoilState } from "recoil";
 // import "react-toastify/dist/ReactToastify.css";
@@ -42,7 +42,6 @@ import { Opfs } from "./views/Opfs";
 import { Interactions } from "./components/Editor/Interactions";
 // import { esmToUmd } from "./helpers/initBabel";
 
-
 function App() {
   // const Editor = lazy(async () => ({
   //   default: (await import("./views/Editor")).Editor,
@@ -50,6 +49,7 @@ function App() {
   // const Editor = lazy( async() => await import("./views/Editor"));
 
   const [dbAssetsSw, setDBAssetsSw] = useRecoilState(dbAssetsSwState);
+  const [appInstalling, setAppInstalling] = useRecoilState(appInstallingState);
   const navigate = useNavigate();
   // const location = useLocation();
 
@@ -110,6 +110,23 @@ function App() {
       command: "refreshSW",
     });
 
+    (async () => {
+      const prevRegs = await navigator.serviceWorker.getRegistrations();
+      if (!(prevRegs.length && navigator.serviceWorker.controller)) {
+        setAppInstalling(true);
+        await initDBAssetsSw(() => {
+          setAppInstalling(false);
+        });
+      } else {
+        setAppInstalling(false);
+      }
+      console.log(
+        "Previous registrations:",
+        prevRegs,
+        navigator.serviceWorker.controller
+      );
+    })();
+
     /**
      *
      * @param {MessageEvent} ev
@@ -117,9 +134,9 @@ function App() {
     const messageCallback = (ev) => {
       const { command, props } = ev.data;
       if (command == "refreshSW") {
-        console.log('Got refreshSW event from refresher worker!');
-        
-        initDBAssetsSw(setDBAssetsSw);
+        console.log("Got refreshSW event from refresher worker!");
+
+        // initDBAssetsSw(setDBAssetsSw);
       }
     };
 
@@ -167,10 +184,10 @@ function App() {
   //   });
   // };
 
-  const isProject = Boolean(+localStorage.getItem(current_project_id));
+  // const isProject = Boolean(+localStorage.getItem(current_project_id));
   return (
     // <Suspense fallback={<Loader />}>
-    <Routes >
+    <Routes>
       <Route
         path="/"
         element={<Editor />}

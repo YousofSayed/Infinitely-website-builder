@@ -13,6 +13,7 @@ import {
   useResolvedPath,
 } from "react-router-dom";
 import {
+  appInstallingState,
   currentElState,
   dbAssetsSwState,
   modalDataState,
@@ -44,6 +45,7 @@ import { Loader } from "../components/Loader";
 import { minify } from "csso";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Memo } from "../components/Protos/Memo";
+import { AppInstalling } from "./AppInstalling";
 // import { tailwindClasses } from "../constants/tailwindClasses";
 // tailwindClasses
 export function Editor({ params }) {
@@ -60,6 +62,7 @@ export function Editor({ params }) {
   const [isAssetsWorkerDone, setIsAssetsWorkerDone] = useState(false);
   const [parent] = useAutoAnimate();
   const [mainAnimate] = useAutoAnimate({ duration: 100 });
+  const [appInstalling , setAppInstalling] = useRecoilState(appInstallingState)
   // const [dbAssetsSw, setDBAssetsSw] = useRecoilState(dbAssetsSwState);
 
   // useEffect(() => {
@@ -237,7 +240,7 @@ export function Editor({ params }) {
   useWorkerToast();
   const isProject = Boolean(+localStorage.getItem(current_project_id));
   const [parentForPanelsGroup] = useAutoAnimate();
-  return isProject ? (
+  return appInstalling ? <AppInstalling/> : isProject ? (
     isAssetsWorkerDone ? (
       <Memo className="w-full h-full">
         <ToastContainer
