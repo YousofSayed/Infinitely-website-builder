@@ -163,9 +163,9 @@ export const initDBAssetsSw = async (setSw = () => {}) => {
         }
         setSw(activeSw);
         if (!(prevRegs.length && navigator.serviceWorker.controller)) {
-          setTimeout(() => {
-            location.reload();
-          }, 10);
+          location.reload();
+          // setTimeout(() => {
+          // }, 10);
         }
       }
 
@@ -178,5 +178,19 @@ export const initDBAssetsSw = async (setSw = () => {}) => {
     console.error("SW registration failed:", err);
     toast.error(<ToastMsgInfo msg="Failed to register service worker ❌" />);
     return null;
+  } finally {
+    // navigator.serviceWorker.getRegistration().then((registration) => {
+    //   if (registration && registration.active) {
+    //     registration.active.addEventListener("statechange", (e) => {
+    //       if (e.target.state === "redundant") {
+    //         console.log(
+    //           "Service Worker became redundant (unregistered or replaced)."
+    //         );
+    //       }
+    //     });
+    //   }
+    // });
   }
 };
+
+

@@ -19,6 +19,7 @@ import {
   varType,
 } from "./jsDocs";
 import { getGlobalSettings, getProjectSettings } from "./functions";
+import { parse } from "./cocktail";
 
 export const widths = atom({
   key: "widths",
@@ -68,7 +69,7 @@ export const blocksStt = atom({
 
 export const appInstallingState = atom({
   key: "appInstallingState",
-  default: false,
+  default: !Boolean(parse(localStorage.getItem('installed'))),
 });
 
 /**

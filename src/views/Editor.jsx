@@ -45,7 +45,6 @@ import { Loader } from "../components/Loader";
 import { minify } from "csso";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Memo } from "../components/Protos/Memo";
-import { AppInstalling } from "./AppInstalling";
 // import { tailwindClasses } from "../constants/tailwindClasses";
 // tailwindClasses
 export function Editor({ params }) {
@@ -240,7 +239,7 @@ export function Editor({ params }) {
   useWorkerToast();
   const isProject = Boolean(+localStorage.getItem(current_project_id));
   const [parentForPanelsGroup] = useAutoAnimate();
-  return appInstalling ? <AppInstalling/> : isProject ? (
+  return  isProject ? (
     isAssetsWorkerDone ? (
       <Memo className="w-full h-full">
         <ToastContainer

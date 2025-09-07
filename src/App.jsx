@@ -40,6 +40,7 @@ import { opfs } from "./helpers/initOpfs";
 import { isDevMode } from "./helpers/bridge";
 import { Opfs } from "./views/Opfs";
 import { Interactions } from "./components/Editor/Interactions";
+import { AppInstalling } from "./views/AppInstalling";
 // import { esmToUmd } from "./helpers/initBabel";
 
 function App() {
@@ -114,11 +115,25 @@ function App() {
       const prevRegs = await navigator.serviceWorker.getRegistrations();
       if (!(prevRegs.length && navigator.serviceWorker.controller)) {
         setAppInstalling(true);
+        localStorage.setItem("installed", "false");
         await initDBAssetsSw(() => {
           setAppInstalling(false);
+          localStorage.setItem("installed", "true");
         });
       } else {
+        localStorage.setItem("installed", "true");
         setAppInstalling(false);
+        // navigator.serviceWorker.getRegistration().then((registration) => {
+        //   if (registration && registration.active) {
+        //     registration.active.addEventListener("statechange", (e) => {
+        //       if (e.target.state === "redundant") {
+        //         console.log(
+        //           "Service Worker became redundant (unregistered or replaced)."
+        //         );
+        //       }
+        //     });
+        //   }
+        // });
       }
       console.log(
         "Previous registrations:",
@@ -187,39 +202,43 @@ function App() {
   // const isProject = Boolean(+localStorage.getItem(current_project_id));
   return (
     // <Suspense fallback={<Loader />}>
-    <Routes>
-      <Route
-        path="/"
-        element={<Editor />}
-        action={
-          Boolean(+localStorage.getItem(current_project_id))
-            ? null
-            : () => navigate("/workspace")
-        }
-      >
-        <Route path="add-blocks" element={<Blocks />} />
-        <Route path="edite">
-          <Route path="styling" element={<StyleAside />} />
-          <Route path="traits" element={<TraitsAside />} />
-          <Route path="commands" element={<Commands />} />
-          <Route path="interactions" element={<Interactions />} />
-          <Route path="motion" element={<Motion />} />
-          {/* <Route path="choose-and-write-model" element={<ChooseModel />}>
+    appInstalling ? (
+      <AppInstalling />
+    ) : (
+      <Routes>
+        <Route
+          path="/"
+          element={<Editor />}
+          action={
+            Boolean(+localStorage.getItem(current_project_id))
+              ? null
+              : () => navigate("/workspace")
+          }
+        >
+          <Route path="add-blocks" element={<Blocks />} />
+          <Route path="edite">
+            <Route path="styling" element={<StyleAside />} />
+            <Route path="traits" element={<TraitsAside />} />
+            <Route path="commands" element={<Commands />} />
+            <Route path="interactions" element={<Interactions />} />
+            <Route path="motion" element={<Motion />} />
+            {/* <Route path="choose-and-write-model" element={<ChooseModel />}>
               <Route path="dynamic-content" element={<DynamicContent />} />
               <Route
                 path="dynamic-attributes"
                 element={<DynamicAttributes />}
               />
             </Route> */}
+          </Route>
         </Route>
-      </Route>
 
-      <Route path="/preview" element={<Preview />} />
+        <Route path="/preview" element={<Preview />} />
 
-      <Route path="/workspace" element={<Workspace />}></Route>
+        <Route path="/workspace" element={<Workspace />}></Route>
 
-      {isDevMode() && <Route path="opfs-dev" element={<Opfs />} />}
-    </Routes>
+        {isDevMode() && <Route path="opfs-dev" element={<Opfs />} />}
+      </Routes>
+    )
     // </Suspense>
   );
 }
