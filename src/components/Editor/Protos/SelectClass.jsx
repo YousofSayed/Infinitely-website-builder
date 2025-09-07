@@ -4,25 +4,27 @@ import { useEditorMaybe } from "@grapesjs/react";
 import { SmallButton } from "./SmallButton";
 import { Icons } from "../../Icons/Icons";
 import { Choices } from "./Choices";
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import {
   currentElState,
   projectData,
   selectorState,
 } from "../../../helpers/atoms";
-import { current_project_id } from "../../../constants/shared";
+import { current_project_id, inf_class_name } from "../../../constants/shared";
 import { db } from "../../../helpers/db";
 import { inlineWorker } from "../../../helpers/bridge";
 import { classesFinderWorker } from "../../../helpers/defineWorkers";
-import { getProjectSettings } from "../../../helpers/functions";
+import {
+  getProjectSettings,
+  preventSelectNavigation,
+} from "../../../helpers/functions";
 import { parse } from "css";
 
 export const SelectClass = memo(() => {
   const editor = useEditorMaybe();
   const projectId = +localStorage.getItem(current_project_id);
-  const setSelector = useSetRecoilState(selectorState);
+  const [selector, setSelector] = useRecoilState(selectorState);
   const selectedEl = useRecoilValue(currentElState);
-  const selector = useRecoilValue(selectorState);
   const [value, setvalue] = useState("");
   const [classesKeywrods, setClassesKeywords] = useState([]);
   const [allStyleSheetClasses, setAllStyleSheetClasses] = useState([]);
@@ -100,25 +102,28 @@ export const SelectClass = memo(() => {
 
   useEffect(() => {
     if (!editor) return;
-    const callbackUndo = () => {
+    const selected = editor.getSelected();
+    if (!selected) return;
+    const callback = () => {
       console.log("undo");
       setClassesKeywords(getELClasses());
     };
 
-    const callbackRedo = () => {
-      console.log("redo");
-      setClassesKeywords(getELClasses());
-    };
+    // const callbackRedo = () => {
+    //   console.log("redo");
+    //   setClassesKeywords(getELClasses());
+    // };
 
     // Listen for the undo command
-    editor.on("command:run:core:undo", callbackUndo);
-
+    editor.on("command:run:core:undo", callback);
+    selected.on("change:attributes", callback);
     // Listen for the redo command
-    editor.on("command:run:core:redo", callbackRedo);
+    editor.on("command:run:core:redo", callback);
 
     return () => {
-      editor.off("command:run:core:redo", callbackRedo);
-      editor.off("command:run:core:undo", callbackUndo);
+      editor.off("command:run:core:redo", callback);
+      editor.off("command:run:core:undo", callback);
+      selected.off("change:attributes", callback);
       // editor.off("undo", callback);
     };
   }, [editor]);
@@ -132,8 +137,17 @@ export const SelectClass = memo(() => {
   };
 
   const removeClass = (classNameKeyword = "") => {
-    editor.getSelected().removeClass(classNameKeyword);
+    const selected = editor.getSelected();
+    selected.removeClass([classNameKeyword]);
+    if (`.${classNameKeyword}` == selector.toString()) {
+      setSelector(new String(""));
+    }
+    const infClassName = selected.getAttributes()[inf_class_name];
+    if (infClassName == classNameKeyword) {
+      selected.removeAttributes([inf_class_name]);
+    }
     setClassesKeywords(getELClasses());
+    // preventSelectNavigation(editor , selected)
   };
 
   const getELClasses = () => {
@@ -277,7 +291,6 @@ export const SelectClass = memo(() => {
             }}
             onActive={({ keyword, index }) => {
               console.log("keeeeyword : ", keyword, "active");
-
               // setSelector(keyword ? `.${keyword}` : null);
             }}
             onUnActive={({ keyword, index }) => {

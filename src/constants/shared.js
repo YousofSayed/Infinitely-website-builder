@@ -58,7 +58,17 @@ export const text_tags = [
   "pre",
   "article",
 ];
-export const editorComponentProps = ['draggable' , 'droppable' , 'editable' , 'layerable' , 'selectable' , 'hoverable' , 'copyable' , 'removable' , 'badgeable'];
+export const editorComponentProps = [
+  "draggable",
+  "droppable",
+  "editable",
+  "layerable",
+  "selectable",
+  "hoverable",
+  "copyable",
+  "removable",
+  "badgeable",
+];
 export const media_types = ["video", "audio", "iframe"];
 export const headersProps = [
   "accept-ranges",
@@ -120,8 +130,6 @@ export const project_successfully_build_msg = `Project built successfully`;
 export const project_faild_build_msg = `Project faild to build successfully`;
 export const file_deleted_success_msg = `File deleted successfully`;
 
-
-
 /**
  *
  * @param {{
@@ -153,6 +161,22 @@ export const buildScripts = ({
       name: "infinitely.js",
       localUrl: "/scripts/infinitely.js",
     },
+
+    ...(projectSetting.enable_swiperjs
+      ? [
+          {
+            name: "swiper.js",
+            localUrl:
+              "https://cdn.jsdelivr.net/npm/swiper@latest/swiper-bundle.min.js",
+          },
+
+          {
+            name: "swiper-element.js",
+            localUrl:
+              "https://cdn.jsdelivr.net/npm/swiper@latest/swiper-element-bundle.min.js",
+          },
+        ]
+      : []),
 
     ...((!disableGsapCore && [
       {

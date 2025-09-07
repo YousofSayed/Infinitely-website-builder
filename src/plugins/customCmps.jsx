@@ -20,6 +20,7 @@ import { Media } from "../Blocks/Media";
 import { Svg } from "../Blocks/Svg";
 import { SplineScene } from "../Blocks/SplineScene";
 import { DropArea } from "../Blocks/DropArea";
+import { Slider } from "../Blocks/Slider";
 
 /**
  *
@@ -40,6 +41,7 @@ export const customCmps = (editor) => {
   Heading({ editor });
   Button({ editor });
   Text({ editor });
+  Slider({ editor });
   // Video({ editor });
   // Audio({ editor });
   // Iframe({ editor });

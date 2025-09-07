@@ -855,6 +855,8 @@ export const Commands = memo(() => {
                                    
                                   },
                                   onMount(mEditor) {
+                                    console.log("obj[key].value", obj[key].value);
+                                    
                                     handleStyleAndClassAttributes(
                                       mEditor,
                                       obj?.[key]?.suffixes,

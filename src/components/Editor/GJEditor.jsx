@@ -40,6 +40,7 @@ import { globalTraits } from "../../plugins/globalTraits.jsx";
 import { useSetClassForCurrentEl } from "../../hooks/useSetclassForCurrentEl.js";
 import { toast } from "react-toastify";
 import { handleComponentsOnCreate } from "../../plugins/handleComponentsOnCreate.js";
+import { initTraitsOnRender } from "../../plugins/initTraitsOnRender.jsx";
 
 export const GJEditor = memo(({ children }) => {
   const setSelectedEl = useSetRecoilState(currentElState);
@@ -66,6 +67,7 @@ export const GJEditor = memo(({ children }) => {
     // motionsRemoverHandler,
     motionsCloneHandler,
     globalTraits,
+    initTraitsOnRender,
     // handleComponentsOnCreate,
     // selectionPreventer,
     // muatationDomElements,
@@ -188,7 +190,7 @@ export const GJEditor = memo(({ children }) => {
         // avoidDefaults: true,
         // nativeDnD:true,
         // showToolbar:true,
-        showOffsets: false,
+        showOffsets: true,
         keepUnusedStyles: true,
         clearStyles: false,
         
@@ -202,6 +204,7 @@ export const GJEditor = memo(({ children }) => {
         //   pages: ,
         // },
         // exportWrapper: true,
+        domComponents:{ escapeHtml: false},
         richTextEditor: {
           custom: true,
           // adjustToolbar:
@@ -210,7 +213,7 @@ export const GJEditor = memo(({ children }) => {
         optsHtml: {
           // attributes: true,
           // keepInlineStyle: true,
-          altQuoteAttr: true,
+          // altQuoteAttr: true,
 
           withProps: true,
           // asDocument: true,
@@ -221,9 +224,10 @@ export const GJEditor = memo(({ children }) => {
           onlyMatched: false,
         },
         autorender: true,
-
+        
         parser: {
           optionsHtml: {
+            
             allowScripts: true,
             // detectDocument: true,
             allowUnsafeAttr: true,

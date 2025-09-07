@@ -1443,9 +1443,9 @@ export class TelegramBot {
  * @param {object} obj
  * @returns
  */
-export function stringify(value , space) {
+export function stringify(value, space) {
   try {
-    return JSON.stringify(value , undefined , space);
+    return JSON.stringify(value, undefined, space);
   } catch (error) {
     return undefined;
   }
@@ -1462,6 +1462,10 @@ export function parse(value) {
   } catch (error) {
     return undefined;
   }
+}
+
+export function parseAndReturnInputIfNot(value) {
+  return parse(value) || value;
 }
 
 /**

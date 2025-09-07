@@ -12,6 +12,8 @@ import { Icons } from "../../Icons/Icons";
 import { editorIcons } from "../../Icons/editorIcons";
 import { opfs } from "../../../helpers/initOpfs";
 import { defineRoot } from "../../../helpers/bridge";
+import { toast } from "react-toastify";
+import { ToastMsgInfo } from "../Protos/ToastMsgInfo";
 
 export const ReusableCmb = () => {
   const editor = useEditorMaybe();
@@ -38,6 +40,7 @@ export const ReusableCmb = () => {
   };
 
   const save = async () => {
+   const tId = toast.loading(<ToastMsgInfo msg={`Saving...`}/>)
     const sle = editor.getSelected();
     const id = newProps.name + (newProps.ctg || "templates") + sle.getId();
     selectedEl.addAttributes({ [inf_template_id]: id });
@@ -89,6 +92,8 @@ export const ReusableCmb = () => {
     });
     editor.trigger("block:add");
     editor.runCommand("close:current:modal");
+    toast.done(tId);
+    toast.success(<ToastMsgInfo msg={`Template saved successfully👍`}/>)
   };
 
   return (

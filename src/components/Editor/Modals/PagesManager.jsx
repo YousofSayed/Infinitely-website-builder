@@ -73,6 +73,8 @@ export const PagesManager = () => {
             title: "",
             robots: "",
           },
+          symbols:[],
+          bodyAttributes:{},
           id: uniqueID(),
           name: name,
         },

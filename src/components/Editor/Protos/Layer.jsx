@@ -344,7 +344,7 @@ export const Layer = ({
           style={{
             // opacity: !layerProps.draggable || !layerProps.droppable ? 0.5 : 1,
             pointerEvents:
-              !layerProps.draggable || !layerProps.droppable ? "none" : "auto",
+              !layerProps.droppable ? "none" : "auto",
           }}
           onDragOver={(ev) => {
             addOpacity(ev);

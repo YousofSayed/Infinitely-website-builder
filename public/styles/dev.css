@@ -97,6 +97,10 @@ infinitely-svg svg {
   font-weight: bold !important;
 }
 
+swiper-slide.drop{
+  height: 500px;
+}
+
 .min-h-60 {
   min-height: 60px;
 }
@@ -111,4 +115,65 @@ infinitely-svg svg {
 
 spline-viewer {
   pointer-events: none;
+}
+
+spline-viewer.drop {
+  all:  unset !important;
+}
+
+.enable-swiper , .enable-spline{
+  pointer-events: none;
+  position: relative !important;
+  height: 150px !important;
+  width: 100% !important;
+  display: block !important;
+  border: #E0E0E0 2px dotted !important;
+}
+
+.enable-swiper::after , .enable-spline::after{
+  content: '';
+  position: absolute !important;
+  left: 0 !important;
+  height: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: white !important;
+}
+
+.enable-swiper::before , .enable-spline::before{
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  text-transform: capitalize !important;
+  position: absolute !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 100 !important;
+  background: crimson !important;
+  color: white !important;
+  font-weight: bold !important;
+  font-size: large !important;
+  animation: scale 1s alternate-reverse forwards infinite !important;
+}
+
+.enable-swiper::before{
+  content: 'Please Enable Swiper To Access This component';
+}
+
+.enable-spline::before{
+  content: 'Please Enable Spline Viewer To Access This component';
+
+}
+
+
+@keyframes scale {
+  from{
+    /* transform: scale(0); */
+    opacity: .7;
+  }
+  to{
+    opacity: 1;
+    /* transform: scale(1); */
+  }
 }

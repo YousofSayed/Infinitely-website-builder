@@ -1,4 +1,4 @@
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import {
   ruleState,
   selectorState,
@@ -37,7 +37,7 @@ let setStyleTimeout = null;
 export function useSetClassForCurrentEl() {
   const editor = useEditorMaybe();
   const rule = useRecoilValue(ruleState);
-  const selector = useRecoilValue(selectorState);
+  const [selector , setSelector] = useRecoilState(selectorState);
   const removeProp = useRemoveCssProp();
 
   const showAnimationsBuilder = useRecoilValue(showAnimationsBuilderState);
@@ -96,7 +96,7 @@ export function useSetClassForCurrentEl() {
       const Media = getCurrentMediaDevice(editor);
       const sle = editor.getSelected();
 
-      let currentSelector = getCurrentSelector(selector, sle);
+      let currentSelector = getCurrentSelector(selector, sle); 
       console.log("from set style current selector is : ", currentSelector);
       const classes = [...sle.getClasses()];
       const isCurrentSelectorAdded = classes.some(
@@ -112,13 +112,15 @@ export function useSetClassForCurrentEl() {
         const classes = [...sle.getClasses()];
         const isNewAdded = classes.some((cls) => cls === newClassName);
         if (isNewAdded) {
-          currentSelector = newClassName;
+          currentSelector = `.${newClassName}`;
         } else {
           throw new Error(`New class not added!`);
         }
       } else if (currentSelector && !isCurrentSelectorAdded) {
         sle.addClass(currentSelector);
       }
+      console.log('current selector from updater : ' , currentSelector);
+      
       // const symbolInfo = getInfinitelySymbolInfo(sle);
       // console.log(
       //   "from updater  : ",

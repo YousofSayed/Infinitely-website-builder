@@ -10,7 +10,7 @@ import {
 import { ToastMsgInfo } from "../Editor/Protos/ToastMsgInfo";
 import { toast } from "react-toastify";
 import { addClickClass } from "../../helpers/cocktail";
-import { getFileSize, toMB } from "../../helpers/bridge";
+import { defineRoot, getFileSize, toMB } from "../../helpers/bridge";
 import { FitTitle } from "../Editor/Protos/FitTitle";
 import { Icons } from "../Icons/Icons";
 import { Tooltip } from "react-tooltip";
@@ -79,7 +79,7 @@ export const FileView = ({
     callback(asset, src);
   };
 
-  const deleteAsset = async (asset) => {
+  const deleteAsset = async () => {
     // const newAssets = await (
     //   await getProjectData()
     // ).assets.filter((asset) => asset.id != id);
@@ -87,7 +87,7 @@ export const FileView = ({
     //   assets: newAssets,
     // });
 
-    await opfs.deleteEntry(await opfs.root , asset.name,`projects/project-${projectId}/assets`)
+    await opfs.removeFiles([defineRoot(`assets/${asset.name}`)])
     toast.success(<ToastMsgInfo msg={file_deleted_success_msg}/>)
   };
 console.log('size : ' , toMB(asset.size , 2) , asset.size);

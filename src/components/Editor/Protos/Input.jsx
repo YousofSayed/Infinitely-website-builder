@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 
+// million-ignore
 /**
  * A small button component with customizable styles and click behavior.
  * @typedef {Object} Props - Component props

@@ -634,6 +634,18 @@ export function getCurrentMediaDevice(editor) {
   return Media;
 }
 
+/**
+ *
+ * @param {import('grapesjs').Editor} editor
+ * @returns
+ */
+export function getMediaBreakpoint(editor) {
+  const currentDeviceName = editor.getDevice();
+  if(currentDeviceName == 'desktop')return ''
+  const currentDevice = editor.Devices.get(currentDeviceName);
+  return parseFloat(currentDevice.attributes.widthMedia) || ''
+}
+
 export const replaceLastWord = (
   string = "",
   newValue = "",
@@ -1490,7 +1502,7 @@ posts : ['post-1' , 'post-2']
 export function getCurrentSelector(selector, cmp) {
   if (!cmp) return "";
   const symbolInfo = getInfinitelySymbolInfo(cmp);
-  let currentSelector ;
+  let currentSelector;
   if (selector?.toString()) {
     console.log("selector", selector.toString());
 
@@ -1518,12 +1530,12 @@ export function getCurrentSelector(selector, cmp) {
   else {
     const newClassName = `inf-${uniqueID()}`;
     const infClassName = cmp.getAttributes()[inf_class_name];
-    const classes = [...cmp.getClasses()]
+    const classes = [...cmp.getClasses()];
     if (!infClassName) {
       // cmp.addAttributes({
       //   [inf_class_name]: newClassName,
       // });
-      currentSelector = '';
+      currentSelector = "";
       return currentSelector;
     }
     // !classes.some(cls=>cls.toLowerCase() == infClassName.toLowerCase()) && cmp.addClass(infClassName ? infClassName : newClassName);
@@ -1612,19 +1624,22 @@ export function getGlobalSettings() {
 
 export function setProjectSettings() {
   const projectSettingsLS = localStorage.getItem(project_settings);
-  if(Object.keys(JSON.parse(projectSettingsLS || '{}')).toString() == Object.keys(projectSettingsType).toString())return
+  if (
+    Object.keys(JSON.parse(projectSettingsLS || "{}")).toString() ==
+    Object.keys(projectSettingsType).toString()
+  )
+    return;
   const news = {};
-  let isChange = false
+  let isChange = false;
   for (const key in projectSettingsType) {
     // if (!(key in news)) {
     // }
-    
-    news[key] = JSON.parse(projectSettingsLS||'{}')?.[key] || projectSettingsType[key];
+
+    news[key] =
+      JSON.parse(projectSettingsLS || "{}")?.[key] || projectSettingsType[key];
     console.log(key, news[key], projectSettingsType[key]);
     isChange = true;
   }
-
-
 
   if (isChange) {
     console.log("No storage setted yet!");
@@ -1636,7 +1651,7 @@ export function setProjectSettings() {
  *
  */
 export function getProjectSettings() {
-  setProjectSettings()
+  setProjectSettings();
   /**
    * @type {import('./types').ProjectSetting}
    */
@@ -1647,8 +1662,7 @@ export function getProjectSettings() {
       })
   );
 
-  console.log('project sttings , :' , projectSettings);
-  
+  console.log("project sttings , :", projectSettings);
 
   return {
     projectSettings,
@@ -2593,7 +2607,6 @@ export const triggerKeyFramesGetterWorker = (editor) => {
   });
 };
 
-
 export async function detectGlobalsSandbox(url) {
   const iframe = document.createElement("iframe");
   iframe.style.display = "none";
@@ -2611,12 +2624,29 @@ export async function detectGlobalsSandbox(url) {
   });
 
   const after = new Set(Object.keys(win));
-  const newGlobals = [...after].filter(x => !before.has(x));
+  const newGlobals = [...after].filter((x) => !before.has(x));
 
   // Cleanup iframe if you want
   document.body.removeChild(iframe);
 
   return newGlobals;
+}
+
+/**
+ *
+ * @param {{
+ * data : import('./types').Project ,
+ * projectSetting:import('./types').ProjectSetting,
+ * projectId : number ,
+ * pageName:string,
+ * editorData: { canvasCss:string , editorCss:string },
+ * }} props
+ */
+export function updatePrevirePage(props) {
+  pageBuilderWorker.postMessage({
+    command: "writePreviewPage",
+    props,
+  });
 }
 
 // Example:

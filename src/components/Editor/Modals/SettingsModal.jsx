@@ -120,6 +120,10 @@ export const SettingsModal = () => {
             }
           );
         });
+
+        isCurrentChange('enable_swiperjs' , ()=>{
+          editor.load();
+        })
       }, 100);
     },
     [currentChange]

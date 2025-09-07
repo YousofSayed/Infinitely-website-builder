@@ -19,6 +19,7 @@ import {
   getProjectSettings,
   initSymbolTimout,
   screenshotTimout,
+  updatePrevirePage,
 } from "../helpers/functions";
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
 import { changePageName } from "../helpers/customEvents";
@@ -332,6 +333,9 @@ export const IDB = (editor) => {
               ]);
             } else {
               const wrapper = editor.getWrapper();
+              const styleCmp = wrapper.find(`[infinitely-style]`)[0];
+              editor.Css.clear({ avoidStore: true });
+              styleCmp?.[0] && styleCmp.remove();
               // wrapper.components(`${htmlPage}` , {merge:false,skipDomReset:true,sort:false})
               editor.setComponents(document.body.innerHTML, {
                 avoidStore: true,
@@ -350,13 +354,6 @@ export const IDB = (editor) => {
             }
           };
 
-          // if ("requestIdleCallback" in window) {
-          //   requestIdleCallback(() => {
-          //     renderCallback();
-          //   }, {});
-          // } else {
-          //   renderCallback();
-          // }
           renderCallback();
 
           editor.trigger(InfinitelyEvents.pages.select);
@@ -400,16 +397,16 @@ export const IDB = (editor) => {
            * @type {HTMLBodyElement}
            */
           const body = ev.window.document.body;
-          const originalStore = editor.Storage.store;
-          editor.Storage.store = () =>
-            console.log(`Store prevented while loading`);
+          // const originalStore = editor.Storage.store;
+          // editor.Storage.store = () =>
+          //   console.log(`Store prevented while loading`);
           editor.Storage.setAutosave(false);
           editor.Storage.setStepsBeforeSave(0);
           // editor.getWrapper().setClass("");
-          const classes = [...editor.getWrapper().getClasses()].join(" ");
           const attributes = Object.fromEntries(
             vAttributesFilterd.concat(otherAttributes)
           );
+          const classes = attributes?.class || ""; //|| [...editor.getWrapper().getClasses()].join(" ");
           // attributes["class"] = "";
           // editor.getWrapper().addClass()
           // classes == attributes["class"] && delete attributes["class"];
@@ -420,26 +417,43 @@ export const IDB = (editor) => {
           //   attributes,
           // },{avoidStore:true})
 
+          editor
+            .getWrapper()
+            .removeAttributes(
+              Object.keys(editor.getWrapper().getAttributes()),
+              { avoidStore: true }
+            );
+
+          editor.getWrapper().removeClass(editor.getWrapper().getClasses());
+
+          console.log(
+            "classses :  ",
+            editor.getWrapper().getClasses(),
+            classes
+          );
+
+          // editor.getWrapper().clear({})
+
           editor.getWrapper().setAttributes(attributes, {
             avoidStore: true,
-            addStyle: true,
-            noEvent: true,
-            skipWatcherUpdates: true,
-            avoidTransformers: true,
-            inline: true,
-            validate: true,
-            fromDataSource: false,
-            partial: true,
+            // addStyle: true,
+            // noEvent: true,
+            // skipWatcherUpdates: true,
+            // avoidTransformers: true,
+            // inline: true,
+            // validate: true,
+            // fromDataSource: false,
+            // partial: true,
             // silent: true,
           });
           editor.getWrapper().addClass(classes.split(" "));
-          const wrapperEl = editor.getWrapper().getEl();
+          // const wrapperEl = editor.getWrapper().getEl();
           // for (const key in attributes) {
           //   wrapperEl.setAttribute(key, attributes[key]);
           // }
 
           editor.UndoManager.start();
-          editor.Storage.store = originalStore;
+          // editor.Storage.store = originalStore;
           isLoadEnd = editor.getDirtyCount();
           // console.log(
           //   `Auto save  : `,
@@ -470,7 +484,13 @@ export const IDB = (editor) => {
           editor.clearDirtyCount();
           clearTimeout(storeTimeout);
           editor.Storage.setAutosave(originalAutosave);
-
+          updatePrevirePage({
+            data: projectData,
+            pageName: currentPageName,
+            projectId: +projectID,
+            projectSetting: projectSettings,
+            // editorData:{canvasCss:editor.config.canvasCss , editorCss:editor.config.editorCss}
+          });
           editor.trigger(InfinitelyEvents.storage.loadEnd);
         }, 0);
         return {};
@@ -714,6 +734,7 @@ export const IDB = (editor) => {
  */
 const loadScripts = async (editor, projectData) => {
   const currentPageName = localStorage.getItem(current_page_id);
+  const { projectSettings, set } = getProjectSettings();
   /**
    *
    * @param {{type:'styles' | 'scripts' , attributes:{name:string} , condition:boolean }} param0
@@ -1002,6 +1023,19 @@ const loadScripts = async (editor, projectData) => {
     await appendScript(mainScriptsForEditor, 0, (script, lib) => {
       script.src = lib;
     });
+
+    projectSettings.enable_swiperjs &&
+      (await appendScript(
+        [
+          "https://cdn.jsdelivr.net/npm/swiper@latest/swiper-bundle.min.js",
+          "https://cdn.jsdelivr.net/npm/swiper@latest/swiper-element-bundle.min.js",
+        ],
+        0,
+        (script, lib) => {
+          script.src = lib;
+        }
+      ));
+
     // loadMainScriptsCallback(body);
     // loadFooterLibs(body);
     // appendLocalPageAndGlobalCssAndJs(body);

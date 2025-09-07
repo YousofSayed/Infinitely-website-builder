@@ -38,7 +38,7 @@ export default defineConfig({
 
     // removeConsole(),
     VitePWA({
-      registerType: "prompt",
+      registerType: "autoUpdate",
       minify: true,
       // devOptions: {
       //   enabled: true, // Enable SW in dev mode

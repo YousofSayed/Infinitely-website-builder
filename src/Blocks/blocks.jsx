@@ -202,7 +202,7 @@ export const blocks = [
     id: "table",
     label: html`<p class="custom-font-size ">Table</p>`,
     media: reactToStringMarkup(
-      Icons.table({ strokeColor: "white", width: 25, height: 25 })
+      Icons.table({ strokeColor: "white", width: 25, height: 25, fill: "none" })
     ),
     category: "Basic",
     content: html`
@@ -254,11 +254,26 @@ export const blocks = [
     id: "spline-viewer",
     label: html`<p class="custom-font-size ">Spline viewer</p>`,
     media: reactToStringMarkup(
-      Icons.spline({ strokeColor: "white", width: 25, height: 25 })
+      Icons.spline({
+        strokeColor: "white",
+        width: 25,
+        height: 25,
+        fill: "none",
+      })
     ),
     category: "fancy",
     content: { type: "spline-viewer" },
     // `<spline-viewer></spline-viewer>`
+  },
+
+  {
+    id: "slider",
+    label: html`<p class="custom-font-size ">Slider</p>`,
+    media: reactToStringMarkup(
+      Icons.slider({ strokeColor: "white", width: 25, height: 25 })
+    ),
+    category: "fancy",
+    content: { type: "slider" },
   },
 
   {
@@ -291,3 +306,4 @@ export const blocks = [
   //   }
   // }
 ];
+//next steps : shoelace ان شاء الله 

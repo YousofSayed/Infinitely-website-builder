@@ -168,6 +168,7 @@ export const directives = [
       if (!this.preventNestedDefault) {
         const sle = editor.getSelected();
         sle.addAttributes({ [targetAttribute]: value });
+        editor.trigger(InfinitelyEvents.directives.update);
       }
       callback?.();
     },
@@ -204,6 +205,7 @@ export const directives = [
       if (!this.preventNestedDefault) {
         const sle = editor.getSelected();
         sle.addAttributes({ [targetAttribute]: value });
+        editor.trigger(InfinitelyEvents.directives.update);
       }
       callback?.();
     },

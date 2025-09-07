@@ -347,6 +347,7 @@ export async function updateDB(props) {
       );
       if (props.updatePreviewPages) {
         await writePreviewPage(props);
+        // updatePrevirePage(props);
       }
       console.warn("after save to db");
       self.postMessage({
@@ -378,10 +379,8 @@ export async function updateDB(props) {
  * @param {{
  * data : import('./types').Project ,
  * projectSetting:import('./types').ProjectSetting,
- *  projectId : number ,
- *  updatePreviewPages : boolean ,
- *  pageName:string,
- * pageUrl:string,
+ * projectId : number ,
+ * pageName:string,
  * editorData: { canvasCss:string , editorCss:string },
  * }} props
  */

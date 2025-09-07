@@ -217,6 +217,7 @@ export let projectSettingsType = {
   disable_petite_vue: false,
   enable_tailwind: false,
   enable_spline_viewer: false,
+  enable_swiperjs: false,
   enable_editor_lazy_loading:false,
   enable_auto_save:true,
   stop_all_animation_on_page: false,

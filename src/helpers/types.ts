@@ -23,12 +23,13 @@ export type Animations = {
   values: { percentage: number; styles: CSSStyleDeclaration }[];
 }[];
 
-type TraitCallProps = {
+export type TraitCallProps = {
   editor: import("grapesjs").Editor;
   trait: InfinitelyTrait;
   oldValue: string;
   newValue: string;
   asset: InfinitelyAsset | undefined;
+  mediaBreakpoint: number;
 };
 
 export type TraitCallback = ({
@@ -37,6 +38,7 @@ export type TraitCallback = ({
   oldValue,
   newValue,
   asset,
+  mediaBreakpoint,
 }: TraitCallProps) => void;
 
 export type InfinitelyTrait = {
@@ -69,6 +71,7 @@ export type InfinitelyTrait = {
   placeholder: string;
   category: string;
   changeProp: boolean;
+  showMediaBreakpoint: boolean;
   stateProp: any;
   options: string[];
   ext: string;
@@ -80,12 +83,26 @@ export type InfinitelyTrait = {
   textareaLanguage: string;
   allowCmdsContext: boolean;
   callback: TraitCallback;
+  hint : TraitCallback | string 
+  init: ({
+    editor,
+    trait,
+    model,
+    mediaBreakpoint,
+  }: {
+    editor: import("grapesjs").Editor;
+    trait: InfinitelyTrait;
+    model: Component;
+    mediaBreakpoint: number;
+  }) => void;
   onSwitch: (value: boolean) => void;
   buttonEvents: (
     handlers: TraitCallProps
   ) => import("react").HTMLAttributes<HTMLButtonElement>;
-  showCallback: () => boolean;
-  hideCallback: () => boolean;
+  showCallback: (trait: InfinitelyTrait) => boolean;
+  hideCallback: (trait: InfinitelyTrait) => boolean;
+  nestedKeys: string[];
+  isChild: boolean;
   role: "attribute" | "handler";
   mediaType?: "image" | "video" | "audio";
   bindToAttribute: boolean;
@@ -273,7 +290,7 @@ export interface LibraryConfig {
   content: string;
   dataUrl: string;
   name: string;
-  nameWithoutExt:string,
+  nameWithoutExt: string;
   description: string;
   version: string;
   isLocal: boolean;
@@ -288,7 +305,7 @@ export interface LibraryConfig {
   async: boolean;
   defer: boolean;
   globalName: string;
-  typesPath:string;
+  typesPath: string;
   jsType: string;
   sort: number;
   path: string;
@@ -476,6 +493,7 @@ export type ProjectSetting = {
   enable_auto_save: boolean;
   enable_tailwind: boolean;
   enable_spline_viewer: boolean;
+  enable_swiperjs: boolean;
   stop_all_animation_on_page: boolean;
   // include_canvas_styles_in_build_file: boolean;
   purge_css: boolean;

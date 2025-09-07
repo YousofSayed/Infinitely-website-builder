@@ -40,7 +40,7 @@ export const CustomModals = memo(() => {
     <section
       onClick={(ev) => {
         ev.stopPropagation();
-        ev.preventDefault();
+        // ev.preventDefault();
         if (ev.target === ev.currentTarget) {
           // Only close if clicked directly on backdrop, not children
           editor.Commands.run("close:custom:modal");
@@ -56,7 +56,7 @@ export const CustomModals = memo(() => {
         }}
         onClick={(ev) => {
           ev.stopPropagation();
-          ev.preventDefault();
+          // ev.preventDefault();
           console.log("main is me");
           // document.body.click();
         }}

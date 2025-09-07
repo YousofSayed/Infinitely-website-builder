@@ -1,6 +1,6 @@
 import { Icons } from "../components/Icons/Icons";
 import { html } from "../helpers/bridge";
-import { defineTraits, doActionAndPreventSaving } from "../helpers/functions";
+import { defineTraits, doActionAndPreventSaving, getProjectSettings } from "../helpers/functions";
 import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
 
 /**
@@ -77,10 +77,13 @@ export const SplineScene = ({ editor }) => {
           return;
         }
 
+        const attrs = { ...(child.getAttributes() || {}) }
+        delete attrs['droppable'];
+        delete attrs['draggable'];
         doActionAndPreventSaving(editor, (ed) => {
           child.addClass("no-pointer");
           model.setAttributes(
-            { ...(child.getAttributes() || {}) },
+            attrs,
             {
               avoidStore: true,
               // skipWatcherUpdates: true,
@@ -92,6 +95,11 @@ export const SplineScene = ({ editor }) => {
         });
 
         editor.clearDirtyCount();
+
+        const {projectSettings} = getProjectSettings();
+        !projectSettings.enable_spline_viewer && this.el.classList.add('enable-spline') 
+        !projectSettings.enable_spline_viewer && this.el.classList.remove('drop')
+         
       },
     },
     model: {
@@ -100,7 +108,7 @@ export const SplineScene = ({ editor }) => {
         icon: reactToStringMarkup(Icons.spline({ strokeColor: "white" })),
         tagName: `spline-wrapper`,
         name: "Spline",
-        components: [{ tagName: "spline-viewer" }],
+        components: [{ tagName: "spline-viewer" , droppable:false}],
         attributes: {
           // class: "p-10 min-h-60",
           type: "spline-wrapper",

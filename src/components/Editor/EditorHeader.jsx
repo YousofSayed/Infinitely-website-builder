@@ -103,11 +103,16 @@ export const HomeHeader = memo(() => {
       const currentDeviceName = editor.getDevice();
       const currentDevice = editor.Devices.get(currentDeviceName);
       setDimaonsion({
-        height: parseFloat(currentDevice.attributes.height),
-        width: parseFloat(currentDevice.attributes.widthMedia),
+        height: parseFloat(currentDevice.attributes.height) || '',
+        width: parseFloat(currentDevice.attributes.widthMedia) || '',
       });
     };
     editor.on("change:device", changeDeviceCallback);
+    
+    return ()=>{
+      editor.off("change:device", changeDeviceCallback);
+
+    }
   }, [editor]);
 
   useEffect(() => {
@@ -260,7 +265,7 @@ export const HomeHeader = memo(() => {
               localStorage.setItem(preview_url, getCurrentPageName());
               window.open(
                 `/${getCurrentPageName()}`,
-                "_blank"
+                "infinitely-preview"
                 // 'width=800,height=600,top=50,left=50,scrollbars=yes,resizable=yes,location=yes,menubar=no,toolbar=no,status=yes,titlebar=yes'
               );
               // console.log("navigated to frontend");

@@ -17,6 +17,7 @@ import { useEditorMaybe } from "@grapesjs/react";
 import { getCurrentSelector } from "../../../helpers/functions";
 import { inf_class_name } from "../../../constants/shared";
 
+// million-ignore
 /**
  *
  * @param {{keywords : string[] , className:string , onActive : ({ keyword , index} : { keyword:string , index:number})=>void, onUnActive : ({ keyword , index} : { keyword:string , index:number})=>void,  enableSelecting:boolean,  onCloseClick : (ev : MouseEvent , keyword : string , index:number) => void , }} param0
@@ -43,6 +44,35 @@ export const Choices = memo(
     //   setActive(false);
     // }, [sle]);
 
+    const selectingCallback = () => {
+      const currentSelector = getCurrentSelector(
+        selector,
+        editor.getSelected()
+      );
+      console.log("current   : ", currentSelector, selector);
+
+      const index = keywords.findIndex((item) => {
+        // console.log(currentSelector.replace('.','').toLowerCase() == item.toLowerCase() , currentSelector.toLowerCase() , item.toLowerCase());
+        return (
+          currentSelector.replace(".", "").toLowerCase() == item.toLowerCase()
+        );
+      });
+
+      currentIndex.current = index;
+      const active = index <= -1 ? false : true;
+      setActive(Boolean(active));
+      // console.log(
+      //   "indexoo : ",
+      //   index,
+      //   currentIndex.current,
+      //   keywords[index],
+      //   active && currentIndex.current == 0
+      // );
+
+      // active ? onActive({ keyword, index: currentIndex.current }) :  onUnActive({ keyword, index: currentIndex.current });
+      setKeyword(keywords[index]);
+    };
+
     useEffect(() => {
       active
         ? onActive({ keyword, index: currentIndex.current })
@@ -50,46 +80,27 @@ export const Choices = memo(
     }, [active]);
 
     useEffect(() => {
-      const selectingCallback = () => {
-        if (!enableSelecting) return;
-        const currentSelector = getCurrentSelector(
-          selector,
-          editor.getSelected()
-        );
-        console.log("current   : ", currentSelector, selector);
-
-        const index = keywords.findIndex((item) => {
-          // console.log(currentSelector.replace('.','').toLowerCase() == item.toLowerCase() , currentSelector.toLowerCase() , item.toLowerCase());
-          return (
-            currentSelector.replace(".", "").toLowerCase() == item.toLowerCase()
-          );
-        });
-
-        currentIndex.current = index;
-        const active = index <= -1 ? false : true;
-        setActive(Boolean(active));
-        // console.log(
-        //   "indexoo : ",
-        //   index,
-        //   currentIndex.current,
-        //   keywords[index],
-        //   active && currentIndex.current == 0
-        // );
-
-        // active ? onActive({ keyword, index: currentIndex.current }) :  onUnActive({ keyword, index: currentIndex.current });
-        setKeyword(keywords[index]);
-      };
-
       if (enableSelecting) {
         selectingCallback();
-        editor.on("component:update:attributes", selectingCallback);
+      }
+
+      // setCurrentSelcetor(currentSelector);
+    }, [selector, active, sle, editor]);
+
+    useEffect(() => {
+      const selected = editor.getSelected();
+      console.log("fired before");
+      if (!selected) return;
+      console.log("fired after");
+      if (enableSelecting) {
+        selectingCallback();
+        selected.on("change:attributes", selectingCallback);
       }
 
       return () => {
-        editor.on("component:update:attributes", selectingCallback);
+        selected.off("change:attributes", selectingCallback);
       };
-      // setCurrentSelcetor(currentSelector);
-    }, [selector, active, sle]);
+    }, [editor]);
 
     return (
       <section
@@ -128,6 +139,8 @@ export const Choices = memo(
                   // );
                   // currentIndex.current = i;
                   // setKeyword(keyword);
+                  console.log("selector setttting");
+
                   setSelector(
                     selector.toLowerCase() === keyword.toLowerCase()
                       ? ""
@@ -146,6 +159,9 @@ export const Choices = memo(
                 {keyword}
                 <i
                   onClick={(ev) => {
+                    ev.stopPropagation();
+                    ev.preventDefault();
+
                     onCloseClick(ev, keyword, i);
                   }}
                   className="absolute bg-blue-600 shadow-sm shadow-blue-950 w-[23px]  h-[23px] flex items-center justify-center rounded-full transition-all cursor-pointer opacity-0 group-hover:opacity-[1]  right-[-5px] top-[-5px] z-50"

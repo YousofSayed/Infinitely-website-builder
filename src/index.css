@@ -79,7 +79,7 @@ body {
 }
 
 .gjs-cv-canvas iframe , #editor-container {
-  transform: translateZ(0);
+  /* transform: translateZ(0); */
   will-change: zoom;
   backface-visibility: hidden;
   contain: layout paint size ;

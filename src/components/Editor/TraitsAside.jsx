@@ -27,6 +27,9 @@ import { CodeEditor } from "./Protos/CodeEditor";
 import { parseHTML } from "linkedom";
 import {
   doDocument,
+  generateBeautifulHexColor,
+  getCurrentMediaDevice,
+  getMediaBreakpoint,
   getProjectData,
   getProjectSettings,
   isValidAttribute,
@@ -37,7 +40,7 @@ import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
 // import { AccordionItem } from "@heroui/accordion";
 import { FitTitle } from "./Protos/FitTitle";
 import { SwitchButton } from "../Protos/SwitchButton";
-import { isFunction, isString } from "lodash";
+import { isBoolean, isFunction, isString } from "lodash";
 import { addClickClass, parse, stringify } from "../../helpers/cocktail";
 import { useCmdsContext } from "../../hooks/useCmdsContext";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -48,11 +51,14 @@ import { FileView } from "../Protos/FileView";
 import { ChooseFile } from "../Protos/ChooseFile";
 import { AccordionItem } from "../Protos/AccordionItem";
 import { Accordion } from "../Protos/Accordion";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { Hint } from "../Protos/Hint";
 
 export const TraitsAside = memo(() => {
   const editor = useEditorMaybe();
   const [newAttributeName, setNewAttributeName] = useState("");
   const [traits, setTraits] = useState(traitsType);
+  const [mediaBreakpoint, setMediaBreakpoint] = useState();
   const [attributesTraits, setAttributesTraits] = useState(traitsType);
   const [handlerTraits, setHandlerTraits] = useState(traitsType);
   const [attributes, setAttributes] = useState({});
@@ -64,6 +70,7 @@ export const TraitsAside = memo(() => {
   const selectedEl = useRecoilValue(currentElState);
   const [cmdsContext, setCmdsContext] = useCmdsContext();
   const [projectData, setProjectData] = useState({});
+  const [traitsAnimate] = useAutoAnimate();
 
   const [codeSettings, setCodeSettings] = useState({
     defaultLanguage: "html" || "javascript",
@@ -105,6 +112,20 @@ export const TraitsAside = memo(() => {
     getAndSetTraits();
     setCmdsContext();
   }, [selectedEl]);
+
+  useEffect(() => {
+    if (!editor) return;
+    const getAndSetMediaBreakpoint = () => {
+      console.log("getMediaBreakpoint(editor) : ", getMediaBreakpoint(editor));
+
+      setMediaBreakpoint(getMediaBreakpoint(editor));
+    };
+    getAndSetMediaBreakpoint(editor);
+    editor.on("change:device", getAndSetMediaBreakpoint);
+    return () => {
+      editor.off("change:device", getAndSetMediaBreakpoint);
+    };
+  }, [editor]);
 
   useEffect(() => {
     const selectedEl = editor?.getSelected?.();
@@ -158,21 +179,29 @@ export const TraitsAside = memo(() => {
   const getAndSetTraits = () => {
     const sle = editor.getSelected();
 
-    const traits = sle.getTraits();
+    const traits = sle
+      .getTraits()
+      .filter((tr) => tr.attributes.role)
+      .map((tr) => tr.attributes);
 
-    const attributesTraits = traits
-      .map((trait) => trait.attributes)
-      .filter((trait) => trait.role == "attribute");
+    // const attributesTraits = traits
+    //   .map((trait) => trait.attributes)
+    //   .filter((trait) => trait.role == "attribute");
 
-    const handlerTraits = traits
-      .map((trait) => trait.attributes)
-      .filter((trait) => trait.role == "handler");
+    // const handlerTraits = traits
+    //   .map((trait) => trait.attributes)
+    //   .filter((trait) => trait.role == "handler");
 
     const elementAttributes = sle.getAttributes();
 
-    attributesTraits.concat(handlerTraits).forEach((trait) => {
+    // attributesTraits.concat(handlerTraits).forEach((trait) => {
+    //   delete elementAttributes[trait.name];
+    // });
+
+    traits.forEach((trait) => {
       delete elementAttributes[trait.name];
     });
+
     Object.keys(elementAttributes).forEach((key) => {
       if (
         key.startsWith("_") ||
@@ -185,15 +214,10 @@ export const TraitsAside = memo(() => {
     delete elementAttributes["id"];
     delete elementAttributes["class"];
     setTraits(traits);
-    setAttributesTraits(attributesTraits);
-    setHandlerTraits(handlerTraits);
+    // setAttributesTraits(attributesTraits);
+    // setHandlerTraits(handlerTraits);
     setAttributes(elementAttributes);
-    console.log(
-      "traits : ",
-      attributesTraits,
-      handlerTraits,
-      sle.getTraits().map((tr) => tr.attributes)
-    );
+    console.log("traits is me : ", traits);
   };
 
   const updateTraitValue = ({ name = "", key = "", value = "" }) => {
@@ -205,12 +229,17 @@ export const TraitsAside = memo(() => {
       [key]: value,
     });
 
+    console.log(trait);
+
     const role = trait.get("role");
     if (role == "attribute") {
       console.log("this is attribute");
 
-      sle.addAttributes({ [name]: trait.get("value") });
+      sle.addAttributes({
+        [name]: isString(value) ? value : JSON.stringify(trait.get("value")),
+      });
     }
+    // isString(value) ? value : JSON.stringify(trait.get("value"))
     // sle.addAttributes({ [name]: isString(value) ? value : stringify(value) });
     editor.trigger("trait:value");
     console.log("update should be done");
@@ -439,54 +468,111 @@ export const TraitsAside = memo(() => {
           </ul>
         </AccordionItem>
 
-        {!![...attributesTraits, ...handlerTraits].length && (
+        {!!traits.length && (
           <AccordionItem title={"Traits"}>
-            <section className="p-1 flex flex-col gap-2 bg-slate-900 rounded-lg">
+            <ul
+              ref={traitsAnimate}
+              className="p-1 flex flex-col gap-2 bg-slate-900 rounded-lg"
+            >
               <MiniTitle className={`py-3 w-full`}>Traits</MiniTitle>
 
-              {[...attributesTraits, ...handlerTraits].map((trait, i) => {
-                console.log("trait type:", trait);
-                console.log("is function ? ", isFunction(trait?.showCallback));
+              {traits.map((trait, i) => {
+                // console.log("trait type:", trait);
+                // console.log("is function ? ", isFunction(trait?.showCallback));
+                /**
+                 * @type {import('../../helpers/types').TraitCallProps}
+                 */
+                const mainCallbackProps = {
+                  editor,
+                  trait,
+                  mediaBreakpoint: mediaBreakpoint,
+                };
+                // console.log(
+                //   isBoolean(trait.value || trait.default)
+                //     ? trait.value || trait.default
+                //     : Boolean(parse(trait.value || trait.default)),
+                //   trait.name,
+                //   trait.value
+                // );
 
                 const isShow =
                   trait?.showCallback && isFunction(trait?.showCallback)
-                    ? trait?.showCallback?.()
+                    ? trait?.showCallback?.(trait)
                     : true;
                 return isShow ? (
                   <li
                     key={i}
-                    className="flex flex-wrap items-center justify-between gap-2 bg-slate-950 p-2 rounded-lg"
+                    style={{
+                      marginLeft:
+                        trait.isChild && trait?.nestedKeys?.length
+                          ? `${
+                              trait.isChild && trait?.nestedKeys?.length * 0.5
+                            }rem`
+                          : "",
+                    }}
+                    className={`relative flex   justify-between gap-2 bg-slate-950 p-2 rounded-lg `}
                   >
                     {/* <h1 className="text-[14px!important] px-2 text-white capitalize font-semibold">
                     {trait.name}
                   </h1> */}
-                    <FitTitle>{trait.label}</FitTitle>
-                    {trait.type == "text" && isShow && (
-                      <Input
-                        value={trait.value || trait.default || ""}
-                        placeholder={trait.placeholder || trait.label}
-                        className="py-2 w-full bg-slate-800"
-                        onInput={(ev) => {
-                          trait.callback &&
-                            trait.callback({
-                              editor,
-                              oldValue: trait.value,
-                              newValue: ev.target.value,
-                              trait,
-                            });
-                          trait.command && editor.runCommand(trait.command);
-                          updateTraitValue({
-                            name: trait.name,
-                            key: "value",
-                            value: ev.target.value,
-                          });
-
-                          // if (trait.role == "attribute") {
-                          //   addAttribute({ [trait.name]: ev.target.value });
-                          // }
-                        }}
-                      />
+                    {trait.hint ? (
+                      <Hint>
+                        {isFunction(trait.hint)
+                          ? trait.hint({ ...mainCallbackProps })
+                          : trait.hint}
+                      </Hint>
+                    ) : null}
+                    {trait.label && (
+                      <FitTitle className="custom-font-size flex justify-center items-center">
+                        {trait.label}
+                      </FitTitle>
                     )}
+                    {(trait.type == "text" || trait.type == "number") &&
+                      isShow && (
+                        <Input
+                          type={trait.type || "text"}
+                          value={trait.value || trait.default || ""}
+                          placeholder={trait.placeholder || trait.label}
+                          className="py-2 w-full bg-slate-800"
+                          onInput={(ev) => {
+                            console.log(
+                              "from input trait : ",
+                              mainCallbackProps,
+                              mediaBreakpoint,
+                              {
+                                // editor,
+                                // trait,
+                                ...mainCallbackProps,
+                                // name:'yousef',
+                                // mediaBreakpoint,
+                                oldValue: trait.value,
+                                newValue: ev.target.value,
+                              }
+                            );
+
+                            trait.callback &&
+                              trait.callback({
+                                // editor,
+                                // trait,
+                                ...mainCallbackProps,
+                                name: "yousef",
+                                mediaBreakpoint,
+                                oldValue: trait.value,
+                                newValue: ev.target.value,
+                              });
+                            trait.command && editor.runCommand(trait.command);
+                            updateTraitValue({
+                              name: trait.name,
+                              key: "value",
+                              value: ev.target.value,
+                            });
+
+                            // if (trait.role == "attribute") {
+                            //   addAttribute({ [trait.name]: ev.target.value });
+                            // }
+                          }}
+                        />
+                      )}
 
                     {trait.type == "select" && isShow && (
                       <Select
@@ -500,10 +586,11 @@ export const TraitsAside = memo(() => {
                         onAll={(value) => {
                           trait.callback &&
                             trait.callback({
-                              editor,
+                              // editor,
+                              // trait,
+                              ...mainCallbackProps,
                               oldValue: trait.value,
                               newValue: value,
-                              trait,
                             });
                           trait.command && editor.runCommand(trait.command);
                           updateTraitValue({
@@ -520,42 +607,6 @@ export const TraitsAside = memo(() => {
                         placeholder={trait.placeholder || trait.label}
                         // keywords={trait.keywords}
                         value={trait.value || trait.default || ""}
-                        // onAll={(value) => {
-                        //   console.log(value);
-
-                        //   trait.callback &&
-                        //     trait.callback({
-                        //       editor,
-                        //       oldValue: trait.value,
-                        //       newValue: value,
-                        //       trait,
-                        //     });
-                        //   trait.command && editor.runCommand(trait.command);
-                        //   updateTraitValue({
-                        //     name: trait.name,
-                        //     key: "value",
-                        //     value,
-                        //   });
-                        //   console.log(
-                        //     "traits vals",
-                        //     editor
-                        //       .getSelected()
-                        //       .getTraits()
-                        //       .map((tr) => tr.attributes),
-                        //     JSON.stringify(editor.getSelected()),
-                        //     {
-                        //       ...editor.getSelected().toJSON(),
-                        //       traits: editor
-                        //         .getSelected()
-                        //         .getTraits()
-                        //         .map((tr) => tr.attributes),
-                        //     },
-                        //     editor.getComponents()
-                        //   );
-                        //   // if (trait.role == "attribute") {
-                        //   //   addAttribute({ [trait.name]: value });
-                        //   // }
-                        // }}
                         allowCmdsContext={trait?.allowCmdsContext}
                         allowRestAPIModelsContext={trait?.allowCmdsContext}
                         isCode
@@ -570,10 +621,11 @@ export const TraitsAside = memo(() => {
                             trait?.onChangeHandler?.(value);
                             trait.callback &&
                               trait.callback({
-                                editor,
+                                // editor,
+                                // trait,
+                                ...mainCallbackProps,
                                 oldValue: trait.value,
                                 newValue: value,
-                                trait,
                               });
 
                             trait.command && editor.runCommand(trait.command);
@@ -620,10 +672,11 @@ export const TraitsAside = memo(() => {
 
                               trait.callback &&
                                 trait.callback({
-                                  editor,
+                                  // editor,
+                                  // trait,
+                                  ...mainCallbackProps,
                                   oldValue: trait.value,
                                   newValue: newVal,
-                                  trait,
                                 });
                               trait.command && editor.runCommand(trait.command);
                               updateTraitValue({
@@ -640,10 +693,11 @@ export const TraitsAside = memo(() => {
 
                               trait.callback &&
                                 trait.callback({
-                                  editor,
+                                  // editor,
+                                  // trait,
+                                  ...mainCallbackProps,
                                   oldValue: trait.value,
                                   newValue: newVal,
-                                  trait,
                                 });
 
                               trait.command && editor.runCommand(trait.command);
@@ -664,10 +718,11 @@ export const TraitsAside = memo(() => {
 
                               trait.callback &&
                                 trait.callback({
-                                  editor,
+                                  // editor,
+                                  // trait,
+                                  ...mainCallbackProps,
                                   oldValue: trait.value,
                                   newValue: newVal,
-                                  trait,
                                 });
                               trait.command && editor.runCommand(trait.command);
                               updateTraitValue({
@@ -703,10 +758,11 @@ export const TraitsAside = memo(() => {
 
                                         trait.callback &&
                                           trait.callback({
-                                            editor,
+                                            // editor,
+                                            // trait,
+                                            ...mainCallbackProps,
                                             oldValue: trait.value,
                                             newValue: newVal,
-                                            trait,
                                           });
 
                                         trait.command &&
@@ -798,25 +854,42 @@ export const TraitsAside = memo(() => {
 
                     {trait.type.toLowerCase() == "switch" && isShow && (
                       <SwitchButton
-                        defaultValue={Boolean(trait.value || trait.default)}
-                        onActive={() => {
-                          trait?.onSwitch?.(true);
-                          trait.command && editor.runCommand(trait.command);
+                        defaultValue={
+                          isBoolean(trait.value || trait.default)
+                            ? trait.value || trait.default
+                            : Boolean(parse(trait.value || trait.default))
+                        }
+                        onSwitch={(value) => {
+                          trait.callback &&
+                            trait.callback({
+                              ...mainCallbackProps,
+                              newValue: value,
+                            });
+                            trait.command && editor.runCommand(trait.command);
                           updateTraitValue({
                             name: trait.name,
                             key: "value",
-                            value: true,
+                            value,
                           });
                         }}
-                        onUnActive={() => {
-                          trait?.onSwitch?.(false);
-                          trait.command && editor.runCommand(trait.command);
-                          updateTraitValue({
-                            name: trait.name,
-                            key: "value",
-                            value: false,
-                          });
-                        }}
+                        // onActive={() => {
+                        //   trait?.onSwitch?.(true);
+                        //   trait.command && editor.runCommand(trait.command);
+                        //   updateTraitValue({
+                        //     name: trait.name,
+                        //     key: "value",
+                        //     value: true,
+                        //   });
+                        // }}
+                        // onUnActive={() => {
+                        //   trait?.onSwitch?.(false);
+                        //   trait.command && editor.runCommand(trait.command);
+                        //   updateTraitValue({
+                        //     name: trait.name,
+                        //     key: "value",
+                        //     value: false,
+                        //   });
+                        // }}
                       >
                         {trait.label}
                       </SwitchButton>
@@ -839,11 +912,12 @@ export const TraitsAside = memo(() => {
                         mediaType={trait.mediaType}
                         callback={(asset, url) => {
                           trait.callback({
-                            editor,
+                            // editor,
+                            // trait,
+                            ...mainCallbackProps,
                             newValue: url,
                             oldValue: trait.value,
                             asset: asset,
-                            trait,
                           });
                           console.log("url : ", url);
 
@@ -863,7 +937,7 @@ export const TraitsAside = memo(() => {
                   </li>
                 ) : null;
               })}
-            </section>
+            </ul>
           </AccordionItem>
         )}
 

@@ -828,6 +828,23 @@ export function buildGsapMotionsScript(motions) {
 
 /**
  *
+ * @param {{[key:string] : import('./types').MotionType}} motions
+ * @param {string} pageName
+ */
+export function filterMotionsByPage(motions, pageName) {
+  if (!pageName) {
+    throw new Error(`pageName is not defined at filterMotionsByPage`);
+  }
+  return Object.fromEntries(
+    Object.entries(motions).filter(([key, motion]) => {
+      if (!motion.pages || !motion.pages.length) return true;
+      return motion.pages.includes(pageName);
+    })
+  );
+}
+
+/**
+ *
  * @param {{[key : string] : import('./types').MotionType}} motions
  * @param {{[key:string] : import('./types').InfinitelyPage}} pages
  */
@@ -1182,7 +1199,9 @@ export const buildPageData = async (page = "", projectData) => {
     fonts: "",
     bodyAttributes: projectData.pages[`${currentPageId}`].bodyAttributes || {},
     motions:
-      `<script>${buildGsapMotionsScript(projectData.motions)}</script>` || "",
+      `<script>${buildGsapMotionsScript(
+        filterMotionsByPage(projectData.motions , currentPageId)
+      )}</script>` || "",
   };
   // console.log("motions : ", buildGsapMotionsScript(projectData.motions));
 
@@ -1782,6 +1801,7 @@ export function getInitProjectData({
   };
 }
 
+
 /**
  *
  * @param {{asJson:boolean , projectId:number , toastId:string, projectSetting : import('./types').ProjectSetting}} props
@@ -1804,11 +1824,7 @@ export async function uploadProjectToTMP(props) {
   return res.json();
 }
 
-export function doGlobalType(
-  libName,
-  globalTypeName,
-  isExportDefault = false
-) {
+export function doGlobalType(libName, globalTypeName, isExportDefault = false) {
   if (!libName) {
     throw new Error(`libName param is required`);
   }
@@ -1832,7 +1848,6 @@ ${globalDeclaration}
   `;
 }
 
-
 export function needsWrapping(code) {
   return (
     /\bexport\s+(interface|type|class|function|const|enum)/.test(code) &&
@@ -1844,14 +1859,14 @@ export function wrapModule(libName, code) {
   return `declare module "${libName}" {\n${code}\n}`;
 }
 
-export function hasExportDefault(code='') {
-  return /export default/ig.test(code);
+export function hasExportDefault(code = "") {
+  return /export default/gi.test(code);
 }
 
 export function styleToString(styleObj = {}) {
   return Object.entries(styleObj)
-    .map(([k, v]) =>
-      `${k.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase())}:${v}`
+    .map(
+      ([k, v]) => `${k.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase())}:${v}`
     )
     .join(";");
 }

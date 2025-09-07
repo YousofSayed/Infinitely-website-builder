@@ -461,47 +461,47 @@ export const CodeEditor = ({
       );
 
     // Force the model to use the right language
-monaco.editor.setModelLanguage(editor.getModel(), props.language);
+// monaco.editor.setModelLanguage(editor.getModel(), props.language);
 
-monaco.languages.registerDocumentFormattingEditProvider({language:"javascript"}, {
-  provideDocumentFormattingEdits(model) {
-    const text = model.getValue();
-    const formatted = js_beautify(text, { indent_size: 2 });
-    return [
-      {
-        range: model.getFullModelRange(),
-        text: formatted,
-      },
-    ];
-  },
-});
+// monaco.languages.registerDocumentFormattingEditProvider({language:"javascript"}, {
+//   provideDocumentFormattingEdits(model) {
+//     const text = model.getValue();
+//     const formatted = js_beautify(text, { indent_size: 2 });
+//     return [
+//       {
+//         range: model.getFullModelRange(),
+//         text: formatted,
+//       },
+//     ];
+//   },
+// });
 
-monaco.languages.registerDocumentFormattingEditProvider({language:'css'}, {
-  provideDocumentFormattingEdits(model) {
-    const text = model.getValue();
-    const formatted = css_beautify(text, { indent_size: 2 });
-    return [
-      {
-        range: model.getFullModelRange(),
-        text: formatted,
-      },
-    ];
-  },
-});
+// monaco.languages.registerDocumentFormattingEditProvider({language:'css'}, {
+//   provideDocumentFormattingEdits(model) {
+//     const text = model.getValue();
+//     const formatted = css_beautify(text, { indent_size: 2 });
+//     return [
+//       {
+//         range: model.getFullModelRange(),
+//         text: formatted,
+//       },
+//     ];
+//   },
+// });
 
-monaco.languages.registerDocumentFormattingEditProvider({language:'html'}, {
-  provideDocumentFormattingEdits(model) {
-    const text = model.getValue();
-    const formatted = html_beautify(text, { indent_size: 2 });
-    console.log("HTML formatting triggered");
-    return [
-      {
-        range: model.getFullModelRange(),
-        text: formatted,
-      },
-    ];
-  },
-});
+// monaco.languages.registerDocumentFormattingEditProvider({language:'html'}, {
+//   provideDocumentFormattingEdits(model) {
+//     const text = model.getValue();
+//     const formatted = html_beautify(text, { indent_size: 2 });
+//     console.log("HTML formatting triggered");
+//     return [
+//       {
+//         range: model.getFullModelRange(),
+//         text: formatted,
+//       },
+//     ];
+//   },
+// });
 
 // 🔑 Ensure formatting is triggered programmatically if you want auto-format
 // editor.getAction("editor.action.formatDocument").run();

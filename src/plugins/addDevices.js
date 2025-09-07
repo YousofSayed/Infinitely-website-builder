@@ -66,11 +66,11 @@ export const addDevices = (editor) => {
       const wrapperWidth = canvasWrapper.clientWidth;
       // const iframeBody = iframe.contentDocument.body;
       // iframeBody.style.transition = `.2s`;
-      editor.getContainer().style.transformOrigin = "0 0";
+      // editor.getContainer().style.transformOrigin = "0 0";
       editor.getContainer().style.willChange = "zoom";
       editor.getContainer().style.contain = `layout paint size`;
-      editor.getContainer().style.backfaceVisibility = `hidden`;
-      editor.getContainer().style.transform = `translateZ(0)`;
+      // editor.getContainer().style.backfaceVisibility = `hidden`;
+      // editor.getContainer().style.transform = `translateZ(0)`;
 
       if (wrapperWidth < targetWidth) {
         const scale = wrapperWidth / targetWidth;
