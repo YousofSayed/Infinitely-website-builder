@@ -1,6 +1,12 @@
 import { parseHTML } from "linkedom";
 import { db } from "./db";
-import { inf_cmds_id, inf_symbol_Id_attribute } from "../constants/shared";
+import {
+  inf_cmds_id,
+  inf_symbol_Id_attribute,
+  mainMotionId,
+  motionId,
+  motionInstanceId,
+} from "../constants/shared";
 // import { doDocument } from "./functions";
 // import monacoLoader from "@monaco-editor/loader";
 // import { buildDynamicTemplate, buildScriptFromCmds } from "./worker_functions";
@@ -1733,4 +1739,46 @@ export async function shareProject(props) {
 
     throw new Error(error);
   }
+}
+
+/**
+ *
+ * @param {{ projectId:number  , mId : number}} props
+ */
+export async function deleteAllMotionsById({ projectId, mId }) {
+  const projectData = await db.projects.get(projectId);
+  !opfs.id && (await initOPFS({ id: projectId }));
+  const content = [];
+  for (const key in projectData.pages) {
+    const page = projectData.pages[key];
+    const { document } = parseHTML(
+      doDocument(
+        await (await opfs.getFile(defineRoot(page.pathes.html))).text()
+      )
+    );
+
+    const els = document.querySelectorAll(
+      `[${motionId}="${mId}"] , [${mainMotionId}="${mId}"]`
+    );
+    if (els && els.length) {
+      els.forEach((el) => {
+        el.removeAttribute(motionId);
+        el.removeAttribute(mainMotionId);
+        el.removeAttribute(motionInstanceId);
+      });
+
+      content.push({
+        path: defineRoot(page.pathes.html),
+        content: document.body.innerHTML,
+      });
+    }
+  }
+
+  await opfs.writeFiles(content);
+  self.postMessage({
+    command: "motion-delete",
+    props: {
+      done: true,
+    },
+  });
 }

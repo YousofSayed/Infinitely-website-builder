@@ -38,7 +38,7 @@ import { killGsapMotionTool } from "../plugins/tools/killGsapMotion";
 import { createReusableCmpTool } from "../plugins/tools/createReusableCmpTool";
 import { createSymbolTool } from "../plugins/tools/createSymbolTool";
 import { infinitelyWorker } from "./infinitelyWorker";
-import { isPlainObject } from "lodash";
+import { isFunction, isPlainObject } from "lodash";
 export {
   replaceBlobs,
   base64ToBlob,
@@ -293,7 +293,7 @@ export function addItemInToolBarForEditor({
     selectedEl.set({
       ...selectedEl.props(),
       toolbar: [
-        cond ? newTool : null,
+        (isFunction(cond) ? cond() : cond) ? newTool : null,
         ...toolbar.filter((tb) => tb.id && !tb.id.includes(newTool.id)),
       ].filter(Boolean),
     });

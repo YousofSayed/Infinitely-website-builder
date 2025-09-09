@@ -97,16 +97,12 @@ export const HomeHeader = memo(() => {
     setZoomValue((value * 100).toFixed(2));
   };
 
-  useEffect(()=>{
-    (async()=>{
-      const project = await getProjectData();
-      console.log('motions : ' ,project.motions, buildGsapMotionsScript(project.motions));
-      
-    })()
-  },[])
+ 
 
   useEffect(() => {
     if (!editor) return;
+    // console.log('html editor : ' , editor.getWrapper().getInnerHTML({withProps:true , withScripts: true}));
+    // getHtml({withProps:true , asDocument:false , })
     setZoomValue((editor.getContainer().style.zoom * 100).toFixed(2));
     const changeDeviceCallback = () => {
       const currentDeviceName = editor.getDevice();

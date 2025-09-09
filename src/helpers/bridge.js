@@ -4,6 +4,7 @@ import { cloneDeep, isPlainObject, random, uniqueId } from "lodash";
 import serializeJavascript from "serialize-javascript";
 import {
   interactionId,
+  mainMotionId,
   MAX_FILE_SIZE,
   MAX_FILES_COUNT,
   MAX_UPLOAD_SIZE,
@@ -897,36 +898,46 @@ export function filterMotionsByPage(motions, pageName) {
  * @param {{[key:string] : import('./types').InfinitelyPage}} pages
  */
 export async function cleanMotions(motions, pages) {
+  const { parseHTML } = await import("linkedom");
   await Promise.all(
     Object.entries(motions).map(async ([key, motion]) => {
       return await Promise.all(
         Object.values(pages).map(async (page) => {
           // const pageContent = await page.html.text();
           console.log(page, page.helmet);
-          const pageFile = await (
-            await opfs.getFile(defineRoot(page.pathes.html))
-          ).getOriginFile();
-          const stream = pageFile.stream();
-          const reader = stream.getReader();
-          const decoder = new TextDecoder();
-          const buffer = [];
-          let isMotionFounded = false;
-          while (true) {
-            const { value, done } = await reader.read();
-            const pageContent = decoder.decode(value, { stream: true });
-            if (!pageContent) break;
-            buffer.push(pageContent);
-            console.log("page content is : ", pageContent, buffer.join(""));
-            buffer.length > 20 && buffer.shift();
-            if (buffer.join("").includes(`${motionId}="${motion.id}"`)) {
-              isMotionFounded = true;
-              break;
-            }
-            if (isMotionFounded || done) {
-              !isMotionFounded && delete motions[key];
-              break;
-            }
+          const { document } = parseHTML(
+            doDocument(
+              await (await opfs.getFile(defineRoot(page.pathes.html))).text()
+            )
+          );
+
+          const els = document.querySelectorAll(
+            `[${motionId}="${motion.id}"] , [${mainMotionId}="${motion.id}"]`
+          );
+          if (!(els && els.length)) {
+            delete motions[key];
           }
+          // const stream = pageFile.stream();
+          // const reader = stream.getReader();
+          // const decoder = new TextDecoder();
+          // const buffer = [];
+          // let isMotionFounded = false;
+          // while (true) {
+          //   const { value, done } = await reader.read();
+          //   const pageContent = decoder.decode(value, { stream: true });
+          //   if (!pageContent) break;
+          //   buffer.push(pageContent);
+          //   console.log("page content is : ", pageContent, buffer.join(""));
+          //   buffer.length > 20 && buffer.shift();
+          //   if (buffer.join("").includes(`${motionId}="${motion.id}"`)) {
+          //     isMotionFounded = true;
+          //     break;
+          //   }
+          //   if (isMotionFounded || done) {
+          //     !isMotionFounded && delete motions[key];
+          //     break;
+          //   }
+          // }
           // if (!pageContent.includes(`[${motionId}="${motion.id}"]`)) {
           //   delete motions[key];
           // }

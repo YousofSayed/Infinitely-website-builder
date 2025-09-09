@@ -21,6 +21,7 @@ export const inf_cmds_id = `inf-cmds-id`;
 export const inf_style_my_child = "inf-style-my-child";
 export const data_disable_scripting = `data-disable-scripting`;
 export const motionId = "motion-id";
+export const mainMotionId = "main-motion-id";
 export const interactionId = "interaction-id";
 export const motionInstanceId = "motion-instance-id";
 

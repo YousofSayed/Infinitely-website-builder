@@ -47,6 +47,7 @@ import { infinitelyWorker } from "../../../helpers/infinitelyWorker";
 import {
   current_page_id,
   current_project_id,
+  mainMotionId,
   motionId,
   motionInstanceId,
 } from "../../../constants/shared";
@@ -290,7 +291,11 @@ const ObjectComponent = ({
       removeNestedKey(editeable, destination.concat(prop));
     }
 
-    if (isArray(secondDestination) && !secondEditableValue && !isBoolean(secondEditableValue)) {
+    if (
+      isArray(secondDestination) &&
+      !secondEditableValue &&
+      !isBoolean(secondEditableValue)
+    ) {
       removeNestedKey(secondEditeable, secondDestination.concat(prop));
     }
 
@@ -1164,7 +1169,7 @@ export const Motion = memo(() => {
   useEffect(() => {
     if (!editor || !editor?.getSelected?.() || !motion?.animations?.length)
       return;
-    console.log("bonbone");
+    // console.log("bonbone");
 
     motion.id && updateDB(motion);
 
@@ -1180,7 +1185,7 @@ export const Motion = memo(() => {
     const sle = editor.getSelected();
     if (!sle) return;
     const attributes = sle.getAttributes();
-    let mId = attributes[motionId],
+    let mId = attributes[motionId] || attributes[mainMotionId],
       instanceId = attributes[motionInstanceId];
     setEditeAsMain(!Boolean(instanceId));
     setIsInstance(Boolean(instanceId));
@@ -1188,7 +1193,7 @@ export const Motion = memo(() => {
     setInstanceId(instanceId);
     // instanceId ? setIsInstance(true) : setIsInstance(false);
     // instanceId ? setEditeAsMain(false) : setEditeAsMain(true);
-    getMotion(mId || instanceId);
+    getMotion(mId);
   }, [selectedEl, editor]);
 
   /**
@@ -1253,18 +1258,55 @@ export const Motion = memo(() => {
   const deleteMotion = async (id) => {
     const sle = editor.getSelected();
     if (!id || !sle) return;
+    const { projectSettings } = getProjectSettings();
     const projectData = await getProjectData();
-    sle.removeAttributes([motionId, motionInstanceId]);
+    editor
+      .getWrapper()
+      .find(`[${motionId}="${id}"] , [${mainMotionId}="${id}"]`)
+      .forEach((cmp) => {
+        cmp.removeAttributes([motionId, motionInstanceId, mainMotionId]);
+      });
     delete projectData.motions[id];
-    await infinitelyWorker.postMessage({
-      command: "updateDB",
+    infinitelyWorker.postMessage({
+      command: "deleteAllMotionsById",
       props: {
         projectId: +localStorage.getItem(current_project_id),
-        data: { motions: projectData.motions },
+        mId: id,
       },
     });
+    /**
+     *
+     * @param {MessageEvent} ev
+     */
+    const callback = (ev) => {
+      const { command, props } = ev.data;
+      if (command == "motion-delete" && props.done) {
+        console.log("motion-deleted successfully");
+
+        infinitelyWorker.postMessage({
+          command: "updateDB",
+          props: {
+            projectId: +localStorage.getItem(current_project_id),
+            data: { motions: projectData.motions },
+            updatePreviewPages: projectSettings.enable_auto_save,
+            pageName: localStorage.getItem(current_page_id),
+            projectSetting: projectSettings,
+          },
+        });
+      }
+
+      infinitelyWorker.removeEventListener("message", callback);
+    };
+
+    infinitelyWorker.addEventListener("message", callback);
+
     // preventSelectNavigation(editor,sle)
     initToolbar(editor, sle);
+    setIsInstance(false);
+    setEditeAsMain(true);
+    setInstanceId("");
+    setMainId("");
+    toast.success(<ToastMsgInfo msg={`Motion delete successfully👍`} />);
   };
 
   const addAnimation = () => {
@@ -1272,8 +1314,8 @@ export const Motion = memo(() => {
     const pageId = localStorage.getItem(current_page_id);
     const sle = editor.getSelected();
     if (!sle) return;
-
-    let mId = sle.getAttributes()[motionId];
+    const attrs = sle.getAttributes();
+    let mId = attrs[motionId] || attrs[mainMotionId];
     if (!mId) {
       sle.addAttributes({ [motionId]: id });
     }
@@ -1295,40 +1337,29 @@ export const Motion = memo(() => {
         },
       ],
     };
-    // preventSelectNavigation(editor, sle);
-    // sle.set({toolbar : []});
-    // console.log('toolbar:',sle.toolbar);
-    // const toolbar = sle.toolbar;
 
-    // sle.set({
-    //   toolbar:[]
-    // });
-
-    // sle.set({
-    //   toolbar:toolbar
-    // })
-
-    // sle.initToolbar()
     setMotion(newMotion);
     initToolbar(editor, sle);
-
-    // reSelect();
-    // updateDB(newMotion);
   };
 
   const removeAnimation = (index) => {
     const newAnimations = motion.animations.filter((_, i) => i !== index);
 
     if (!newAnimations.length && motion.id) {
-      console.log("no length");
+      // console.log("no length");
 
-      const sle = editor?.getSelected();
-      if (sle) {
-        sle.removeAttributes([motionId]);
-        // preventSelectNavigation(editor, sle);
-        initToolbar(editor, sle);
-      }
+      // const sle = editor?.getSelected();
+      // if (sle) {
+      //   sle.removeAttributes([motionId, mainMotionId]);
+      //   // preventSelectNavigation(editor, sle);
+      //   initToolbar(editor, sle);
+      // }
+      deleteMotion(motion.id)
       setMotion({ ...motionType, id: "" });
+      setIsInstance(false);
+      setEditeAsMain(true);
+      setInstanceId("");
+      setMainId("");
     } else {
       const newMotion = { ...motion, animations: newAnimations };
       setMotion(newMotion);
@@ -1339,7 +1370,7 @@ export const Motion = memo(() => {
     const sle = editor.getSelected();
     if (!(isInstance && instanceId && sle && mainId)) return;
     const projectData = await getProjectData();
-    sle.removeAttributes([motionId, motionInstanceId]);
+    sle.removeAttributes([mainMotionId, motionInstanceId, motionId]);
     delete projectData.motions[mainId].instances[instanceId];
     await infinitelyWorker.postMessage({
       command: "updateDB",
@@ -1356,7 +1387,7 @@ export const Motion = memo(() => {
     const firstMotionCmp = editor
       .getWrapper()
       .find(`[${motionId}="${mainId}"]`)[0];
-    preventSelectNavigation(editor, firstMotionCmp);
+    firstMotionCmp && preventSelectNavigation(editor, firstMotionCmp);
   };
 
   const copyInstance = async () => {
@@ -1412,7 +1443,11 @@ export const Motion = memo(() => {
     // const oldSelectValue =
     //   projectSettings.projectSettings.navigate_to_style_when_Select;
     // projectSettings.set({ navigate_to_style_when_Select: false });
-    sle.addAttributes({ [motionInstanceId]: instanceId, [motionId]: targetId });
+    sle.addAttributes({
+      [motionInstanceId]: instanceId,
+      [mainMotionId]: targetId,
+    });
+    setInstanceId(instanceId);
     initToolbar(editor, sle);
     // editor.select(null);
     // editor.select(sle);
@@ -1473,7 +1508,7 @@ export const Motion = memo(() => {
     <section className="flex flex-col gap-2 w-full relative mt-2">
       {isInstance && !editeAsMain && (
         <section className="absolute left-0 top-[0] w-full h-full min-h-full backdrop-blur-md z-[50] rounded-lg p-2">
-          <section className="flex flex-col gap-3 items-center p-2 py-3 bg-slate-900 rounded-lg">
+          <section className="sticky top-0 flex flex-col gap-3 items-center p-2 py-3 bg-slate-900 rounded-lg">
             {Icons.info({
               fill: "yellow",
               strokeColor: "yellow",
@@ -1690,7 +1725,7 @@ export const Motion = memo(() => {
           })}
         </>
       ) : (
-        <section className="flex flex-col gap-2 items-center justify-center p-2 bg-slate-800 rounded-lg minion">
+        <section className=" flex flex-col gap-2 items-center justify-center p-2 bg-slate-800 rounded-lg minion">
           <h1 className="text-slate-200 font-semibold text-center">
             No animations yet
           </h1>

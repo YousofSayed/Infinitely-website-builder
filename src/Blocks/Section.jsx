@@ -27,12 +27,17 @@ export const Section = ({ editor }) => {
       //   });
       // },
     },
+    
     model: {
       // init(){
       //   this.updateTrait('tag-name', {value: this.tagName});
       // },
 
       defaults: {
+        // script:function(){
+        //   console.log('from script : ' , this);
+        //   alert('scriiiiiiiiiiiiiiipt ')
+        // },
         icon: editorIcons.section({ width: 25, height: 25, fill: "white" }),
         resizable: true,
         draggable: true,

@@ -3,6 +3,7 @@ import { loadProject } from "./loadProject";
 import {
   clearTimeouts,
   createProject,
+  deleteAllMotionsById,
   deleteAllSymbolsById,
   getDataFromDB,
   initOPFS,
@@ -33,6 +34,7 @@ const commands = {
   initOPFS,
   clearTimeouts,
   writeFilesToOPFS,
+  deleteAllMotionsById,
 };
 
 

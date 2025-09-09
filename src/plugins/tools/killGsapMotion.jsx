@@ -5,23 +5,37 @@ import {
 } from "../../helpers/functions";
 import { reactToStringMarkup } from "../../helpers/reactToStringMarkup";
 import { Icons } from "../../components/Icons/Icons";
-import { motionId } from "../../constants/shared";
+import { mainMotionId, motionId, motionInstanceId } from "../../constants/shared";
 import { runGsapMethod } from "../../helpers/customEvents";
 
 export const killGsapMotionTool = (editor) => {
   return addItemInToolBarForEditor({
-    label: reactToStringMarkup(Icons.close('white')),
+    label: reactToStringMarkup(Icons.close("white")),
     editor,
     commandName: `run:kill-gsap-motion`,
     forAll: true,
-    cond:Boolean(editor.getSelected().getAttributes()[motionId]),
+    cond: ()=>{
+      const attrs = editor.getSelected().getAttributes()
+      return Boolean(attrs[motionId] || attrs[mainMotionId])
+    },
     async commandCallback(ed) {
       const selected = ed.getSelected();
-      const motionIdValue = selected.getAttributes()[motionId];
-      if (motionIdValue) {
-        const projectData = await getProjectData();
-        const motion = projectData.motions[motionIdValue];
-        runGsapMethod(["kill", "revert"], motion);
+      const attrs = selected.getAttributes();
+      const mainId = attrs[motionId] || attrs[mainMotionId];
+      const instanceId = attrs[motionInstanceId];
+      const projectData = await getProjectData();
+
+      if (mainId && !instanceId) {
+        const motion = projectData.motions[mainId];
+        runGsapMethod(["play"], motion);
+      } else {
+        const motion = projectData.motions[mainId];
+        runGsapMethod(["kill", "revert"], {
+          ...motion,
+          id: instanceId,
+          isInstance: true,
+          instances: {},
+        });
       }
     },
   });

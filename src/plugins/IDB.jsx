@@ -626,7 +626,7 @@ export const IDB = (editor) => {
 
               files[`editor/pages/${currentPageId}.html`] = editor
                 .getWrapper()
-                .getInnerHTML({ withProps: true });
+                .getInnerHTML({ withProps: true ,});
               editor.Parser.config.optionsHtml.allowScripts = true;
 
               files[`css/${currentPageId}.css`] = cssCode;

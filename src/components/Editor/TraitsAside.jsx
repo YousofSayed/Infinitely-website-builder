@@ -271,16 +271,16 @@ export const TraitsAside = memo(() => {
     const type = sle.get("type").toLowerCase();
     sle.removeAttributes([key]);
     setAttributes(getFilterdAttributes());
-    if (type == "video" || type == "iframe" || type == "source") {
-      const newSle = sle.replaceWith(sle.clone())[0];
-      getProjectSettings().set({
-        navigate_to_style_when_Select: false,
-      });
-      editor.select(newSle);
-      getProjectSettings().set({
-        navigate_to_style_when_Select: true,
-      });
-    }
+    // if (type == "video" || type == "iframe" || type == "source") {
+    //   const newSle = sle.replaceWith(sle.clone())[0];
+    //   getProjectSettings().set({
+    //     navigate_to_style_when_Select: false,
+    //   });
+    //   editor.select(newSle);
+    //   getProjectSettings().set({
+    //     navigate_to_style_when_Select: true,
+    //   });
+    // }
   };
 
   return (
