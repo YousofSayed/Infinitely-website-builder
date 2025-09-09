@@ -325,6 +325,9 @@ export const Interaction = ({
             tooltipTitle="Copy Interaction"
             onClick={async (ev) => {
               await navigator.clipboard.writeText(JSON.stringify(interaction));
+              toast.success(
+                <ToastMsgInfo msg={`Interaction copied successfully👍`} />
+              );
             }}
           >
             {Icons.copy({ fill: "white" })}
@@ -357,6 +360,9 @@ export const Interaction = ({
             tooltipTitle="Paste Action"
             onClick={async () => {
               pasteAction(await navigator.clipboard.readText());
+              toast.success(
+                <ToastMsgInfo msg={`Action pasted successfully👍`} />
+              );
             }}
           >
             {Icons.paste({})}
@@ -390,6 +396,9 @@ export const Interaction = ({
                     onClick={async () => {
                       await navigator.clipboard.writeText(
                         JSON.stringify(action)
+                      );
+                      toast.success(
+                        <ToastMsgInfo msg={`Action copied successfully👍`} />
                       );
                     }}
                   >
@@ -670,6 +679,8 @@ export const Interactions = () => {
     }
 
     await getAndSetIdHandle([...interactionsState, parsedInteraction]);
+    toast.success(<ToastMsgInfo msg={`Interaction pasted successfully👍`} />);
+
     // setInteractions([...interactionsState, parsedInteraction]);
   };
 

@@ -346,7 +346,9 @@ export const addNewTools = (editor) => {
      */
     (component) => {
       if (!component) return;
-      if (!isScrollValue) return;
+      if (isScrollValue) {
+        return
+      };
       try {
         // const trg = component && component.getEl();
         const highlighter = document.querySelector(

@@ -460,6 +460,7 @@ export const TraitsAside = memo(() => {
                           ...editor.getSelected().props(),
                           [prop]: value,
                         });
+                        editor.trigger(InfinitelyEvents.layers.update)
                       }}
                     />
                   </li>

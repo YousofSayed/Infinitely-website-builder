@@ -21,6 +21,7 @@ import {
   zoomValueState,
 } from "../../helpers/atoms";
 import {
+  buildGsapMotionsScript,
   buildScriptFromCmds,
   exportProject,
   getCurrentPageName,
@@ -95,6 +96,14 @@ export const HomeHeader = memo(() => {
 
     setZoomValue((value * 100).toFixed(2));
   };
+
+  useEffect(()=>{
+    (async()=>{
+      const project = await getProjectData();
+      console.log('motions : ' ,project.motions, buildGsapMotionsScript(project.motions));
+      
+    })()
+  },[])
 
   useEffect(() => {
     if (!editor) return;
@@ -175,7 +184,7 @@ export const HomeHeader = memo(() => {
           />
         </ul>
 
-        <li className="flex items-center h-[65%] gap-4 max-lg:flex-shrink-0">
+        <li className="flex  items-center h-[65%] gap-4 max-lg:flex-shrink-0">
           <Input
             type="number"
             placeholder="Width"

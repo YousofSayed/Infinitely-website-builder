@@ -289,6 +289,10 @@ export const Slider = ({ editor }) => {
         const { projectSettings } = getProjectSettings();
         if(!projectSettings.enable_swiperjs){
           el.classList.add('enable-swiper')
+          el.classList.remove('drop');
+          el.querySelectorAll('*').forEach(el=>{
+            el.classList.remove('drop')
+          })
         }
       }
     },

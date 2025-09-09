@@ -641,9 +641,9 @@ export function getCurrentMediaDevice(editor) {
  */
 export function getMediaBreakpoint(editor) {
   const currentDeviceName = editor.getDevice();
-  if(currentDeviceName == 'desktop')return ''
+  if (currentDeviceName == "desktop") return "";
   const currentDevice = editor.Devices.get(currentDeviceName);
-  return parseFloat(currentDevice.attributes.widthMedia) || ''
+  return parseFloat(currentDevice.attributes.widthMedia) || "";
 }
 
 export const replaceLastWord = (
@@ -1662,7 +1662,7 @@ export function getProjectSettings() {
       })
   );
 
-  console.log("project sttings , :", projectSettings);
+  // console.log("project sttings , :", projectSettings);
 
   return {
     projectSettings,
@@ -2237,6 +2237,11 @@ export function doDocument(content = "") {
   `;
 }
 
+/**
+ *
+ * @param {import('grapesjs').Editor} editor
+ * @param {import('grapesjs').Component} cmp
+ */
 export function preventSelectNavigation(editor, cmp = null) {
   const projectSettings = getProjectSettings();
   const navigation =
@@ -2245,7 +2250,7 @@ export function preventSelectNavigation(editor, cmp = null) {
     navigate_to_style_when_Select: false,
   });
   editor.select(null);
-  editor.select(cmp);
+  editor.select(cmp, { scroll: true });
   projectSettings.set({
     navigate_to_style_when_Select: navigation,
   });

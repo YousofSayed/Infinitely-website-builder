@@ -494,6 +494,7 @@ export type ProjectSetting = {
   enable_tailwind: boolean;
   enable_spline_viewer: boolean;
   enable_swiperjs: boolean;
+  remove_gsap_markers_on_build:boolean;
   stop_all_animation_on_page: boolean;
   // include_canvas_styles_in_build_file: boolean;
   purge_css: boolean;

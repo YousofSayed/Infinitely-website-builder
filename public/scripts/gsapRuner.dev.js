@@ -36,6 +36,10 @@ function CompileMotion(motion, paused = false) {
     fromTo: [],
   };
 
+  const attribute = `[${
+    motion?.isInstance ? `motion-instance-id` : `motion-id`
+  }=${motion.id}]`;
+
   const parseObjValue = (obj = {}) => {
     return Object.fromEntries(
       Object.entries(obj).map(([key, value]) => {
@@ -47,7 +51,7 @@ function CompileMotion(motion, paused = false) {
         return [
           key,
           typeof value === "string"
-            ? value.replaceAll?.("self", `[motion-id="${motion.id}"]`)
+            ? value.replaceAll?.("self", attribute)
             : value,
         ];
       })
@@ -95,7 +99,7 @@ function CompileMotion(motion, paused = false) {
       };
     }
     output.fromTo.push({
-      selector: selector.replaceAll("self", `[motion-id="${motion.id}"]`),
+      selector: selector.replaceAll("self", attribute),
       fromValue,
       toValue,
       positionParameter,
@@ -213,6 +217,7 @@ window.parent.addEventListener("gsap:all:run", (ev) => {
    * @type {{motions:{[key:string]:import('../../src/helpers/types').MotionType}}}
    */
   const { motions, methods, props } = ev.detail;
+  
   Object.values(motions).forEach((motion) => {
     window.parent.dispatchEvent(
       new CustomEvent("gsap:run", {
@@ -221,6 +226,18 @@ window.parent.addEventListener("gsap:all:run", (ev) => {
           methods,
           props,
         },
+      })
+    );
+
+    const instanceMotions = {};
+
+    Object.entries(motion.instances || {}).forEach(([id, instance]) => {
+      instanceMotions[id] = { ...motion, id, isInstance: true , instances:{} };
+    });
+
+    window.parent.dispatchEvent(
+      new CustomEvent("gsap:all:run", {
+        detail: { motions: instanceMotions, methods, props },
       })
     );
   });
@@ -244,5 +261,15 @@ window.parent.addEventListener("gsap:all:kill", (ev) => {
       gsapTween[motion.id].revert();
       gsapTween[motion.id] = null;
     }
+
+    const instanceMotions = {};
+
+    Object.entries(motion.instances || {}).forEach(([id, instace]) => {
+      instanceMotions[id] = { ...motion, id, isInstance: true , instances:{} };
+    });
+
+    window.parent.dispatchEvent(
+      new CustomEvent("gsap:all:kill", { detail: { motions: instanceMotions } })
+    );
   });
 });

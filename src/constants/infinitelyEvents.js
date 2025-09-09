@@ -11,6 +11,9 @@ export const InfinitelyEvents = {
     select: "infinitely:symbol:select",
     de_select: "infinitely:symbol:deselect",
   },
+  layers:{
+    update:'infinitely:layers:update'
+  },
   attributes: {
     buildUrl: "infinitely:build-url:update",
   },

@@ -7,6 +7,7 @@ import { Virtuoso } from "react-virtuoso";
 import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { LazyList } from "../../Protos/LazyList";
+import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 
 export const Layers = memo(() => {
   const editor = useEditorMaybe();
@@ -34,15 +35,21 @@ export const Layers = memo(() => {
     // setLayers(newLayers());
     setLayers([editor.getWrapper()]);
 
-    const evCallback = () => setLayers([editor.getWrapper()]);
+    const evCallback = () => {
+      setLayers([editor.getWrapper()]);
+      console.log('layyersssssssssssssss  :');
+      
+    };
 
     editor.on("component:add", evCallback);
     editor.on("component:remove", evCallback);
     editor.on("page:select", evCallback);
-
+    editor.on(InfinitelyEvents.layers.update,evCallback)
     return () => {
       editor.off("component:add", evCallback);
       editor.off("component:remove", evCallback);
+      editor.off("page:select", evCallback);
+      editor.off(InfinitelyEvents.layers.update,evCallback)
     };
   }, [editor]);
 

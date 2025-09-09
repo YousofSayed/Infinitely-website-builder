@@ -871,9 +871,9 @@ function buildFontFaces(fonts) {
 
 /**
  *
- * @param {{motions : {[key:string] : import('./types').MotionType} , pages :  {[key:string]:import('./types').InfinitelyPage}}} param0
+ * @param {{motions : {[key:string] : import('./types').MotionType} , pages : {[key:string]:import('./types').InfinitelyPage , projectSetting : import('./types').ProjectSetting}}} param0
  */
-function buildMotionScripts({ motions, pages }) {
+function buildMotionScripts({ motions, pages, projectSetting }) {
   // const cleanedMotions = await cleanMotions(motions);
   const finalMotions = {
     index: "",
@@ -885,11 +885,19 @@ function buildMotionScripts({ motions, pages }) {
     // const pageContent = await page.html.text();
     Object.values(motions).map((motion) => {
       if (motion.pages.includes("index")) {
-        finalMotions.index = buildGsapMotionsScript({ [motion.id]: motion });
+        finalMotions.index = buildGsapMotionsScript(
+          { [motion.id]: motion },
+          false,
+          projectSetting.remove_gsap_markers_on_build
+        );
       } else if (motion.pages.includes(page.name)) {
-        finalMotions.other[page.name] = buildGsapMotionsScript({
-          [motion.id]: motion,
-        });
+        finalMotions.other[page.name] = buildGsapMotionsScript(
+          {
+            [motion.id]: motion,
+          },
+          false,
+          projectSetting.remove_gsap_markers_on_build
+        );
       }
     });
     return page;

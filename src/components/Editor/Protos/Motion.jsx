@@ -33,13 +33,14 @@ import {
   add,
   cloneDeep,
   isArray,
+  isBoolean,
   isObject,
   isPlainObject,
   isString,
   random,
   uniqueId,
 } from "lodash";
-import { addClickClass, uniqueID } from "../../../helpers/cocktail";
+import { addClickClass, stringify, uniqueID } from "../../../helpers/cocktail";
 import { useRecoilState } from "recoil";
 import { currentElState } from "../../../helpers/atoms";
 import { infinitelyWorker } from "../../../helpers/infinitelyWorker";
@@ -285,14 +286,14 @@ const ObjectComponent = ({
     const secondEditableValue = isArray(secondDestination)
       ? getNestedValue(secondEditeable, secondDestination.concat(prop))
       : null;
-    if (!editableValue) {
-      removeNestedKey(editeable , destination.concat(prop));
+    if (!editableValue && !isBoolean(editableValue)) {
+      removeNestedKey(editeable, destination.concat(prop));
     }
 
-    if (isArray(secondDestination) && !secondEditableValue) {
-      removeNestedKey(secondEditeable , secondDestination.concat(prop));
+    if (isArray(secondDestination) && !secondEditableValue && !isBoolean(secondEditableValue)) {
+      removeNestedKey(secondEditeable, secondDestination.concat(prop));
     }
-    
+
     console.log(
       "from after set first and second nested : ",
       editeable,
@@ -1089,11 +1090,11 @@ export const Motion = memo(() => {
   const [selectedEl, setSelectedEl] = useRecoilState(currentElState);
   const [selectedElMotionId, setSelectedElMotionId] = useState("");
   const [isPending, setTransition] = useTransition();
-  const [isGlobally, setIsGlobally] = useState(false);
   const [motionKeys, setMotionKeys] = useState([]);
-  const [showTooltip, setShowTooltip] = useState(false);
   const [isInstance, setIsInstance] = useState(false);
   const [editeAsMain, setEditeAsMain] = useState(true);
+  const [mainId, setMainId] = useState("");
+  const [instanceId, setInstanceId] = useState("");
   const motionUploader = useRef();
   const iconStyle = {
     fill: "white",
@@ -1183,6 +1184,8 @@ export const Motion = memo(() => {
       instanceId = attributes[motionInstanceId];
     setEditeAsMain(!Boolean(instanceId));
     setIsInstance(Boolean(instanceId));
+    setMainId(mId);
+    setInstanceId(instanceId);
     // instanceId ? setIsInstance(true) : setIsInstance(false);
     // instanceId ? setEditeAsMain(false) : setEditeAsMain(true);
     getMotion(mId || instanceId);
@@ -1196,35 +1199,41 @@ export const Motion = memo(() => {
   const updateDB = async (newMotion) => {
     if (!newMotion?.id) return;
     const projectData = await getProjectData();
+    const { projectSettings } = getProjectSettings();
     const newMotions = {
       ...projectData.motions,
       [newMotion.id]: newMotion,
     };
+    console.log(
+      "project settings  ::: ",
+      projectSettings.remove_gsap_markers_on_build
+    );
 
-    await infinitelyWorker.postMessage({
+    infinitelyWorker.postMessage({
       command: "updateDB",
       props: {
         projectId: +localStorage.getItem(current_project_id),
         data: { motions: newMotions },
-        // updatePreviewPages: true,
-        // pageName: +localStorage.getItem(current_project_id),
+        updatePreviewPages: projectSettings.enable_auto_save,
+        pageName: localStorage.getItem(current_page_id),
+        projectSetting: projectSettings,
         // pageUrl: `pages/${localStorage.getItem(current_page_id)}.html`,
       },
     });
-    projectData.motions = {
-      ...projectData.motions,
-      ...newMotions,
-    };
+    // projectData.motions = {
+    //   ...projectData.motions,
+    //   ...newMotions,
+    // };
 
-    pageBuilderWorker.postMessage({
-      command: "sendPreviewPageToServiceWorker",
-      props: {
-        projectData,
-        pageUrl: `pages/${localStorage.getItem(current_page_id)}.html`,
-        pageName: localStorage.getItem(current_page_id),
-        editorData: {},
-      },
-    });
+    // pageBuilderWorker.postMessage({
+    //   command: "sendPreviewPageToServiceWorker",
+    //   props: {
+    //     projectData,
+    //     pageUrl: `pages/${localStorage.getItem(current_page_id)}.html`,
+    //     pageName: localStorage.getItem(current_page_id),
+    //     editorData: {},
+    //   },
+    // });
   };
 
   const getMotion = async (id) => {
@@ -1326,6 +1335,35 @@ export const Motion = memo(() => {
     }
   };
 
+  const removeInstance = async () => {
+    const sle = editor.getSelected();
+    if (!(isInstance && instanceId && sle && mainId)) return;
+    const projectData = await getProjectData();
+    sle.removeAttributes([motionId, motionInstanceId]);
+    delete projectData.motions[mainId].instances[instanceId];
+    await infinitelyWorker.postMessage({
+      command: "updateDB",
+      props: {
+        projectId: +localStorage.getItem(current_project_id),
+        data: { motions: projectData.motions },
+      },
+    });
+    // preventSelectNavigation(editor,sle)
+    initToolbar(editor, sle);
+    setInstanceId("");
+    setIsInstance(false);
+    setEditeAsMain(true);
+    const firstMotionCmp = editor
+      .getWrapper()
+      .find(`[${motionId}="${mainId}"]`)[0];
+    preventSelectNavigation(editor, firstMotionCmp);
+  };
+
+  const copyInstance = async () => {
+    await navigator.clipboard.writeText(instanceId);
+    toast.success(<ToastMsgInfo msg={`Instance id copied successfully👍`} />);
+  };
+
   const cloneMotion = async (targetId) => {
     const sle = editor?.getSelected?.();
     if (!targetId) {
@@ -1342,7 +1380,7 @@ export const Motion = memo(() => {
     const newId = uniqueId(`mt${uniqueID()}`);
     clone.id = newId;
     for (const animation of clone.animations) {
-      animation.name = uniqueId(`varName_${uniqueID()}${random(99,999)}`);
+      animation.name = uniqueId(`varName_${uniqueID()}${random(99, 999)}`);
     }
     sle.addAttributes({ [motionId]: newId });
     initToolbar(editor, sle);
@@ -1474,7 +1512,12 @@ export const Motion = memo(() => {
                         ev.currentTarget || ev.target.parentNode,
                         "click"
                       );
-                      runGsapMethod(methods, motion);
+                      runGsapMethod(methods, {
+                        ...motion,
+                        isInstance: isInstance,
+                        id: instanceId,
+                        // id:instance
+                      });
                     }}
                     className="relative cursor-pointer p-2 rounded-md bg-slate-900 transition-all hover:bg-blue-600 "
                   >
@@ -1495,7 +1538,9 @@ export const Motion = memo(() => {
           </ScrollableToolbar>
           <section className="relative flex gap-2 p-3 justify-between bg-slate-800 w-full rounded-lg">
             {/* <FitTitle className="absolute top-[-50%]  left-0">{isInstance ? 'Instance' : 'Main'}</FitTitle> */}
-            <h1 className="custom-font-size  text-slate-200 ">{motion.id}</h1>
+            <FitTitle className="custom-font-size  text-slate-200 ">
+              {isInstance ? "Main ID :" : ""} {motion.id}
+            </FitTitle>
             <OptionsButton>
               <section className="flex flex-col items-center gap-5">
                 <button
@@ -1554,6 +1599,45 @@ export const Motion = memo(() => {
             </OptionsButton>
           </section>
 
+          {isInstance && (
+            <section className="relative  flex gap-2 p-3 justify-between bg-slate-800 w-full rounded-lg">
+              {/* <FitTitle className="absolute top-[-50%]  left-0">{isInstance ? 'Instance' : 'Main'}</FitTitle> */}
+              <FitTitle className="custom-font-size  text-slate-200 flex-shrink ">
+                Instance ID : {instanceId}
+              </FitTitle>
+              <OptionsButton>
+                <section className="flex flex-col items-center gap-5">
+                  <button
+                    id="mt-copy"
+                    onClick={async (ev) => {
+                      await copyInstance();
+                    }}
+                  >
+                    {Icons.copy({ fill: "white", height: 18 })}
+                  </button>
+                  <Tooltip anchorSelect="#mt-copy" opacity={1} place="left-end">
+                    Copy Instance ID
+                  </Tooltip>
+
+                  <button
+                    id="mt-delete-motion"
+                    onClick={async (ev) => {
+                      await removeInstance();
+                    }}
+                  >
+                    {Icons.trash("white", undefined, undefined, 18)}
+                  </button>
+                  <Tooltip
+                    anchorSelect="#mt-delete-motion"
+                    opacity={1}
+                    place="left-end"
+                  >
+                    Delete Instance
+                  </Tooltip>
+                </section>
+              </OptionsButton>
+            </section>
+          )}
           {/* <SwitcherSection
             title="Use Globally"
             defaultValue={isGlobally}

@@ -52,7 +52,7 @@ export const initTraitsOnRender = (editor) => {
             mediaBreakPoint:getMediaBreakpoint(editor)
           });
       }
-      console.log("autoplay traits : ", traits);
+      // console.log("autoplay traits : ", traits);
     }
   );
 };

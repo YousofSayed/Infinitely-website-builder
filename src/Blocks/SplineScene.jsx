@@ -97,8 +97,14 @@ export const SplineScene = ({ editor }) => {
         editor.clearDirtyCount();
 
         const {projectSettings} = getProjectSettings();
-        !projectSettings.enable_spline_viewer && this.el.classList.add('enable-spline') 
-        !projectSettings.enable_spline_viewer && this.el.classList.remove('drop')
+        if(!projectSettings.enable_spline_viewer ){
+
+          this.el.classList.add('enable-spline') 
+          this.el.classList.remove('drop')
+          // el.querySelectorAll('*').forEach(el=>{
+          //   el.classList.remove('drop')
+          // })
+        }
          
       },
     },

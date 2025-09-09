@@ -513,7 +513,7 @@ export const IDB = (editor) => {
     },
 
     //Storinggg
-    store(manually = false) {
+    store(storeProps={}) {
       if (storeTimeout) clearTimeout(storeTimeout);
       if (pageBuilderTimeout) clearTimeout(pageBuilderTimeout);
 
@@ -649,6 +649,7 @@ export const IDB = (editor) => {
                 editorData: {
                   canvasCss: editor.config.canvasCss,
                 },
+                ...storeProps,
               };
 
               const onWorkerMessage = (ev) => {
@@ -680,9 +681,7 @@ export const IDB = (editor) => {
                     );
                   }
 
-                  manually && (
-                    <ToastMsgInfo msg={`Project saved successfully👍`} />
-                  );
+                  
                   // res(true);
                 }
               };
@@ -721,7 +720,8 @@ export const IDB = (editor) => {
         getProjectSettings().projectSettings?.enable_auto_save ? 700 : 0
       );
       // });
-
+      console.log('prrrrrrrrrrrrops from store : ' , storeProps);
+      
       return storeTimeout;
     },
   });

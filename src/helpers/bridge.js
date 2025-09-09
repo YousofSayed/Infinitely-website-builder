@@ -698,9 +698,15 @@ export function removeNestedKey(obj, keys) {
  *
  * @param {import('./types').MotionType} motion
  * @param {Boolean} paused
+ * @param {boolean} isInstance
  * @returns
  */
-export function CompileMotion(motion, paused = false) {
+export function CompileMotion(
+  motion,
+  paused = false,
+  isInstance = false,
+  removeMarkers = true
+) {
   /**
    * @type {{timeline:object , fromTo : {
    * selector:string,
@@ -718,19 +724,27 @@ export function CompileMotion(motion, paused = false) {
 
   const parseObjValue = (obj = {}) => {
     return Object.fromEntries(
-      Object.entries(obj).map(([key, value]) => {
-        if (typeof value === "object") {
-          return [key, parseObjValue(value)];
-        } else if (key.startsWith("on") && /on[A-Z]/gi.test(key)) {
-          return [key, new Function(`return (()=>{${value}})`)()];
-        }
-        return [
-          key,
-          typeof value === "string"
-            ? value.replaceAll?.("self", `[motion-id="${motion.id}"]`)
-            : value,
-        ];
-      })
+      Object.entries(obj)
+        .map(([key, value]) => {
+          if (key == "markers" && removeMarkers) return null;
+          if (typeof value === "object") {
+            return [key, parseObjValue(value)];
+          } else if (key.startsWith("on") && /on[A-Z]/gi.test(key)) {
+            return [key, new Function(`return (()=>{${value}})`)()];
+          }
+          return [
+            key,
+            typeof value === "string"
+              ? value.replaceAll?.(
+                  "self",
+                  `[${isInstance ? `motion-instance-id` : `motion-id`}="${
+                    motion.id
+                  }"]`
+                )
+              : value,
+          ];
+        })
+        .filter(Boolean)
     );
   };
 
@@ -775,7 +789,10 @@ export function CompileMotion(motion, paused = false) {
       };
     }
     output.fromTo.push({
-      selector: selector.replaceAll("self", `[motion-id="${motion.id}"]`),
+      selector: selector.replaceAll(
+        "self",
+        `[${isInstance ? `motion-instance-id` : `motion-id`}="${motion.id}"]`
+      ),
       fromValue,
       toValue,
       positionParameter,
@@ -791,14 +808,24 @@ export function CompileMotion(motion, paused = false) {
  *
  * @param {{[key:string] : import('./types').MotionType}} motions
  */
-export function buildGsapMotionsScript(motions) {
+export function buildGsapMotionsScript(
+  motions,
+  isInstance = false,
+  removeMarkers = true
+) {
   const built = Object.values(motions).map((motion) => {
-    const compiledMotion = CompileMotion(motion);
-    let tween = "";
+    const compiledMotion = CompileMotion(
+      motion,
+      false,
+      isInstance,
+      removeMarkers
+    );
+    let tween = `let ${motion.id} = {}; \n\n`;
+
     if (motion.isTimeLine) {
-      tween += `let ${motion.timeLineName} = gsap.timeline(${JSON.stringify(
-        compiledMotion.timeline
-      )})`;
+      tween += `${motion.id}.${
+        motion.timeLineName
+      } = gsap.timeline(${JSON.stringify(compiledMotion.timeline)})`;
     }
     if (compiledMotion.fromTo.length) {
       for (const item of compiledMotion.fromTo) {
@@ -811,12 +838,33 @@ export function buildGsapMotionsScript(motions) {
           { space: 2 }
         ).replaceAll("\\", "\\\\")})\`)()`;
         tween += `${
-          motion.isTimeLine ? "" : `let ${item.name} = gsap`
+          motion.isTimeLine ? "" : `${motion.id}.${item.name} = gsap`
         }.fromTo(\`${item.selector}\`, {...${fromObject}}, {...${toObject}} , ${
           item.positionParameter || ""
         });\n\n`;
 
         // console.log(new Function(`return ${serializeJavascript(item.toValue , {space:2, })}`)());
+      }
+    }
+
+    console.log(
+      "instances length : ",
+      motion.instances,
+      Object.keys(motion.instances)
+    );
+    if (Object.keys(motion.instances).length) {
+      console.log(
+        "instances length : ",
+        motion.instances,
+        Object.keys(motion.instances)
+      );
+
+      for (const id in motion.instances) {
+        const clone = cloneDeep(motion);
+        clone.id = id;
+        clone.instances = {};
+
+        tween += buildGsapMotionsScript({ [id]: clone }, true);
       }
     }
 
@@ -1159,9 +1207,10 @@ export const buildHeadFromEditorCanvasHeader = ({
  *
  * @param {string} page
  * @param {import('./types').Project} projectData
+ * @param {import('./types').ProjectSetting} projectSetting
  * @returns
  */
-export const buildPageData = async (page = "", projectData) => {
+export const buildPageData = async (page = "", projectData, projectSetting) => {
   console.log(`from buildPageData callback : `, page);
 
   const currentPageId = page;
@@ -1200,7 +1249,9 @@ export const buildPageData = async (page = "", projectData) => {
     bodyAttributes: projectData.pages[`${currentPageId}`].bodyAttributes || {},
     motions:
       `<script>${buildGsapMotionsScript(
-        filterMotionsByPage(projectData.motions , currentPageId)
+        filterMotionsByPage(projectData.motions, currentPageId),
+        false,
+        projectSetting.remove_gsap_markers_on_build
       )}</script>` || "",
   };
   // console.log("motions : ", buildGsapMotionsScript(projectData.motions));
@@ -1288,7 +1339,7 @@ export async function buildPageContentFromData({
   editorData,
   projectSetting = {},
 }) {
-  const pageData = await buildPageData(page, projectData);
+  const pageData = await buildPageData(page, projectData, projectSetting);
   const urlException = page.toLowerCase() == "index" ? `.` : `..`;
   let isTailwindEnabled = false;
   if (projectSetting.enable_tailwind) {
@@ -1800,7 +1851,6 @@ export function getInitProjectData({
     inited: false,
   };
 }
-
 
 /**
  *
