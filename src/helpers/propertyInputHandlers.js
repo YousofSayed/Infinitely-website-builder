@@ -15,7 +15,7 @@ export const onInput = ({
   currentElObj,
   cssProp,
 }) => {
-  special && (ev.target.type = 'number');
+  // special && (ev.target.type = 'number');
   if (isCurrentELChange.current) {
     return;
   }

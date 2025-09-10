@@ -19,7 +19,7 @@ import {
   advancedSearchSuggestions,
   rgbStringToHex,
 } from "../../helpers/functions";
-import { cloneDeep } from "lodash";
+import { cloneDeep, isNumber } from "lodash";
 import { keyframesGetterWorker } from "../../helpers/defineWorkers";
 import { current_page_id, current_project_id } from "../../constants/shared";
 import { Accordion } from "../Protos/Accordion";
@@ -28,7 +28,7 @@ import { IntersectionList } from "../Protos/IntersectionList";
 import { Memo } from "../Protos/Memo";
 import { keyframeStylesInstance } from "../../constants/InfinitelyInstances";
 import { InfinitelyEvents } from "../../constants/infinitelyEvents";
-
+import { For } from "million/react";
 // const KeyframesList = ({
 //   type,
 //   animations = keyframesType,
@@ -273,6 +273,7 @@ export const AnimationsBuilder = memo(() => {
       // );
 
       // console.log(props);
+      console.log("frames : ", props);
 
       setAnimations(props);
       searchedAnimations.current = props;
@@ -308,58 +309,32 @@ export const AnimationsBuilder = memo(() => {
     return () => {
       keyframesGetterWorker.removeEventListener(
         "message",
-        sendToKeyframesGetterWorker
-        // { once: true }
+        sendToKeyframesGetterWorker,
+        { once: true }
       );
     };
 
     // console.log(animes, animationsReady, Object.values(animes));
   };
 
-  // const addAnimation = (animationName) => {
-  //   if (!animation) return;
-  //   oldAnimtaions.current = structuredClone(animations);
-  //   // setAnimations([
-  //   //   ...animations,
-  //   //   {
-  //   //     name: animationName,
-  //   //     declarations: [
-  //   //       {
-  //   //         percentage: 0,
-  //   //         styles: {},
-  //   //       },
-  //   //     ],
-  //   //   },
-  //   // ]);
-
-  //    setAnimations([
-  //     ...animations,
-  //     {
-  //       type:'keyframes',
-  //       name: animationName,
-  //       keyframes:[
-  //         {type:'keyframe' , values:[`0%`] , declarations:[{type:'declaration' , }]}
-  //       ]
-  //     },
-  //   ]);
-  // };
   const addAnimation = (animationName) => {
     if (!animation) return;
     oldAnimtaions.current = cloneDeep(animations);
 
     setAnimations([
-      ...animations,
       {
         type: "keyframes",
         name: animationName,
+        path: `css/${localStorage.getItem(current_page_id)}.css`,
         keyframes: [
           {
             type: "keyframe",
             values: [`0%`],
-            declarations: [{ type: "declaration" }],
+            declarations: [],
           },
         ],
       },
+      ...animations,
     ]);
   };
 
@@ -420,7 +395,10 @@ export const AnimationsBuilder = memo(() => {
   useEffect(() => {
     // if (!frameStyles) return;
     // if (!animations.length) return;
-    if (!indexes.animationIndex && !indexes.keyframeIndex) return;
+    // console.log('key frame indexes : ' , indexes)
+    if (!isNumber(indexes.animationIndex) && !isNumber(indexes.keyframeIndex))
+      return;
+    console.log("key frame indexes after: ", indexes);
     /**
      *
      * @param {CustomEvent} ev
@@ -432,22 +410,54 @@ export const AnimationsBuilder = memo(() => {
         clone[indexes.animationIndex || 0].keyframes[
           indexes.keyframeIndex || 0
         ];
+      console.log("key frame event : ", ev, keyframe);
+      // const noDeclerations = [];
       if (keyframe.type == "keyframe") {
-        clone[indexes.animationIndex || 0].keyframes[
-          indexes.keyframeIndex || 0
-        ].declarations = keyframe.declarations.map((dclr) => {
+        keyframe.declarations = keyframe.declarations.map((dclr) => {
           if (frameStyles[dclr.property]) {
             dclr.value = frameStyles[dclr.property];
           }
-
           return dclr;
         });
+        const properties = keyframe.declarations.map((dclr) => dclr.property);
+        const notFoundedKeys = new Set([
+          ...Object.keys(frameStyles),
+          ...properties,
+        ]);
+        // const isThereProperty = keyframe.declarations.some(dclr=>Boolean(frameStyles[dclr.property]));
+        notFoundedKeys.forEach((value) => {
+          console.log("value : ", value);
+          !properties.includes(value) &&
+            keyframe.declarations.push({
+              type: "declaration",
+              property: value,
+              value: frameStyles[value],
+            });
+        });
+
+        // clone[indexes.animationIndex || 0].keyframes[
+        //   indexes.keyframeIndex || 0
+        // ].declarations.concat(noDeclerations);
+
+        console.log(
+          "clone  : ",
+          clone,
+          // noDeclerations,
+          frameStyles,
+          Array.from(notFoundedKeys)
+        );
+
+        if (!clone[indexes.animationIndex].changed) {
+          clone[indexes.animationIndex].changed = true;
+          setAnimations(clone);
+        }
 
         setAnimations(clone);
-        setIsChangedAnimations(
-          clone[indexes.animationIndex],
-          indexes.animationIndex
-        );
+
+        // setIsChangedAnimations(
+        //   clone[indexes.animationIndex],
+        //   indexes.animationIndex
+        // );
       }
     };
 
@@ -455,7 +465,7 @@ export const AnimationsBuilder = memo(() => {
     return () => {
       keyframeStylesInstance.off(InfinitelyEvents.keyframe.set, callback);
     };
-  }, [indexes]);
+  }, [animations, indexes]);
 
   useEffect(() => {
     if (!(showAnimeBuilder && editor)) return;
@@ -519,10 +529,15 @@ export const AnimationsBuilder = memo(() => {
         </section>
         <Accordion>
           {/* <section className="w-full h-full flex flex-col gap-2 "> */}
+
           {!!animations.length && (
-            <IntersectionList
+            <For
+              // memo
+              // each={(i)=>}
               className="will-change-[contents,height,scroll] flex flex-col gap-2"
-              renderItem={(animation, i) => (
+              each={animations}
+            >
+              {(animation, i) => (
                 // <InfAccordion>
                 <AccordionItem
                   title={animation.name}
@@ -564,7 +579,7 @@ export const AnimationsBuilder = memo(() => {
                                 keyframe-id={id}
                                 className={`flex  flex-col  gap-2 bg-gray-950 p-2 border-[2.5px]  w-full rounded-lg ${
                                   // currentEditingIndexStyles == x &&
-                                  currentEditing == id
+                                  indexes.animationIndex == i && indexes.keyframeIndex == x
                                     ? "border-blue-600"
                                     : "border-slate-600"
                                 } `}
@@ -615,7 +630,7 @@ export const AnimationsBuilder = memo(() => {
                                     className="flex-shrink-0 bg-slate-800"
                                     onClick={(ev) => {
                                       // setCurrentEditingIndex(i);
-                                      setCurrentEditing(id);
+                                      // setCurrentEditing(id);
                                       setIndexes({
                                         keyframeIndex: x,
                                         animationIndex: i,
@@ -640,6 +655,19 @@ export const AnimationsBuilder = memo(() => {
                                       //       ])
                                       //   )
                                       // );
+
+                                      console.log('indexing' ,  Object.fromEntries(
+                                          keyframe?.declarations
+                                            .filter(
+                                              (dclr) =>
+                                                dclr.type == "declaration"
+                                            )
+                                            .map((dclr) => [
+                                              dclr.property,
+                                              dclr.value,
+                                            ])
+                                        ));
+                                      
 
                                       setFramesStyles(
                                         Object.fromEntries(
@@ -704,8 +732,7 @@ export const AnimationsBuilder = memo(() => {
                 </AccordionItem>
                 // </InfAccordion>
               )}
-              list={animations}
-            />
+            </For>
           )}
           {/* </section> */}
         </Accordion>

@@ -44,6 +44,84 @@ import { random, uniqueId } from "lodash";
 import { Accordion } from "../Protos/Accordion";
 import { AccordionItem } from "../Protos/AccordionItem";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { Show } from "../Protos/Show";
+import { ErrorBoundary } from "react-error-boundary";
+
+const SelectElementToStyle = () => (
+  <h1 className="text-slate-400 custom-font-size text-center animate-pulse capitalize font-semibold bg-slate-900 rounded-lg p-2">
+    Select element to style
+  </h1>
+);
+
+const StyleAccordion = () => {
+  const showAnimeBuilder = useRecoilValue(showAnimationsBuilderState);
+  return <Accordion>
+    <AccordionItem label={"Layout"}>
+      <ErrorBoundary fallbackRender={SelectElementToStyle}>
+        <Layout />
+      </ErrorBoundary>
+    </AccordionItem>
+
+    <AccordionItem title={"Typography"}>
+      <ErrorBoundary fallbackRender={SelectElementToStyle}>
+        <StyleTypography />
+      </ErrorBoundary>
+    </AccordionItem>
+
+    <AccordionItem title={"border"}>
+      <ErrorBoundary fallbackRender={SelectElementToStyle}>
+        <Border />
+      </ErrorBoundary>
+    </AccordionItem>
+
+    <AccordionItem title={"background"}>
+      <ErrorBoundary fallbackRender={SelectElementToStyle}>
+        <Background />
+      </ErrorBoundary>
+    </AccordionItem>
+
+    <AccordionItem title={"backdrop"}>
+      <ErrorBoundary fallbackRender={SelectElementToStyle}>
+        <Backdrop />
+      </ErrorBoundary>
+    </AccordionItem>
+
+    <AccordionItem title={"Filters"}>
+      <ErrorBoundary fallbackRender={SelectElementToStyle}>
+        <MultiFunctionProp
+          cssProp={"filter"}
+          keywords={filterTypes}
+          units={filterUnits}
+          placeholder={"Select Filter"}
+        />
+      </ErrorBoundary>
+    </AccordionItem>
+
+    <AccordionItem title={"Transform"}>
+      <ErrorBoundary fallbackRender={SelectElementToStyle}>
+        <MultiFunctionProp
+          cssProp={"transform"}
+          keywords={transformValues}
+          placeholder={"Select Prop"}
+        />
+      </ErrorBoundary>
+    </AccordionItem>
+
+    {!showAnimeBuilder && (
+      <AccordionItem title={"Animation"}>
+        <ErrorBoundary fallbackRender={SelectElementToStyle}>
+          <Animation />
+        </ErrorBoundary>
+      </AccordionItem>
+    )}
+
+    <AccordionItem title={"Others"}>
+      <ErrorBoundary fallbackRender={SelectElementToStyle} >
+        <Others />
+      </ErrorBoundary>
+    </AccordionItem>
+  </Accordion>;
+};
 /**
  *
  * @param {{className:string}} param0
@@ -57,21 +135,22 @@ export const StyleAside = memo(({ className }) => {
   const [selector, setSelector] = useRecoilState(ruleState);
   const [showClasses, setShowClasses] = useState(false);
   const [animateRef] = useAutoAnimate();
-  useEffect(() => {
-    /**
-     *
-     * @param {CustomEvent} ev
-     */
-    const onCurrentEl = (ev) => {
-      setCurrentEl((oldVal) => ({ currentEl: ev.detail.currentEl }));
-    };
+  const [key, setKey] = useState(uniqueId("Accordion-id-"));
+  // useEffect(() => {
+  //   /**
+  //    *
+  //    * @param {CustomEvent} ev
+  //    */
+  //   const onCurrentEl = (ev) => {
+  //     setCurrentEl((oldVal) => ({ currentEl: ev.detail.currentEl }));
+  //   };
 
-    window.addEventListener("currentel", onCurrentEl);
+  //   window.addEventListener("currentel", onCurrentEl);
 
-    return () => {
-      window.removeEventListener("currentel", onCurrentEl);
-    };
-  });
+  //   return () => {
+  //     window.removeEventListener("currentel", onCurrentEl);
+  //   };
+  // });
 
   useLayoutEffect(() => {
     // console.log(
@@ -86,8 +165,13 @@ export const StyleAside = memo(({ className }) => {
     setShowClasses(showVal);
   }, [selector]);
 
+  useEffect(() => {
+    setKey(uniqueId("Accordion-id-"));
+  }, [showAnimeBuilder]);
+
   return (
     <section
+      // key={key}
       ref={animateRef}
       className="flex flex-col w-full h-full gap-2 mt-2"
     >
@@ -129,90 +213,19 @@ export const StyleAside = memo(({ className }) => {
       )} */}
 
       <>
-        {currentEl.currentEl || showAnimeBuilder ? (
-          <>
-            {!showAnimeBuilder && (
-              <Accordion>
-                <AccordionItem title={"classes"}>
-                  {showClasses ? <SelectClass /> : null}
-                </AccordionItem>
+        {!showAnimeBuilder && (
+          <Accordion>
+            <AccordionItem title={"classes"}>
+              {showClasses ? <SelectClass /> : null}
+            </AccordionItem>
 
-                <AccordionItem key={2} title={"states"}>
-                  <SelectState />
-                </AccordionItem>
-              </Accordion>
-            )}
-            <Accordion>
-              <AccordionItem label={"Layout"}>
-                <Layout />
-              </AccordionItem>
-
-              <AccordionItem title={"Typography"}>
-                <StyleTypography />
-              </AccordionItem>
-
-              <AccordionItem title={"border"}>
-                <Border />
-              </AccordionItem>
-
-              <AccordionItem title={"background"}>
-                <Background />
-              </AccordionItem>
-
-              <AccordionItem
-                title={"backdrop"}
-                slotProps={{ transition: { unmountOnExit: true } }}
-              >
-                <Backdrop />
-              </AccordionItem>
-
-              <AccordionItem
-                title={"Filters"}
-                slotProps={{ transition: { unmountOnExit: true } }}
-              >
-                <MultiFunctionProp
-                  cssProp={"filter"}
-                  keywords={filterTypes}
-                  units={filterUnits}
-                  placeholder={"Select Filter"}
-                />
-              </AccordionItem>
-
-              <AccordionItem
-                title={"Transform"}
-                slotProps={{ transition: { unmountOnExit: true } }}
-              >
-                <MultiFunctionProp
-                  cssProp={"transform"}
-                  keywords={transformValues}
-                  placeholder={"Select Prop"}
-                />
-              </AccordionItem>
-
-              {!showAnimeBuilder && (
-                <AccordionItem
-                  title={"Animation"}
-                  slotProps={{ transition: { unmountOnExit: true } }}
-                >
-                  <Animation />
-                </AccordionItem>
-              )}
-
-              <AccordionItem
-                title={"Others"}
-                slotProps={{ transition: { unmountOnExit: true } }}
-              >
-                <Others />
-              </AccordionItem>
-            </Accordion>
-          </>
-        ) : (
-          <section className="w-full h-full flex justify-center items-center ">
-            <section className="text-slate-400 text-xl animate-pulse bg-slate-800 p-2 rounded-lg font-semibold capitalize text-center">
-              Select element to start style
-            </section>
-          </section>
+            <AccordionItem key={2} title={"states"}>
+              <SelectState />
+            </AccordionItem>
+          </Accordion>
         )}
+
+        {showAnimeBuilder ? <StyleAccordion /> : <StyleAccordion />}
       </>
     </section>
   );

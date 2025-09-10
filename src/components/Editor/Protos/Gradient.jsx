@@ -35,6 +35,8 @@ const stringifyValues = (values, type) => {
 };
 
 function parseGradient(input = "") {
+  console.log('inpuu : ' , input);
+  
   const types = input.match(/linear|radial/gi);
   const data = input
     .split(/linear-gradient|radial-gradient/gi)

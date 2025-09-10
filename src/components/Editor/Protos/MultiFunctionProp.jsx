@@ -25,7 +25,7 @@ export const MultiFunctionProp = memo(
     const stringifyFilter = (filtersVals = []) => {
       const value = filtersVals
         .map(
-          ({ name, value }) => `${name}(${value}${units?.[name] ?  units[name] : ''})`
+          ({ name, value }) => value ? `${name}(${value}${units?.[name] ?  units[name] : ''})` : ''
         )
         .join(" ");
 
@@ -42,8 +42,8 @@ export const MultiFunctionProp = memo(
       // console.log(stringValue
       //   .match(/(\w+\([^()]*\))/g));
       
-      const value = stringValue
-        .match(/(\w+\((?:[^()]+|\([^()]*\))*\))/g)
+      const value = (stringValue
+        ?.match(/(\w+\((?:[^()]+|\([^()]*\))*\))/g) || [])
         .filter(Boolean)
         .map((prop) => {
           const vals = prop.split(/\(|\)/gi);

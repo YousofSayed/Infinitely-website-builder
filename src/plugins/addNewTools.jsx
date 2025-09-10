@@ -271,21 +271,21 @@ export const addNewTools = (editor) => {
       const wrapperEl = editor.getWrapper().getEl();
       const canvasBody = editor.Canvas.getBody();
       const scrollCallback = (ev) => {
-        console.log('scroll call back');
+        // console.log('scroll call back');
         // alert('jhahahahahahaahahahaaahahaa')
         editor.trigger("canvas:frame:scroll", {
-          window,
+          // window,
           isScroll: true,
         });
         scrollTimeout && clearTimeout(scrollTimeout);
         scrollTimeout = setTimeout(() => {
           editor.trigger("canvas:frame:scroll:stop", {
-            window,
+            // window,
             isScroll: false,
           });
         }, 100);
       };
-      console.log("canvasDoc, canvasBody, wrapperEl", canvasDoc, canvasBody, wrapperEl);
+      // console.log("canvasDoc, canvasBody, wrapperEl", canvasDoc, canvasBody, wrapperEl);
       // editor.Canvas.get 
       // if (!(canvasDoc && canvasBody && wrapperEl)) {
       //   console.error("no canvas doc or body or wrapper");
@@ -326,13 +326,13 @@ export const addNewTools = (editor) => {
 // });
 
 
-  editor.on("canvas:frame:scroll", ({ window, isScroll }) => {
+  editor.on("canvas:frame:scroll", ({ isScroll }) => {
     // console.log("is scrollll : ", isScroll , window);
     isScrollValue = isScroll;
     editor.Canvas.getBody().classList.add("preventWhenScroll");
   });
 
-  editor.on("canvas:frame:scroll:stop", ({ window, isScroll }) => {
+  editor.on("canvas:frame:scroll:stop", ({  isScroll }) => {
     // console.log("is scrollll stop: ", isScroll);
     isScrollValue = isScroll;
     editor.Canvas.getBody().classList.remove("preventWhenScroll");

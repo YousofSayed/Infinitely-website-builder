@@ -16,6 +16,7 @@ import {
 import { useEditor, useEditorMaybe } from "@grapesjs/react";
 import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
 import { FitTitle } from "./FitTitle";
+import { Input } from "./Input";
 
 /**
  *
@@ -27,9 +28,9 @@ export const Property = ({
   cssProp,
   sectionClassName = "",
   inputClassName = "",
-  placeholder='',
+  placeholder = "",
   allowText = false,
-  wrap=false,
+  wrap = false,
   special = false,
 }) => {
   const currentElObj = useRecoilValue(currentElState);
@@ -38,9 +39,9 @@ export const Property = ({
   const setUndoAndRedoStatesVal = useSetRecoilState(undoAndRedoStates);
   const [val, setVal] = useState("");
   const isCurrentELChange = useRef(false);
-  const editor =useEditorMaybe();
+  const editor = useEditorMaybe();
 
-  useUpdateInputValue({setVal,cssProp})
+  useUpdateInputValue({ setVal, cssProp });
 
   // useEffect(() => {
   //   if ( currentElObj.currentEl) {
@@ -65,18 +66,24 @@ export const Property = ({
   //   }
   // }, [currentElObj]);
 
-  
-
   return (
     <section
-      className={`${sectionClassName} flex flex-col ${wrap && 'flex-wrap gap-3 py-2'} gap-2  bg-slate-800 p-1 rounded-lg`}
+      className={`${sectionClassName} flex flex-col ${
+        wrap && "flex-wrap gap-3 py-2"
+      } gap-2  bg-slate-800 p-1 rounded-lg`}
     >
-      {label ? <FitTitle className="capitalize flex items-center  justify-center custom-font-size w-fit flex-shrink-0  overflow-hidden text-ellipsis ">{label}  </FitTitle> : ""}
-      <input
+      {label ? (
+        <FitTitle className="capitalize flex items-center  justify-center custom-font-size w-fit flex-shrink-0  overflow-hidden text-ellipsis ">
+          {label}{" "}
+        </FitTitle>
+      ) : (
+        ""
+      )}
+      <Input
         className={`${
-          inputClassName ? inputClassName : `${wrap ? 'w-full' : 'w-full'}`
+          inputClassName ? inputClassName : `${wrap ? "w-full" : "w-full"}`
         } h-full   font-semibold bg-slate-900 rounded-lg px-2 py-2 outline-none border-2 border-transparent focus:border-blue-600 transition-colors text-white`}
-        type="text"
+        type={special ? "number" : "text"}
         value={val}
         placeholder={placeholder || label}
         onFocus={(ev) => {
@@ -89,10 +96,18 @@ export const Property = ({
           onKeyUp({ ev, isCurrentELChange });
         }}
         onInput={(ev) => {
-          onInput({ ev, isCurrentELChange, setClass, setVal , special , currentElObj , cssProp});
+          onInput({
+            ev,
+            isCurrentELChange,
+            setClass,
+            setVal,
+            special,
+            currentElObj,
+            cssProp,
+          });
         }}
         onKeyDown={(ev) => {
-          onKeyDown({ ev, setClass, setVal , isCurrentELChange , cssProp});
+          onKeyDown({ ev, setClass, setVal, isCurrentELChange, cssProp });
         }}
       />
     </section>

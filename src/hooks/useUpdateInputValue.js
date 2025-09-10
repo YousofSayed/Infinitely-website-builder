@@ -141,7 +141,7 @@ export const useUpdateInputValue = ({
         : framesStyles[cssProp] || "";
 
       setVal(setter(value));
-      onEffect(cssProp, setter(value));
+      onEffect(cssProp, value);
       // console.log('mounted' , value , cssProp);
     }
 

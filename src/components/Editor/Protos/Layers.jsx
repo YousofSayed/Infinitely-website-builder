@@ -8,6 +8,7 @@ import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { LazyList } from "../../Protos/LazyList";
 import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
+import { For } from "million/react";
 
 export const Layers = memo(() => {
   const editor = useEditorMaybe();
@@ -15,9 +16,9 @@ export const Layers = memo(() => {
   const [layers, setLayers] = useState(layersType);
   const [autoAnimate] = useAutoAnimate();
   const layerstRef = useRef(refType);
-  useEffect(()=>{
-    layerstRef.current && autoAnimate(layerstRef.current)
-  },[layerstRef]) 
+  useEffect(() => {
+    layerstRef.current && autoAnimate(layerstRef.current);
+  }, [layerstRef]);
   useEffect(() => {
     if (!editor) return;
     console.log("layers");
@@ -37,19 +38,18 @@ export const Layers = memo(() => {
 
     const evCallback = () => {
       setLayers([editor.getWrapper()]);
-      console.log('layyersssssssssssssss  :');
-      
+      console.log("layyersssssssssssssss  :");
     };
 
     editor.on("component:add", evCallback);
     editor.on("component:remove", evCallback);
     editor.on("page:select", evCallback);
-    editor.on(InfinitelyEvents.layers.update,evCallback)
+    editor.on(InfinitelyEvents.layers.update, evCallback);
     return () => {
       editor.off("component:add", evCallback);
       editor.off("component:remove", evCallback);
       editor.off("page:select", evCallback);
-      editor.off(InfinitelyEvents.layers.update,evCallback)
+      editor.off(InfinitelyEvents.layers.update, evCallback);
     };
   }, [editor]);
 
@@ -76,7 +76,7 @@ export const Layers = memo(() => {
   return (
     <section id="layers" className="h-full hideScrollBar" ref={layerSecRef}>
       <main id="layer-wrapper" className="h-full  ">
-        <LazyList list={layers} renderItem={(item , i) => {
+        {/* <LazyList list={layers} renderItem={(item , i) => {
             const layer = layers[i];
 
             return layer.props().layerable ? (
@@ -89,7 +89,24 @@ export const Layers = memo(() => {
                 key={i}
               />
             ) : null;
-          }} />
+          }} /> */}
+
+        <For each={layers}>
+          {(item, i) => {
+            const layer = layers[i];
+
+            return layer.props().layerable ? (
+              <Layer
+                layers={layers}
+                setLayers={setLayers}
+                layer={layer}
+                layersRef={layerstRef}
+                index={i}
+                key={i}
+              />
+            ) : null;
+          }}
+        </For>
 
         {/* <Virtuoso
           ref={layerstRef}
