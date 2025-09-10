@@ -38,7 +38,7 @@ function CompileMotion(motion, paused = false) {
 
   const attribute = `[${
     motion?.isInstance ? `motion-instance-id` : `motion-id`
-  }=${motion.id}]`;
+  }="${motion.id}"]`;
 
   const parseObjValue = (obj = {}) => {
     return Object.fromEntries(
@@ -143,15 +143,40 @@ window.parent.addEventListener("gsap:run", (ev) => {
    * @type {{methods :  string[] , motion:import('../../src/helpers/types').MotionType}}
    */
   const { methods, motion, props } = ev.detail;
+  console.log('Before InIt : ' , { methods, motion, props });
+  
   if (
     !gsapTween[motion.id] &&
-    !methods.includes("kill") &&
-    !methods.includes("revert")
+    !(methods.includes("kill") || methods.includes("revert"))
   ) {
     console.log("Init Gsap Tweens");
 
     gsapTween[motion.id] = CreateGsap(motion);
-  } else {
+  } else if (
+    gsapTween[motion.id] &&
+    (methods.includes("kill") || methods.includes("revert"))
+  ) {
+    if (Array.isArray(gsapTween[motion.id])) {
+      gsapTween[motion.id].forEach((tween) => {
+        tween.kill();
+        tween.revert();
+      });
+    } else if (gsapTween[motion.id]) {
+      console.log(gsapTween, gsapTween[motion.id]);
+
+      gsapTween[motion.id].revert();
+      gsapTween[motion.id].kill();
+    }
+    gsapTween[motion.id] = null;
+
+  }
+   else {
+    console.log(
+      previousMotion == JSON.stringify(motion),
+      previousMotion,
+      JSON.stringify(motion)
+    );
+
     if (previousMotion != JSON.stringify(motion)) {
       if (Array.isArray(gsapTween[motion.id])) {
         gsapTween[motion.id].forEach((tween) => {
@@ -161,13 +186,13 @@ window.parent.addEventListener("gsap:run", (ev) => {
       } else if (gsapTween[motion.id]) {
         console.log(gsapTween, gsapTween[motion.id]);
 
-        gsapTween[motion.id].kill();
         gsapTween[motion.id].revert();
+        gsapTween[motion.id].kill();
       }
       // console.log('Motion changed', motion , CompileMotion(motion) );
 
       gsapTween[motion.id] = null;
-
+      previousMotion = JSON.stringify(motion);
       window.parent.dispatchEvent(
         new CustomEvent("gsap:run", {
           detail: {
@@ -217,7 +242,7 @@ window.parent.addEventListener("gsap:all:run", (ev) => {
    * @type {{motions:{[key:string]:import('../../src/helpers/types').MotionType}}}
    */
   const { motions, methods, props } = ev.detail;
-  
+
   Object.values(motions).forEach((motion) => {
     window.parent.dispatchEvent(
       new CustomEvent("gsap:run", {
@@ -232,7 +257,7 @@ window.parent.addEventListener("gsap:all:run", (ev) => {
     const instanceMotions = {};
 
     Object.entries(motion.instances || {}).forEach(([id, instance]) => {
-      instanceMotions[id] = { ...motion, id, isInstance: true , instances:{} };
+      instanceMotions[id] = { ...motion, id, isInstance: true, instances: {} };
     });
 
     window.parent.dispatchEvent(
@@ -265,7 +290,7 @@ window.parent.addEventListener("gsap:all:kill", (ev) => {
     const instanceMotions = {};
 
     Object.entries(motion.instances || {}).forEach(([id, instace]) => {
-      instanceMotions[id] = { ...motion, id, isInstance: true , instances:{} };
+      instanceMotions[id] = { ...motion, id, isInstance: true, instances: {} };
     });
 
     window.parent.dispatchEvent(

@@ -283,7 +283,7 @@ export const addNewTools = (editor) => {
             window,
             isScroll: false,
           });
-        }, 200);
+        }, 100);
       };
       console.log("canvasDoc, canvasBody, wrapperEl", canvasDoc, canvasBody, wrapperEl);
       // editor.Canvas.get 
@@ -345,10 +345,12 @@ export const addNewTools = (editor) => {
      * @param { import('grapesjs').Component } component
      */
     (component) => {
+      
       if (!component) return;
       if (isScrollValue) {
         return
       };
+      // console.log('hoveriiiiiing')
       try {
         // const trg = component && component.getEl();
         const highlighter = document.querySelector(
@@ -359,16 +361,7 @@ export const addNewTools = (editor) => {
          * @type {HTMLElement | undefined}
          */
         const badgeEl = editor.Canvas.getBadgeEl();
-        // component.getName();
-        // console.log(
-        //   "hover : ",
-        //   badgeEl,
-        //   editor.Canvas.getHighlighter(),
-        //   document.querySelector(`.gjs-cv-canvas .gjs-highlighter`),
-        //   editor.Canvas.getHighlighter(),
-        //   component,
-        //   trg
-        // );
+       
         if (badgeEl && highlighter && component && symbolInfo.isSymbol) {
           highlighter.classList.add("symbol-highlight");
           badgeEl.classList.add("badge-symbol-highlight");

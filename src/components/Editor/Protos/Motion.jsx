@@ -1123,7 +1123,7 @@ export const Motion = memo(() => {
     // {icon : Icons.trash('white') , method : "remove"},
     {
       icon: Icons.x(iconStyle),
-      methods: ["revert", "kill"],
+      methods: ["kill", "revert"],
       tooltipTitle: "Kill",
     },
     {
@@ -1485,6 +1485,7 @@ export const Motion = memo(() => {
     sle.addAttributes({ [motionId]: motion.id });
     await updateDB(motion);
     setMotion(motion);
+    initToolbar(editor , sle)
     // reSelect();
     // preventSelectNavigation(editor , sle)
   };
@@ -1547,21 +1548,29 @@ export const Motion = memo(() => {
                         ev.currentTarget || ev.target.parentNode,
                         "click"
                       );
+                      // console.log('motcheeeeeeeeeee : ' , {
+                      //   ...motion,
+                      //   isInstance: isInstance,
+                      //   id: isInstance ? instanceId : mainId,
+                      //   // id:instance
+                      // } , methods);
+                      
                       runGsapMethod(methods, {
                         ...motion,
                         isInstance: isInstance,
-                        id: instanceId,
+                        id: isInstance ? instanceId : mainId,
                         // id:instance
                       });
                     }}
-                    className="relative cursor-pointer p-2 rounded-md bg-slate-900 transition-all hover:bg-blue-600 "
+                    
+                    className="relative cursor-pointer  p-2 rounded-md bg-slate-900 transition-all hover:bg-blue-600 "
                   >
                     {icon}
                     <Tooltip
                       anchorSelect={`#motion-controller-${index}`}
                       place={isInstance ? "top-end" : "bottom-end"}
                       // position={{x: 0, y: 0}}
-
+                      
                       positionStrategy="fixed"
                       className=" text-slate-200 font-semibold "
                     >

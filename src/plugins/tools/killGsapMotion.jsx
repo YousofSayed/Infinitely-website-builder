@@ -27,7 +27,7 @@ export const killGsapMotionTool = (editor) => {
 
       if (mainId && !instanceId) {
         const motion = projectData.motions[mainId];
-        runGsapMethod(["play"], motion);
+        runGsapMethod(["kill", "revert"], motion);
       } else {
         const motion = projectData.motions[mainId];
         runGsapMethod(["kill", "revert"], {
