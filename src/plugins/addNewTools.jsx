@@ -347,9 +347,9 @@ export const addNewTools = (editor) => {
     (component) => {
       
       if (!component) return;
-      if (isScrollValue) {
-        return
-      };
+      // if (isScrollValue) {
+      //   return
+      // };
       // console.log('hoveriiiiiing')
       try {
         // const trg = component && component.getEl();

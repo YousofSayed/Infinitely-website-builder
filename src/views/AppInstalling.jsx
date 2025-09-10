@@ -17,7 +17,7 @@ const words = [
 
 export const AppInstalling = () => {
   const [state, setState] = useState(words[0]);
-  const [animatedRef] = useAutoAnimate();
+  const [animatedRef] = useAutoAnimate({duration:500});
   const [index, setIndex] = useState(0);
   const timeout = useRef();
 

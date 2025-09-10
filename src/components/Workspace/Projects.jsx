@@ -11,11 +11,14 @@ import { Loader } from "../Loader.jsx";
 import { projectsType } from "../../helpers/jsDocs.js";
 import { VirtuosoGrid } from "react-virtuoso";
 import { GridComponents } from "../Protos/VirtusoGridComponent.jsx";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { version } from "../../constants/Version.js";
 
 export const Projects = memo(() => {
   const setShowCrtModal = useSetRecoilState(showCrtModalState);
   const [showLoader, setShowLoader] = useState(true);
   const [dbProjects, setDbProjects] = useRecoilState(projectState);
+  const [animtedRef] = useAutoAnimate();
   const liveQueryProjects = useLiveQuery(async () => {
     const res = await db.projects.toArray();
     console.log("res : ", res);
@@ -26,16 +29,25 @@ export const Projects = memo(() => {
   });
 
   return (
-    <section className="w-full h-full">
+    <section className="relative w-full h-full">
       <section
-        className={`${dbProjects?.length ? '' : 'p-2'} container m-auto gap-3 h-full bg-slate-950 w-full rounded-lg ${
-          !dbProjects?.length &&
-            "flex items-center justify-center"
+        ref={animtedRef}
+        className={`${
+          dbProjects?.length ? "" : "p-2"
+        } container m-auto gap-3 overflow-hidden h-full bg-slate-950 w-full rounded-lg ${
+          !dbProjects?.length && "flex items-center justify-center"
         }`}
       >
-        {dbProjects?.length && <VirtuosoGrid components={GridComponents} totalCount={Number(dbProjects.length)}  itemClassName="p-2" itemContent={(i)=>{
-          return <Project key={i} project={dbProjects[i]} />
-        }}/>}
+        {dbProjects?.length && (
+          <VirtuosoGrid
+            components={GridComponents}
+            totalCount={Number(dbProjects.length)}
+            itemClassName="p-2"
+            itemContent={(i) => {
+              return <Project key={i} project={dbProjects[i]} />;
+            }}
+          />
+        )}
         {/* {dbProjects?.map((project) => (
           <Project key={project.id} project={project} />
         ))} */}
@@ -63,7 +75,10 @@ export const Projects = memo(() => {
         )}
 
         {showLoader && <Loader />}
+
+        <div className="absolute right-[2%] bottom-[2%] text-slate-600 opacity-[.9] z-40 text-2xl pointer-events-none">{version}</div>
       </section>
+
     </section>
   );
 });

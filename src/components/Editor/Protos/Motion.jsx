@@ -68,6 +68,7 @@ import { ScrollableToolbar } from "../../Protos/ScrollableToolbar";
 import { pageBuilderWorker } from "../../../helpers/defineWorkers";
 import { AccordionItem } from "../../Protos/AccordionItem";
 import { Accordion } from "../../Protos/Accordion";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 const parseValue = (value) => {
   try {
     return (
@@ -105,6 +106,8 @@ const AddNestedProps = ({
   placeholder = "",
 }) => {
   const [value, setValue] = useState("");
+  const [animatedRef] = useAutoAnimate();
+  const [parentAnimatedRef] = useAutoAnimate();
   const addProp = (prop) => {
     const clone = cloneDeep(animation);
     const editeable = editNestedObject(clone, destination.concat(prop), "");
@@ -176,8 +179,9 @@ const AddNestedProps = ({
   };
 
   return (
-    <section className="flex flex-col  ">
+    <section className="flex flex-col  " ref={parentAnimatedRef}>
       <section
+     
         className={`${className} flex  gap-2  sticky top-0 bg-slate-950 ${
           Object.keys(getNestedValue(animation, destination) || {})?.length
             ? "rounded-tl-lg rounded-tr-lg"
@@ -211,7 +215,7 @@ const AddNestedProps = ({
 
       {!!Object.entries(getNestedValue(animation, destination) || {})
         .length && (
-        <section className=" flex flex-col gap-2 p-1 bg-slate-950 rounded-bl-md rounded-br-md">
+        <section  ref={animatedRef} className=" flex flex-col gap-2 p-1 bg-slate-950 rounded-bl-md rounded-br-md">
           {Object.entries(getNestedValue(animation, destination) || {}).map(
             ([key, value], index) => {
               return (
@@ -1318,6 +1322,7 @@ export const Motion = memo(() => {
     let mId = attrs[motionId] || attrs[mainMotionId];
     if (!mId) {
       sle.addAttributes({ [motionId]: id });
+      setMainId(id);
     }
 
     /**
@@ -1354,7 +1359,13 @@ export const Motion = memo(() => {
       //   // preventSelectNavigation(editor, sle);
       //   initToolbar(editor, sle);
       // }
-      deleteMotion(motion.id)
+      const cnfrm = confirm(
+        Object.keys(motion.instances || {}).length ?
+        `You will remove all instance too , Are you sure ?` :
+        `Are you sure to remove motion ?`
+      );
+      if (!cnfrm) return;
+      deleteMotion(motion.id);
       setMotion({ ...motionType, id: "" });
       setIsInstance(false);
       setEditeAsMain(true);
@@ -1485,7 +1496,7 @@ export const Motion = memo(() => {
     sle.addAttributes({ [motionId]: motion.id });
     await updateDB(motion);
     setMotion(motion);
-    initToolbar(editor , sle)
+    initToolbar(editor, sle);
     // reSelect();
     // preventSelectNavigation(editor , sle)
   };
@@ -1554,15 +1565,18 @@ export const Motion = memo(() => {
                       //   id: isInstance ? instanceId : mainId,
                       //   // id:instance
                       // } , methods);
-                      
+
                       runGsapMethod(methods, {
                         ...motion,
-                        isInstance: isInstance,
-                        id: isInstance ? instanceId : mainId,
+                        ...(isInstance
+                          ? {
+                              isInstance: isInstance,
+                              id: instanceId,
+                            }
+                          : {}),
                         // id:instance
                       });
                     }}
-                    
                     className="relative cursor-pointer  p-2 rounded-md bg-slate-900 transition-all hover:bg-blue-600 "
                   >
                     {icon}
@@ -1570,7 +1584,7 @@ export const Motion = memo(() => {
                       anchorSelect={`#motion-controller-${index}`}
                       place={isInstance ? "top-end" : "bottom-end"}
                       // position={{x: 0, y: 0}}
-                      
+
                       positionStrategy="fixed"
                       className=" text-slate-200 font-semibold "
                     >
