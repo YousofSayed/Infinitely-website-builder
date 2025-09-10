@@ -15,7 +15,7 @@ export const onInput = ({
   currentElObj,
   cssProp,
 }) => {
-  special && transformToNumInput(ev.target);
+  special && (ev.target.type = 'number');
   if (isCurrentELChange.current) {
     return;
   }
