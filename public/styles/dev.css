@@ -1,6 +1,9 @@
 /* svg{
     pointer-events: none;
 } */
+ /* html , body , body *{
+  contain: layout , paint , size , style , content ;
+ } */
 img,
 video {
   will-change: auto !important;

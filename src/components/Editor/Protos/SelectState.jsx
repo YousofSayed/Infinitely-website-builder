@@ -43,7 +43,7 @@ export const SelectState = ({ placeholder }) => {
   useEffect(() => {
     if (!selectedEl.currentEl || selectedEl.currentEl.tagName == "body") return;
     extractRules();
-    updateCurrentIndex();
+    // updateCurrentIndex();
   }, [selectedEl, selector]);
 
   useEffect(() => {
@@ -53,7 +53,7 @@ export const SelectState = ({ placeholder }) => {
     };
 
     // editor.on("inf:rules:update", callback);
-    editor.on("device:change", updateCurrentIndex);
+    // editor.on("device:change", updateCurrentIndex);
 
     return () => {
       editor.off("inf:rules:update", callback);

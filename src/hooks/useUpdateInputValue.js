@@ -37,10 +37,10 @@ export const useUpdateInputValue = ({
   const framesStyles = useRecoilValue(framesStylesState);
   const setter = (value) => (old) => {
     //  const safeValue = value ?? "";
-     
-     if (old !== value) return value;
-  //    console.log(safeValue , old || "");
-  // return old || "";
+
+    if (old !== value) return value;
+    //    console.log(safeValue , old || "");
+    // return old || "";
   };
   ///Debounce
   // const currentElObjDeb = useDebounce(currentElObj , 1000);
@@ -56,17 +56,17 @@ export const useUpdateInputValue = ({
     const slEL = editor?.getSelected();
     const Media = getCurrentMediaDevice(editor);
     const currentSelector = getCurrentSelector(selector, slEL);
-    // console.log("currentSelector : ", currentSelector);
+    console.log("currentSelector : ", currentSelector, rule);
     // console.log("rule.ruleString : ", rule.ruleString);
     // console.log("rule.atRuleParams : ", rule.atRuleParams);
     // console.log("rule.atRuleType : ", rule.atRuleType);
     // console.log("rule.is : ", rule.is);
     // console.log("rules : ", rule);
 
-    if(!currentSelector){
+    if (!currentSelector) {
       return {
-        [cssProp]:''
-      }
+        [cssProp]: "",
+      };
     }
 
     const mediaAccordingToRule =
@@ -85,6 +85,8 @@ export const useUpdateInputValue = ({
       mediaAccordingToRule
     )?.toJSON()?.style;
 
+    console.log('style output : ' , outPut);
+    
     return outPut || {};
   }
 
@@ -94,8 +96,8 @@ export const useUpdateInputValue = ({
     const Media = getCurrentMediaDevice(editor);
     const currentSelector = getCurrentSelector(selector, slEL);
 
-    // console.log('styles : ' , getRuleStyle() , framesStyles , !Object.values(framesStyles || {}).length);
-    if(!currentSelector)return;
+    // console.log("styles : ");
+    if (!currentSelector) return;
     if (
       !slEL &&
       !getRuleStyle(isDeviceEvent)[cssProp] &&
@@ -120,17 +122,18 @@ export const useUpdateInputValue = ({
         const value = returnPropsAsIt
           ? getRuleStyle(isDeviceEvent)
           : getRuleStyle(isDeviceEvent)[cssProp] || "";
-        // console.log('valueee : ' , value , getRuleStyle() , cssProp);
+        // console.log('valueee : ' , value , getRuleStyle(isDeviceEvent) , cssProp);
 
-        setVal(setter(value));
+        setVal(value);
         onEffect(cssProp, value);
       } else if (Object.keys(slElStyles).length) {
         const value = returnPropsAsIt ? slElStyles : slElStyles[cssProp] || "";
-
+        // console.log('slElStyles : ' , slElStyles);
+        
         setVal(setter(value));
         onEffect(cssProp, value);
       } else {
-        setVal(setter(""));
+        setVal("");
         onEffect(cssProp, value);
       }
     }
@@ -140,7 +143,7 @@ export const useUpdateInputValue = ({
         ? framesStyles
         : framesStyles[cssProp] || "";
 
-      setVal(setter(value));
+      setVal(value);
       onEffect(cssProp, value);
       // console.log('mounted' , value , cssProp);
     }
@@ -168,7 +171,14 @@ export const useUpdateInputValue = ({
       editor.off("device:change", deviceHandler);
       editor.off("inf:rules:set", setRuleHandler);
     };
-  }, [editor]);
+  }, [
+   editor,
+    currentElObj,
+    selector,
+    rule,
+    showAnimationsBuilder,
+    framesStyles,
+  ]);
 
   useMemo(() => {
     // console.log(!currentElObj?.currentEl  && !showAnimationsBuilder && !editor.getSelected());

@@ -4,7 +4,11 @@ import { TabLabel } from "../Protos/TabLabel";
 import { Icons } from "../../Icons/Icons";
 import { CodeEditor } from "../Protos/CodeEditor";
 import { Button } from "../../Protos/Button";
-import { current_page_id, current_project_id } from "../../../constants/shared";
+import {
+  current_page_id,
+  current_project_id,
+  inf_symbol_Id_attribute,
+} from "../../../constants/shared";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
   executeAndExtractFunctions,
@@ -15,9 +19,10 @@ import { db } from "../../../helpers/db";
 import { random } from "../../../helpers/cocktail";
 import { infinitelyWorker } from "../../../helpers/infinitelyWorker";
 import { opfs } from "../../../helpers/initOpfs";
-import { defineRoot } from "../../../helpers/bridge";
+import { defineRoot, doDocument } from "../../../helpers/bridge";
 import { css_beautify, html_beautify, js_beautify } from "js-beautify";
 import { minify, syntax } from "csso";
+import { parseHTML } from "linkedom";
 
 export const CodeManagerModal = () => {
   const timeoutRef = useRef();
@@ -230,17 +235,38 @@ export const CodeManagerModal = () => {
 
   const save = async () => {
     const newChange = {};
+ 
     for (const key in filesData) {
       const root = defineRoot(key);
       const isChanged = changed[root];
-      console.log(
-        "chhhhhhhhhhhhhhhhhhhhhhage before : ",
-        root,
-        changed,
-        isChanged
-      );
+      // console.log(
+      //   "chhhhhhhhhhhhhhhhhhhhhhage before : ",
+      //   root,
+      //   changed,
+      //   isChanged
+      // );
       if (!isChanged) continue;
       console.log("chhhhhhhhhhhhhhhhhhhhhhage : ", isChanged);
+
+      if (key.includes(`editor/pages/${currentPageName}.html`)) {
+        const { document } = parseHTML(doDocument(filesData[root]));
+        const symbols = document.querySelectorAll(
+          `[${inf_symbol_Id_attribute}]`
+        );
+        for (const symbol of [...symbols]) {
+          const symbolId = symbol.getAttribute(`${inf_symbol_Id_attribute}`);
+          const root = defineRoot(
+            `editor/symbols/${symbolId}/${symbolId}.html`
+          );
+          // console.log( 'from writing : ' , root , symbol.outerHTML);
+          
+          await opfs.writeFiles([
+            { path: root, content: symbol.outerHTML},
+          ]);
+        }
+        // console.log('there is symbols' , symbols);
+        
+      }
 
       await opfs.writeFiles([
         {
@@ -249,7 +275,7 @@ export const CodeManagerModal = () => {
         },
       ]);
 
-      console.log(await (await opfs.getFile(root)).text());
+      console.log('key : ' , key);
 
       newChange[root] = false;
     }
