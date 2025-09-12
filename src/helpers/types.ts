@@ -83,7 +83,7 @@ export type InfinitelyTrait = {
   textareaLanguage: string;
   allowCmdsContext: boolean;
   callback: TraitCallback;
-  hint : TraitCallback | string 
+  hint: TraitCallback | string;
   init: ({
     editor,
     trait,
@@ -463,6 +463,7 @@ export interface Project {
   motions: { [key: string]: MotionType };
   interactions: InteractionsInDB;
   inited: boolean;
+  lastScreenshot: Date | string;
 }
 
 export type GlobalSettings = {
@@ -494,7 +495,7 @@ export type ProjectSetting = {
   enable_tailwind: boolean;
   enable_spline_viewer: boolean;
   enable_swiperjs: boolean;
-  remove_gsap_markers_on_build:boolean;
+  remove_gsap_markers_on_build: boolean;
   stop_all_animation_on_page: boolean;
   // include_canvas_styles_in_build_file: boolean;
   purge_css: boolean;
@@ -591,6 +592,8 @@ export type MotionType = {
   };
   isTimeLine: boolean;
   timeLineName: string;
+  timeline: {};
+  isInstance: boolean;
   timeLineSingleOptions: {};
   timeLineMultiOptions: {};
   isTimelineHasScrollTrigger: boolean;

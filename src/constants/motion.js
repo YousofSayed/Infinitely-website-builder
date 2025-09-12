@@ -138,15 +138,7 @@ export function getGsapAnimationOptions() {
       id: "",
       data: "",
       totalDuration: "",
-      ease: [
-        "linear",
-        "power1.in",
-        "power1.out",
-        "power1.inOut",
-        "sine.in",
-        "sine.out",
-        "sine.inOut",
-      ],
+      ease: easeValues,
       repeat: [-1, 0, 1, 2],
       yoyo: [true, false],
       yoyoEase: [true, false, ...easeValues],
@@ -248,30 +240,7 @@ export function getGsapAnimationOptions() {
         snapTo: [0.1, 0.5, 1], // Sample snap points
         duration: [0.1, 0.5, 1], // Sample durations (seconds)
         delay: [0, 0.1, 0.5], // Sample delays (seconds)
-        ease: [
-          "none",
-          "power1.in",
-          "power1.out",
-          "power1.inOut",
-          "power2.in",
-          "power2.out",
-          "power2.inOut",
-          "power3.in",
-          "power3.out",
-          "power3.inOut",
-          "power4.in",
-          "power4.out",
-          "power4.inOut",
-          "back.in",
-          "back.out",
-          "back.inOut",
-          "elastic.in",
-          "elastic.out",
-          "elastic.inOut",
-          "bounce.in",
-          "bounce.out",
-          "bounce.inOut",
-        ], // GSAP ease strings
+        ease: easeValues, // GSAP ease strings
         onEnter: "", // Function
         onLeave: "", // Function
         onEnterBack: "", // Function
@@ -285,6 +254,58 @@ export function getGsapAnimationOptions() {
     },
   };
 }
+
+export function getGsapTimelineProps() {
+  return {
+    // --- Timeline global options ---
+    delay: '0', // number, seconds before the timeline starts
+    paused: 'false', // boolean, whether timeline starts paused
+    repeat: '0', // number, how many repeats after first iteration (-1 = infinite)
+    repeatDelay: '0', // number, delay between repeats
+    yoyo: 'false', // boolean, whether to reverse on every repeat
+    smoothChildTiming: 'false', // boolean, whether children reposition to maintain smooth timing
+    autoRemoveChildren: 'false', // boolean, remove child tweens/timelines when done
+    defaults: {
+      duration: "",
+      repeat: [-1, 0, 1, 2],
+      repeatDelay: "",
+      ease: easeValues,
+      yoyo: [true, false],
+      yoyoEase: [true, false, ...easeValues],
+      immediateRender: [true, false],
+      overwrite: [true, false, "auto", "none"],
+      runBackwards: [true, false],
+      inherit: [true, false],
+      lazy: [true, false],
+      snap: ["auto", "labels"],
+    },
+    timeScale: '1', // number, speed of timeline (1 = normal)
+    // 'data' is optional metadata storage
+    // data: null, // any type
+
+    // Callback/event hooks for timeline
+    onStart: 'null', // function
+    onStartParams: [], // array of args
+    onUpdate: null, // function
+    onUpdateParams: [], // array of args
+    onComplete: null, // function
+    onCompleteParams: [], // array of args
+    onReverseComplete: null, // function
+    onReverseCompleteParams: [], // array of args
+    onRepeat: null, // function
+    onRepeatParams: [], // array of args
+    onInterrupt: null, // function, if supported
+
+    // Identifier for debugging
+    id: "", // string identifier
+
+    // --- ScrollTrigger options (to use when you want scroll-driven timeline) ---
+    scrollTrigger: {
+      ...getGsapAnimationOptions().objectProps.scrollTrigger,
+    },
+  };
+}
+
 export const advancedGsapOptions = {
   scrollTrigger: {
     markers: {

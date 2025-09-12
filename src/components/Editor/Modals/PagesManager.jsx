@@ -24,6 +24,7 @@ import { Hr } from "../../Protos/Hr";
 import { buildPage, defineRoot } from "../../../helpers/bridge";
 import { opfs } from "../../../helpers/initOpfs";
 import { cloneDeep } from "lodash";
+import { assetsWorker } from "../../../helpers/defineWorkers";
 
 export const PagesManager = () => {
   const editor = useEditorMaybe();
@@ -57,7 +58,10 @@ export const PagesManager = () => {
     };
 
     await opfs.writeFiles(
-      Object.values(pathes).map((path) => ({ path : defineRoot(path), content: "" }))
+      Object.values(pathes).map((path) => ({
+        path: defineRoot(path),
+        content: "",
+      }))
     );
     await db.projects.update(projectId, {
       pages: {
@@ -73,8 +77,8 @@ export const PagesManager = () => {
             title: "",
             robots: "",
           },
-          symbols:[],
-          bodyAttributes:{},
+          symbols: [],
+          bodyAttributes: {},
           id: uniqueID(),
           name: name,
         },
@@ -94,7 +98,9 @@ export const PagesManager = () => {
     const projectData = await getProjectData();
     const clone = structuredClone(await projectData.pages);
     const page = clone[pageName];
-    await opfs.removeFiles(Object.values(page.pathes).map(path=>defineRoot(path)));
+    await opfs.removeFiles(
+      Object.values(page.pathes).map((path) => defineRoot(path))
+    );
     delete clone[pageName];
     await db.projects.update(projectId, {
       pages: clone,
@@ -131,12 +137,47 @@ export const PagesManager = () => {
    * @param {import("react").ChangeEvent} ev
    */
   const uploadPages = async (ev) => {
-    ev.target.value='';
+    // ev.target.value = "";
+    /**
+     * @type {File[]}
+     */
     const files = [...ev.target.files];
     if (!files.length) return;
-    
+    const tId = toast.loading(<ToastMsgInfo msg={`Uploading...`}/>)
+    const projectData = await getProjectData();
+    const mime = await (await import("mime")).default;
+    const htmlFiles = files.filter(
+      (file) => file.name.endsWith(".html") || file.name.endsWith(".htm")
+    );
+    const cssFiles = files.filter((file) => file.name.endsWith(".css"));
+    const jsFiles = files.filter((file) => file.name.endsWith(".js"));
+    const otherFiles = files.filter(
+      (file) =>
+        (
+          !file.name.endsWith(".js") &&
+          !file.name.endsWith(".css") &&
+          !file.name.endsWith(".html") &&
+          !file.name.endsWith(".htm")
+        )
+    );
+    console.log("files : ", htmlFiles);
+    // for (const file of [...cssFiles, ...jsFiles]) {
+    //   const ext = mime.getExtension(file.type);
+    //   const fileName = file.name.replace(`.${ext}`, "");
+    //   // const page = projectData.pages[fileName]
+    //   // if(page){
+    //   //   await opfs.writeFiles([
+    //   //     {
+    //   //       path:defineRoot(page.pathes[ext])
+    //   //     }
+    //   //   ])
+    //   // }
+    //   console.log("fileNAme = ", fileName, ext);
+    // }
+    // ev.target.value = "";
+    // return;
     const pagesUploaded = await Promise.all(
-      files.map(async (file) =>
+      htmlFiles.map(async (file) =>
         buildPage({
           file,
           pageName: file.name.replace(".html", "").replace(".htm", ""),
@@ -149,19 +190,22 @@ export const PagesManager = () => {
     //     return [page.name, page];
     //   })
     // );
-    const projectData = await getProjectData();
     for (const page of pagesUploaded) {
       // console.log('paaaaaaage : ' , page , await page.html.text());
-      if(page.html.size == 0){
-        toast.warn(<ToastMsgInfo msg={`File is empty , maybe it is corrupted!`}/>)
+      if (page.html.size == 0) {
+        toast.warn(
+          <ToastMsgInfo msg={`File is empty , maybe it is corrupted!`} />
+        );
       }
       if (projectData.pages[page.name]) {
-        toast.error(
-          <ToastMsgInfo
-            msg={`Page ${page.name} already exists, skipping upload.`}
-          />
-        );
-        continue;
+        const cnfrm  = confirm(`Page ${page.name} already exists, are you wanna to overwrite it ?`)
+        if(!cnfrm)continue;
+        // toast.error(
+        //   <ToastMsgInfo
+        //     msg={`Page ${page.name} already exists, skipping upload.`}
+        //   />
+        // );
+        // continue;
       }
       await opfs.writeFiles([
         {
@@ -178,15 +222,48 @@ export const PagesManager = () => {
         },
       ]);
 
-
-
       // ["html", "css", "js"].forEach((key) => {
       //   delete page[key];
       // });
       projectData.pages[page.name] = cloneDeep(page);
     }
 
-    for (const page of Object.values( projectData.pages)) {
+    const assetsWorkerWillUpload = [];
+
+    for (const file of [...cssFiles, ...jsFiles, ...otherFiles]) {
+      const ext = mime.getExtension(file.type);
+      const fileName = file.name.replace(`.${ext}`, "");
+      const page = projectData.pages[fileName];
+      if (page) {
+        await opfs.writeFiles([
+          {
+            path: defineRoot(page.pathes[ext]),
+            content: file,
+          },
+        ]);
+      } else {
+        assetsWorkerWillUpload.push(file);
+
+        // await opfs.writeFiles([
+        //   {
+        //     path: defineRoot(`assets/${file.name}`),
+        //     content: file,
+        //   },
+        // ]);
+      }
+      console.log("fileNAme = ", fileName);
+    }
+
+    assetsWorker.postMessage({
+        command: "uploadAssets",
+        props: {
+          projectId,
+          // toastId: id,
+          assets: assetsWorkerWillUpload,
+        },
+      });
+
+    for (const page of Object.values(projectData.pages)) {
       ["html", "css", "js"].forEach((key) => {
         delete page[key];
       });
@@ -195,10 +272,11 @@ export const PagesManager = () => {
       pages: projectData.pages,
     });
 
+    toast.done(tId);
     toast.success(<ToastMsgInfo msg={`Pages uploaded successfully 👍`} />);
 
     console.log("Files to upload: ", pagesUploaded);
-    ev.target.value = '';
+    ev.target.value = "";
   };
 
   return (
@@ -251,7 +329,7 @@ export const PagesManager = () => {
             type="file"
             hidden
             multiple
-            accept=".html,.htm"
+            accept="*"
             onChange={uploadPages}
           />
           {/* <Button
@@ -272,7 +350,9 @@ export const PagesManager = () => {
                 className={`flex items-center justify-between p-1 bg-slate-800 rounded-lg  `}
               >
                 <FitTitle className="flex items-center gap-2 min-w-[20%!important] p-1 py-2 flex-shrink-0 overflow-hidden text-ellipsis">
-                  <div className="flex-shrink-0">{Icons.stNote("white", undefined, 18, 18)}</div>
+                  <div className="flex-shrink-0">
+                    {Icons.stNote("white", undefined, 18, 18)}
+                  </div>
                   <p className="capitalize font-bold text-slate-200">
                     {page.name}
                   </p>

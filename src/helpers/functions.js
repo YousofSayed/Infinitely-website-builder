@@ -24,7 +24,7 @@ import { InfinitelyEvents } from "../constants/infinitelyEvents";
 import { db } from "./db";
 import html2canvas from "html2canvas-pro";
 import { jsURLRgx } from "../constants/rgxs";
-import { pvMount, pvUnMount } from "./customEvents";
+import { killAllGsapMotions, pvMount, pvUnMount, runAllGsapMotions } from "./customEvents";
 import serializeJavascript from "serialize-javascript";
 import {
   fetcherWorker,
@@ -2082,6 +2082,8 @@ export function getGsapCssProperties() {
   const gsapTransformProps = [
     "transform", // Standard transform property
     "x",
+    // "xPercent",
+    // "yPercent ",
     "y",
     "z", // GSAP shorthand for translations
     "scale",
@@ -2103,6 +2105,12 @@ export function getGsapCssProperties() {
 
   // Return sorted list for consistency
   return finalProperties.sort();
+}
+
+export async function restartGSAPMotions() {
+  const motions = await (await getProjectData()).motions;
+  killAllGsapMotions(motions);
+  runAllGsapMotions(motions);
 }
 
 // Example usage

@@ -17,6 +17,7 @@ import {
   advancedGsapOptions,
   getGsapAnimationOptions,
   getGsapScrollTriggerOptions,
+  getGsapTimelineProps,
 } from "../../../constants/motion";
 import { SmallButton } from "./SmallButton";
 import { Icons, mainColor } from "../../Icons/Icons";
@@ -40,7 +41,12 @@ import {
   random,
   uniqueId,
 } from "lodash";
-import { addClickClass, stringify, uniqueID } from "../../../helpers/cocktail";
+import {
+  addClickClass,
+  parseAndReturnInputIfNot,
+  stringify,
+  uniqueID,
+} from "../../../helpers/cocktail";
 import { useRecoilState } from "recoil";
 import { currentElState } from "../../../helpers/atoms";
 import { infinitelyWorker } from "../../../helpers/infinitelyWorker";
@@ -87,7 +93,7 @@ console.log(/on[A-Z]/gi.test("onUpdate"));
 
 const cssProps = getGsapCssProperties();
 const allGsapOptions = getGsapAnimationOptions();
-const singleProps = allGsapOptions.single;
+const timelineOptions = getGsapTimelineProps();
 const multiGsapProps = allGsapOptions.arrayProps;
 const objectProps = allGsapOptions.objectProps;
 const scrollTriggerOptions = getGsapScrollTriggerOptions();
@@ -137,7 +143,7 @@ const AddNestedProps = ({
       ? editNestedObject(
           clone,
           secondDestination.concat(prop),
-          parseValue(value)
+          parseAndReturnInputIfNot(value)
         )
       : {};
 
@@ -181,7 +187,6 @@ const AddNestedProps = ({
   return (
     <section className="flex flex-col  " ref={parentAnimatedRef}>
       <section
-     
         className={`${className} flex  gap-2  sticky top-0 bg-slate-950 ${
           Object.keys(getNestedValue(animation, destination) || {})?.length
             ? "rounded-tl-lg rounded-tr-lg"
@@ -215,7 +220,10 @@ const AddNestedProps = ({
 
       {!!Object.entries(getNestedValue(animation, destination) || {})
         .length && (
-        <section  ref={animatedRef} className=" flex flex-col gap-2 p-1 bg-slate-950 rounded-bl-md rounded-br-md">
+        <section
+          ref={animatedRef}
+          className=" flex flex-col gap-2 p-1 bg-slate-950 rounded-bl-md rounded-br-md"
+        >
           {Object.entries(getNestedValue(animation, destination) || {}).map(
             ([key, value], index) => {
               return (
@@ -263,9 +271,22 @@ const ObjectComponent = ({
   motion = motionType,
   animation = motionAnimationType,
   animationIndex = 0,
+  isTimeLine = false,
   setMotion = (motion = motionType) => {},
 }) => {
   const addValue = (value, prop) => {
+    if (isTimeLine) {
+      const clone = cloneDeep(motion);
+      const editeable = editNestedObject(
+        clone,
+        destination.concat(prop),
+        parseValue(value)
+      );
+      console.log("cloone timeline : ", clone);
+
+      setMotion(clone);
+      return;
+    }
     console.log("from destoooo : ", destination.concat(prop));
     console.log(
       "from destoooo one and second: ",
@@ -330,10 +351,6 @@ const ObjectComponent = ({
     });
   };
 
-  const getFunctionContent = (value = "") => {
-    value.match(/{([\s\S]*)}/)[1].trim();
-  };
-
   return (
     <section className="flex flex-col gap-2 p-1 bg-slate-950 rounded-lg">
       {Object.entries(objectProps).map(([key, value], index) => {
@@ -360,6 +377,7 @@ const ObjectComponent = ({
                     motion={motion}
                     setMotion={setMotion}
                     animation={animation}
+                    isTimeLine={isTimeLine}
                     animationIndex={animationIndex}
                     objectProps={value}
                     destination={[...destination, key]}
@@ -1031,7 +1049,7 @@ const Timeline = ({
       <Accordion>
         <AccordionItem title="Timeline options">
           <section className=" flex flex-col gap-2 p-1">
-            {singleProps.map((item, index) => {
+            {/* {singleProps.map((item, index) => {
               return (
                 <section
                   key={index}
@@ -1043,11 +1061,21 @@ const Timeline = ({
                   <Input placeholder={item} className="bg-slate-800 w-full" />
                 </section>
               );
-            })}
+
+              
+            })} */}
+
+            <ObjectComponent
+              isTimeLine
+              motion={motion}
+              setMotion={setMotion}
+              objectProps={timelineOptions}
+              destination={["timeline"]}
+            />
           </section>
         </AccordionItem>
 
-        <AccordionItem title="Advanced timeline options">
+        {/* <AccordionItem title="Advanced timeline options">
           <section className=" flex flex-col gap-2 p-1">
             {Object.entries(multiGsapProps).map(([key, value], index) => {
               return (
@@ -1063,9 +1091,9 @@ const Timeline = ({
               );
             })}
           </section>
-        </AccordionItem>
+        </AccordionItem> */}
       </Accordion>
-
+      {/* 
       <SwitcherSection
         title="ScrollTrigger"
         defaultValue={motion.isTimelineHasScrollTrigger}
@@ -1082,7 +1110,7 @@ const Timeline = ({
           setMotion={setMotion}
           isTimeLine
         />
-      )}
+      )} */}
     </section>
   );
 };
@@ -1360,9 +1388,9 @@ export const Motion = memo(() => {
       //   initToolbar(editor, sle);
       // }
       const cnfrm = confirm(
-        Object.keys(motion.instances || {}).length ?
-        `You will remove all instance too , Are you sure ?` :
-        `Are you sure to remove motion ?`
+        Object.keys(motion.instances || {}).length
+          ? `You will remove all instance too , Are you sure ?`
+          : `Are you sure to remove motion ?`
       );
       if (!cnfrm) return;
       deleteMotion(motion.id);
@@ -1711,9 +1739,21 @@ export const Motion = memo(() => {
             onActive={() =>
               setTransition(() => setMotion({ ...motion, isTimeLine: true }))
             }
-            onUnActive={() =>
-              setTransition(() => setMotion({ ...motion, isTimeLine: false }))
-            }
+            onUnActive={() => {
+              runGsapMethod(["revert", "kill"], {
+                ...motion,
+                ...(isInstance
+                  ? {
+                      isInstance: isInstance,
+                      id: instanceId,
+                    }
+                  : {}),
+                // id:instance
+              });
+              setTransition(() =>
+                setMotion({ ...motion, isTimeLine: false, timeline: null })
+              );
+            }}
           />
 
           {motion.isTimeLine && (

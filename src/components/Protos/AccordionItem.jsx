@@ -3,6 +3,7 @@ import { DetailsNormal } from "./DetailsNormal";
 import { random, uniqueId } from "lodash";
 // import {AccordionItem as RadixAccordionItem , AccordionHeader , AccordionContent} from '@radix-ui/react-accordion'
 
+// million-ignore
 export const AccordionItem = memo(({
   label,
   title,

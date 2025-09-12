@@ -95,11 +95,16 @@ export const mainScripts = [
 ];
 
 export const codeEditorScripts = ["/scripts/infinitely.js"];
+export const gsapScripts = [
+  "/scripts/gsap.min.js",
+  "/scripts/scrollTrigger.min.js",
+  // "https://cdn.jsdelivr.net/npm/gsap@latest/dist/gsap.min.js",
+  // "https://cdn.jsdelivr.net/npm/gsap@latest/dist/ScrollTrigger.min.js",
+];
 
 export const mainScriptsForEditor = [
   "/scripts/infinitely.js",
-  "/scripts/gsap@3.12.7.js",
-  "/scripts/scrollTrigger@3.12.7.js",
+  ...gsapScripts,
   "/scripts/gsapRuner.dev.js",
   "/scripts/pVuePlugins.js",
   "/scripts/p-vue.js",
@@ -109,8 +114,7 @@ export const mainScriptsForEditor = [
 
 export const preivewScripts = [
   "/scripts/infinitely.js",
-  "/scripts/gsap@3.12.7.js",
-  "/scripts/scrollTrigger@3.12.7.js",
+  ...gsapScripts,
   "/scripts/initGsap.js",
   "/scripts/pVuePlugins.js",
   "/scripts/p-vue.js",

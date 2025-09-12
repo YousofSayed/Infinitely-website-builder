@@ -85,8 +85,8 @@ export const useUpdateInputValue = ({
       mediaAccordingToRule
     )?.toJSON()?.style;
 
-    console.log('style output : ' , outPut);
-    
+    console.log("style output : ", outPut);
+
     return outPut || {};
   }
 
@@ -95,9 +95,16 @@ export const useUpdateInputValue = ({
     const slEL = editor?.getSelected();
     const Media = getCurrentMediaDevice(editor);
     const currentSelector = getCurrentSelector(selector, slEL);
+    console.log("styles : ", cssProp, currentSelector);
 
-    // console.log("styles : ");
-    if (!currentSelector) return;
+    if (!currentSelector) {
+      setVal((old) => {
+        if (old) return "";
+      });
+      onEffect(cssProp, "");
+      return;
+    }
+
     if (
       !slEL &&
       !getRuleStyle(isDeviceEvent)[cssProp] &&
@@ -112,9 +119,11 @@ export const useUpdateInputValue = ({
       onEffect(cssProp, "");
       return;
     }
+
     if (slEL && !showAnimationsBuilder) {
       const slElStyles = slEL.getStyle();
       // const infSymbolAttrValue = slEL.getAttributes()[inf_symbol_Id_attribute];
+      // console.log("styles : ");
 
       // console.log("rrrrrrule : ", currentSelector || rule.is, cssProp);
 
@@ -125,12 +134,6 @@ export const useUpdateInputValue = ({
         // console.log('valueee : ' , value , getRuleStyle(isDeviceEvent) , cssProp);
 
         setVal(value);
-        onEffect(cssProp, value);
-      } else if (Object.keys(slElStyles).length) {
-        const value = returnPropsAsIt ? slElStyles : slElStyles[cssProp] || "";
-        // console.log('slElStyles : ' , slElStyles);
-        
-        setVal(setter(value));
         onEffect(cssProp, value);
       } else {
         setVal("");
@@ -172,7 +175,7 @@ export const useUpdateInputValue = ({
       editor.off("inf:rules:set", setRuleHandler);
     };
   }, [
-   editor,
+    editor,
     currentElObj,
     selector,
     rule,
@@ -203,6 +206,8 @@ export const useUpdateInputValue = ({
     // }
     //  saveTimeout = setTimeout(() => {
     // }, 5);
+    // console.log("i should work", cssProp);
+
     handler({});
   }, [
     editor,

@@ -1,6 +1,7 @@
 import { current_project_id } from "../constants/shared";
-import { defineRoot } from "../helpers/bridge";
-import { getImgAsBlob } from "../helpers/functions";
+import { defineRoot, isDaysAgo } from "../helpers/bridge";
+import { db } from "../helpers/db";
+import { getImgAsBlob, getProjectData } from "../helpers/functions";
 import { infinitelyWorker } from "../helpers/infinitelyWorker";
 import { opfs } from "../helpers/initOpfs";
 
@@ -12,19 +13,27 @@ export let updateThumbnailTimeout;
 export const updateProjectThumbnail = (editor) => {
   const projectID = localStorage.getItem(current_project_id);
 
-  editor.on("storage:after:store", () => {
+  editor.on("storage:after:store", async() => {
+    const projectData = await getProjectData();
+
+    const is5DaysAgo = isDaysAgo(projectData.lastScreenshot, 3);
+    if (!is5DaysAgo) return;
     updateThumbnailTimeout && clearTimeout(updateThumbnailTimeout);
     updateThumbnailTimeout = setTimeout(async () => {
       console.log("after all done");
       // editor.Canvas.getBody().classList.add("screenshot-mode");
 
-      const blob = await getImgAsBlob(editor.getWrapper().getEl(), "image/webp", {
-        x: 0,
-        y: 0,
-        // width: editor.getContainer().offsetWidth, // or editor.Canvas.getFrameEl().offsetWidth
-        height: 600, // limit height
-        // scale: editor.getContainer().style.zoom,
-      });
+      const blob = await getImgAsBlob(
+        editor.getWrapper().getEl(),
+        "image/webp",
+        {
+          x: 0,
+          y: 0,
+          // width: editor.getContainer().offsetWidth, // or editor.Canvas.getFrameEl().offsetWidth
+          height: 600, // limit height
+          // scale: editor.getContainer().style.zoom,
+        }
+      );
       // editor.Canvas.getBody().classList.remove("screenshot-mode");
 
       console.log("blob : ", blob);
@@ -63,6 +72,10 @@ export const updateProjectThumbnail = (editor) => {
         });
       }
 
+      // localStorage.setItem("last-screenshot", new Date());
+      await db.projects.update(+projectID, {
+        lastScreenshot: new Date(),
+      });
       // infinitelyWorker.postMessage({
       //   command: "updateDB",
       //   props: {

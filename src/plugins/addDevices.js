@@ -1,5 +1,6 @@
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
 import { editorContainerInstance } from "../constants/InfinitelyInstances";
+import { restartGSAPMotions } from "../helpers/functions";
 
 /**
  * @param {import('grapesjs').Editor} editor
@@ -95,6 +96,7 @@ export const addDevices = (editor) => {
         // editor.refresh({ tools: true });
       }
       emitEditorContainerZoom();
+      restartGSAPMotions();
     }, 80);
   };
 

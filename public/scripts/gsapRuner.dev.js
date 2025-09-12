@@ -18,9 +18,17 @@ let previousMotion;
 
 /**
  *
- * @param {import('../../src/helpers/types').MotionType} motion
+ * @param {import('./types').MotionType} motion
+ * @param {Boolean} paused
+ * @param {boolean} isInstance
+ * @returns
  */
-function CompileMotion(motion, paused = false) {
+function CompileMotion(
+  motion,
+  paused = false,
+  isInstance = false
+  // removeMarkers = true // this is just in bridge.js for final build (production)
+) {
   /**
    * @type {{timeline:object , fromTo : {
    * selector:string,
@@ -36,38 +44,44 @@ function CompileMotion(motion, paused = false) {
     fromTo: [],
   };
 
-  const attribute = `[${
-    motion?.isInstance ? `motion-instance-id` : `motion-id`
-  }="${motion.id}"]`;
-
   const parseObjValue = (obj = {}) => {
     return Object.fromEntries(
-      Object.entries(obj).map(([key, value]) => {
-        if (typeof value === "object") {
-          return [key, parseObjValue(value)];
-        } else if (key.startsWith("on") && /on[A-Z]/gi.test(key)) {
-          return [key, new Function(`return (()=>{${value}})`)()];
-        }
-        return [
-          key,
-          typeof value === "string"
-            ? value.replaceAll?.("self", attribute)
-            : value,
-        ];
-      })
+      Object.entries(obj)
+        .map(([key, value]) => {
+          // if (key == "markers" && removeMarkers) return null;
+          if (typeof value === "object") {
+            return [key, parseObjValue(value)];
+          } else if (key.startsWith("on") && /on[A-Z]/gi.test(key)) {
+            return [key, new Function(`return (()=>{${value}})`)()];
+          }
+          return [
+            key,
+            typeof value === "string"
+              ? value.replaceAll?.(
+                  "self",
+                  `[${isInstance ? `motion-instance-id` : `motion-id`}="${
+                    motion.id
+                  }"]`
+                )
+              : value,
+          ];
+        })
+        .filter(Boolean)
     );
   };
 
   if (motion.isTimeLine) {
     output.timeline = {
-      ...parseObjValue(motion.timeLineSingleOptions),
-      ...parseObjValue(motion.timeLineMultiOptions),
+      // ...parseObjValue(motion.timeLineSingleOptions),
+      // ...parseObjValue(motion.timeLineMultiOptions),
+      ...parseObjValue(motion?.timeline || {}),
       paused,
     };
     if (motion.isTimelineHasScrollTrigger) {
       output.timeline.scrollTrigger = {
-        ...parseObjValue(motion.timelineScrollTriggerOptions.singleOptions),
-        ...parseObjValue(motion.timelineScrollTriggerOptions.multiOptions),
+        // ...parseObjValue(motion.timelineScrollTriggerOptions.singleOptions),
+        // ...parseObjValue(motion.timelineScrollTriggerOptions.multiOptions),
+        // ...parseObjValue(motion?.timelineScrollTriggerOptions || {}),
       };
     }
     motion.timeLineName && (output.timeline.name = motion.timeLineName);
@@ -99,7 +113,10 @@ function CompileMotion(motion, paused = false) {
       };
     }
     output.fromTo.push({
-      selector: selector.replaceAll("self", attribute),
+      selector: selector.replaceAll(
+        "self",
+        `[${isInstance ? `motion-instance-id` : `motion-id`}="${motion.id}"]`
+      ),
       fromValue,
       toValue,
       positionParameter,
@@ -117,6 +134,8 @@ function CompileMotion(motion, paused = false) {
  */
 function CreateGsap(motion, paused = false) {
   const { fromTo, timeline } = CompileMotion(motion, paused);
+  console.log("from copiled motions : ", fromTo, timeline);
+
   if (Object.keys(timeline).length > 0) {
     const tl = gsap.timeline(timeline);
     fromTo.forEach((item) => {
@@ -143,8 +162,8 @@ window.parent.addEventListener("gsap:run", (ev) => {
    * @type {{methods :  string[] , motion:import('../../src/helpers/types').MotionType}}
    */
   const { methods, motion, props } = ev.detail;
-  console.log('Before InIt : ' , { methods, motion, props });
-  
+  console.log("Before InIt : ", { methods, motion, props });
+
   if (
     !gsapTween[motion.id] &&
     !(methods.includes("kill") || methods.includes("revert"))
@@ -158,19 +177,29 @@ window.parent.addEventListener("gsap:run", (ev) => {
   ) {
     if (Array.isArray(gsapTween[motion.id])) {
       gsapTween[motion.id].forEach((tween) => {
-        tween.kill();
+        tween.kill(true);
         tween.revert();
+        ScrollTrigger.refresh();
       });
-    } else if (gsapTween[motion.id]) {
+    } else if (gsapTween[motion.id] && motion.isTimeLine) {
+      gsapTween[motion.id].getChildren().forEach((child) => {
+        if (child.scrollTrigger) {
+          child.scrollTrigger.revert(); // Kill inner scrollTrigger
+          //child.scrollTrigger.kill(true); // Kill inner scrollTrigger
+        }
+      });
+      gsapTween[motion.id].revert(); // Kill the timeline
+      gsapTween[motion.id].kill(true); // Kill the timeline
       console.log(gsapTween, gsapTween[motion.id]);
-
+      ScrollTrigger.refresh();
+    } else if (gsapTween[motion.id] && !motion.isTimeLine) {
+      gsapTween[motion.id].kill(true);
       gsapTween[motion.id].revert();
-      gsapTween[motion.id].kill();
+      ScrollTrigger.refresh();
     }
     gsapTween[motion.id] = null;
-
-  }
-   else {
+    console.log("From gsap runner ", motion.id, "killed");
+  } else {
     console.log(
       previousMotion == JSON.stringify(motion),
       previousMotion,
@@ -180,14 +209,25 @@ window.parent.addEventListener("gsap:run", (ev) => {
     if (previousMotion != JSON.stringify(motion)) {
       if (Array.isArray(gsapTween[motion.id])) {
         gsapTween[motion.id].forEach((tween) => {
-          tween.kill();
+          tween.kill(true);
           tween.revert();
+          ScrollTrigger.refresh();
         });
-      } else if (gsapTween[motion.id]) {
+      } else if (gsapTween[motion.id] && motion.isTimeLine) {
+        gsapTween[motion.id].getChildren().forEach((child) => {
+          if (child.scrollTrigger) {
+            child.scrollTrigger.revert(); // Kill inner scrollTrigger
+            //child.scrollTrigger.kill(true); // Kill inner scrollTrigger
+          }
+        });
+        gsapTween[motion.id].revert(); // Kill the timeline
+        gsapTween[motion.id].kill(true); // Kill the timeline
         console.log(gsapTween, gsapTween[motion.id]);
-
+        ScrollTrigger.refresh();
+      } else if (gsapTween[motion.id] && !motion.isTimeLine) {
+        gsapTween[motion.id].kill(true);
         gsapTween[motion.id].revert();
-        gsapTween[motion.id].kill();
+        ScrollTrigger.refresh();
       }
       // console.log('Motion changed', motion , CompileMotion(motion) );
 
@@ -216,14 +256,21 @@ window.parent.addEventListener("gsap:run", (ev) => {
           gsapTween[motion.id].forEach((tween) => {
             tween[method](...props);
           });
+        } else if (gsapTween[motion.id] && motion.isTimeLine) {
+          gsapTween[motion.id].getChildren().forEach((child) => {
+            if (child.scrollTrigger) {
+              child[method](...props);
+            }
+          });
+          gsapTween[motion.id][method](...props);
         } else if (gsapTween[motion.id]) {
-          console.log("tween or timeline:", gsapTween[motion.id]);
-
           gsapTween[motion.id][method](...props);
         }
+        console.log("tween or timeline:", gsapTween[motion.id]);
 
         (method.includes("kill") || method.includes("revert")) &&
-          (isIncluedsKillOrRevert = true);
+          (isIncluedsKillOrRevert = true) &&
+          ScrollTrigger.refresh();
       });
 
       if (isIncluedsKillOrRevert) {
@@ -277,16 +324,27 @@ window.parent.addEventListener("gsap:all:kill", (ev) => {
     if (!gsapTween[motion.id]) return;
     if (Array.isArray(gsapTween[motion.id])) {
       gsapTween[motion.id].forEach((tween) => {
-        tween.kill();
         tween.revert();
+        tween.kill(true);
+        ScrollTrigger.refresh();
       });
-      gsapTween[motion.id] = null;
-    } else {
-      gsapTween[motion.id].kill();
+    } else if (gsapTween[motion.id] && motion.isTimeLine) {
+      gsapTween[motion.id].getChildren().forEach((child) => {
+        if (child.scrollTrigger) {
+          child.scrollTrigger.revert(); // Kill inner scrollTrigger
+          //child.scrollTrigger.kill(true); // Kill inner scrollTrigger
+        }
+      });
+      gsapTween[motion.id].revert(); // Kill the timeline
+      gsapTween[motion.id].kill(true); // Kill the timeline
+      console.log(gsapTween, gsapTween[motion.id]);
+      ScrollTrigger.refresh();
+    } else if (gsapTween[motion.id] && !motion.isTimeLine) {
+      gsapTween[motion.id].kill(true);
       gsapTween[motion.id].revert();
-      gsapTween[motion.id] = null;
+      ScrollTrigger.refresh();
     }
-
+    delete gsapTween[motion.id] 
     const instanceMotions = {};
 
     Object.entries(motion.instances || {}).forEach(([id, instace]) => {

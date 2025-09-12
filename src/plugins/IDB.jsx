@@ -130,7 +130,7 @@ export const IDB = (editor) => {
 
       if (editor.getDirtyCount()) {
         const cnfrm = confirm(
-          `There is changes not saved , Are you want to save changes ? `
+          `There is changes not saved and you lost it after reload , Are you want to save changes ? `
         );
 
         if (cnfrm) {
@@ -145,6 +145,7 @@ export const IDB = (editor) => {
       }
 
       clearTimeouts();
+      editor.loading = true;
       const callback = async () => {
         isLoadEnd = false;
         editor.trigger(InfinitelyEvents.storage.loadStart);
@@ -163,7 +164,9 @@ export const IDB = (editor) => {
         // await fetch('/keep-live');
 
         console.time("loading");
-
+        const storageManager = editor.StorageManager;
+        const originalAutosave = storageManager.getConfig().autosave;
+        storageManager.setAutosave(false);
         editor.UndoManager.stop();
         editor.DomComponents.clear({ avoidStore: false });
         editor.getWrapper().setAttributes({}, { avoidStore: true });
@@ -174,11 +177,7 @@ export const IDB = (editor) => {
         //   URL.revokeObjectURL(value);
         // });
         // willRevokedURLs.clear();
-        const storageManager = editor.StorageManager;
 
-        // Disable autosave temporarily
-        const originalAutosave = storageManager.getConfig().autosave;
-        storageManager.setAutosave(false);
         // const projectDir = await getOPFSProjectDir();
 
         const loadCurrentPage = async () => {
@@ -452,23 +451,17 @@ export const IDB = (editor) => {
           //   wrapperEl.setAttribute(key, attributes[key]);
           // }
 
-          editor.UndoManager.start();
           // editor.Storage.store = originalStore;
           isLoadEnd = editor.getDirtyCount();
-          // console.log(
-          //   `Auto save  : `,
-          //   originalAutosave,
-          //   attributes,
-          //   editor.getWrapper().getAttributes(),
-          //   editor.getDirtyCount(),
-          //   isLoadEnd
-          // );
+
           setTimeout(() => {
             clearTimeout(storeTimeout);
 
-            editor.clearDirtyCount();
             editor.Storage.setStepsBeforeSave(0);
+            editor.clearDirtyCount();
             editor.Storage.setAutosave(originalAutosave);
+            editor.UndoManager.start();
+            editor.loading = false;
           }, 0);
           editor.off("canvas:frame:load:body", callback);
         };
@@ -513,10 +506,10 @@ export const IDB = (editor) => {
     },
 
     //Storinggg
-    store(storeProps={}) {
+    store(storeProps = {}) {
       if (storeTimeout) clearTimeout(storeTimeout);
       if (pageBuilderTimeout) clearTimeout(pageBuilderTimeout);
-
+      if (editor.loading) return;
       editor.UndoManager.stop();
 
       // return new Promise((res, rej) => {
@@ -626,7 +619,7 @@ export const IDB = (editor) => {
 
               files[`editor/pages/${currentPageId}.html`] = editor
                 .getWrapper()
-                .getInnerHTML({ withProps: true ,});
+                .getInnerHTML({ withProps: true });
               editor.Parser.config.optionsHtml.allowScripts = true;
 
               files[`css/${currentPageId}.css`] = cssCode;
@@ -681,7 +674,6 @@ export const IDB = (editor) => {
                     );
                   }
 
-                  
                   // res(true);
                 }
               };
@@ -720,8 +712,8 @@ export const IDB = (editor) => {
         getProjectSettings().projectSettings?.enable_auto_save ? 700 : 0
       );
       // });
-      console.log('prrrrrrrrrrrrops from store : ' , storeProps);
-      
+      console.log("prrrrrrrrrrrrops from store : ", storeProps, editor.loading);
+
       return storeTimeout;
     },
   });

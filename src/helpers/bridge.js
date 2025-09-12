@@ -751,14 +751,16 @@ export function CompileMotion(
 
   if (motion.isTimeLine) {
     output.timeline = {
-      ...parseObjValue(motion.timeLineSingleOptions),
-      ...parseObjValue(motion.timeLineMultiOptions),
+      // ...parseObjValue(motion.timeLineSingleOptions),
+      // ...parseObjValue(motion.timeLineMultiOptions),
+      ...parseObjValue(motion?.timeline || {}),
       paused,
     };
     if (motion.isTimelineHasScrollTrigger) {
       output.timeline.scrollTrigger = {
-        ...parseObjValue(motion.timelineScrollTriggerOptions.singleOptions),
-        ...parseObjValue(motion.timelineScrollTriggerOptions.multiOptions),
+        // ...parseObjValue(motion.timelineScrollTriggerOptions.singleOptions),
+        // ...parseObjValue(motion.timelineScrollTriggerOptions.multiOptions),
+        // ...parseObjValue(motion?.timelineScrollTriggerOptions || {}),
       };
     }
     motion.timeLineName && (output.timeline.name = motion.timeLineName);
@@ -1930,4 +1932,13 @@ export function styleToString(styleObj = {}) {
       ([k, v]) => `${k.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase())}:${v}`
     )
     .join(";");
+}
+
+
+export function isDaysAgo(date, days) {
+  const now = Date.now(); // current time in ms
+  const targetTime = !(date instanceof Date ) ? new Date(date) :  date.getTime(); // convert Date object to ms
+  const daysInMs = days * 24 * 60 * 60 * 1000; // days → ms
+
+  return (now - targetTime) >= daysInMs;
 }
