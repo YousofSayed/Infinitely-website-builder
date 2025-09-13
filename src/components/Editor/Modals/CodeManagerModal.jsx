@@ -284,6 +284,8 @@ export const CodeManagerModal = () => {
       ...changed,
       ...newChange,
     });
+    editor.clearDirtyCount();
+     await editor.load();
   };
 
   return (
@@ -399,7 +401,7 @@ export const CodeManagerModal = () => {
           onClick={async () => {
             // await updateDB();
             await save();
-            await editor.load();
+           
           }}
         >
           {Icons.save("white", 0, "white")}

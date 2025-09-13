@@ -60,8 +60,23 @@ export const IDB = (editor) => {
   };
   let isLoadEnd = false,
     timesLoaded = 0;
-
   let tId;
+  editor.infDirty = 0;
+  editor.getDirtyCount = () => editor.infDirty;
+  editor.clearDirtyCount = () => (editor.infDirty = 0);
+  const updateDirty = () => {
+    editor.infDirty++;
+  }
+  editor.on("update", updateDirty);
+
+  window.addEventListener('beforeunload', (e) => {
+  // Check if there are unsaved changes
+  if (editor.getDirtyCount() > 0) {
+    e.preventDefault();
+    e.returnValue = 'Changes you made may not be saved!'; // This triggers the browser's native confirmation dialog
+    return '';
+  }
+});
 
   async function getAllSymbolsStyles() {
     const projectData = await getProjectData();
@@ -110,17 +125,17 @@ export const IDB = (editor) => {
     clearTimeouts();
   });
 
-  editor.on(InfinitelyEvents.storage.loadEnd, ({ originalAutosave }) => {
-    setTimeout(() => {
-      clearTimeout(storeTimeout);
+  // editor.on(InfinitelyEvents.storage.loadEnd, ({ originalAutosave }) => {
+  //   setTimeout(() => {
+  //     clearTimeout(storeTimeout);
 
-      editor.Storage.setStepsBeforeSave(0);
-      editor.clearDirtyCount();
-      editor.Storage.setAutosave(originalAutosave);
-      editor.UndoManager.start();
-      editor.loading = false;
-    }, 0);
-  });
+  //
+  //     editor.clearDirtyCount();
+  //     editor.Storage.setAutosave(originalAutosave);
+  //     editor.UndoManager.start();
+  //     editor.infLoading = false;
+  //   }, 0);
+  // });
 
   // editor.on("canvas:spot", () => {
   //   console.log("pooooooooooooointer");
@@ -131,6 +146,16 @@ export const IDB = (editor) => {
     return;
   }
 
+  const dirtyCleanner = () => {
+    if (!editor.infLoading) return;
+    console.log("cleaner : :");
+
+    // setTimeout(() => {
+    //   editor.clearDirtyCount();
+    //   dirtyCleanner();
+    // }, 0);
+  };
+
   editor.Storage.add("infinitely", {
     async load() {
       console.log(
@@ -140,8 +165,8 @@ export const IDB = (editor) => {
         editor.getDirtyCount()
       );
 
-      if (editor.getDirtyCount()) {
-        console.log("loading state : ", editor.loading);
+      if (editor.getDirtyCount() > 0) {
+        console.log("loading state : ", editor.infLoading , editor.getDirtyCount.toString());
 
         const cnfrm = confirm(
           `There is changes not saved and you lost it after reload , Are you want to save changes ? `
@@ -149,9 +174,11 @@ export const IDB = (editor) => {
 
         if (cnfrm) {
           await editor.store();
-          editor.on(InfinitelyEvents.storage.storeEnd, async () => {
+          const callback = async () => {
             await editor.load();
-          });
+            editor.off(InfinitelyEvents.storage.storeEnd, callback);
+          }
+          editor.on(InfinitelyEvents.storage.storeEnd, callback);
           editor.StorageManager.setStepsBeforeSave(0);
           editor.clearDirtyCount();
           return;
@@ -159,9 +186,10 @@ export const IDB = (editor) => {
       }
 
       clearTimeouts();
-      editor.loading = true;
+
       const callback = async () => {
-        isLoadEnd = false;
+          editor.off("update", updateDirty);
+
         editor.trigger(InfinitelyEvents.storage.loadStart);
         const projectData = await db.projects.get(+projectID);
         const projectSettings = getProjectSettings().projectSettings;
@@ -184,15 +212,6 @@ export const IDB = (editor) => {
         editor.UndoManager.stop();
         editor.DomComponents.clear({ avoidStore: false });
         editor.getWrapper().setAttributes({}, { avoidStore: true });
-        setTimeout(() => {
-          clearTimeout(storeTimeout);
-
-          editor.Storage.setStepsBeforeSave(0);
-          editor.clearDirtyCount();
-          editor.Storage.setAutosave(originalAutosave);
-          editor.UndoManager.start();
-          editor.loading = false;
-        }, 0);
 
         const loadCurrentPage = async () => {
           if (!localStorage.getItem(current_page_id)) {
@@ -233,48 +252,65 @@ export const IDB = (editor) => {
            * @param {number} starter
            * @param {number} ender
            */
-          const appender = (
-            components,
-            starter = 0,
-            ender = 7,
-            timeout = 50
-          ) => {
-            const sliced = components.slice(starter, ender); //.filter(Boolean);
-
-            // console.log(sliced, starter, ender);
-            if (!sliced.length) return;
-            // let paresd = editor.Parser.parseHtml(sliced.join(""));
-            // console.log("parsed : ", paresd);
-
-            editor.addComponents(sliced.join(""), {
-              avoidStore: true,
-              // merge: true,
-              // sort: true,
-              // temporary: true,
-              // avoidUpdateStyle: true,
-            });
-
-            // paresd = null;
-
-            return new Promise((res, rej) => {
-              appenderTimeout && clearTimeout(appenderTimeout);
-              appenderTimeout = setTimeout(() => {
-                editor.clearDirtyCount();
-                editor.StorageManager.setStepsBeforeSave(0);
-                try {
-                  if (!sliced && !sliced.length) {
-                    res(true);
-                    htmlPage = null; // For garbage collection
-                    return;
-                  }
-
-                  res(appender(components, starter + ender, ender + ender));
-                } catch (error) {
-                  rej(error);
-                }
-              }, timeout);
-            });
+          const appender = async (components, chunkSize = 5) => {
+            const total = components.length;
+            for (let i = 0; i < total; i += chunkSize) {
+              const chunk = components.slice(i, i + chunkSize);
+              editor.addComponents(chunk.join(""), { avoidStore: true });
+              await new Promise((r) => requestAnimationFrame(r)); // smoother rendering
+            }
+            storageManager.setStepsBeforeSave(0);
+            editor.clearDirtyCount();
           };
+
+          // /**
+          //  *
+          //  * @param {import('grapesjs').Component[]} components
+          //  * @param {number} starter
+          //  * @param {number} ender
+          //  */
+          // const appender = (
+          //   components,
+          //   starter = 0,
+          //   ender = 7,
+          //   timeout = 50
+          // ) => {
+          //   const sliced = components.slice(starter, ender); //.filter(Boolean);
+
+          //   // console.log(sliced, starter, ender);
+          //   if (!sliced.length) return;
+          //   // let paresd = editor.Parser.parseHtml(sliced.join(""));
+          //   // console.log("parsed : ", paresd);
+
+          //   editor.addComponents(sliced.join(""), {
+          //     avoidStore: true,
+          //     // merge: true,
+          //     // sort: true,
+          //     // temporary: true,
+          //     // avoidUpdateStyle: true,
+          //   });
+
+          //   // paresd = null;
+
+          //   return new Promise((res, rej) => {
+          //     appenderTimeout && clearTimeout(appenderTimeout);
+          //     appenderTimeout = setTimeout(() => {
+          //       editor.clearDirtyCount();
+          //       editor.StorageManager.setStepsBeforeSave(0);
+          //       try {
+          //         if (!sliced && !sliced.length) {
+          //           res(true);
+          //           htmlPage = null; // For garbage collection
+          //           return;
+          //         }
+
+          //         res(appender(components, starter + ender, ender + ender));
+          //       } catch (error) {
+          //         rej(error);
+          //       }
+          //     }, timeout);
+          //   });
+          // };
 
           // console.log("loaded css code : \n", css_beautify(cssCode));
 
@@ -325,43 +361,46 @@ export const IDB = (editor) => {
             //   })
             // );
 
+            editor.setComponents(``, { avoidStore: true });
             if (projectSettings.enable_editor_lazy_loading) {
-              editor.setComponents(``, { avoidStore: true });
-              const styleCmp = editor
-                .getWrapper()
-                .find(`[infinitely-style]`)[0];
               editor.Css.clear({ avoidStore: true });
-              styleCmp?.[0] && styleCmp.remove();
-              editor.addComponents(
-                `<style infinitely-style">${cssCode}</style>`,
-                { avoidStore: true }
-              );
+              editor.setStyle(cssCode, { avoidStore: true });
+              // const styleCmp = editor
+              //   .getWrapper()
+              //   .find(`[infinitely-style]`)[0];
+              // editor.Css.clear({ avoidStore: true });
+              // styleCmp?.[0] && styleCmp.remove();
+              // editor.addComponents(
+              //   `<style infinitely-style">${cssCode}</style>`,
+              //   { avoidStore: true }
+              // );
               // editor.addStyle(css_beautify(cssCode) , {avoidStore:true})
-              setTimeout(() => {
-                editor.clearDirtyCount();
-                storageManager.setStepsBeforeSave(0);
-              });
-              const appenderResponse = await appender([
-                ...document.body.children,
-              ]);
+
+              storageManager.setStepsBeforeSave(0);
+              editor.clearDirtyCount();
+              const appenderResponse = await appender(
+                [...document.body.children].map((el) => el.outerHTML)
+              );
             } else {
               const wrapper = editor.getWrapper();
-              const styleCmp = wrapper.find(`[infinitely-style]`)[0];
               editor.Css.clear({ avoidStore: true });
-              styleCmp?.[0] && styleCmp.remove();
+              // editor.addStyle(cssCode, { avoidStore: true  });
+              // editor.setStyle(cssCode, { avoidStore: true  });
+              // const styleCmp = wrapper.find(`[infinitely-style]`)[0];
+              // styleCmp?.[0] && styleCmp.remove();
               // wrapper.components(`${htmlPage}` , {merge:false,skipDomReset:true,sort:false})
-              editor.setComponents(document.body.innerHTML, {
-                avoidStore: true,
-                merge: false,
-                sort: false,
-                // temporary: true,
-              });
-              // wrapper.a
-
+              editor.addComponents(
+                [...document.body.children].map((el) => el.outerHTML),
+                {
+                  avoidStore: true,
+                }
+              );
+              dirtyCleanner();
               editor.addComponents(
                 `<style infinitely-style">${cssCode}</style>`,
                 { avoidStore: true }
               );
+              dirtyCleanner();
 
               // htmlPage = null; // For garbage collection
             }
@@ -414,7 +453,7 @@ export const IDB = (editor) => {
           // editor.Storage.store = () =>
           //   console.log(`Store prevented while loading`);
           editor.Storage.setAutosave(false);
-          editor.Storage.setStepsBeforeSave(0);
+
           // editor.getWrapper().setClass("");
           const attributes = Object.fromEntries(
             vAttributesFilterd.concat(otherAttributes)
@@ -437,27 +476,20 @@ export const IDB = (editor) => {
           });
           editor.getWrapper().addClass(classes.split(" "));
 
-          isLoadEnd = editor.getDirtyCount();
+          dirtyCleanner();
 
-          editor.Storage.setStepsBeforeSave(0);
           editor.clearDirtyCount();
           editor.Storage.setAutosave(originalAutosave);
           editor.UndoManager.start();
-          editor.loading = false;
-
-          setTimeout(() => {
-            clearTimeout(storeTimeout);
-
-            editor.Storage.setStepsBeforeSave(0);
-            editor.clearDirtyCount();
-            editor.Storage.setAutosave(originalAutosave);
-            editor.UndoManager.start();
-            editor.loading = false;
-          }, 0);
+          editor.infLoading = false;
+          editor.infDirty = -1;
           editor.off("canvas:frame:load:body", callback);
           editor.trigger(InfinitelyEvents.storage.loadEnd, {
             originalAutosave,
           });
+            editor.on("update", updateDirty);
+
+          clearTimeout(storeTimeout);
         };
 
         editor.on("canvas:frame:load:body", callback);
@@ -465,16 +497,13 @@ export const IDB = (editor) => {
         // if(timesLoaded >1)timesLoaded=1
 
         console.log("loading end", editor.getDirtyCount(), isLoadEnd);
-        editor.Storage.setStepsBeforeSave(0);
         editor.clearDirtyCount();
-        clearTimeout(storeTimeout);
-        editor.Storage.setAutosave(originalAutosave);
         setTimeout(() => {
           // editor.off("canvas:frame:load:body", loadFooterScriptsCallback);
-          editor.Storage.setStepsBeforeSave(0);
+
           editor.clearDirtyCount();
-          clearTimeout(storeTimeout);
           editor.Storage.setAutosave(originalAutosave);
+          clearTimeout(storeTimeout);
           updatePrevirePage({
             data: projectData,
             pageName: currentPageName,
@@ -486,27 +515,13 @@ export const IDB = (editor) => {
         return {};
       };
 
-      // return new Promise((res, rej) => {
-      //   loadTimeout && clearTimeout(loadTimeout);
-      //   loadTimeout = setTimeout(async () => {
-      //     await callback();
-      //     res(true);
-      //   }, 10);
-      // });
-
       loadTimeout && clearTimeout(loadTimeout);
       loadTimeout = setTimeout(async () => {
-        const originalAutosave = editor.Storage.config.autosave;
+        editor.infLoading = true;
+        isLoadEnd = false;
+        dirtyCleanner();
         await callback();
-        setTimeout(() => {
-          clearTimeout(storeTimeout);
 
-          editor.Storage.setStepsBeforeSave(0);
-          editor.clearDirtyCount();
-          editor.Storage.setAutosave(originalAutosave);
-          editor.UndoManager.start();
-          editor.loading = false;
-        }, 0);
         // res(true);
       }, 10);
       return loadTimeout;
@@ -516,13 +531,27 @@ export const IDB = (editor) => {
     store(storeProps = {}) {
       if (storeTimeout) clearTimeout(storeTimeout);
       if (pageBuilderTimeout) clearTimeout(pageBuilderTimeout);
-      if (editor.loading) return;
+      if(editor.getDirtyCount() < 0)return
+      // if (editor.infDirty < 0) {
+      //   editor.clearDirtyCount();
+      //   editor.infDirty++;
+      //   return;
+      // }
+      // if (editor.infLoading) {
+      //   editor.clearDirtyCount();
+      //   return;
+      // }
       editor.UndoManager.stop();
 
       // return new Promise((res, rej) => {
       storeTimeout = setTimeout(
         () => {
           const runStore = async () => {
+            console.log(
+              "prrrrrrrrrrrrops from store : ",
+              storeProps,
+              editor.infLoading
+            );
             const projectSettings = getProjectSettings().projectSettings;
             editor.trigger(InfinitelyEvents.storage.storeStart);
             console.log("Before storing:", {
@@ -670,7 +699,7 @@ export const IDB = (editor) => {
                     editor.trigger("block:add");
                     editor.trigger("block:update");
                   }
-
+                  editor.infDirty = 0;
                   console.log("Store complete:", { pageId: currentPageId });
                   console.timeEnd("storing end");
                   editor.trigger(InfinitelyEvents.storage.storeEnd);
@@ -719,7 +748,6 @@ export const IDB = (editor) => {
         getProjectSettings().projectSettings?.enable_auto_save ? 700 : 0
       );
       // });
-      console.log("prrrrrrrrrrrrops from store : ", storeProps, editor.loading);
 
       return storeTimeout;
     },

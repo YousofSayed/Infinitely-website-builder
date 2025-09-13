@@ -2,6 +2,7 @@ import { interpolate } from "gsap/src/all";
 import { isChrome } from "../helpers/bridge";
 
 export const current_project_id = `currentProjectId`;
+export const gsap_animation_state = 'gsap_animation_state';
 export const current_page_id = `currentPageId`;
 export const current_symbol_rule = "current-symbol-rule";
 export const current_page_helmet = "current-page-helmet";

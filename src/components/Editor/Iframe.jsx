@@ -212,13 +212,13 @@ export const Iframe = memo(() => {
       }
     };
 
-    window.addEventListener("keydown", saveCallback);
+    // window.addEventListener("keydown", saveCallback);
 
     return () => {
       styleInfInstance.off(InfinitelyEvents.style.set, infCallback);
       editor.off("canvas:frame:load:body", loadMonaco);
       // window.removeEventListener("keydown", preventDefaultSave);
-      window.removeEventListener("keydown", saveCallback);
+      // window.removeEventListener("keydown", saveCallback);
     };
   }, [editor]);
 

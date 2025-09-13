@@ -15,6 +15,7 @@ import {
   getProjectData,
   getProjectSettings,
   mount,
+  toggleFastPreview,
   unMount,
 } from "../../../helpers/functions";
 import { toast } from "react-toastify";
@@ -29,6 +30,7 @@ import { Hr } from "../../Protos/Hr";
 import { animationsSavingMsg } from "../../../constants/confirms";
 import { editorContainerInstance } from "../../../constants/InfinitelyInstances";
 import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
+import { gsap_animation_state } from "../../../constants/shared";
 
 export const IframeControllers = () => {
   const editor = useEditorMaybe();
@@ -92,8 +94,6 @@ export const IframeControllers = () => {
       }
     };
 
-    
-
     // window.addEventListener("click", clickCallback);
     window.addEventListener("keyup", callback, { capture: true });
 
@@ -103,8 +103,6 @@ export const IframeControllers = () => {
       window.removeEventListener("keyup", callback, { capture: true });
     };
   }, [editor]);
-
-
 
   const undo = () => {
     // editor.runCommand("core:undo");
@@ -124,11 +122,16 @@ export const IframeControllers = () => {
   };
 
   const setComponentsView = () => {
-    const command = `core:component-outline`;
-    const acitveCommand = Object.keys(editor.Commands.active);
-    acitveCommand.includes(command)
-      ? editor.stopCommand(command)
-      : editor.runCommand(command);
+    //   if(editor.Commands.isActive("preview"))return;
+    //   const command = `core:component-outline`;
+    //  const isActive = editor.Commands.isActive(command);
+    //   isActive ? editor.stopCommand(command) : editor.runCommand(command);
+    //   console.log('isActive : ' ,isActive);
+    editor.runCommand("ui:outline");
+    // const acitveCommand = Object.keys(editor.Commands.active);
+    // acitveCommand.includes(command)
+    //   ? editor.stopCommand(command)
+    //   : editor.runCommand(command);
   };
 
   const emitZoomValue = (decrease = false) => {
@@ -279,6 +282,7 @@ export const IframeControllers = () => {
           const motions = await (await getProjectData()).motions;
           killAllGsapMotions(motions);
           runAllGsapMotions(motions);
+          sessionStorage.setItem(gsap_animation_state, "true");
         }}
         title="Run All Motions"
         fillIcon
@@ -293,6 +297,7 @@ export const IframeControllers = () => {
         // refForward={redoRef}
         onClick={async () => {
           killAllGsapMotions(await (await getProjectData()).motions);
+          sessionStorage.setItem(gsap_animation_state, "false");
         }}
         title="Kill All Motions"
         fillIcon
@@ -303,8 +308,23 @@ export const IframeControllers = () => {
       />
 
       <Li
+        onClick={() => {
+          editor.runCommand("toggle-preview");
+          // toggleFastPreview(editor);
+        }}
+        className="flex-shrink-0"
+        isObjectParamsIcon
+        fillObjIcon
+        fillObjectIconOnHover
+        justHover
+        icon={Icons.binoculars}
+        hover
+        title="Fast Preview"
+      />
+
+      <Li
         onClick={setComponentsView}
-        title="hash elements"
+        title="outline elements"
         className="flex-shrink-0"
         icon={Icons.square}
         justHover={true}

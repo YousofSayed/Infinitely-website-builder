@@ -415,17 +415,17 @@ const ObjectComponent = ({
                 placeholder={key}
                 value={
                   isPlainObject(
-                    getNestedValue(animation, [...destination, key])
+                    getNestedValue(isTimeLine ? motion : animation, [...destination, key])
                   )
                     ? ""
-                    : getNestedValue(animation, [...destination, key])
+                    : getNestedValue(isTimeLine ? motion : animation, [...destination, key])
                 }
                 keywords={value}
                 onAll={(value) => {
                   console.log(
                     "from select : ",
                     [...destination, key],
-                    getNestedValue(animation, [...destination, key])
+                    getNestedValue(isTimeLine ? motion : animation, [...destination, key])
                   );
 
                   addValue(value, key);
@@ -436,10 +436,10 @@ const ObjectComponent = ({
                 placeholder={key}
                 isCode
                 allowCmdsContext
-                value={getNestedValue(animation, [...destination, key])}
+                value={getNestedValue(isTimeLine ? motion : animation, [...destination, key])}
                 codeProps={{
                   language: "javascript",
-                  value: getNestedValue(animation, [...destination, key]),
+                  value: getNestedValue(isTimeLine ? motion : animation, [...destination, key]),
                   onChange: (value) => {
                     addValue(value, key);
                   },
@@ -450,10 +450,10 @@ const ObjectComponent = ({
                 placeholder={key}
                 value={
                   isPlainObject(
-                    getNestedValue(animation, [...destination, key])
+                    getNestedValue(isTimeLine ? motion : animation, [...destination, key])
                   )
                     ? ""
-                    : getNestedValue(animation, [...destination, key])
+                    : getNestedValue(isTimeLine ? motion : animation, [...destination, key])
                 }
                 className="bg-slate-900 w-full border-[4px]  border-[#1e293b!important]"
                 onInput={(ev) => {

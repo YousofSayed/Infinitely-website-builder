@@ -1,6 +1,6 @@
 import { Icons } from "../components/Icons/Icons";
 import { filterUnits } from "../constants/cssProps";
-import { addClickClass, css, hash, html, random, uniqueID } from "./cocktail";
+import { addClickClass, css, hash, html, parse, random, uniqueID } from "./cocktail";
 import { dynamic_container, dynamic_text } from "../constants/cmpsTypes";
 import {
   projectDataType,
@@ -13,6 +13,7 @@ import {
   current_project_id,
   current_symbol_rule,
   global_settings,
+  gsap_animation_state,
   inf_bridge_id,
   inf_class_name,
   inf_symbol_Id_attribute,
@@ -2107,10 +2108,26 @@ export function getGsapCssProperties() {
   return finalProperties.sort();
 }
 
-export async function restartGSAPMotions() {
+/**
+ * 
+ * @param {import('grapesjs').Editor} editor 
+ * @returns 
+ */
+export async function restartGSAPMotions(editor) {
+  const currentGsapStateAnimation = Boolean(parse(sessionStorage.getItem(gsap_animation_state)));
+  if(!currentGsapStateAnimation)return;
   const motions = await (await getProjectData()).motions;
   killAllGsapMotions(motions);
   runAllGsapMotions(motions);
+  
+}
+
+export function toggleFastPreview(editor) {
+  if (editor.Commands.isActive('preview')) {
+    editor.stopCommand('preview');
+  } else {
+    editor.runCommand('preview');
+  }
 }
 
 // Example usage

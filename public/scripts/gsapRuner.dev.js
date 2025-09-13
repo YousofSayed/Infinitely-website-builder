@@ -43,6 +43,9 @@ function CompileMotion(
     timeline: {},
     fromTo: [],
   };
+const attribute = `[${
+    motion?.isInstance ? `motion-instance-id` : `motion-id`
+  }=${motion.id}]`;
 
   const parseObjValue = (obj = {}) => {
     return Object.fromEntries(
@@ -59,9 +62,7 @@ function CompileMotion(
             typeof value === "string"
               ? value.replaceAll?.(
                   "self",
-                  `[${isInstance ? `motion-instance-id` : `motion-id`}="${
-                    motion.id
-                  }"]`
+                  attribute
                 )
               : value,
           ];
@@ -115,7 +116,7 @@ function CompileMotion(
     output.fromTo.push({
       selector: selector.replaceAll(
         "self",
-        `[${isInstance ? `motion-instance-id` : `motion-id`}="${motion.id}"]`
+        attribute
       ),
       fromValue,
       toValue,

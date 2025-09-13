@@ -96,7 +96,7 @@ export const addDevices = (editor) => {
         // editor.refresh({ tools: true });
       }
       emitEditorContainerZoom();
-      restartGSAPMotions();
+      restartGSAPMotions(editor);
     }, 80);
   };
 

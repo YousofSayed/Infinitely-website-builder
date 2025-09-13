@@ -55,6 +55,9 @@ export const addNewTools = (editor) => {
   //   console.log("update", update, editor.getDirtyCount());
   // });
 
+
+  
+
   editor.on(
     "component:create",
     /**
@@ -171,93 +174,7 @@ export const addNewTools = (editor) => {
     }
   );
 
-  // editor.on(
-  //   "component:drag",
-  //   /**
-  //    *
-  //    * @param {{parent : import('grapesjs').Component , target : import('grapesjs').Component}} param0
-  //    */
-  //   ({ parent, target }) => {
-  //     if (!parent || !target) {
-  //       console.warn("No Component here");
-  //       return;
-  //     }
-  //     const parentOfParent = parent.parent();
-  //     if (parent.get("type") != "wrapper") {
-
-  //       doActionAndPreventSaving(
-  //         editor,
-  //         () => {
-  //           parent.addClass("p-10");
-  //         },
-  //         { decreaseSteps: true }
-  //       );
-  //     }
-
-  //     if (parentOfParent && parentOfParent.get('type') =='wrapper' )return;
-  //   }
-  // );
-
-  // editor.on('component:update:components',
-  //   /**
-  //    *
-  //    * @param {import('grapesjs').Component} model
-  //    */
-  //   (model)=>{
-  //   console.log('cmp mount' , model , model.components().models.length , model.props().droppable);
-  //   if(!model.components().models.length && model.props().droppable){
-  //     model.components({type:'drop-area'})
-  //   }
-  // })
-
-  // editor.on(
-  //   "component:update:components",
-  //   /**
-  //    *
-  //    * @param {import('grapesjs').Component} model
-  //    * @param {import('grapesjs').Components} comps
-  //    * @param {{}} opts
-  //    */
-  //   (model) => {
-  //     console.log("update cmp : ", model);
-  //     if (!model.components().models.length) {
-  //       model.components({ type: "drop-area" });
-  //       console.log("model setted : ", model);
-  //     }
-  //     return;
-  //     if (model.get("type") == "wrapper") return;
-  //     console.log(model, comps, opts);
-
-  //     if (!comps.models.length) {
-  //       const props = model.props();
-  //       const isDroppable = props.droppable;
-  //       if (isDroppable) {
-  //         model.components({
-  //           type: "drop-area",
-  //         });
-  //       }
-  //     }
-  //   }
-  // );
-
-  // editor.on(
-  //   "component:add",
-  //   /**
-  //    *
-  //    * @param {import('grapesjs').Component} cmp
-  //    */
-  //   (cmp) => {
-  //     const parent = cmp.parent();
-  //     console.log('classes  :' ,parent.getClasses());
-
-  //     if (parent.getClasses().includes("p-10")) {
-  //       console.log("From padding remover", cmp);
-  //       parent.removeClass("p-10", {});
-  //     }
-  //   }
-  // );
-
-  let scrollTimeout,
+   let scrollTimeout,
     isScrollValue = false;
   editor.on(
     "canvas:frame:load:body",
@@ -310,20 +227,6 @@ export const addNewTools = (editor) => {
     }
   );
 
-//   editor.on("load", () => {
-//   const frameEl = editor.Canvas.getFrameEl(); // iframe element
-//   const doc = frameEl.contentDocument || frameEl.contentWindow.document;
-
-//   // the container that actually scrolls
-//   const scrollContainer = doc.scrollingElement || doc.documentElement;
-
-//   scrollContainer.addEventListener("scroll", (e) => {
-//     console.log("Canvas scrolled", {
-//       scrollTop: scrollContainer.scrollTop,
-//       scrollLeft: scrollContainer.scrollLeft,
-//     });
-//   });
-// });
 
 
   editor.on("canvas:frame:scroll", ({ isScroll }) => {

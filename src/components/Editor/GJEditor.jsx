@@ -41,6 +41,7 @@ import { useSetClassForCurrentEl } from "../../hooks/useSetclassForCurrentEl.js"
 import { toast } from "react-toastify";
 import { handleComponentsOnCreate } from "../../plugins/handleComponentsOnCreate.js";
 import { initTraitsOnRender } from "../../plugins/initTraitsOnRender.jsx";
+import { editorKeymaps } from "../../plugins/editorKeymaps.jsx";
 
 export const GJEditor = memo(({ children }) => {
   const setSelectedEl = useSetRecoilState(currentElState);
@@ -68,6 +69,7 @@ export const GJEditor = memo(({ children }) => {
     motionsCloneHandler,
     globalTraits,
     initTraitsOnRender,
+    editorKeymaps,
     // handleComponentsOnCreate,
     // selectionPreventer,
     // muatationDomElements,
@@ -190,10 +192,11 @@ export const GJEditor = memo(({ children }) => {
         // avoidDefaults: true,
         // nativeDnD:true,
         // showToolbar:true,
+        noticeOnUnload:false,
         showOffsets: true,
         keepUnusedStyles: true,
         clearStyles: false,
-        
+        // showBadges: true,
         // stylePrefix:'inf-',
         forceClass: true,
         // canvasCss: gStyles,
@@ -257,9 +260,11 @@ export const GJEditor = memo(({ children }) => {
 
         keymaps: {
           defaults: {
+
             // 'core:undo': '', // Unbind Ctrl+Z
             // 'core:redo': '', // Unbind Ctrl+Y
           },
+          
         },
         protectedCss: ``,
         // customUI: true,
