@@ -10,6 +10,7 @@ import { db } from "../../../helpers/db";
 import { getProjectData } from "../../../helpers/functions";
 import { current_project_id } from "../../../constants/shared";
 import { useLiveQuery } from "dexie-react-hooks";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 
 /**
  *
@@ -21,16 +22,23 @@ export const ColorPicker = memo(
     const [showHexColor, setShowHexColor] = useState(false);
     const [savedColors, setSavedColors] = useState([]);
     const [width, setWidth] = useState(0);
+    const [animate] = useAutoAnimate();
+    const hexColorRef = useRef();
+
     /**
      * @type {{current:HTMLElement}}
      */
     const colorPickerContainerRef = useRef();
     const [isPending, setTransition] = useTransition();
 
+    useEffect(()=>{
+      if(!hexColorRef.current)return;
+      hexColorRef.current && animate(hexColorRef.current);
+    },[hexColorRef])
+
     /**
      * @type {{current:HTMLElement}}
      */
-    const hexColorRef = useRef();
     useEffect(() => {
       if (hexColorRef.current) {
         hexColorRef.current.scrollIntoView({
@@ -62,12 +70,15 @@ export const ColorPicker = memo(
           setWidth(entry.target.clientWidth - 10);
         });
       });
-      const el = colorPickerContainerRef.current.parentNode.parentNode
+      const el = colorPickerContainerRef.current.parentNode.parentNode;
       resizableObserver.observe(el);
 
       setWidth(el.clientWidth - 10);
-      console.log('colorPickerContainerRef.current.parentNode.clientWidth - 10',el.clientWidth - 10);
-      
+      console.log(
+        "colorPickerContainerRef.current.parentNode.clientWidth - 10",
+        el.clientWidth - 10
+      );
+
       return () => {
         resizableObserver.disconnect();
       };
@@ -130,7 +141,10 @@ export const ColorPicker = memo(
                 ev.preventDefault();
               }}
               id="colors"
-              className="absolute flex flex-col gap-2 top-[195px] rounded-bl-lg rounded-br-lg p-2 pt-[13px] bg-slate-800 shadow-md shadow-slate-950 h-[250px] w-full z-[70] "
+              style={{
+                height : Boolean(savedColors.length) ? '250px' : ''
+              }}
+              className="transition-all absolute flex flex-col gap-2 top-[195px] rounded-bl-lg rounded-br-lg p-2 pt-[13px] bg-slate-800 shadow-md shadow-slate-950  w-full z-[70] "
             >
               <header className="flex justify-between gap-2 bg-slate-900 p-2 rounded-lg">
                 <FitTitle className="w-full flex justify-center items-center">
@@ -162,28 +176,30 @@ export const ColorPicker = memo(
                 </SmallButton>
               </header>
 
-              <main className=" p-2 h-full overflow-auto bg-slate-900 rounded-lg  ">
-                <div className="w-full grid grid-cols-[repeat(auto-fill,minmax(30px,1fr))] gap-2 h-fit">
-                  {savedColors.map((savedColor, i) => (
-                    <button
-                      key={i}
-                      className="h-[30px] rounded-lg border-[2.2px] border-slate-600 hover:border-blue-500  transition-all "
-                      style={{
-                        backgroundColor: savedColor,
-                        borderColor: savedColor == color ? "#3b82f6" : null,
-                      }}
-                      onClick={(ev) => {
-                        ev.stopPropagation();
-                        ev.preventDefault();
-                        addClickClass(ev.currentTarget, "click");
-                        // if (color.toLowerCase().includes("nan")) return;
-                        setColor(savedColor);
-                        onEffect(savedColor, setColor);
-                      }}
-                    ></button>
-                  ))}
-                </div>
-              </main>
+              {Boolean(savedColors.length) && (
+                <main className=" p-2 h-full overflow-auto bg-slate-900 rounded-lg  ">
+                  <div className="w-full grid grid-cols-[repeat(auto-fill,minmax(30px,1fr))] gap-2 h-fit">
+                    {savedColors.map((savedColor, i) => (
+                      <button
+                        key={i}
+                        className="h-[30px] rounded-lg border-[2.2px] border-slate-600 hover:border-blue-500  transition-all "
+                        style={{
+                          backgroundColor: savedColor,
+                          borderColor: savedColor == color ? "#3b82f6" : null,
+                        }}
+                        onClick={(ev) => {
+                          ev.stopPropagation();
+                          ev.preventDefault();
+                          addClickClass(ev.currentTarget, "click");
+                          // if (color.toLowerCase().includes("nan")) return;
+                          setColor(savedColor);
+                          onEffect(savedColor, setColor);
+                        }}
+                      ></button>
+                    ))}
+                  </div>
+                </main>
+              )}
             </section>
           </section>
         )}

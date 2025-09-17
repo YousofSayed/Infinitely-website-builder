@@ -415,17 +415,26 @@ const ObjectComponent = ({
                 placeholder={key}
                 value={
                   isPlainObject(
-                    getNestedValue(isTimeLine ? motion : animation, [...destination, key])
+                    getNestedValue(isTimeLine ? motion : animation, [
+                      ...destination,
+                      key,
+                    ])
                   )
                     ? ""
-                    : getNestedValue(isTimeLine ? motion : animation, [...destination, key])
+                    : getNestedValue(isTimeLine ? motion : animation, [
+                        ...destination,
+                        key,
+                      ])
                 }
                 keywords={value}
                 onAll={(value) => {
                   console.log(
                     "from select : ",
                     [...destination, key],
-                    getNestedValue(isTimeLine ? motion : animation, [...destination, key])
+                    getNestedValue(isTimeLine ? motion : animation, [
+                      ...destination,
+                      key,
+                    ])
                   );
 
                   addValue(value, key);
@@ -436,10 +445,16 @@ const ObjectComponent = ({
                 placeholder={key}
                 isCode
                 allowCmdsContext
-                value={getNestedValue(isTimeLine ? motion : animation, [...destination, key])}
+                value={getNestedValue(isTimeLine ? motion : animation, [
+                  ...destination,
+                  key,
+                ])}
                 codeProps={{
                   language: "javascript",
-                  value: getNestedValue(isTimeLine ? motion : animation, [...destination, key]),
+                  value: getNestedValue(isTimeLine ? motion : animation, [
+                    ...destination,
+                    key,
+                  ]),
                   onChange: (value) => {
                     addValue(value, key);
                   },
@@ -450,10 +465,16 @@ const ObjectComponent = ({
                 placeholder={key}
                 value={
                   isPlainObject(
-                    getNestedValue(isTimeLine ? motion : animation, [...destination, key])
+                    getNestedValue(isTimeLine ? motion : animation, [
+                      ...destination,
+                      key,
+                    ])
                   )
                     ? ""
-                    : getNestedValue(isTimeLine ? motion : animation, [...destination, key])
+                    : getNestedValue(isTimeLine ? motion : animation, [
+                        ...destination,
+                        key,
+                      ])
                 }
                 className="bg-slate-900 w-full border-[4px]  border-[#1e293b!important]"
                 onInput={(ev) => {
@@ -1237,9 +1258,13 @@ export const Motion = memo(() => {
     if (!newMotion?.id) return;
     const projectData = await getProjectData();
     const { projectSettings } = getProjectSettings();
+    const clone = cloneDeep(newMotion);
+    clone.pages = [
+      ...new Set([...newMotion.pages, localStorage.getItem(current_page_id)]),
+    ];
     const newMotions = {
       ...projectData.motions,
-      [newMotion.id]: newMotion,
+      [clone.id]: clone,
     };
     console.log(
       "project settings  ::: ",
@@ -1622,7 +1647,7 @@ export const Motion = memo(() => {
                 );
               })}
           </ScrollableToolbar>
-          <section className="relative flex gap-2 p-3 justify-between bg-slate-800 w-full rounded-lg">
+          <section className="relative flex gap-2 p-3 justify-between bg-slate-800 w-full rounded-md">
             {/* <FitTitle className="absolute top-[-50%]  left-0">{isInstance ? 'Instance' : 'Main'}</FitTitle> */}
             <FitTitle className="custom-font-size  text-slate-200 ">
               {isInstance ? "Main ID :" : ""} {motion.id}

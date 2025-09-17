@@ -139,6 +139,12 @@ export interface Interaction {
   id: string | number;
   event: keyof ElementEventMap;
   actions: Actions;
+  instances: {
+    [key: string]: {
+      id: string;
+      page: string;
+    };
+  };
   // onInteractionSelected: (component: Component) => void;
   // onInteractionUnSelected: (component: Component) => void;
 }
@@ -590,6 +596,7 @@ export type MotionType = {
       page: string;
     };
   };
+  excludes? : string[] 
   isTimeLine: boolean;
   timeLineName: string;
   timeline: {};

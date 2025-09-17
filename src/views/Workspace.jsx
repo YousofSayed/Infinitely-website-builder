@@ -26,10 +26,11 @@ export const Workspace = memo(() => {
       try {
         // const file = await (await fetch(fileUrl));
         // loadProject(file);
-        
+
         downloadFileByLink(fileUrl);
-        toast.success(<ToastMsgInfo msg={`Project downloaded successfully 💙`}/>);
-        
+        toast.success(
+          <ToastMsgInfo msg={`Project downloaded successfully 💙`} />
+        );
       } catch (error) {
         toast.error("Faild to load project");
         console.error(error);
@@ -40,7 +41,8 @@ export const Workspace = memo(() => {
   return (
     <main className=" h-full bg-slate-900 flex flex-col gap-2 pb-2 overflow-hidden">
       <ToastContainer
-        toastStyle={{ background: " #111827 " }}
+        toastClassName={`backdrop-blur-md bg-[#020617BF]`}
+        className={`z-[1000000000000]    `}
         autoClose={3000}
         draggable={true}
         theme="dark"

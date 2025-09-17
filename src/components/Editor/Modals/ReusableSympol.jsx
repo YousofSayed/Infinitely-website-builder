@@ -10,12 +10,17 @@ import {
   getComponentRules,
   getImgAsBlob,
   getInfinitelySymbolInfo,
+  getProjectData,
+  handleCloneComponent,
   initSymbol,
   initToolbar,
   preventSelectNavigation,
+  saveProjectByWorker,
+  store,
 } from "../../../helpers/functions";
 import { db } from "../../../helpers/db";
 import {
+  current_page_id,
   current_project_id,
   inf_class_name,
   inf_symbol_Id_attribute,
@@ -47,26 +52,24 @@ export const ReusableSympol = () => {
   };
 
   const onSave = (ev) => {
-    const selectedEl = editor.getSelected();
-    const symbolInfo = getInfinitelySymbolInfo(selectedEl);
+    const selectedElMain = editor.getSelected();
+    const symbolInfo = getInfinitelySymbolInfo(selectedElMain);
     if (symbolInfo.isSymbol) {
       toast.error(<ToastMsgInfo msg={`You Can’t Create symbol From Symbol`} />);
-      // console.log(selectedEl.toHTML({attributes:{haha:'ahaha'} , withProps:true}) , , selectedEl.toHTML());
-
       return;
     }
     const projectId = +localStorage.getItem(current_project_id);
+    const tId = toast.loading(<ToastMsgInfo msg={`Saving symbol...`} />);
 
     const addSymbolBlock = async () => {
-      const selectedEl = editor.getSelected();
       const uuid = uniqueID();
-      const attributes = selectedEl.getAttributes();
-      selectedEl.addAttributes({
+      const attributes = selectedElMain.getAttributes();
+      selectedElMain.addAttributes({
         [inf_symbol_Id_attribute]: uuid,
         ...(!attributes[inf_class_name] && { [inf_class_name]: `inf-${uuid}` }),
       });
-      !attributes[inf_class_name] && selectedEl.addClass(`inf-${uuid}`);
-      selectedEl.forEachChild((child) => {
+      !attributes[inf_class_name] && selectedElMain.addClass(`inf-${uuid}`);
+      selectedElMain.forEachChild((child) => {
         const childUuid = uniqueID();
         const childAttributes = child.getAttributes();
         child.addAttributes({
@@ -76,7 +79,11 @@ export const ReusableSympol = () => {
         });
         !childAttributes[inf_class_name] && child.addClass(`inf-${childUuid}`);
       });
-      const projectData = await await db.projects.get(projectId);
+      const projectData = await getProjectData();
+      // sessionStorage.setItem("clone-disabled", "true");
+      const selectedEl = editor.getSelected().clone();
+      // sessionStorage.removeItem("clone-disabled");
+      // const projectDataHandled = await handleCloneComponent(selectedEl, editor);
 
       const prevBlocks = projectData?.blocks ? projectData.blocks : {};
 
@@ -86,7 +93,7 @@ export const ReusableSympol = () => {
         nested: true,
       });
 
-      const jsonRules = JSON.stringify(rules.rules);
+      // const jsonRules = JSON.stringify(rules.rules);
       const stringRules = rules.stringRules;
       console.log("rules  : ", JSON.stringify(rules));
       const contentPath = `editor/symbols/${uuid}/${uuid}.html`;
@@ -95,60 +102,189 @@ export const ReusableSympol = () => {
         content: contentPath,
         style: stylePath,
       };
-      await opfs.writeFiles([
+
+      // await opfs.writeFiles([
+      //   {
+      //     path: defineRoot(contentPath),
+      //     content: selectedEl.toHTML({
+      //       keepInlineStyle: true,
+      //       withProps: true,
+      //     }),
+      //   },
+      //   {
+      //     path: defineRoot(stylePath),
+      //     content: minify(stringRules).css,
+      //   },
+      // ]);
+      // await db.projects.update(+projectId, {
+      //   symbols: {
+      //     ...projectData.symbols,
+      //     [uuid]: {
+      //       id: uuid,
+      //       label: props.name,
+      //       category: props.category || "symbols",
+      //       pathes,
+      //       // style: new Blob([minify(stringRules).css], { type: "text/css" }),
+      //       // content: new Blob(
+      //       //   [selectedEl.toHTML({ keepInlineStyle: true, withProps: true })],
+      //       //   { type: "text/html" }
+      //       // ),
+      //     },
+      //   },
+      //   blocks: {
+      //     ...prevBlocks,
+      //     [uuid]: {
+      //       name: props.name,
+      //       label: props.name,
+      //       category: props.category || "symbols",
+      //       id: uuid,
+      //       media:
+      //         selectedEl.getIcon() ||
+      //         editorIcons.components({ strokeColor: "white", strokeWidth: 2 }), //blobImg,
+      //       type: "symbol",
+      //       pathes,
+      //       // style: new Blob([minify(stringRules).css], { type: "text/css" }),
+      //       // content: new Blob(
+      //       //   [selectedEl.toHTML({ withProps: true, keepInlineStyle: true })],
+      //       //   { type: "text/html" }
+      //       // ),
+      //     },
+      //   },
+      // });
+
+      // saveProjectByWorker(
+      //   {
+      //     data: {
+      //       motions: projectDataHandled.motions,
+      //       symbols: {
+      //         ...projectData.symbols,
+      //         [uuid]: {
+      //           id: uuid,
+      //           label: props.name,
+      //           category: props.category || "symbols",
+      //           pathes,
+      //           // style: new Blob([minify(stringRules).css], { type: "text/css" }),
+      //           // content: new Blob(
+      //           //   [selectedEl.toHTML({ keepInlineStyle: true, withProps: true })],
+      //           //   { type: "text/html" }
+      //           // ),
+      //         },
+      //       },
+      //       blocks: {
+      //         ...prevBlocks,
+      //         [uuid]: {
+      //           name: props.name,
+      //           label: props.name,
+      //           category: props.category || "symbols",
+      //           id: uuid,
+      //           media:
+      //             selectedEl.getIcon() ||
+      //             editorIcons.components({
+      //               strokeColor: "white",
+      //               strokeWidth: 2,
+      //             }), //blobImg,
+      //           type: "symbol",
+      //           pathes,
+      //           // style: new Blob([minify(stringRules).css], { type: "text/css" }),
+      //           // content: new Blob(
+      //           //   [selectedEl.toHTML({ withProps: true, keepInlineStyle: true })],
+      //           //   { type: "text/html" }
+      //           // ),
+      //         },
+      //       },
+      //     },
+
+      //     files: {
+      //       [defineRoot(contentPath)]: selectedEl.toHTML({
+      //         keepInlineStyle: true,
+      //         withProps: true,
+      //       }),
+
+      //       [defineRoot(stylePath)]: minify(stringRules).css,
+      //     },
+
+      //     updatePreviewPages: true,
+      //     pageName: localStorage.getItem(current_page_id),
+      //   },
+      //   () => {
+      //     editor.trigger("block:add");
+      //     initToolbar(editor, selectedElMain);
+      //     initSymbol(uuid, editor);
+      //     editor.runCommand("close:current:modal");
+      //     toast.done(tId);
+      //     toast.success(
+      //       <ToastMsgInfo msg={`Symbols created and saved successfully👍`} />
+      //     );
+      //   }
+      // );
+
+      store(
         {
-          path: defineRoot(contentPath),
-          content: selectedEl.toHTML({
-            keepInlineStyle: true,
-            withProps: true,
-          }),
-        },
-        {
-          path: defineRoot(stylePath),
-          content: minify(stringRules).css,
-        },
-      ]);
-      await db.projects.update(+projectId, {
-        symbols: {
-          ...projectData.symbols,
-          [uuid]: {
-            id: uuid,
-            label: props.name,
-            category: props.category || "symbols",
-            pathes,
-            // style: new Blob([minify(stringRules).css], { type: "text/css" }),
-            // content: new Blob(
-            //   [selectedEl.toHTML({ keepInlineStyle: true, withProps: true })],
-            //   { type: "text/html" }
-            // ),
+          data: {
+            // motions: projectDataHandled.motions,
+            symbols: {
+              ...projectData.symbols,
+              [uuid]: {
+                id: uuid,
+                label: props.name,
+                category: props.category || "symbols",
+                pathes,
+                // style: new Blob([minify(stringRules).css], { type: "text/css" }),
+                // content: new Blob(
+                //   [selectedEl.toHTML({ keepInlineStyle: true, withProps: true })],
+                //   { type: "text/html" }
+                // ),
+              },
+            },
+            blocks: {
+              ...prevBlocks,
+              [uuid]: {
+                name: props.name,
+                label: props.name,
+                category: props.category || "symbols",
+                id: uuid,
+                media:
+                  selectedEl.getIcon() ||
+                  editorIcons.components({
+                    strokeColor: "white",
+                    strokeWidth: 2,
+                  }), //blobImg,
+                type: "symbol",
+                pathes,
+                // style: new Blob([minify(stringRules).css], { type: "text/css" }),
+                // content: new Blob(
+                //   [selectedEl.toHTML({ withProps: true, keepInlineStyle: true })],
+                //   { type: "text/html" }
+                // ),
+              },
+            },
           },
-        },
-        blocks: {
-          ...prevBlocks,
-          [uuid]: {
-            name: props.name,
-            label: props.name,
-            category: props.category || "symbols",
-            id: uuid,
-            media:
-              selectedEl.getIcon() ||
-              editorIcons.components({ strokeColor: "white", strokeWidth: 2 }), //blobImg,
-            type: "symbol",
-            pathes,
-            // style: new Blob([minify(stringRules).css], { type: "text/css" }),
-            // content: new Blob(
-            //   [selectedEl.toHTML({ withProps: true, keepInlineStyle: true })],
-            //   { type: "text/html" }
-            // ),
+
+          files: {
+            [defineRoot(contentPath)]: selectedEl.toHTML({
+              keepInlineStyle: true,
+              withProps: true,
+            }),
+
+            [defineRoot(stylePath)]: minify(stringRules).css,
           },
+
+          updatePreviewPages: true,
+          pageName: localStorage.getItem(current_page_id),
         },
-      });
-      editor.trigger("block:add");
-      initToolbar(editor, selectedEl);
+        editor
+      );
+
+      initToolbar(editor, selectedElMain);
       initSymbol(uuid, editor);
+      editor.runCommand("close:current:modal");
+      toast.done(tId);
+      toast.success(
+        <ToastMsgInfo msg={`Symbols created and saved successfully👍`} />
+      );
     };
+
     addSymbolBlock();
-    editor.runCommand("close:current:modal");
   };
 
   const getSelectedElAsImg = async () => {
@@ -172,6 +308,7 @@ export const ReusableSympol = () => {
     <section className="w-full z-50 p-2 flex flex-col gap-2 overflow-auto bg-slate-800 rounded-lg ">
       <header className="p-2 z-50 rounded-lg flex gap-4 justify-between bg-slate-900">
         <Input
+          
           value={props.name}
           autoFocus={true}
           placeholder="Name"

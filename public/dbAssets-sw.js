@@ -56,9 +56,9 @@ self.addEventListener("message", (ev) => {
   }
   vars = { ...vars, ...props.obj };
 
-  if (cond) {
-    console.log("Got Vars", vars, props.obj);
-  }
+  // if (cond) {
+  //   console.log("Got Vars", vars, props.obj);
+  // }
   // self.skipWaiting();
   // event.waitUntil(clients.claim());
 });
@@ -142,7 +142,7 @@ self.addEventListener("fetch", (event) => {
         const path = `${folderPath}/${fileName}`;
         const opfsBroadcastChannel = new BroadcastChannel("opfs");
         const fileBraodCastChannel = new BroadcastChannel(path);
-        console.log("Paaaaaaaaaaaath is : ", path);
+        // console.log("Paaaaaaaaaaaath is : ", path);
 
         // if (!projectId) {
         //   return new Response(
@@ -169,11 +169,11 @@ self.addEventListener("fetch", (event) => {
            * @param {MessageEvent} ev
            */
           const callback = (ev) => {
-            console.log(
-              "from service worker sendFile broadcast",
-              folderPath,
-              fileName
-            );
+            // console.log(
+            //   "from service worker sendFile broadcast",
+            //   folderPath,
+            //   fileName
+            // );
             const { type, file, isExisit, filePath } = ev.data;
 
             if (type !== "sendFile") {
@@ -229,14 +229,14 @@ self.addEventListener("fetch", (event) => {
         });
 
         if (responseFile) {
-          console.log(
-            `File is From service worker: `,
-            responseFile,
-            folderPath,
-            entryPoint,
-            url.pathname,
-            pathname
-          );
+          // console.log(
+          //   `File is From service worker: `,
+          //   responseFile,
+          //   folderPath,
+          //   entryPoint,
+          //   url.pathname,
+          //   pathname
+          // );
           return new Response(responseFile, {
             status: 200,
             headers: {

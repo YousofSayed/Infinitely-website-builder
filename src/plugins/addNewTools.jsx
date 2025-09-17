@@ -7,14 +7,23 @@ import { addClickClass, css, html } from "../helpers/cocktail";
 import {
   doActionAndPreventSaving,
   getInfinitelySymbolInfo,
+  getProjectData,
   getProjectSettings,
+  handleCloneComponent,
   initToolbar,
   isDynamicComponent,
   preventSelectNavigation,
+  saveProjectByWorker,
 } from "../helpers/functions";
 import { unMountAppTool } from "./tools/unMountAppTool";
-import { cloneDeep } from "lodash";
-import { motionId } from "../constants/shared";
+import { cloneDeep, random, uniqueId } from "lodash";
+import {
+  current_page_id,
+  interactionId,
+  mainMotionId,
+  motionId,
+  motionInstanceId,
+} from "../constants/shared";
 import { runGsapMotionTool } from "./tools/runGsapMotionTool";
 import { killGsapMotionTool } from "./tools/killGsapMotion";
 import interact from "interactjs";
@@ -23,6 +32,7 @@ import { InfinitelyEvents } from "../constants/infinitelyEvents";
 import { styleInfInstance } from "../constants/InfinitelyInstances";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
+import { cloneMotion } from "../helpers/bridge";
 
 /**
  *
@@ -30,7 +40,6 @@ import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
  * @returns
  */
 export const addNewTools = (editor) => {
-  
   /**
    * @type {Interact.Interactable}
    */
@@ -54,9 +63,6 @@ export const addNewTools = (editor) => {
   // editor.on("component:update", (update) => {
   //   console.log("update", update, editor.getDirtyCount());
   // });
-
-
-  
 
   editor.on(
     "component:create",
@@ -174,7 +180,7 @@ export const addNewTools = (editor) => {
     }
   );
 
-   let scrollTimeout,
+  let scrollTimeout,
     isScrollValue = false;
   editor.on(
     "canvas:frame:load:body",
@@ -203,13 +209,14 @@ export const addNewTools = (editor) => {
         }, 100);
       };
       // console.log("canvasDoc, canvasBody, wrapperEl", canvasDoc, canvasBody, wrapperEl);
-      // editor.Canvas.get 
+      // editor.Canvas.get
       // if (!(canvasDoc && canvasBody && wrapperEl)) {
       //   console.error("no canvas doc or body or wrapper");
       //   return;
       // }
       // canvasDoc.documentElement.style.contain = `paint layout size`;
-        const scrollTarget = canvasDoc.scrollingElement || canvasDoc.documentElement;
+      const scrollTarget =
+        canvasDoc.scrollingElement || canvasDoc.documentElement;
       canvasBody.style.overflow = "auto";
       canvasDoc.documentElement.style.overflow = "auto";
       canvasDoc.scrollingElement.style.overflow = "auto";
@@ -217,17 +224,21 @@ export const addNewTools = (editor) => {
       // canvasDoc.documentElement.addEventListener("scroll", scrollCallback,{passive:true});
       // canvasDoc.scrollingElement.addEventListener("scroll", scrollCallback,{passive:true});
       // window.document.addEventListener("scroll", scrollCallback,{passive:true});
-      canvasDoc.removeEventListener("scroll", scrollCallback,{passive:true});
-      wrapperEl.removeEventListener("scroll", scrollCallback , {passive:true});
-      canvasBody.removeEventListener("scroll", scrollCallback , {passive:true});
+      canvasDoc.removeEventListener("scroll", scrollCallback, {
+        passive: true,
+      });
+      wrapperEl.removeEventListener("scroll", scrollCallback, {
+        passive: true,
+      });
+      canvasBody.removeEventListener("scroll", scrollCallback, {
+        passive: true,
+      });
 
-      canvasDoc.addEventListener("scroll", scrollCallback,{passive:true});
-      wrapperEl.addEventListener("scroll", scrollCallback , {passive:true});
-      canvasBody.addEventListener("scroll", scrollCallback , {passive:true});
+      canvasDoc.addEventListener("scroll", scrollCallback, { passive: true });
+      wrapperEl.addEventListener("scroll", scrollCallback, { passive: true });
+      canvasBody.addEventListener("scroll", scrollCallback, { passive: true });
     }
   );
-
-
 
   editor.on("canvas:frame:scroll", ({ isScroll }) => {
     // console.log("is scrollll : ", isScroll , window);
@@ -235,7 +246,7 @@ export const addNewTools = (editor) => {
     editor.Canvas.getBody().classList.add("preventWhenScroll");
   });
 
-  editor.on("canvas:frame:scroll:stop", ({  isScroll }) => {
+  editor.on("canvas:frame:scroll:stop", ({ isScroll }) => {
     // console.log("is scrollll stop: ", isScroll);
     isScrollValue = isScroll;
     editor.Canvas.getBody().classList.remove("preventWhenScroll");
@@ -248,7 +259,6 @@ export const addNewTools = (editor) => {
      * @param { import('grapesjs').Component } component
      */
     (component) => {
-      
       if (!component) return;
       // if (isScrollValue) {
       //   return
@@ -264,7 +274,7 @@ export const addNewTools = (editor) => {
          * @type {HTMLElement | undefined}
          */
         const badgeEl = editor.Canvas.getBadgeEl();
-       
+
         if (badgeEl && highlighter && component && symbolInfo.isSymbol) {
           highlighter.classList.add("symbol-highlight");
           badgeEl.classList.add("badge-symbol-highlight");
@@ -282,6 +292,11 @@ export const addNewTools = (editor) => {
       }
     }
   );
+
+  // editor.on(
+  //   "component:clone",
+  //   handleCloneComponent
+  // );
 
   editor.on("component:selected", (cmp) => {
     const sle = editor.getSelected();

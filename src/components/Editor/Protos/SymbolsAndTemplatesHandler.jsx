@@ -267,7 +267,7 @@ export const SymbolsAndTemplatesHandler = ({
   };
 
   return (
-    <main className="h-full flex p-1 flex-col gap-2 " ref={animatRef}>
+    <main className="h-full flex p-1 flex-col gap-2 overflow-hidden " ref={animatRef}>
       {showHeader && !!symbols.length && (
         <header className="flex items-center  rounded-lg  gap-2">
           <Input
@@ -336,9 +336,9 @@ export const SymbolsAndTemplatesHandler = ({
                  
                 </section> */}
 
-                  <FitTitle className="flex gap-2 items-center w-full justify-center custom-font-size">
+                  <FitTitle className="flex gap-2 items-center w-full  custom-font-size">
                     <figure
-                      className=" h-full py-2 flex justify-center items-center rounded-lg"
+                      className=" h-full py-1 w-[35px]  bg-slate-900 flex justify-center items-center rounded-lg"
                       dangerouslySetInnerHTML={{ __html: symbol.media }}
                     >
                       {/* <img src={URL.createObjectURL(symbol.media)} alt="" /> */}
@@ -354,7 +354,7 @@ export const SymbolsAndTemplatesHandler = ({
                     {showDeleteBtn && (
                       <SmallButton
                         title={"delete"}
-                        className="p-2 bg-slate-900 hover:bg-blue-600 transition-all"
+                        className="p-1 bg-slate-900 hover:bg-blue-600 transition-all"
                         onClick={() => {
                           deleteSymbol(symbol.id, symbol.name);
                         }}
@@ -366,7 +366,7 @@ export const SymbolsAndTemplatesHandler = ({
                     {showDownloadBtn && (
                       <SmallButton
                         title={"export as json"}
-                        className="p-2 bg-slate-900 hover:bg-blue-600 transition-all"
+                        className="p-1 bg-slate-900 hover:bg-blue-600 transition-all"
                         onClick={() => {
                           exportSymbol(symbol);
                         }}

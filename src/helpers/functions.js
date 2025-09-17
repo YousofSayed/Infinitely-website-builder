@@ -1,6 +1,14 @@
 import { Icons } from "../components/Icons/Icons";
 import { filterUnits } from "../constants/cssProps";
-import { addClickClass, css, hash, html, parse, random, uniqueID } from "./cocktail";
+import {
+  addClickClass,
+  css,
+  hash,
+  html,
+  parse,
+  random,
+  uniqueID,
+} from "./cocktail";
 import { dynamic_container, dynamic_text } from "../constants/cmpsTypes";
 import {
   projectDataType,
@@ -18,14 +26,24 @@ import {
   inf_class_name,
   inf_symbol_Id_attribute,
   inf_template_id,
+  interactionId,
+  interactionInstanceId,
+  mainInteractionId,
+  mainMotionId,
   motionId,
+  motionInstanceId,
   project_settings,
 } from "../constants/shared";
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
 import { db } from "./db";
 import html2canvas from "html2canvas-pro";
 import { jsURLRgx } from "../constants/rgxs";
-import { killAllGsapMotions, pvMount, pvUnMount, runAllGsapMotions } from "./customEvents";
+import {
+  killAllGsapMotions,
+  pvMount,
+  pvUnMount,
+  runAllGsapMotions,
+} from "./customEvents";
 import serializeJavascript from "serialize-javascript";
 import {
   fetcherWorker,
@@ -39,7 +57,8 @@ import { killGsapMotionTool } from "../plugins/tools/killGsapMotion";
 import { createReusableCmpTool } from "../plugins/tools/createReusableCmpTool";
 import { createSymbolTool } from "../plugins/tools/createSymbolTool";
 import { infinitelyWorker } from "./infinitelyWorker";
-import { isFunction, isPlainObject } from "lodash";
+import { isFunction, isPlainObject, uniqueId, random as _random } from "lodash";
+import { buildInteractionsAttributes, cloneMotion } from "./bridge";
 export {
   replaceBlobs,
   base64ToBlob,
@@ -1431,7 +1450,7 @@ export function initSymbol(id, editor) {
             // symbol.getEl(),
             // selectedSymbol.symbol.getEl()
           );
-          return;
+          // return;
         } else {
           // console.error(`replaaaaaaaaaaaaaaaaaaaaaaaaaace here`);
 
@@ -1440,6 +1459,9 @@ export function initSymbol(id, editor) {
           // symbol.replaceWith(regenerateSymbol(JSON.parse(newContent)));
           // symbol.set('content', regenerateSymbol(JSON.parse(newContent)));
         }
+        selectedCmp.on('change:attributes',()=>{
+          handler()
+        })
       });
     }, 10);
   };
@@ -2109,24 +2131,25 @@ export function getGsapCssProperties() {
 }
 
 /**
- * 
- * @param {import('grapesjs').Editor} editor 
- * @returns 
+ *
+ * @param {import('grapesjs').Editor} editor
+ * @returns
  */
 export async function restartGSAPMotions(editor) {
-  const currentGsapStateAnimation = Boolean(parse(sessionStorage.getItem(gsap_animation_state)));
-  if(!currentGsapStateAnimation)return;
+  const currentGsapStateAnimation = Boolean(
+    parse(sessionStorage.getItem(gsap_animation_state))
+  );
+  if (!currentGsapStateAnimation) return;
   const motions = await (await getProjectData()).motions;
   killAllGsapMotions(motions);
   runAllGsapMotions(motions);
-  
 }
 
 export function toggleFastPreview(editor) {
-  if (editor.Commands.isActive('preview')) {
-    editor.stopCommand('preview');
+  if (editor.Commands.isActive("preview")) {
+    editor.stopCommand("preview");
   } else {
-    editor.runCommand('preview');
+    editor.runCommand("preview");
   }
 }
 
@@ -2679,6 +2702,302 @@ export function updatePrevirePage(props) {
   });
 }
 
-// Example:
-// detectGlobalsSandbox("https://cdn.jsdelivr.net/npm/vue@3.5.20/dist/vue.global.min.js")
-//   .then(globals => console.log("Detected safely:", globals));
+/**
+ *
+ * @param {{
+ *  data : import('./types').Project,
+ *  files : {},
+ *  projectSetting : import('./types').ProjectSetting,
+ *  tailwindcssStyle : string,
+ *  pageName:string,
+ *  updatePreviewPages : boolean,
+ *  editorData : {
+ *    canvasCss: string
+ *  },
+ * }} props
+ * @param {(props)=>void} onDone
+ */
+export function saveProjectByWorker(props, onDone) {
+  infinitelyWorker.postMessage({
+    command: "updateDB",
+    props,
+  });
+  const projectID = +localStorage.getItem(current_project_id);
+
+  const onWorkerMessage = (ev) => {
+    const { command, props: resProps } = ev.data;
+    const isMatch = resProps?.projectId === projectID;
+    console.log(" isMatch from worker : ", isMatch, resProps);
+
+    if (
+      isMatch &&
+      (command === "updateDB" || command === "storeGrapesjsDataIfSymbols")
+    ) {
+      onDone(props);
+      infinitelyWorker.removeEventListener("message", onWorkerMessage);
+    }
+  };
+
+  infinitelyWorker.addEventListener("message", onWorkerMessage);
+}
+
+/**
+ *
+ * @param {{
+ *  data : import('./types').Project,
+ *  files : {},
+ *  projectSetting : import('./types').ProjectSetting,
+ *  tailwindcssStyle : string,
+ *  pageName:string,
+ *  updatePreviewPages : boolean,
+ *  editorData : {
+ *    canvasCss: string
+ *  },
+ * }} props
+ * @param {import('grapesjs').Editor} editor
+ */
+export function store(props, editor) {
+  editor.Storage.store((defualtProps) => {
+    return {
+      data: {
+        ...(defualtProps?.data || {}),
+        ...(props?.data || {}),
+      },
+
+      files: {
+        ...(defualtProps?.files || {}),
+        ...(props?.files || {}),
+      },
+
+      projectSetting: {
+        ...(defualtProps?.projectSetting || {}),
+        ...(props?.projectSetting || {}),
+      },
+
+      tailwindcssStyle: props.tailwindcssStyle || defualtProps.tailwindcssStyle,
+
+      pageName: props.pageName || defualtProps.pageName,
+
+      updatePreviewPages:
+        props.updatePreviewPages || defualtProps.updatePreviewPages,
+
+      editorData: {
+        ...(defualtProps?.editorData || {}),
+        ...(props?.editorData || {}),
+      },
+    };
+  });
+}
+
+/**
+ *
+ * @param {import('grapesjs').Component} model
+ */
+export function getCloneConfimedCmp(model) {
+  const isConfrimed = model.get("clone-confirmed");
+  if (isConfrimed) {
+    return model;
+  } else {
+    const isConfrimedCmp = model
+      .parents()
+      .find((parent) => parent.get("clone-confirmed"));
+    if (isConfrimedCmp) return isConfrimedCmp;
+  }
+  return null;
+}
+
+/**
+ *
+ * @param {import('grapesjs').Component} model
+ * @param {import('grapesjs').Editor} editor
+ */
+export async function handleCloneComponent(model, editor) {
+  console.log("cloned model : ", model);
+  if (editor.infLoading) return;
+  const isDisabled = Boolean(parse(sessionStorage.getItem("clone-disabled")));
+  console.log("isDisabled : ", isDisabled, model);
+
+  if (isDisabled) {
+    // sessionStorage.removeItem("clone-disabled")
+    return;
+  }
+  const confirmedCmp = getCloneConfimedCmp(model);
+  !confirmedCmp && model.set("clone-confirmed", true);
+  const attributes = model.getAttributes();
+  const projectData = await getProjectData();
+  // 1- Handle Motions
+  const mainId = attributes[motionId] || attributes[mainMotionId];
+  const instanceId = attributes[motionInstanceId];
+  const interactionsId =
+    attributes[interactionId] || attributes[mainInteractionId];
+  const msg =
+    mainId && interactionsId
+      ? `This element contains interactions and motions attributes , are you wanna clone them?`
+      : mainId
+      ? `This element contains motions attribute , are you wanna clone it?`
+      : interactionsId
+      ? `This element contains interactions attribute , are you wanna clone it?`
+      : "";
+  console.log("ids : ", mainId, instanceId, interactionId);
+
+  const cnfrm = msg ? (confirmedCmp ? true : confirm(msg)) : false;
+  if (cnfrm) {
+    editor && editor.UndoManager.stop();
+    if (mainId) {
+      // const clone = await cloneMotion(mainId, projectData.id);
+      // const uuid = uniqueId(`mt${_random(99, 9999)}${_random(99, 599)}`);
+      // projectData.motions[uuid] = clone;
+      // model.addAttributes({ [motionId]: uuid });
+      // console.log('main motion');
+      const uuid = uniqueId(`mt${_random(99, 9999)}${_random(99, 599)}`);
+      projectData.motions[mainId].instances[uuid] = {
+        id: uuid,
+        page: localStorage.getItem(current_page_id),
+      };
+      model.removeAttributes([motionId]);
+      model.addAttributes({ [motionInstanceId]: uuid, [mainMotionId]: mainId });
+      console.log("main motion");
+    }
+   
+
+    if (interactionsId) {
+      const uuid = uniqueId(`iNN${_random(99, 9999)}${_random(99, 599)}`);
+      model.removeAttributes([interactionId]);
+      model.addAttributes({
+        ...buildInteractionsAttributes(
+          projectData.interactions[interactionsId],
+          uuid,
+          true
+        ),
+        [interactionInstanceId]: uuid,
+        [mainInteractionId]: interactionsId,
+      });
+    }
+
+    if (confirmedCmp) {
+      const props = confirmedCmp.props();
+      const newProps = {
+        motions: {
+          ...(props.motions || {}),
+          ...projectData.motions,
+        },
+        interactions: {
+          ...(props.interactions || {}),
+          ...projectData.interactions,
+        },
+      };
+      confirmedCmp.set(newProps);
+      await db.projects.update(
+        +localStorage.getItem(current_project_id),
+        newProps
+      );
+    } else {
+      const props = model.props();
+      const newProps = {
+        motions: {
+          ...(props.motions || {}),
+          ...projectData.motions,
+        },
+        interactions: {
+          ...(props.interactions || {}),
+          ...projectData.interactions,
+        },
+      };
+      model.set(newProps);
+      await db.projects.update(
+        +localStorage.getItem(current_project_id),
+        newProps
+      );
+    }
+
+    console.log(
+      "project Data : ",
+      projectData,
+      +localStorage.getItem(current_project_id)
+    );
+    // await db.projects.update()
+
+    // save &&
+    //   saveProjectByWorker({
+    //     data: {
+    //       motions: projectData.motions,
+    //     },
+    //     updatePreviewPages: true,
+    //     pageName: localStorage.getItem(current_page_id),
+    //   });
+  } else {
+    model.removeAttributes([
+      mainInteractionId,
+      interactionId,
+      interactionInstanceId,
+      motionInstanceId,
+      motionId,
+      mainMotionId,
+    ]);
+  }
+
+  editor && editor.UndoManager.start();
+
+  return projectData;
+}
+
+/**
+ *
+ * @param {Worker} worker
+ * @param {string} commandCallback
+ * @param {()=>void} callback
+ */
+export function workerCallbackMaker(
+  worker,
+  commandCallback,
+  callback = () => {}
+) {
+  /**
+   *
+   * @param {MessageEvent} ev
+   */
+  const callbackWorker = (ev) => {
+    const { msg, command, props } = ev.data;
+    console.log(
+      "from worker callback maker",
+      (command, msg),
+      commandCallback,
+      (command || msg) == commandCallback,
+      command || msg
+    );
+    if ((command || msg) == commandCallback) {
+      callback(props);
+    }
+    worker.removeEventListener("message", callbackWorker);
+  };
+  worker.addEventListener("message", callbackWorker);
+}
+
+export function deleteAttributesInAllPages(
+  attributes = {},
+  onDone = () => {},
+  selector
+) {
+  if (!Object.keys(attributes).length) return;
+  infinitelyWorker.postMessage({
+    command: "deleteAttributesInAllPages",
+    props: {
+      projectId: +localStorage.getItem(current_project_id),
+      attributes,
+      selector,
+    },
+  });
+  workerCallbackMaker(infinitelyWorker, "attributes-deleted", onDone);
+}
+
+export function setInteractionsAttributes(interactionsId, onDone = () => {}) {
+  infinitelyWorker.postMessage({
+    command: "setInteractionsAttributes",
+    props: {
+      projectId: +localStorage.getItem(current_project_id),
+      interactionsId,
+    },
+  });
+
+  workerCallbackMaker(infinitelyWorker, "interctions-setted", onDone);
+}

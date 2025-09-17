@@ -30,11 +30,12 @@ export const runGsapMotionTool = (editor) => {
       const instanceId = attrs[motionInstanceId];
       const projectData = await getProjectData();
 
+      const motion = projectData.motions[mainId];
+      runGsapMethod(["kill", "revert"], motion);
       if (mainId && !instanceId) {
-        const motion = projectData.motions[mainId];
         runGsapMethod(["play"], motion);
       } else {
-        const motion = projectData.motions[mainId];
+        // const motion = projectData.motions[mainId];
         runGsapMethod(["play"], {
           ...motion,
           id: instanceId,

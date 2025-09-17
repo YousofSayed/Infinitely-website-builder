@@ -243,14 +243,16 @@ export function Editor({ params }) {
     isAssetsWorkerDone ? (
       <Memo className="w-full h-full">
         <ToastContainer
-          toastStyle={{ background: " #111827 " }}
+          // toastStyle={{ background: "transparent" }}
+
           autoClose={3000}
           draggable={true}
           theme="dark"
           limit={10}
           pauseOnHover={true}
           position="top-left"
-          className={`z-[1000000000000]`}
+          toastClassName={`backdrop-blur-md bg-[#020617BF] text-slate-900`}
+          className={`z-[1000000000000]    `}
           // containerId={`main-toast-container`}
 
           // stacked={true}

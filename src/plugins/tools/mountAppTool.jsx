@@ -23,7 +23,7 @@ return  addItemInToolBarForEditor({
       // const projectData = await getProjectData();
       // const pageName = localStorage.getItem(current_page_id);
       // const cmds = projectData.pages[`${pageName}`].cmds;
-      
+      editor.runCommand("run:kill-gsap-motion")
       const sle = editor.getSelected();
       mount({
         editor,

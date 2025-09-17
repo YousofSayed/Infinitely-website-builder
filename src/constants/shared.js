@@ -24,6 +24,8 @@ export const data_disable_scripting = `data-disable-scripting`;
 export const motionId = "motion-id";
 export const mainMotionId = "main-motion-id";
 export const interactionId = "interaction-id";
+export const interactionInstanceId = "interaction-instance-id";
+export const mainInteractionId = "main-interaction-id";
 export const motionInstanceId = "motion-instance-id";
 
 export const global_settings = "global_settings";
@@ -186,8 +188,8 @@ export const buildScripts = ({
 
     ...((!disableGsapCore && [
       {
-        name: "gsap@3.12.7.js",
-        localUrl: "/scripts/gsap@3.12.7.js",
+        name: "gsap.min.js",
+        localUrl: "/scripts/gsap.min.js",
       },
     ]) ||
       []),
@@ -195,7 +197,7 @@ export const buildScripts = ({
     ...((!disableGsapScrollTrigger && [
       {
         name: "scrollTrigger.js",
-        localUrl: "/scripts/scrollTrigger@3.12.7.js",
+        localUrl: "/scripts/scrollTrigger.min.js",
       },
     ]) ||
       []),
@@ -219,8 +221,8 @@ export const buildScripts = ({
     // },
   ];
 
-  inserts.forEach(({ index, item }) => {
-    scripts.splice(index, 0, item);
+  inserts.forEach(({ index, useLastIndex, item }) => {
+    scripts.splice(useLastIndex ? scripts.length : index  , 0, item);
   });
 
   return scripts;

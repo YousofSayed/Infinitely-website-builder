@@ -5,9 +5,11 @@ import {
   createProject,
   deleteAllMotionsById,
   deleteAllSymbolsById,
+  deleteAttributesInAllPages,
   getDataFromDB,
   initOPFS,
   sendPreviewPagesToServiceWorker,
+  setInteractionsAttributes,
   storeGrapesjsDataIfSymbols,
   updateAllPages,
   updateDB,
@@ -35,6 +37,8 @@ const commands = {
   clearTimeouts,
   writeFilesToOPFS,
   deleteAllMotionsById,
+  setInteractionsAttributes,
+  deleteAttributesInAllPages,
 };
 
 

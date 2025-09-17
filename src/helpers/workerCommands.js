@@ -3,6 +3,9 @@ import { db } from "./db";
 import {
   inf_cmds_id,
   inf_symbol_Id_attribute,
+  interactionId,
+  interactionInstanceId,
+  mainInteractionId,
   mainMotionId,
   motionId,
   motionInstanceId,
@@ -11,6 +14,7 @@ import {
 // import monacoLoader from "@monaco-editor/loader";
 // import { buildDynamicTemplate, buildScriptFromCmds } from "./worker_functions";
 import {
+  buildInteractionsAttributes,
   buildPageAsBlobForSecrviceWorker,
   buildPagesAsBlobForSecrviceWorker,
   defineRoot,
@@ -1743,6 +1747,67 @@ export async function shareProject(props) {
 
 /**
  *
+ * @param {{ projectId:number  , attributes : {[key:string]:string | null } ,  selector:string}} props
+ */
+export async function deleteAttributesInAllPages({
+  projectId,
+  attributes = {},
+  selector,
+}) {
+  const projectData = await db.projects.get(projectId);
+  !opfs.id && (await initOPFS({ id: projectId }));
+  const content = [];
+  for (const key in projectData.pages) {
+    const page = projectData.pages[key];
+    const { document } = parseHTML(
+      doDocument(
+        await (await opfs.getFile(defineRoot(page.pathes.html))).text()
+      )
+    );
+
+    /**
+     * @type {NodeListOf<Element>}
+     */
+    let els = [];
+
+    selector && (els = document.querySelectorAll(selector));
+
+    for (const key in attributes) {
+      !selector &&
+        (els = document.querySelectorAll(
+          `[${attributes[key] ? `${key}="${attributes[key]}"` : key}]`
+        ));
+
+      els.forEach((el) => {
+        el.removeAttribute(key);
+      });
+
+      if (els && els.length) {
+        els.forEach((el) => {
+          el.removeAttribute(motionId);
+          el.removeAttribute(mainMotionId);
+          el.removeAttribute(motionInstanceId);
+        });
+
+        content.push({
+          path: defineRoot(page.pathes.html),
+          content: document.body.innerHTML,
+        });
+      }
+    }
+  }
+
+  await opfs.writeFiles(content);
+  self.postMessage({
+    command: "attributes-deleted",
+    props: {
+      done: true,
+    },
+  });
+}
+
+/**
+ *
  * @param {{ projectId:number  , mId : number}} props
  */
 export async function deleteAllMotionsById({ projectId, mId }) {
@@ -1777,6 +1842,56 @@ export async function deleteAllMotionsById({ projectId, mId }) {
   await opfs.writeFiles(content);
   self.postMessage({
     command: "motion-delete",
+    props: {
+      done: true,
+    },
+  });
+}
+
+/**
+ *
+ * @param {{ projectId:number , interactionsId}} props
+ */
+export async function setInteractionsAttributes({ interactionsId, projectId }) {
+  const projectData = await db.projects.get(+projectId);
+  const interactions = projectData.interactions[interactionsId];
+  const content = [];
+  !opfs.id && initOPFS({ id: projectId });
+  for (const key in projectData.pages) {
+    const page = projectData.pages[key];
+    const { document } = parseHTML(
+      doDocument(
+        await (await opfs.getFile(defineRoot(page.pathes.html))).text()
+      )
+    );
+
+    const els = document.querySelectorAll(
+      `[${interactionId}="${interactionsId}"] , [${mainInteractionId}="${interactionsId}"]`
+    );
+
+    els.forEach((el) => {
+      const instanceId = el.getAttribute(interactionInstanceId);
+      const interactionsAttributes = buildInteractionsAttributes(
+        interactions,
+        instanceId ? instanceId : interactionsId,
+        Boolean(instanceId)
+      );
+      for (const attr in interactionsAttributes) {
+        el.setAttribute(attr, interactionsAttributes[attr]);
+      }
+    });
+
+    if (els && els.length) {
+      content.push({
+        path: defineRoot(page.pathes.html),
+        content: document.body.innerHTML,
+      });
+    }
+  }
+
+  await opfs.writeFiles(content);
+  self.postMessage({
+    command: "interctions-setted",
     props: {
       done: true,
     },

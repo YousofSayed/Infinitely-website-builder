@@ -79,5 +79,5 @@ export const motionsRemoverHandler = (editor) => {
       motionIds = [];
     }, 350);
   };
-  editor.on("component:remove:before", callback);
+  // editor.on("component:remove:before", callback);
 };

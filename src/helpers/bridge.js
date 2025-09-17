@@ -1,14 +1,16 @@
 import parseObjectLiteral from "object-literal-parse";
 import { parse as parseCss, stringify as stringifyCss } from "css";
-import { cloneDeep, isPlainObject, random, uniqueId } from "lodash";
+import { cloneDeep, isArray, isPlainObject, random, uniqueId } from "lodash";
 import serializeJavascript from "serialize-javascript";
 import {
   interactionId,
+  interactionInstanceId,
   mainMotionId,
   MAX_FILE_SIZE,
   MAX_FILES_COUNT,
   MAX_UPLOAD_SIZE,
   motionId,
+  motionInstanceId,
   preivewScripts,
 } from "../constants/shared";
 import { db } from "./db";
@@ -807,6 +809,19 @@ export function CompileMotion(
   return output;
 }
 
+export async function cloneMotion(motionId, projectId) {
+  const projectData = await db.projects.get(+projectId);
+  const motions = projectData.motions;
+  const targetMotion = motions[motionId];
+  const clone = cloneDeep(targetMotion);
+  const newId = uniqueId(`mt${random(999, 10000)}`);
+  clone.id = newId;
+  for (const animation of clone.animations) {
+    animation.name = uniqueId(`varName_${random(999, 1000)}${random(99, 999)}`);
+  }
+  return clone;
+}
+
 /**
  *
  * @param {{[key:string] : import('./types').MotionType}} motions
@@ -814,7 +829,8 @@ export function CompileMotion(
 export function buildGsapMotionsScript(
   motions,
   isInstance = false,
-  removeMarkers = true
+  removeMarkers = true,
+  pageName
 ) {
   const built = Object.values(motions).map((motion) => {
     const compiledMotion = CompileMotion(
@@ -824,37 +840,42 @@ export function buildGsapMotionsScript(
       removeMarkers
     );
     let tween = `let ${motion.id} = {}; \n\n`;
-
-    if (motion.isTimeLine) {
-      tween += `${motion.id}.${
-        motion.timeLineName
-      } = gsap.timeline(${JSON.stringify(compiledMotion.timeline)})`;
-    }
-    if (compiledMotion.fromTo.length) {
-      for (const item of compiledMotion.fromTo) {
-        const toObject = `new Function(\`return (${serializeJavascript(
-          item.toValue,
-          { space: 2 }
-        ).replaceAll("\\", "\\\\")})\`)()`;
-        const fromObject = `new Function(\`return (${serializeJavascript(
-          item.fromValue,
-          { space: 2 }
-        ).replaceAll("\\", "\\\\")})\`)()`;
-        tween += `${
-          motion.isTimeLine ? "" : `${motion.id}.${item.name} = gsap`
-        }.fromTo(\`${item.selector}\`, {...${fromObject}}, {...${toObject}} , ${
-          item.positionParameter || ""
-        });\n\n`;
-
-        // console.log(new Function(`return ${serializeJavascript(item.toValue , {space:2, })}`)());
+    const doMotion = () => {
+      if (motion.isTimeLine) {
+        tween += `${motion.id}.${
+          motion.timeLineName
+        } = gsap.timeline(${JSON.stringify(compiledMotion.timeline)})`;
       }
+      if (compiledMotion.fromTo.length) {
+        for (const item of compiledMotion.fromTo) {
+          const toObject = `new Function(\`return (${serializeJavascript(
+            item.toValue,
+            { space: 2 }
+          ).replaceAll("\\", "\\\\")})\`)()`;
+          const fromObject = `new Function(\`return (${serializeJavascript(
+            item.fromValue,
+            { space: 2 }
+          ).replaceAll("\\", "\\\\")})\`)()`;
+          tween += `${
+            motion.isTimeLine ? "" : `${motion.id}.${item.name} = gsap`
+          }.fromTo(\`${
+            item.selector
+          }\`, {...${fromObject}}, {...${toObject}} , ${
+            item.positionParameter || ""
+          });\n\n`;
+
+          // console.log(new Function(`return ${serializeJavascript(item.toValue , {space:2, })}`)());
+        }
+      }
+    };
+
+    console.log('motions from script builder' ,motion  , !motion?.excludes?.includes?.(pageName) );
+    
+
+    if (!motion?.excludes?.includes?.(pageName)) {
+      doMotion();
     }
 
-    console.log(
-      "instances length : ",
-      motion.instances,
-      Object.keys(motion.instances)
-    );
     if (Object.keys(motion.instances).length) {
       console.log(
         "instances length : ",
@@ -866,8 +887,8 @@ export function buildGsapMotionsScript(
         const clone = cloneDeep(motion);
         clone.id = id;
         clone.instances = {};
-
-        tween += buildGsapMotionsScript({ [id]: clone }, true);
+        delete clone["excludes"];
+        tween += buildGsapMotionsScript({ [id]: clone }, true , removeMarkers );
       }
     }
 
@@ -888,7 +909,7 @@ export function filterMotionsByPage(motions, pageName) {
   }
   return Object.fromEntries(
     Object.entries(motions).filter(([key, motion]) => {
-      if (!motion.pages || !motion.pages.length) return true;
+      if (!motion.pages || !motion.pages.length) return false;
       return motion.pages.includes(pageName);
     })
   );
@@ -901,53 +922,108 @@ export function filterMotionsByPage(motions, pageName) {
  */
 export async function cleanMotions(motions, pages) {
   const { parseHTML } = await import("linkedom");
-  await Promise.all(
-    Object.entries(motions).map(async ([key, motion]) => {
-      return await Promise.all(
-        Object.values(pages).map(async (page) => {
-          // const pageContent = await page.html.text();
-          console.log(page, page.helmet);
-          const { document } = parseHTML(
-            doDocument(
-              await (await opfs.getFile(defineRoot(page.pathes.html))).text()
-            )
-          );
+  const pagesContent = {};
+  for (const key in pages) {
+    const page = pages[key];
+    const pageContent = await (
+      await opfs.getFile(defineRoot(page.pathes.html))
+    ).text();
+    pagesContent[page.name] = pageContent;
+  }
 
-          const els = document.querySelectorAll(
-            `[${motionId}="${motion.id}"] , [${mainMotionId}="${motion.id}"]`
-          );
-          if (!(els && els.length)) {
-            delete motions[key];
-          }
-          // const stream = pageFile.stream();
-          // const reader = stream.getReader();
-          // const decoder = new TextDecoder();
-          // const buffer = [];
-          // let isMotionFounded = false;
-          // while (true) {
-          //   const { value, done } = await reader.read();
-          //   const pageContent = decoder.decode(value, { stream: true });
-          //   if (!pageContent) break;
-          //   buffer.push(pageContent);
-          //   console.log("page content is : ", pageContent, buffer.join(""));
-          //   buffer.length > 20 && buffer.shift();
-          //   if (buffer.join("").includes(`${motionId}="${motion.id}"`)) {
-          //     isMotionFounded = true;
-          //     break;
-          //   }
-          //   if (isMotionFounded || done) {
-          //     !isMotionFounded && delete motions[key];
-          //     break;
-          //   }
-          // }
-          // if (!pageContent.includes(`[${motionId}="${motion.id}"]`)) {
-          //   delete motions[key];
-          // }
-          return page;
-        })
+  for (const key in cloneDeep(motions)) {
+    const motion = motions[key];
+    let isChange = false;
+    const allowedInstances = {};
+
+    for (const name in pagesContent) {
+      if (isChange) break;
+      const pageContent = pagesContent[name];
+      const { document } = parseHTML(doDocument(pageContent));
+      const mainIdEls = document.querySelectorAll(`[${motionId}="${key}"]`);
+      const instancesEls = document.querySelectorAll(
+        `[${mainMotionId}="${key}"]`
       );
-    })
-  );
+      console.log(mainIdEls, instancesEls, pageContent, "a3aaaaaaa");
+      if (!mainIdEls.length && instancesEls.length) {
+        motion.excludes = [...new Set([...(motion.excludes || []), name])];
+      }
+
+      if (mainIdEls.length || instancesEls.length) {
+        isChange = true;
+      } else {
+        isChange = false;
+      }
+
+      //clear instances
+      for (const instanceKey in cloneDeep(motion.instances)) {
+        if (allowedInstances[instanceKey]) continue;
+        const el = document.querySelectorAll(
+          `[${motionInstanceId}="${instanceKey}"]`
+        );
+        if (el.length) allowedInstances[instanceKey] = true;
+        if (!el.length) allowedInstances[instanceKey] = false;
+      }
+    }
+
+    for (const allowedInstance in allowedInstances) {
+      if (!allowedInstances[allowedInstance])
+        delete motion.instances[allowedInstance];
+    }
+    if (!isChange) delete motions[key];
+  }
+
+  // await Promise.all(
+  //   Object.entries(motions).map(async ([key, motion]) => {
+  //     return await Promise.all(
+  //       Object.values(pages).map(async (page) => {
+  //         // const pageContent = await page.html.text();
+  //         console.log(page, page.helmet);
+  //         const { document } = parseHTML(
+  //           doDocument(
+  //             await (await opfs.getFile(defineRoot(page.pathes.html))).text()
+  //           )
+  //         );
+
+  //         const els = document.querySelectorAll(
+  //           `[${motionId}="${key}"] , [${mainMotionId}="${key}"]`
+  //         );
+  //         if (!els.length) {
+  //           console.log(`motions ${key} deleted.`, els);
+
+  //           delete motions[key];
+  //         }
+  //         // const stream = pageFile.stream();
+  //         // const reader = stream.getReader();
+  //         // const decoder = new TextDecoder();
+  //         // const buffer = [];
+  //         // let isMotionFounded = false;
+  //         // while (true) {
+  //         //   const { value, done } = await reader.read();
+  //         //   const pageContent = decoder.decode(value, { stream: true });
+  //         //   if (!pageContent) break;
+  //         //   buffer.push(pageContent);
+  //         //   console.log("page content is : ", pageContent, buffer.join(""));
+  //         //   buffer.length > 20 && buffer.shift();
+  //         //   if (buffer.join("").includes(`${motionId}="${motion.id}"`)) {
+  //         //     isMotionFounded = true;
+  //         //     break;
+  //         //   }
+  //         //   if (isMotionFounded || done) {
+  //         //     !isMotionFounded && delete motions[key];
+  //         //     break;
+  //         //   }
+  //         // }
+  //         // if (!pageContent.includes(`[${motionId}="${motion.id}"]`)) {
+  //         //   delete motions[key];
+  //         // }
+  //         return page;
+  //       })
+  //     );
+  //   })
+  // );
+
+  console.log("cleaned motions", motions);
 
   return motions;
 }
@@ -990,6 +1066,73 @@ export async function cleanInteractions(interactions, pages) {
   console.log(`newInteractions is: `, newInteractions);
 
   return newInteractions;
+}
+
+export function advancedParse(value) {
+  // console.log("before parse value : ", value);
+
+  try {
+    return JSON.parse(value); // new Function(`return ${value}`)();
+  } catch (error) {
+    return value == undefined ? `undefined` : `\`${value}\``;
+  }
+}
+
+/**
+ *
+ * @param {import('./types').Actions} actions
+ * @param {string} id
+ */
+export const buildFunctionsFromActions = (actions, id, isInstance = false) => {
+  // console.log(actions);
+
+  const functionsFromParams = actions
+    .map(
+      (action) =>
+        `${action.function}(${Object.values(action.params)
+          .map((value) => {
+            value = isPlainObject(value) ? value.value : value;
+            value = advancedParse(value);
+            console.log("value", value);
+            return typeof value == "string"
+              ? value.replaceAll(
+                  `self`,
+                  `[${
+                    isInstance ? interactionInstanceId : interactionId
+                  }="${id}"]`
+                )
+              : value;
+          })
+          .join(",")})`
+    )
+    .join(";");
+
+  // console.log('functionsFromParams' , functionsFromParams);
+
+  return functionsFromParams;
+};
+
+/**
+ *
+ * @param {import('./types').Interactions} interactions
+ * @param {string} interactionsId
+ * @param {boolean} isInstance
+ */
+export function buildInteractionsAttributes(
+  interactions,
+  interactionsId,
+  isInstance = false
+) {
+  return Object.fromEntries(
+    interactions.map((interaction) => [
+      `v-on:${interaction.event}`,
+      buildFunctionsFromActions(
+        interaction.actions,
+        interactionsId,
+        isInstance
+      ),
+    ])
+  );
 }
 
 /**
@@ -1262,12 +1405,17 @@ export const buildPageData = async (page = "", projectData, projectSetting) => {
     bodyAttributes: projectData.pages[`${currentPageId}`].bodyAttributes || {},
     motions:
       `<script>${buildGsapMotionsScript(
-        filterMotionsByPage(projectData.motions, currentPageId),
+        filterMotionsByPage(
+          await cleanMotions(projectData.motions, projectData.pages),
+          currentPageId
+        ),
         false,
-        projectSetting.remove_gsap_markers_on_build
+        projectSetting.remove_gsap_markers_on_build,
+        currentPageId
       )}</script>` || "",
   };
-  // console.log("motions : ", buildGsapMotionsScript(projectData.motions));
+
+  // console.log("motions script: ", cleanMotions(projectData.motions, projectData.pages),);
 
   const helmet = currentPage.helmet;
 
@@ -1934,11 +2082,10 @@ export function styleToString(styleObj = {}) {
     .join(";");
 }
 
-
 export function isDaysAgo(date, days) {
   const now = Date.now(); // current time in ms
-  const targetTime = !(date instanceof Date ) ? new Date(date) :  date.getTime(); // convert Date object to ms
+  const targetTime = !(date instanceof Date) ? new Date(date) : date.getTime(); // convert Date object to ms
   const daysInMs = days * 24 * 60 * 60 * 1000; // days → ms
 
-  return (now - targetTime) >= daysInMs;
+  return now - targetTime >= daysInMs;
 }

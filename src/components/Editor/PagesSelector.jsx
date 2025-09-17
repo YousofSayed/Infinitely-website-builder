@@ -31,10 +31,10 @@ export const PagesSelector = memo(() => {
 
   useEffect(() => {
     if (!editor) {
-      console.log("whyyyyyyy");
+      // console.log("whyyyyyyy");
       return;
     }
-    console.log("editor is now on");
+    // console.log("editor is now on");
 
     const pageUpdateCallback = async () => {
       console.log("editor is now on from updater");
@@ -43,10 +43,10 @@ export const PagesSelector = memo(() => {
       // localStorage.setItem(current_page_id, currentPage.id);
     };
 
-    const windowCallback = (ev) => {
-      console.log("111111111111: details", ev.detail);
-      setPageName(new String(ev.detail.pageName));
-    };
+    // const windowCallback = (ev) => {
+    //   console.log("111111111111: details", ev.detail);
+    //   setPageName(new String(ev.detail.pageName));
+    // };
     // window.addEventListener(InfinitelyEvents.pages.all, pageUpdateCallback);
     editor.on(InfinitelyEvents.pages.all, pageUpdateCallback);
     // window.addEventListener(InfinitelyEvents.pages.all, windowCallback);
@@ -62,7 +62,7 @@ export const PagesSelector = memo(() => {
 
   useEffect(() => {
     if (!editor) {
-      console.log("whyyyyyyy");
+      // console.log("whyyyyyyy");
       return;
     }
     console.log("editor is now on");
@@ -71,7 +71,7 @@ export const PagesSelector = memo(() => {
 
   const getAndSetAllPages = async () => {
     const pages = await (await db.projects.get(projectId)).pages;
-    console.log("pages names : ", Object.keys(pages));
+    // console.log("pages names : ", Object.keys(pages));
 
     setPages(Object.keys(pages));
   };

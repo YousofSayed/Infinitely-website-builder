@@ -16,6 +16,11 @@ export default defineConfig({
     global: "globalThis",
     // 'process.env': {}, // Shim process.env
   },
+   server: {
+    watch: {
+      ignored: ['**/node_modules/**', '**/.git/**']
+    }
+  },
   optimizeDeps: {
     esbuildOptions: {
       // Node.js global to browser globalThis

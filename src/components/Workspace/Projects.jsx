@@ -13,72 +13,87 @@ import { VirtuosoGrid } from "react-virtuoso";
 import { GridComponents } from "../Protos/VirtusoGridComponent.jsx";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { version } from "../../constants/Version.js";
+import { For } from "million/react";
 
-export const Projects = memo(() => {
+//million-ignore
+export const Projects = () => {
   const setShowCrtModal = useSetRecoilState(showCrtModalState);
   const [showLoader, setShowLoader] = useState(true);
   const [dbProjects, setDbProjects] = useRecoilState(projectState);
   const [animtedRef] = useAutoAnimate();
-  const liveQueryProjects = useLiveQuery(async () => {
+  useLiveQuery(async () => {
     const res = await db.projects.toArray();
     console.log("res : ", res);
 
     setShowLoader(false);
     setDbProjects(res);
-    return res;
+    // return res;
   });
 
   return (
-    <section className="relative w-full h-full">
-      <section
-        ref={animtedRef}
-        className={`${
-          dbProjects?.length ? "" : "p-2"
-        } container m-auto gap-3 overflow-hidden h-full bg-slate-950 w-full rounded-lg ${
-          !dbProjects?.length && "flex items-center justify-center"
-        }`}
-      >
-        {dbProjects?.length && (
-          <VirtuosoGrid
-            components={GridComponents}
-            totalCount={Number(dbProjects.length)}
-            itemClassName="p-2"
-            itemContent={(i) => {
-              return <Project key={i} project={dbProjects[i]} />;
+    // <section className="relative w-full h-full flex flex-col">
+    <section
+      ref={animtedRef}
+      className={`${
+        dbProjects?.length ? "" : "p-2"
+      } container m-auto gap-3 overflow-hidden h-full bg-slate-950 w-full rounded-lg ${
+        !dbProjects?.length && "flex items-center justify-center"
+      }`}
+    >
+      {dbProjects?.length && (
+        // <VirtuosoGrid
+        //   components={GridComponents}
+        //   totalCount={Number(dbProjects.length)}
+        //   itemClassName="p-2"
+        //   itemContent={(i) => {
+        //     return <Project key={i} project={dbProjects[i]} />;
+        //   }}
+        // />
+
+        <section className="h-full grid gap-2 p-1 overflow-auto grid-cols-[repeat(auto-fill,minmax(250px,1fr))]">
+          {/* <For each={dbProjects}>
+            {(project, i) => {
+              return <Project key={i} project={project} />;
             }}
-          />
-        )}
-        {/* {dbProjects?.map((project) => (
+          </For> */}
+
+          {dbProjects.map((project, i) => (
+            <Project key={project.id} project={project}  />
+          ))}
+        </section>
+      )}
+      {/* {dbProjects?.map((project) => (
           <Project key={project.id} project={project} />
         ))} */}
 
-        {!dbProjects?.length && !showLoader && !liveQueryProjects?.length && (
-          <figure className="flex flex-col items-center justify-center gap-2">
-            <img
-              src={noDataImg}
-              className="max-w-[300px] opacity-[.9] ml-[-36px]"
-              alt="no data is here"
-              // loading="lazy"
-            />
-            <figcaption className="text-slate-200 font-semibold text-2xl ">
-              No Projects Yet
-            </figcaption>
-            <Button
-              onClick={(ev) => {
-                setShowCrtModal(true);
-              }}
-            >
-              {Icons.plus("white")}
-              Add New
-            </Button>
-          </figure>
-        )}
+      {!dbProjects?.length && !showLoader && !dbProjects?.length && (
+        <figure className="flex flex-col items-center justify-center gap-2">
+          <img
+            src={noDataImg}
+            className="max-w-[300px] opacity-[.9] ml-[-36px]"
+            alt="no data is here"
+            // loading="lazy"
+          />
+          <figcaption className="text-slate-200 font-semibold text-2xl ">
+            No Projects Yet
+          </figcaption>
+          <Button
+            onClick={(ev) => {
+              setShowCrtModal(true);
+            }}
+          >
+            {Icons.plus("white")}
+            Add New
+          </Button>
+        </figure>
+      )}
 
-        {showLoader && <Loader />}
+      {showLoader && <Loader />}
 
-        <div className="absolute right-[2%] bottom-[2%] text-slate-600 opacity-[.9] z-40 text-2xl pointer-events-none">{version}</div>
-      </section>
-
+      <div className="absolute right-[2%] bottom-[2%] text-slate-600 opacity-[.9] z-40 text-2xl pointer-events-none">
+        {version}
+      </div>
     </section>
+    // {/* </section> */}
   );
-});
+};

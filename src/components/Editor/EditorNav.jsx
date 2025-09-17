@@ -144,6 +144,7 @@ export const HomeNav = () => {
             onClick={() => {
               // editor.trigger("leave:project");
               // console.log("navigated");
+              editor.leaving = true;
               if (editor.getDirtyCount()) {
                 const cnfrm = confirm(
                   `There is changes not saved , are you sure to leave ?`

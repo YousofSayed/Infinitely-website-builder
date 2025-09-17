@@ -18,6 +18,7 @@ import { toast } from "react-toastify";
 import { getProjectRoot } from "../../helpers/bridge";
 import { random } from "lodash";
 
+// million-ignore
 /**
  *
  * @param {{project : import('../../helpers/types').Project}} param0
@@ -31,31 +32,31 @@ export const Project = ({ project }) => {
     useRecoilState(isProjectInitedState);
   const urlsRef = useRef([]);
   // console.log(project.imgSrc);
-  useEffect(() => { 
+  useEffect(() => {
     (async () => {
       const root = `projects/project-${project.id}`;
+      console.log("project id : ", project);
+
       const file = await (
         await opfs.getFile(`${root}/screenshot.webp`)
       ).getOriginFile();
-      if(!(file?.size > 0))return;
+      if (!(file?.size > 0)) return;
       const url = URL.createObjectURL(file);
-      setImg(new String(url));
+      setImg(url); // no new String()
       urlsRef.current.push(url);
-      // URL.revokeObjectURL(url);
     })();
 
     return () => {
-      urlsRef.current.forEach((url) => {
-        URL.revokeObjectURL(url);
-      });
+      urlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      urlsRef.current = [];
     };
   }, [project]);
 
   return (
-    <article className="p-2 bg-slate-900  rounded-lg flex flex-col h-[320px] justify-evenly  gap-2">
+    <article  className="p-2 bg-slate-900  rounded-lg flex flex-col h-[320px] justify-evenly  gap-2">
       <figure className="flex flex-col gap-2 h-[70%]  items-center ">
         <img
-        // key={`random-${random(999,1000)}`}
+          // key={`random-${random(999,1000)}`}
           src={img ? img : "/images/blank.jpg"}
           className={`max-w-full max-h-full ${
             project.imgSrc ? "h-full " : "h-full  object-cover"
@@ -108,9 +109,9 @@ export const Project = ({ project }) => {
             if (!project.inited) return;
             const tId = toast.loading("Deleting project");
             await opfs.remove({
-              dirOrFile:await opfs.getFolder(`projects/project-${project.id}`)
-            })
-          
+              dirOrFile: await opfs.getFolder(`projects/project-${project.id}`),
+            });
+
             await db.projects.delete(project.id);
             sessionStorage.removeItem(current_dynamic_template_id);
             localStorage.removeItem(current_page_id);

@@ -6,6 +6,7 @@ import { dynamic_container, dynamic_text } from "../constants/cmpsTypes";
 import { defineTraits } from "../helpers/functions";
 import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
 import { Icons } from "../components/Icons/Icons";
+import { inf_symbol_Id_attribute } from "../constants/shared";
 
 const svgText = html`<svg style="width:24px;height:24px" viewBox="0 0 24 24">
   <path
@@ -287,15 +288,14 @@ export const blocks = [
       type: "looper",
     },
   },
-  // {
-  //   id: dynamic_text,
-  //   label: "Dynamic Text",
-  //   media: editorIcons.dynamicText,
-  //   category: "Basic",
-  //   content: {
-  //     type: dynamic_text,
-  //   },
-  // },
+
+  {
+    id: dynamic_text,
+    label: "Symbol test",
+    media: editorIcons.dynamicText,
+    category: "Tests",
+    content: `<section ${inf_symbol_Id_attribute}="2213sad1">Hello</section>`,
+  },
   // {
   //   id:'template',
   //   label:'Template',

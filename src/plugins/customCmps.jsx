@@ -21,12 +21,14 @@ import { Svg } from "../Blocks/Svg";
 import { SplineScene } from "../Blocks/SplineScene";
 import { DropArea } from "../Blocks/DropArea";
 import { Slider } from "../Blocks/Slider";
+import { Symbol } from "../Blocks/Symbol";
 
 /**
  *
  * @param {import('grapesjs').Editor} editor
  */
 export const customCmps = (editor) => {
+  Symbol(editor);
   Input({ editor });
   DynamicContainer({ editor });
   DynamicText({ editor });
@@ -47,6 +49,6 @@ export const customCmps = (editor) => {
   // Iframe({ editor });
   Media({ editor });
   SplineScene({ editor });
-  DropArea({editor});
+  DropArea({ editor });
   Svg(editor);
 };

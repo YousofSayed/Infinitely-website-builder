@@ -29,6 +29,7 @@ import {
   defineFontFace,
   defineRoot,
   doDocument,
+  filterMotionsByPage,
   html,
   minifyBlobJSAndCssStream,
   replaceBlobs,
@@ -157,6 +158,10 @@ export async function buildProject(props) {
   //   })
   // );
 
+  const cleanedMotions = await cleanMotions(
+    projectData.motions,
+    projectData.pages
+  );
   //Handling js folder
   for (const page of Object.values(projectData.pages)) {
     const jsHandle = await opfs.getFile(defineRoot(page.pathes.js));
@@ -192,6 +197,53 @@ export async function buildProject(props) {
       }
     }
 
+    console.log(`Start loading motions`);
+
+    if (!props.projectSetting.disable_gsap_core) {
+      const filterdMotions = buildGsapMotionsScript(
+        filterMotionsByPage(cleanedMotions, page.name),
+        false,
+        props.projectSetting.remove_gsap_markers_on_build,
+        page.name
+      );
+
+      zip.file(
+        `js/motions/${page.name}.js`,
+        props.projectSetting.minify_Js
+          ? (await (await import("terser")).minify(filterdMotions)).code
+          : filterdMotions
+      );
+
+      // const cleanedMotions = await cleanMotions(
+      //   projectData.motions,
+      //   projectData.pages
+      // ); //Will used in build motion scripts function
+      // const motionScripts = buildMotionScripts({
+      //   motions: cleanedMotions,
+      //   pages: projectData.pages,
+      //   projectSetting: props.projectSetting,
+      // });
+
+      // zip.file(
+      //   `js/motions/index.js`,
+      //   props.projectSetting.minify_Js
+      //     ? (await (await import("terser")).minify(motionScripts.index)).code
+      //     : motionScripts.index
+      // );
+
+      // for (const [key, value] of Object.entries(motionScripts.other)) {
+      //   zip.file(
+      //     `js/motions/${key}.js`,
+      //     props.projectSetting.minify_Js
+      //       ? (await (await import("terser")).minify(value)).code
+      //       : value
+      //   );
+      // }
+
+      projectData.motions = cleanedMotions;
+    }
+    console.log(`End loading motions`);
+
     // if (page.symbols.length) {
     //   const files = await Promise.all(
     //     page.symbols.map(async (symbol) => {
@@ -213,6 +265,7 @@ export async function buildProject(props) {
     //   );
     // }
   }
+
   const templates = Object.values(projectData.blocks || {}).filter(
     (block) => block.type == "template"
   );
@@ -425,75 +478,15 @@ export async function buildProject(props) {
   }
   console.log(`End loading pages`);
 
-  console.log(`Start loading motions`);
-  const cleanedMotions = await cleanMotions(
-    projectData.motions,
-    projectData.pages
-  ); //Will used in build motion scripts function
-  const motionScripts = buildMotionScripts({
-    motions: cleanedMotions,
-    pages: projectData.pages,
-  });
-
-  zip.file(
-    `js/motions/index.js`,
-    props.projectSetting.minify_Js
-      ? (await (await import("terser")).minify(motionScripts.index)).code
-      : motionScripts.index
-  );
-
-  for (const [key, value] of Object.entries(motionScripts.other)) {
-    zip.file(
-      `js/motions/${key}.js`,
-      props.projectSetting.minify_Js
-        ? (await (await import("terser")).minify(value)).code
-        : value
-    );
-  }
-  console.log(`End loading motions`);
-
-  // await Promise.all(
-  //   Object.entries(motionScripts.other).map(async ([key, value]) => {
-  //     return zip.file(
-  //       `js/motions/${key}.js`,
-  //       props.projectSetting.minify_Js
-  //         ? (await (await import("terser")).minify(value)).code
-  //         : value
-  //     );
-  //   })
-  // );
-
-  //Handling Editor Data
-  /**
-   * @type {import('../helpers/types').Project}
-   */
-  // const editorData = {
-  //   blocks: projectData.blocks,
-  //   imgSrc: projectData.imgSrc,
-  //   description: projectData.description,
-  //   name: projectData.name,
-  //   restAPIModels: projectData.restAPIModels.map((model) => {
-  //     model.response = null;
-  //     return model;
-  //   }),
-  //   symbols: projectData.symbols,
-  //   type: projectData.type,
-  //   fonts: fontsData,
-  //   jsHeaderLibs: jsHeaderLibsData,
-  //   jsFooterLibs: jsFooterLibsData,
-  //   cssLibs: cssLibsData,
-  //   pages: pagesData,
-  //   motions: cleanedMotions,
-  //   projectSettings: props.projectSetting,
-  // };
   for (const rm of projectData.restAPIModels) {
     rm.response = "";
   }
-  projectData.motions = cleanedMotions;
+
   const editorDataBlob = new Blob(
     [JSON.stringify(await replaceBlobs(projectData))],
     { type: "application/json" }
   );
+
   zip.file("editor/infinitely.json", editorDataBlob);
   const screenshot = await (
     await opfs.getFile(defineRoot(`screenshot.webp`))
@@ -786,6 +779,7 @@ async function buildPage({
                     !projectSetting.disable_gsap_scrollTrigger
                   ? 2
                   : null,
+              useLastIndex: true,
               item: {
                 name: `${page.name}.js`,
                 buildUrl: `/js/motions/${page.name}.js`,
@@ -806,41 +800,6 @@ async function buildPage({
               }></script>`
           )
           .join("\n")}
-
-        <script>
-          const seriousStyle = \`
-  font-size: 20px;
-  font-weight: 900;
-  color: #b91c1c;       
-  background: #fef2f2;  
-  padding: 8px 12px;
-  border: 2px solid #b91c1c;
-  border-radius: 6px;
-\`;
-
-          const neutralStyle = \`\`; // reset styles
-
-          const decorativeStyle = \`
-  background: #1e3a8a; 
-  color: white;              
-  font-style: italic;
-  font-size: 18px;
-  font-weight: bold;
-  padding: 10px;            
-  border-radius: 6px;      
-  text-shadow: 2px 2px 6px rgba(0,0,0,0.5);
-\`;
-
-          console.clear();
-          console.log(
-            \`%cThis text 👇 is my copyright, so don’t remove it 😒!%c
-
-%c💙 الحمد لله رب العالمين 💙\`,
-            seriousStyle,
-            neutralStyle,
-            decorativeStyle
-          );
-        </script>
       </body>
     </html>
   `;
@@ -871,38 +830,41 @@ function buildFontFaces(fonts) {
 
 /**
  *
- * @param {{motions : {[key:string] : import('./types').MotionType} , pages : {[key:string]:import('./types').InfinitelyPage , projectSetting : import('./types').ProjectSetting}}} param0
+ * @param {{motions : {[key:string] : import('./types').MotionType} , pages : {[key:string]:import('./types').InfinitelyPage} , projectSetting : import('./types').ProjectSetting}}} param0
  */
-function buildMotionScripts({ motions, pages, projectSetting }) {
-  // const cleanedMotions = await cleanMotions(motions);
-  const finalMotions = {
-    index: "",
-    other: {},
-  };
 
-  // await Promise.all(
-  Object.entries(pages).map(([key, page]) => {
-    // const pageContent = await page.html.text();
-    Object.values(motions).map((motion) => {
-      if (motion.pages.includes("index")) {
-        finalMotions.index = buildGsapMotionsScript(
-          { [motion.id]: motion },
-          false,
-          projectSetting.remove_gsap_markers_on_build
-        );
-      } else if (motion.pages.includes(page.name)) {
-        finalMotions.other[page.name] = buildGsapMotionsScript(
-          {
-            [motion.id]: motion,
-          },
-          false,
-          projectSetting.remove_gsap_markers_on_build
-        );
-      }
-    });
-    return page;
-  });
-  // );
+// function buildMotionScripts({ motions, pages, projectSetting }) {
+//   // const cleanedMotions = await cleanMotions(motions);
+//   const finalMotions = {
+//     index: "",
+//     other: {},
+//   };
 
-  return finalMotions;
-}
+//   // await Promise.all(
+//   Object.entries(pages).map(([key, page]) => {
+//     // const pageContent = await page.html.text();
+//     Object.values(motions).map((motion) => {
+//       if (motion.pages.includes("index")) {
+//         finalMotions.index = buildGsapMotionsScript(
+//           { [motion.id]: motion },
+//           false,
+//           projectSetting.remove_gsap_markers_on_build,
+//           "index"
+//         );
+//       } else if (motion.pages.includes(page.name)) {
+//         finalMotions.other[page.name] = buildGsapMotionsScript(
+//           {
+//             [motion.id]: motion,
+//           },
+//           false,
+//           projectSetting.remove_gsap_markers_on_build,
+//           page.name
+//         );
+//       }
+//     });
+//     return page;
+//   });
+//   // );
+
+//   return finalMotions;
+// }

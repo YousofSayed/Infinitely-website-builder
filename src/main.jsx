@@ -9,13 +9,35 @@ import { ErrorBoundary } from "react-error-boundary";
 import { BrowserRouter } from "react-router-dom";
 import { version } from "./constants/Version.js";
 import { setProjectSettings } from "./helpers/functions.js";
+import { toast } from "react-toastify";
+import { ToastMsgInfo } from "./components/Editor/Protos/ToastMsgInfo.jsx";
 // import worker from './helpers/worker.js';
 // import './helpers/backbonePacher.js'
 // src/main.js
 // src/main.js
 setProjectSettings();
-RecoilEnv.RECOIL_DUPLICATE_ATOM_KEY_CHECKING_ENABLED = false
+RecoilEnv.RECOIL_DUPLICATE_ATOM_KEY_CHECKING_ENABLED = false;
 makeAppResponsive("#root");
+const originalFetch = window.fetch;
+
+window.fetch = async (input, init) => {
+  if (!navigator.onLine) {
+    toast.error(<ToastMsgInfo msg="You are offline" />);
+    return new Response(JSON.stringify({ error: 'Offline' }), {
+      status: 503,
+      statusText: 'Service Unavailable',
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  try {
+    return await originalFetch(input, init);
+  } catch (error) {
+    toast.error(<ToastMsgInfo msg="Network error occurred" />);
+    throw error;
+  }
+};
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   // <React.StrictMode>
   <RecoilRoot>
@@ -59,4 +81,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   // </React.StrictMode>,
 );
 
-console.log(version);
+const appStatus = { developer: 'Yousef' , version: version };
+console.table(appStatus);
+// console.log(version);

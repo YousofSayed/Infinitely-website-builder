@@ -3,10 +3,20 @@ import { Input } from "../Protos/Input";
 import { Button } from "../../Protos/Button";
 import { useEditorMaybe } from "@grapesjs/react";
 import html2canvas from "html2canvas-pro";
-import { getComponentRules } from "../../../helpers/functions";
+import {
+  getComponentRules,
+  getProjectSettings,
+  handleCloneComponent,
+  saveProjectByWorker,
+  store,
+} from "../../../helpers/functions";
 import { html, uniqueID } from "../../../helpers/cocktail";
 import { db } from "../../../helpers/db";
-import { current_project_id, inf_template_id } from "../../../constants/shared";
+import {
+  current_page_id,
+  current_project_id,
+  inf_template_id,
+} from "../../../constants/shared";
 import { minify } from "csso";
 import { Icons } from "../../Icons/Icons";
 import { editorIcons } from "../../Icons/editorIcons";
@@ -40,18 +50,24 @@ export const ReusableCmb = () => {
   };
 
   const save = async () => {
-   const tId = toast.loading(<ToastMsgInfo msg={`Saving...`}/>)
-    const sle = editor.getSelected();
+    const tId = toast.loading(<ToastMsgInfo msg={`Saving template...`} />);
+    // sessionStorage.setItem("clone-disabled", "true");
+    const sle = await editor.getSelected().clone();
+    console.log(sle.props());
+    
+    // return
+    // sessionStorage.removeItem("clone-disabled");
+    // const projectDataHandled = await handleCloneComponent(sle , editor);
     const id = newProps.name + (newProps.ctg || "templates") + sle.getId();
-    selectedEl.addAttributes({ [inf_template_id]: id });
+    sle.addAttributes({ [inf_template_id]: id });
     const block = {};
-
+    const {projectSettings} = getProjectSettings()
     // editor.Blocks.add(id, block);
     const projectId = +localStorage.getItem(current_project_id);
     const projectData = await db.projects.get(projectId);
     const stringStyle = getComponentRules({
       editor,
-      cmp: selectedEl,
+      cmp: sle,
       nested: true,
     }).stringRules;
     const contentPath = `editor/templates/${id}/${id}.html`;
@@ -61,39 +77,108 @@ export const ReusableCmb = () => {
       style: stylePath,
     };
 
-    await opfs.writeFiles([
+    store(
       {
-        path: defineRoot(contentPath),
-        content: selectedEl.toHTML({ withProps: true  }),
-      },
-      {
-        path: defineRoot(stylePath),
-        content: minify(stringStyle).css,
-      },
-    ]);
-
-    await db.projects.update(projectId, {
-      blocks: {
-        ...projectData.blocks,
-        [id]: {
-          label: newProps.name,
-          name: newProps.name,
-          category: newProps.ctg || "templates",
-          id,
-          pathes,
-          // content: new Blob([selectedEl.toHTML({ withProps: true })], {
-          //   type: "text/html",
-          // }),
-          // style: minify(stringStyle).css,
-          type: "template",
-          media: selectedEl.getIcon() || editorIcons.templates({}),
+        data: {
+          // motions:projectDataHandled.motions,
+          blocks: {
+            ...projectData.blocks,
+            [id]: {
+              label: newProps.name,
+              name: newProps.name,
+              category: newProps.ctg || "templates",
+              id,
+              pathes,
+              // content: new Blob([selectedEl.toHTML({ withProps: true })], {
+              //   type: "text/html",
+              // }),
+              // style: minify(stringStyle).css,
+              type: "template",
+              media: sle.getIcon() || editorIcons.templates({}),
+            },
+          },
         },
+
+        files: {
+          [defineRoot(contentPath)]: sle.toHTML({
+            keepInlineStyle: true,
+            withProps: true,
+          }),
+
+          [defineRoot(stylePath)]: minify(stringStyle).css,
+        },
+
+        pageName: localStorage.getItem(current_page_id),
+        updatePreviewPages: projectSettings.enable_auto_save,
       },
-    });
-    editor.trigger("block:add");
+      editor
+    );
+    //  editor.trigger("block:add");
     editor.runCommand("close:current:modal");
     toast.done(tId);
-    toast.success(<ToastMsgInfo msg={`Template saved successfully👍`}/>)
+    toast.success(<ToastMsgInfo msg={`Template saved successfully👍`} />);
+
+    // await opfs.writeFiles([
+    //   {
+    //     path: defineRoot(contentPath),
+    //     content: sle.toHTML({ withProps: true }),
+    //   },
+    //   {
+    //     path: defineRoot(stylePath),
+    //     content: minify(stringStyle).css,
+    //   },
+    // ]);
+
+    // await db.projects.update(projectId, {
+    //   blocks: {
+    //     ...projectData.blocks,
+    //     [id]: {
+    //       label: newProps.name,
+    //       name: newProps.name,
+    //       category: newProps.ctg || "templates",
+    //       id,
+    //       pathes,
+    //       // content: new Blob([selectedEl.toHTML({ withProps: true })], {
+    //       //   type: "text/html",
+    //       // }),
+    //       // style: minify(stringStyle).css,
+    //       type: "template",
+    //       media: sle.getIcon() || editorIcons.templates({}),
+    //     },
+    //   },
+    // });
+
+    // saveProjectByWorker(
+    //   {
+    //     data: {
+    //       blocks: {
+    //         ...projectData.blocks,
+    //         [id]: {
+    //           label: newProps.name,
+    //           name: newProps.name,
+    //           category: newProps.ctg || "templates",
+    //           id,
+    //           pathes,
+    //           // content: new Blob([selectedEl.toHTML({ withProps: true })], {
+    //           //   type: "text/html",
+    //           // }),
+    //           // style: minify(stringStyle).css,
+    //           type: "template",
+    //           media: sle.getIcon() || editorIcons.templates({}),
+    //         },
+    //       },
+    //     },
+
+    //     pageName: localStorage.getItem(current_page_id),
+    //     updatePreviewPages: true,
+    //   },
+    //   () => {
+    // editor.trigger("block:add");
+    // editor.runCommand("close:current:modal");
+    // toast.done(tId);
+    // toast.success(<ToastMsgInfo msg={`Template saved successfully👍`} />);
+    //   }
+    // );
   };
 
   return (

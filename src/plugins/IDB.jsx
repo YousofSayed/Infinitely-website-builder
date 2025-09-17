@@ -38,6 +38,7 @@ import { css_beautify } from "js-beautify";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
 import { parseHTML } from "linkedom";
+import { isFunction } from "lodash";
 
 let loadFooterScriptsCallback, loadHeadScriptsCallback, loadMainScriptsCallback;
 let storeTimeout;
@@ -62,21 +63,21 @@ export const IDB = (editor) => {
     timesLoaded = 0;
   let tId;
   editor.infDirty = 0;
-  editor.getDirtyCount = () => editor.infDirty;
-  editor.clearDirtyCount = () => (editor.infDirty = 0);
+  // editor.getDirtyCount = () => editor.infDirty;
+  // editor.clearDirtyCount = () => (editor.infDirty = 0);
   const updateDirty = () => {
     editor.infDirty++;
-  }
-  editor.on("update", updateDirty);
+  };
+  // editor.on("update", updateDirty);
 
-  window.addEventListener('beforeunload', (e) => {
-  // Check if there are unsaved changes
-  if (editor.getDirtyCount() > 0) {
-    e.preventDefault();
-    e.returnValue = 'Changes you made may not be saved!'; // This triggers the browser's native confirmation dialog
-    return '';
-  }
-});
+  // window.addEventListener("beforeunload", (e) => {
+  //   // Check if there are unsaved changes
+  //   if (editor.getDirtyCount() > 0) {
+  //     e.preventDefault();
+  //     e.returnValue = "Changes you made may not be saved!"; // This triggers the browser's native confirmation dialog
+  //     return "";
+  //   }
+  // });
 
   async function getAllSymbolsStyles() {
     const projectData = await getProjectData();
@@ -155,9 +156,16 @@ export const IDB = (editor) => {
     //   dirtyCleanner();
     // }, 0);
   };
-
+  editor.on("update", (update) => {
+    console.log("update : ", update, editor.infLoading);
+    if (editor.infLoading) {
+      editor.clearDirtyCount();
+    }
+  });
   editor.Storage.add("infinitely", {
-    async load() {
+    async load(options) {
+      // console.log('loading options : ' , options);
+
       console.log(
         "before loading : ",
         editor.Storage.config.autosave,
@@ -166,7 +174,11 @@ export const IDB = (editor) => {
       );
 
       if (editor.getDirtyCount() > 0) {
-        console.log("loading state : ", editor.infLoading , editor.getDirtyCount.toString());
+        console.log(
+          "loading state : ",
+          editor.infLoading,
+          editor.getDirtyCount.toString()
+        );
 
         const cnfrm = confirm(
           `There is changes not saved and you lost it after reload , Are you want to save changes ? `
@@ -177,7 +189,7 @@ export const IDB = (editor) => {
           const callback = async () => {
             await editor.load();
             editor.off(InfinitelyEvents.storage.storeEnd, callback);
-          }
+          };
           editor.on(InfinitelyEvents.storage.storeEnd, callback);
           editor.StorageManager.setStepsBeforeSave(0);
           editor.clearDirtyCount();
@@ -188,7 +200,7 @@ export const IDB = (editor) => {
       clearTimeouts();
 
       const callback = async () => {
-          editor.off("update", updateDirty);
+        editor.off("update", updateDirty);
 
         editor.trigger(InfinitelyEvents.storage.loadStart);
         const projectData = await db.projects.get(+projectID);
@@ -210,6 +222,7 @@ export const IDB = (editor) => {
         const originalAutosave = storageManager.getConfig().autosave;
         storageManager.setAutosave(false);
         editor.UndoManager.stop();
+        editor.UndoManager.clear();
         editor.DomComponents.clear({ avoidStore: false });
         editor.getWrapper().setAttributes({}, { avoidStore: true });
 
@@ -337,53 +350,29 @@ export const IDB = (editor) => {
                 )
               ).text();
             }
-            // htmlPage = await Promise.all(
-            //   chunkHtmlElements(
-            //     await (
-            //       await opfs.getFile(
-            //         defineRoot(`editor/pages/${currentPageId}.html`)
-            //       )
-            //     ).text()
-            //   ).map(async (el) => {
-            //     if (!el.includes(inf_symbol_Id_attribute)) return el;
-            //     for (const symbolId of currentPage.symbols || []) {
-            //       if (el.includes(`${inf_symbol_Id_attribute}="${symbolId}"`)) {
-            //         el = await (
-            //           await opfs.getFile(
-            //             defineRoot(
-            //               `editor/symbols/${symbolId}/${symbolId}.html`
-            //             )
-            //           )
-            //         ).text();
-            //       }
-            //     }
-            //     return el;
-            //   })
-            // );
 
-            editor.setComponents(``, { avoidStore: true });
+            // editor.setComponents(``, { avoidStore: true });
+            // editor.Css.clear({ avoidStore: true });
+            // editor.setStyle(cssCode, { avoidStore: true });
+
+            const styleCmp = editor.getWrapper().find(`[infinitely-style]`)[0];
+            editor.Css.clear({ avoidStore: true });
+            styleCmp?.[0] && styleCmp.remove();
+            editor.addComponents(
+              `<style infinitely-style">${cssCode}</style>`,
+              { avoidStore: true }
+            );
+
             if (projectSettings.enable_editor_lazy_loading) {
-              editor.Css.clear({ avoidStore: true });
-              editor.setStyle(cssCode, { avoidStore: true });
-              // const styleCmp = editor
-              //   .getWrapper()
-              //   .find(`[infinitely-style]`)[0];
-              // editor.Css.clear({ avoidStore: true });
-              // styleCmp?.[0] && styleCmp.remove();
-              // editor.addComponents(
-              //   `<style infinitely-style">${cssCode}</style>`,
-              //   { avoidStore: true }
-              // );
               // editor.addStyle(css_beautify(cssCode) , {avoidStore:true})
 
-              storageManager.setStepsBeforeSave(0);
               editor.clearDirtyCount();
               const appenderResponse = await appender(
                 [...document.body.children].map((el) => el.outerHTML)
               );
             } else {
               const wrapper = editor.getWrapper();
-              editor.Css.clear({ avoidStore: true });
+              // editor.Css.clear({ avoidStore: true });
               // editor.addStyle(cssCode, { avoidStore: true  });
               // editor.setStyle(cssCode, { avoidStore: true  });
               // const styleCmp = wrapper.find(`[infinitely-style]`)[0];
@@ -395,15 +384,14 @@ export const IDB = (editor) => {
                   avoidStore: true,
                 }
               );
-              dirtyCleanner();
-              editor.addComponents(
-                `<style infinitely-style">${cssCode}</style>`,
-                { avoidStore: true }
-              );
-              dirtyCleanner();
+              // editor.addComponents(
+              //   `<style infinitely-style">${cssCode}</style>`,
+              //   { avoidStore: true }
+              // );
 
               // htmlPage = null; // For garbage collection
             }
+            editor.clearDirtyCount();
           };
 
           renderCallback();
@@ -441,9 +429,6 @@ export const IDB = (editor) => {
         URL.createObjectURL = mainCreateObjectURLMethod;
         editor.render();
 
-        console.timeEnd("loading");
-        timesLoaded++;
-
         const callback = (ev) => {
           /**
            * @type {HTMLBodyElement}
@@ -466,30 +451,48 @@ export const IDB = (editor) => {
             .getWrapper()
             .removeAttributes(
               Object.keys(editor.getWrapper().getAttributes()),
-              { avoidStore: true }
+              { avoidStore: true, silent: true }
             );
-
-          editor.getWrapper().removeClass(editor.getWrapper().getClasses());
 
           editor.getWrapper().setAttributes(attributes, {
             avoidStore: true,
+            silent: true,
           });
-          editor.getWrapper().addClass(classes.split(" "));
+
+          const wrapperEl = editor.getWrapper().getEl();
+          Object.entries(attributes).forEach(([key, value]) => {
+            wrapperEl.setAttribute(key, value);
+          });
+          if (!editor.wrapperAddIsDone) {
+            const originalAddAttributes = editor.getWrapper().addAttributes;
+            editor.getWrapper().addAttributes = (newAttrs, opts) => {
+              const attrs = editor.getWrapper().getAttributes();
+              originalAddAttributes({ ...attrs, ...newAttrs }, opts);
+              editor.wrapperAddIsDone = true;
+            };
+          }
+
+          // editor.getWrapper().addClass(classes.split(" "));
+          // editor.getWrapper().setClass(classes.split(" "))
+
+          console.log(classes.split(" "));
 
           dirtyCleanner();
 
-          editor.clearDirtyCount();
-          editor.Storage.setAutosave(originalAutosave);
-          editor.UndoManager.start();
-          editor.infLoading = false;
-          editor.infDirty = -1;
-          editor.off("canvas:frame:load:body", callback);
-          editor.trigger(InfinitelyEvents.storage.loadEnd, {
-            originalAutosave,
-          });
+          setTimeout(() => {
+            editor.UndoManager.start();
+            editor.clearDirtyCount();
+            editor.Storage.setAutosave(originalAutosave);
+            editor.infLoading = false;
+            editor.infDirty = 0;
+            editor.trigger(InfinitelyEvents.storage.loadEnd, {
+              originalAutosave,
+            });
             editor.on("update", updateDirty);
 
-          clearTimeout(storeTimeout);
+            clearTimeout(storeTimeout);
+          }, 100);
+          editor.off("canvas:frame:load:body", callback);
         };
 
         editor.on("canvas:frame:load:body", callback);
@@ -502,8 +505,9 @@ export const IDB = (editor) => {
           // editor.off("canvas:frame:load:body", loadFooterScriptsCallback);
 
           editor.clearDirtyCount();
-          editor.Storage.setAutosave(originalAutosave);
+          // editor.Storage.setAutosave(originalAutosave);
           clearTimeout(storeTimeout);
+          // editor.infLoading = false;
           updatePrevirePage({
             data: projectData,
             pageName: currentPageName,
@@ -531,7 +535,7 @@ export const IDB = (editor) => {
     store(storeProps = {}) {
       if (storeTimeout) clearTimeout(storeTimeout);
       if (pageBuilderTimeout) clearTimeout(pageBuilderTimeout);
-      if(editor.getDirtyCount() < 0)return
+      if (editor.getDirtyCount() < 0) return;
       // if (editor.infDirty < 0) {
       //   editor.clearDirtyCount();
       //   editor.infDirty++;
@@ -666,7 +670,7 @@ export const IDB = (editor) => {
                 editor.getWrapper().getInnerHTML({ withProps: true })
               );
 
-              const props = {
+              const propsData = {
                 data,
                 files,
                 projectSetting: projectSettings,
@@ -678,8 +682,15 @@ export const IDB = (editor) => {
                 editorData: {
                   canvasCss: editor.config.canvasCss,
                 },
-                ...storeProps,
               };
+
+              const props = {
+                ...propsData,
+                ...(isFunction(storeProps) ? storeProps(propsData) : storeProps || {}),
+              };
+
+              console.log('props will store : ' , props);
+              
 
               const onWorkerMessage = (ev) => {
                 const { command, props: resProps } = ev.data;
@@ -700,6 +711,7 @@ export const IDB = (editor) => {
                     editor.trigger("block:update");
                   }
                   editor.infDirty = 0;
+                  editor.clearDirtyCount();
                   console.log("Store complete:", { pageId: currentPageId });
                   console.timeEnd("storing end");
                   editor.trigger(InfinitelyEvents.storage.storeEnd);

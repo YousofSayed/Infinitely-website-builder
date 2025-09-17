@@ -12,8 +12,8 @@ import React, { useEffect, useState } from "react";
  * @param {React.InputHTMLAttributes<HTMLInputElement> & Props} props
  */
 export const Input = ({
-  type = "text",
-  autoFocus = false,
+  // type = "text",
+  // autoFocus = false,
   className = "",
   placeholder = "",
   value = "",
@@ -32,8 +32,8 @@ export const Input = ({
   return (
     <input
       {...props}
-      autoFocus={autoFocus}
-      type={type}
+      // autoFocus={autoFocus}
+      // type={type}
       value={val}
       placeholder={placeholder}
       className={`p-2 outline-none text-white border-2 border-transparent focus:border-blue-600  rounded-lg  ${

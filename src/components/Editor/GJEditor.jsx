@@ -35,7 +35,7 @@ import {
 import { muatationDomElements } from "../../plugins/mutation.js";
 import { isChrome } from "../../helpers/bridge.js";
 import { motionsRemoverHandler } from "../../plugins/motionsRemoverHandler.js";
-import { motionsCloneHandler } from "../../plugins/motionsCloneHandler.js";
+import { motionsAndInteractionsCloneHandler } from "../../plugins/motionsAndInteractionsCloneHandler.jsx";
 import { globalTraits } from "../../plugins/globalTraits.jsx";
 import { useSetClassForCurrentEl } from "../../hooks/useSetclassForCurrentEl.js";
 import { toast } from "react-toastify";
@@ -66,7 +66,7 @@ export const GJEditor = memo(({ children }) => {
     customInfinitelySymbols,
     // updateDynamicTemplates,
     // motionsRemoverHandler,
-    motionsCloneHandler,
+    motionsAndInteractionsCloneHandler,
     globalTraits,
     initTraitsOnRender,
     editorKeymaps,
@@ -192,7 +192,7 @@ export const GJEditor = memo(({ children }) => {
         // avoidDefaults: true,
         // nativeDnD:true,
         // showToolbar:true,
-        noticeOnUnload:false,
+        // noticeOnUnload:false,
         showOffsets: true,
         keepUnusedStyles: true,
         clearStyles: false,

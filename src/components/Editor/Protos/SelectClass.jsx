@@ -48,7 +48,7 @@ export const SelectClass = memo(() => {
   useEffect(() => {
     if (!editor) return;
     const cb = () => {
-      console.log("selector setted");
+      // console.log("selector setted");
 
       setSelector("");
     };
@@ -72,7 +72,7 @@ export const SelectClass = memo(() => {
 
   useEffect(() => {
     if (!editor) return;
-    console.log("effectoooo");
+    // console.log("effectoooo");
 
     /**
      *
@@ -83,7 +83,7 @@ export const SelectClass = memo(() => {
 
       const { command, props } = ev.data;
       if (command == "classes-chunks" && props.classes) {
-        console.log("classes : ", props.classes);
+        // console.log("classes : ", props.classes);
 
         setAllStyleSheetClasses([...allStyleSheetClasses, ...props.classes]);
       }

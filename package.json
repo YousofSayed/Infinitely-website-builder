@@ -6,7 +6,7 @@
   "icon": "/puplic/favicon.ico",
   "scripts": {
     "start": "vite",
-    "dev": "vite",
+    "dev": "node --max-old-space-size=4096 ./node_modules/vite/bin/vite.js",
     "build": "node --max-old-space-size=4096 ./node_modules/vite/bin/vite.js build",
     "preview": "vite preview",
     "electron:dev": "concurrently \"npm run start\" \"wait-on http://localhost:5173 && electron .\"",

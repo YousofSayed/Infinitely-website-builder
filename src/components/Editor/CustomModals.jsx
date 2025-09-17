@@ -39,7 +39,7 @@ export const CustomModals = memo(() => {
   return (
     <section
       onClick={(ev) => {
-        ev.stopPropagation();
+        // ev.stopPropagation();
         // ev.preventDefault();
         if (ev.target === ev.currentTarget) {
           // Only close if clicked directly on backdrop, not children
@@ -55,7 +55,7 @@ export const CustomModals = memo(() => {
           height: modalData.height,
         }}
         onClick={(ev) => {
-          ev.stopPropagation();
+          // ev.stopPropagation();
           // ev.preventDefault();
           console.log("main is me");
           // document.body.click();
