@@ -358,6 +358,8 @@ export const Iframe = memo(() => {
           display: showPreview ? "none" : "block",
           // scale:showPreview ? 0 : 1,
           overflow: "auto",
+          contain:'layout , content , size , paint',
+          transform:'translateZ(0)'
         }}
         // srcDoc="<video src='../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4'></video>"
       ></Canvas>
@@ -371,7 +373,7 @@ export const Iframe = memo(() => {
       {/* {showPreview && ( */}
       <section
         ref={virtualBrowserWindow}
-        style={{ display: showPreview ? "block" : "none" }}
+        style={{ display: showPreview ? "block" : "none" , contain:'layout , size , paint'}}
         className="w-full h-full rounded-xl overflow-hidden p-1 fixed left-0 top-0 z-[1000] backdrop-blur-md"
         // style={{ display: showPreview ? "block" : "none" }}
       >

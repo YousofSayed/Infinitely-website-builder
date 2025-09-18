@@ -57,7 +57,7 @@ export const customInfinitelySymbols = (editor) => {
     const updateSymbolInDb = () => {
       symbolTimeout && clearTimeout(symbolTimeout);
       setTimeout(async () => {
-        console.log("Component updated: ", cmp, symbol.symbol.getEl());
+        // console.log("Component updated: ", cmp, symbol.symbol.getEl());
 
         const addedCmpSymbolInfo = getInfinitelySymbolInfo(addedComponent);
         if (addedComponent.getAttributes()[inf_symbol_Id_attribute]) {
@@ -96,7 +96,7 @@ export const customInfinitelySymbols = (editor) => {
 
   editor.on("component:update:components", updateSymbols);
   editor.on("component:update:attributes", (model, attr) => {
-    console.log("attributes updated : ", model, attr);
+    // console.log("attributes updated : ", model, attr);
     if (!model) return;
     const symbolInfo = getInfinitelySymbolInfo(model);
     if (!symbolInfo.isSymbol) return;

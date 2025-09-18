@@ -38,6 +38,9 @@ export const CustomModals = memo(() => {
 
   return (
     <section
+    style={{
+      contain:'layout , paint , size , content , size , style'
+    }}
       onClick={(ev) => {
         // ev.stopPropagation();
         // ev.preventDefault();

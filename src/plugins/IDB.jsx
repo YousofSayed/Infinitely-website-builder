@@ -443,34 +443,41 @@ export const IDB = (editor) => {
           const attributes = Object.fromEntries(
             vAttributesFilterd.concat(otherAttributes)
           );
-          const classes = attributes?.class || ""; //|| [...editor.getWrapper().getClasses()].join(" ");
           delete attributes["id"];
+          if(projectSettings.stop_all_animation_on_page){
+            attributes['class'] = `${attributes['class'] || ''} inf-stop-all-animations`
+          }else{
+            attributes['class'] = attributes['class']?.replace('inf-stop-all-animations' , '')  || ''
+          }
+          const classes = attributes?.class || ""; //|| [...editor.getWrapper().getClasses()].join(" ");
           console.log("classes equal : ", classes);
 
           editor
             .getWrapper()
             .removeAttributes(
-              Object.keys(editor.getWrapper().getAttributes()),
-              { avoidStore: true, silent: true }
+              Object.keys(attributes),
+              { avoidStore: true}
             );
 
           editor.getWrapper().setAttributes(attributes, {
             avoidStore: true,
-            silent: true,
+            // silent: true,
           });
 
+          editor.clearDirtyCount();
+
           const wrapperEl = editor.getWrapper().getEl();
-          Object.entries(attributes).forEach(([key, value]) => {
-            wrapperEl.setAttribute(key, value);
-          });
-          if (!editor.wrapperAddIsDone) {
-            const originalAddAttributes = editor.getWrapper().addAttributes;
-            editor.getWrapper().addAttributes = (newAttrs, opts) => {
-              const attrs = editor.getWrapper().getAttributes();
-              originalAddAttributes({ ...attrs, ...newAttrs }, opts);
-              editor.wrapperAddIsDone = true;
-            };
-          }
+          // Object.entries(attributes).forEach(([key, value]) => {
+          //   wrapperEl.setAttribute(key, value);
+          // });
+          // if (!editor.wrapperAddIsDone) {
+          //   const originalAddAttributes = editor.getWrapper().addAttributes;
+          //   editor.getWrapper().addAttributes = (newAttrs, opts) => {
+          //     const attrs = editor.getWrapper().getAttributes();
+          //     originalAddAttributes({ ...attrs, ...newAttrs }, opts);
+          //     editor.wrapperAddIsDone = true;
+          //   };
+          // }
 
           // editor.getWrapper().addClass(classes.split(" "));
           // editor.getWrapper().setClass(classes.split(" "))

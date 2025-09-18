@@ -17,7 +17,7 @@ export const updateProjectThumbnail = (editor) => {
     const projectData = await getProjectData();
 
     const is5DaysAgo = isDaysAgo(projectData.lastScreenshot, 3);
-    if (!is5DaysAgo) return;
+    if (!is5DaysAgo && projectData.lastScreenshot) return;
     updateThumbnailTimeout && clearTimeout(updateThumbnailTimeout);
     updateThumbnailTimeout = setTimeout(async () => {
       console.log("after all done");

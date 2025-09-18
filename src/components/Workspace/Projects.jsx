@@ -51,15 +51,15 @@ export const Projects = () => {
         // />
 
         <section className="h-full grid gap-2 p-1 overflow-auto grid-cols-[repeat(auto-fill,minmax(250px,1fr))]">
-          {/* <For each={dbProjects}>
+          <For each={dbProjects}>
             {(project, i) => {
-              return <Project key={i} project={project} />;
+              return <Project key={project.id} project={project} />;
             }}
-          </For> */}
+          </For>
 
-          {dbProjects.map((project, i) => (
+          {/* {dbProjects.map((project, i) => (
             <Project key={project.id} project={project}  />
-          ))}
+          ))} */}
         </section>
       )}
       {/* {dbProjects?.map((project) => (

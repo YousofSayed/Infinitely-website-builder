@@ -51,12 +51,12 @@ export const motionsAndInteractionsCloneHandler = (editor) => {
     const interactionsId =
       attributes[interactionId] || attributes[mainInteractionId];
     const interactionInstanceIdAttr = attributes[interactionInstanceId];
-    console.log(
-      "instances : ",
-      model,
-      model.getEl(),
-      editor.getWrapper().find(`[${motionId}="${mainId}"] `)
-    );
+    // console.log(
+    //   "instances : ",
+    //   model,
+    //   model.getEl(),
+    //   editor.getWrapper().find(`[${motionId}="${mainId}"] `)
+    // );
     const isNotMainMotion =
       editor.getWrapper().find(`[${motionId}="${mainId}"] `).length > 1;
     const isThereSameMotionInstance =
@@ -70,14 +70,14 @@ export const motionsAndInteractionsCloneHandler = (editor) => {
         .getWrapper()
         .find(`[${interactionInstanceId}="${interactionInstanceIdAttr}"] `)
         .length > 1;
-    console.log(
-      "handlers : ",
-      isNotMainMotion,
-      isThereSameMotionInstance,
-      isNotMainInteractions,
-      isThereSameMotionInstance,
-      model.getEl()
-    );
+    // console.log(
+    //   "handlers : ",
+    //   isNotMainMotion,
+    //   isThereSameMotionInstance,
+    //   isNotMainInteractions,
+    //   isThereSameMotionInstance,
+    //   model.getEl()
+    // );
     let isChanged = false;
     // return;
     // if (!(mainId || interactionId)) return;
@@ -127,13 +127,13 @@ export const motionsAndInteractionsCloneHandler = (editor) => {
         }
       );
 
-      console.log(
-        "updateResponse : ",
-        updateResponse,
-        await getProjectData(),
-        projectData.motions,
-        model.getEl()
-      );
+      // console.log(
+      //   "updateResponse : ",
+      //   updateResponse,
+      //   await getProjectData(),
+      //   projectData.motions,
+      //   model.getEl()
+      // );
     }
 
     const childs = model.components().models;
