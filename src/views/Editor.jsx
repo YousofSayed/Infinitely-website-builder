@@ -251,8 +251,8 @@ export function Editor({ params }) {
           limit={10}
           pauseOnHover={true}
           position="top-left"
-          toastClassName={`backdrop-blur-md bg-[#020617BF] text-slate-900`}
-          className={`z-[1000000000000]    `}
+          toastClassName={`backdrop-blur-md bg-[#020617BF]`}
+          className={`z-[1000000]    `}
           // containerId={`main-toast-container`}
 
           // stacked={true}
@@ -335,6 +335,7 @@ export function Editor({ params }) {
                 </Panel>
               </PanelGroup>
             </section>
+            
             {showCustomModal && <CustomModals />}
 
             {/* <CustomModals /> */}

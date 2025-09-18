@@ -363,7 +363,7 @@ export const HomeHeader = memo(() => {
             isObjectParamsIcon
             fillObjIcon={false}
             fillObjectIconOnHover
-            title="style block"
+            title="edite component"
           />
           <Li
             to={"/add-blocks"}

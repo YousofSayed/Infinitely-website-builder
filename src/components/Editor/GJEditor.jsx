@@ -105,6 +105,8 @@ export const GJEditor = memo(({ children }) => {
           const iframe = el;
 
           if (iframe.hasAttribute("src")) return;
+
+          iframe.setAttribute("sandbox", "allow-scripts allow-same-origin");
           iframe.setAttribute("referrerpolicy", "same-origin unsafe-url");
           iframe.setAttribute("src", "about:srcdoc");
           console.log("iframe work: ", iframe);

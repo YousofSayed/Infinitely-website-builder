@@ -147,9 +147,12 @@ export const IDB = (editor) => {
     return;
   }
 
-  const dirtyCleanner = () => {
-    if (!editor.infLoading) return;
-    console.log("cleaner : :");
+  const dirtyCleanner = (model, attrs) => {
+    editor.clearDirtyCount();
+    console.log("attrs wrapper changed : ", attrs, model);
+
+    // if (!editor.infLoading) return;
+    // console.log("cleaner : :");
 
     // setTimeout(() => {
     //   editor.clearDirtyCount();
@@ -200,7 +203,9 @@ export const IDB = (editor) => {
       clearTimeouts();
 
       const callback = async () => {
-        editor.off("update", updateDirty);
+        // editor.off("update", updateDirty);
+        // editor.getWrapper().off("change:attributes", dirtyCleanner);
+        // editor.getWrapper().on("change:attributes", dirtyCleanner);
 
         editor.trigger(InfinitelyEvents.storage.loadStart);
         const projectData = await db.projects.get(+projectID);
@@ -427,7 +432,11 @@ export const IDB = (editor) => {
           sessionStorage.removeItem(current_dynamic_template_id);
         editor.select(null);
         URL.createObjectURL = mainCreateObjectURLMethod;
+        editor.Canvas.getFrameEl().remove();
         editor.render();
+        // editor.trigger('canvas:frame:load' , {window:editor.Canvas.getWindow() , el:editor.Canvas.getFrameEl()});
+        // editor.trigger('canvas:frame:load:head' , {window:editor.Canvas.getWindow() , el:editor.Canvas.getFrameEl()});
+        // editor.trigger('canvas:frame:load:body' , {window:editor.Canvas.getWindow() , el:editor.Canvas.getFrameEl()});
 
         const callback = (ev) => {
           /**
@@ -444,20 +453,20 @@ export const IDB = (editor) => {
             vAttributesFilterd.concat(otherAttributes)
           );
           delete attributes["id"];
-          if(projectSettings.stop_all_animation_on_page){
-            attributes['class'] = `${attributes['class'] || ''} inf-stop-all-animations`
-          }else{
-            attributes['class'] = attributes['class']?.replace('inf-stop-all-animations' , '')  || ''
+          if (projectSettings.stop_all_animation_on_page) {
+            attributes["class"] = `${
+              attributes["class"] || ""
+            } inf-stop-all-animations`;
+          } else {
+            attributes["class"] =
+              attributes["class"]?.replace("inf-stop-all-animations", "") || "";
           }
           const classes = attributes?.class || ""; //|| [...editor.getWrapper().getClasses()].join(" ");
           console.log("classes equal : ", classes);
 
           editor
             .getWrapper()
-            .removeAttributes(
-              Object.keys(attributes),
-              { avoidStore: true}
-            );
+            .removeAttributes(Object.keys(attributes), { avoidStore: true });
 
           editor.getWrapper().setAttributes(attributes, {
             avoidStore: true,
@@ -532,9 +541,11 @@ export const IDB = (editor) => {
         isLoadEnd = false;
         dirtyCleanner();
         await callback();
+      // return await new Promise((res, rej) => {
 
-        // res(true);
-      }, 10);
+      //     res(true);
+      //   }, 10);
+      });
       return loadTimeout;
     },
 
@@ -693,11 +704,12 @@ export const IDB = (editor) => {
 
               const props = {
                 ...propsData,
-                ...(isFunction(storeProps) ? storeProps(propsData) : storeProps || {}),
+                ...(isFunction(storeProps)
+                  ? storeProps(propsData)
+                  : storeProps || {}),
               };
 
-              console.log('props will store : ' , props);
-              
+              console.log("props will store : ", props);
 
               const onWorkerMessage = (ev) => {
                 const { command, props: resProps } = ev.data;

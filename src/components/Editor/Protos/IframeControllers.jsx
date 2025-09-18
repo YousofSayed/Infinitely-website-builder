@@ -365,7 +365,7 @@ export const IframeControllers = () => {
         onClick={async (ev) => {
           console.log(editor?.Canvas?.getBody?.());
           const body = editor?.Canvas?.getBody();
-          if (!body && body.getAttribute("loaded") != "true") {
+          if (editor.infLoading) {
             toast.warn(<ToastMsgInfo msg={`Wait until load end`} />);
             return;
           }

@@ -24,7 +24,9 @@ export const initTraitsOnRender = (editor) => {
           attrs[trait.attributes.name] &&
           trait.attributes.role == "attribute"
         ) {
-          trait.set("value", attrs[trait.attributes.name]);
+          trait.set("value", attrs[trait.attributes.name], {
+            avoidStore: true,
+          });
           trait.attributes.value = attrs[trait.attributes.name];
           // console.log(
           //   "attr name : ",
@@ -34,13 +36,14 @@ export const initTraitsOnRender = (editor) => {
         }
 
         if (trait.attributes.role == "hadnler") {
-          trait.set("value", attrs[trait.attributes.name]);
+          trait.set("value", attrs[trait.attributes.name], {
+            avoidStore: true,
+          });
           model.removeAttributes([trait.attributes.name], { avoidStore: true });
         }
 
         !attrs[trait.attributes.name] &&
           model.removeAttributes([trait.attributes.name], { avoidStore: true });
-
 
         //Handling init callback
         trait.attributes?.init &&
@@ -49,8 +52,10 @@ export const initTraitsOnRender = (editor) => {
             editor,
             trait: trait.attributes,
             model,
-            mediaBreakPoint:getMediaBreakpoint(editor)
+            mediaBreakPoint: getMediaBreakpoint(editor),
           });
+
+        editor.clearDirtyCount();
       }
       // console.log("autoplay traits : ", traits);
     }
