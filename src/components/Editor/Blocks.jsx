@@ -67,11 +67,14 @@ export const Blocks = memo(() => {
             block.content = await (
               await opfs.getFile(defineRoot(block.pathes.content))
             ).text();
+
+            
             // block.style = await (
-            //   await opfs.getFile(defineRoot(block.pathes.style))
-            // ).text();
-          } 
-          // console.log('block style : ' , block.style);
+              //   await opfs.getFile(defineRoot(block.pathes.style))
+              // ).text();
+            } 
+            // console.log('block style : ' , block.style);
+            console.log('block : ' , block);
           
           return block; 
         }

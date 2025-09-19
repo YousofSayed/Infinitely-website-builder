@@ -27,7 +27,7 @@ import { CodeManagerModal } from "../components/Editor/Modals/CodeManagerModal";
 import { SymbolsAndTemplatesManager } from "../components/Editor/Modals/SymbolsAndTemplatesManager";
 import { FileEditorModal } from "../components/Editor/Modals/FileEditorModal";
 
-const ModalTitle = ({ icon, title }) => {
+export const ModalTitle = ({ icon, title }) => {
   return (
     <>
       {icon}

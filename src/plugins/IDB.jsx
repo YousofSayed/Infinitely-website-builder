@@ -725,10 +725,12 @@ export const IDB = (editor) => {
                     onWorkerMessage
                   );
 
-                  if (currentSymbolId) {
-                    editor.trigger("block:add");
+                  // if (currentSymbolId) {
+                  //   editor.trigger("block:add");
+                  //   editor.trigger("block:update");
+                  // }
+                   editor.trigger("block:add");
                     editor.trigger("block:update");
-                  }
                   editor.infDirty = 0;
                   editor.clearDirtyCount();
                   console.log("Store complete:", { pageId: currentPageId });

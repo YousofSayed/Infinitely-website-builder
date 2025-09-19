@@ -2137,8 +2137,10 @@ export function getGsapCssProperties() {
  */
 export async function restartGSAPMotions(editor) {
   const currentGsapStateAnimation = Boolean(
-    parse(sessionStorage.getItem(gsap_animation_state))
+    parse(editor.gsapRunning)
   );
+  console.log('parsed anim state : ' , currentGsapStateAnimation , editor.gsapRunning);
+  
   if (!currentGsapStateAnimation) return;
   const motions = await (await getProjectData()).motions;
   killAllGsapMotions(motions);

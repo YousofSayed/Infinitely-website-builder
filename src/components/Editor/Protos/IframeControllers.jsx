@@ -282,7 +282,7 @@ export const IframeControllers = () => {
           const motions = await (await getProjectData()).motions;
           killAllGsapMotions(motions);
           runAllGsapMotions(motions);
-          sessionStorage.setItem(gsap_animation_state, "true");
+          editor.gsapRunning = true;
         }}
         title="Run All Motions"
         fillIcon
@@ -297,7 +297,7 @@ export const IframeControllers = () => {
         // refForward={redoRef}
         onClick={async () => {
           killAllGsapMotions(await (await getProjectData()).motions);
-          sessionStorage.setItem(gsap_animation_state, "false");
+          editor.gsapRunning = false;
         }}
         title="Kill All Motions"
         fillIcon

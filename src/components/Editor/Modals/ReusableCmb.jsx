@@ -53,15 +53,18 @@ export const ReusableCmb = () => {
     const tId = toast.loading(<ToastMsgInfo msg={`Saving template...`} />);
     // sessionStorage.setItem("clone-disabled", "true");
     const sle = await editor.getSelected().clone();
+    // sle.set({
+    //   draggable: true,
+    // });
     console.log(sle.props());
-    
+
     // return
     // sessionStorage.removeItem("clone-disabled");
     // const projectDataHandled = await handleCloneComponent(sle , editor);
     const id = newProps.name + (newProps.ctg || "templates") + sle.getId();
     sle.addAttributes({ [inf_template_id]: id });
     const block = {};
-    const {projectSettings} = getProjectSettings()
+    const { projectSettings } = getProjectSettings();
     // editor.Blocks.add(id, block);
     const projectId = +localStorage.getItem(current_project_id);
     const projectData = await db.projects.get(projectId);
