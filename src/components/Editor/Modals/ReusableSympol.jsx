@@ -82,6 +82,9 @@ export const ReusableSympol = () => {
       const projectData = await getProjectData();
       // sessionStorage.setItem("clone-disabled", "true");
       const selectedEl = editor.getSelected().clone();
+      selectedEl.set({
+        draggable: true,
+      });
       // sessionStorage.removeItem("clone-disabled");
       // const projectDataHandled = await handleCloneComponent(selectedEl, editor);
 
@@ -308,7 +311,6 @@ export const ReusableSympol = () => {
     <section className="w-full z-50 p-2 flex flex-col gap-2 overflow-auto bg-slate-800 rounded-lg ">
       <header className="p-2 z-50 rounded-lg flex gap-4 justify-between bg-slate-900">
         <Input
-          
           value={props.name}
           autoFocus={true}
           placeholder="Name"

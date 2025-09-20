@@ -17,6 +17,7 @@ import {
   currentElState,
   dbAssetsSwState,
   modalDataState,
+  reloaderState,
   showAnimationsBuilderState,
   showCustomModalState,
   showLayersState,
@@ -62,6 +63,7 @@ export function Editor({ params }) {
   const [parent] = useAutoAnimate();
   const [mainAnimate] = useAutoAnimate({ duration: 100 });
   const [appInstalling , setAppInstalling] = useRecoilState(appInstallingState)
+  const [reloader , setReloader] = useRecoilState(reloaderState);
   // const [dbAssetsSw, setDBAssetsSw] = useRecoilState(dbAssetsSwState);
 
   // useEffect(() => {
@@ -257,7 +259,7 @@ export function Editor({ params }) {
 
           // stacked={true}
         />
-        <GJEditor>
+        <GJEditor key={reloader}>
           <main
             className="relative w-full h-full bg-slate-950 flex justify-between"
             ref={mainAnimate}

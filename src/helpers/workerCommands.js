@@ -1897,3 +1897,33 @@ export async function setInteractionsAttributes({ interactionsId, projectId }) {
     },
   });
 }
+
+export async function parseHTMLAndRaplceSymbols({ pageName = "", projectId }) {
+  const html = await (
+    await opfs.getFile(defineRoot(`editor/pages/${pageName}.html`))
+  ).text();
+  if (!opfs.id && !projectId) throw new Error(`Project ID not found!`);
+  !opfs.id && initOPFS({ id: projectId });
+  let { document } = parseHTML(doDocument(html));
+  const els = document.querySelectorAll(`[${inf_symbol_Id_attribute}]`);
+  for (const el of els) {
+    const symbolId = el.getAttribute(inf_symbol_Id_attribute);
+    el.outerHTML = await (
+      await opfs.getFile(
+        defineRoot(`editor/symbols/${symbolId}/${symbolId}.html`)
+      )
+    ).text();
+  }
+
+  let response = [...document.body.children].map((el) => el.outerHTML);
+  self.postMessage({
+    command: "parseHTMLAndRaplceSymbols",
+    props: {
+      response,
+    },
+  });
+  response = null;
+  document.body.innerHTML = '';
+  document = null;
+  // return response;
+}

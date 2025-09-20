@@ -29,6 +29,11 @@ export const widths = atom({
   },
 });
 
+export const reloaderState = atom({
+  key:'reloaderState',
+  default:''
+})
+
 export const popoverState = atom({
   key: "popoverState",
   default: {

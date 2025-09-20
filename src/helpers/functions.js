@@ -2947,12 +2947,12 @@ export async function handleCloneComponent(model, editor) {
  *
  * @param {Worker} worker
  * @param {string} commandCallback
- * @param {()=>void} callback
+ * @param {(props : {})=>void} callback
  */
 export function workerCallbackMaker(
   worker,
   commandCallback,
-  callback = () => {}
+  callback = (props) => {}
 ) {
   /**
    *

@@ -173,6 +173,12 @@ textarea,
   gap: 7px;
 }
 
+/* Hide the blue hover outline */
+/* .gjs-highlighter {
+  display: none !important;
+} */
+
+
 .monaco-editor .monaco-hover {
   position: fixed !important;
   z-index: 99999 !important;

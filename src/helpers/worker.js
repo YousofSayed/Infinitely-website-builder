@@ -8,6 +8,7 @@ import {
   deleteAttributesInAllPages,
   getDataFromDB,
   initOPFS,
+  parseHTMLAndRaplceSymbols,
   sendPreviewPagesToServiceWorker,
   setInteractionsAttributes,
   storeGrapesjsDataIfSymbols,
@@ -39,6 +40,7 @@ const commands = {
   deleteAllMotionsById,
   setInteractionsAttributes,
   deleteAttributesInAllPages,
+  parseHTMLAndRaplceSymbols
 };
 
 

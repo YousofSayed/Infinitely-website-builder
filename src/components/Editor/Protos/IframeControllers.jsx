@@ -6,6 +6,7 @@ import { useRecoilState, useSetRecoilState } from "recoil";
 import {
   animationsState,
   isAnimationsChangedState,
+  reloaderState,
   showAnimationsBuilderState,
   showLayersState,
   zoomValueState,
@@ -31,6 +32,9 @@ import { animationsSavingMsg } from "../../../constants/confirms";
 import { editorContainerInstance } from "../../../constants/InfinitelyInstances";
 import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 import { gsap_animation_state } from "../../../constants/shared";
+import { uniqueId } from "lodash";
+import { uniqueID } from "../../../helpers/cocktail";
+import { loadScripts } from "../../../plugins/IDB";
 
 export const IframeControllers = () => {
   const editor = useEditorMaybe();
@@ -49,7 +53,7 @@ export const IframeControllers = () => {
   const isEditorLoad = useRef(true);
   // const projectSettings = useRef(getProjectSettings());
   const [projectSetting, setProjectSettings] = useProjectSettings();
-
+  const [reloader, setReloader] = useRecoilState(reloaderState);
   useEffect(() => {
     if (!editor) return;
     const cb = () => {
@@ -365,12 +369,40 @@ export const IframeControllers = () => {
         onClick={async (ev) => {
           console.log(editor?.Canvas?.getBody?.());
           const body = editor?.Canvas?.getBody();
-          if (editor.infLoading) {
+          if (editor.infLoading || editor.canvasReload) {
             toast.warn(<ToastMsgInfo msg={`Wait until load end`} />);
             return;
           }
           isEditorLoad.current = true;
-          editor.load();
+          editor.canvasReload = true
+          // editor.destroy();
+          // setReloader(uniqueId(`reloader-key-${uniqueID()}-`))
+          // editor.load();
+          ///////////////////
+          const frame = editor.Canvas.getFrameEl?.();
+          if (!frame) return;
+          frame.contentDocument?.location?.reload?.();
+          await loadScripts(editor, await getProjectData());
+          editor.trigger("canvas:frame:load:body", {
+            window: frame.contentWindow,
+            el: frame,
+          });
+          const callback = () => {
+            editor.canvasReload = false;
+            editor.off("canvas:frame:load:body", callback);
+          };
+          editor.on("canvas:frame:load:body", callback);
+          // editor.Canvas.getFrameEl?.().remove();
+          // const init = editor.EditorModel.init;
+          // let oldEditor = editor;
+          // editor.destroy();
+          // console.log(editor?.Canvas?.getFrameEl?.() , 'fraaaaaaaamee before');
+          // init(oldEditor);
+          // console.log(editor.Canvas.getFrameEl?.() , 'fraaaaaaaamee');
+
+          // editor.Canvas.model.destroy()
+          // editor.Canvas.destroy();
+          // editor.Canvas.model.init()
         }}
         title="Reload Canvas"
       >

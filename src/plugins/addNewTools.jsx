@@ -182,74 +182,60 @@ export const addNewTools = (editor) => {
 
   let scrollTimeout,
     isScrollValue = false;
-  editor.on(
-    "canvas:frame:load:body",
-    /**
-     *
-     * @param {{window:Window}} param0
-     */
-    ({ window }) => {
-      console.log("loaded from scroller");
-      const canvasDoc = editor.Canvas.getDocument();
-      const wrapperEl = editor.getWrapper().getEl();
-      const canvasBody = editor.Canvas.getBody();
-      const scrollCallback = (ev) => {
-        // console.log('scroll call back');
-        // alert('jhahahahahahaahahahaaahahaa')
-        editor.trigger("canvas:frame:scroll", {
-          // window,
-          isScroll: true,
-        });
-        scrollTimeout && clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-          editor.trigger("canvas:frame:scroll:stop", {
-            // window,
-            isScroll: false,
-          });
-        }, 100);
-      };
-      // console.log("canvasDoc, canvasBody, wrapperEl", canvasDoc, canvasBody, wrapperEl);
-      // editor.Canvas.get
-      // if (!(canvasDoc && canvasBody && wrapperEl)) {
-      //   console.error("no canvas doc or body or wrapper");
-      //   return;
-      // }
-      // canvasDoc.documentElement.style.contain = `paint layout size`;
-      const scrollTarget =
-        canvasDoc.scrollingElement || canvasDoc.documentElement;
-      canvasBody.style.overflow = "auto";
-      canvasDoc.documentElement.style.overflow = "auto";
-      canvasDoc.scrollingElement.style.overflow = "auto";
-      // scrollTarget.addEventListener("scroll", scrollCallback,{passive:true});
-      // canvasDoc.documentElement.addEventListener("scroll", scrollCallback,{passive:true});
-      // canvasDoc.scrollingElement.addEventListener("scroll", scrollCallback,{passive:true});
-      // window.document.addEventListener("scroll", scrollCallback,{passive:true});
-      canvasDoc.removeEventListener("scroll", scrollCallback, {
-        passive: true,
-      });
-      wrapperEl.removeEventListener("scroll", scrollCallback, {
-        passive: true,
-      });
-      canvasBody.removeEventListener("scroll", scrollCallback, {
-        passive: true,
-      });
+editor.on('canvas:frame:load', 
+  /**
+   * 
+   * @param {{window : Window , el : HTMLIFrameElement}} param0 
+   */
+  ({window , el}) => {
+  const frameEl =el;      // <iframe> element
+  const frameWindow = window;       // iframe window
+  const frameDocument = frameWindow.document;      // iframe document
+  const frameBody = window.document.body;       // body inside iframe
 
-      canvasDoc.addEventListener("scroll", scrollCallback, { passive: true });
-      wrapperEl.addEventListener("scroll", scrollCallback, { passive: true });
-      canvasBody.addEventListener("scroll", scrollCallback, { passive: true });
-    }
-  );
+  console.log('Canvas Frame Loaded:', { frameWindow, frameDocument, frameBody });
+
+  // Make the canvas always full height of the iframe
+  frameBody.style.minHeight = frameWindow.outerHeight + 'px'; // Full screen height
+  frameBody.style.height = 'auto';
+  frameBody.style.overflow = 'auto';   // Allow scroll only if content is taller
+  frameDocument.documentElement.style.overflow = 'auto';
+
+  let scrollTimeout;
+
+  // Listen for scroll inside the canvas
+  frameWindow.addEventListener('scroll', () => {
+    editor.trigger('canvas:frame:scroll', { isScroll: true });
+
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+      editor.trigger('canvas:frame:scroll:stop', { isScroll: false });
+    }, 150); // Fires after scrolling stops
+  }, { passive: true });
+});
+
+
+  const offsetConfig = editor.config.showOffsets;
 
   editor.on("canvas:frame:scroll", ({ isScroll }) => {
     // console.log("is scrollll : ", isScroll , window);
     isScrollValue = isScroll;
     editor.Canvas.getBody().classList.add("preventWhenScroll");
+    const hlt = document.querySelector(`.gjs-highlighter`);
+    hlt.style.display = "none";
+    editor.getConfig().showOffsets = false;
+    console.log("scrolling");
+    // alert(`a7a`);
   });
 
   editor.on("canvas:frame:scroll:stop", ({ isScroll }) => {
     // console.log("is scrollll stop: ", isScroll);
     isScrollValue = isScroll;
     editor.Canvas.getBody().classList.remove("preventWhenScroll");
+    const hlt = document.querySelector('.gjs-highlighter');
+    hlt.style.display = "block";
+    editor.getConfig().showOffsets = offsetConfig;
+    console.log("stop scrolling");
   });
 
   editor.on(

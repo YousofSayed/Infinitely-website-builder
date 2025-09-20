@@ -53,9 +53,9 @@ export const ReusableCmb = () => {
     const tId = toast.loading(<ToastMsgInfo msg={`Saving template...`} />);
     // sessionStorage.setItem("clone-disabled", "true");
     const sle = await editor.getSelected().clone();
-    // sle.set({
-    //   draggable: true,
-    // });
+    sle.set({
+      draggable: true,
+    });
     console.log(sle.props());
 
     // return
