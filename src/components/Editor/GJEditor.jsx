@@ -182,8 +182,8 @@ export const GJEditor = memo(({ children }) => {
     },
     [plugins]
   );
-  console.log('gj-editor : ' , getProjectSettings().projectSettings);
-  
+  console.log("gj-editor : ", getProjectSettings().projectSettings);
+
   return (
     <Editor
       grapesjs={grapesjs}
@@ -195,6 +195,7 @@ export const GJEditor = memo(({ children }) => {
         // nativeDnD:true,
         // showToolbar:true,
         // noticeOnUnload:false,
+        mediaCondition: localStorage.getItem("media-condition") || "max-width",
         showOffsets: true,
         keepUnusedStyles: true,
         clearStyles: false,
@@ -209,7 +210,7 @@ export const GJEditor = memo(({ children }) => {
         //   pages: ,
         // },
         // exportWrapper: true,
-        domComponents:{ escapeHtml: false},
+        domComponents: { escapeHtml: false },
         richTextEditor: {
           custom: true,
           // adjustToolbar:
@@ -229,10 +230,9 @@ export const GJEditor = memo(({ children }) => {
           onlyMatched: false,
         },
         autorender: true,
-        
+
         parser: {
           optionsHtml: {
-            
             allowScripts: true,
             // detectDocument: true,
             allowUnsafeAttr: true,
@@ -262,11 +262,9 @@ export const GJEditor = memo(({ children }) => {
 
         keymaps: {
           defaults: {
-
             // 'core:undo': '', // Unbind Ctrl+Z
             // 'core:redo': '', // Unbind Ctrl+Y
           },
-          
         },
         protectedCss: ``,
         // customUI: true,
@@ -298,7 +296,7 @@ export const GJEditor = memo(({ children }) => {
               []),
             // {src:`${jsToDataURL(`console.log('data js url.............@')`)}`}
           ],
-          styles: ["/styles/dev.css" , "/styles/style.css"],
+          styles: ["/styles/dev.css", "/styles/style.css"],
 
           customBadgeLabel:
             /**

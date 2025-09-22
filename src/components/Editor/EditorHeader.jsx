@@ -57,6 +57,7 @@ export const HomeHeader = memo(() => {
   const [showPreview, setShowPreview] = useRecoilState(showPreviewState);
   const [currentEl, setCurrentEl] = useRecoilState(currentElState);
   const [zoomValue, setZoomValue] = useRecoilState(zoomValueState);
+  const [mediaValue, setMediaValue] = useState("");
   // const [isAnimationsChanged, setAnimationsChanged] = useRecoilState(
   //   isAnimationsChangedState
   // );
@@ -97,8 +98,6 @@ export const HomeHeader = memo(() => {
     setZoomValue((value * 100).toFixed(2));
   };
 
- 
-
   useEffect(() => {
     if (!editor) return;
     // console.log('html editor : ' , editor.getWrapper().getInnerHTML({withProps:true , withScripts: true}));
@@ -108,16 +107,17 @@ export const HomeHeader = memo(() => {
       const currentDeviceName = editor.getDevice();
       const currentDevice = editor.Devices.get(currentDeviceName);
       setDimaonsion({
-        height: parseFloat(currentDevice.attributes.height) || '',
-        width: parseFloat(currentDevice.attributes.widthMedia) || '',
+        height: parseFloat(currentDevice.attributes.height) || "",
+        width: parseFloat(currentDevice.attributes.widthMedia) || "",
       });
+      setMediaValue(editor.config.mediaCondition);
     };
     editor.on("change:device", changeDeviceCallback);
-    
-    return ()=>{
-      editor.off("change:device", changeDeviceCallback);
+    setMediaValue(editor.config.mediaCondition);
 
-    }
+    return () => {
+      editor.off("change:device", changeDeviceCallback);
+    };
   }, [editor]);
 
   useEffect(() => {
@@ -137,7 +137,7 @@ export const HomeHeader = memo(() => {
   return (
     <header className="w-full h-[60px]  zoom-80 px-2 bg-slate-900  border-b-[1.5px]  border-slate-400    flex items-center justify-between gap-5">
       <ScrollableToolbar
-        className="w-[37.5%] h-full items-center flex-shrink-0 max-w-[600px]"
+        className="w-[37.5%] h-full items-center flex-shrink-0 max-w-[700px]"
         space={3}
       >
         {/* <ul className="flex gap-[25px] flex-shrink  h-full  items-center"> */}
@@ -179,6 +179,20 @@ export const HomeHeader = memo(() => {
             icon={Icons.mobile}
           />
         </ul>
+
+        <li className="flex-shrink-0 w-[100px]">
+          <Select
+            preventInput
+            keywords={["min-width", "max-width"]}
+            placeholder="Media"
+            value={mediaValue}
+            onAll={(value) => {
+              setMediaValue(value);
+              editor.getConfig().mediaCondition = value;
+              localStorage.setItem("media-condition", value);
+            }}
+          />
+        </li>
 
         <li className="flex  items-center h-[65%] gap-4 max-lg:flex-shrink-0">
           <Input

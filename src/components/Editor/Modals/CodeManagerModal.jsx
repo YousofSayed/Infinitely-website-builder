@@ -11,18 +11,27 @@ import {
 } from "../../../constants/shared";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
+  createGJSComponent,
   executeAndExtractFunctions,
+  getComponentRules,
   getProjectData,
+  workerCallbackMaker,
 } from "../../../helpers/functions";
 import { useEditorMaybe } from "@grapesjs/react";
 import { db } from "../../../helpers/db";
-import { random } from "../../../helpers/cocktail";
+import { random, uniqueID } from "../../../helpers/cocktail";
 import { infinitelyWorker } from "../../../helpers/infinitelyWorker";
 import { opfs } from "../../../helpers/initOpfs";
-import { defineRoot, doDocument } from "../../../helpers/bridge";
+import {
+  defineRoot,
+  doDocument,
+  extractElementStyles,
+  getElementRulesWithAst,
+} from "../../../helpers/bridge";
 import { css_beautify, html_beautify, js_beautify } from "js-beautify";
 import { minify, syntax } from "csso";
 import { parseHTML } from "linkedom";
+import { isArray, isPlainObject, uniqueId } from "lodash";
 
 export const CodeManagerModal = () => {
   const timeoutRef = useRef();
@@ -34,6 +43,8 @@ export const CodeManagerModal = () => {
   const currentPageName = localStorage.getItem(current_page_id);
   const projectId = +localStorage.getItem(current_project_id);
   const editor = useEditorMaybe();
+  const createUUID = () => uniqueId(`reloader-${random(100000)}-${uniqueID()}`);
+  const [reloaderKey, setReloaderKey] = useState(createUUID());
   // const [pageStructure, setPageStructure] = useState({
   //   html: {
   //     path: `editor/pages/${currentPageName}.html`,
@@ -158,7 +169,7 @@ export const CodeManagerModal = () => {
                 : await handle.text();
             }
 
-            console.log(`after : `, content, isCssEditorStyles);
+            // console.log(`after : `, content, isCssEditorStyles);
 
             return isCssEditorStyles
               ? [
@@ -235,7 +246,7 @@ export const CodeManagerModal = () => {
 
   const save = async () => {
     const newChange = {};
- 
+
     for (const key in filesData) {
       const root = defineRoot(key);
       const isChanged = changed[root];
@@ -248,44 +259,91 @@ export const CodeManagerModal = () => {
       if (!isChanged) continue;
       console.log("chhhhhhhhhhhhhhhhhhhhhhage : ", isChanged);
 
-      if (key.includes(`editor/pages/${currentPageName}.html`)) {
-        const { document } = parseHTML(doDocument(filesData[root]));
-        const symbols = document.querySelectorAll(
-          `[${inf_symbol_Id_attribute}]`
-        );
-        for (const symbol of [...symbols]) {
-          const symbolId = symbol.getAttribute(`${inf_symbol_Id_attribute}`);
-          const root = defineRoot(
-            `editor/symbols/${symbolId}/${symbolId}.html`
+      if (
+        key.includes(`editor/pages/${currentPageName}.html`) ||
+        key.includes(`css/${currentPageName}.css`)
+      ) {
+        infinitelyWorker.postMessage({
+          command: "parseHTMLAndRaplceSymbols",
+          props: {
+            pageName: currentPageName,
+            projectId,
+          },
+        });
+        const response = await new Promise((res, rej) => {
+          workerCallbackMaker(
+            infinitelyWorker,
+            "parseHTMLAndRaplceSymbols",
+            (props) => {
+              res(props);
+            }
           );
-          // console.log( 'from writing : ' , root , symbol.outerHTML);
-          
-          await opfs.writeFiles([
-            { path: root, content: symbol.outerHTML},
-          ]);
+        });
+        if (response.done && isPlainObject(response.symbols)) {
+          infinitelyWorker.postMessage({
+            command: "updateSymbolsStylesFiles",
+            props: {
+              symbols: response.symbols,
+              cssCode: filesData[defineRoot(`css/${currentPageName}.css`)],
+            },
+          });
+          const symbolsCssContent = {};
+          const cssSymbolsRes = await new Promise((res, rej) => {
+            workerCallbackMaker(
+              infinitelyWorker,
+              "updateSymbolsStylesFiles",
+              (props) => {
+                res(props);
+              }
+            );
+          });
+          console.log(
+            "response  : ",
+            // filesData[defineRoot(`css/${currentPageName}.css`)],
+            response,
+            cssSymbolsRes
+          );
         }
-        // console.log('there is symbols' , symbols);
-        
       }
 
-      await opfs.writeFiles([
-        {
-          path: root,
-          content: filesData[root],
+      // return;
+      infinitelyWorker.postMessage({
+        command: "writeFilesToOPFS",
+        props: {
+          files: [
+            {
+              path: root,
+              content: filesData[root],
+            },
+          ],
         },
-      ]);
+      });
+      const fileWriteRes = await new Promise((res, rej) => {
+        workerCallbackMaker(infinitelyWorker, "writeFilesToOPFS", (props) => {
+          res(props);
+        });
+      });
+      // await opfs.writeFiles([
+      //   {
+      //     path: root,
+      //     content: filesData[root],
+      //   },
+      // ]);
 
-      console.log('key : ' , key);
+      console.log("fileWriteRes response : ", fileWriteRes);
 
-      newChange[root] = false;
+      fileWriteRes.roots.includes(root) &&
+        fileWriteRes.done &&
+        (newChange[root] = false);
     }
 
     setChanged({
       ...changed,
       ...newChange,
     });
+    setReloaderKey(createUUID());
     editor.clearDirtyCount();
-     await editor.load();
+    await editor.load();
   };
 
   return (
@@ -306,6 +364,7 @@ export const CodeManagerModal = () => {
             title: <TabLabel icon={Icons.html({})} label="HTML" />,
             content: (
               <CodeEditor
+                key={`1-${reloaderKey}`}
                 props={{
                   language: "html",
                   value: filesData[defineRoot(htmlPath)],
@@ -324,6 +383,7 @@ export const CodeManagerModal = () => {
             title: <TabLabel icon={Icons.css({})} label="local.css" />,
             content: (
               <CodeEditor
+                key={`2-${reloaderKey}`}
                 props={{
                   language: "css",
                   value: filesData[defineRoot(cssPath)],
@@ -341,7 +401,7 @@ export const CodeManagerModal = () => {
             title: <TabLabel icon={Icons.js({})} label="local.js" />,
             content: (
               <CodeEditor
-                key={randomKeys.localJsKey}
+                key={`3-${reloaderKey}`}
                 // extraLibs={pageStructure.js}
                 props={{
                   language: "javascript",
@@ -360,6 +420,7 @@ export const CodeManagerModal = () => {
             title: <TabLabel icon={Icons.css({})} label="global.css" />,
             content: (
               <CodeEditor
+                key={`4-${reloaderKey}`}
                 props={{
                   language: "css",
                   value: filesData[defineRoot(`global/global.css`)],
@@ -377,7 +438,7 @@ export const CodeManagerModal = () => {
             title: <TabLabel icon={Icons.js({})} label="global.js" />,
             content: (
               <CodeEditor
-                key={randomKeys.globalJsKey}
+                key={`5-${reloaderKey}`}
                 // extraLibs={globals.globalJs}
                 // isTemplateEngine
                 // allowCmdsContext
@@ -398,10 +459,10 @@ export const CodeManagerModal = () => {
       />
       <footer className="h-[8%] flex items-center py-2">
         <Button
+          className="flex-grow-0 flex-shrink"
           onClick={async () => {
             // await updateDB();
             await save();
-           
           }}
         >
           {Icons.save("white", 0, "white")}

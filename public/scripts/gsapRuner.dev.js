@@ -16,6 +16,15 @@ let gsapTween = {};
  */
 let previousMotion;
 
+const isFunction = (value) => {
+  try {
+    const isFunction = typeof new Function(`return (${value})`) == "function";
+    return isFunction;
+  } catch (error) {
+    return false;
+  }
+};
+
 /**
  *
  * @param {import('./types').MotionType} motion
@@ -43,7 +52,7 @@ function CompileMotion(
     timeline: {},
     fromTo: [],
   };
-const attribute = `[${
+  const attribute = `[${
     motion?.isInstance ? `motion-instance-id` : `motion-id`
   }=${motion.id}]`;
 
@@ -51,19 +60,24 @@ const attribute = `[${
     return Object.fromEntries(
       Object.entries(obj)
         .map(([key, value]) => {
+          console.log('key : ' , key);
+          
           // if (key == "markers" && removeMarkers) return null;
-          if (typeof value === "object") {
+          if (typeof value === "object" && !Array.isArray(value)) {
             return [key, parseObjValue(value)];
-          } else if (key.startsWith("on") && /on[A-Z]/gi.test(key)) {
-            return [key, new Function(`return (()=>{${value}})`)()];
+          } else if (key.startsWith("on") && /on[A-Z]/gi.test(key) && !key.toLocaleLowerCase().endsWith('params')) {
+            const isFn = isFunction(value);
+            return [
+              key,
+              isFn
+                ? new Function(`return (${value}) `)()
+                : new Function(`return (()=>{${value}})`)(),
+            ];
           }
           return [
             key,
             typeof value === "string"
-              ? value.replaceAll?.(
-                  "self",
-                  attribute
-                )
+              ? value.replaceAll?.("self", attribute)
               : value,
           ];
         })
@@ -114,10 +128,7 @@ const attribute = `[${
       };
     }
     output.fromTo.push({
-      selector: selector.replaceAll(
-        "self",
-        attribute
-      ),
+      selector: selector.replaceAll("self", attribute),
       fromValue,
       toValue,
       positionParameter,
@@ -345,7 +356,7 @@ window.parent.addEventListener("gsap:all:kill", (ev) => {
       gsapTween[motion.id].revert();
       ScrollTrigger.refresh();
     }
-    delete gsapTween[motion.id] 
+    delete gsapTween[motion.id];
     const instanceMotions = {};
 
     Object.entries(motion.instances || {}).forEach(([id, instace]) => {

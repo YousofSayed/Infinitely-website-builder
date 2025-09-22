@@ -697,6 +697,15 @@ export function removeNestedKey(obj, keys) {
   return obj;
 }
 
+const isFunction = (value) => {
+  try {
+    const isFunction = typeof new Function(`return (${value})`) == "function";
+    return isFunction;
+  } catch (error) {
+    return false;
+  }
+};
+
 /**
  *
  * @param {import('./types').MotionType} motion
@@ -704,11 +713,11 @@ export function removeNestedKey(obj, keys) {
  * @param {boolean} isInstance
  * @returns
  */
-export function CompileMotion(
+function CompileMotion(
   motion,
   paused = false,
-  isInstance = false,
-  removeMarkers = true
+  isInstance = false
+  // removeMarkers = true // this is just in bridge.js for final build (production)
 ) {
   /**
    * @type {{timeline:object , fromTo : {
@@ -724,26 +733,36 @@ export function CompileMotion(
     timeline: {},
     fromTo: [],
   };
+  const attribute = `[${
+    motion?.isInstance ? `motion-instance-id` : `motion-id`
+  }=${motion.id}]`;
 
   const parseObjValue = (obj = {}) => {
     return Object.fromEntries(
       Object.entries(obj)
         .map(([key, value]) => {
-          if (key == "markers" && removeMarkers) return null;
-          if (typeof value === "object") {
+          console.log("key : ", key);
+
+          // if (key == "markers" && removeMarkers) return null;
+          if (typeof value === "object" && !Array.isArray(value)) {
             return [key, parseObjValue(value)];
-          } else if (key.startsWith("on") && /on[A-Z]/gi.test(key)) {
-            return [key, new Function(`return (()=>{${value}})`)()];
+          } else if (
+            key.startsWith("on") &&
+            /on[A-Z]/gi.test(key) &&
+            !key.toLocaleLowerCase().endsWith("params")
+          ) {
+            const isFn = isFunction(value);
+            return [
+              key,
+              isFn
+                ? new Function(`return (${value}) `)()
+                : new Function(`return (()=>{${value}})`)(),
+            ];
           }
           return [
             key,
             typeof value === "string"
-              ? value.replaceAll?.(
-                  "self",
-                  `[${isInstance ? `motion-instance-id` : `motion-id`}="${
-                    motion.id
-                  }"]`
-                )
+              ? value.replaceAll?.("self", attribute)
               : value,
           ];
         })
@@ -794,10 +813,7 @@ export function CompileMotion(
       };
     }
     output.fromTo.push({
-      selector: selector.replaceAll(
-        "self",
-        `[${isInstance ? `motion-instance-id` : `motion-id`}="${motion.id}"]`
-      ),
+      selector: selector.replaceAll("self", attribute),
       fromValue,
       toValue,
       positionParameter,
@@ -844,7 +860,10 @@ export function buildGsapMotionsScript(
       if (motion.isTimeLine) {
         tween += `${motion.id}.${
           motion.timeLineName
-        } = gsap.timeline(${JSON.stringify(compiledMotion.timeline)})`;
+        } = gsap.timeline( new Function(\`return (${serializeJavascript(
+          compiledMotion.timeline,
+          { space: 2 }
+        ).replaceAll("\\", "\\\\")})\`)())`;
       }
       if (compiledMotion.fromTo.length) {
         for (const item of compiledMotion.fromTo) {
@@ -869,8 +888,11 @@ export function buildGsapMotionsScript(
       }
     };
 
-    console.log('motions from script builder' ,motion  , !motion?.excludes?.includes?.(pageName) );
-    
+    console.log(
+      "motions from script builder",
+      motion,
+      !motion?.excludes?.includes?.(pageName)
+    );
 
     if (!motion?.excludes?.includes?.(pageName)) {
       doMotion();
@@ -886,9 +908,9 @@ export function buildGsapMotionsScript(
       for (const id in motion.instances) {
         const clone = cloneDeep(motion);
         clone.id = id;
-        clone.instances = {};
+        (clone.isInstance = true), (clone.instances = {});
         delete clone["excludes"];
-        tween += buildGsapMotionsScript({ [id]: clone }, true , removeMarkers );
+        tween += buildGsapMotionsScript({ [id]: clone }, true, removeMarkers);
       }
     }
 
@@ -1534,7 +1556,7 @@ export async function buildPageContentFromData({
             rel="stylesheet"
           />
           `}
-        ${pageData.symbolsStyles} ${pageData.templatesStyles}
+        <!-- There is {pageData.symbolsStyles} {pageData.templatesStyles} -->
         ${Object.values(projectData.fonts).length
           ? `<link href="${urlException}/css/fonts.css" rel="stylesheet"/>`
           : ""}
@@ -2088,4 +2110,238 @@ export function isDaysAgo(date, days) {
   const daysInMs = days * 24 * 60 * 60 * 1000; // days → ms
 
   return now - targetTime >= daysInMs;
+}
+
+/**
+ * Extract all relevant CSS rules for one or more HTML elements.
+ * - Fully supports @media, @supports, @keyframes, etc.
+ * - Handles pseudo selectors like :hover, :focus, etc.
+ * - Designed to run inside Web Worker (no real DOM required)
+ * - Very fast: parses CSS once and matches selectors in memory
+ *
+ * @param {Object} params
+ * @param {string|string[]} params.html - HTML string or array of HTML strings
+ * @param {string} params.cssCode - Raw CSS code
+ * @param {boolean} [params.nested=true] - Include child elements recursively
+ * @returns {Promise<{rules: any[], stringRules: string}>}
+ */
+export async function getElementRulesWithAst({ html, cssCode, nested = true }) {
+  if (!cssCode) throw new Error("CSS code is required");
+
+  const { parse, stringify } = await import("css"); // npm: css
+  const { parseHTML } = await import("linkedom"); // npm: linkedom
+
+  // Normalize input
+  const htmlArray = Array.isArray(html) ? html : [html];
+
+  // Parse CSS once
+  const ast = parse(cssCode);
+
+  const matchedRules = [];
+  const seenSelectors = new Set();
+  const stack = [];
+
+  // --- Build initial elements stack ---
+  for (const htmlString of htmlArray) {
+    const { document } = parseHTML(doDocument(htmlString));
+    if (document.body?.firstElementChild) {
+      stack.push(document.body.firstElementChild);
+    }
+  }
+
+  // --- Helper: Get all selectors for a given element ---
+  const getElementSelectors = (el) => {
+    const selectors = [];
+
+    // Tag
+    if (el.tagName) selectors.push(el.tagName.toLowerCase());
+
+    // Classes
+    if (el.classList?.length) {
+      el.classList.forEach((cls) => selectors.push(`.${cls}`));
+    }
+
+    // ID
+    if (el.id) selectors.push(`#${el.id}`);
+
+    // Attributes
+    if (el.getAttributeNames) {
+      for (const name of el.getAttributeNames()) {
+        const value = el.getAttribute(name);
+        selectors.push(value ? `[${name}="${value}"]` : `[${name}]`);
+      }
+    }
+
+    return selectors;
+  };
+
+  // --- Helper: Does a selector match this element ---
+  const selectorMatches = (ruleSelector, elementSelectors) => {
+    return elementSelectors.some((sel) => {
+      return (
+        ruleSelector === sel || // exact match
+        ruleSelector.startsWith(sel + ":") || // pseudo class
+        ruleSelector.includes(sel + "::") || // pseudo element
+        ruleSelector.split(/\s+/).includes(sel) // part of complex selector
+      );
+    });
+  };
+
+  // --- Walk through CSS AST recursively ---
+  const walk = (rules, parentAtRule = null, selectorsToMatch = []) => {
+    for (const rule of rules) {
+      // Normal CSS rule
+      if (rule.type === "rule" && rule.selectors) {
+        if (
+          rule.selectors.some((rSel) => selectorMatches(rSel, selectorsToMatch))
+        ) {
+          const uniqueKey =
+            (parentAtRule ? parentAtRule.type : "root") +
+            "|" +
+            rule.selectors.join(",");
+
+          if (!seenSelectors.has(uniqueKey)) {
+            seenSelectors.add(uniqueKey);
+
+            if (parentAtRule) {
+              // Clone parent at-rule and only include this rule
+              const cloned = JSON.parse(JSON.stringify(parentAtRule));
+              cloned.rules = [rule];
+              matchedRules.push(cloned);
+            } else {
+              matchedRules.push(rule);
+            }
+          }
+        }
+      }
+
+      // Nested @media / @supports / etc.
+      if (rule.rules) {
+        walk(rule.rules, rule, selectorsToMatch);
+      }
+
+      // Keyframes, font-face, layer → always include
+      if (["keyframes", "font-face", "layer"].includes(rule.type)) {
+        const key = JSON.stringify(rule);
+        if (!matchedRules.find((r) => JSON.stringify(r) === key)) {
+          matchedRules.push(rule);
+        }
+      }
+    }
+  };
+
+  // === Main Matching Loop ===
+  while (stack.length > 0) {
+    const el = stack.pop();
+    if (!el) continue;
+
+    const selectors = getElementSelectors(el);
+
+    if (nested && el.children?.length) {
+      stack.push(...Array.from(el.children));
+    }
+
+    walk(ast.stylesheet.rules, null, selectors);
+  }
+
+  // Build filtered AST
+  const filteredAst = {
+    type: "stylesheet",
+    stylesheet: { rules: matchedRules },
+  };
+
+  return {
+    rules: matchedRules,
+    stringRules: stringify(filteredAst),
+  };
+}
+
+/**
+ *
+ * @param {{elementsHTML : string | string[]  , cssCode:string}} param0
+ * @returns
+ */
+export async function extractElementStyles({ elementsHTML, cssCode }) {
+  if (!elementsHTML) return { rules: [], stringRules: "" };
+  const { parse, stringify } = await import("css"); // npm: css
+  const { parseHTML } = await import("linkedom"); // npm: linkedom
+
+  // لو العنصر جاي كـ array، نجمعه
+  const htmlString = Array.isArray(elementsHTML)
+    ? elementsHTML.join("")
+    : elementsHTML;
+
+  // نجهز DOM وهمي
+  const { document } = parseHTML(doDocument(htmlString));
+  const root = document.firstElementChild;
+
+  // نجمع كل العناصر (الابن + الأحفاد)
+  const allElements = [root, ...root.querySelectorAll("*")];
+
+  // نجمع جميع selectors الممكنة (id, class, attributes)
+  const selectorsToMatch = new Set();
+  allElements.forEach((el) => {
+    // الكلاسات
+    el.classList.forEach((cls) => selectorsToMatch.add(`.${cls}`));
+
+    // id
+    if (el.id) selectorsToMatch.add(`#${el.id}`);
+
+    // attributes
+    [...el.attributes].forEach((attr) => {
+      selectorsToMatch.add(
+        `[${attr.name}${attr.value ? `="${attr.value}"` : ""}]`
+      );
+    });
+  });
+
+  // Parse الـCSS مرة واحدة
+  const ast = parse(cssCode);
+  const matchedRules = [];
+
+  /**
+   * recursive function to walk nested rules
+   */
+  const walk = (rules, parentAtRule = null) => {
+    for (const rule of rules) {
+      if (rule.type === "rule" && rule.selectors) {
+        // لو أي selector موجود ضمن العنصر أو ولاده
+        const match = rule.selectors.some((sel) =>
+          [...selectorsToMatch].some((target) => sel.includes(target))
+        );
+
+        if (match) {
+          if (parentAtRule) {
+            const cloned = JSON.parse(JSON.stringify(parentAtRule));
+            cloned.rules = [rule];
+            matchedRules.push(cloned);
+          } else {
+            matchedRules.push(rule);
+          }
+        }
+      }
+
+      // لو فيه nested rules زي media queries
+      if (rule.rules) {
+        walk(rule.rules, rule);
+      }
+
+      // قواعد خاصة زي keyframes أو font-face أو layer
+      if (["keyframes", "font-face", "layer"].includes(rule.type)) {
+        matchedRules.push(rule);
+      }
+    }
+  };
+
+  walk(ast.stylesheet.rules);
+
+  const filteredAst = {
+    type: "stylesheet",
+    stylesheet: { rules: matchedRules },
+  };
+
+  return {
+    rules: matchedRules,
+    stringRules: stringify(filteredAst),
+  };
 }

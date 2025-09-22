@@ -19,6 +19,7 @@ import {
   buildPagesAsBlobForSecrviceWorker,
   defineRoot,
   doDocument,
+  extractElementStyles,
   getFileSize,
   // getOPFSProjectDir,
   getProjectRoot,
@@ -1253,87 +1254,71 @@ export async function initOPFS({ id }) {
 }
 
 export async function listenToOPFSBroadcastChannel({ id }) {
-  console.log("INited listenToOPFSBroadcastChannel", id);
+  console.log("Initialized listenToOPFSBroadcastChannel", id);
 
   await initOPFS({ id });
   const opfsBc = new BroadcastChannel("opfs");
+
   opfsBc.addEventListener("message", (ev) => {
-    console.log(`opfcBc : `, ev.data);
+    console.log(`opfcBc message:`, ev.data);
   });
-  const broadCastCleaner = opfs.onBroadcast(
-    "getFile",
-    async (data) => {
-      const path = `${data.folderPath}/${data.fileName}`;
-      console.log(
-        "recived getFile event from boadcast",
-        opfs.id,
-        data.projectId,
-        path
-      );
-      try {
-        if (!opfs.id) {
-          opfs.opfsBraodcast.postMessage({
-            type: "sendFile",
-            file: undefined,
-            isExisit: false,
-            fileName: undefined,
-            filePath: undefined,
-          });
-          throw new Error(`Project id not found`);
-        }
 
-        const fileHandle = await opfs.getFile(
-          `${getProjectRoot(id)}/${
-            data.folderPath ? `${data.folderPath}/` : ""
-          }${data.fileName}`
-        );
-        const file = await fileHandle.getOriginFile();
+  const broadCastCleaner = opfs.onBroadcast("getFile", async (data) => {
+    const path = `${data.folderPath}/${data.fileName}`;
+    console.log(
+      "Received getFile event from broadcast",
+      opfs.id,
+      data.projectId,
+      path
+    );
 
-        console.log(
-          "recived path : ",
-          `${getProjectRoot(id)}/${
-            data.folderPath ? `${data.folderPath}/` : ""
-          }${data.fileName}`,
-          file,
-          {
-            type: "sendFile",
-            file: file,
-            isExisit: file ? true : false,
-            fileName: fileHandle.name,
-            filePath: fileHandle.path,
-          }
-        );
-        if (!file) {
-          throw new Error(`File not founded`);
-        }
-        const fileBraodcast = new BroadcastChannel(path);
-        fileBraodcast.postMessage({
-          type: "sendFile",
-          file: file,
-          isExisit: file ? true : false,
-          fileName: fileHandle.name,
-          filePath: fileHandle.path,
-        });
-      } catch (error) {
-        const fileBraodcast = new BroadcastChannel(path);
-        fileBraodcast.postMessage({
+    let fileBraodcast;
+
+    try {
+      if (!opfs.id) {
+        opfs.opfsBraodcast.postMessage({
           type: "sendFile",
           file: undefined,
           isExisit: false,
           fileName: undefined,
           filePath: undefined,
         });
-        throw new Error(error);
+        throw new Error(`Project id not found`);
       }
+
+      const fileHandle = await opfs.getFile(
+        `${getProjectRoot(id)}/${data.folderPath ? `${data.folderPath}/` : ""}${data.fileName}`
+      );
+      const file = await fileHandle.getOriginFile();
+
+      if (!file) throw new Error(`File not found`);
+
+      fileBraodcast = new BroadcastChannel(path);
+      fileBraodcast.postMessage({
+        type: "sendFile",
+        file,
+        isExisit: true,
+        fileName: fileHandle.name,
+        filePath: fileHandle.path,
+      });
+    } catch (error) {
+      console.error("Broadcast getFile error:", error);
+
+      if (!fileBraodcast) fileBraodcast = new BroadcastChannel(path);
+      fileBraodcast.postMessage({
+        type: "sendFile",
+        file: undefined,
+        isExisit: false,
+        fileName: undefined,
+        filePath: undefined,
+      });
+    } finally {
+      if (fileBraodcast) fileBraodcast.close();
     }
-    // { once: true }
-  );
-  /**
-   *
-   * @param {MessageEvent} ev
-   */
+  });
+
   const clean = (ev) => {
-    if (ev.data.command == "clean-opfs-broadcast") {
+    if (ev.data.command === "clean-opfs-broadcast") {
       broadCastCleaner();
       self.removeEventListener("message", clean);
     }
@@ -1343,12 +1328,110 @@ export async function listenToOPFSBroadcastChannel({ id }) {
 
   self.postMessage({
     command: "listenToOPFSBroadcastChannel",
-    props: {
-      done: true,
-    },
+    props: { done: true },
   });
+
   return broadCastCleaner;
 }
+
+
+// export async function listenToOPFSBroadcastChannel({ id }) {
+//   console.log("INited listenToOPFSBroadcastChannel", id);
+
+//   await initOPFS({ id });
+//   const opfsBc = new BroadcastChannel("opfs");
+//   opfsBc.addEventListener("message", (ev) => {
+//     console.log(`opfcBc : `, ev.data);
+//   });
+//   const broadCastCleaner = opfs.onBroadcast(
+//     "getFile",
+//     async (data) => {
+//       const path = `${data.folderPath}/${data.fileName}`;
+//       console.log(
+//         "recived getFile event from boadcast",
+//         opfs.id,
+//         data.projectId,
+//         path
+//       );
+//       try {
+//         if (!opfs.id) {
+//           opfs.opfsBraodcast.postMessage({
+//             type: "sendFile",
+//             file: undefined,
+//             isExisit: false,
+//             fileName: undefined,
+//             filePath: undefined,
+//           });
+//           throw new Error(`Project id not found`);
+//         }
+
+//         const fileHandle = await opfs.getFile(
+//           `${getProjectRoot(id)}/${
+//             data.folderPath ? `${data.folderPath}/` : ""
+//           }${data.fileName}`
+//         );
+//         const file = await fileHandle.getOriginFile();
+
+//         // console.log(
+//         //   "recived path : ",
+//         //   `${getProjectRoot(id)}/${
+//         //     data.folderPath ? `${data.folderPath}/` : ""
+//         //   }${data.fileName}`,
+//         //   file,
+//         //   {
+//         //     type: "sendFile",
+//         //     file: file,
+//         //     isExisit: file ? true : false,
+//         //     fileName: fileHandle.name,
+//         //     filePath: fileHandle.path,
+//         //   }
+//         // );
+//         if (!file) {
+//           throw new Error(`File not founded`);
+//         }
+//         const fileBraodcast = new BroadcastChannel(path);
+//         fileBraodcast.postMessage({
+//           type: "sendFile",
+//           file: file,
+//           isExisit: file ? true : false,
+//           fileName: fileHandle.name,
+//           filePath: fileHandle.path,
+//         });
+//       } catch (error) {
+//         const fileBraodcast = new BroadcastChannel(path);
+//         fileBraodcast.postMessage({
+//           type: "sendFile",
+//           file: undefined,
+//           isExisit: false,
+//           fileName: undefined,
+//           filePath: undefined,
+//         });
+//         throw new Error(error);
+//       }
+//     }
+//     // { once: true }
+//   );
+//   /**
+//    *
+//    * @param {MessageEvent} ev
+//    */
+//   const clean = (ev) => {
+//     if (ev.data.command == "clean-opfs-broadcast") {
+//       broadCastCleaner();
+//       self.removeEventListener("message", clean);
+//     }
+//   };
+
+//   self.addEventListener("message", clean);
+
+//   self.postMessage({
+//     command: "listenToOPFSBroadcastChannel",
+//     props: {
+//       done: true,
+//     },
+//   });
+//   return broadCastCleaner;
+// }
 
 export async function removeOPFSEntry({
   path = "",
@@ -1507,7 +1590,24 @@ export async function getKeyFrames({
 }
 
 export async function writeFilesToOPFS({ files }) {
-  await opfs.writeFiles(files);
+  try {
+    await opfs.writeFiles(files);
+    self.postMessage({
+      command: "writeFilesToOPFS",
+      props: {
+        done: true,
+        roots: files.map((file) => file.path),
+      },
+    });
+  } catch (error) {
+    self.postMessage({
+      command: "writeFilesToOPFS",
+      props: {
+        done: false,
+        msg: error.message,
+      },
+    });
+  }
 }
 
 /**
@@ -1899,31 +1999,88 @@ export async function setInteractionsAttributes({ interactionsId, projectId }) {
 }
 
 export async function parseHTMLAndRaplceSymbols({ pageName = "", projectId }) {
-  const html = await (
-    await opfs.getFile(defineRoot(`editor/pages/${pageName}.html`))
-  ).text();
-  if (!opfs.id && !projectId) throw new Error(`Project ID not found!`);
-  !opfs.id && initOPFS({ id: projectId });
-  let { document } = parseHTML(doDocument(html));
-  const els = document.querySelectorAll(`[${inf_symbol_Id_attribute}]`);
-  for (const el of els) {
-    const symbolId = el.getAttribute(inf_symbol_Id_attribute);
-    el.outerHTML = await (
-      await opfs.getFile(
-        defineRoot(`editor/symbols/${symbolId}/${symbolId}.html`)
-      )
+  try {
+    const html = await (
+      await opfs.getFile(defineRoot(`editor/pages/${pageName}.html`))
     ).text();
-  }
+    if (!opfs.id && !projectId) throw new Error(`Project ID not found!`);
+    !opfs.id && initOPFS({ id: projectId });
+    let { document } = parseHTML(doDocument(html));
+    const els = document.querySelectorAll(`[${inf_symbol_Id_attribute}]`);
+    for (const el of els) {
+      const symbolId = el.getAttribute(inf_symbol_Id_attribute);
+      el.outerHTML = await (
+        await opfs.getFile(
+          defineRoot(`editor/symbols/${symbolId}/${symbolId}.html`)
+        )
+      ).text();
+    }
 
-  let response = [...document.body.children].map((el) => el.outerHTML);
-  self.postMessage({
-    command: "parseHTMLAndRaplceSymbols",
-    props: {
-      response,
-    },
-  });
-  response = null;
-  document.body.innerHTML = '';
-  document = null;
+    let response = [...document.body.children].map((el) => el.outerHTML);
+    self.postMessage({
+      command: "parseHTMLAndRaplceSymbols",
+      props: {
+        response,
+        symbols: Object.fromEntries(
+          [...els].map((el) => [
+            el.getAttribute(inf_symbol_Id_attribute),
+            el.outerHTML,
+          ])
+        ),
+        // bodyInnerHTML : document.body.innerHTML,
+        done: true,
+      },
+    });
+    response = null;
+    document.body.innerHTML = "";
+    document = null;
+  } catch (error) {
+    self.postMessage({
+      command: "parseHTMLAndRaplceSymbols",
+      props: {
+        response: [],
+        symbols: {},
+        // bodyInnerHTML : document.body.innerHTML,
+        done: false,
+        msg: error.message,
+      },
+    });
+    throw new Error(error);
+  }
   // return response;
+}
+
+export async function updateSymbolsStylesFiles({ symbols = {}, cssCode = "" }) {
+  try {
+    for (const [id, symbol] of Object.entries(symbols)) {
+      const styles = await (
+        await extractElementStyles({
+          elementsHTML: Object.values(symbol),
+          cssCode,
+        })
+      ).stringRules;
+      await opfs.writeFiles([
+        {
+          path: defineRoot(`editor/symbols/${id}/${id}.css`),
+          content: styles,
+        },
+      ]);
+    }
+
+    self.postMessage({
+      command: "updateSymbolsStylesFiles",
+      props: {
+        done: true,
+      },
+    });
+  } catch (error) {
+    self.postMessage({
+      command: "updateSymbolsStylesFiles",
+      props: {
+        done: false,
+        msg: error.message,
+      },
+    });
+    throw new Error(error);
+  }
 }

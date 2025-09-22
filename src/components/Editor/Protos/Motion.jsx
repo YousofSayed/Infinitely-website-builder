@@ -451,10 +451,22 @@ const ObjectComponent = ({
                 ])}
                 codeProps={{
                   language: "javascript",
-                  value: getNestedValue(isTimeLine ? motion : animation, [
-                    ...destination,
-                    key,
-                  ]),
+                  value: isObject(
+                    getNestedValue(isTimeLine ? motion : animation, [
+                      ...destination,
+                      key,
+                    ])
+                  )
+                    ? stringify(
+                        getNestedValue(isTimeLine ? motion : animation, [
+                          ...destination,
+                          key,
+                        ])
+                      )
+                    : getNestedValue(isTimeLine ? motion : animation, [
+                        ...destination,
+                        key,
+                      ]),
                   onChange: (value) => {
                     addValue(value, key);
                   },

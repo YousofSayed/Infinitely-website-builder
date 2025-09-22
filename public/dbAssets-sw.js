@@ -69,8 +69,6 @@ function getOPFSFile(path) {
 
 function parseTextToURI(text = "") {
   const searcher = new URLSearchParams(`value=${text}`);
-  // console.log(`From sw : `, searcher.get("value"));
-
   return searcher.get("value");
 }
 
@@ -92,19 +90,24 @@ const folders = [
   "screentshot.avif",
 ];
 
-self.addEventListener("fetch", (event) => {
-  // console.log(`From Fetch Event :` ,   event);
+// Reuse a single BroadcastChannel for all OPFS requests
+const opfsBroadcastChannel = new BroadcastChannel("opfs");
 
+self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   let pathname = parseTextToURI(url.pathname);
+
   const routePrefixes = [
+    "edite/styling",
+    "edite/motions",
+    "edite/interactions",
+    "edite/traits",
+    "edite/commands",
     "/edite/",
     "/preview/",
     "/workspace/",
     "/add-blocks/",
-    "motions",
   ];
-  // console.warn("Pathh from sw before", pathname);
   for (const prefix of routePrefixes) {
     if (pathname.startsWith(prefix)) {
       pathname = `/${pathname.replace(prefix, "")}`;
@@ -115,44 +118,26 @@ self.addEventListener("fetch", (event) => {
   const splittedUrl = pathname.split("/");
   const fileName = splittedUrl.pop();
   let folderPath = splittedUrl.join("/");
-  folderPath = folderPath.startsWith("/")
-    ? folderPath.replace("/", "")
-    : folderPath;
 
+  folderPath = folderPath.startsWith("/") ? folderPath.slice(1) : folderPath;
   const entryPoint = folderPath.split("/")[0] || fileName;
   const projectId = vars["projectId"];
-  // console.warn(
-  //   "Pathh from sw after",
-  //   pathname,
-  //   splittedUrl,
-  //   fileName,
-  //   folderPath
-  // );
-  // Handle /keep-alive first
+
+  // Handle keep-alive requests
   if (url.pathname.includes("/keep-alive")) {
     event.respondWith(new Response(new Blob(["ok"], { type: "text/plain" })));
     return;
   }
-  // self.skipWaiting();
-  // Handle other fetch requests
 
-  folders.includes(entryPoint) &&
-    event.respondWith(
-      (async () => {
-        const path = `${folderPath}/${fileName}`;
-        const opfsBroadcastChannel = new BroadcastChannel("opfs");
-        const fileBraodCastChannel = new BroadcastChannel(path);
-        // console.log("Paaaaaaaaaaaath is : ", path);
+  // Only intercept if the request matches known folders
+  if (!folders.includes(entryPoint)) return;
 
-        // if (!projectId) {
-        //   return new Response(
-        //     new Blob(["Project ID not found"], { type: "text/plain" }),
-        //     {
-        //       status: 400,
-        //     }
-        //   );
-        // }
+  event.respondWith(
+    (async () => {
+      const path = `${folderPath}/${fileName}`;
+      const fileBraodCastChannel = new BroadcastChannel(path);
 
+      try {
         opfsBroadcastChannel.postMessage({
           type: "getFile",
           from: "sw",
@@ -161,66 +146,27 @@ self.addEventListener("fetch", (event) => {
           projectId,
         });
 
-        /**
-         * @type {File|undefined}
-         */
         const responseFile = await new Promise((resolve, reject) => {
-          /**
-           * @param {MessageEvent} ev
-           */
           const callback = (ev) => {
-            // console.log(
-            //   "from service worker sendFile broadcast",
-            //   folderPath,
-            //   fileName
-            // );
-            const { type, file, isExisit, filePath } = ev.data;
+            const { type, file, isExisit, fileName: returnedName } = ev.data;
 
             if (type !== "sendFile") {
-              reject(`No file found: ${file}, ${isExisit}`);
-              fileBraodCastChannel.removeEventListener("message", callback);
-              fileBraodCastChannel.close();
+              reject("Invalid response type");
               return;
             }
 
-            if (fileName != ev.data.fileName) {
-              console.error(
-                `File name not equal file name : ${isExisit}`,
-                file,
-                folderPath,
-                entryPoint,
-                fileName,
-                ev.data.fileName,
-                url.pathname,
-                pathname
+            if (fileName !== returnedName) {
+              reject(
+                `File name mismatch: expected ${fileName}, got ${returnedName}`
               );
-
-              reject(`File name not equal file name : ${isExisit}`);
-              fileBraodCastChannel.removeEventListener("message", callback);
-              fileBraodCastChannel.close();
               return;
             }
 
             if (isExisit && file) {
-              console.log(`File from sw is : `, file);
-
               resolve(file);
-              fileBraodCastChannel.close();
-              opfsBroadcastChannel.close();
             } else {
-              console.error(
-                `No file found: ${isExisit}`,
-                file,
-                folderPath,
-                entryPoint,
-                url.pathname,
-                pathname
-              );
-
-              reject(`No file found: ${isExisit}`);
+              reject(`No file found: ${path}`);
             }
-            fileBraodCastChannel.removeEventListener("message", callback);
-            fileBraodCastChannel.close();
           };
 
           fileBraodCastChannel.addEventListener("message", callback, {
@@ -228,36 +174,218 @@ self.addEventListener("fetch", (event) => {
           });
         });
 
-        if (responseFile) {
-          // console.log(
-          //   `File is From service worker: `,
-          //   responseFile,
-          //   folderPath,
-          //   entryPoint,
-          //   url.pathname,
-          //   pathname
-          // );
-          return new Response(responseFile, {
-            status: 200,
-            headers: {
-              "Content-Type": responseFile.type || "application/octet-stream",
-              "Access-Control-Allow-Origin": "*", // For cross-origin iframes
-            },
-          });
-        } else {
-          return new Response("File not founded", {
-            status: 404,
-            statusText: `File Not Founded For Path : ${folderPath}!`,
-          });
-        }
-
-        // return fetch(event.request)
-        // return new Response(new Blob(["404 not found!"], { type: "text/plain" }), {
-        //   status: 404,
-        // });
-      })()
-    );
+        return new Response(responseFile, {
+          status: 200,
+          headers: {
+            "Content-Type": responseFile.type || "application/octet-stream",
+            "Access-Control-Allow-Origin": "*",
+          },
+        });
+      } catch (err) {
+        console.error("SW Fetch error:", err);
+        return new Response("File not found", {
+          status: 404,
+          statusText: `File Not Found for Path: ${folderPath}`,
+        });
+      } finally {
+        fileBraodCastChannel.close();
+      }
+    })()
+  );
 });
+
+// function parseTextToURI(text = "") {
+//   const searcher = new URLSearchParams(`value=${text}`);
+//   // console.log(`From sw : `, searcher.get("value"));
+
+//   return searcher.get("value");
+// }
+
+// const folders = [
+//   "assets",
+//   "fonts",
+//   "pages",
+//   "libs",
+//   "js",
+//   "css",
+//   "global",
+//   "editor",
+//   "index.html",
+//   "logo.png",
+//   "logo.webp",
+//   "logo.avif",
+//   "screentshot.png",
+//   "screentshot.webp",
+//   "screentshot.avif",
+// ];
+
+// self.addEventListener("fetch", (event) => {
+//   // console.log(`From Fetch Event :` ,   event);
+
+//   const url = new URL(event.request.url);
+//   let pathname = parseTextToURI(url.pathname);
+//   const routePrefixes = [
+//     "/edite/",
+//     "/preview/",
+//     "/workspace/",
+//     "/add-blocks/",
+//     "motions",
+//   ];
+//   // console.warn("Pathh from sw before", pathname);
+//   for (const prefix of routePrefixes) {
+//     if (pathname.startsWith(prefix)) {
+//       pathname = `/${pathname.replace(prefix, "")}`;
+//       break;
+//     }
+//   }
+
+//   const splittedUrl = pathname.split("/");
+//   const fileName = splittedUrl.pop();
+//   let folderPath = splittedUrl.join("/");
+//   folderPath = folderPath.startsWith("/")
+//     ? folderPath.replace("/", "")
+//     : folderPath;
+
+//   const entryPoint = folderPath.split("/")[0] || fileName;
+//   const projectId = vars["projectId"];
+//   // console.warn(
+//   //   "Pathh from sw after",
+//   //   pathname,
+//   //   splittedUrl,
+//   //   fileName,
+//   //   folderPath
+//   // );
+//   // Handle /keep-alive first
+//   if (url.pathname.includes("/keep-alive")) {
+//     event.respondWith(new Response(new Blob(["ok"], { type: "text/plain" })));
+//     return;
+//   }
+//   // self.skipWaiting();
+//   // Handle other fetch requests
+
+//   folders.includes(entryPoint) &&
+//     event.respondWith(
+//       (async () => {
+//         const path = `${folderPath}/${fileName}`;
+//         const opfsBroadcastChannel = new BroadcastChannel("opfs");
+//         const fileBraodCastChannel = new BroadcastChannel(path);
+//         // console.log("Paaaaaaaaaaaath is : ", path);
+
+//         // if (!projectId) {
+//         //   return new Response(
+//         //     new Blob(["Project ID not found"], { type: "text/plain" }),
+//         //     {
+//         //       status: 400,
+//         //     }
+//         //   );
+//         // }
+
+//         opfsBroadcastChannel.postMessage({
+//           type: "getFile",
+//           from: "sw",
+//           folderPath,
+//           fileName,
+//           projectId,
+//         });
+
+//         /**
+//          * @type {File|undefined}
+//          */
+//         const responseFile = await new Promise((resolve, reject) => {
+//           /**
+//            * @param {MessageEvent} ev
+//            */
+//           const callback = (ev) => {
+//             // console.log(
+//             //   "from service worker sendFile broadcast",
+//             //   folderPath,
+//             //   fileName
+//             // );
+//             const { type, file, isExisit, filePath } = ev.data;
+
+//             if (type !== "sendFile") {
+//               reject(`No file found: ${file}, ${isExisit}`);
+//               fileBraodCastChannel.removeEventListener("message", callback);
+//               fileBraodCastChannel.close();
+//               return;
+//             }
+
+//             if (fileName != ev.data.fileName) {
+//               console.error(
+//                 `File name not equal file name : ${isExisit}`,
+//                 file,
+//                 folderPath,
+//                 entryPoint,
+//                 fileName,
+//                 ev.data.fileName,
+//                 url.pathname,
+//                 pathname
+//               );
+
+//               reject(`File name not equal file name : ${isExisit}`);
+//               fileBraodCastChannel.removeEventListener("message", callback);
+//               fileBraodCastChannel.close();
+//               return;
+//             }
+
+//             if (isExisit && file) {
+//               console.log(`File from sw is : `, file);
+
+//               resolve(file);
+//               fileBraodCastChannel.close();
+//               opfsBroadcastChannel.close();
+//             } else {
+//               console.error(
+//                 `No file found: ${isExisit}`,
+//                 file,
+//                 folderPath,
+//                 entryPoint,
+//                 url.pathname,
+//                 pathname
+//               );
+
+//               reject(`No file found: ${isExisit}`);
+//             }
+//             fileBraodCastChannel.removeEventListener("message", callback);
+//             fileBraodCastChannel.close();
+//           };
+
+//           fileBraodCastChannel.addEventListener("message", callback, {
+//             once: true,
+//           });
+//         });
+
+//         if (responseFile) {
+//           // console.log(
+//           //   `File is From service worker: `,
+//           //   responseFile,
+//           //   folderPath,
+//           //   entryPoint,
+//           //   url.pathname,
+//           //   pathname
+//           // );
+//           return new Response(responseFile, {
+//             status: 200,
+//             headers: {
+//               "Content-Type": responseFile.type || "application/octet-stream",
+//               "Access-Control-Allow-Origin": "*", // For cross-origin iframes
+//             },
+//           });
+//         } else {
+//           return new Response("File not founded", {
+//             status: 404,
+//             statusText: `File Not Founded For Path : ${folderPath}!`,
+//           });
+//         }
+
+//         // return fetch(event.request)
+//         // return new Response(new Blob(["404 not found!"], { type: "text/plain" }), {
+//         //   status: 404,
+//         // });
+//       })()
+//     );
+// });
+
 /**
  * @type {import('../src/helpers/types').Project}
  */

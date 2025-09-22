@@ -641,7 +641,7 @@ export function getCurrentMediaDevice(editor) {
     desktopDevices.findIndex((value) => value == editor.getDevice()) == -1
       ? {
           atRuleType: "media",
-          atRuleParams: `(max-width: ${
+          atRuleParams: `(${editor.getConfig().mediaCondition}: ${
             isPlainObject(targetWidth) ? targetWidth.widthMedia : targetWidth
           })`,
         }
@@ -1459,9 +1459,9 @@ export function initSymbol(id, editor) {
           // symbol.replaceWith(regenerateSymbol(JSON.parse(newContent)));
           // symbol.set('content', regenerateSymbol(JSON.parse(newContent)));
         }
-        selectedCmp.on('change:attributes',()=>{
-          handler()
-        })
+        selectedCmp.on("change:attributes", () => {
+          handler();
+        });
       });
     }, 10);
   };
@@ -2136,11 +2136,13 @@ export function getGsapCssProperties() {
  * @returns
  */
 export async function restartGSAPMotions(editor) {
-  const currentGsapStateAnimation = Boolean(
-    parse(editor.gsapRunning)
+  const currentGsapStateAnimation = Boolean(parse(editor.gsapRunning));
+  console.log(
+    "parsed anim state : ",
+    currentGsapStateAnimation,
+    editor.gsapRunning
   );
-  console.log('parsed anim state : ' , currentGsapStateAnimation , editor.gsapRunning);
-  
+
   if (!currentGsapStateAnimation) return;
   const motions = await (await getProjectData()).motions;
   killAllGsapMotions(motions);
@@ -2165,18 +2167,11 @@ export function toggleFastPreview(editor) {
  *   editor: import('grapesjs').Editor,
  *   cmp: import('grapesjs').Component,
  *   nested?: boolean,
- *   rules?: import('grapesjs').CssRule[],
- *   stringRules?: string[],
+ *    cssCode : string | undefined
  * }} param0
  */
-export function getComponentRules({
-  editor,
-  cmp,
-  nested = false,
-  rules = [],
-  stringRules = [],
-}) {
-  const cssText = editor.getCss(); // Avoid repeated calls
+export function getComponentRules({ editor, cmp, nested = false, cssCode }) {
+  const cssText = cssCode || editor.getCss(); // Avoid repeated calls
   const seenSelectors = new Set();
   const resultRules = new Set();
   const resultStrings = new Set();
@@ -2860,7 +2855,6 @@ export async function handleCloneComponent(model, editor) {
       model.addAttributes({ [motionInstanceId]: uuid, [mainMotionId]: mainId });
       console.log("main motion");
     }
-   
 
     if (interactionsId) {
       const uuid = uniqueId(`iNN${_random(99, 9999)}${_random(99, 599)}`);
@@ -3002,4 +2996,39 @@ export function setInteractionsAttributes(interactionsId, onDone = () => {}) {
   });
 
   workerCallbackMaker(infinitelyWorker, "interctions-setted", onDone);
+}
+
+/**
+ * Create a GrapesJS component from an HTML string
+ * without adding it to the editor's main wrapper.
+ *
+ * @param {import('grapesjs').Editor} editor
+ * @param {string} html
+ * @returns {import('grapesjs').Component}
+ */
+export function createGJSComponent(editor, html = "") {
+  if (!editor) throw new Error("Editor instance is required");
+  if (!html) throw new Error("HTML string is empty");
+
+  // Parse HTML into GrapesJS internal JSON format
+  const parsed = editor.Parser.parseHtml(html, {
+    allowUnsafeAttr: true,
+    allowUnsafeAttrValue: true,
+    allowScripts: true,
+    keepEmptyTextNodes: true,
+    htmlType: "text/html",
+  });
+
+  // Create the component instance without attaching to wrapper
+  const cmp = editor.Components.addComponent(parsed.html, {
+    avoidUpdateStyle: true, // Do not update the canvas
+    temporary: true,        // Keep it out of the DOM
+    at: null,               // Do NOT insert anywhere
+    avoidStore:true,
+  });
+
+  // Remove the link to the wrapper so it stays virtual
+  cmp.remove({ silent: true });
+
+  return cmp;
 }

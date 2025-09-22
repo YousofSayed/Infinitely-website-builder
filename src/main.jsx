@@ -11,10 +11,31 @@ import { version } from "./constants/Version.js";
 import { setProjectSettings } from "./helpers/functions.js";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./components/Editor/Protos/ToastMsgInfo.jsx";
+import { isDevMode } from "./helpers/bridge.js";
 // import worker from './helpers/worker.js';
 // import './helpers/backbonePacher.js'
 // src/main.js
 // src/main.js
+const appStatus = {
+  developer_creator: "Yousef Sayed Ahmed",
+  email: "infinitely.studio.dev@gmail.com",
+  phone_1: "+201096277104",
+  phone_2: "+201120020790",
+  msg: "Contact me if you need any thing 💙",
+  version: version,
+};
+console.table(appStatus);
+if (!isDevMode()) {
+  const originalLog = window.console.log;
+  window.console.log = (...data) => {
+    // Prevent infinite loop
+    if (data.includes("[APP_STATUS]")) return;
+    window.console.clear();
+    console.table(appStatus);
+    // originalLog(...data);
+  };
+}
+
 setProjectSettings();
 RecoilEnv.RECOIL_DUPLICATE_ATOM_KEY_CHECKING_ENABLED = false;
 makeAppResponsive("#root");
@@ -23,10 +44,10 @@ const originalFetch = window.fetch;
 window.fetch = async (input, init) => {
   if (!navigator.onLine) {
     toast.error(<ToastMsgInfo msg="You are offline" />);
-    return new Response(JSON.stringify({ error: 'Offline' }), {
+    return new Response(JSON.stringify({ error: "Offline" }), {
       status: 503,
-      statusText: 'Service Unavailable',
-      headers: { 'Content-Type': 'application/json' },
+      statusText: "Service Unavailable",
+      headers: { "Content-Type": "application/json" },
     });
   }
 
@@ -81,6 +102,4 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   // </React.StrictMode>,
 );
 
-const appStatus = { developer: 'Yousef' , version: version };
-console.table(appStatus);
 // console.log(version);

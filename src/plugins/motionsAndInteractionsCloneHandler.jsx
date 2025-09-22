@@ -183,7 +183,7 @@ export const motionsAndInteractionsCloneHandler = (editor) => {
      * @param {import('grapesjs').Component} model
      */
     (model, remove, options) => {
-      if(editor.leaving)return;
+      if(editor.leaving || editor.infLoading)return;
       const attributes = model.getAttributes();
       const symbolInfo = getInfinitelySymbolInfo(model);
       if (symbolInfo.isSymbol) return;

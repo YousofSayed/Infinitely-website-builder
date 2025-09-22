@@ -367,31 +367,45 @@ export const IframeControllers = () => {
       <Li
         className="flex-shrink-0"
         onClick={async (ev) => {
-          console.log(editor?.Canvas?.getBody?.());
-          const body = editor?.Canvas?.getBody();
+          // console.log(editor?.Canvas?.getBody?.());
+          // const body = editor?.Canvas?.getBody();
           if (editor.infLoading || editor.canvasReload) {
             toast.warn(<ToastMsgInfo msg={`Wait until load end`} />);
             return;
           }
-          isEditorLoad.current = true;
-          editor.canvasReload = true
+          // isEditorLoad.current = true;
+          // editor.canvasReload = true;
           // editor.destroy();
           // setReloader(uniqueId(`reloader-key-${uniqueID()}-`))
-          // editor.load();
+          editor.load();
+          editor.clearDirtyCount();
+
           ///////////////////
-          const frame = editor.Canvas.getFrameEl?.();
-          if (!frame) return;
-          frame.contentDocument?.location?.reload?.();
-          await loadScripts(editor, await getProjectData());
-          editor.trigger("canvas:frame:load:body", {
-            window: frame.contentWindow,
-            el: frame,
-          });
-          const callback = () => {
-            editor.canvasReload = false;
-            editor.off("canvas:frame:load:body", callback);
-          };
-          editor.on("canvas:frame:load:body", callback);
+          // editor.loadProjectData({
+          //   components: editor
+          //     .getWrapper()
+          //     .components()
+          //     .models.concat(
+          //       `<style>${editor.getCss({
+          //         avoidProtected: true,
+          //         keepUnusedStyles: false,
+          //       })}</style>`
+          //     ),
+          // });
+
+          // const frame = editor.Canvas.getFrameEl?.();
+          // if (!frame) return;
+          // frame.contentDocument?.location?.reload?.();
+          // await loadScripts(editor, await getProjectData());
+          // editor.trigger("canvas:frame:load:body", {
+          //   window: frame.contentWindow,
+          //   el: frame,
+          // });
+          // const callback = () => {
+          //   editor.canvasReload = false;
+          //   editor.off("canvas:frame:load:body", callback);
+          // };
+          // editor.on("canvas:frame:load:body", callback);
           // editor.Canvas.getFrameEl?.().remove();
           // const init = editor.EditorModel.init;
           // let oldEditor = editor;

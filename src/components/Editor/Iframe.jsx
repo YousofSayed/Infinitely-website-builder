@@ -53,6 +53,7 @@ import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
 import { animationsSavingMsg } from "../../constants/confirms";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { Loader } from "../Loader";
 
 const PreviewIframe = ({
   content = "",
@@ -101,6 +102,7 @@ export const Iframe = memo(() => {
   const projectId = +localStorage.getItem(current_project_id);
   const setStyle = useSetClassForCurrentEl();
   const [autoAnimate] = useAutoAnimate();
+  const [showLoader, setShowLoader] = useState(false);
   const saveAnimations = () => {
     if (isAnimationsChanged) {
       setSaveLoad(true);
@@ -128,7 +130,6 @@ export const Iframe = memo(() => {
               },
             });
             keyframesGetterWorker.removeEventListener("message", callback);
-
           }
         };
 
@@ -195,28 +196,21 @@ export const Iframe = memo(() => {
     };
 
     editor.on("canvas:frame:load:body", loadMonaco);
-    const preventDefaultSave = (ev) => {
-      if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "s") {
-        ev.preventDefault();
-      }
+
+    const loaderStartCallback = () => {
+      setShowLoader(true);
     };
-    // window.addEventListener("keydown", preventDefaultSave);
-    /**
-     *
-     * @param {KeyboardEvent} ev
-     */
-    const saveCallback = (ev) => {
-      if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "s") {
-        ev.preventDefault();
-        editor.store();
-      }
+    const loaderEndCallback = () => {
+      setShowLoader(false);
     };
 
-    // window.addEventListener("keydown", saveCallback);
+    editor.on(InfinitelyEvents.storage.loadStart, loaderStartCallback);
+    editor.on(InfinitelyEvents.storage.loadEnd, loaderEndCallback);
 
     return () => {
       styleInfInstance.off(InfinitelyEvents.style.set, infCallback);
       editor.off("canvas:frame:load:body", loadMonaco);
+      editor.off(InfinitelyEvents.storage.loadStart, loaderStartCallback);
       // window.removeEventListener("keydown", preventDefaultSave);
       // window.removeEventListener("keydown", saveCallback);
     };
@@ -228,28 +222,10 @@ export const Iframe = memo(() => {
     editor.Canvas.refresh();
   }, [showAnimBuilder, showLayers]);
 
-  // const getPageName = ()=>{}
-
   const reloadPreview = () => {
     setPreviewSrc(new String(getCurrentPageName()));
     // getAndSetPreviewData(previewPageName, false, { firstPreview: false });
   };
-
-  // useEffect(() => {
-  //   if (!editor) return;
-
-  //   pageBuilderWorker.postMessage({
-  //     command: "sendPreviewPagesToServiceWorker",
-  //     props: {
-  //       projectId: +localStorage.getItem(current_project_id),
-  //       editorData: {
-  //         canvasCss: editor.config.canvasCss,
-  //         editorCss: "",
-  //       },
-  //     },
-  //   });
-  //   console.log("i should send preview page");
-  // },[]);
 
   useEffect(() => {
     if (!showPreview) {
@@ -265,13 +241,8 @@ export const Iframe = memo(() => {
     setPreviewSrc(urlSrc);
   }, [showPreview]);
 
-  
-
   return (
-    <section
-      className="relative bg-[#aaa]    h-full"
-      ref={autoAnimate}
-    >
+    <section className="relative bg-[#aaa]    h-full" ref={autoAnimate}>
       {showAnimBuilder && (
         <section className="grid place-items-center p-2 absolute top-0 left-0 z-20 bg-blur-dark w-full h-full">
           <section className="flex flex-col items-center justify-center self-center p-3 bg-slate-900 shadow-2xl shadow-slate-950 rounded-lg gap-5">
@@ -328,10 +299,14 @@ export const Iframe = memo(() => {
                 //  style={{
                 //   backgroundColor: 'green',
                 // }}
-                className={`font-semibold ${!Boolean(isAnimationsChanged)? `opacity-[.7] cursor-not-allowed ` :''}`}
+                className={`font-semibold ${
+                  !Boolean(isAnimationsChanged)
+                    ? `opacity-[.7] cursor-not-allowed `
+                    : ""
+                }`}
                 onClick={(ev) => {
-                  console.log('isAnimationsChanged: ' , isAnimationsChanged);
-                  
+                  console.log("isAnimationsChanged: ", isAnimationsChanged);
+
                   if (!isAnimationsChanged) {
                     toast.info(
                       <ToastMsgInfo msg={`You did not do any change!`} />
@@ -339,7 +314,6 @@ export const Iframe = memo(() => {
                   }
                   saveAnimations();
                 }}
-               
               >
                 Save
               </Button>
@@ -358,8 +332,8 @@ export const Iframe = memo(() => {
           display: showPreview ? "none" : "block",
           // scale:showPreview ? 0 : 1,
           overflow: "auto",
-          contain:'layout , content , size , paint',
-          transform:'translateZ(0)'
+          contain: "layout , content , size , paint",
+          transform: "translateZ(0)",
         }}
         // srcDoc="<video src='../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4'></video>"
       ></Canvas>
@@ -371,9 +345,19 @@ export const Iframe = memo(() => {
       )} */}
 
       {/* {showPreview && ( */}
+
+      {showLoader && (
+        <section className="absolute top-0 left-0 w-full h-full bg-slate-900 flex justify-center items-center">
+          <Loader />
+        </section>
+      )}
+
       <section
         ref={virtualBrowserWindow}
-        style={{ display: showPreview ? "block" : "none" , contain:'layout , size , paint'}}
+        style={{
+          display: showPreview ? "block" : "none",
+          contain: "layout , size , paint",
+        }}
         className="w-full h-full rounded-xl overflow-hidden p-1 fixed left-0 top-0 z-[1000] backdrop-blur-md"
         // style={{ display: showPreview ? "block" : "none" }}
       >
