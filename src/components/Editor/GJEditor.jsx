@@ -42,6 +42,7 @@ import { toast } from "react-toastify";
 import { handleComponentsOnCreate } from "../../plugins/handleComponentsOnCreate.js";
 import { initTraitsOnRender } from "../../plugins/initTraitsOnRender.jsx";
 import { editorKeymaps } from "../../plugins/editorKeymaps.jsx";
+import { parse } from "css";
 
 export const GJEditor = memo(({ children }) => {
   const setSelectedEl = useSetRecoilState(currentElState);
@@ -61,15 +62,15 @@ export const GJEditor = memo(({ children }) => {
     customModal,
     addNewTools,
     addNewBuiltinCommands,
-    IDB,
+    motionsAndInteractionsCloneHandler,
     updateProjectThumbnail,
     customInfinitelySymbols,
-    // updateDynamicTemplates,
-    // motionsRemoverHandler,
-    motionsAndInteractionsCloneHandler,
     globalTraits,
     initTraitsOnRender,
     editorKeymaps,
+    IDB,
+    // updateDynamicTemplates,
+    // motionsRemoverHandler,
     // handleComponentsOnCreate,
     // selectionPreventer,
     // muatationDomElements,
@@ -232,6 +233,9 @@ export const GJEditor = memo(({ children }) => {
         autorender: true,
 
         parser: {
+          // parserCss:(css)=>{
+          //  return parse(css , {}).stylesheet.rules
+          // },
           optionsHtml: {
             allowScripts: true,
             // detectDocument: true,

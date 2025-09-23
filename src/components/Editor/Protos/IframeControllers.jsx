@@ -373,12 +373,22 @@ export const IframeControllers = () => {
             toast.warn(<ToastMsgInfo msg={`Wait until load end`} />);
             return;
           }
+
+          const test = async () => {
+            await editor.load();
+            setTimeout(() => {
+              test();
+            }, 10000);
+          };
+          // test();
           // isEditorLoad.current = true;
           // editor.canvasReload = true;
           // editor.destroy();
+          // await editor.Storage.load();
+          await editor.load();
+          // await editor.destroy();
           // setReloader(uniqueId(`reloader-key-${uniqueID()}-`))
-          editor.load();
-          editor.clearDirtyCount();
+          // editor.clearDirtyCount();
 
           ///////////////////
           // editor.loadProjectData({

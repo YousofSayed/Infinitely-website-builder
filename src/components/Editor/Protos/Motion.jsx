@@ -1327,6 +1327,10 @@ export const Motion = memo(() => {
   const deleteMotion = async (id) => {
     const sle = editor.getSelected();
     if (!id || !sle) return;
+      const cnfrm = confirm(
+      `Are you sure you want to delete those motions? All instances will be removed from all pages, and you won’t be able to undo them on other pages (but you can undo them on the current page; symbols are exceptions)`
+    );
+    if (!cnfrm) return;
     const { projectSettings } = getProjectSettings();
     const projectData = await getProjectData();
     editor

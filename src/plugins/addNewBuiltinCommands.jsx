@@ -15,6 +15,9 @@ export const addNewBuiltinCommands = (editor) => {
   editor.Commands.add("close:current:modal", (editor, sender, options) => {
     editor.runCommand("close:custom:modal");
   });
+  const originalRemove = editor.Commands.get('remove');
+
+ 
 
   editor.Commands.add(select_page, (editor, sender, options) => {
     const pageId = options.pageId;

@@ -195,26 +195,32 @@ export const Iframe = memo(() => {
       });
     };
 
-    editor.on("canvas:frame:load:body", loadMonaco);
-
+    
     const loaderStartCallback = () => {
       setShowLoader(true);
     };
+
     const loaderEndCallback = () => {
       setShowLoader(false);
+      console.log('should end');
+      
     };
 
     editor.on(InfinitelyEvents.storage.loadStart, loaderStartCallback);
     editor.on(InfinitelyEvents.storage.loadEnd, loaderEndCallback);
-
+    editor.on('storage:end:load', loaderEndCallback);
+    editor.on("canvas:frame:load:body", loadMonaco);
+    
     return () => {
       styleInfInstance.off(InfinitelyEvents.style.set, infCallback);
       editor.off("canvas:frame:load:body", loadMonaco);
       editor.off(InfinitelyEvents.storage.loadStart, loaderStartCallback);
+      editor.off(InfinitelyEvents.storage.loadEnd, loaderEndCallback);
+      editor.off('storage:end:load', loaderEndCallback);
       // window.removeEventListener("keydown", preventDefaultSave);
       // window.removeEventListener("keydown", saveCallback);
     };
-  }, [editor]);
+  }, [editor , showLoader]);
 
   useEffect(() => {
     if (!editor) return;
@@ -323,7 +329,7 @@ export const Iframe = memo(() => {
       )}
 
       <Canvas
-        // key={uniqueID()}
+        // key={uniqueID()+random(1,100000)}
         id="editor-container"
         label="Canvas"
         aria-label="Editor"

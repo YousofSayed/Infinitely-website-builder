@@ -176,20 +176,21 @@ export const motionsAndInteractionsCloneHandler = (editor) => {
     }
   );
 
-  editor.on(
-    "component:remove:before",
+  const removerBeforeHandler =
     /**
      *
      * @param {import('grapesjs').Component} model
      */
     (model, remove, options) => {
-      if(editor.leaving || editor.infLoading)return;
+      console.log("from remover : ", editor.infLoading , options.infinitelyClear);
+
+      if (editor.leaving || editor.infLoading || options.infinitelyClear)
+        return;
       const attributes = model.getAttributes();
       const symbolInfo = getInfinitelySymbolInfo(model);
       if (symbolInfo.isSymbol) return;
       const mainId = attributes[motionId];
       const mainIntaractionsIdAttr = attributes[interactionId];
-      if (editor.infLoading) return;
       if (!(mainId || mainIntaractionsIdAttr)) return;
       options.abort = true;
       (async () => {
@@ -270,6 +271,7 @@ export const motionsAndInteractionsCloneHandler = (editor) => {
           );
         }
       })();
-    }
-  );
+    };
+  editor.removerBeforeHandler = removerBeforeHandler;
+  editor.on("component:remove:before",editor.removerBeforeHandler);
 };

@@ -31,6 +31,16 @@ export const actions = [
     function: "toggleElement",
   },
   {
+    name:'toggleAnimationClass',
+    label:'Toggle animation class',
+    placeholder:"Type selector and animation class, e.g., .selector , .animation-class",
+    params:{
+      selector:"",
+      animationClass:""
+    },
+    function:"toggleAnimationClass"
+  },
+  {
     name: "addClass",
     label: "Add Class",
     placeholder: "Type selector and class, e.g., .selector, my-class",

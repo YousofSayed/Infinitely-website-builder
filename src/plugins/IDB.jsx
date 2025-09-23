@@ -40,6 +40,7 @@ import { toast } from "react-toastify";
 import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
 import { parseHTML } from "linkedom";
 import { isFunction } from "lodash";
+import grapesjs from "grapesjs";
 // import LeakDetector from "jest-leak-detector";
 
 let loadFooterScriptsCallback, loadHeadScriptsCallback, loadMainScriptsCallback;
@@ -47,7 +48,10 @@ let storeTimeout;
 let pageBuilderTimeout;
 let loadTimeout, appenderTimeout;
 let currentPageName = localStorage.getItem(current_page_id);
-
+/**
+ * @type {HTMLIFrameElement[]}
+ */
+let frames = [];
 /**
  *
  * @param {import('grapesjs').Editor} editor
@@ -72,16 +76,72 @@ export const IDB = (editor) => {
   const updateDirty = () => {
     editor.infDirty++;
   };
-  // editor.on("update", updateDirty);
+  const attrsCallback = (editor, projectData) => {
+    const { projectSettings } = getProjectSettings();
+    /**
+     * @type {HTMLBodyElement}
+     */
+    // const body = ev.window.document.body;
+    const currentPageId = localStorage.getItem(current_page_id);
+    const attributesAsEntries = Object.entries(
+      projectData.pages[`${currentPageId}`].bodyAttributes || {}
+    );
 
-  // window.addEventListener("beforeunload", (e) => {
-  //   // Check if there are unsaved changes
-  //   if (editor.getDirtyCount() > 0) {
-  //     e.preventDefault();
-  //     e.returnValue = "Changes you made may not be saved!"; // This triggers the browser's native confirmation dialog
-  //     return "";
-  //   }
-  // });
+    const vAttributesFilterd = attributesAsEntries.filter(
+      ([key, value]) => key.startsWith("v-") && value
+    );
+
+    const otherAttributes = attributesAsEntries.filter(
+      ([key, value]) => !key.startsWith("v-")
+    );
+
+    editor.Storage.setAutosave(false);
+
+    // editor.getWrapper().setClass("");
+    const attributes = Object.fromEntries(
+      vAttributesFilterd.concat(otherAttributes)
+    );
+    delete attributes["id"];
+    if (projectSettings.stop_all_animation_on_page) {
+      attributes["class"] = `${
+        attributes["class"] || ""
+      } inf-stop-all-animations`;
+    } else {
+      attributes["class"] =
+        attributes["class"]?.replace("inf-stop-all-animations", "") || "";
+    }
+    const classes = attributes?.class || ""; //|| [...editor.getWrapper().getClasses()].join(" ");
+    console.log("classes equal : ", classes);
+
+    editor
+      .getWrapper()
+      .removeAttributes(Object.keys(attributes), { avoidStore: true });
+
+    editor.getWrapper().setAttributes(attributes, {
+      avoidStore: true,
+      // silent: true,
+    });
+
+    editor.clearDirtyCount();
+
+    setTimeout(() => {
+      editor.clearDirtyCount();
+      editor.Storage.setAutosave(projectSettings.enable_auto_save);
+      editor.UndoManager.start();
+      editor.trigger(InfinitelyEvents.storage.loadEnd);
+      editor.infLoading = false;
+    }, 0);
+    // editor.on("update", updateDirty);
+
+    clearTimeout(storeTimeout);
+    // editor.off("canvas:frame:load:body", callback);
+  };
+
+  editor.on("storage:end:load", () => {
+    console.log("load end");
+
+    editor.trigger(InfinitelyEvents.storage.loadEnd);
+  });
 
   async function getAllSymbolsStyles() {
     const projectData = await getProjectData();
@@ -130,22 +190,6 @@ export const IDB = (editor) => {
     clearTimeouts();
   });
 
-  // editor.on(InfinitelyEvents.storage.loadEnd, ({ originalAutosave }) => {
-  //   setTimeout(() => {
-  //     clearTimeout(storeTimeout);
-
-  //
-  //     editor.clearDirtyCount();
-  //     editor.Storage.setAutosave(originalAutosave);
-  //     editor.UndoManager.start();
-  //     editor.infLoading = false;
-  //   }, 0);
-  // });
-
-  // editor.on("canvas:spot", () => {
-  //   console.log("pooooooooooooointer");
-  // });
-
   if (!projectID) {
     console.error(`Error : No project id founded in local storage`);
     return;
@@ -155,36 +199,87 @@ export const IDB = (editor) => {
     editor.clearDirtyCount();
     console.log("attrs wrapper changed : ", attrs, model);
   };
+
   editor.on("update", (update) => {
     console.log("update : ", update, editor.infLoading);
     if (editor.infLoading) {
       editor.clearDirtyCount();
     }
   });
+  function clearEditor() {
+  const canvas = editor.Canvas;
 
-  // editor.on(
-  //   "canvas:frame:load",
-  //   /**
-  //    *
-  //    * @param {{window : Window , el : HTMLIFrameElement}} param0
-  //    */
-  //   ({ window, el }) => {
-  //     window.document.documentElement.remove();
-  //   }
-  // );
+  // 1. Destroy Frame Completely
+  const frameEl = canvas.getFrameEl();
+  if (frameEl) {
+    frameEl.remove(); // Removes iframe DOM
+  }
+
+  const frameView = canvas.getFrame();
+  if (frameView) {
+    frameView.remove();
+  }
+
+  // Clear GrapesJS internal references
+  canvas.frames = [];
+
+  // 2. Clear all Components
+  editor.DomComponents.clear({ avoidStore: true });
+  editor.DomComponents.destroy();
+  editor.Components.clear({ avoidStore: true });
+  editor.Components.destroy();
+  editor.getWrapper()?.empty?.();
+  // 3. Clear CSS
+  editor.Css.clear({ avoidStore: true });
+  editor.Css.destroy();
+  editor.CssComposer.clear({ avoidStore: true });
+  editor.CssComposer.destroy();
+
+  // 4. Undo Manager
+  editor.UndoManager.stop();
+  editor.UndoManager.clear();
+
+  // 5. Clear Selections
+  editor.select(null);
+
+  // 6. Remove custom event listeners bound to the editor
+  editor.off("canvas:frame:load:body");
+  editor.off("component:remove:before", editor.removerBeforeHandler);
+
+  // 7. Reset internal object URLs
+  URL.createObjectURL = mainCreateObjectURLMethod;
+}
+
+function fullDestroyCanvas(editor) {
+  const canvas = editor.Canvas;
+
+  // 1. Remove iframe DOM
+  const frameEl = canvas.getFrameEl();
+  if (frameEl) {
+    frameEl.remove();
+  }
+
+  // 2. Destroy GrapesJS frame view
+  const frameView = canvas.getFrame();
+  if (frameView) {
+    frameView.remove();
+  }
+
+  // 3. Reset canvas internals
+  canvas.frames = [];
+  canvas.wrapper = null;
+  canvas.model = null;
+}
+
 
   editor.Storage.add("infinitely", {
-    async load(options) {
-      // console.log('loading options : ' , options);
+    async load(options = {}) {
+      console.log('loading options : ' , options);
       loadTimeout && clearTimeout(loadTimeout);
       loadTimeout &&
         window.cancelIdleCallback &&
         cancelIdleCallback(loadTimeout);
-
-      // editor.off("canvas:frame:load:body");
-      // editor.off("update");
-      // editor.off(InfinitelyEvents.storage.storeEnd);
-
+ editor.infLoading = true;
       if (editor.getDirtyCount() > 0) {
         console.log(
           "loading state : ",
@@ -210,33 +305,24 @@ export const IDB = (editor) => {
       }
 
       clearTimeouts();
+        editor.off("component:remove:before", editor.removerBeforeHandler);
 
       const callback = async () => {
-        // editor.off("update", updateDirty);
-        // editor.getWrapper().off("change:attributes", dirtyCleanner);
-        // editor.getWrapper().on("change:attributes", dirtyCleanner);
-
+        clearEditor(editor);
+        fullDestroyCanvas(editor)
+        !editor.loadTimes && (editor.loadTimes = 0);
+        editor.loadTimes++;
         editor.trigger(InfinitelyEvents.storage.loadStart);
+
         const projectData = await db.projects.get(+projectID);
         const projectSettings = getProjectSettings().projectSettings;
-        if (!projectData) return;
-        // infinitelyWorker.postMessage
-
-        // await initDBAssetsSw();
-        await loadScripts(editor, projectData);
-
-        // await sendDataToServiceWorker({
-        //   projectId: +localStorage.getItem(current_project_id),
-        //   projectData: projectData,
-        // });
-        // await fetch('/keep-live');
+        if (!projectData) {};
 
         console.time("loading");
         const storageManager = editor.StorageManager;
         const originalAutosave = storageManager.getConfig().autosave;
         storageManager.setAutosave(false);
-        editor.UndoManager.stop();
-        editor.UndoManager.clear();
+      
 
         const loadCurrentPage = async () => {
           if (!localStorage.getItem(current_page_id)) {
@@ -260,7 +346,6 @@ export const IDB = (editor) => {
 
           allSymbolsStyle = null; //For garpage collection
           cssStyles = null;
-
           /**
            *
            * @param {import('grapesjs').Component[]} components
@@ -274,11 +359,10 @@ export const IDB = (editor) => {
               editor.addComponents(chunk.join(""), { avoidStore: true });
               await new Promise((r) => requestAnimationFrame(r)); // smoother rendering
             }
-            storageManager.setStepsBeforeSave(0);
             editor.clearDirtyCount();
           };
 
-          const renderCallback = async () => {
+          const getElements = async () => {
             infinitelyWorker.postMessage({
               command: "parseHTMLAndRaplceSymbols",
               props: {
@@ -287,20 +371,19 @@ export const IDB = (editor) => {
               },
             });
 
-            let styleElement = renderCssStyles(editor, cssCode);
+            let styleElement = ' ' // renderCssStyles(editor, cssCode);
 
-            const elements = await new Promise((res, rej) => {
+            let elements = await new Promise((res, rej) => {
               workerCallbackMaker(
                 infinitelyWorker,
                 "parseHTMLAndRaplceSymbols",
                 (props) => {
-                  props.response && res([styleElement, ...props.response]);
+                  props.response && res([...props.response]);
                   !props.response && rej([]);
                 }
               );
             });
-
-            // cssCode = null;
+            console.log("elements : ", elements);
 
             if (projectSettings.enable_editor_lazy_loading) {
               // Take the first 5 and mutate the original array
@@ -310,170 +393,73 @@ export const IDB = (editor) => {
               editor.loadProjectData({
                 components: firstFive,
               });
-
               // Now `elements` contains ONLY the remaining ones
               await appender(elements);
-            } else {
-              // editor.addComponents(elements, {
-              //   avoidStore: true,
-              // });
 
-              editor.loadProjectData({
-                // styles: cssCode, // optional
-                components: elements,
-              });
+              // let tmpElements = [...elements]; // clone
+              // const firstFive = tmpElements.splice(0, 5);
+              // editor.loadProjectData({ components: firstFive });
+              // await appender(tmpElements);
+              // tmpElements.length = 0;
+              // tmpElements = null;
+            } else {
+              // const parser = editor.Parser.parseHtml(elements);
+              // editor.loadProjectData({
+              //   // styles: parser.css, // optional
+              //   components:elements,
+              // });
+              // const el = editor.getEl();
+              // frames.push(el);
+              // console.log('render el : ' ,el);
+              // editor.addComponents(elements , {merge:true});
+              // const frame = editor.Canvas.getFrameEl();
+              // frame.setAttribute('srcdoc', elements.join(' ')) // = doDocument(elements.join(' '))
             }
 
-            editor.clearDirtyCount();
+            return elements;
           };
-
-          renderCallback();
 
           editor.trigger(InfinitelyEvents.pages.select);
           editor.trigger(InfinitelyEvents.pages.update);
           editor.trigger(InfinitelyEvents.pages.all);
           window.dispatchEvent(changePageName({ pageName: currentPageId }));
+          const parsed = editor.Parser.parseHtml(await getElements(),{asDocument:false});
+          return {
+            components: [renderCssStyles(editor, cssCode) , ...parsed.html],
+            // styles:editor.Parser.parseCss(cssCode)
+          };
         };
-        await loadCurrentPage();
 
         [current_symbol_rule, current_symbol_id, current_template_id].forEach(
           (item) => sessionStorage.removeItem(item)
         );
-        const currentPageId = localStorage.getItem(current_page_id);
-        const attributesAsEntries = Object.entries(
-          projectData.pages[`${currentPageId}`].bodyAttributes || {}
-        );
-
-        const vAttributesFilterd = attributesAsEntries.filter(
-          ([key, value]) => key.startsWith("v-") && value
-        );
-
-        const otherAttributes = attributesAsEntries.filter(
-          ([key, value]) => !key.startsWith("v-")
-        );
 
         // editor.getWrapper().setAttributes({} , {avoidStore:true});
 
-        currentPageId.toLowerCase() != "playground" &&
-          sessionStorage.removeItem(current_dynamic_template_id);
         editor.select(null);
         URL.createObjectURL = mainCreateObjectURLMethod;
 
-        const callback = (ev) => {
-          /**
-           * @type {HTMLBodyElement}
-           */
-          const body = ev.window.document.body;
-          // const originalStore = editor.Storage.store;
-          // editor.Storage.store = () =>
-          //   console.log(`Store prevented while loading`);
-          editor.Storage.setAutosave(false);
+        editor.off("canvas:frame:load:body");
+        await loadScripts(editor, projectData);
+        editor.on("canvas:frame:load:body", () => {
+          attrsCallback(editor, projectData);
+        });
 
-          // editor.getWrapper().setClass("");
-          const attributes = Object.fromEntries(
-            vAttributesFilterd.concat(otherAttributes)
-          );
-          delete attributes["id"];
-          if (projectSettings.stop_all_animation_on_page) {
-            attributes["class"] = `${
-              attributes["class"] || ""
-            } inf-stop-all-animations`;
-          } else {
-            attributes["class"] =
-              attributes["class"]?.replace("inf-stop-all-animations", "") || "";
-          }
-          const classes = attributes?.class || ""; //|| [...editor.getWrapper().getClasses()].join(" ");
-          console.log("classes equal : ", classes);
-
-          editor
-            .getWrapper()
-            .removeAttributes(Object.keys(attributes), { avoidStore: true });
-
-          editor.getWrapper().setAttributes(attributes, {
-            avoidStore: true,
-            // silent: true,
-          });
-
-          editor.clearDirtyCount();
-
-          const wrapperEl = editor.getWrapper().getEl();
-          // Object.entries(attributes).forEach(([key, value]) => {
-          //   wrapperEl.setAttribute(key, value);
-          // });
-          // if (!editor.wrapperAddIsDone) {
-          //   const originalAddAttributes = editor.getWrapper().addAttributes;
-          //   editor.getWrapper().addAttributes = (newAttrs, opts) => {
-          //     const attrs = editor.getWrapper().getAttributes();
-          //     originalAddAttributes({ ...attrs, ...newAttrs }, opts);
-          //     editor.wrapperAddIsDone = true;
-          //   };
-          // }
-
-          // editor.getWrapper().addClass(classes.split(" "));
-          // editor.getWrapper().setClass(classes.split(" "))
-
-          console.log(classes.split(" "));
-
-          dirtyCleanner();
-
-          setTimeout(() => {
-            editor.UndoManager.start();
-            editor.clearDirtyCount();
-            editor.Storage.setAutosave(originalAutosave);
-            editor.infLoading = false;
-            editor.infDirty = 0;
-            editor.trigger(InfinitelyEvents.storage.loadEnd, {
-              originalAutosave,
-            });
-            editor.on("update", updateDirty);
-
-            clearTimeout(storeTimeout);
-          }, 100);
-          editor.off("canvas:frame:load:body", callback);
-        };
-
-        // editor.off("canvas:frame:load:body", callback);
-        editor.on("canvas:frame:load:body", callback);
-
-        // if(timesLoaded >1)timesLoaded=1
-
-        console.log("loading end", editor.getDirtyCount());
         editor.clearDirtyCount();
-        setTimeout(() => {
-          editor.clearDirtyCount();
-          clearTimeout(storeTimeout);
-          updatePrevirePage({
-            data: projectData,
-            pageName: currentPageName,
-            projectId: +projectID,
-            projectSetting: projectSettings,
-            // editorData:{canvasCss:editor.config.canvasCss , editorCss:editor.config.editorCss}
-          });
-        }, 0);
-        return {};
+
+        // if (editor.loadTimes > 1) {
+        //   clearEditor(editor);
+        // }
+        editor.on("component:remove:before", editor.removerBeforeHandler);
+        return await loadCurrentPage();
       };
 
-      if (window.requestIdleCallback) {
-        loadTimeout = requestIdleCallback(async () => {
-          editor.infLoading = true;
-          isLoadEnd = false;
-          dirtyCleanner();
-          await callback();
-        });
-      } else {
-        loadTimeout = setTimeout(async () => {
-          editor.infLoading = true;
-          isLoadEnd = false;
-          dirtyCleanner();
-          await callback();
-          // return await new Promise((res, rej) => {
-
-          //     res(true);
-          //   }, 10);
-        });
-      }
-
-      return loadTimeout;
+      console.log("should load");
+      
+      // return {
+      //   components:['<h1>Hello world!!</h1>']
+      // }
+      return await callback();
     },
 
     //Storinggg
@@ -712,7 +698,7 @@ export const IDB = (editor) => {
  * @param {string} cssCode
  */
 export const renderCssStyles = (editor, cssCode) => {
-  const styleCmp = editor.getWrapper().find(`[infinitely-style]`)[0];
+  const styleCmp = editor.getWrapper()?.find?.(`[infinitely-style]`)?.[0];
   // editor.Css.clear({ avoidStore: true });
   styleCmp?.[0] && styleCmp.remove();
   // editor.addComponents(`<style infinitely-style">${cssCode}</style>`, {
@@ -1043,3 +1029,203 @@ export const loadScripts = async (editor, projectData) => {
   // editor.on("canvas:frame:load:body", loadMainScriptsCallback);
   // editor.on("canvas:frame:load:head", loadHeadScriptsCallback);
 };
+
+//======================Trash=========================
+//  const callback = async () => {
+//         !editor.loadTimes && (editor.loadTimes = 0);
+//         editor.loadTimes++;
+//         editor.trigger(InfinitelyEvents.storage.loadStart);
+//         editor.off("component:remove:before", editor.removerBeforeHandler);
+
+//         const projectData = await db.projects.get(+projectID);
+//         const projectSettings = getProjectSettings().projectSettings;
+//         if (!projectData) return;
+
+//         console.time("loading");
+//         const storageManager = editor.StorageManager;
+//         const originalAutosave = storageManager.getConfig().autosave;
+//         storageManager.setAutosave(false);
+//         function clearEditor() {
+//           const canvas = editor.Canvas;
+//           const frameView = canvas.getFrame();
+
+//           if (frameView) {
+//             frameView.remove();
+//             canvas.frames = [];
+//           }
+
+//           // Components & CSS
+//           editor.DomComponents.clear({ avoidStore: true });
+//           editor.Components.clear({ avoidStore: true });
+//           editor.getWrapper()?.empty?.();
+//           editor.Css.clear({ avoidStore: true });
+//           editor.CssComposer.clear({ avoidStore: true });
+
+//           // Undo manager
+//           editor.UndoManager.stop();
+//           editor.UndoManager.clear();
+
+//           // Remove all selections
+//           editor.select(null);
+
+//           // Force GrapesJS to forget the wrapper
+//           editor?.setComponents?.("");
+//         }
+
+//         const frame = editor.Canvas.getFrameEl();
+//         frame && frames.push(frame);
+//         console.log(frames, "frames");
+//         frames.forEach((frameEl) => {
+//           const els = [...frameEl.querySelectorAll("*")];
+//           console.log("frame children length el: ", els.length);
+
+//           els.forEach((el) => el.remove());
+//           // frame.contentWindow.location.replace("about:blank");
+//           frameEl.remove();
+//         });
+//         frames = [];
+//         // if (editor.loadTimes > 1) {
+//         //   clearEditor(editor);
+//         // }
+
+//         const loadCurrentPage = async () => {
+//           if (!localStorage.getItem(current_page_id)) {
+//             localStorage.setItem(current_page_id, "index");
+//           }
+//           currentPageName = localStorage.getItem(current_page_id);
+//           const currentPageId = currentPageName; //it will return void so that will make it take second choics : "index"
+//           const currentPage = projectData.pages[`${currentPageId}`];
+//           let cssStyles = await (
+//             await opfs.getFile(defineRoot(`css/${currentPageId}.css`))
+//           ).text();
+//           let allSymbolsStyle = await getAllSymbolsStyles();
+
+//           let cssCode = minify(
+//             `
+//             ${allSymbolsStyle}
+//             ${cssStyles}
+//         `,
+//             { restructure: true }
+//           ).css;
+
+//           allSymbolsStyle = null; //For garpage collection
+//           cssStyles = null;
+//           /**
+//            *
+//            * @param {import('grapesjs').Component[]} components
+//            * @param {number} starter
+//            * @param {number} ender
+//            */
+//           const appender = async (components, chunkSize = 1) => {
+//             const total = components.length;
+//             for (let i = 0; i < total; i += chunkSize) {
+//               const chunk = components.slice(i, i + chunkSize);
+//               editor.addComponents(chunk.join(""), { avoidStore: true });
+//               await new Promise((r) => requestAnimationFrame(r)); // smoother rendering
+//             }
+//             editor.clearDirtyCount();
+//           };
+
+//           const renderCallback = async () => {
+//             infinitelyWorker.postMessage({
+//               command: "parseHTMLAndRaplceSymbols",
+//               props: {
+//                 pageName: currentPageId,
+//                 projectId: +projectID,
+//               },
+//             });
+
+//             let styleElement = renderCssStyles(editor, cssCode);
+
+//             let elements = await new Promise((res, rej) => {
+//               workerCallbackMaker(
+//                 infinitelyWorker,
+//                 "parseHTMLAndRaplceSymbols",
+//                 (props) => {
+//                   props.response && res([styleElement, ...props.response]);
+//                   !props.response && rej([]);
+//                 }
+//               );
+//             });
+//             console.log("elements : ", elements);
+
+//             if (projectSettings.enable_editor_lazy_loading) {
+//               // Take the first 5 and mutate the original array
+//               const firstFive = elements.splice(0, 5);
+
+//               // Load the first 5 into GrapesJS
+//               editor.loadProjectData({
+//                 components: firstFive,
+//               });
+//               // Now `elements` contains ONLY the remaining ones
+//               await appender(elements);
+
+//               // let tmpElements = [...elements]; // clone
+//               // const firstFive = tmpElements.splice(0, 5);
+//               // editor.loadProjectData({ components: firstFive });
+//               // await appender(tmpElements);
+//               // tmpElements.length = 0;
+//               // tmpElements = null;
+//             } else {
+//               // const parser = editor.Parser.parseHtml(elements);
+//               // editor.loadProjectData({
+//               //   // styles: parser.css, // optional
+//               //   components:elements,
+//               // });
+//               // const el = editor.getEl();
+//               // frames.push(el);
+//               // console.log('render el : ' ,el);
+//               // editor.addComponents(elements , {merge:true});
+//               // const frame = editor.Canvas.getFrameEl();
+//               // frame.setAttribute('srcdoc', elements.join(' ')) // = doDocument(elements.join(' '))
+//             }
+//             elements.length = 0;
+//             cssCode = null;
+//             elements = null;
+
+//             editor.clearDirtyCount();
+//             // console.log(editor.removerBeforeHandler,'editor.removerBeforeHandler');
+//           };
+
+//           renderCallback();
+
+//           editor.trigger(InfinitelyEvents.pages.select);
+//           editor.trigger(InfinitelyEvents.pages.update);
+//           editor.trigger(InfinitelyEvents.pages.all);
+//           window.dispatchEvent(changePageName({ pageName: currentPageId }));
+//         };
+//         await loadCurrentPage();
+
+//         [current_symbol_rule, current_symbol_id, current_template_id].forEach(
+//           (item) => sessionStorage.removeItem(item)
+//         );
+
+//         // editor.getWrapper().setAttributes({} , {avoidStore:true});
+
+//         editor.select(null);
+//         URL.createObjectURL = mainCreateObjectURLMethod;
+
+//         editor.off("canvas:frame:load:body");
+//         await loadScripts(editor, projectData);
+//         editor.on("canvas:frame:load:body", () => {
+//           attrsCallback(editor, projectData);
+//         });
+
+//         // if(timesLoaded >1)timesLoaded=1
+
+//         console.log("loading end", editor.getDirtyCount());
+//         editor.clearDirtyCount();
+//         setTimeout(() => {
+//           editor.clearDirtyCount();
+//           clearTimeout(storeTimeout);
+//           updatePrevirePage({
+//             data: projectData,
+//             pageName: currentPageName,
+//             projectId: +projectID,
+//             projectSetting: projectSettings,
+//             // editorData:{canvasCss:editor.config.canvasCss , editorCss:editor.config.editorCss}
+//           });
+//           editor.infLoading = false;
+//         }, 0);
+//         return {};
+//       };

@@ -1200,7 +1200,7 @@ export const Interactions = () => {
           </>
         }
       </header>
-      {interactionsId && <MiniTitle>Actions</MiniTitle>}
+      {interactionsId && interactionsState?.length && <MiniTitle>Interactions</MiniTitle>}
       <Accordion>
         {interactionsState.map((interaction, i) => (
           <AccordionItem key={i} title={interaction.event}>

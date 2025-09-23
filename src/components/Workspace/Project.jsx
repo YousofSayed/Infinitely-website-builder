@@ -17,6 +17,7 @@ import { opfs } from "../../helpers/initOpfs";
 import { toast } from "react-toastify";
 import { getProjectRoot } from "../../helpers/bridge";
 import { random } from "lodash";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 
 // million-ignore
 /**
@@ -28,6 +29,7 @@ export const Project = ({ project }) => {
   const navigate = useNavigate();
   const [swAssset, setSwAsset] = useRecoilState(dbAssetsSwState);
   const [img, setImg] = useState("");
+  const [autoAminRef] = useAutoAnimate();
   const [isProjectInited, setIsProjectInited] =
     useRecoilState(isProjectInitedState);
   const urlsRef = useRef([]);
@@ -53,7 +55,7 @@ export const Project = ({ project }) => {
   }, [project]);
 
   return (
-    <article  className="p-2 bg-slate-900  rounded-lg flex flex-col h-[320px] justify-evenly  gap-2">
+    <article ref={autoAminRef} className="p-2 bg-slate-900  rounded-lg flex flex-col h-[320px] justify-evenly  gap-2">
       <figure className="flex flex-col gap-2 h-[70%]  items-center ">
         <img
           // key={`random-${random(999,1000)}`}

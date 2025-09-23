@@ -17,11 +17,82 @@ function showElement(selector) {
 }
 
 function toggleElement(selector) {
+  /**
+   * @type {NodeListOf<Element>}
+   */
   const elements = document.querySelectorAll(selector);
+
   elements.forEach((el) => {
-    el.style.display = el.style.display === "none" ? "" : "none";
+    const isHidden = window.getComputedStyle(el).display === "none";
+
+    if (isHidden) {
+      // Show element
+      el.style.display = ""; // make it visible first
+      el.animate(
+        [
+          { opacity: 0 },
+          { opacity: 1 }
+        ],
+        {
+          duration: 200,
+          easing: "ease-in-out"
+        }
+      );
+    } else {
+      // Fade out, then hide
+      const animation = el.animate(
+        [
+          { opacity: 1 },
+          { opacity: 0 }
+        ],
+        {
+          duration: 200,
+          easing: "ease-in-out"
+        }
+      );
+
+      // When fade-out finishes, set display: none
+      animation.onfinish = () => {
+        el.style.display = "none";
+      };
+    }
   });
 }
+
+function toggleAnimationClass(selector, animationClass) {
+  const elements = document.querySelectorAll(selector);
+
+  elements.forEach((el) => {
+    const isHidden = window.getComputedStyle(el).display === "none";
+
+    if (isHidden) {
+      // Show element first, then animate in
+      el.style.display = ""; 
+      el.classList.add(animationClass);
+
+      el.addEventListener(
+        "animationend",
+        () => {
+          el.classList.remove(animationClass); // Clean up after animation
+        },
+        { once: true }
+      );
+    } else {
+      // Animate out
+      el.classList.add(animationClass);
+
+      el.addEventListener(
+        "animationend",
+        () => {
+          el.classList.remove(animationClass); // Clean up
+          el.style.display = "none"; // Hide after animation ends
+        },
+        { once: true }
+      );
+    }
+  });
+}
+
 
 function addClass(selector, className) {
   const elements = document.querySelectorAll(selector);

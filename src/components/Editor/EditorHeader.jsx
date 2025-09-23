@@ -27,6 +27,7 @@ import {
   getCurrentPageName,
   getProjectData,
   getProjectSettings,
+  preventSelectNavigation,
   shareProject,
 } from "../../helpers/functions";
 import { Select } from "./Protos/Select";
@@ -190,6 +191,8 @@ export const HomeHeader = memo(() => {
               setMediaValue(value);
               editor.getConfig().mediaCondition = value;
               localStorage.setItem("media-condition", value);
+              const sle =editor.getSelected();
+              preventSelectNavigation(editor , sle);
             }}
           />
         </li>

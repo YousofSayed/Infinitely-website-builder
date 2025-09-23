@@ -116,7 +116,7 @@ export const Blocks = memo(() => {
   };
 
   return (
-    <section className="flex flex-col gap-2 h-full w-full">
+    <section className="flex flex-col gap-2 h-full w-full ">
       <SearchHeader search={search}  />
       <Accordion>
         {Object.keys(blocksAtom).map((ctg, i) => {

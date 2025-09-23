@@ -179,6 +179,15 @@ export const Svg = (editor) => {
               const textCmp = await asset.text();
               // const children = sle.components().models;
               sle.components(textCmp);
+              const svg = sle.components().models[0];
+              svg.set({
+                draggable:false,
+                draggable:false,
+                layerable:false,
+                selectable:false,
+                highlightable:false,
+                hoverable:false,
+              })
               // const newCmp = sle.replaceWith(textCmp)[0];
               // newCmp.set({ resizable: true });
               // preventSelectNavigation(editor, newCmp);
@@ -198,9 +207,10 @@ export const Svg = (editor) => {
 
       //   const newAttrs = { ...this.getAttributes(), ...attributes };
       //   delete newAttrs.id; // Avoid overwriting ID
-      //   Object.entries(newAttrs).forEach(([key, value]) => {
-      //     childEl.setAttribute(key, value);
-      //   });
+      //   child.addAttributes(newAttrs)
+      //   // Object.entries(newAttrs).forEach(([key, value]) => {
+      //   //   childEl.setAttribute(key, value);
+      //   // });
       // },
       // toHTML() {
       //   const child = this.components().models[0];
