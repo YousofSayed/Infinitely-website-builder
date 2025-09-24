@@ -6,6 +6,7 @@ import {
   animationsWillRemoveState,
   isAnimationsChangedState,
   projectData,
+  reloaderState,
   showAnimationsBuilderState,
   showDragLayerState,
   showLayersState,
@@ -78,6 +79,7 @@ export const Iframe = memo(() => {
   const [showAnimBuilder, setShowAnimBuilder] = useRecoilState(
     showAnimationsBuilderState
   );
+  const [reloader , setReloader] = useRecoilState(reloaderState);
   const [showPreview, setShowPreview] = useRecoilState(showPreviewState);
   const [showDragLayer, setShowDragLayer] = useRecoilState(showDragLayerState);
   const [animations, setAnimations] = useRecoilState(animationsState);
@@ -167,60 +169,60 @@ export const Iframe = memo(() => {
     };
   }, [editor, animations]);
 
-  useEffect(() => {
-    if (!editor) return;
-    console.log("auto save : ", editor.Storage.config.autosave);
+  // useEffect(() => {
+  //   if (!editor) return;
+  //   console.log("auto save : ", editor.Storage.config.autosave);
 
-    const infCallback = (ev) => {
-      // console.log("fire from inf instance");
+  //   const infCallback = (ev) => {
+  //     // console.log("fire from inf instance");
 
-      const { cssProp, value } = ev.detail;
-      // console.log("navigateCallback : ", cssProp, value);
+  //     const { cssProp, value } = ev.detail;
+  //     // console.log("navigateCallback : ", cssProp, value);
 
-      setStyle({
-        cssProp,
-        value,
-      });
-      editor.refresh({ tools: true });
-      editor.Canvas.refresh({ all: true, spots: true });
-    };
-    styleInfInstance.on(InfinitelyEvents.style.set, infCallback);
+  //     setStyle({
+  //       cssProp,
+  //       value,
+  //     });
+  //     editor.refresh({ tools: true });
+  //     editor.Canvas.refresh({ all: true, spots: true });
+  //   };
+  //   styleInfInstance.on(InfinitelyEvents.style.set, infCallback);
 
-    const loadMonaco = () => {
-      monacoLoader.init().then((monaco) => {
-        !window.monaco && (window.monaco = monaco);
-        monaco.editor.onDidCreateEditor(() => {
-          monaco.worker?.keepAlive?.();
-        });
-      });
-    };
+  //   const loadMonaco = () => {
+  //     monacoLoader.init().then((monaco) => {
+  //       !window.monaco && (window.monaco = monaco);
+  //       monaco.editor.onDidCreateEditor(() => {
+  //         monaco.worker?.keepAlive?.();
+  //       });
+  //     });
+  //   };
 
     
-    const loaderStartCallback = () => {
-      setShowLoader(true);
-    };
+  //   const loaderStartCallback = () => {
+  //     setShowLoader(true);
+  //   };
 
-    const loaderEndCallback = () => {
-      setShowLoader(false);
-      console.log('should end');
+  //   const loaderEndCallback = () => {
+  //     setShowLoader(false);
+  //     console.log('should end');
       
-    };
+  //   };
 
-    editor.on(InfinitelyEvents.storage.loadStart, loaderStartCallback);
-    editor.on(InfinitelyEvents.storage.loadEnd, loaderEndCallback);
-    editor.on('storage:end:load', loaderEndCallback);
-    editor.on("canvas:frame:load:body", loadMonaco);
+  //   editor.on(InfinitelyEvents.storage.loadStart, loaderStartCallback);
+  //   editor.on(InfinitelyEvents.storage.loadEnd, loaderEndCallback);
+  //   editor.on('storage:end:load', loaderEndCallback);
+  //   editor.on("canvas:frame:load:body", loadMonaco);
     
-    return () => {
-      styleInfInstance.off(InfinitelyEvents.style.set, infCallback);
-      editor.off("canvas:frame:load:body", loadMonaco);
-      editor.off(InfinitelyEvents.storage.loadStart, loaderStartCallback);
-      editor.off(InfinitelyEvents.storage.loadEnd, loaderEndCallback);
-      editor.off('storage:end:load', loaderEndCallback);
-      // window.removeEventListener("keydown", preventDefaultSave);
-      // window.removeEventListener("keydown", saveCallback);
-    };
-  }, [editor , showLoader]);
+  //   return () => {
+  //     styleInfInstance.off(InfinitelyEvents.style.set, infCallback);
+  //     editor.off("canvas:frame:load:body", loadMonaco);
+  //     editor.off(InfinitelyEvents.storage.loadStart, loaderStartCallback);
+  //     editor.off(InfinitelyEvents.storage.loadEnd, loaderEndCallback);
+  //     editor.off('storage:end:load', loaderEndCallback);
+  //     // window.removeEventListener("keydown", preventDefaultSave);
+  //     // window.removeEventListener("keydown", saveCallback);
+  //   };
+  // }, [editor , showLoader]);
 
   useEffect(() => {
     if (!editor) return;
@@ -330,6 +332,7 @@ export const Iframe = memo(() => {
 
       <Canvas
         // key={uniqueID()+random(1,100000)}
+        // key={reloader}
         id="editor-container"
         label="Canvas"
         aria-label="Editor"
@@ -337,12 +340,14 @@ export const Iframe = memo(() => {
         style={{
           display: showPreview ? "none" : "block",
           // scale:showPreview ? 0 : 1,
+          width:'100%',
+          height:'100%',
           overflow: "auto",
           contain: "layout , content , size , paint",
           transform: "translateZ(0)",
         }}
         // srcDoc="<video src='../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4'></video>"
-      ></Canvas>
+      />
 
       {/* <FloatingButton/> */}
 

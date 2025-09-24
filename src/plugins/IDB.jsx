@@ -58,8 +58,6 @@ let frames = [];
  * @param {import('grapesjs').Editor} editor
  */
 export const IDB = (editor) => {
-  
-
   const projectID = localStorage.getItem(current_project_id);
   const mainCreateObjectURLMethod = URL.createObjectURL;
   const willRevokedURLs = new Map();
@@ -353,6 +351,10 @@ export const IDB = (editor) => {
           const frameRemovedDone = await new Promise((res, rej) => {
             if (frame) {
               frame.addEventListener("load", () => {
+               
+
+                // 3. Force browser to GC old document
+
                 frame.contentDocument.body
                   .querySelectorAll("*")
                   .forEach((el) => el.remove());
@@ -361,8 +363,14 @@ export const IDB = (editor) => {
                   frame.contentDocument.body.querySelectorAll("*"),
                   frame.contentDocument.querySelectorAll("*")
                 );
-                frame.remove();
+                 frame.replaceWith(frame.cloneNode(false));
 
+                // 2. Clear references
+                frame.onload = null;
+                frame.src = "about:blank";
+                setTimeout(() => {
+                  frame.remove();
+                }, 0);
                 res(true);
               });
             } else {

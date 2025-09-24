@@ -107,7 +107,7 @@ export const gsapScripts = [
 
 export const mainScriptsForEditor = [
   "/scripts/infinitely.js",
-  // ...gsapScripts,
+  ...gsapScripts,
   "/scripts/gsapRuner.dev.js",
   "/scripts/pVuePlugins.js",
   "/scripts/p-vue.js",

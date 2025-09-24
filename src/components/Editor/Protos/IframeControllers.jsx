@@ -35,6 +35,7 @@ import { gsap_animation_state } from "../../../constants/shared";
 import { uniqueId } from "lodash";
 import { uniqueID } from "../../../helpers/cocktail";
 import { loadScripts } from "../../../plugins/IDB";
+import grapesjs from "grapesjs";
 
 export const IframeControllers = () => {
   const editor = useEditorMaybe();
@@ -56,11 +57,11 @@ export const IframeControllers = () => {
   const [reloader, setReloader] = useRecoilState(reloaderState);
   useEffect(() => {
     if (!editor) return;
-    const cb = () => {
-      isEditorLoad.current = false;
-      editor?.Canvas?.getBody?.()?.setAttribute("loaded", true);
-      console.log("i should load");
-    };
+    // const cb = () => {
+    //   isEditorLoad.current = false;
+    //   editor?.Canvas?.getBody?.()?.setAttribute("loaded", true);
+    //   console.log("i should load");
+    // };
     /**
      *
      * @param {KeyboardEvent} ev
@@ -101,9 +102,9 @@ export const IframeControllers = () => {
     // window.addEventListener("click", clickCallback);
     window.addEventListener("keyup", callback, { capture: true });
 
-    editor.on("canvas:frame:load:body", cb);
+    // editor.on("canvas:frame:load:body", cb);
     return () => {
-      editor.off("canvas:frame:load:body", cb);
+      // editor.off("canvas:frame:load:body", cb);
       window.removeEventListener("keyup", callback, { capture: true });
     };
   }, [editor]);
@@ -383,15 +384,18 @@ export const IframeControllers = () => {
 
           // test();
           // window.stop()
-          editor.rqId && cancelIdleCallback(editor.rqId);
-          editor.rqId = requestIdleCallback(
-            async () => {
-              await editor.load();
-              // editor.setComponents(editor.getWrapper().getInnerHTML({withProps:true , keepInlineStyle:true}))
-             
-            },
-            { timeout: 5000 }
-          );
+          // document.documentElement.remove();
+          await editor.load();
+          // setReloader(uniqueId(`reloader-key-${uniqueID()}-`));
+          // const ed = document.querySelector(`#editor-container`);
+          // editor.Canvas.destroy();
+          // ed.innerHTML = "";
+          // ed.appendChild(editor.Canvas.render());
+
+          // grapesjs.init(editor.getConfig());
+
+          // editor.rqId && cancelIdleCallback(editor.rqId);
+          // editor.rqId = requestIdleCallback(editor.load, { timeout: 5000 });
           //   const mainWrapperel = editor.getWrapper().getEl();
           //   const frame = editor.Canvas.getFrameEl();
           //   frame.contentDocument.addEventListener("DOMContentLoaded", () => {
@@ -406,7 +410,6 @@ export const IframeControllers = () => {
           // editor.destroy();
           // await editor.Storage.load();
           // await editor.destroy();
-          // setReloader(uniqueId(`reloader-key-${uniqueID()}-`))
           // editor.clearDirtyCount();
 
           ///////////////////
