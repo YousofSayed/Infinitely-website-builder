@@ -31,6 +31,7 @@ import {
   defineRoot,
   getPageURLException,
 } from "../helpers/bridge";
+// import  "https://cdn.jsdelivr.net/npm/jest-leak-detector@29.7.0/build/index.js";
 
 // import { initDBAssetsSw } from "../serviceWorkers/initDBAssets-sw";
 import { opfs } from "../helpers/initOpfs";
@@ -39,7 +40,7 @@ import { css_beautify } from "js-beautify";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
 import { parseHTML } from "linkedom";
-import { isFunction } from "lodash";
+import { isArray, isFunction } from "lodash";
 import grapesjs from "grapesjs";
 // import LeakDetector from "jest-leak-detector";
 
@@ -57,6 +58,8 @@ let frames = [];
  * @param {import('grapesjs').Editor} editor
  */
 export const IDB = (editor) => {
+  
+
   const projectID = localStorage.getItem(current_project_id);
   const mainCreateObjectURLMethod = URL.createObjectURL;
   const willRevokedURLs = new Map();
@@ -207,79 +210,115 @@ export const IDB = (editor) => {
     }
   });
   function clearEditor() {
-  const canvas = editor.Canvas;
+    const canvas = editor.Canvas;
 
-  // 1. Destroy Frame Completely
-  const frameEl = canvas.getFrameEl();
-  if (frameEl) {
-    frameEl.remove(); // Removes iframe DOM
+    // 1. Destroy Frame Completely
+    const frameEl = canvas.getFrameEl();
+    if (frameEl) {
+      frameEl.remove(); // Removes iframe DOM
+    }
+
+    const frameView = canvas.getFrame();
+    if (frameView) {
+      frameView.remove();
+    }
+
+    // Clear GrapesJS internal references
+    canvas.frames = [];
+
+    // 2. Clear all Components
+    editor.DomComponents.clear({ avoidStore: true });
+    editor.DomComponents.destroy();
+    editor.Components.clear({ avoidStore: true });
+    editor.Components.destroy();
+    editor.getWrapper()?.empty?.();
+    // 3. Clear CSS
+    editor.Css.clear({ avoidStore: true });
+    editor.Css.destroy();
+    editor.CssComposer.clear({ avoidStore: true });
+    editor.CssComposer.destroy();
+
+    // 4. Undo Manager
+    editor.UndoManager.stop();
+    editor.UndoManager.clear();
+
+    // 5. Clear Selections
+    editor.select(null);
+
+    // 6. Remove custom event listeners bound to the editor
+    editor.off("canvas:frame:load:body");
+    editor.off("component:remove:before", editor.removerBeforeHandler);
+
+    // 7. Reset internal object URLs
+    URL.createObjectURL = mainCreateObjectURLMethod;
   }
 
-  const frameView = canvas.getFrame();
-  if (frameView) {
-    frameView.remove();
+  function fullDestroyCanvas(editor) {
+    const canvas = editor.Canvas;
+
+    // 1. Remove iframe DOM
+    const frameEl = canvas.getFrameEl();
+    if (frameEl) {
+      frameEl.remove();
+    }
+
+    // 2. Destroy GrapesJS frame view
+    const frameView = canvas.getFrame();
+    if (frameView) {
+      frameView.remove();
+    }
+
+    // 3. Reset canvas internals
+    canvas.frames = [];
+    canvas.wrapper = null;
+    canvas.model = null;
   }
 
-  // Clear GrapesJS internal references
-  canvas.frames = [];
+  function hardResetEditor() {
+    // 1. Remove custom listeners
+    // editor.off(); // Completely clear all event listeners
 
-  // 2. Clear all Components
-  editor.DomComponents.clear({ avoidStore: true });
-  editor.DomComponents.destroy();
-  editor.Components.clear({ avoidStore: true });
-  editor.Components.destroy();
-  editor.getWrapper()?.empty?.();
-  // 3. Clear CSS
-  editor.Css.clear({ avoidStore: true });
-  editor.Css.destroy();
-  editor.CssComposer.clear({ avoidStore: true });
-  editor.CssComposer.destroy();
+    // 2. Stop Undo Manager
+    editor.UndoManager.stop();
+    editor.UndoManager.clear();
 
-  // 4. Undo Manager
-  editor.UndoManager.stop();
-  editor.UndoManager.clear();
+    // 3. Clear selections
+    editor.select(null);
 
-  // 5. Clear Selections
-  editor.select(null);
+    // 4. Clear components and CSS
+    editor.DomComponents.clear({ avoidStore: true });
+    editor.CssComposer.clear({ avoidStore: true });
 
-  // 6. Remove custom event listeners bound to the editor
-  editor.off("canvas:frame:load:body");
-  editor.off("component:remove:before", editor.removerBeforeHandler);
+    // 5. Clear wrapper
+    editor.getWrapper()?.empty?.();
 
-  // 7. Reset internal object URLs
-  URL.createObjectURL = mainCreateObjectURLMethod;
-}
+    // 6. Remove iframe
+    const frameEl = editor.Canvas.getFrameEl();
+    if (frameEl?.parentNode) {
+      frameEl.parentNode.removeChild(frameEl);
+    }
+    editor.Canvas.frames = [];
 
-function fullDestroyCanvas(editor) {
-  const canvas = editor.Canvas;
+    // 7. Clear storage
+    // editor.StorageManager.getStorages().forEach((storage) => {
+    //   if (storage?.clear) storage.clear();
+    // });
 
-  // 1. Remove iframe DOM
-  const frameEl = canvas.getFrameEl();
-  if (frameEl) {
-    frameEl.remove();
+    // 8. Force revoke any Blob URLs
+    // if (window.__activeBlobUrls) {
+    //   window.__activeBlobUrls.forEach((url) => URL.revokeObjectURL(url));
+    //   window.__activeBlobUrls = [];
+    // }
   }
-
-  // 2. Destroy GrapesJS frame view
-  const frameView = canvas.getFrame();
-  if (frameView) {
-    frameView.remove();
-  }
-
-  // 3. Reset canvas internals
-  canvas.frames = [];
-  canvas.wrapper = null;
-  canvas.model = null;
-}
-
 
   editor.Storage.add("infinitely", {
     async load(options = {}) {
-      console.log('loading options : ' , options);
+      console.log("loading options : ", options);
       loadTimeout && clearTimeout(loadTimeout);
       loadTimeout &&
         window.cancelIdleCallback &&
         cancelIdleCallback(loadTimeout);
- editor.infLoading = true;
+      editor.infLoading = true;
       if (editor.getDirtyCount() > 0) {
         console.log(
           "loading state : ",
@@ -305,24 +344,58 @@ function fullDestroyCanvas(editor) {
       }
 
       clearTimeouts();
-        editor.off("component:remove:before", editor.removerBeforeHandler);
+      editor.off("component:remove:before", editor.removerBeforeHandler);
 
       const callback = async () => {
-        clearEditor(editor);
-        fullDestroyCanvas(editor)
+        const frame = editor.Canvas.getFrameEl();
+        if (frame?.contentDocument?.location) {
+          frame.contentDocument.location.reload();
+          const frameRemovedDone = await new Promise((res, rej) => {
+            if (frame) {
+              frame.addEventListener("load", () => {
+                frame.contentDocument.body
+                  .querySelectorAll("*")
+                  .forEach((el) => el.remove());
+                console.log(
+                  "frame remover : ",
+                  frame.contentDocument.body.querySelectorAll("*"),
+                  frame.contentDocument.querySelectorAll("*")
+                );
+                frame.remove();
+
+                res(true);
+              });
+            } else {
+              res(true);
+            }
+          });
+        }
+
+        // hardResetEditor();
+        // clearEditor(editor);
+        // fullDestroyCanvas(editor);
+        // const oldCnfg = editor.getConfig();
+        // if (editor) {
+        // editor.destroy();
+        // editor = null;
+        // document.querySelector("#gjs").innerHTML = ""; // clear container
+        // }
+
+        // editor = grapesjs.init(oldCnfg);
+
         !editor.loadTimes && (editor.loadTimes = 0);
         editor.loadTimes++;
         editor.trigger(InfinitelyEvents.storage.loadStart);
 
         const projectData = await db.projects.get(+projectID);
         const projectSettings = getProjectSettings().projectSettings;
-        if (!projectData) {};
+        if (!projectData) {
+        }
 
         console.time("loading");
         const storageManager = editor.StorageManager;
         const originalAutosave = storageManager.getConfig().autosave;
         storageManager.setAutosave(false);
-      
 
         const loadCurrentPage = async () => {
           if (!localStorage.getItem(current_page_id)) {
@@ -371,7 +444,7 @@ function fullDestroyCanvas(editor) {
               },
             });
 
-            let styleElement = ' ' // renderCssStyles(editor, cssCode);
+            let styleElement = " "; // renderCssStyles(editor, cssCode);
 
             let elements = await new Promise((res, rej) => {
               workerCallbackMaker(
@@ -423,9 +496,12 @@ function fullDestroyCanvas(editor) {
           editor.trigger(InfinitelyEvents.pages.update);
           editor.trigger(InfinitelyEvents.pages.all);
           window.dispatchEvent(changePageName({ pageName: currentPageId }));
-          const parsed = editor.Parser.parseHtml(await getElements(),{asDocument:false});
+          const parsed = editor.Parser.parseHtml(await getElements(), {
+            asDocument: false,
+          });
+          let content = isArray(parsed.html) ? [...parsed.html] : [parsed.html];
           return {
-            components: [renderCssStyles(editor, cssCode) , ...parsed.html],
+            components: [renderCssStyles(editor, cssCode), ...content],
             // styles:editor.Parser.parseCss(cssCode)
           };
         };
@@ -455,10 +531,11 @@ function fullDestroyCanvas(editor) {
       };
 
       console.log("should load");
-      
+
       // return {
       //   components:['<h1>Hello world!!</h1>']
       // }
+      // editor.Canvas.getCanvasView().initialize({el:document.body  ,tagName:'h1'});
       return await callback();
     },
 

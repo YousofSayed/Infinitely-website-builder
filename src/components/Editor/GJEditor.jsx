@@ -56,7 +56,6 @@ export const GJEditor = memo(({ children }) => {
   // const dynamicTemplates = useRecoilValue(dynamicTemplatesState);
   // const setStyle = useSetClassForCurrentEl();
   const [plugins, setPlugins] = useState([
-    // customColors,
     customCmps,
     addDevices,
     customModal,
@@ -69,6 +68,7 @@ export const GJEditor = memo(({ children }) => {
     initTraitsOnRender,
     editorKeymaps,
     IDB,
+    // customColors,
     // updateDynamicTemplates,
     // motionsRemoverHandler,
     // handleComponentsOnCreate,
@@ -149,37 +149,19 @@ export const GJEditor = memo(({ children }) => {
       //     setCmdsContext(sle);
       //   }
       // });
+  
 
       ev.on("redo", (args) => {
-        // ev.trigger("component:style:update", {
-        //   currentDynamicTemplateId,
-        //   dynamicTemplates,
-        // });
         setSelectedEl({
           currentEl: JSON.parse(JSON.stringify(editor.getSelected() || {})),
         });
       });
 
       ev.on("undo", (args) => {
-        // ev.trigger("component:style:update", {
-        //   currentDynamicTemplateId,
-        //   dynamicTemplates,
-        // });
         setSelectedEl({
           currentEl: JSON.parse(JSON.stringify(editor.getSelected() || {})),
         });
       });
-
-      // ev.on("canvas:dragover", (eve) => {
-      //   /**
-      //    *
-      //    * @param {import('grapesjs').Component} el
-      //    */
-      //   const getSymbol = (el) => {
-      //     ev.mySymbol = el;
-      //   };
-      //   getSymbol(ev.DomComponents.getById(eve.target.id));
-      // });
     },
     [plugins]
   );
@@ -202,7 +184,7 @@ export const GJEditor = memo(({ children }) => {
         clearStyles: false,
         // showBadges: true,
         // stylePrefix:'inf-',
-        forceClass: true,
+        // forceClass: true,
         // canvasCss: gStyles,
 
         // pageManager: {
@@ -211,6 +193,9 @@ export const GJEditor = memo(({ children }) => {
         //   pages: ,
         // },
         // exportWrapper: true,
+        avoidDefaults:true,
+        log:true,
+
         domComponents: { escapeHtml: false },
         richTextEditor: {
           custom: true,
@@ -230,7 +215,7 @@ export const GJEditor = memo(({ children }) => {
           clearStyles: false,
           onlyMatched: false,
         },
-        autorender: true,
+        // autorender: true,
 
         parser: {
           // parserCss:(css)=>{
@@ -257,8 +242,6 @@ export const GJEditor = memo(({ children }) => {
         },
         panels: { defaults: [] },
         blockManager: {
-          // appendTo: "#blocks",
-
           blocks: blocks,
           custom: true,
         },
@@ -271,11 +254,26 @@ export const GJEditor = memo(({ children }) => {
           },
         },
         protectedCss: ``,
-        // customUI: true,
-        // headless:true,
-        // autorender: false,
-        // plugins:[mutationPlugin],
         canvas: {
+          // scrollableCanvas: true,
+          //   customRenderer: ({ editor, frame, frameView, window }) => {
+          //     const rootEl = window.document.body;
+
+          //     // GrapesJS will only run this once
+          //     if (!window.__initialized__) {
+          //       window.__initialized__ = true;
+
+          //       // You can now safely inject whatever static HTML you want
+          //       rootEl.innerHTML = `
+          //   <div id="app">
+          //     <h1>My custom frame</h1>
+          //   </div>
+          // `;
+          //     }
+
+          //     // Return the root element for GrapesJS to attach selection & drag/drop
+          //     return frame.getComponent().view;
+          //   },
           // frameContent: (canvas) => {
           //   const html = canvas.getHtml();
           //   const css = canvas.getCss();

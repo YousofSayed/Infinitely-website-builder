@@ -369,23 +369,42 @@ export const IframeControllers = () => {
         onClick={async (ev) => {
           // console.log(editor?.Canvas?.getBody?.());
           // const body = editor?.Canvas?.getBody();
-          if (editor.infLoading || editor.canvasReload) {
-            toast.warn(<ToastMsgInfo msg={`Wait until load end`} />);
-            return;
-          }
+          // if (editor.infLoading || editor.canvasReload) {
+          //   toast.warn(<ToastMsgInfo msg={`Wait until load end`} />);
+          //   return;
+          // }
 
-          const test = async () => {
-            await editor.load();
-            setTimeout(() => {
-              test();
-            }, 10000);
-          };
+          // const test = async () => {
+          //   await editor.load();
+          //   setTimeout(() => {
+          //     test();
+          //   }, 5000);
+          // };
+
           // test();
+          // window.stop()
+          editor.rqId && cancelIdleCallback(editor.rqId);
+          editor.rqId = requestIdleCallback(
+            async () => {
+              await editor.load();
+              // editor.setComponents(editor.getWrapper().getInnerHTML({withProps:true , keepInlineStyle:true}))
+             
+            },
+            { timeout: 5000 }
+          );
+          //   const mainWrapperel = editor.getWrapper().getEl();
+          //   const frame = editor.Canvas.getFrameEl();
+          //   frame.contentDocument.addEventListener("DOMContentLoaded", () => {
+          //    const newWrapperEl = editor.getWrapper().getEl();
+          //    newWrapperEl.replaceWith(mainWrapperel);
+          //    console.log(mainWrapperel , newWrapperEl);
+
+          //  });
+          //    frame.contentDocument.location.reload();
           // isEditorLoad.current = true;
           // editor.canvasReload = true;
           // editor.destroy();
           // await editor.Storage.load();
-          await editor.load();
           // await editor.destroy();
           // setReloader(uniqueId(`reloader-key-${uniqueID()}-`))
           // editor.clearDirtyCount();
