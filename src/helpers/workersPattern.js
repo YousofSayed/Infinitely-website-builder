@@ -8,7 +8,7 @@ export function doWorkerPattern(commands) {
     }
     console.log(`Infinitly worker event got it : ${command}`);
     if (!command) return;
-    commands[command](props);
+   return await commands[command](props);
   });
 
   self.addEventListener("error", (ev) => {
