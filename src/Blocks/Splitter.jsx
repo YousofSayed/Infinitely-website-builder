@@ -48,6 +48,13 @@ export const Splitter = ({ editor }) => {
             role: "attribute",
             value: "",
             type: "text",
+            callback({editor , newValue , oldValue}){
+               const sle = editor.getSelected();
+              sle.components().models.forEach(model=>{
+                model.removeClass(['char' , oldValue]);
+                model.addClass(newValue);
+              })
+            }
           },
           {
             label: "splitter",

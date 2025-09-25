@@ -24,7 +24,10 @@ import {
 } from "../helpers/functions";
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
 import { changePageName } from "../helpers/customEvents";
-import { infinitelyWorker } from "../helpers/infinitelyWorker";
+import {
+  infinitelyWorker,
+  reInitInfinitelyWorker,
+} from "../helpers/infinitelyWorker";
 import { minify } from "csso";
 import {
   chunkHtmlElements,
@@ -352,6 +355,8 @@ export const IDB = (editor) => {
     editor.DomComponents.clear({});
     editor.Css.clear({});
     editor.CssComposer.clear({});
+    editor.setStyle("");
+    editor.setComponents("");
     // editor.Canvas.canvas.clear({});
     // editor.Canvas.canvas.destroy();
     // editor.Canvas.canvas.init();
@@ -429,19 +434,17 @@ export const IDB = (editor) => {
             }
           );
         });
-        console.log("elements : ", elements);
+        // console.log("elements : ", elements);
 
         if (projectSettings.enable_editor_lazy_loading) {
           // Take the first 5 and mutate the original array
-          const firstFive = elements.splice(0, 5);
-
-          // Load the first 5 into GrapesJS
-          editor.loadProjectData({
-            components: firstFive,
-          });
-          // Now `elements` contains ONLY the remaining ones
-          await appender(elements);
-
+          // const firstFive = elements.splice(0, 5);
+          // // Load the first 5 into GrapesJS
+          // editor.loadProjectData({
+          //   components: firstFive,
+          // });
+          // // Now `elements` contains ONLY the remaining ones
+          // await appender(elements);
           // let tmpElements = [...elements]; // clone
           // const firstFive = tmpElements.splice(0, 5);
           // editor.loadProjectData({ components: firstFive });
@@ -469,12 +472,17 @@ export const IDB = (editor) => {
       editor.trigger(InfinitelyEvents.pages.update);
       editor.trigger(InfinitelyEvents.pages.all);
       window.dispatchEvent(changePageName({ pageName: currentPageId }));
-      const parsed = editor.Parser.parseHtml(await getElements(), {
-        asDocument: false,
-      });
-      let content = isArray(parsed.html) ? [...parsed.html] : [parsed.html];
+      // const parsed = editor.Parser.parseHtml(await getElements(), {
+      //   asDocument: false,
+      // });
+      // let content = isArray(parsed.html) ? [...parsed.html] : [parsed.html];
+      // console.log(content);
+
       return {
-        components: [renderCssStyles(editor, cssCode), ...content],
+        components: [
+          renderCssStyles(editor, cssCode),
+          ...(await getElements()),
+        ],
         // styles:editor.Parser.parseCss(cssCode)
       };
     };
@@ -503,7 +511,7 @@ export const IDB = (editor) => {
     return await loadCurrentPage();
   };
 
-  editor.on("storage:end:load", async() => {
+  editor.on("storage:end:load", async () => {
     editor.trigger(InfinitelyEvents.storage.loadEnd);
     editorStorageInstance.emit(InfinitelyEvents.storage.loadEnd);
     // editor.setComponents(await(await loadElements()).components , {merge:true });
@@ -547,14 +555,12 @@ export const IDB = (editor) => {
           return;
         }
       }
-      const projectData = await getProjectData();
-      editor.off("canvas:frame:load:body");
-      await loadScripts(editor, projectData); 
-      editor.on("canvas:frame:load:body", () => {
-        attrsCallback(editor, projectData);
-      }); 
-
-  
+      // const projectData = await getProjectData();
+      // editor.off("canvas:frame:load:body");
+      // await loadScripts(editor, projectData);
+      // editor.on("canvas:frame:load:body", () => {
+      //   attrsCallback(editor, projectData);
+      // });
 
       editor.clearDirtyCount();
       clearTimeouts();
@@ -755,6 +761,7 @@ export const IDB = (editor) => {
                       <ToastMsgInfo msg={`Project saved successfully👍`} />
                     );
                   }
+                  reInitInfinitelyWorker();
 
                   // res(true);
                 }

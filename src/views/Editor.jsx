@@ -31,7 +31,7 @@ import { AsideControllers } from "../components/Editor/Protos/AsideControllers";
 import { initDBAssetsSw } from "../serviceWorkers/initDBAssets-sw";
 import { current_project_id } from "../constants/shared";
 import { getProjectData, getProjectSettings } from "../helpers/functions";
-import { infinitelyWorker } from "../helpers/infinitelyWorker";
+import { infinitelyWorker, reInitInfinitelyWorker } from "../helpers/infinitelyWorker";
 // import { swAliveInterval } from "../helpers/keepSwAlive";
 import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
 import {
@@ -103,6 +103,8 @@ export function Editor({ params }) {
       setShowCustomModal(false);
     };
     opfs.id = +localStorage.getItem(current_project_id);
+    opfs.init(+localStorage.getItem(current_project_id));
+
     infinitelyWorker.postMessage({
       command: "initOPFS",
       props: { id: opfs.id },
@@ -113,20 +115,6 @@ export function Editor({ params }) {
       props: { id: opfs.id },
     });
 
-    // routerWorker.postMessage({
-    //   command: "initOPFS",
-    //   props: { id: opfs.id },
-    // });
-
-
-
-    console.log(
-      "opfs id : ",
-      opfs.id,
-      opfs._id,
-      +localStorage.getItem(current_project_id)
-    );
-    opfs.init(+localStorage.getItem(current_project_id));
     routerWorker.postMessage({
       command: "clean-opfs-broadcast",
     });
@@ -134,73 +122,23 @@ export function Editor({ params }) {
       command: "listenToOPFSBroadcastChannel",
       props: { id: +localStorage.getItem(current_project_id) },
     });
-    // initDBAssetsSw();
     getProjectSettings();
-    // const broadCastCleaner = opfs.onBroadcast(
-    //   "getFile",
-    //   async (data) => {
-    //     console.log(
-    //       "recived getFile event from boadcast",
-    //       opfs.id,
-    //       data.projectId
-    //     );
-    //     const path = `${data.folderPath}/${data.fileName}`
-    //     try {
-    //       if (!opfs.id) {
-    //         opfs.opfsBraodcast.postMessage({
-    //           type: "sendFile",
-    //           file: undefined,
-    //           isExisit: false,
-    //           fileName: undefined,
-    //           filePath: undefined,
-    //         });
-    //         throw new Error(`Project id not found`);
-    //       }
-
-    //       const fileHandle = await opfs.getFile(
-    //         `${getProjectRoot()}/${data.folderPath}/${data.fileName}`
-    //       );
-    //       const file = await fileHandle.getOriginFile();
-
-    //         console.log(
-    //         "recived path : ",
-    //         `projects/project-${opfs.id || data.projectId}/${data.folderPath}/${
-    //           data.fileName
-    //         }`,
-    //         file
-    //       );
-    //       if (!file) {
-    //         throw new Error(`File not founded`);
-    //       }
-    //       const fileBraodcast = new BroadcastChannel(path);
-    //       fileBraodcast.postMessage({
-    //         type: "sendFile",
-    //         file: file,
-    //         isExisit: file ? true : false,
-    //         fileName: fileHandle.name,
-    //         filePath: fileHandle.path,
-    //       });
-    //     } catch (error) {
-    //       const fileBraodcast = new BroadcastChannel(path);
-    //       fileBraodcast.postMessage({
-    //         type: "sendFile",
-    //         file: undefined,
-    //         isExisit: false,
-    //         fileName: undefined,
-    //         filePath: undefined,
-    //       });
-    //       throw new Error(error);
-    //     }
-    //   }
-    //   // { once: true }
-    // );
-
+   
+    const infinitelyWorkerIniter = (ev)=>{
+      const {command} = ev.data;
+      if(command == 'updateDB'){
+        reInitInfinitelyWorker();
+        infinitelyWorker.addEventListener('message' , infinitelyWorkerIniter)
+      }
+    };
+    infinitelyWorker.addEventListener('message' , infinitelyWorkerIniter);
     window.addEventListener("open:custom:modal", openModal);
     window.addEventListener("close:custom:modal", closeModal);
-
+    
     return () => {
       window.removeEventListener("open:custom:modal", openModal);
       window.removeEventListener("close:custom:modal", closeModal);
+      infinitelyWorker.removeEventListener('message' , infinitelyWorkerIniter);
       // broadCastCleaner();
       // clearInterval(swAliveInterval);
     };

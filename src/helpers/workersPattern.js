@@ -1,6 +1,6 @@
 export function doWorkerPattern(commands) {
   self.addEventListener("message", async (ev) => {
-    const { command, props } = ev.data;
+    let { command, props } = ev.data;
     if(!commands[command]){
       console.warn(`${command} is not in commands list!`);
       
@@ -8,7 +8,9 @@ export function doWorkerPattern(commands) {
     }
     console.log(`Infinitly worker event got it : ${command}`);
     if (!command) return;
-   return await commands[command](props);
+    await commands[command](props);
+    props = null;
+    
   });
 
   self.addEventListener("error", (ev) => {

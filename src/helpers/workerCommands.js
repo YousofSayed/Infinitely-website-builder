@@ -295,95 +295,71 @@ export async function deleteAllSymbolsById(props) {
 }
 
 /**
- *
  * @param {{
- * data : import('./types').Project ,
- * files:{[key:string] : File},
- *  projectId : number ,
- *  updatePreviewPages : boolean ,
- *  pageName:string,
- * pageUrl:string,
- * tailwindcssStyle:string | undefined;
- * editorData: { canvasCss:string , editorCss:string },
+ *  data: import('./types').Project,
+ *  files: { [key: string]: File },
+ *  projectId: number,
+ *  updatePreviewPages: boolean,
+ *  pageName: string,
+ *  pageUrl: string,
+ *  tailwindcssStyle?: string,
+ *  editorData: { canvasCss: string, editorCss: string },
  * }} props
  */
 export async function updateDB(props) {
-  console.log("From updateDB ");
+  console.log("From updateDB");
 
-  // try {
+  if (!opfs.id) throw new Error(`OPFS Id not found!`);
+  if (!props.projectId && !opfs.id) throw new Error(`DB Id not found!`);
 
-  if (!opfs.id) {
-    throw new Error(`OPFS Id not founded!`);
-  }
+  return new Promise((resolve, reject) => {
+    const localTimeout = setTimeout(async () => {
+      try {
+        const { files, tailwindcssStyle, projectId, data, updatePreviewPages, pageName } = props;
 
-  if (!props.projectId && !opfs.id) {
-    throw new Error(`DB Id not founded!`);
-  }
-  // const projectDir = await getOPFSProjectDir();
-  // const projectRoot = `projects/project-${opfs.id}`;
-  console.log(
-    "From worker : Update project is done"
-    // props.projectId,
-    // props.data
-  );
+        if (files && isPlainObject(files)) {
+          await opfs.writeFiles(
+            Object.entries(files).map(([key, file]) => ({
+              path: defineRoot(key),
+              content: file,
+            }))
+          );
+        }
 
-  return new Promise((res, rej) => {
-    storeTimeout && clearTimeout(storeTimeout);
-    storeTimeout = setTimeout(async () => {
-      console.warn("Before save to db", props.files);
+        if (tailwindcssStyle) {
+          await opfs.writeFiles([
+            {
+              path: defineRoot(`css/tailwind/${pageName}.css`),
+              content: tailwindcssStyle,
+            },
+          ]);
+        }
 
-      if (props.files && isPlainObject(props.files)) {
-        await opfs.writeFiles(
-          Object.entries(props.files).map(([key, file]) => ({
-            path: defineRoot(key),
-            content: file,
-          }))
-        );
+        const resp = await db.projects.update(projectId || opfs.id, data);
+
+        if (updatePreviewPages) {
+          await writePreviewPage(props);
+        }
+
+        self.postMessage({
+          command: "updateDB",
+          props: { done: true, projectId },
+        });
+
+        resolve(resp);
+      } catch (err) {
+        console.error("UpdateDB Error:", err);
+        reject(err);
+      } finally {
+        // Force GC to release `props`
+        for (let key in props) delete props[key];
       }
-
-      if (props.tailwindcssStyle) {
-        console.log("from worker : ", props.tailwindcssStyle);
-
-        await opfs.writeFiles([
-          {
-            path: defineRoot(`css/tailwind/${props.pageName}.css`),
-            content: props.tailwindcssStyle,
-          },
-        ]);
-      }
-
-      const resp = await db.projects.update(
-        props.projectId || opfs.id,
-        props.data
-      );
-      if (props.updatePreviewPages) {
-        await writePreviewPage(props);
-        // updatePrevirePage(props);
-      }
-      console.warn("after save to db");
-      self.postMessage({
-        command: "updateDB",
-        props: {
-          done: true,
-          projectId: props.projectId,
-        },
-      });
-      res(resp);
-      return resp;
     }, 15);
   });
-  // } catch (error) {
-  //   console.error(`From worker command updateDB: ${error}`);
-  //   self.postMessage({
-  //     command: "updateDB",
-  //     props: {
-  //       done: false,
-  //       projectId: props.projectId,
-  //     },
-  //   });
-  //   return false;
-  // }
 }
+
+
+
 
 /**
  *

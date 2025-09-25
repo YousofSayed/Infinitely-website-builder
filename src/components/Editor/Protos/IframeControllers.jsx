@@ -386,6 +386,7 @@ export const IframeControllers = () => {
           // window.stop()
           // document.documentElement.remove();
           await editor.load();
+          // navigate('/');
           // setReloader(uniqueId(`reloader-key-${uniqueID()}-`));
           // const ed = document.querySelector(`#editor-container`);
           // editor.Canvas.destroy();
