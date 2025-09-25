@@ -243,7 +243,7 @@ export function Editor({ params }) {
   const [parentForPanelsGroup] = useAutoAnimate();
   return  isProject ? (
     isAssetsWorkerDone ? (
-      <Memo className="w-full h-full">
+      <section className="w-full h-full">
         <ToastContainer
           // toastStyle={{ background: "transparent" }}
 
@@ -344,7 +344,7 @@ export function Editor({ params }) {
             {/* <Popover /> */}
           </main>
         </GJEditor>
-      </Memo>
+      </section>
     ) : (
       <section className="h-full w-full bg-slate-950">
         <Loader />

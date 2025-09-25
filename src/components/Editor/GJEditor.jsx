@@ -299,7 +299,7 @@ export const GJEditor = memo(({ children }) => {
             // {src:`${jsToDataURL(`console.log('data js url.............@')`)}`}
           ],
           styles: ["/styles/dev.css", "/styles/style.css"],
-
+          
           customBadgeLabel:
             /**
              *

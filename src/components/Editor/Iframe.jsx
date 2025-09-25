@@ -49,7 +49,7 @@ import {
 } from "../../helpers/defineWorkers";
 import { useLiveQuery } from "dexie-react-hooks";
 import { liveQuery } from "dexie";
-import { styleInfInstance } from "../../constants/InfinitelyInstances";
+import { editorStorageInstance, styleInfInstance } from "../../constants/InfinitelyInstances";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
 import { animationsSavingMsg } from "../../constants/confirms";
@@ -104,7 +104,7 @@ export const Iframe = memo(() => {
   const projectId = +localStorage.getItem(current_project_id);
   const setStyle = useSetClassForCurrentEl();
   const [autoAnimate] = useAutoAnimate();
-  const [showLoader, setShowLoader] = useState(false);
+  const [showLoader, setShowLoader] = useState(true);
   const saveAnimations = () => {
     if (isAnimationsChanged) {
       setSaveLoad(true);
@@ -169,60 +169,60 @@ export const Iframe = memo(() => {
     };
   }, [editor, animations]);
 
-  // useEffect(() => {
-  //   if (!editor) return;
-  //   console.log("auto save : ", editor.Storage.config.autosave);
+  useEffect(() => {
+    if (!editor) return;
+    console.log("auto save : ", editor.Storage.config.autosave);
 
-  //   const infCallback = (ev) => {
-  //     // console.log("fire from inf instance");
+    const infCallback = (ev) => {
+      // console.log("fire from inf instance");
 
-  //     const { cssProp, value } = ev.detail;
-  //     // console.log("navigateCallback : ", cssProp, value);
+      const { cssProp, value } = ev.detail;
+      // console.log("navigateCallback : ", cssProp, value);
 
-  //     setStyle({
-  //       cssProp,
-  //       value,
-  //     });
-  //     editor.refresh({ tools: true });
-  //     editor.Canvas.refresh({ all: true, spots: true });
-  //   };
-  //   styleInfInstance.on(InfinitelyEvents.style.set, infCallback);
+      setStyle({
+        cssProp,
+        value,
+      });
+      editor.refresh({ tools: true });
+      editor.Canvas.refresh({ all: true, spots: true });
+    };
+    styleInfInstance.on(InfinitelyEvents.style.set, infCallback);
 
-  //   const loadMonaco = () => {
-  //     monacoLoader.init().then((monaco) => {
-  //       !window.monaco && (window.monaco = monaco);
-  //       monaco.editor.onDidCreateEditor(() => {
-  //         monaco.worker?.keepAlive?.();
-  //       });
-  //     });
-  //   };
+    const loadMonaco = () => {
+      monacoLoader.init().then((monaco) => {
+        !window.monaco && (window.monaco = monaco);
+        monaco.editor.onDidCreateEditor(() => {
+          monaco.worker?.keepAlive?.();
+        });
+      });
+    };
 
     
-  //   const loaderStartCallback = () => {
-  //     setShowLoader(true);
-  //   };
+    const loaderStartCallback = () => {
+      setShowLoader(true);
+    };
 
-  //   const loaderEndCallback = () => {
-  //     setShowLoader(false);
-  //     console.log('should end');
+    const loaderEndCallback = () => {
+      setShowLoader(false);
+      console.log('should end');
       
-  //   };
+    };
 
-  //   editor.on(InfinitelyEvents.storage.loadStart, loaderStartCallback);
-  //   editor.on(InfinitelyEvents.storage.loadEnd, loaderEndCallback);
-  //   editor.on('storage:end:load', loaderEndCallback);
-  //   editor.on("canvas:frame:load:body", loadMonaco);
+    editorStorageInstance.on(InfinitelyEvents.storage.loadStart, loaderStartCallback);
+    editorStorageInstance.on(InfinitelyEvents.storage.loadEnd, loaderEndCallback);
+    // editor.on('storage:end:load', loaderEndCallback);
+    editor.on("canvas:frame:load:body", loadMonaco);
     
-  //   return () => {
-  //     styleInfInstance.off(InfinitelyEvents.style.set, infCallback);
-  //     editor.off("canvas:frame:load:body", loadMonaco);
-  //     editor.off(InfinitelyEvents.storage.loadStart, loaderStartCallback);
-  //     editor.off(InfinitelyEvents.storage.loadEnd, loaderEndCallback);
-  //     editor.off('storage:end:load', loaderEndCallback);
-  //     // window.removeEventListener("keydown", preventDefaultSave);
-  //     // window.removeEventListener("keydown", saveCallback);
-  //   };
-  // }, [editor , showLoader]);
+    return () => {
+      styleInfInstance.off(InfinitelyEvents.style.set, infCallback);
+      editor.off("canvas:frame:load:body", loadMonaco);
+      editorStorageInstance.off(InfinitelyEvents.storage.loadStart, loaderStartCallback);
+      editorStorageInstance.off(InfinitelyEvents.storage.loadEnd, loaderEndCallback);
+      // editor.off('storage:end:load', loaderEndCallback);
+      // window.removeEventListener("keydown", preventDefaultSave);
+      // window.removeEventListener("keydown", saveCallback);
+    };
+  }, [editor]);
 
   useEffect(() => {
     if (!editor) return;

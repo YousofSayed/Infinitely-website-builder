@@ -42,6 +42,7 @@ import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
 import { parseHTML } from "linkedom";
 import { isArray, isFunction } from "lodash";
 import grapesjs from "grapesjs";
+import { editorStorageInstance } from "../constants/InfinitelyInstances";
 // import LeakDetector from "jest-leak-detector";
 
 let loadFooterScriptsCallback, loadHeadScriptsCallback, loadMainScriptsCallback;
@@ -137,12 +138,6 @@ export const IDB = (editor) => {
     clearTimeout(storeTimeout);
     // editor.off("canvas:frame:load:body", callback);
   };
-
-  editor.on("storage:end:load", () => {
-    console.log("load end");
-
-    editor.trigger(InfinitelyEvents.storage.loadEnd);
-  });
 
   async function getAllSymbolsStyles() {
     const projectData = await getProjectData();
@@ -309,9 +304,221 @@ export const IDB = (editor) => {
     // }
   }
 
+  const loadElements = async () => {
+    const frame = editor.Canvas.getFrameEl();
+    // if (frame?.contentDocument?.location) {
+    //   frame.contentDocument.location.reload();
+    //   const frameRemovedDone = await new Promise((res, rej) => {
+    //     if (frame) {
+    //       frame.addEventListener("load", () => {
+    //         // 3. Force browser to GC old document
+
+    //         frame.contentDocument.body
+    //           .querySelectorAll("*")
+    //           .forEach((el) => el.remove());
+    //         console.log(
+    //           "frame remover : ",
+    //           frame.contentDocument.body.querySelectorAll("*"),
+    //           frame.contentDocument.querySelectorAll("*")
+    //         );
+    //         frame.replaceWith(frame.cloneNode(false));
+
+    //         // 2. Clear references
+    //         frame.onload = null;
+    //         frame.src = "about:blank";
+    //         setTimeout(() => {
+    //           frame.remove();
+    //         }, 0);
+    //         res(true);
+    //       });
+    //     } else {
+    //       res(true);
+    //     }
+    //   });
+    // }
+
+    // hardResetEditor();
+    // clearEditor(editor);
+    // fullDestroyCanvas(editor);
+    // const oldCnfg = editor.getConfig();
+    // if (editor) {
+    // editor.destroy();
+    // editor = null;
+    // document.querySelector("#gjs").innerHTML = ""; // clear container
+    // }
+
+    // editor = grapesjs.init(oldCnfg);
+    editor.Components.clear({});
+    editor.DomComponents.clear({});
+    editor.Css.clear({});
+    editor.CssComposer.clear({});
+    // editor.Canvas.canvas.clear({});
+    // editor.Canvas.canvas.destroy();
+    // editor.Canvas.canvas.init();
+
+    !editor.loadTimes && (editor.loadTimes = 0);
+    editor.loadTimes++;
+    editor.trigger(InfinitelyEvents.storage.loadStart);
+
+    const projectData = await db.projects.get(+projectID);
+    const projectSettings = getProjectSettings().projectSettings;
+    if (!projectData) {
+    }
+
+    console.time("loading");
+    const storageManager = editor.StorageManager;
+    const originalAutosave = storageManager.getConfig().autosave;
+    storageManager.setAutosave(false);
+
+    const loadCurrentPage = async () => {
+      if (!localStorage.getItem(current_page_id)) {
+        localStorage.setItem(current_page_id, "index");
+      }
+      currentPageName = localStorage.getItem(current_page_id);
+      const currentPageId = currentPageName; //it will return void so that will make it take second choics : "index"
+      const currentPage = projectData.pages[`${currentPageId}`];
+      let cssStyles = await (
+        await opfs.getFile(defineRoot(`css/${currentPageId}.css`))
+      ).text();
+      let allSymbolsStyle = await getAllSymbolsStyles();
+
+      let cssCode = minify(
+        `
+            ${allSymbolsStyle}
+            ${cssStyles}
+        `,
+        { restructure: true }
+      ).css;
+
+      allSymbolsStyle = null; //For garpage collection
+      cssStyles = null;
+      /**
+       *
+       * @param {import('grapesjs').Component[]} components
+       * @param {number} starter
+       * @param {number} ender
+       */
+      const appender = async (components, chunkSize = 1) => {
+        const total = components.length;
+        for (let i = 0; i < total; i += chunkSize) {
+          const chunk = components.slice(i, i + chunkSize);
+          editor.addComponents(chunk.join(""), { avoidStore: true });
+          await new Promise((r) => requestAnimationFrame(r)); // smoother rendering
+        }
+        editor.clearDirtyCount();
+      };
+
+      const getElements = async () => {
+        infinitelyWorker.postMessage({
+          command: "parseHTMLAndRaplceSymbols",
+          props: {
+            pageName: currentPageId,
+            projectId: +projectID,
+          },
+        });
+
+        let styleElement = " "; // renderCssStyles(editor, cssCode);
+
+        let elements = await new Promise((res, rej) => {
+          workerCallbackMaker(
+            infinitelyWorker,
+            "parseHTMLAndRaplceSymbols",
+            (props) => {
+              props.response && res([...props.response]);
+              !props.response && rej([]);
+            }
+          );
+        });
+        console.log("elements : ", elements);
+
+        if (projectSettings.enable_editor_lazy_loading) {
+          // Take the first 5 and mutate the original array
+          const firstFive = elements.splice(0, 5);
+
+          // Load the first 5 into GrapesJS
+          editor.loadProjectData({
+            components: firstFive,
+          });
+          // Now `elements` contains ONLY the remaining ones
+          await appender(elements);
+
+          // let tmpElements = [...elements]; // clone
+          // const firstFive = tmpElements.splice(0, 5);
+          // editor.loadProjectData({ components: firstFive });
+          // await appender(tmpElements);
+          // tmpElements.length = 0;
+          // tmpElements = null;
+        } else {
+          // const parser = editor.Parser.parseHtml(elements);
+          // editor.loadProjectData({
+          //   // styles: parser.css, // optional
+          //   components:elements,
+          // });
+          // const el = editor.getEl();
+          // frames.push(el);
+          // console.log('render el : ' ,el);
+          // editor.addComponents(elements , {merge:true});
+          // const frame = editor.Canvas.getFrameEl();
+          // frame.setAttribute('srcdoc', elements.join(' ')) // = doDocument(elements.join(' '))
+        }
+
+        return elements;
+      };
+
+      editor.trigger(InfinitelyEvents.pages.select);
+      editor.trigger(InfinitelyEvents.pages.update);
+      editor.trigger(InfinitelyEvents.pages.all);
+      window.dispatchEvent(changePageName({ pageName: currentPageId }));
+      const parsed = editor.Parser.parseHtml(await getElements(), {
+        asDocument: false,
+      });
+      let content = isArray(parsed.html) ? [...parsed.html] : [parsed.html];
+      return {
+        components: [renderCssStyles(editor, cssCode), ...content],
+        // styles:editor.Parser.parseCss(cssCode)
+      };
+    };
+
+    [current_symbol_rule, current_symbol_id, current_template_id].forEach(
+      (item) => sessionStorage.removeItem(item)
+    );
+
+    // editor.getWrapper().setAttributes({} , {avoidStore:true});
+
+    editor.select(null);
+    URL.createObjectURL = mainCreateObjectURLMethod;
+
+    editor.off("canvas:frame:load:body");
+    await loadScripts(editor, projectData);
+    editor.on("canvas:frame:load:body", () => {
+      attrsCallback(editor, projectData);
+    });
+
+    editor.clearDirtyCount();
+
+    // if (editor.loadTimes > 1) {
+    //   clearEditor(editor);
+    // }
+    editor.on("component:remove:before", editor.removerBeforeHandler);
+    return await loadCurrentPage();
+  };
+
+  editor.on("storage:end:load", async() => {
+    editor.trigger(InfinitelyEvents.storage.loadEnd);
+    editorStorageInstance.emit(InfinitelyEvents.storage.loadEnd);
+    // editor.setComponents(await(await loadElements()).components , {merge:true });
+    console.log("load end");
+  });
+
+  editor.on("storage:start:load", () => {
+    editorStorageInstance.emit(InfinitelyEvents.storage.loadStart);
+    console.log("start load");
+  });
+
   editor.Storage.add("infinitely", {
     async load(options = {}) {
       console.log("loading options : ", options);
+      editor.off("component:remove:before", editor.removerBeforeHandler);
       loadTimeout && clearTimeout(loadTimeout);
       loadTimeout &&
         window.cancelIdleCallback &&
@@ -340,203 +547,18 @@ export const IDB = (editor) => {
           return;
         }
       }
+      const projectData = await getProjectData();
+      editor.off("canvas:frame:load:body");
+      await loadScripts(editor, projectData); 
+      editor.on("canvas:frame:load:body", () => {
+        attrsCallback(editor, projectData);
+      }); 
 
+  
+
+      editor.clearDirtyCount();
       clearTimeouts();
       editor.off("component:remove:before", editor.removerBeforeHandler);
-
-      const callback = async () => {
-        const frame = editor.Canvas.getFrameEl();
-        if (frame?.contentDocument?.location) {
-          frame.contentDocument.location.reload();
-          const frameRemovedDone = await new Promise((res, rej) => {
-            if (frame) {
-              frame.addEventListener("load", () => {
-               
-
-                // 3. Force browser to GC old document
-
-                frame.contentDocument.body
-                  .querySelectorAll("*")
-                  .forEach((el) => el.remove());
-                console.log(
-                  "frame remover : ",
-                  frame.contentDocument.body.querySelectorAll("*"),
-                  frame.contentDocument.querySelectorAll("*")
-                );
-                 frame.replaceWith(frame.cloneNode(false));
-
-                // 2. Clear references
-                frame.onload = null;
-                frame.src = "about:blank";
-                setTimeout(() => {
-                  frame.remove();
-                }, 0);
-                res(true);
-              });
-            } else {
-              res(true);
-            }
-          });
-        }
-
-        // hardResetEditor();
-        // clearEditor(editor);
-        // fullDestroyCanvas(editor);
-        // const oldCnfg = editor.getConfig();
-        // if (editor) {
-        // editor.destroy();
-        // editor = null;
-        // document.querySelector("#gjs").innerHTML = ""; // clear container
-        // }
-
-        // editor = grapesjs.init(oldCnfg);
-
-        !editor.loadTimes && (editor.loadTimes = 0);
-        editor.loadTimes++;
-        editor.trigger(InfinitelyEvents.storage.loadStart);
-
-        const projectData = await db.projects.get(+projectID);
-        const projectSettings = getProjectSettings().projectSettings;
-        if (!projectData) {
-        }
-
-        console.time("loading");
-        const storageManager = editor.StorageManager;
-        const originalAutosave = storageManager.getConfig().autosave;
-        storageManager.setAutosave(false);
-
-        const loadCurrentPage = async () => {
-          if (!localStorage.getItem(current_page_id)) {
-            localStorage.setItem(current_page_id, "index");
-          }
-          currentPageName = localStorage.getItem(current_page_id);
-          const currentPageId = currentPageName; //it will return void so that will make it take second choics : "index"
-          const currentPage = projectData.pages[`${currentPageId}`];
-          let cssStyles = await (
-            await opfs.getFile(defineRoot(`css/${currentPageId}.css`))
-          ).text();
-          let allSymbolsStyle = await getAllSymbolsStyles();
-
-          let cssCode = minify(
-            `
-            ${allSymbolsStyle}
-            ${cssStyles}
-        `,
-            { restructure: true }
-          ).css;
-
-          allSymbolsStyle = null; //For garpage collection
-          cssStyles = null;
-          /**
-           *
-           * @param {import('grapesjs').Component[]} components
-           * @param {number} starter
-           * @param {number} ender
-           */
-          const appender = async (components, chunkSize = 1) => {
-            const total = components.length;
-            for (let i = 0; i < total; i += chunkSize) {
-              const chunk = components.slice(i, i + chunkSize);
-              editor.addComponents(chunk.join(""), { avoidStore: true });
-              await new Promise((r) => requestAnimationFrame(r)); // smoother rendering
-            }
-            editor.clearDirtyCount();
-          };
-
-          const getElements = async () => {
-            infinitelyWorker.postMessage({
-              command: "parseHTMLAndRaplceSymbols",
-              props: {
-                pageName: currentPageId,
-                projectId: +projectID,
-              },
-            });
-
-            let styleElement = " "; // renderCssStyles(editor, cssCode);
-
-            let elements = await new Promise((res, rej) => {
-              workerCallbackMaker(
-                infinitelyWorker,
-                "parseHTMLAndRaplceSymbols",
-                (props) => {
-                  props.response && res([...props.response]);
-                  !props.response && rej([]);
-                }
-              );
-            });
-            console.log("elements : ", elements);
-
-            if (projectSettings.enable_editor_lazy_loading) {
-              // Take the first 5 and mutate the original array
-              const firstFive = elements.splice(0, 5);
-
-              // Load the first 5 into GrapesJS
-              editor.loadProjectData({
-                components: firstFive,
-              });
-              // Now `elements` contains ONLY the remaining ones
-              await appender(elements);
-
-              // let tmpElements = [...elements]; // clone
-              // const firstFive = tmpElements.splice(0, 5);
-              // editor.loadProjectData({ components: firstFive });
-              // await appender(tmpElements);
-              // tmpElements.length = 0;
-              // tmpElements = null;
-            } else {
-              // const parser = editor.Parser.parseHtml(elements);
-              // editor.loadProjectData({
-              //   // styles: parser.css, // optional
-              //   components:elements,
-              // });
-              // const el = editor.getEl();
-              // frames.push(el);
-              // console.log('render el : ' ,el);
-              // editor.addComponents(elements , {merge:true});
-              // const frame = editor.Canvas.getFrameEl();
-              // frame.setAttribute('srcdoc', elements.join(' ')) // = doDocument(elements.join(' '))
-            }
-
-            return elements;
-          };
-
-          editor.trigger(InfinitelyEvents.pages.select);
-          editor.trigger(InfinitelyEvents.pages.update);
-          editor.trigger(InfinitelyEvents.pages.all);
-          window.dispatchEvent(changePageName({ pageName: currentPageId }));
-          const parsed = editor.Parser.parseHtml(await getElements(), {
-            asDocument: false,
-          });
-          let content = isArray(parsed.html) ? [...parsed.html] : [parsed.html];
-          return {
-            components: [renderCssStyles(editor, cssCode), ...content],
-            // styles:editor.Parser.parseCss(cssCode)
-          };
-        };
-
-        [current_symbol_rule, current_symbol_id, current_template_id].forEach(
-          (item) => sessionStorage.removeItem(item)
-        );
-
-        // editor.getWrapper().setAttributes({} , {avoidStore:true});
-
-        editor.select(null);
-        URL.createObjectURL = mainCreateObjectURLMethod;
-
-        editor.off("canvas:frame:load:body");
-        await loadScripts(editor, projectData);
-        editor.on("canvas:frame:load:body", () => {
-          attrsCallback(editor, projectData);
-        });
-
-        editor.clearDirtyCount();
-
-        // if (editor.loadTimes > 1) {
-        //   clearEditor(editor);
-        // }
-        editor.on("component:remove:before", editor.removerBeforeHandler);
-        return await loadCurrentPage();
-      };
 
       console.log("should load");
 
@@ -544,7 +566,8 @@ export const IDB = (editor) => {
       //   components:['<h1>Hello world!!</h1>']
       // }
       // editor.Canvas.getCanvasView().initialize({el:document.body  ,tagName:'h1'});
-      return await callback();
+      return await loadElements();
+      // return {components:[]};
     },
 
     //Storinggg
