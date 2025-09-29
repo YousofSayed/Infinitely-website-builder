@@ -183,3 +183,11 @@ export const killAllGsapMotions = (motions) => {
     })
   );
 };
+
+export const reloadEditor =  () => {
+  window.parent.dispatchEvent(
+    new CustomEvent(InfinitelyEvents.editor.reload, {
+      detail: {},
+    })
+  );
+};

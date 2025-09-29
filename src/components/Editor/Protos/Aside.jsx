@@ -5,15 +5,7 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 
 export const Aside = ({ children, className = "", dir = "left" , style }) => {
   const [parent] = useAutoAnimate();
-  /**
-   * @type {{current:HTMLElement}}
-   */
-  const asideRef = useRef();
-  /**
-   * @type {{current:HTMLElement}}
-   */
-  const resizerRef = useRef();
-  const showCustomModal = useRecoilValue(showCustomModalState);
+
 
   return (
     <aside

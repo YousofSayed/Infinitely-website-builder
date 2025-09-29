@@ -59,6 +59,8 @@ import { createSymbolTool } from "../plugins/tools/createSymbolTool";
 import { infinitelyWorker } from "./infinitelyWorker";
 import { isFunction, isPlainObject, uniqueId, random as _random } from "lodash";
 import { buildInteractionsAttributes, cloneMotion } from "./bridge";
+import { loadElements } from "../plugins/IDB";
+import { editorStorageInstance } from "../constants/InfinitelyInstances";
 export {
   replaceBlobs,
   base64ToBlob,
@@ -3022,13 +3024,75 @@ export function createGJSComponent(editor, html = "") {
   // Create the component instance without attaching to wrapper
   const cmp = editor.Components.addComponent(parsed.html, {
     avoidUpdateStyle: true, // Do not update the canvas
-    temporary: true,        // Keep it out of the DOM
-    at: null,               // Do NOT insert anywhere
-    avoidStore:true,
+    temporary: true, // Keep it out of the DOM
+    at: null, // Do NOT insert anywhere
+    avoidStore: true,
   });
 
   // Remove the link to the wrapper so it stays virtual
   cmp.remove({ silent: true });
 
   return cmp;
+}
+
+export let reloaderTimeout;
+/**
+ *
+ * @param {import('grapesjs').Editor} editor
+ */
+export async function reloadEditor(editor) {
+  const { projectSettings } = getProjectSettings();
+  editor.off("component:remove:before");
+  editor.Storage.setAutosave(false);
+  editor
+    .getWrapper()
+    .components()
+    .models.forEach((model) => {
+      model.destroy();
+      model.remove();
+    });
+  editor.Components.clear({});
+  editor.DomComponents.clear({});
+  editor.Css.clear({});
+  editor.CssComposer.clear({});
+  editor.setStyle("");
+  editor.setComponents("");
+  editor.UndoManager.stop();
+  editor.UndoManager.clear();
+
+  reloaderTimeout && clearTimeout(reloaderTimeout);
+  const response = await loadElements(editor, {
+    justSendToWorker: true,
+    onSend(elements) {
+      editorStorageInstance.emit(InfinitelyEvents.storage.loadStart);
+      const render = (index) => {
+        if (index >= elements.length) {
+          editor.UndoManager.start();
+          editor.Storage.setAutosave(projectSettings.enable_auto_save);
+          editorStorageInstance.emit(InfinitelyEvents.storage.loadEnd);
+          return;
+        }
+        editor.addComponents(elements[index], {
+          avoidStore: true,
+          at: index,
+          sort: true,
+        });
+        const newIndex = index + 1;
+        setTimeout(() => {
+          render(newIndex);
+        }, 10);
+      };
+      // render(0);
+      // editor.setComponents(elements.join('') , { avoidStore:true});
+      // console.log('componentd setted' , elements);
+      editor.loadProjectData({
+        components: elements,
+      });
+      editor.clearDirtyCount();
+      editor.UndoManager.start();
+      editor.Storage.setAutosave(projectSettings.enable_auto_save);
+      editorStorageInstance.emit(InfinitelyEvents.storage.loadEnd);
+    },
+  });
+  // workerCallbackMaker(infinitelyWorker , 'project-loaded' , (props)=>{
 }

@@ -100,7 +100,7 @@ export const HomeHeader = memo(() => {
   };
 
   useEffect(() => {
-    if (!editor) return;
+    if (!(editor  && editor.getContainer())) return;
     // console.log('html editor : ' , editor.getWrapper().getInnerHTML({withProps:true , withScripts: true}));
     // getHtml({withProps:true , asDocument:false , })
     setZoomValue((editor.getContainer().style.zoom * 100).toFixed(2));

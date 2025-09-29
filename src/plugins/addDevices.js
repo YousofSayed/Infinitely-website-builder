@@ -129,24 +129,41 @@ export const addDevices = (editor) => {
   //   zoomToFit();
   // });
 
-  editor.on("canvas:frame:load",
+  editor.on(
+    "canvas:frame:load",
     /**
-     * 
-     * @param {{window:Window}} param0 
+     *
+     * @param {{window:Window}} param0
      */
-    ({window}) => {
-    // console.log('from load ;' , document.querySelector(`#right-panel`));
-    //document.querySelector(`#panel-group`)
-    console.log('from load window' , window);
-    window.document
-    zoomToFit();
-    mutationsObserver.observe(document.querySelector(`#panels-group`), {
-      childList: true,
-      subtree: true,
-    });
-    // resizerObserver.observe(document.querySelector(`#right-panel`));
-    // resizerObserver.observe(document.querySelector(`#left-panel`));
-  });
+    ({ window }) => {
+      // console.log('from load ;' , document.querySelector(`#right-panel`));
+      //document.querySelector(`#panel-group`)
+      console.log("from load window", window);
+      window.document;
+      zoomToFit();
+      if (mutationsObserver && mutationsObserver instanceof MutationObserver) {
+        mutationsObserver.disconnect();
+        mutationsObserver = null;
+        mutationsObserver = new MutationObserver((entries) => {
+          const rightPanel = document.querySelector(`#right-panel`);
+          const leftPanel = document.querySelector(`#left-panel`);
+          if (rightPanel) {
+            resizerObserver.observe(rightPanel);
+          }
+          if (leftPanel) {
+            resizerObserver.observe(leftPanel);
+          }
+        });
+      }
+
+      mutationsObserver.observe(document.querySelector(`#panels-group`), {
+        childList: true,
+        subtree: true,
+      });
+      // resizerObserver.observe(document.querySelector(`#right-panel`));
+      // resizerObserver.observe(document.querySelector(`#left-panel`));
+    }
+  );
 
   window.addEventListener("resize", () => zoomToFit());
 };

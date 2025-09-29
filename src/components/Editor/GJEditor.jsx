@@ -1,5 +1,5 @@
-import { Editor } from "@grapesjs/react";
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
+import GjsEditor,{ Editor , } from "@grapesjs/react";
+import React, { memo, useCallback, useEffect, useRef, useState  , } from "react";
 import grapesjs from "grapesjs";
 // import  "../../helpers/grapesjs.js";
 import { useRecoilValue, useSetRecoilState } from "recoil";
@@ -139,16 +139,16 @@ export const GJEditor = memo(({ children }) => {
         }
       });
 
-      // ev.on("component:cmds:update", () => {
-      //   console.log("updateeeeeeeeeeeeeeeeeeeeeee 89");
-      //   const sle = ev.getSelected();
-      //   if (!sle) {
-      //     console.warn("No Selected Component");
-      //     return;
-      //   } else {
-      //     setCmdsContext(sle);
-      //   }
-      // });
+      ev.on("component:cmds:update", () => {
+        console.log("updateeeeeeeeeeeeeeeeeeeeeee 89");
+        const sle = ev.getSelected();
+        if (!sle) {
+          console.warn("No Selected Component");
+          return;
+        } else {
+          setCmdsContext(sle);
+        }
+      });
   
 
       ev.on("redo", (args) => {
@@ -168,7 +168,7 @@ export const GJEditor = memo(({ children }) => {
   console.log("gj-editor : ", getProjectSettings().projectSettings);
 
   return (
-    <Editor
+    <GjsEditor
       grapesjs={grapesjs}
       options={{
         height: "100%",
@@ -178,10 +178,13 @@ export const GJEditor = memo(({ children }) => {
         // nativeDnD:true,
         // showToolbar:true,
         // noticeOnUnload:false,
+        // headless:true,
+        container:'#editor-wrapper',
         mediaCondition: localStorage.getItem("media-condition") || "max-width",
         showOffsets: true,
         keepUnusedStyles: true,
         clearStyles: false,
+        keepEmptyTextNodes: true,
         // showBadges: true,
         // stylePrefix:'inf-',
         // forceClass: true,
@@ -227,7 +230,8 @@ export const GJEditor = memo(({ children }) => {
             allowUnsafeAttr: true,
 
             allowUnsafeAttrValue: true,
-
+            keepEmptyTextNodes:true,
+            
             htmlType: "text/html",
           },
         },
@@ -255,6 +259,7 @@ export const GJEditor = memo(({ children }) => {
         },
         protectedCss: ``,
         canvas: {
+          frame: document.getElementById('my-iframe'),
           // scrollableCanvas: true,
           //   customRenderer: ({ editor, frame, frameView, window }) => {
           //     const rootEl = window.document.body;
@@ -337,6 +342,6 @@ export const GJEditor = memo(({ children }) => {
       onEditor={onEditor}
     >
       {children}
-    </Editor>
+    </GjsEditor>
   );
 });

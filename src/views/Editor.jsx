@@ -31,7 +31,10 @@ import { AsideControllers } from "../components/Editor/Protos/AsideControllers";
 import { initDBAssetsSw } from "../serviceWorkers/initDBAssets-sw";
 import { current_project_id } from "../constants/shared";
 import { getProjectData, getProjectSettings } from "../helpers/functions";
-import { infinitelyWorker, reInitInfinitelyWorker } from "../helpers/infinitelyWorker";
+import {
+  infinitelyWorker,
+  reInitInfinitelyWorker,
+} from "../helpers/infinitelyWorker";
 // import { swAliveInterval } from "../helpers/keepSwAlive";
 import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
 import {
@@ -46,6 +49,7 @@ import { Loader } from "../components/Loader";
 import { minify } from "csso";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Memo } from "../components/Protos/Memo";
+import { WithEditor } from "@grapesjs/react";
 // import { tailwindClasses } from "../constants/tailwindClasses";
 // tailwindClasses
 export function Editor({ params }) {
@@ -62,23 +66,8 @@ export function Editor({ params }) {
   const [isAssetsWorkerDone, setIsAssetsWorkerDone] = useState(false);
   const [parent] = useAutoAnimate();
   const [mainAnimate] = useAutoAnimate({ duration: 100 });
-  const [appInstalling , setAppInstalling] = useRecoilState(appInstallingState)
-  const [reloader , setReloader] = useRecoilState(reloaderState);
-  // const [dbAssetsSw, setDBAssetsSw] = useRecoilState(dbAssetsSwState);
-
-  // useEffect(() => {
-  //   pageBuilderWorker.postMessage({
-  //     command: "sendPreviewPagesToServiceWorker",
-  //     props: {
-  //       projectId: +localStorage.getItem(current_project_id),
-  //       editorData: {
-  //         canvasCss: "",
-  //         editorCss: "",
-  //       },
-  //     },
-  //   });
-  //   console.log("i should send preview page");
-  // });
+  const [appInstalling, setAppInstalling] = useRecoilState(appInstallingState);
+  const [reloader, setReloader] = useRecoilState(reloaderState);
 
   useEffect(() => {
     /**
@@ -123,22 +112,22 @@ export function Editor({ params }) {
       props: { id: +localStorage.getItem(current_project_id) },
     });
     getProjectSettings();
-   
-    const infinitelyWorkerIniter = (ev)=>{
-      const {command} = ev.data;
-      if(command == 'updateDB'){
+
+    const infinitelyWorkerIniter = (ev) => {
+      const { command } = ev.data;
+      if (command == "updateDB") {
         reInitInfinitelyWorker();
-        infinitelyWorker.addEventListener('message' , infinitelyWorkerIniter)
+        infinitelyWorker.addEventListener("message", infinitelyWorkerIniter);
       }
     };
-    infinitelyWorker.addEventListener('message' , infinitelyWorkerIniter);
+    infinitelyWorker.addEventListener("message", infinitelyWorkerIniter);
     window.addEventListener("open:custom:modal", openModal);
     window.addEventListener("close:custom:modal", closeModal);
-    
+
     return () => {
       window.removeEventListener("open:custom:modal", openModal);
       window.removeEventListener("close:custom:modal", closeModal);
-      infinitelyWorker.removeEventListener('message' , infinitelyWorkerIniter);
+      infinitelyWorker.removeEventListener("message", infinitelyWorkerIniter);
       // broadCastCleaner();
       // clearInterval(swAliveInterval);
     };
@@ -152,23 +141,9 @@ export function Editor({ params }) {
         // assetsWorker.removeEventListener("message", cb);
       }
 
-      // else {
-      //   setIsAssetsWorkerDone(false);
-      //   // assetsWorker.removeEventListener("message", cb);
-      // }
     };
 
-    // (async () => {
-    //   await opfs.getAllFiles(defineRoot("assets"), {
-    //     chunks: true,
-    //     recursive:true,
-    //     chunksCount:50,
-    //     chunksStart:0,
-    //     onChunk: (chunk) => {
-    //       console.log(`Chunkkkk`, chunk);
-    //     },
-    //   });
-    // })();
+   
     routerWorker.addEventListener("message", cb);
     setCurrentEl({ currentEl: null, addStyle: null });
     return () => {
@@ -179,7 +154,7 @@ export function Editor({ params }) {
   useWorkerToast();
   const isProject = Boolean(+localStorage.getItem(current_project_id));
   const [parentForPanelsGroup] = useAutoAnimate();
-  return  isProject ? (
+  return isProject ? (
     isAssetsWorkerDone ? (
       <section className="w-full h-full">
         <ToastContainer
@@ -198,61 +173,62 @@ export function Editor({ params }) {
           // stacked={true}
         />
         <GJEditor key={reloader}>
-          <main
-            className="relative w-full h-full bg-slate-950 flex justify-between"
-            ref={mainAnimate}
-          >
-            {/* {!showPreview && <HomeNav />} */}
-            <HomeNav />
-            <section
-              // ref={parent}
-              className={`${
-                showPreview
-                  ? "w-full"
-                  : "w-[calc(100%-55px)] border-l-[1.5px] border-slate-400"
-              } flex flex-col h-full `}
+          {/* <WithEditor> */}
+            <main
+              className="relative w-full h-full bg-slate-950 flex justify-between"
+              ref={mainAnimate}
             >
-              {/* {!showPreview && <HomeHeader />} */}
-              <HomeHeader />
-              <PanelGroup
-                id={"panels-group"}
-                tagName="section"
-                className="flex h-full w-full"
-                direction="horizontal"
-                autoSaveId="panels"
-                // ref={parentForPanelsGroup}
+              {/* {!showPreview && <HomeNav />} */}
+              <HomeNav />
+              <section
+                // ref={parent}
+                className={`${
+                  showPreview
+                    ? "w-full"
+                    : "w-[calc(100%-55px)] border-l-[1.5px] border-slate-400"
+                } flex flex-col h-full `}
               >
-                {(showAnimBuilder || showLayers) && !showPreview && (
-                  <>
-                    <Panel defaultSize={300} id="left-panel" order={1}>
-                      <section
-                        // ref={parentForPanelsGroup}
-                        className="h-full w-full"
-                      >
-                        {showLayers && (
-                          <Aside dir="right">
-                            <Layers />
-                          </Aside>
-                        )}
+                {/* {!showPreview && <HomeHeader />} */}
+                <HomeHeader />
+                <PanelGroup
+                  id={"panels-group"}
+                  tagName="section"
+                  className="flex h-full w-full"
+                  direction="horizontal"
+                  autoSaveId="panels"
+                  // ref={parentForPanelsGroup}
+                >
+                  {(showAnimBuilder || showLayers) && !showPreview && (
+                    <>
+                      <Panel defaultSize={300} id="left-panel" order={1}>
+                        <section
+                          // ref={parentForPanelsGroup}
+                          className="h-full w-full"
+                        >
+                          {showLayers && (
+                            <Aside dir="right">
+                              <Layers />
+                            </Aside>
+                          )}
 
-                        {showAnimBuilder && (
-                          <Aside>
-                            <AnimationsBuilder />
-                          </Aside>
-                        )}
-                      </section>
-                    </Panel>
-                    <PanelResizeHandle
-                      className={`w-[5px] bg-blue-600  opacity-0 hover:opacity-[1] transition-all`}
-                    />
-                  </>
-                )}
+                          {showAnimBuilder && (
+                            <Aside>
+                              <AnimationsBuilder />
+                            </Aside>
+                          )}
+                        </section>
+                      </Panel>
+                      <PanelResizeHandle
+                        className={`w-[5px] bg-blue-600  opacity-0 hover:opacity-[1] transition-all`}
+                      />
+                    </>
+                  )}
 
-                <Panel id="center" defaultSize={600} order={2}>
-                  <Iframe />
-                </Panel>
+                  <Panel id="center" defaultSize={600} order={2}>
+                    <Iframe />
+                  </Panel>
 
-                {/* {!showPreview && (
+                  {/* {!showPreview && (
                   <>
                     <PanelResizeHandle className="w-[5px] bg-blue-600 opacity-0 hover:opacity-[1] transition-all" />
                     <Panel defaultSize={300} order={3} id="right-panel">
@@ -266,21 +242,24 @@ export function Editor({ params }) {
                   </>
                 )} */}
 
-                <PanelResizeHandle className="w-[5px] bg-blue-600 opacity-0 hover:opacity-[1] transition-all" />
-                <Panel defaultSize={300} order={3} id="right-panel">
-                  <Aside>
-                    {pathname.pathname != "/add-blocks" && <AsideControllers />}
-                    <Outlet />
-                  </Aside>
-                </Panel>
-              </PanelGroup>
-            </section>
-            
-            {showCustomModal && <CustomModals />}
+                  <PanelResizeHandle className="w-[5px] bg-blue-600 opacity-0 hover:opacity-[1] transition-all" />
+                  <Panel defaultSize={300} order={3} id="right-panel">
+                    <Aside>
+                      {pathname.pathname != "/add-blocks" && (
+                        <AsideControllers />
+                      )}
+                      <Outlet />
+                    </Aside>
+                  </Panel>
+                </PanelGroup>
+              </section>
 
-            {/* <CustomModals /> */}
-            {/* <Popover /> */}
-          </main>
+              {showCustomModal && <CustomModals />}
+
+              {/* <CustomModals /> */}
+              {/* <Popover /> */}
+            </main>
+          {/* </WithEditor> */}
         </GJEditor>
       </section>
     ) : (
@@ -292,3 +271,5 @@ export function Editor({ params }) {
     <Navigate to="/workspace" replace={true} />
   );
 }
+
+// Editor.whyDidYouRender = true; // 👈 Required for tracking

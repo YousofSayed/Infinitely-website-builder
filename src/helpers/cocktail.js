@@ -470,10 +470,15 @@ export function makeAppResponsive(root) {
   const el = document.querySelector(root);
   if (!el) throw new Error(`Your element root "${root}" is ${el}`);
   el.style.height = `${window.innerHeight}px`;
+  const callback = () => (el.style.height = `${window.innerHeight}px`)
   window.addEventListener(
     "resize",
-    () => (el.style.height = `${window.innerHeight}px`)
+    callback
   );
+
+  return ()=>{
+    window.removeEventListener('resize' , callback);
+  }
 }
 
 /**

@@ -7,22 +7,25 @@ import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
  * @param {{editor : import('grapesjs').Editor}} param0
  */
 export const Splitter = ({ editor }) => {
+  let renderTimeout;
   editor.Components.addType("splitter", {
     // extend: "text",
-  
+
     view: {
-      
       onRender({ model, editor, el }) {
-        console.log('from splitter : ' , el.textContent , '\n\n' , el.innerText);
-        
+        console.log("from splitter : ", el.textContent, "\n\n", el.innerText);
+
         model.updateTrait("splitter", { value: el.textContent });
         const firstSplittedEl = el.children[0];
-        if(firstSplittedEl && firstSplittedEl.tagName.toLowerCase() == 'span'){
+        if (
+          firstSplittedEl &&
+          firstSplittedEl.tagName.toLowerCase() == "span"
+        ) {
           model.updateTrait("char-class-name", {
             value: firstSplittedEl.classList[0],
           });
-        }   
-        // editor.on(' ') 
+        }
+        // editor.on(' ')
       },
     },
     model: {
@@ -40,21 +43,27 @@ export const Splitter = ({ editor }) => {
         attributes: {
           class: "p-10",
         },
-        components: `Insert your splitted text here`.split('').map(char=>`<span class="char">${char}</span>`).join(''),
+        components: `Insert your splitted text here`
+          .split("")
+          .map((char) => `<span class="char">${char}</span>`)
+          .join(""),
         traits: defineTraits([
           {
             label: "char class name",
             name: "char-class-name",
             role: "attribute",
-            value: "",
+            value: "char",
             type: "text",
-            callback({editor , newValue , oldValue}){
-               const sle = editor.getSelected();
-              sle.components().models.forEach(model=>{
-                model.removeClass(['char' , oldValue]);
-                model.addClass(newValue);
-              })
-            }
+            // init({})=>{},
+            callback({ editor, newValue, oldValue }) {
+              const sle = editor.getSelected();
+              sle.components().models.forEach((model) => {
+                model.find(`.${oldValue}`).forEach((model) => {
+                  model.removeClass(["char", oldValue]);
+                  model.addClass(newValue, "inline-block");
+                });
+              });
+            },
           },
           {
             label: "splitter",
@@ -62,23 +71,57 @@ export const Splitter = ({ editor }) => {
             type: "textarea",
             role: "handler",
             // value: "",
-            onMountHandler(mEditor , monaco){
+            onMountHandler(mEditor, monaco) {
               mEditor.setValue(this.value);
             },
             callback({ editor, newValue, oldValue }) {
               const sle = editor.getSelected();
-              sle.components(
-                newValue
-                  .split("")
-                  .map(
-                    (char) =>
-                     !char.includes(' ') ? `<span class="${
-                        sle.getTrait(`char-class-name`).attributes.value || "char"
-                      } inline-block">${char}</span>` :
-                      `${char}`
-                  )
-                  .join("")
-              );
+              const segmenter = new Intl.Segmenter(undefined, {
+                granularity: "grapheme",
+              });
+
+              const words = newValue
+                .split(" ")
+                .map((word) => {
+                  const chars = [...segmenter.segment(word)].map(
+                    ({ segment }) =>
+                      `<span class="${
+                        sle.getTrait("char-class-name").attributes.value ||
+                        "char"
+                      } inline-block">${segment}</span>`
+                  );
+                  return chars.join("");
+                })
+                .filter(Boolean)
+                .map((word) => `${word}&nbsp;`);
+              sle.components("");
+              console.log("words : ", words);
+              // return
+              if (renderTimeout) clearTimeout(renderTimeout);
+              const render = (word, index) => {
+                sle.append(
+                  ` <span class="inline-block text-nowrap" >${word}</span>`,
+                  { at: index }
+                );
+                renderTimeout = setTimeout(() => {
+                  const newIndex = index + 1;
+                  if (newIndex < words.length)
+                    render(words[newIndex], newIndex);
+                }, 50);
+              };
+              render(words[0], 0);
+              // sle.components(
+              //   newValue
+              //     .split("")
+              //     .map(
+              //       (char) =>
+              //  !char.includes(' ') ? `<span class="${
+              //     sle.getTrait(`char-class-name`).attributes.value || "char"
+              //   } inline-block">${char}</span>` :
+              //   `${char}`
+              // )
+              //     .join("")
+              // );
             },
           },
         ]),

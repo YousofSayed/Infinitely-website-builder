@@ -1,28 +1,17 @@
 import React, { memo, useEffect, useLayoutEffect, useState } from "react";
-import { Aside } from "./Protos/Aside";
-import { Details } from "./Protos/Details";
 import { Layout } from "./Protos/Layout";
 import {
-  selector,
   useRecoilState,
   useRecoilValue,
-  useSetRecoilState,
 } from "recoil";
 import {
   currentElState,
   ruleState,
-  selectorState,
   showAnimationsBuilderState,
 } from "../../helpers/atoms";
 import { StyleTypography } from "./Protos/StyleTypography";
-import { Content } from "./Protos/Content";
-import { Size } from "./Protos/Size";
-import { Positioning } from "./Protos/Positioning";
 import { Border } from "./Protos/Border";
-import { Select } from "./Protos/Select";
-// import {  selectors } from "../../constants/cssProps";
 import { useEditorMaybe } from "@grapesjs/react";
-import { AsideControllers } from "./Protos/AsideControllers";
 import { SelectState } from "./Protos/SelectState";
 import { SelectClass } from "./Protos/SelectClass";
 import { Background } from "./Protos/Background";
@@ -34,17 +23,11 @@ import {
   transformValues,
 } from "../../constants/cssProps";
 import { Others } from "./Protos/Others";
-// import MonacoEditorWithESM from "./Protos/CSSEditor";
 import { Backdrop } from "./Protos/Backdrop";
-import { AccordionProvider, DetailsNormal } from "../Protos/DetailsNormal";
-// import { AccordionItem } from "@heroui/accordion";
-// import { InfAccordion } from "../Protos/InfAccordion";
-// import { InfAccordionItem } from "../Protos/InfAccordionItem";
 import { random, uniqueId } from "lodash";
 import { Accordion } from "../Protos/Accordion";
 import { AccordionItem } from "../Protos/AccordionItem";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { Show } from "../Protos/Show";
 import { ErrorBoundary } from "react-error-boundary";
 
 const SelectElementToStyle = () => (

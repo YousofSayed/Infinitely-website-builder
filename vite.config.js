@@ -214,6 +214,10 @@ export default defineConfig({
   build: {
     rollupOptions:{
       treeshake:true,
+      input: {
+        main: './index.html',
+        app: './app.html',
+      },
     },
     minify:'esbuild',
     chunkSizeWarningLimit: "5000",

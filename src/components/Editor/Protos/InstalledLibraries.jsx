@@ -15,6 +15,8 @@ import Portal from "../Portal";
 import { refType } from "../../../helpers/jsDocs";
 import { Accordion } from "../../Protos/Accordion";
 import { AccordionItem } from "../../Protos/AccordionItem";
+import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
+import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 
 const ReactSortableComponent = memo(
   ({ libraries = [], prop = "", updateList = (newList, key) => {} }) => {
@@ -28,7 +30,8 @@ const ReactSortableComponent = memo(
           updateList(newList, prop);
         }}
         onUpdate={(ev) => {
-          editor.load();
+          // editor.load();
+          reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {state:true});
         }}
       >
         {libraries[prop]?.libs?.map((lib, x) => (

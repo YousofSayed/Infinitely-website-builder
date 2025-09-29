@@ -6,6 +6,10 @@ export const InfinitelyEvents = {
     update: "infinitely:page:update",
     all: "infinitely:page:all",
   },
+  editor:{
+    reload:'infinitely:editor:reload',
+    require:`infinitely:editor:require-reload`
+  },
   symbols: {
     update: "infinitely:symbol:update",
     select: "infinitely:symbol:select",

@@ -24,6 +24,8 @@ import { toast } from "react-toastify";
 import { ToastMsgInfo } from "../Protos/ToastMsgInfo";
 import { useEditorMaybe } from "@grapesjs/react";
 import { classesFinderWorker } from "../../../helpers/defineWorkers";
+import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
+import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 
 export const SettingsModal = () => {
   const editor = useEditorMaybe();
@@ -80,7 +82,8 @@ export const SettingsModal = () => {
               ].map((styleEl) => styleEl.innerHTML),
             },
           });
-          editor.load();
+          // editor.load();
+          reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {state:true});
         };
 
         isCurrentChange("enable_tailwind", () => {
@@ -94,7 +97,8 @@ export const SettingsModal = () => {
         isCurrentChange("enable_spline_viewer", () => {
           console.log("lalalalalalaala");
 
-          editor.load();
+          // editor.load();
+          reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {state:true});
         });
 
         isCurrentChange("stop_all_animation_on_page", (key) => {
@@ -122,7 +126,8 @@ export const SettingsModal = () => {
         });
 
         isCurrentChange('enable_swiperjs' , ()=>{
-          editor.load();
+          // editor.load();
+          reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {state:true});
         })
       }, 100);
     },

@@ -6,19 +6,12 @@
   box-sizing: border-box;
   scroll-behavior: smooth;
   font-size: 14px;
-  /* scrollbar-gutter: space; */
-
-  /* direction: rtl;
-  flex-direction: row-reverse;
-  text-align: left !important; */
 }
 ul,
 li {
   list-style: none;
 }
-/* *::selection{
-  user-select: red;
-} */
+
 :root {
   --rt-color-white: #fff;
   --rt-color-dark: #2563eb !important;
@@ -32,19 +25,6 @@ li {
   --symbol-color-hover: #eb2588;
 }
 
-
-
-
-/* html,
-body {
-  margin: 0;
-  padding: 0;
-  width: 100vw;
-  height: 100vh;
-} */
-/* html {
-  height: fit-content;
-} */
 body {
   cursor: url("./assets/images/mainCursor.png"), auto;
   font-family: system-ui, "roboto", "poppins";

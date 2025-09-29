@@ -22,6 +22,8 @@ import { FitTitle } from "./FitTitle";
 import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
 import { opfs } from "../../../helpers/initOpfs";
 import { defineRoot, getFileSize, getFonts, toMB } from "../../../helpers/bridge";
+import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
+import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 
 export const GoogleFontsInstaller = () => {
   const editor = useEditorMaybe();
@@ -198,7 +200,8 @@ export const GoogleFontsInstaller = () => {
     // checkedinputsRef.current = checkedinputsRef.current.filter(Boolean);
     fontFilesWillInstalled.current = [];
     setFontFiles(clone);
-    editor.load();
+    // editor.load();
+    reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {state:true});
   };
 
   const onNavigateToFiles = (font) => {

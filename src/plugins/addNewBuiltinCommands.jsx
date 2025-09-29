@@ -15,7 +15,7 @@ export const addNewBuiltinCommands = (editor) => {
   editor.Commands.add("close:current:modal", (editor, sender, options) => {
     editor.runCommand("close:custom:modal");
   });
-  const originalRemove = editor.Commands.get('remove');
+  // const originalRemove = editor.Commands.get('remove');
 
  
 
@@ -24,7 +24,8 @@ export const addNewBuiltinCommands = (editor) => {
     if (pageId == localStorage.getItem(current_page_id)) return;
     localStorage.setItem(current_page_id, pageId);
     //  editor.store();
-    editor.load();
+    // editor.load();
+    location.reload()
   });
 
   editor.Commands.add("toggle-preview", {

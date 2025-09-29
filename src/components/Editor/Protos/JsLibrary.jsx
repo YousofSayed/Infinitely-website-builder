@@ -14,6 +14,8 @@ import { opfs } from "../../../helpers/initOpfs";
 import { defineRoot, doGlobalType, getFileSize, hasExportDefault } from "../../../helpers/bridge";
 import { Tooltip } from "react-tooltip";
 import { fetcherWorker } from "../../../helpers/defineWorkers";
+import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
+import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 
 export const JsLibrary = ({
   library = JSLibraryType,
@@ -103,7 +105,8 @@ export const JsLibrary = ({
         await db.projects.update(+projectId, {
           [key]: [...projectData[key], { ...newContent }],
         });
-        editor.load();
+        // editor.load();
+        reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {state:true});
         toast.done(tId);
         toast.success(<ToastMsgInfo msg={`Library Installed Successfully `} />);
         afterInstall({ key: key, lib: newContent });

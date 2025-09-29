@@ -12,6 +12,8 @@ import { Input } from "./Input";
 import { useEditorMaybe } from "@grapesjs/react";
 import { FitTitle } from "./FitTitle";
 import { getFileSize } from "../../../helpers/bridge";
+import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
+import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 
 export const InstalledFonts = () => {
   const editor = useEditorMaybe();
@@ -77,7 +79,8 @@ export const InstalledFonts = () => {
       fonts: clone,
     });
 
-    editor.load();
+    // editor.load();
+    reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {state:true});
   };
 
   const filterFonts = (value = "") => {

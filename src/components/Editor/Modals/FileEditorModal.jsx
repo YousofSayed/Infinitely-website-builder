@@ -15,6 +15,8 @@ import { ToastMsgInfo } from "../Protos/ToastMsgInfo";
 import { open_library_installer_modal } from "../../../constants/InfinitelyCommands";
 import { opfs } from "../../../helpers/initOpfs";
 import { defineRoot, getFileSize } from "../../../helpers/bridge";
+import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
+import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 
 export const FileEditorModal = () => {
   const editor = useEditorMaybe();
@@ -77,7 +79,8 @@ export const FileEditorModal = () => {
           content: fileData.content,
         },
       ]);
-      editor.load();
+      // editor.load();
+      reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {state:true});
       toast.success(<ToastMsgInfo msg={"File Saved Successfully 👍"} />);
     } catch (error) {
       throw new Error(error);

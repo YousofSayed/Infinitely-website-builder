@@ -312,8 +312,15 @@ const ObjectComponent = ({
     const secondEditableValue = isArray(secondDestination)
       ? getNestedValue(secondEditeable, secondDestination.concat(prop))
       : null;
-    if (!editableValue && !isBoolean(editableValue)) {
+    if (!editableValue && !isBoolean(editableValue) ) {
       removeNestedKey(editeable, destination.concat(prop));
+    }
+
+    // console.log("from removing empty obj : " , editableValue ,destination , prop);
+    const parentObj = getNestedValue(editeable , destination);
+    const secondParentObj = isArray(secondDestination) ? getNestedValue(secondEditeable , secondDestination) : null;
+    if(isPlainObject(parentObj) && !Object.keys(parentObj || {})?.length){
+      removeNestedKey(editeable, destination);
     }
 
     if (
@@ -322,6 +329,9 @@ const ObjectComponent = ({
       !isBoolean(secondEditableValue)
     ) {
       removeNestedKey(secondEditeable, secondDestination.concat(prop));
+    }
+    if(isArray(secondDestination) && isPlainObject(secondParentObj) && !Object.keys(secondParentObj || {})?.length){
+      removeNestedKey(secondEditeable, secondDestination);
     }
 
     console.log(

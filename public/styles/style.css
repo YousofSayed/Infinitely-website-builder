@@ -64,6 +64,10 @@ video {
   padding: 10px;
 }
 
+.text-nowrap{
+  text-wrap: nowrap;
+}
+
 .inline-block {
   display: inline-block;
 }

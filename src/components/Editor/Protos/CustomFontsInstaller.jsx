@@ -18,6 +18,8 @@ import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
 import { opfs } from "../../../helpers/initOpfs";
 import { useEditorMaybe } from "@grapesjs/react";
 import { defineRoot, getFileSize, getFonts } from "../../../helpers/bridge";
+import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
+import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 
 const CustomScroller = React.forwardRef(({ style, ...props }, ref) => (
   <div
@@ -131,7 +133,8 @@ export const CustomFontsInstaller = () => {
     //   },
     // });
 
-    editor.load();
+    // editor.load();
+    reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {state:true});
     toast.success(
       <ToastMsgInfo
         msg={`${fontFiles.length} Font File Installed Successfully`}

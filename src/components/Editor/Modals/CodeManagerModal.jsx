@@ -32,6 +32,8 @@ import { css_beautify, html_beautify, js_beautify } from "js-beautify";
 import { minify, syntax } from "csso";
 import { parseHTML } from "linkedom";
 import { isArray, isPlainObject, uniqueId } from "lodash";
+import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
+import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 
 export const CodeManagerModal = () => {
   const timeoutRef = useRef();
@@ -343,7 +345,8 @@ export const CodeManagerModal = () => {
     });
     setReloaderKey(createUUID());
     editor.clearDirtyCount();
-    await editor.load();
+    // await editor.load();
+    reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {state:true});
   };
 
   return (

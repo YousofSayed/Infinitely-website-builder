@@ -2345,3 +2345,12 @@ export async function extractElementStyles({ elementsHTML, cssCode }) {
     stringRules: stringify(filteredAst),
   };
 }
+
+
+export function infinitelyCallback(callback = () => {} , timeout=0) {
+  if(window.requestIdleCallback){
+    requestIdleCallback(callback , {timeout})
+  }else{
+    setTimeout(callback , timeout)
+  }
+}

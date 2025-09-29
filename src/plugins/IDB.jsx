@@ -18,6 +18,7 @@ import {
   getProjectData,
   getProjectSettings,
   initSymbolTimout,
+  reloadEditor,
   screenshotTimout,
   updatePrevirePage,
   workerCallbackMaker,
@@ -53,10 +54,280 @@ let storeTimeout;
 let pageBuilderTimeout;
 let loadTimeout, appenderTimeout;
 let currentPageName = localStorage.getItem(current_page_id);
+
 /**
- * @type {HTMLIFrameElement[]}
+ *
+ * @param {import('grapesjs').Editor} editor
+ * @param {import('../helpers/types').Project} projectData
  */
-let frames = [];
+const attrsCallback = (editor, projectData) => {
+  const { projectSettings } = getProjectSettings();
+  editor.Storage.setAutosave(false);
+
+  editor.getWrapper().setClass("");
+  /**
+   * @type {HTMLBodyElement}
+   */
+  // const body = ev.window.document.body;
+  const currentPageId = localStorage.getItem(current_page_id);
+  const attributesAsEntries = Object.entries(
+    projectData.pages[`${currentPageId}`].bodyAttributes || {}
+  );
+
+  const vAttributesFilterd = attributesAsEntries.filter(
+    ([key, value]) => key.startsWith("v-") && value
+  );
+
+  const otherAttributes = attributesAsEntries.filter(
+    ([key, value]) => !key.startsWith("v-")
+  );
+
+  // editor.getWrapper().setClass("");
+  const attributes = Object.fromEntries(
+    vAttributesFilterd.concat(otherAttributes)
+  );
+  delete attributes["id"];
+  if (projectSettings.stop_all_animation_on_page) {
+    attributes["class"] = `${
+      attributes["class"] || ""
+    } inf-stop-all-animations`;
+  } else {
+    attributes["class"] =
+      attributes["class"]?.replace("inf-stop-all-animations", "") || "";
+  }
+  const classes = attributes?.class || ""; //|| [...editor.getWrapper().getClasses()].join(" ");
+  console.log("classes equal : ", classes);
+
+  editor
+    .getWrapper()
+    .removeAttributes(Object.keys(attributes), { avoidStore: true });
+
+  editor.getWrapper().setAttributes(attributes, {
+    avoidStore: true,
+    // silent: true,
+  });
+
+  editor.clearDirtyCount();
+
+  setTimeout(() => {
+    editor.clearDirtyCount();
+    editor.Storage.setAutosave(projectSettings.enable_auto_save);
+    editor.UndoManager.start();
+    editor.trigger(InfinitelyEvents.storage.loadEnd);
+    editor.infLoading = false;
+  }, 0);
+  // editor.on("update", updateDirty);
+
+  clearTimeout(storeTimeout);
+  // editor.off("canvas:frame:load:body", callback);
+};
+
+async function getAllSymbolsStyles() {
+  const projectData = await getProjectData();
+  const currentPageId = localStorage.getItem(current_page_id); //it will return void so that will make it take second choics : "index"
+
+  // const currentPage = projectData.pages[`${currentPageId}`];
+  const allSymbolsStyle = await (
+    await Promise.all(
+      Object.values(projectData.blocks)
+        // .filter((block) => block.type && block.type != "symbol")
+        // .concat(Object.values(projectData.symbols))
+        .filter((block) => block.pathes.style)
+        .map(
+          async (symbol) =>
+            await (await opfs.getFile(defineRoot(symbol.pathes.style))).text()
+        )
+    )
+  ).join("\n");
+
+  return minify(allSymbolsStyle).css;
+}
+
+/**
+ *
+ * @param {import('grapesjs').Editor} editor
+ * @returns
+ */
+export const loadElements = async (
+  editor,
+  { justSendToWorker = false, onSend = (response = []) => {} }
+) => {
+  editor.Components.clear({});
+  editor.DomComponents.clear({});
+  editor.Css.clear({});
+  editor.CssComposer.clear({});
+  editor.setStyle("");
+  editor.setComponents("");
+  // editor.Canvas.canvas.clear({});
+  // editor.Canvas.canvas.destroy();
+  // editor.Canvas.canvas.init();
+
+  !editor.loadTimes && (editor.loadTimes = 0);
+  editor.loadTimes++;
+  editor.trigger(InfinitelyEvents.storage.loadStart);
+  const projectID = +localStorage.getItem(current_project_id);
+  const projectData = await db.projects.get(projectID);
+  const projectSettings = getProjectSettings().projectSettings;
+
+  console.time("loading");
+  const storageManager = editor.StorageManager;
+  const originalAutosave = storageManager.getConfig().autosave;
+  storageManager.setAutosave(false);
+
+  const loadCurrentPage = async () => {
+    if (!localStorage.getItem(current_page_id)) {
+      localStorage.setItem(current_page_id, "index");
+    }
+    currentPageName = localStorage.getItem(current_page_id);
+    const currentPageId = currentPageName; //it will return void so that will make it take second choics : "index"
+    const currentPage = projectData.pages[`${currentPageId}`];
+    let cssStyles = await (
+      await opfs.getFile(defineRoot(`css/${currentPageId}.css`))
+    ).text();
+    let allSymbolsStyle = await getAllSymbolsStyles();
+
+    let cssCode = minify(
+      `
+            ${allSymbolsStyle}
+            ${cssStyles}
+        `,
+      { restructure: true }
+    ).css;
+
+    allSymbolsStyle = null; //For garpage collection
+    cssStyles = null;
+    /**
+     *
+     * @param {import('grapesjs').Component[]} components
+     * @param {number} starter
+     * @param {number} ender
+     */
+    // const appender = async (components, chunkSize = 1) => {
+    //   const total = components.length;
+    //   for (let i = 0; i < total; i += chunkSize) {
+    //     const chunk = components.slice(i, i + chunkSize);
+    //     editor.addComponents(chunk.join(""), { avoidStore: true });
+    //     await new Promise((r) => requestAnimationFrame(r)); // smoother rendering
+    //   }
+    //   editor.clearDirtyCount();
+    // };
+
+    const getElements = async () => {
+      let styleElement = " "; // renderCssStyles(editor, cssCode);
+
+      let elements = await new Promise((res, rej) => {
+        workerCallbackMaker(
+          infinitelyWorker,
+          "parseHTMLAndRaplceSymbols",
+          (props) => {
+            props.response && res([...props.response]);
+            !props.response && rej([]);
+          }
+        );
+
+        infinitelyWorker.postMessage({
+          command: "parseHTMLAndRaplceSymbols",
+          props: {
+            pageName: currentPageId,
+            projectId: +projectID,
+          },
+        });
+      });
+      // console.log("elements : ", elements);
+
+      // if (projectSettings.enable_editor_lazy_loading) {
+      //   // Take the first 5 and mutate the original array
+      //   // const firstFive = elements.splice(0, 5);
+      //   // // Load the first 5 into GrapesJS
+      //   // editor.loadProjectData({
+      //   //   components: firstFive,
+      //   // });
+      //   // // Now `elements` contains ONLY the remaining ones
+      //   // await appender(elements);
+      //   // let tmpElements = [...elements]; // clone
+      //   // const firstFive = tmpElements.splice(0, 5);
+      //   // editor.loadProjectData({ components: firstFive });
+      //   // await appender(tmpElements);
+      //   // tmpElements.length = 0;
+      //   // tmpElements = null;
+      // } else {
+      //   // const parser = editor.Parser.parseHtml(elements);
+      //   // editor.loadProjectData({
+      //   //   // styles: parser.css, // optional
+      //   //   components:elements,
+      //   // });
+      //   // const el = editor.getEl();
+      //   // frames.push(el);
+      //   // console.log('render el : ' ,el);
+      //   // editor.addComponents(elements , {merge:true});
+      //   // const frame = editor.Canvas.getFrameEl();
+      //   // frame.setAttribute('srcdoc', elements.join(' ')) // = doDocument(elements.join(' '))
+      // }
+
+      return elements;
+    };
+
+    editor.trigger(InfinitelyEvents.pages.select);
+    editor.trigger(InfinitelyEvents.pages.update);
+    editor.trigger(InfinitelyEvents.pages.all);
+    window.dispatchEvent(changePageName({ pageName: currentPageId }));
+    // const parsed = editor.Parser.parseHtml(await getElements(), {
+    //   asDocument: false,
+    // });
+    // let content = isArray(parsed.html) ? [...parsed.html] : [parsed.html];
+    // console.log(content);
+    if (justSendToWorker) {
+      workerCallbackMaker(
+        infinitelyWorker,
+        "parseHTMLAndRaplceSymbols",
+        (props) => {
+          onSend([renderCssStyles(editor, cssCode), ...props.response]);
+          editor.on("component:remove:before", editor.removerBeforeHandler);
+        }
+      );
+
+      infinitelyWorker.postMessage({
+        command: "parseHTMLAndRaplceSymbols",
+        props: {
+          pageName: currentPageId,
+          projectId: +projectID,
+        },
+      });
+      return [];
+    } else {
+      editor.on("component:remove:before", editor.removerBeforeHandler);
+      return {
+        components: [
+          renderCssStyles(editor, cssCode),
+          ...(await getElements()),
+        ],
+        // styles:editor.Parser.parseCss(cssCode)
+      };
+    }
+  };
+
+  [current_symbol_rule, current_symbol_id, current_template_id].forEach(
+    (item) => sessionStorage.removeItem(item)
+  );
+
+  // editor.getWrapper().setAttributes({} , {avoidStore:true});
+
+  editor.select(null);
+
+  editor.off("canvas:frame:load:body");
+  await loadScripts(editor, projectData);
+  editor.on("canvas:frame:load:body", () => {
+    attrsCallback(editor, projectData);
+  });
+
+  editor.clearDirtyCount();
+
+  // if (editor.loadTimes > 1) {
+  //   clearEditor(editor);
+  // }
+  return await loadCurrentPage();
+};
+
 /**
  *
  * @param {import('grapesjs').Editor} editor
@@ -74,94 +345,6 @@ export const IDB = (editor) => {
     timesLoaded = 0;
   let tId;
   editor.infDirty = 0;
-  // const detector = new LeakDetector(editor , {shouldGenerateV8HeapSnapshot:true});
-
-  // editor.getDirtyCount = () => editor.infDirty;
-  // editor.clearDirtyCount = () => (editor.infDirty = 0);
-  const updateDirty = () => {
-    editor.infDirty++;
-  };
-  const attrsCallback = (editor, projectData) => {
-    const { projectSettings } = getProjectSettings();
-    /**
-     * @type {HTMLBodyElement}
-     */
-    // const body = ev.window.document.body;
-    const currentPageId = localStorage.getItem(current_page_id);
-    const attributesAsEntries = Object.entries(
-      projectData.pages[`${currentPageId}`].bodyAttributes || {}
-    );
-
-    const vAttributesFilterd = attributesAsEntries.filter(
-      ([key, value]) => key.startsWith("v-") && value
-    );
-
-    const otherAttributes = attributesAsEntries.filter(
-      ([key, value]) => !key.startsWith("v-")
-    );
-
-    editor.Storage.setAutosave(false);
-
-    // editor.getWrapper().setClass("");
-    const attributes = Object.fromEntries(
-      vAttributesFilterd.concat(otherAttributes)
-    );
-    delete attributes["id"];
-    if (projectSettings.stop_all_animation_on_page) {
-      attributes["class"] = `${
-        attributes["class"] || ""
-      } inf-stop-all-animations`;
-    } else {
-      attributes["class"] =
-        attributes["class"]?.replace("inf-stop-all-animations", "") || "";
-    }
-    const classes = attributes?.class || ""; //|| [...editor.getWrapper().getClasses()].join(" ");
-    console.log("classes equal : ", classes);
-
-    editor
-      .getWrapper()
-      .removeAttributes(Object.keys(attributes), { avoidStore: true });
-
-    editor.getWrapper().setAttributes(attributes, {
-      avoidStore: true,
-      // silent: true,
-    });
-
-    editor.clearDirtyCount();
-
-    setTimeout(() => {
-      editor.clearDirtyCount();
-      editor.Storage.setAutosave(projectSettings.enable_auto_save);
-      editor.UndoManager.start();
-      editor.trigger(InfinitelyEvents.storage.loadEnd);
-      editor.infLoading = false;
-    }, 0);
-    // editor.on("update", updateDirty);
-
-    clearTimeout(storeTimeout);
-    // editor.off("canvas:frame:load:body", callback);
-  };
-
-  async function getAllSymbolsStyles() {
-    const projectData = await getProjectData();
-    const currentPageId = localStorage.getItem(current_page_id); //it will return void so that will make it take second choics : "index"
-
-    // const currentPage = projectData.pages[`${currentPageId}`];
-    const allSymbolsStyle = await (
-      await Promise.all(
-        Object.values(projectData.blocks)
-          // .filter((block) => block.type && block.type != "symbol")
-          // .concat(Object.values(projectData.symbols))
-          .filter((block) => block.pathes.style)
-          .map(
-            async (symbol) =>
-              await (await opfs.getFile(defineRoot(symbol.pathes.style))).text()
-          )
-      )
-    ).join("\n");
-
-    return minify(allSymbolsStyle).css;
-  }
 
   const clearTimeouts = () => {
     infinitelyWorker.postMessage({
@@ -194,339 +377,28 @@ export const IDB = (editor) => {
     return;
   }
 
-  const dirtyCleanner = (model, attrs) => {
-    editor.clearDirtyCount();
-    console.log("attrs wrapper changed : ", attrs, model);
-  };
-
   editor.on("update", (update) => {
     console.log("update : ", update, editor.infLoading);
     if (editor.infLoading) {
       editor.clearDirtyCount();
     }
   });
-  function clearEditor() {
-    const canvas = editor.Canvas;
 
-    // 1. Destroy Frame Completely
-    const frameEl = canvas.getFrameEl();
-    if (frameEl) {
-      frameEl.remove(); // Removes iframe DOM
-    }
+  // editor.on("storage:end:load", async () => {
+  //   // editor.trigger(InfinitelyEvents.storage.loadEnd);
+  //   editorStorageInstance.emit(InfinitelyEvents.storage.loadEnd);
+  //   // editor.setComponents(await(await loadElements()).components , {merge:true });
+  //   console.log("load end");
+  // });
 
-    const frameView = canvas.getFrame();
-    if (frameView) {
-      frameView.remove();
-    }
-
-    // Clear GrapesJS internal references
-    canvas.frames = [];
-
-    // 2. Clear all Components
-    editor.DomComponents.clear({ avoidStore: true });
-    editor.DomComponents.destroy();
-    editor.Components.clear({ avoidStore: true });
-    editor.Components.destroy();
-    editor.getWrapper()?.empty?.();
-    // 3. Clear CSS
-    editor.Css.clear({ avoidStore: true });
-    editor.Css.destroy();
-    editor.CssComposer.clear({ avoidStore: true });
-    editor.CssComposer.destroy();
-
-    // 4. Undo Manager
-    editor.UndoManager.stop();
-    editor.UndoManager.clear();
-
-    // 5. Clear Selections
-    editor.select(null);
-
-    // 6. Remove custom event listeners bound to the editor
-    editor.off("canvas:frame:load:body");
-    editor.off("component:remove:before", editor.removerBeforeHandler);
-
-    // 7. Reset internal object URLs
-    URL.createObjectURL = mainCreateObjectURLMethod;
-  }
-
-  function fullDestroyCanvas(editor) {
-    const canvas = editor.Canvas;
-
-    // 1. Remove iframe DOM
-    const frameEl = canvas.getFrameEl();
-    if (frameEl) {
-      frameEl.remove();
-    }
-
-    // 2. Destroy GrapesJS frame view
-    const frameView = canvas.getFrame();
-    if (frameView) {
-      frameView.remove();
-    }
-
-    // 3. Reset canvas internals
-    canvas.frames = [];
-    canvas.wrapper = null;
-    canvas.model = null;
-  }
-
-  function hardResetEditor() {
-    // 1. Remove custom listeners
-    // editor.off(); // Completely clear all event listeners
-
-    // 2. Stop Undo Manager
-    editor.UndoManager.stop();
-    editor.UndoManager.clear();
-
-    // 3. Clear selections
-    editor.select(null);
-
-    // 4. Clear components and CSS
-    editor.DomComponents.clear({ avoidStore: true });
-    editor.CssComposer.clear({ avoidStore: true });
-
-    // 5. Clear wrapper
-    editor.getWrapper()?.empty?.();
-
-    // 6. Remove iframe
-    const frameEl = editor.Canvas.getFrameEl();
-    if (frameEl?.parentNode) {
-      frameEl.parentNode.removeChild(frameEl);
-    }
-    editor.Canvas.frames = [];
-
-    // 7. Clear storage
-    // editor.StorageManager.getStorages().forEach((storage) => {
-    //   if (storage?.clear) storage.clear();
-    // });
-
-    // 8. Force revoke any Blob URLs
-    // if (window.__activeBlobUrls) {
-    //   window.__activeBlobUrls.forEach((url) => URL.revokeObjectURL(url));
-    //   window.__activeBlobUrls = [];
-    // }
-  }
-
-  const loadElements = async () => {
-    const frame = editor.Canvas.getFrameEl();
-    // if (frame?.contentDocument?.location) {
-    //   frame.contentDocument.location.reload();
-    //   const frameRemovedDone = await new Promise((res, rej) => {
-    //     if (frame) {
-    //       frame.addEventListener("load", () => {
-    //         // 3. Force browser to GC old document
-
-    //         frame.contentDocument.body
-    //           .querySelectorAll("*")
-    //           .forEach((el) => el.remove());
-    //         console.log(
-    //           "frame remover : ",
-    //           frame.contentDocument.body.querySelectorAll("*"),
-    //           frame.contentDocument.querySelectorAll("*")
-    //         );
-    //         frame.replaceWith(frame.cloneNode(false));
-
-    //         // 2. Clear references
-    //         frame.onload = null;
-    //         frame.src = "about:blank";
-    //         setTimeout(() => {
-    //           frame.remove();
-    //         }, 0);
-    //         res(true);
-    //       });
-    //     } else {
-    //       res(true);
-    //     }
-    //   });
-    // }
-
-    // hardResetEditor();
-    // clearEditor(editor);
-    // fullDestroyCanvas(editor);
-    // const oldCnfg = editor.getConfig();
-    // if (editor) {
-    // editor.destroy();
-    // editor = null;
-    // document.querySelector("#gjs").innerHTML = ""; // clear container
-    // }
-
-    // editor = grapesjs.init(oldCnfg);
-    editor.Components.clear({});
-    editor.DomComponents.clear({});
-    editor.Css.clear({});
-    editor.CssComposer.clear({});
-    editor.setStyle("");
-    editor.setComponents("");
-    // editor.Canvas.canvas.clear({});
-    // editor.Canvas.canvas.destroy();
-    // editor.Canvas.canvas.init();
-
-    !editor.loadTimes && (editor.loadTimes = 0);
-    editor.loadTimes++;
-    editor.trigger(InfinitelyEvents.storage.loadStart);
-
-    const projectData = await db.projects.get(+projectID);
-    const projectSettings = getProjectSettings().projectSettings;
-    if (!projectData) {
-    }
-
-    console.time("loading");
-    const storageManager = editor.StorageManager;
-    const originalAutosave = storageManager.getConfig().autosave;
-    storageManager.setAutosave(false);
-
-    const loadCurrentPage = async () => {
-      if (!localStorage.getItem(current_page_id)) {
-        localStorage.setItem(current_page_id, "index");
-      }
-      currentPageName = localStorage.getItem(current_page_id);
-      const currentPageId = currentPageName; //it will return void so that will make it take second choics : "index"
-      const currentPage = projectData.pages[`${currentPageId}`];
-      let cssStyles = await (
-        await opfs.getFile(defineRoot(`css/${currentPageId}.css`))
-      ).text();
-      let allSymbolsStyle = await getAllSymbolsStyles();
-
-      let cssCode = minify(
-        `
-            ${allSymbolsStyle}
-            ${cssStyles}
-        `,
-        { restructure: true }
-      ).css;
-
-      allSymbolsStyle = null; //For garpage collection
-      cssStyles = null;
-      /**
-       *
-       * @param {import('grapesjs').Component[]} components
-       * @param {number} starter
-       * @param {number} ender
-       */
-      const appender = async (components, chunkSize = 1) => {
-        const total = components.length;
-        for (let i = 0; i < total; i += chunkSize) {
-          const chunk = components.slice(i, i + chunkSize);
-          editor.addComponents(chunk.join(""), { avoidStore: true });
-          await new Promise((r) => requestAnimationFrame(r)); // smoother rendering
-        }
-        editor.clearDirtyCount();
-      };
-
-      const getElements = async () => {
-        infinitelyWorker.postMessage({
-          command: "parseHTMLAndRaplceSymbols",
-          props: {
-            pageName: currentPageId,
-            projectId: +projectID,
-          },
-        });
-
-        let styleElement = " "; // renderCssStyles(editor, cssCode);
-
-        let elements = await new Promise((res, rej) => {
-          workerCallbackMaker(
-            infinitelyWorker,
-            "parseHTMLAndRaplceSymbols",
-            (props) => {
-              props.response && res([...props.response]);
-              !props.response && rej([]);
-            }
-          );
-        });
-        // console.log("elements : ", elements);
-
-        if (projectSettings.enable_editor_lazy_loading) {
-          // Take the first 5 and mutate the original array
-          // const firstFive = elements.splice(0, 5);
-          // // Load the first 5 into GrapesJS
-          // editor.loadProjectData({
-          //   components: firstFive,
-          // });
-          // // Now `elements` contains ONLY the remaining ones
-          // await appender(elements);
-          // let tmpElements = [...elements]; // clone
-          // const firstFive = tmpElements.splice(0, 5);
-          // editor.loadProjectData({ components: firstFive });
-          // await appender(tmpElements);
-          // tmpElements.length = 0;
-          // tmpElements = null;
-        } else {
-          // const parser = editor.Parser.parseHtml(elements);
-          // editor.loadProjectData({
-          //   // styles: parser.css, // optional
-          //   components:elements,
-          // });
-          // const el = editor.getEl();
-          // frames.push(el);
-          // console.log('render el : ' ,el);
-          // editor.addComponents(elements , {merge:true});
-          // const frame = editor.Canvas.getFrameEl();
-          // frame.setAttribute('srcdoc', elements.join(' ')) // = doDocument(elements.join(' '))
-        }
-
-        return elements;
-      };
-
-      editor.trigger(InfinitelyEvents.pages.select);
-      editor.trigger(InfinitelyEvents.pages.update);
-      editor.trigger(InfinitelyEvents.pages.all);
-      window.dispatchEvent(changePageName({ pageName: currentPageId }));
-      // const parsed = editor.Parser.parseHtml(await getElements(), {
-      //   asDocument: false,
-      // });
-      // let content = isArray(parsed.html) ? [...parsed.html] : [parsed.html];
-      // console.log(content);
-
-      return {
-        components: [
-          renderCssStyles(editor, cssCode),
-          ...(await getElements()),
-        ],
-        // styles:editor.Parser.parseCss(cssCode)
-      };
-    };
-
-    [current_symbol_rule, current_symbol_id, current_template_id].forEach(
-      (item) => sessionStorage.removeItem(item)
-    );
-
-    // editor.getWrapper().setAttributes({} , {avoidStore:true});
-
-    editor.select(null);
-    URL.createObjectURL = mainCreateObjectURLMethod;
-
-    editor.off("canvas:frame:load:body");
-    await loadScripts(editor, projectData);
-    editor.on("canvas:frame:load:body", () => {
-      attrsCallback(editor, projectData);
-    });
-
-    editor.clearDirtyCount();
-
-    // if (editor.loadTimes > 1) {
-    //   clearEditor(editor);
-    // }
-    editor.on("component:remove:before", editor.removerBeforeHandler);
-    return await loadCurrentPage();
-  };
-
-  editor.on("storage:end:load", async () => {
-    editor.trigger(InfinitelyEvents.storage.loadEnd);
-    editorStorageInstance.emit(InfinitelyEvents.storage.loadEnd);
-    // editor.setComponents(await(await loadElements()).components , {merge:true });
-    console.log("load end");
-  });
-
-  editor.on("storage:start:load", () => {
-    editorStorageInstance.emit(InfinitelyEvents.storage.loadStart);
-    console.log("start load");
-  });
+  // editor.on("storage:start:load", () => {
+  //   editorStorageInstance.emit(InfinitelyEvents.storage.loadStart);
+  //   console.log("start load");
+  // });
 
   editor.Storage.add("infinitely", {
     async load(options = {}) {
       console.log("loading options : ", options);
-      editor.off("component:remove:before", editor.removerBeforeHandler);
       loadTimeout && clearTimeout(loadTimeout);
       loadTimeout &&
         window.cancelIdleCallback &&
@@ -555,25 +427,27 @@ export const IDB = (editor) => {
           return;
         }
       }
-      // const projectData = await getProjectData();
-      // editor.off("canvas:frame:load:body");
-      // await loadScripts(editor, projectData);
-      // editor.on("canvas:frame:load:body", () => {
-      //   attrsCallback(editor, projectData);
-      // });
+
+      // editorStorageInstance.emit(InfinitelyEvents.storage.loadStart);
+      editor.off("component:remove:before");
 
       editor.clearDirtyCount();
       clearTimeouts();
-      editor.off("component:remove:before", editor.removerBeforeHandler);
 
-      console.log("should load");
+      reloadEditor(editor);
 
+      // console.log("should load");
+      // loadTimeout = setTimeout(async () => {
+      //   editor.loadProjectData(await loadElements());
+      //   editorStorageInstance.emit(InfinitelyEvents.storage.loadEnd);
+      // }, 100);
       // return {
       //   components:['<h1>Hello world!!</h1>']
       // }
       // editor.Canvas.getCanvasView().initialize({el:document.body  ,tagName:'h1'});
-      return await loadElements();
+      // return await loadElements(editor , {});
       // return {components:[]};
+      return;
     },
 
     //Storinggg

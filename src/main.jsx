@@ -1,17 +1,19 @@
+// import '../wdyr.js'
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "grapesjs/dist/css/grapes.min.css";
 import "./index.css";
 import { makeAppResponsive } from "./helpers/cocktail.js";
-import { RecoilEnv, RecoilRoot } from "recoil";
+import { RecoilEnv, RecoilRoot ,  } from "recoil";
 import { ErrorBoundary } from "react-error-boundary";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, HashRouter } from "react-router-dom";
 import { version } from "./constants/Version.js";
 import { setProjectSettings } from "./helpers/functions.js";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./components/Editor/Protos/ToastMsgInfo.jsx";
 import { isDevMode } from "./helpers/bridge.js";
+import {patch} from 'million'
 // import worker from './helpers/worker.js';
 // import './helpers/backbonePacher.js'
 // src/main.js
@@ -38,7 +40,7 @@ if (!isDevMode()) {
 
 setProjectSettings();
 RecoilEnv.RECOIL_DUPLICATE_ATOM_KEY_CHECKING_ENABLED = false;
-makeAppResponsive("#root");
+let cleaner ;
 const originalFetch = window.fetch;
 
 window.fetch = async (input, init) => {
@@ -59,13 +61,16 @@ window.fetch = async (input, init) => {
   }
 };
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  // <React.StrictMode>
-  <RecoilRoot>
-    <BrowserRouter basename="/">
-      <ErrorBoundary
-        fallbackRender={({ error, resetErrorBoundary }) => {
-          return (
+// ✅ Main App with unique keys to reset Recoil & Router state
+const Main = () => {
+  const uniqueKey = Date.now();
+
+  return (
+    <RecoilRoot >
+      <HashRouter basename="/">
+        <ErrorBoundary
+          key={uniqueKey}
+          fallbackRender={({ error, resetErrorBoundary }) => (
             <div
               className="flex items-center justify-center min-h-screen h-full bg-slate-950 text-slate-200 relative overflow-hidden"
               role="alert"
@@ -92,14 +97,51 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                 </button>
               </div>
             </div>
-          );
-        }}
-      >
-        <App />
-      </ErrorBoundary>
-    </BrowserRouter>
-  </RecoilRoot>
-  // </React.StrictMode>,
-);
+          )}
+        >
+          <App />
+        </ErrorBoundary>
+      </HashRouter>
+    </RecoilRoot>
+  );
+};
 
-// console.log(version);
+let root = null;
+
+function mountApp() {
+  const container = document.getElementById("root");
+
+  if (!root) {
+    // ✅ Only create root once
+    root = ReactDOM.createRoot(container);
+  }
+
+  cleaner = makeAppResponsive("#root");
+  // ✅ Just render new app instance
+  root.render(<Main key={Date.now()} />);
+}
+
+mountApp();
+
+
+export function  unMountApp () {
+  root.unmount();
+  root = null;
+  cleaner && cleaner();
+  cleaner = null;
+  // patch(null , null)
+  // window.removeEventListener('resize');
+}
+
+export function reBuildApp() {
+  unMountApp();
+  requestIdleCallback(()=>{
+    mountApp();
+  })
+}
+
+window.addEventListener("unmout",()=>{
+  console.log('unmounted');
+  
+  unMountApp();
+})

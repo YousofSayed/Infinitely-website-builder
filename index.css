@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+    font-size: 14px;
+}
+
+#host {
+  height: 100%;
+  overflow: hidden;
+  /* transform: scale(0.8);
+  transform-origin: top left;
+  width: 125%;
+  height: 125%; */
+  /* position: absolute;
+  top: 0;
+  left: 0; */
+}
+
+ul,
+li {
+    list-style: none;
+}

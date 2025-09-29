@@ -49,12 +49,16 @@ import {
 } from "../../helpers/defineWorkers";
 import { useLiveQuery } from "dexie-react-hooks";
 import { liveQuery } from "dexie";
-import { editorStorageInstance, styleInfInstance } from "../../constants/InfinitelyInstances";
+import {
+  editorStorageInstance,
+  styleInfInstance,
+} from "../../constants/InfinitelyInstances";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
 import { animationsSavingMsg } from "../../constants/confirms";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Loader } from "../Loader";
+import { GJEditor } from "./GJEditor";
 
 const PreviewIframe = ({
   content = "",
@@ -74,12 +78,12 @@ const PreviewIframe = ({
   );
 };
 
-export const Iframe = memo(() => {
+export const Iframe = (() => {
   const showLayers = useRecoilValue(showLayersState);
   const [showAnimBuilder, setShowAnimBuilder] = useRecoilState(
     showAnimationsBuilderState
   );
-  const [reloader , setReloader] = useRecoilState(reloaderState);
+  const [reloader, setReloader] = useRecoilState(reloaderState);
   const [showPreview, setShowPreview] = useRecoilState(showPreviewState);
   const [showDragLayer, setShowDragLayer] = useRecoilState(showDragLayerState);
   const [animations, setAnimations] = useRecoilState(animationsState);
@@ -105,6 +109,8 @@ export const Iframe = memo(() => {
   const setStyle = useSetClassForCurrentEl();
   const [autoAnimate] = useAutoAnimate();
   const [showLoader, setShowLoader] = useState(true);
+  const editorWrapper = useRef(refType);
+  const canvasRoot = useRef();
   const saveAnimations = () => {
     if (isAnimationsChanged) {
       setSaveLoad(true);
@@ -197,27 +203,39 @@ export const Iframe = memo(() => {
       });
     };
 
-    
     const loaderStartCallback = () => {
       setShowLoader(true);
+      console.log("should start");
+      
     };
 
     const loaderEndCallback = () => {
       setShowLoader(false);
-      console.log('should end');
-      
+      console.log("should end");
     };
 
-    editorStorageInstance.on(InfinitelyEvents.storage.loadStart, loaderStartCallback);
-    editorStorageInstance.on(InfinitelyEvents.storage.loadEnd, loaderEndCallback);
+    editorStorageInstance.on(
+      InfinitelyEvents.storage.loadStart,
+      loaderStartCallback
+    );
+    editorStorageInstance.on(
+      InfinitelyEvents.storage.loadEnd,
+      loaderEndCallback
+    );
     // editor.on('storage:end:load', loaderEndCallback);
     editor.on("canvas:frame:load:body", loadMonaco);
-    
+
     return () => {
       styleInfInstance.off(InfinitelyEvents.style.set, infCallback);
       editor.off("canvas:frame:load:body", loadMonaco);
-      editorStorageInstance.off(InfinitelyEvents.storage.loadStart, loaderStartCallback);
-      editorStorageInstance.off(InfinitelyEvents.storage.loadEnd, loaderEndCallback);
+      editorStorageInstance.off(
+        InfinitelyEvents.storage.loadStart,
+        loaderStartCallback
+      );
+      editorStorageInstance.off(
+        InfinitelyEvents.storage.loadEnd,
+        loaderEndCallback
+      );
       // editor.off('storage:end:load', loaderEndCallback);
       // window.removeEventListener("keydown", preventDefaultSave);
       // window.removeEventListener("keydown", saveCallback);
@@ -229,11 +247,6 @@ export const Iframe = memo(() => {
 
     editor.Canvas.refresh();
   }, [showAnimBuilder, showLayers]);
-
-  const reloadPreview = () => {
-    setPreviewSrc(new String(getCurrentPageName()));
-    // getAndSetPreviewData(previewPageName, false, { firstPreview: false });
-  };
 
   useEffect(() => {
     if (!showPreview) {
@@ -248,6 +261,29 @@ export const Iframe = memo(() => {
 
     setPreviewSrc(urlSrc);
   }, [showPreview]);
+
+  // useEffect(() => {
+  //   if (!(editorWrapper.current && editor)) return;
+  //   if (canvasRoot.current) canvasRoot.current.unmount();
+  //   canvasRoot.current = createRoot(editorWrapper.current);
+  //   canvasRoot.current.render(
+  //     <GJEditor>
+  //       <Canvas
+  //       id="editor-container"
+  //       label="Canvas"
+  //       aria-label="Editor"
+  //       className="overflow-auto "
+  //     />
+  //     </GJEditor>
+  //   );
+  //   // editorWrapper.current.innerHTML = "";
+  //   // editorWrapper.current.appendChild(editor.Canvas.render())
+  // }, [editorWrapper, editor]);
+
+  const reloadPreview = () => {
+    setPreviewSrc(new String(getCurrentPageName()));
+    // getAndSetPreviewData(previewPageName, false, { firstPreview: false });
+  };
 
   return (
     <section className="relative bg-[#aaa]    h-full" ref={autoAnimate}>
@@ -330,24 +366,26 @@ export const Iframe = memo(() => {
         </section>
       )}
 
-      <Canvas
-        // key={uniqueID()+random(1,100000)}
-        // key={reloader}
-        id="editor-container"
-        label="Canvas"
-        aria-label="Editor"
-        className="overflow-auto "
+      <section
+        id="editor-wrapper"
+        ref={editorWrapper}
         style={{
           display: showPreview ? "none" : "block",
           // scale:showPreview ? 0 : 1,
-          width:'100%',
-          height:'100%',
+          width: "100%",
+          height: "100%",
           overflow: "auto",
           contain: "layout , content , size , paint",
           transform: "translateZ(0)",
         }}
-        // srcDoc="<video src='../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4'></video>"
+      >
+        <Canvas
+        id="editor-container"
+        label="Canvas"
+        aria-label="Editor"
+        className="overflow-auto "
       />
+      </section>
 
       {/* <FloatingButton/> */}
 
@@ -358,8 +396,8 @@ export const Iframe = memo(() => {
       {/* {showPreview && ( */}
 
       {showLoader && (
-        <section className="absolute top-0 left-0 w-full h-full bg-slate-900 flex justify-center items-center">
-          <Loader />
+        <section className="absolute top-0 left-0 w-full h-full z-[1000000] bg-slate-900 flex justify-center items-center">
+          <Loader zIndex={1000}/>
         </section>
       )}
 

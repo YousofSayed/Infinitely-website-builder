@@ -12,30 +12,24 @@ import {
   zoomValueState,
 } from "../../../helpers/atoms";
 import { useNavigate } from "react-router-dom";
-import {
-  getProjectData,
-  getProjectSettings,
-  mount,
-  toggleFastPreview,
-  unMount,
-} from "../../../helpers/functions";
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "./ToastMsgInfo";
-import { isChrome } from "../../../helpers/bridge";
+import { getProjectData } from "../../../helpers/functions";
 import {
   killAllGsapMotions,
+  reloadEditor,
   runAllGsapMotions,
 } from "../../../helpers/customEvents";
 import { useProjectSettings } from "../../../hooks/useProjectSettings";
 import { Hr } from "../../Protos/Hr";
 import { animationsSavingMsg } from "../../../constants/confirms";
-import { editorContainerInstance } from "../../../constants/InfinitelyInstances";
+import {
+  editorContainerInstance,
+  reloadRequiredInstance,
+} from "../../../constants/InfinitelyInstances";
 import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
-import { gsap_animation_state } from "../../../constants/shared";
-import { uniqueId } from "lodash";
-import { uniqueID } from "../../../helpers/cocktail";
-import { loadScripts } from "../../../plugins/IDB";
-import grapesjs from "grapesjs";
+import { infinitelyCallback } from "../../../helpers/bridge";
+import { toast } from "react-toastify";
+import { ToastMsgInfo } from "./ToastMsgInfo";
+// import { reBuildApp, unMountApp } from "../../../main";
 
 export const IframeControllers = () => {
   const editor = useEditorMaybe();
@@ -55,6 +49,7 @@ export const IframeControllers = () => {
   // const projectSettings = useRef(getProjectSettings());
   const [projectSetting, setProjectSettings] = useProjectSettings();
   const [reloader, setReloader] = useRecoilState(reloaderState);
+  const [reloadRequired, setReloadRequired] = useState(false);
   useEffect(() => {
     if (!editor) return;
     // const cb = () => {
@@ -99,13 +94,32 @@ export const IframeControllers = () => {
       }
     };
 
+    /**
+     *
+     * @param {CustomEvent} ev
+     */
+    const reloadRequiredCallback = (ev) => {
+      const { state } = ev.detail;
+      setReloadRequired(state);
+      if (state) {
+        toast.warn(<ToastMsgInfo msg={`Reload required`} />);
+      }
+    };
+
     // window.addEventListener("click", clickCallback);
     window.addEventListener("keyup", callback, { capture: true });
-
+    reloadRequiredInstance.on(
+      InfinitelyEvents.editor.require,
+      reloadRequiredCallback
+    );
     // editor.on("canvas:frame:load:body", cb);
     return () => {
       // editor.off("canvas:frame:load:body", cb);
       window.removeEventListener("keyup", callback, { capture: true });
+      reloadRequiredInstance.off(
+        InfinitelyEvents.editor.require,
+        reloadRequiredCallback
+      );
     };
   }, [editor]);
 
@@ -385,7 +399,7 @@ export const IframeControllers = () => {
           // test();
           // window.stop()
           // document.documentElement.remove();
-          await editor.load();
+          // await editor.load();
           // navigate('/');
           // setReloader(uniqueId(`reloader-key-${uniqueID()}-`));
           // const ed = document.querySelector(`#editor-container`);
@@ -425,7 +439,88 @@ export const IframeControllers = () => {
           //       })}</style>`
           //     ),
           // });
+          // alert('Are you ok ?');
+          // window.parent.resetAppMemory();
 
+          editor.off("component:remove:before");
+          editor.load();
+          // window.location.reload();
+          // window.parent.location.reload();
+          // editor.off("canvas:frame:load");
+          // editor.off("canvas:frame:load:body");
+          // editor.off("canvas:frame:load:head");
+          // editor.off("component:add");
+          // editor.off("component:deselected");
+          // editor.off("component:selected");
+          // editor.off("component:create");
+          // editor.off("component:mount");
+          // editor.off("component:resize");
+          // editor.off("component:toggled");
+          // editor.off("component:clone");
+          // editor.off("storage:load");
+          // editor.off("storage:end:load");
+          // editor.off("storage:start:load");
+          // editor.off("storage:start");
+          // window.open('/' , '_top')
+          // infinitelyCallback(() => {
+
+          //   // reloadEditor();
+          //   // editor.load();
+          //   // location.reload();
+          //   editor.destroy();
+          //   // reBuildApp()
+          //   unMountApp()
+          //   // window.open("/", "_self")
+          // });
+          // window.close()
+          // requestIdleCallback(() => {
+          //   unMountApp();
+          //   window.parent.mountIframe(true);
+          // });
+          // setTimeout(() => {
+          //   // unMountApp();
+          //   window.parent.mountIframe(true);
+          // }, 300);
+          // editor.off("component:remove:before");
+          // await editor.load();
+          // location.reload();
+          // setTimeout(() => {
+          //   editor.off("component:remove:before");
+          //   reBuildApp();
+          // }, 350);
+          // requestIdleCallback(
+          //   () => {
+          //   },
+          //   { timeout: 5000 }
+          // );
+          // editor.Canvas.getFrame().addLink(
+          //   "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          // );
+          //           editor.Canvas.getFrames().forEach(frame => {
+          //   frame.addLink("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css");
+          // });
+          // const frame = editor.Canvas.getFrameEl();
+          // frame.contentDocument.location.reload();
+          // frame.srcdoc = `<h1>Hellow world</h1>`
+          // frame.replaceWith(editor.Canvas.render());
+          // editor.render();
+
+          // editor.
+          // editor.setComponents(
+          //   editor
+          //     .getWrapper()
+          //     .getInnerHTML({ withProps: true, keepInlineStyle: true }) +
+          //     renderCssStyles(editor, editor.getCss({ keepUnusedStyles: true }))
+          // );
+          // editor.load();
+
+          // editor.Canvas.getFrameEl().addEventListener("load", () => {
+          //   console.log("wrapper : ", editor.getWrapper().getEl());
+
+          //   // console.log('t : ',editor.t('hello world' , {hello:'lol'}));
+          // });
+          // editor.Canvas.getFrame().removeLink('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+          // editor.load();
           // const frame = editor.Canvas.getFrameEl?.();
           // if (!frame) return;
           // frame.contentDocument?.location?.reload?.();
@@ -452,6 +547,7 @@ export const IframeControllers = () => {
           // editor.Canvas.model.init()
         }}
         title="Reload Canvas"
+        required={reloadRequired}
       >
         {Icons.refresh({
           width: 20,
