@@ -196,25 +196,8 @@ export const loadElements = async (
 
     allSymbolsStyle = null; //For garpage collection
     cssStyles = null;
-    /**
-     *
-     * @param {import('grapesjs').Component[]} components
-     * @param {number} starter
-     * @param {number} ender
-     */
-    // const appender = async (components, chunkSize = 1) => {
-    //   const total = components.length;
-    //   for (let i = 0; i < total; i += chunkSize) {
-    //     const chunk = components.slice(i, i + chunkSize);
-    //     editor.addComponents(chunk.join(""), { avoidStore: true });
-    //     await new Promise((r) => requestAnimationFrame(r)); // smoother rendering
-    //   }
-    //   editor.clearDirtyCount();
-    // };
 
     const getElements = async () => {
-      let styleElement = " "; // renderCssStyles(editor, cssCode);
-
       let elements = await new Promise((res, rej) => {
         workerCallbackMaker(
           infinitelyWorker,
@@ -233,36 +216,6 @@ export const loadElements = async (
           },
         });
       });
-      // console.log("elements : ", elements);
-
-      // if (projectSettings.enable_editor_lazy_loading) {
-      //   // Take the first 5 and mutate the original array
-      //   // const firstFive = elements.splice(0, 5);
-      //   // // Load the first 5 into GrapesJS
-      //   // editor.loadProjectData({
-      //   //   components: firstFive,
-      //   // });
-      //   // // Now `elements` contains ONLY the remaining ones
-      //   // await appender(elements);
-      //   // let tmpElements = [...elements]; // clone
-      //   // const firstFive = tmpElements.splice(0, 5);
-      //   // editor.loadProjectData({ components: firstFive });
-      //   // await appender(tmpElements);
-      //   // tmpElements.length = 0;
-      //   // tmpElements = null;
-      // } else {
-      //   // const parser = editor.Parser.parseHtml(elements);
-      //   // editor.loadProjectData({
-      //   //   // styles: parser.css, // optional
-      //   //   components:elements,
-      //   // });
-      //   // const el = editor.getEl();
-      //   // frames.push(el);
-      //   // console.log('render el : ' ,el);
-      //   // editor.addComponents(elements , {merge:true});
-      //   // const frame = editor.Canvas.getFrameEl();
-      //   // frame.setAttribute('srcdoc', elements.join(' ')) // = doDocument(elements.join(' '))
-      // }
 
       return elements;
     };
@@ -280,7 +233,14 @@ export const loadElements = async (
       workerCallbackMaker(
         infinitelyWorker,
         "parseHTMLAndRaplceSymbols",
-        (props) => {
+        async (props) => {
+          editor.select(null);
+          editor.off("canvas:frame:load:body");
+          await loadScripts(editor, projectData);
+          editor.on("canvas:frame:load:body", () => {
+            attrsCallback(editor, projectData);
+          });
+          editor.clearDirtyCount();
           onSend([renderCssStyles(editor, cssCode), ...props.response]);
           editor.on("component:remove:before", editor.removerBeforeHandler);
         }
@@ -295,6 +255,13 @@ export const loadElements = async (
       });
       return [];
     } else {
+      editor.select(null);
+      editor.off("canvas:frame:load:body");
+      await loadScripts(editor, projectData);
+      editor.on("canvas:frame:load:body", () => {
+        attrsCallback(editor, projectData);
+      });
+      editor.clearDirtyCount();
       editor.on("component:remove:before", editor.removerBeforeHandler);
       return {
         components: [
@@ -311,16 +278,6 @@ export const loadElements = async (
   );
 
   // editor.getWrapper().setAttributes({} , {avoidStore:true});
-
-  editor.select(null);
-
-  editor.off("canvas:frame:load:body");
-  await loadScripts(editor, projectData);
-  editor.on("canvas:frame:load:body", () => {
-    attrsCallback(editor, projectData);
-  });
-
-  editor.clearDirtyCount();
 
   // if (editor.loadTimes > 1) {
   //   clearEditor(editor);
