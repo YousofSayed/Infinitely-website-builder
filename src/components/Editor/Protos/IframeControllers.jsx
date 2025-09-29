@@ -443,8 +443,8 @@ export const IframeControllers = () => {
           // window.parent.resetAppMemory();
 
           editor.off("component:remove:before");
-          editor.load();
-          // window.location.reload();
+          // editor.load();
+          window.location.reload();
           // window.parent.location.reload();
           // editor.off("canvas:frame:load");
           // editor.off("canvas:frame:load:body");

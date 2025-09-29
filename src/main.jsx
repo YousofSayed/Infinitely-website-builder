@@ -67,7 +67,7 @@ const Main = () => {
 
   return (
     <RecoilRoot >
-      <HashRouter basename="/">
+      <BrowserRouter basename="/">
         <ErrorBoundary
           key={uniqueKey}
           fallbackRender={({ error, resetErrorBoundary }) => (
@@ -101,7 +101,7 @@ const Main = () => {
         >
           <App />
         </ErrorBoundary>
-      </HashRouter>
+      </BrowserRouter>
     </RecoilRoot>
   );
 };
