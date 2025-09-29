@@ -12,21 +12,21 @@ export const Splitter = ({ editor }) => {
     // extend: "text",
 
     view: {
-      onRender({ model, editor, el }) {
-        console.log("from splitter : ", el.textContent, "\n\n", el.innerText);
+      // onRender({ model, editor, el }) {
+      //   console.log("from splitter : ", el.textContent, "\n\n", el.innerText);
 
-        model.updateTrait("splitter", { value: el.textContent });
-        const firstSplittedEl = el.children[0];
-        if (
-          firstSplittedEl &&
-          firstSplittedEl.tagName.toLowerCase() == "span"
-        ) {
-          model.updateTrait("char-class-name", {
-            value: firstSplittedEl.classList[0],
-          });
-        }
-        // editor.on(' ')
-      },
+      //   model.updateTrait("splitter", { value: el.textContent });
+      //   const firstSplittedEl = el.children[0];
+      //   if (
+      //     firstSplittedEl &&
+      //     firstSplittedEl.tagName.toLowerCase() == "span"
+      //   ) {
+      //     model.updateTrait("char-class-name", {
+      //       value: firstSplittedEl.classList[0],
+      //     });
+      //   }
+      //   // editor.on(' ')
+      // },
     },
     model: {
       //   init() {
