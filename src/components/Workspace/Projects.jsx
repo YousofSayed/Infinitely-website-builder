@@ -86,7 +86,7 @@ export const Projects = () => {
             Add New
           </Button>
         </figure>
-      )}
+      )} 
 
       {showLoader && <Loader />}
 

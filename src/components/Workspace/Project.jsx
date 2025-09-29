@@ -65,7 +65,7 @@ export const Project = ({ project }) => {
           }  w-full   max-h-[190px!important] rounded`}
           alt="project image"
           loading="lazy"
-        />
+        /> 
         <figcaption
           className=" w-full rounded-lg p-1 text-center capitalize text-slate-200 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600 "
           onBlur={(ev) => {

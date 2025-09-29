@@ -9,7 +9,7 @@ export const Loader = ({ width = 70, height = 70, zIndex }) => {
     <section
       style={{ zIndex }}
       id="loader"
-      className="w-full h-full flex justify-center items-center bg-slate-900"
+      className="w-full h-full flex justify-center items-center "
     >
       <div
         style={{
