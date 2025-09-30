@@ -52,13 +52,29 @@ export const ReusableCmb = () => {
   const save = async () => {
     const tId = toast.loading(<ToastMsgInfo msg={`Saving template...`} />);
     // sessionStorage.setItem("clone-disabled", "true");
-    const sle = await editor.getSelected().clone();
+    const sle = await editor.getSelected();
     sle.set({
       draggable: true,
     });
     console.log(sle.props());
+    const isSplitter = sle.get("type") == "splitter";
+    let splitterContent = "";
+    if (isSplitter) {
+      const el = editor.getSelected().getEl();
+      const stringAttributs = [...el.attributes]
+        .concat({ name: "is-plain", value: "true" })
+        .map((attr) => `${attr.name}="${attr.value}"`)
+        .join(" ");
 
-    // return
+      splitterContent = `<${sle.tagName.toLowerCase()} ${stringAttributs}>
+       ${el.textContent}
+       </${sle.tagName.toLowerCase()}>`;
+    }
+
+    // console.log("string attrs : ", splitterContent);
+
+    // return;
+
     // sessionStorage.removeItem("clone-disabled");
     // const projectDataHandled = await handleCloneComponent(sle , editor);
     const id = newProps.name + (newProps.ctg || "templates") + sle.getId();
@@ -103,7 +119,7 @@ export const ReusableCmb = () => {
         },
 
         files: {
-          [defineRoot(contentPath)]: sle.toHTML({
+          [defineRoot(contentPath)]: isSplitter ? splitterContent : sle.toHTML({
             keepInlineStyle: true,
             withProps: true,
           }),

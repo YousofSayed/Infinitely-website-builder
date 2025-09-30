@@ -1,3 +1,4 @@
+import { isFunction } from "lodash";
 import { Icons } from "../components/Icons/Icons";
 import { defineTraits } from "../helpers/functions";
 import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
@@ -12,21 +13,53 @@ export const Splitter = ({ editor }) => {
     // extend: "text",
 
     view: {
-      // onRender({ model, editor, el }) {
-      //   console.log("from splitter : ", el.textContent, "\n\n", el.innerText);
+      onRender({ model, editor, el }) {
+        // console.log("from splitter : ", el.textContent, "\n\n", el.innerText);
 
-      //   model.updateTrait("splitter", { value: el.textContent });
-      //   const firstSplittedEl = el.children[0];
-      //   if (
-      //     firstSplittedEl &&
-      //     firstSplittedEl.tagName.toLowerCase() == "span"
-      //   ) {
-      //     model.updateTrait("char-class-name", {
-      //       value: firstSplittedEl.classList[0],
-      //     });
-      //   }
-      //   // editor.on(' ')
-      // },
+        // model.updateTrait("splitter", { value: el.textContent });
+        const segmenter = new Intl.Segmenter(undefined, {
+          granularity: "grapheme",
+        });
+        const value = `${[...segmenter.segment(el.textContent)]
+          .map((seg) => seg.segment)
+          .join("")}`;
+
+        model.updateTrait("splitter", {
+          value,
+        });
+
+        console.log(
+          "from splitter : ",
+          `${[...segmenter.segment(el.textContent)]
+            .map((seg) => seg.segment)
+            .join("")}`
+        );
+
+        const attributes = model.getAttributes();
+        const isPlain = Boolean(attributes["is-plain"]);
+        if (isPlain) {
+          const splitterTraitCallback =
+            model.getTrait("splitter").attributes.callback;
+          isFunction(splitterTraitCallback) &&
+            splitterTraitCallback({
+              editor,
+              newValue: value,
+              model,
+            });
+
+          model.removeAttributes(["is-plain"]);
+        }
+        // const firstSplittedEl = el.children[0];
+        // if (
+        //   firstSplittedEl &&
+        //   firstSplittedEl.tagName.toLowerCase() == "span"
+        // ) {
+        //   model.updateTrait("char-class-name", {
+        //     value: firstSplittedEl.classList[0],
+        //   });
+        // }
+        // editor.on(' ')
+      },
     },
     model: {
       //   init() {
@@ -71,11 +104,12 @@ export const Splitter = ({ editor }) => {
             type: "textarea",
             role: "handler",
             // value: "",
+            // init({ editor, model, trait }) {},
             onMountHandler(mEditor, monaco) {
               mEditor.setValue(this.value);
             },
-            callback({ editor, newValue, oldValue }) {
-              const sle = editor.getSelected();
+            callback({ editor, newValue, oldValue, model }) {
+              const sle = model || editor.getSelected();
               const segmenter = new Intl.Segmenter(undefined, {
                 granularity: "grapheme",
               });

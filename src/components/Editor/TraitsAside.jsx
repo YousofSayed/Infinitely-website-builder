@@ -487,6 +487,7 @@ export const TraitsAside = (() => {
                   editor,
                   trait,
                   mediaBreakpoint: mediaBreakpoint,
+                  model:editor.getSelected(),
                 };
                 // console.log(
                 //   isBoolean(trait.value || trait.default)

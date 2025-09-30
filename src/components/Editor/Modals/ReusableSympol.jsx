@@ -62,26 +62,45 @@ export const ReusableSympol = () => {
     const tId = toast.loading(<ToastMsgInfo msg={`Saving symbol...`} />);
 
     const addSymbolBlock = async () => {
+      const projectData = await getProjectData();
       const uuid = uniqueID();
       const attributes = selectedElMain.getAttributes();
       selectedElMain.addAttributes({
         [inf_symbol_Id_attribute]: uuid,
-        ...(!attributes[inf_class_name] && { [inf_class_name]: `inf-${uuid}` }),
+        ...(!attributes[inf_class_name] && {
+          [inf_class_name]: `inf-${uuid}`,
+        }),
       });
       !attributes[inf_class_name] && selectedElMain.addClass(`inf-${uuid}`);
-      selectedElMain.forEachChild((child) => {
-        const childUuid = uniqueID();
-        const childAttributes = child.getAttributes();
-        child.addAttributes({
-          ...(!childAttributes[inf_class_name] && {
-            [inf_class_name]: `inf-${childUuid}`,
-          }),
+
+      const selectedEl = selectedElMain; //editor.getSelected().clone();
+      const dragVal = selectedEl.get("draggable");
+      const isSplitter = selectedEl.get("type") == "splitter";
+      let splitterContent = "";
+      if (isSplitter) {
+        const el = selectedEl.getEl();
+        const stringAttributs = [...el.attributes]
+          .concat({ name: "is-plain", value: "true" })
+          .map((attr) => `${attr.name}="${attr.value}"`)
+          .join(" ");
+
+        splitterContent = `<${selectedEl.tagName.toLowerCase()} ${stringAttributs}>
+       ${el.textContent}
+       </${selectedEl.tagName.toLowerCase()}>`;
+      } else {
+        selectedElMain.forEachChild((child) => {
+          const childUuid = uniqueID();
+          const childAttributes = child.getAttributes();
+          child.addAttributes({
+            ...(!childAttributes[inf_class_name] && {
+              [inf_class_name]: `inf-${childUuid}`,
+            }),
+          });
+          !childAttributes[inf_class_name] &&
+            child.addClass(`inf-${childUuid}`);
         });
-        !childAttributes[inf_class_name] && child.addClass(`inf-${childUuid}`);
-      });
-      const projectData = await getProjectData();
-      // sessionStorage.setItem("clone-disabled", "true");
-      const selectedEl = editor.getSelected().clone();
+      }
+
       selectedEl.set({
         draggable: true,
       });
@@ -106,121 +125,6 @@ export const ReusableSympol = () => {
         style: stylePath,
       };
 
-      // await opfs.writeFiles([
-      //   {
-      //     path: defineRoot(contentPath),
-      //     content: selectedEl.toHTML({
-      //       keepInlineStyle: true,
-      //       withProps: true,
-      //     }),
-      //   },
-      //   {
-      //     path: defineRoot(stylePath),
-      //     content: minify(stringRules).css,
-      //   },
-      // ]);
-      // await db.projects.update(+projectId, {
-      //   symbols: {
-      //     ...projectData.symbols,
-      //     [uuid]: {
-      //       id: uuid,
-      //       label: props.name,
-      //       category: props.category || "symbols",
-      //       pathes,
-      //       // style: new Blob([minify(stringRules).css], { type: "text/css" }),
-      //       // content: new Blob(
-      //       //   [selectedEl.toHTML({ keepInlineStyle: true, withProps: true })],
-      //       //   { type: "text/html" }
-      //       // ),
-      //     },
-      //   },
-      //   blocks: {
-      //     ...prevBlocks,
-      //     [uuid]: {
-      //       name: props.name,
-      //       label: props.name,
-      //       category: props.category || "symbols",
-      //       id: uuid,
-      //       media:
-      //         selectedEl.getIcon() ||
-      //         editorIcons.components({ strokeColor: "white", strokeWidth: 2 }), //blobImg,
-      //       type: "symbol",
-      //       pathes,
-      //       // style: new Blob([minify(stringRules).css], { type: "text/css" }),
-      //       // content: new Blob(
-      //       //   [selectedEl.toHTML({ withProps: true, keepInlineStyle: true })],
-      //       //   { type: "text/html" }
-      //       // ),
-      //     },
-      //   },
-      // });
-
-      // saveProjectByWorker(
-      //   {
-      //     data: {
-      //       motions: projectDataHandled.motions,
-      //       symbols: {
-      //         ...projectData.symbols,
-      //         [uuid]: {
-      //           id: uuid,
-      //           label: props.name,
-      //           category: props.category || "symbols",
-      //           pathes,
-      //           // style: new Blob([minify(stringRules).css], { type: "text/css" }),
-      //           // content: new Blob(
-      //           //   [selectedEl.toHTML({ keepInlineStyle: true, withProps: true })],
-      //           //   { type: "text/html" }
-      //           // ),
-      //         },
-      //       },
-      //       blocks: {
-      //         ...prevBlocks,
-      //         [uuid]: {
-      //           name: props.name,
-      //           label: props.name,
-      //           category: props.category || "symbols",
-      //           id: uuid,
-      //           media:
-      //             selectedEl.getIcon() ||
-      //             editorIcons.components({
-      //               strokeColor: "white",
-      //               strokeWidth: 2,
-      //             }), //blobImg,
-      //           type: "symbol",
-      //           pathes,
-      //           // style: new Blob([minify(stringRules).css], { type: "text/css" }),
-      //           // content: new Blob(
-      //           //   [selectedEl.toHTML({ withProps: true, keepInlineStyle: true })],
-      //           //   { type: "text/html" }
-      //           // ),
-      //         },
-      //       },
-      //     },
-
-      //     files: {
-      //       [defineRoot(contentPath)]: selectedEl.toHTML({
-      //         keepInlineStyle: true,
-      //         withProps: true,
-      //       }),
-
-      //       [defineRoot(stylePath)]: minify(stringRules).css,
-      //     },
-
-      //     updatePreviewPages: true,
-      //     pageName: localStorage.getItem(current_page_id),
-      //   },
-      //   () => {
-      //     editor.trigger("block:add");
-      //     initToolbar(editor, selectedElMain);
-      //     initSymbol(uuid, editor);
-      //     editor.runCommand("close:current:modal");
-      //     toast.done(tId);
-      //     toast.success(
-      //       <ToastMsgInfo msg={`Symbols created and saved successfully👍`} />
-      //     );
-      //   }
-      // );
-
       store(
         {
           data: {
@@ -232,11 +136,6 @@ export const ReusableSympol = () => {
                 label: props.name,
                 category: props.category || "symbols",
                 pathes,
-                // style: new Blob([minify(stringRules).css], { type: "text/css" }),
-                // content: new Blob(
-                //   [selectedEl.toHTML({ keepInlineStyle: true, withProps: true })],
-                //   { type: "text/html" }
-                // ),
               },
             },
             blocks: {
@@ -254,20 +153,17 @@ export const ReusableSympol = () => {
                   }), //blobImg,
                 type: "symbol",
                 pathes,
-                // style: new Blob([minify(stringRules).css], { type: "text/css" }),
-                // content: new Blob(
-                //   [selectedEl.toHTML({ withProps: true, keepInlineStyle: true })],
-                //   { type: "text/html" }
-                // ),
               },
             },
           },
 
           files: {
-            [defineRoot(contentPath)]: selectedEl.toHTML({
-              keepInlineStyle: true,
-              withProps: true,
-            }),
+            [defineRoot(contentPath)]: isSplitter
+              ? splitterContent
+              : selectedEl.toHTML({
+                  keepInlineStyle: true,
+                  withProps: true,
+                }),
 
             [defineRoot(stylePath)]: minify(stringRules).css,
           },
@@ -279,14 +175,21 @@ export const ReusableSympol = () => {
       );
 
       initToolbar(editor, selectedElMain);
-      initSymbol(uuid, editor);
+      if (!isSplitter) {
+        initSymbol(uuid, editor);
+      }else{
+        alert(`If you have more than one splitter symbol, they will not update in real time to avoid performance drops.`)
+      }
       editor.runCommand("close:current:modal");
       toast.done(tId);
       toast.success(
         <ToastMsgInfo msg={`Symbols created and saved successfully👍`} />
       );
-    };
 
+      selectedEl.set({
+        draggable: dragVal,
+      });
+    };
     addSymbolBlock();
   };
 

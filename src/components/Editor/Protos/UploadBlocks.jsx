@@ -32,7 +32,7 @@ export const UploadBlocks = () => {
      * @type {File}
      */
     const file = input.files[0];
-    ev.target.value = '';
+    input.value = '';
     const symbolsOrTemplates = await restoreBlobs(
       JSON.parse((await file.text()) || "{}")
     );
@@ -49,10 +49,11 @@ export const UploadBlocks = () => {
           }
         />
       );
+      input.value = '';
       return;
     }
     setUploadedBlocks(symbolsOrTemplates);
-    ev.target.value = '';
+    input.value = '';
   };
 
   const saveBlocksToDB = async () => {

@@ -30,6 +30,7 @@ export type TraitCallProps = {
   newValue: string;
   asset: InfinitelyAsset | undefined;
   mediaBreakpoint: number;
+  model : Component;
 };
 
 export type TraitCallback = ({
@@ -39,6 +40,7 @@ export type TraitCallback = ({
   newValue,
   asset,
   mediaBreakpoint,
+  model,
 }: TraitCallProps) => void;
 
 export type InfinitelyTrait = {

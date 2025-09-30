@@ -83,7 +83,7 @@ export const GJEditor = ({ children }) => {
 
     const editor = ev;
 
-    ev.runCommand("core:component-outline");
+    // ev.runCommand("core:component-outline");
     isChrome(() => {
       editor.on("canvas:frame:load", ({ window, el }) => {
         /**

@@ -336,14 +336,14 @@ export const SymbolsAndTemplatesHandler = ({
                  
                 </section> */}
 
-                  <FitTitle className="flex gap-2 items-center w-full  custom-font-size">
+                  <FitTitle className="flex gap-2 items-center h-full  w-[calc(100%-115px)]">
                     <figure
                       className=" h-full py-1 w-[35px]  bg-slate-900 flex justify-center items-center rounded-lg"
                       dangerouslySetInnerHTML={{ __html: symbol.media }}
                     >
                       {/* <img src={URL.createObjectURL(symbol.media)} alt="" /> */}
                     </figure>
-                    <span className="font-semibold capitalize text-slate-200 text-[14px] ">
+                    <span title={symbol.name} className="font-semibold custom-font-size capitalize text-ellipsis overflow-hidden  text-slate-200 text-[14px] ">
                       {symbol.name}
                     </span>
                   </FitTitle>
