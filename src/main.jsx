@@ -13,7 +13,9 @@ import { setProjectSettings } from "./helpers/functions.js";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./components/Editor/Protos/ToastMsgInfo.jsx";
 import { isDevMode } from "./helpers/bridge.js";
-import {patch} from 'million'
+
+// Save the initial state of window
+
 // import worker from './helpers/worker.js';
 // import './helpers/backbonePacher.js'
 // src/main.js
@@ -145,3 +147,5 @@ window.addEventListener("unmout",()=>{
   
   unMountApp();
 })
+
+window.__initialWindowKeys = new Set(Object.getOwnPropertyNames(window));

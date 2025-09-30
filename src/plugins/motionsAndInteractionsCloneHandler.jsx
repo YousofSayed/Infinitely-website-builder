@@ -16,6 +16,7 @@ import {
   getProjectData,
   getProjectSettings,
   handleCloneComponent,
+  preventSelectNavigation,
   store,
 } from "../helpers/functions";
 import { db } from "../helpers/db";
@@ -51,12 +52,6 @@ export const motionsAndInteractionsCloneHandler = (editor) => {
     const interactionsId =
       attributes[interactionId] || attributes[mainInteractionId];
     const interactionInstanceIdAttr = attributes[interactionInstanceId];
-    // console.log(
-    //   "instances : ",
-    //   model,
-    //   model.getEl(),
-    //   editor.getWrapper().find(`[${motionId}="${mainId}"] `)
-    // );
     const isNotMainMotion =
       editor.getWrapper().find(`[${motionId}="${mainId}"] `).length > 1;
     const isThereSameMotionInstance =
@@ -70,6 +65,14 @@ export const motionsAndInteractionsCloneHandler = (editor) => {
         .getWrapper()
         .find(`[${interactionInstanceId}="${interactionInstanceIdAttr}"] `)
         .length > 1;
+
+    // console.log(
+    //   "instances : ",
+    //   model,
+    //   model.getEl(),
+    //   editor.getWrapper().find(`[${motionId}="${mainId}"] `)
+    // );
+
     // console.log(
     //   "handlers : ",
     //   isNotMainMotion,
@@ -96,7 +99,8 @@ export const motionsAndInteractionsCloneHandler = (editor) => {
       ];
       model.removeAttributes([motionId]);
       model.addAttributes({ [motionInstanceId]: uuid, [mainMotionId]: mainId });
-      console.log("main motion", model);
+      preventSelectNavigation(editor, model);
+      console.log("main motion", model, model.getEl());
       isChanged = true;
     }
 
@@ -115,6 +119,7 @@ export const motionsAndInteractionsCloneHandler = (editor) => {
         [interactionInstanceId]: uuid,
         [mainInteractionId]: interactionsId,
       });
+      preventSelectNavigation(editor, model);
       isChanged = true;
     }
 
@@ -150,6 +155,47 @@ export const motionsAndInteractionsCloneHandler = (editor) => {
      */
     (model) => {
       // const projectData = await getProjectData();
+      // 1- Handle Motions
+      // const attributes = model.getAttributes();
+      // const mainId = attributes[motionId] || attributes[mainMotionId];
+      // const instanceId = attributes[motionInstanceId];
+      // const interactionsId =
+      //   attributes[interactionId] || attributes[mainInteractionId];
+      // const interactionInstanceIdAttr = attributes[interactionInstanceId];
+
+      // const isNotMainMotion =
+      //   editor.getWrapper().find(`[${motionId}="${mainId}"] `).length > 1;
+      // const isThereSameMotionInstance =
+      //   editor.getWrapper().find(`[${motionInstanceId}="${instanceId}"] `)
+      //     .length > 1;
+      // const isNotMainInteractions =
+      //   editor.getWrapper().find(`[${interactionId}="${interactionsId}"]`)
+      //     .length > 1;
+      // const isThereSameInteractionsInstance =
+      //   editor
+      //     .getWrapper()
+      //     .find(`[${interactionInstanceId}="${interactionInstanceIdAttr}"] `)
+      //     .length > 1;
+
+      // if (!isNotMainMotion && instanceId) {
+      //   model.removeAttributes([mainMotionId, motionInstanceId]);
+
+      //   model.addAttributes({
+      //     [motionId]: mainId,
+      //   });
+      // }
+
+      // if (!isNotMainInteractions && interactionInstanceIdAttr) {
+      //   model.removeAttributes([
+      //     interactionId,
+      //     mainInteractionId,
+      //     interactionInstanceId,
+      //   ]);
+
+      //   model.addAttributes({
+      //     [interactionId]: interactionsId,
+      //   });
+      // }
 
       timeout && clearTimeout(timeout);
       timeout = setTimeout(async () => {
@@ -182,7 +228,11 @@ export const motionsAndInteractionsCloneHandler = (editor) => {
      * @param {import('grapesjs').Component} model
      */
     (model, remove, options) => {
-      console.log("from remover : ", editor.infLoading , options.infinitelyClear);
+      console.log(
+        "from remover : ",
+        editor.infLoading,
+        options.infinitelyClear
+      );
 
       if (editor.leaving || editor.infLoading || options.infinitelyClear)
         return;
@@ -201,77 +251,102 @@ export const motionsAndInteractionsCloneHandler = (editor) => {
         const cnfrm =
           mainId && mainIntaractionsIdAttr
             ? confirm(
-                `This component is main motion and main interactions , are you sure to remove it?`
+                `This component is the main motion and main interactions. If you remove them, all their instances will also be removed (In current page only). Are you sure you want to remove it?`
               )
             : mainId
             ? confirm(
-                `This component is main motion , are you sure to remove it?`
+                `This component is the main motion. If you remove it, all its instances will also be removed (In current page only). Are you sure you want to remove it?`
               )
             : mainIntaractionsIdAttr
             ? confirm(
-                `This component is main interactions , are you sure to remove it?`
+                `This component is the main interactions. If you remove it, all its instances will also be removed (In current page only). Are you sure you want to remove it?`
               )
             : null;
+        if (!cnfrm) return;
         if (cnfrm && mainId) {
           // editor.UndoManager.stop();
-          model.removeAttributes([mainMotionId, motionId, motionInstanceId]);
-          const originalAutosave = editor.Storage.config.autosave;
+          const keysWillRemoved = {
+            [motionId]: mainId,
+            [mainMotionId]: mainId,
+            [motionInstanceId]:"",
+            ...Object.fromEntries(
+              Object.keys(motion.instances).map((key) => [
+                motionInstanceId,
+                key,
+              ])
+            ),
+          };
+          // model.removeAttributes([mainMotionId, motionId, motionInstanceId]);
+          // const originalAutosave = editor.Storage.config.autosave;
+          editor
+            .getWrapper()
+            .find(`[${motionId}="${mainId}"] , [${mainMotionId}="${mainId}"]`)
+            .forEach((model) => {
+              model.removeAttributes(Object.keys(keysWillRemoved));
+            });
           editor.Storage.setAutosave(false);
-          deleteAttributesInAllPages(
-            {
-              [mainMotionId]: mainId,
-              ...Object.fromEntries(
-                Object.keys(motion.instances).map((key) => [
-                  motionInstanceId,
-                  key,
-                ])
-              ),
-            },
-            () => {
-              editor.Storage.setAutosave(projectSettings.enable_auto_save);
-              // editor.UndoManager.start();
-              model.remove();
-              projectSettings.enable_auto_save && store({}, editor);
-              // options.abort = false;
-            }
-          );
+          // deleteAttributesInAllPages(keysWillRemoved, () => {
+          //   editor.Storage.setAutosave(projectSettings.enable_auto_save);
+          //   // editor.UndoManager.start();
+          //   model.remove();
+          //   projectSettings.enable_auto_save && store({}, editor);
+          //   // options.abort = false;
+          //   console.log("motion removed", mainId, mainIntaractionsIdAttr);
+          // });
         }
 
         if (cnfrm && mainIntaractionsIdAttr) {
-          model.removeAttributes([
+          const keysWillRemoved = [
             mainInteractionId,
             interactionId,
             interactionInstanceId,
-          ]);
+          ];
+
+          editor
+            .getWrapper()
+            .find(
+              `[${interactionId}="${mainIntaractionsIdAttr}"] , [${mainInteractionId}="${mainIntaractionsIdAttr}"]`
+            )
+            .forEach((model) => {
+              model.removeAttributes(keysWillRemoved);
+            });
+
+          model.removeAttributes();
 
           editor.Storage.setAutosave(false);
-          const interactions = projectData.interactions[mainIntaractionsIdAttr];
-          deleteAttributesInAllPages(
-            {
-              // [interactionId]: mainIntaractionsIdAttr,
-              [mainInteractionId]: mainIntaractionsIdAttr,
-              [interactionInstanceId]: null,
-              ...Object.fromEntries(
-                Object.keys(
-                  buildInteractionsAttributes(
-                    interactions,
-                    mainIntaractionsIdAttr
-                  ) || {}
-                ).map((key) => [key, null])
-              ),
-            },
-            () => {
-              editor.Storage.setAutosave(projectSettings.enable_auto_save);
-              // editor.UndoManager.start();
-              model.remove();
-              projectSettings.enable_auto_save && store({}, editor);
-              // options.abort = false;
-            },
-            `[${mainInteractionId}="${mainIntaractionsIdAttr}"][${interactionInstanceId}]`
-          );
+          // const interactions = projectData.interactions[mainIntaractionsIdAttr];
+          // deleteAttributesInAllPages(
+          //   {
+          //     // [interactionId]: mainIntaractionsIdAttr,
+          //     [mainInteractionId]: mainIntaractionsIdAttr,
+          //     [interactionInstanceId]: null,
+          //     ...Object.fromEntries(
+          //       Object.keys(
+          //         buildInteractionsAttributes(
+          //           interactions,
+          //           mainIntaractionsIdAttr
+          //         ) || {}
+          //       ).map((key) => [key, null])
+          //     ),
+          //   },
+          //   () => {
+          // editor.Storage.setAutosave(projectSettings.enable_auto_save);
+          // // editor.UndoManager.start();
+          // model.remove();
+          // projectSettings.enable_auto_save && store({}, editor);
+          // // options.abort = false;
+          //   },
+          //   `[${mainInteractionId}="${mainIntaractionsIdAttr}"][${interactionInstanceId}]`
+          // );
         }
+
+        editor.Storage.setAutosave(projectSettings.enable_auto_save);
+        // editor.UndoManager.start();
+        model.remove();
+        projectSettings.enable_auto_save && store({}, editor);
+        // options.abort = false;
       })();
     };
   editor.removerBeforeHandler = removerBeforeHandler;
-  editor.on("component:remove:before",editor.removerBeforeHandler);
+  editor.on("component:remove:before", editor.removerBeforeHandler);
 };

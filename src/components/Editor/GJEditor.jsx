@@ -1,13 +1,14 @@
-import GjsEditor,{ Editor , } from "@grapesjs/react";
-import React, { memo, useCallback, useEffect, useRef, useState  , } from "react";
+import GjsEditor from "@grapesjs/react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import grapesjs from "grapesjs";
 // import  "../../helpers/grapesjs.js";
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import {
   blocksStt,
   currentDynamicTemplateIdState,
   currentElState,
   dynamicTemplatesState,
+  reloaderState,
   ruleState,
   selectorState,
 } from "../../helpers/atoms";
@@ -44,12 +45,13 @@ import { initTraitsOnRender } from "../../plugins/initTraitsOnRender.jsx";
 import { editorKeymaps } from "../../plugins/editorKeymaps.jsx";
 import { parse } from "css";
 
-export const GJEditor = memo(({ children }) => {
+export const GJEditor = ({ children }) => {
   const setSelectedEl = useSetRecoilState(currentElState);
   // const [cmdsContext, setCmdsContext] = useCmdsContext();
   const setSelector = useSetRecoilState(selectorState);
   const setRule = useSetRecoilState(ruleState);
   const navigate = useNavigate();
+  const [reloader, setReloader] = useRecoilState(reloaderState);
   // const currentDynamicTemplateId = useRecoilValue(
   //   currentDynamicTemplateIdState
   // );
@@ -76,129 +78,93 @@ export const GJEditor = memo(({ children }) => {
     // muatationDomElements,
   ]);
 
-  const onEditor = useCallback(
-    /**
-     *
-     * @param {import('grapesjs').Editor} ev
-     */
-    async (ev) => {
-      //  const types = editor.DomComponents.getTypes();
+  const onEditor = (ev) => {
+    ev.Blocks.categories.add({ id: "others", title: "Others" });
 
-      //   types.forEach((cy) => {
-      //     editor.DomComponents.addType(cy.id, {
-      //       model: {
-      //         defaults: {
-      //           dropabble: true,
-      //         },
-      //       },
-      //     });
-      //   });
-      ev.Blocks.categories.add({ id: "others", title: "Others" });
+    const editor = ev;
 
-      const editor = ev;
+    ev.runCommand("core:component-outline");
+    isChrome(() => {
+      editor.on("canvas:frame:load", ({ window, el }) => {
+        /**
+         * @type {HTMLIFrameElement}
+         */
+        const iframe = el;
 
-      ev.runCommand("core:component-outline");
-      isChrome(() => {
-        editor.on("canvas:frame:load", ({ window, el }) => {
-          /**
-           * @type {HTMLIFrameElement}
-           */
-          const iframe = el;
+        if (iframe.hasAttribute("src")) return;
 
-          if (iframe.hasAttribute("src")) return;
-
-          iframe.setAttribute("sandbox", "allow-scripts allow-same-origin");
-          iframe.setAttribute("referrerpolicy", "same-origin unsafe-url");
-          iframe.setAttribute("src", "about:srcdoc");
-          console.log("iframe work: ", iframe);
-        });
+        // iframe.setAttribute("sandbox", "allow-scripts allow-same-origin");
+        // iframe.setAttribute("referrerpolicy", "same-origin unsafe-url");
+        iframe.setAttribute("src", "about:srcdoc");
+        console.log("iframe work: ", iframe);
       });
+    });
 
-      ev.on("component:deselected", () => {
-        setSelectedEl({ currentEl: undefined });
+    ev.on("component:deselected", () => {
+      setSelectedEl({ currentEl: undefined });
+    });
+
+    ev.on("component:selected", () => {
+      const selectedEl = ev.getSelected();
+      const symbolInfo = getInfinitelySymbolInfo(selectedEl);
+      // selectedEl.set({ resizable: false });
+      setSelectedEl({ currentEl: JSON.parse(JSON.stringify(selectedEl)) }); //Fuck bug which make me like a crazy was fucken here , and it was because i set Dom Element in atom , old Code : selectedEl?.getEl()
+      setRule({ is: false, ruleString: "" });
+
+      // const location = window.location;
+
+      setSelector("");
+      if (symbolInfo.isSymbol) {
+        sessionStorage.setItem(current_symbol_id, symbolInfo.mainId);
+      } else {
+        sessionStorage.removeItem(current_symbol_id);
+      }
+      const projectSettings = getProjectSettings().projectSettings;
+      if (projectSettings.navigate_to_style_when_Select) {
+        navigate("/edite/styling");
+      }
+    });
+
+    ev.on("component:cmds:update", () => {
+      console.log("updateeeeeeeeeeeeeeeeeeeeeee 89");
+      const sle = ev.getSelected();
+      if (!sle) {
+        console.warn("No Selected Component");
+        return;
+      } else {
+        setCmdsContext(sle);
+      }
+    });
+
+    ev.on("redo", (args) => {
+      setSelectedEl({
+        currentEl: JSON.parse(JSON.stringify(editor.getSelected() || {})),
       });
+    });
 
-      ev.on("component:selected", () => {
-        const selectedEl = ev.getSelected();
-        const symbolInfo = getInfinitelySymbolInfo(selectedEl);
-        // selectedEl.set({ resizable: false });
-        setSelectedEl({ currentEl: JSON.parse(JSON.stringify(selectedEl)) }); //Fuck bug which make me like a crazy was fucken here , and it was because i set Dom Element in atom , old Code : selectedEl?.getEl()
-        setRule({ is: false, ruleString: "" });
-
-        // const location = window.location;
-
-        setSelector("");
-        if (symbolInfo.isSymbol) {
-          sessionStorage.setItem(current_symbol_id, symbolInfo.mainId);
-        } else {
-          sessionStorage.removeItem(current_symbol_id);
-        }
-        const projectSettings = getProjectSettings().projectSettings;
-        if (projectSettings.navigate_to_style_when_Select) {
-          navigate("/edite/styling");
-        }
+    ev.on("undo", (args) => {
+      setSelectedEl({
+        currentEl: JSON.parse(JSON.stringify(editor.getSelected() || {})),
       });
-
-      ev.on("component:cmds:update", () => {
-        console.log("updateeeeeeeeeeeeeeeeeeeeeee 89");
-        const sle = ev.getSelected();
-        if (!sle) {
-          console.warn("No Selected Component");
-          return;
-        } else {
-          setCmdsContext(sle);
-        }
-      });
-  
-
-      ev.on("redo", (args) => {
-        setSelectedEl({
-          currentEl: JSON.parse(JSON.stringify(editor.getSelected() || {})),
-        });
-      });
-
-      ev.on("undo", (args) => {
-        setSelectedEl({
-          currentEl: JSON.parse(JSON.stringify(editor.getSelected() || {})),
-        });
-      });
-    },
-    [plugins]
-  );
+    });
+  };
   console.log("gj-editor : ", getProjectSettings().projectSettings);
 
   return (
     <GjsEditor
+    key={reloader}
       grapesjs={grapesjs}
       options={{
         height: "100%",
         width: "100%",
         multipleSelection: true,
-        // avoidDefaults: true,
-        // nativeDnD:true,
-        // showToolbar:true,
-        // noticeOnUnload:false,
-        // headless:true,
-        container:'#editor-wrapper',
         mediaCondition: localStorage.getItem("media-condition") || "max-width",
         showOffsets: true,
         keepUnusedStyles: true,
         clearStyles: false,
         keepEmptyTextNodes: true,
-        // showBadges: true,
-        // stylePrefix:'inf-',
-        // forceClass: true,
-        // canvasCss: gStyles,
-
-        // pageManager: {
-        //   // selected: "index",
-
-        //   pages: ,
-        // },
-        // exportWrapper: true,
-        avoidDefaults:true,
-        log:true,
-
+        avoidDefaults: true,
+        log: true,
         domComponents: { escapeHtml: false },
         richTextEditor: {
           custom: true,
@@ -206,19 +172,14 @@ export const GJEditor = memo(({ children }) => {
           toolbar: [],
         },
         optsHtml: {
-          // attributes: true,
-          // keepInlineStyle: true,
-          // altQuoteAttr: true,
-
           withProps: true,
-          // asDocument: true,
         },
         optsCss: {
           keepUnusedStyles: true,
           clearStyles: false,
           onlyMatched: false,
         },
-        // autorender: true,
+        autorender: true,
 
         parser: {
           // parserCss:(css)=>{
@@ -226,19 +187,14 @@ export const GJEditor = memo(({ children }) => {
           // },
           optionsHtml: {
             allowScripts: true,
-            // detectDocument: true,
             allowUnsafeAttr: true,
-
             allowUnsafeAttrValue: true,
-            keepEmptyTextNodes:true,
-            
+            keepEmptyTextNodes: true,
             htmlType: "text/html",
           },
         },
         showOffsetsSelected: true,
         customUI: true,
-        // showToolbar: true,
-        // pStylePrefix:'inf',
         storageManager: {
           autoload: true,
           autosave: getProjectSettings().projectSettings.enable_auto_save,
@@ -259,43 +215,7 @@ export const GJEditor = memo(({ children }) => {
         },
         protectedCss: ``,
         canvas: {
-          frame: document.getElementById('my-iframe'),
-          // scrollableCanvas: true,
-          //   customRenderer: ({ editor, frame, frameView, window }) => {
-          //     const rootEl = window.document.body;
-
-          //     // GrapesJS will only run this once
-          //     if (!window.__initialized__) {
-          //       window.__initialized__ = true;
-
-          //       // You can now safely inject whatever static HTML you want
-          //       rootEl.innerHTML = `
-          //   <div id="app">
-          //     <h1>My custom frame</h1>
-          //   </div>
-          // `;
-          //     }
-
-          //     // Return the root element for GrapesJS to attach selection & drag/drop
-          //     return frame.getComponent().view;
-          //   },
-          // frameContent: (canvas) => {
-          //   const html = canvas.getHtml();
-          //   const css = canvas.getCss();
-          //   const fullHtml = `
-          //     <!DOCTYPE html>
-          //     <html>
-          //     <head>
-          //       <style>${css}</style>
-          //     </head>
-          //     <body>
-          //       ${html}
-          //     </body>
-          //     </html>
-          //   `;
-          //   const blob = new Blob([fullHtml], { type: 'text/html' });
-          //   canvas.getFrame().setAttribute('src', URL.createObjectURL(blob));
-          // },
+          frame: document.getElementById("my-iframe"),
           scripts: [
             ...((isChrome() && [
               { src: `/scripts/initSw.js`, name: "initSw.js" },
@@ -304,7 +224,7 @@ export const GJEditor = memo(({ children }) => {
             // {src:`${jsToDataURL(`console.log('data js url.............@')`)}`}
           ],
           styles: ["/styles/dev.css", "/styles/style.css"],
-          
+
           customBadgeLabel:
             /**
              *
@@ -326,15 +246,6 @@ export const GJEditor = memo(({ children }) => {
                 </figure>
               `;
             },
-          // allowExternalDrop: true,
-          // notTextable
-          // extHl: true,
-          // infiniteCanvas:true,
-          // scripts: [
-          //   { src: "/scripts/hyperscript@0.9.13.js", dev: true },
-          //   { src: "/scripts/proccesNodeInHS.js", dev: true },
-          // ],
-          // styles: [{ href: "/styles/style.css" }],
         },
         jsInHtml: true,
         plugins,
@@ -344,4 +255,4 @@ export const GJEditor = memo(({ children }) => {
       {children}
     </GjsEditor>
   );
-});
+};

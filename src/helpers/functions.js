@@ -3059,6 +3059,7 @@ export async function reloadEditor(editor) {
   editor.setComponents("");
   editor.UndoManager.stop();
   editor.UndoManager.clear();
+  editor.getWrapper().removeClass(editor.getWrapper().getClasses());
 
   reloaderTimeout && clearTimeout(reloaderTimeout);
   const response = await loadElements(editor, {
@@ -3088,9 +3089,17 @@ export async function reloadEditor(editor) {
       editor.loadProjectData({
         components: elements,
       });
+      // editor.addComponents(elements, { sort: true, merge: true });
+      // if (!editor.rendered) {
+      //   editor.rendered = 0;
+      //   editor.render();
+      // }
+      editor.rendered++;
       editor.clearDirtyCount();
       editor.UndoManager.start();
       editor.Storage.setAutosave(projectSettings.enable_auto_save);
+      console.log('reloadin end here');
+      
       editorStorageInstance.emit(InfinitelyEvents.storage.loadEnd);
     },
   });

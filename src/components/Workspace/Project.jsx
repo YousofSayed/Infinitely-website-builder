@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import blankImg from "../../assets/images/blank.jpg";
 import { Li } from "../Protos/Li";
 import { Icons } from "../Icons/Icons";
@@ -18,6 +18,7 @@ import { toast } from "react-toastify";
 import { getProjectRoot } from "../../helpers/bridge";
 import { random } from "lodash";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { uniqueID } from "../../helpers/cocktail";
 
 // million-ignore
 /**
@@ -34,38 +35,48 @@ export const Project = ({ project }) => {
     useRecoilState(isProjectInitedState);
   const urlsRef = useRef([]);
   // console.log(project.imgSrc);
-  useEffect(() => {
-    (async () => {
-      const root = `projects/project-${project.id}`;
-      console.log("project id : ", project);
+  useLayoutEffect(() => {
+      let canceled = false;
+  (async () => {
+    const root = `projects/project-${project.id}`;
+    const file = await (
+      await opfs.getFile(`${root}/screenshot.webp`)
+    ).getOriginFile();
 
-      const file = await (
-        await opfs.getFile(`${root}/screenshot.webp`)
-      ).getOriginFile();
-      if (!(file?.size > 0)) return;
-      const url = URL.createObjectURL(file);
-      setImg(url); // no new String()
-      urlsRef.current.push(url);
-    })();
+    if (canceled) return;
 
-    return () => {
-      urlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-      urlsRef.current = [];
-    };
+    if (!file || file.size === 0) {
+      setImg("/images/blank.jpg");
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+    setImg(url);
+    urlsRef.current.push(url);
+  })();
+
+  return () => {
+    canceled = true;
+    urlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    urlsRef.current = [];
+  };
   }, [project]);
 
   return (
-    <article ref={autoAminRef} className="p-2 bg-slate-900  rounded-lg flex flex-col h-[320px] justify-evenly  gap-2">
+    <article
+      ref={autoAminRef}
+      className="p-2 bg-slate-900  rounded-lg flex flex-col h-[320px] justify-evenly  gap-2"
+    >
       <figure className="flex flex-col gap-2 h-[70%]  items-center ">
         <img
-          // key={`random-${random(999,1000)}`}
-          src={img ? img : "/images/blank.jpg"}
+          key={project.inited}
+          src={img || "/images/blank.jpg"}
           className={`max-w-full max-h-full ${
             project.imgSrc ? "h-full " : "h-full  object-cover"
           }  w-full   max-h-[190px!important] rounded`}
           alt="project image"
           loading="lazy"
-        /> 
+        />
         <figcaption
           className=" w-full rounded-lg p-1 text-center capitalize text-slate-200 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600 "
           onBlur={(ev) => {

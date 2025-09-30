@@ -191,7 +191,7 @@ import { For } from "million/react";
 //   );
 // };
 
-export const AnimationsBuilder = memo(() => {
+export const AnimationsBuilder = (() => {
   const editor = useEditorMaybe();
   const [animation, setAnimation] = useState("");
   const [animations, setAnimations] = useRecoilState(animationsState);

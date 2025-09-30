@@ -380,7 +380,7 @@ export const Iframe = (() => {
         }}
       >
         <Canvas
-        id="editor-container"
+        id="editor-canvas"
         label="Canvas"
         aria-label="Editor"
         className="overflow-auto "

@@ -14,6 +14,8 @@ import { GridComponents } from "../Protos/VirtusoGridComponent.jsx";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { version } from "../../constants/Version.js";
 import { For } from "million/react";
+import { uniqueID } from "../../helpers/cocktail.js";
+import { cloneDeep, random } from "lodash";
 
 //million-ignore
 export const Projects = () => {
@@ -26,7 +28,7 @@ export const Projects = () => {
     console.log("res : ", res);
 
     setShowLoader(false);
-    setDbProjects(res);
+    setDbProjects(cloneDeep(res));
     // return res;
   });
 
@@ -53,7 +55,9 @@ export const Projects = () => {
         <section className="h-full grid gap-2 p-1 overflow-auto grid-cols-[repeat(auto-fill,minmax(250px,1fr))]">
           <For each={dbProjects}>
             {(project, i) => {
-              return <Project key={project.id} project={project} />;
+              return (
+                <Project key={project.id} project={project} />
+              );
             }}
           </For>
 
@@ -86,7 +90,7 @@ export const Projects = () => {
             Add New
           </Button>
         </figure>
-      )} 
+      )}
 
       {showLoader && <Loader />}
 

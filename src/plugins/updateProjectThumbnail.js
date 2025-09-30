@@ -27,10 +27,10 @@ export const updateProjectThumbnail = (editor) => {
         editor.getWrapper().getEl(),
         "image/webp",
         {
-          x: 0,
-          y: 0,
+          // x: 0,
+          // y: 0,
           // width: editor.getContainer().offsetWidth, // or editor.Canvas.getFrameEl().offsetWidth
-          height: 600, // limit height
+          // height: 600, // limit height
           // scale: editor.getContainer().style.zoom,
         }
       );

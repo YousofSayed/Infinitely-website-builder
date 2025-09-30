@@ -15,6 +15,7 @@ import { getFileSize } from "../../../helpers/bridge";
 import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
 import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 
+//million-ignore
 export const InstalledFonts = () => {
   const editor = useEditorMaybe();
   const [fonts, setFonts] = useState([]);

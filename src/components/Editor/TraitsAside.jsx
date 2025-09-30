@@ -54,7 +54,7 @@ import { Accordion } from "../Protos/Accordion";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Hint } from "../Protos/Hint";
 
-export const TraitsAside = memo(() => {
+export const TraitsAside = (() => {
   const editor = useEditorMaybe();
   const [newAttributeName, setNewAttributeName] = useState("");
   const [traits, setTraits] = useState(traitsType);

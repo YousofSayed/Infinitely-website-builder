@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useRef } from "react";
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { blocksStt, editorBlocksType } from "../../helpers/atoms";
 import { DetailsForBlocks } from "./Protos/DetailsForBlocks";
 import { useEditorMaybe } from "@grapesjs/react";
@@ -19,10 +19,9 @@ import { defineRoot } from "../../helpers/bridge";
 import { Accordion } from "../Protos/Accordion";
 import { AccordionItem } from "../Protos/AccordionItem";
 
-export const Blocks = memo(() => {
+export const Blocks = (() => {
   const editor = useEditorMaybe();
-  const blocksAtom = useRecoilValue(blocksStt);
-  const setBlocks = useSetRecoilState(blocksStt);
+  const [blocksAtom , setBlocks] = useRecoilState(blocksStt);
   const blocksRef = useRef(editorBlocksType);
   const allBlocksAsObject = useRef(blockType);
 

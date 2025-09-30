@@ -37,7 +37,7 @@ import { parse } from "../../helpers/cocktail";
 import { Accordion } from "../Protos/Accordion";
 import { AccordionItem } from "../Protos/AccordionItem";
 
-export const Commands = memo(() => {
+export const Commands = (() => {
   const editor = useEditorMaybe();
   const [cmds, setCmds] = useState(directives);
   const [dataObject, setDataObject] = useState({});

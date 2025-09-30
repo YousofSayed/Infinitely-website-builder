@@ -4,14 +4,12 @@ let app = PetiteVue.createApp({
   $delimiters: ["${", "}"],
 });
 
-
-
 app.directive("view", vIntersection);
 app.directive("ref", vRef);
 
-const mountBroadCastChannel = new BroadcastChannel('pv:mount');
-mountBroadCastChannel.addEventListener('message',(ev)=>{
-(
+let mountBroadCastChannel = new BroadcastChannel("pv:mount");
+mountBroadCastChannel.addEventListener("message", (ev) => {
+  (
     /**
      * @type {MessageEvent}
      */
@@ -36,45 +34,11 @@ mountBroadCastChannel.addEventListener('message',(ev)=>{
     app.mount(ev.data.el);
 
     // _hyperscript.processNode(ev.detail.el);
-  }
-})
+  };
+});
 
-window.parent.addEventListener(
-  "pv:mount",
-  (
-    /**
-     * @type {CustomEvent}
-     */
-    ev
-  ) => {
-    if (!ev.detail.el) {
-      console.error("Oh shit here we again : hs error no element founded");
-      // const el = document.querySelector(ev.detail.selector);
-      return;
-    }
-    console.log('mounting el : ' ,ev.detail.el );
-    
-    // !app &&
-    //   (app = PetiteVue.createApp({
-    //     $delimiters: ["${", "}"],
-    //   }));
-    // app.mount(ev.detail.el);
-
-    app = PetiteVue.createApp({
-      $delimiters: ["${", "}"],
-    });
-    app.directive("view", vIntersection);
-    app.directive("ref", vRef);
-    console.log("mounting : ", ev.detail.el);
-    app.mount(ev.detail.el);
-
-    // _hyperscript.processNode(ev.detail.el);
-  }
-);
-
-
-const unMountBraodCastChannel = new BroadcastChannel('pv:unmount');
-unMountBraodCastChannel.addEventListener('message',(ev)=>{
+let unMountBraodCastChannel = new BroadcastChannel("pv:unmount");
+unMountBraodCastChannel.addEventListener("message", (ev) => {
   (
     /**
      * @type {MessageEvent}
@@ -91,44 +55,78 @@ unMountBraodCastChannel.addEventListener('message',(ev)=>{
     app && app.unmount(ev.data.el);
     app = null;
     // _hyperscript.processNode(ev.detail.el);
+  };
+});
+
+function pvMount(
+  /**
+   * @type {CustomEvent}
+   */
+  ev
+) {
+  if (!ev.detail.el) {
+    console.error("Oh shit here we again : hs error no element founded");
+    // const el = document.querySelector(ev.detail.selector);
+    return;
   }
-})
+  console.log("mounting el : ", ev.detail.el);
 
-window.parent.addEventListener(
-  "pv:unmount",
-  (
-    /**
-     * @type {CustomEvent}
-     */
-    ev
-  ) => {
-    if (!ev.detail.el) {
-      console.error("Oh shit here we again : hs error no element founded");
-      // const el = document.querySelector(ev.detail.selector);
+  // !app &&
+  //   (app = PetiteVue.createApp({
+  //     $delimiters: ["${", "}"],
+  //   }));
+  // app.mount(ev.detail.el);
 
-      return;
-    }
+  app = PetiteVue.createApp({
+    $delimiters: ["${", "}"],
+  });
+  app.directive("view", vIntersection);
+  app.directive("ref", vRef);
+  console.log("mounting : ", ev.detail.el);
+  app.mount(ev.detail.el);
 
-    console.log("un mounting el :", ev.detail.el);
-    app && app.unmount(ev.detail.el);
-    app = null;
-    // _hyperscript.processNode(ev.detail.el);
+  // _hyperscript.processNode(ev.detail.el);
+}
+
+function pvUnMount(
+  /**
+   * @type {CustomEvent}
+   */
+  ev
+) {
+  if (!ev.detail.el) {
+    console.error("Oh shit here we again : hs error no element founded");
+    // const el = document.querySelector(ev.detail.selector);
+
+    return;
   }
-);
 
-// // const observer = new MutationObserver((entries) => {
-// //   entries.forEach((entry) => {
-// //     [...entry.addedNodes]
-// //       .filter((node) => node instanceof HTMLElement)
-// //       .forEach((node) => {
-// //         if (node.hasAttribute("_")) {
-// //           _hyperscript.processNode(node);
-// //         }
-// //       });
-// //   });
-// // });
+  console.log("un mounting el :", ev.detail.el);
+  app && app.unmount(ev.detail.el);
+  app = null;
+  // _hyperscript.processNode(ev.detail.el);
+}
 
-// // observer.observe(document.body, {
-// //   childList: true,
-// //   subtree: true,
-// // });
+function clearPvScript(params) {
+  window.parent.removeEventListener("pv:mount", pvMount);
+
+  window.parent.removeEventListener("pv:unmount", pvUnMount);
+
+  app && app.unmount(document.body);
+  app = null;
+  mountBroadCastChannel.close();
+  unMountBraodCastChannel.close();
+  mountBroadCastChannel = null;
+  unMountBraodCastChannel = null;
+  console.log("script cleared from pvMount.js");
+
+  window.parent.removeEventListener("clear:script", clearPvScript);
+}
+
+window.parent.addEventListener("pv:mount", pvMount);
+
+window.parent.addEventListener("pv:unmount", pvUnMount);
+
+window.parent.addEventListener("clear:script", clearPvScript);
+
+

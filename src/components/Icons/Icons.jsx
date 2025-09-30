@@ -1,6 +1,7 @@
 import { Path } from "../Protos/Path";
 export const mainColor = "#64748B";
 
+//million-ignore
 export const Icons = {
   components: (strokeColor, strokeWidth) => (
     <svg

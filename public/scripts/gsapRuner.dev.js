@@ -60,12 +60,16 @@ function CompileMotion(
     return Object.fromEntries(
       Object.entries(obj)
         .map(([key, value]) => {
-          console.log('key : ' , key);
-          
+          console.log("key : ", key);
+
           // if (key == "markers" && removeMarkers) return null;
           if (typeof value === "object" && !Array.isArray(value)) {
             return [key, parseObjValue(value)];
-          } else if (key.startsWith("on") && /on[A-Z]/gi.test(key) && !key.toLocaleLowerCase().endsWith('params')) {
+          } else if (
+            key.startsWith("on") &&
+            /on[A-Z]/gi.test(key) &&
+            !key.toLocaleLowerCase().endsWith("params")
+          ) {
             const isFn = isFunction(value);
             return [
               key,
@@ -169,7 +173,7 @@ function CreateGsap(motion, paused = false) {
   }
 }
 
-window.parent.addEventListener("gsap:run", (ev) => {
+function gsapRun(ev) {
   /**
    * @type {{methods :  string[] , motion:import('../../src/helpers/types').MotionType}}
    */
@@ -294,9 +298,9 @@ window.parent.addEventListener("gsap:run", (ev) => {
     }
   }
   previousMotion = JSON.stringify(motion);
-});
+}
 
-window.parent.addEventListener("gsap:all:run", (ev) => {
+function gsapRunAll(ev) {
   /**
    * @type {{motions:{[key:string]:import('../../src/helpers/types').MotionType}}}
    */
@@ -325,9 +329,9 @@ window.parent.addEventListener("gsap:all:run", (ev) => {
       })
     );
   });
-});
+}
 
-window.parent.addEventListener("gsap:all:kill", (ev) => {
+function gsapKillAll(ev) {
   /**
    * @type {{motions:{[key:string]:import('../../src/helpers/types').MotionType}}}
    */
@@ -367,4 +371,28 @@ window.parent.addEventListener("gsap:all:kill", (ev) => {
       new CustomEvent("gsap:all:kill", { detail: { motions: instanceMotions } })
     );
   });
-});
+}
+
+window.parent.addEventListener("gsap:run", gsapRun);
+
+window.parent.addEventListener("gsap:all:run", gsapRunAll);
+
+window.parent.addEventListener("gsap:all:kill", gsapKillAll);
+
+function clearScript(ev) {
+  window.parent.removeEventListener("gsap:run", gsapRun);
+
+  window.parent.removeEventListener("gsap:all:run", gsapRunAll);
+
+  window.parent.removeEventListener("gsap:all:kill", gsapKillAll);
+
+  gsap = null;
+  gsapTween = null;
+  previousMotion=null;
+
+  console.log('script cleared from gsapRuner.dev.js');
+  
+  window.parent.removeEventListener("gsap:all:kill", clearScript);
+}
+
+window.parent.addEventListener("clear:script", clearScript);

@@ -9,6 +9,7 @@ import { chunkSplitPlugin } from "vite-plugin-chunk-split";
 // import MillionLint from "@million/lint";
 // import tailwindcss from '@tailwindcss/vite'
 import million from 'million/compiler'
+import path from 'path';
 
 export default defineConfig({
   base:'/',
@@ -33,6 +34,7 @@ export default defineConfig({
   resolve: {
     alias: {
       global: "global-this",
+      // '@grapesjs/react': path.resolve(__dirname, 'src/grapesjs-react-adapter.jsx'),
     },
   },
   plugins: [

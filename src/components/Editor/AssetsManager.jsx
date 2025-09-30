@@ -61,7 +61,7 @@ import { assetsWorker } from "../../helpers/defineWorkers";
  * @param {{editor: import('grapesjs').Editor}} param0
  * @returns
  */
-export const AssetsManager = memo(() => {
+export const AssetsManager = (() => {
   /**
    * @type {import('../../helpers/types').InfinitelyAsset[]}
    */

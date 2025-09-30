@@ -50,7 +50,7 @@ import { editorContainerInstance } from "../../constants/InfinitelyInstances";
 import { InfinitelyEvents } from "../../constants/infinitelyEvents";
 import { fetcherWorker } from "../../helpers/defineWorkers";
 
-export const HomeHeader = memo(() => {
+export const HomeHeader = (() => {
   const editor = useEditorMaybe();
   const widthRef = useRef("");
   const heightRef = useRef("");

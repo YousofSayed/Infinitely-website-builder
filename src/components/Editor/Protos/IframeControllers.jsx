@@ -29,6 +29,9 @@ import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 import { infinitelyCallback } from "../../../helpers/bridge";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./ToastMsgInfo";
+import { uniqueID } from "../../../helpers/cocktail";
+import { destroyEditor } from "../../../grapesjs-react-adapter";
+// import { unMountApp } from "../../../main";
 // import { reBuildApp, unMountApp } from "../../../main";
 
 export const IframeControllers = () => {
@@ -382,169 +385,38 @@ export const IframeControllers = () => {
       <Li
         className="flex-shrink-0"
         onClick={async (ev) => {
-          // console.log(editor?.Canvas?.getBody?.());
-          // const body = editor?.Canvas?.getBody();
-          // if (editor.infLoading || editor.canvasReload) {
-          //   toast.warn(<ToastMsgInfo msg={`Wait until load end`} />);
-          //   return;
-          // }
-
-          // const test = async () => {
-          //   await editor.load();
-          //   setTimeout(() => {
-          //     test();
-          //   }, 5000);
-          // };
-
-          // test();
-          // window.stop()
-          // document.documentElement.remove();
-          // await editor.load();
-          // navigate('/');
-          // setReloader(uniqueId(`reloader-key-${uniqueID()}-`));
-          // const ed = document.querySelector(`#editor-container`);
-          // editor.Canvas.destroy();
-          // ed.innerHTML = "";
-          // ed.appendChild(editor.Canvas.render());
-
-          // grapesjs.init(editor.getConfig());
-
-          // editor.rqId && cancelIdleCallback(editor.rqId);
-          // editor.rqId = requestIdleCallback(editor.load, { timeout: 5000 });
-          //   const mainWrapperel = editor.getWrapper().getEl();
-          //   const frame = editor.Canvas.getFrameEl();
-          //   frame.contentDocument.addEventListener("DOMContentLoaded", () => {
-          //    const newWrapperEl = editor.getWrapper().getEl();
-          //    newWrapperEl.replaceWith(mainWrapperel);
-          //    console.log(mainWrapperel , newWrapperEl);
-
-          //  });
-          //    frame.contentDocument.location.reload();
-          // isEditorLoad.current = true;
-          // editor.canvasReload = true;
-          // editor.destroy();
-          // await editor.Storage.load();
-          // await editor.destroy();
-          // editor.clearDirtyCount();
-
-          ///////////////////
-          // editor.loadProjectData({
-          //   components: editor
-          //     .getWrapper()
-          //     .components()
-          //     .models.concat(
-          //       `<style>${editor.getCss({
-          //         avoidProtected: true,
-          //         keepUnusedStyles: false,
-          //       })}</style>`
-          //     ),
-          // });
-          // alert('Are you ok ?');
-          // window.parent.resetAppMemory();
-
-          editor.off("component:remove:before");
-          // editor.load();
-          window.location.reload();
-          // window.parent.location.reload();
-          // editor.off("canvas:frame:load");
-          // editor.off("canvas:frame:load:body");
-          // editor.off("canvas:frame:load:head");
-          // editor.off("component:add");
-          // editor.off("component:deselected");
-          // editor.off("component:selected");
-          // editor.off("component:create");
-          // editor.off("component:mount");
-          // editor.off("component:resize");
-          // editor.off("component:toggled");
-          // editor.off("component:clone");
-          // editor.off("storage:load");
-          // editor.off("storage:end:load");
-          // editor.off("storage:start:load");
-          // editor.off("storage:start");
-          // window.open('/' , '_top')
-          // infinitelyCallback(() => {
-
-          //   // reloadEditor();
-          //   // editor.load();
-          //   // location.reload();
-          //   editor.destroy();
-          //   // reBuildApp()
-          //   unMountApp()
-          //   // window.open("/", "_self")
-          // });
-          // window.close()
-          // requestIdleCallback(() => {
-          //   unMountApp();
-          //   window.parent.mountIframe(true);
-          // });
-          // setTimeout(() => {
-          //   // unMountApp();
-          //   window.parent.mountIframe(true);
-          // }, 300);
           // editor.off("component:remove:before");
-          // await editor.load();
-          // location.reload();
-          // setTimeout(() => {
-          //   editor.off("component:remove:before");
-          //   reBuildApp();
-          // }, 350);
-          // requestIdleCallback(
-          //   () => {
-          //   },
-          //   { timeout: 5000 }
-          // );
-          // editor.Canvas.getFrame().addLink(
-          //   "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-          // );
-          //           editor.Canvas.getFrames().forEach(frame => {
-          //   frame.addLink("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css");
-          // });
-          // const frame = editor.Canvas.getFrameEl();
-          // frame.contentDocument.location.reload();
-          // frame.srcdoc = `<h1>Hellow world</h1>`
-          // frame.replaceWith(editor.Canvas.render());
-          // editor.render();
-
-          // editor.
-          // editor.setComponents(
-          //   editor
-          //     .getWrapper()
-          //     .getInnerHTML({ withProps: true, keepInlineStyle: true }) +
-          //     renderCssStyles(editor, editor.getCss({ keepUnusedStyles: true }))
-          // );
-          // editor.load();
-
-          // editor.Canvas.getFrameEl().addEventListener("load", () => {
-          //   console.log("wrapper : ", editor.getWrapper().getEl());
-
-          //   // console.log('t : ',editor.t('hello world' , {hello:'lol'}));
-          // });
-          // editor.Canvas.getFrame().removeLink('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
-          // editor.load();
-          // const frame = editor.Canvas.getFrameEl?.();
-          // if (!frame) return;
-          // frame.contentDocument?.location?.reload?.();
-          // await loadScripts(editor, await getProjectData());
-          // editor.trigger("canvas:frame:load:body", {
-          //   window: frame.contentWindow,
-          //   el: frame,
-          // });
-          // const callback = () => {
-          //   editor.canvasReload = false;
-          //   editor.off("canvas:frame:load:body", callback);
-          // };
-          // editor.on("canvas:frame:load:body", callback);
-          // editor.Canvas.getFrameEl?.().remove();
-          // const init = editor.EditorModel.init;
-          // let oldEditor = editor;
+          console.log("reloading");
+          // location.replace(location.pathname)
           // editor.destroy();
-          // console.log(editor?.Canvas?.getFrameEl?.() , 'fraaaaaaaamee before');
-          // init(oldEditor);
-          // console.log(editor.Canvas.getFrameEl?.() , 'fraaaaaaaamee');
+          function cleanGlobalListeners() {
+            const events = [
+              "resize",
+              "scroll",
+              "mousemove",
+              "mouseup",
+              "keydown",
+              "keyup",
+            ];
 
-          // editor.Canvas.model.destroy()
-          // editor.Canvas.destroy();
-          // editor.Canvas.model.init()
+            events.forEach((event) => {
+              window.removeEventListener(event, () => {});
+              document.removeEventListener(event, () => {});
+            });
+          }
+          // cleanGlobalListeners();
+          // unMountApp();
+          // editor.destroy();
+          window.dispatchEvent(new CustomEvent("clear:script"));
+          
+          setTimeout(() => {
+            // document.documentElement.replaceWith(document.documentElement.cloneNode(true));
+            location.replace(location.href)
+            // editor.load();
+            // destroyEditor();
+          }, 0);
+          // setReloader(uniqueID());
+          // window.location.reload();
         }}
         title="Reload Canvas"
         required={reloadRequired}

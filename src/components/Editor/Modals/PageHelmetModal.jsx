@@ -27,6 +27,7 @@ import { opfs } from "../../../helpers/initOpfs";
 import { defineRoot } from "../../../helpers/bridge";
 import { random } from "lodash";
 
+//million-ignore
 export const PageHelmetModal = () => {
   const [helmet, setHelmet] = useState({
     logo: null,

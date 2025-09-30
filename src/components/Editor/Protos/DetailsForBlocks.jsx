@@ -13,15 +13,16 @@ import { refType } from "../../../helpers/jsDocs";
  * @param {{label : string , HTMLChildren : HTMLElement[]}} param0
  * @returns
  */
-export const DetailsForBlocks = memo(({ label, HTMLChildren }) => {
+export const DetailsForBlocks = (({ label, HTMLChildren }) => {
   const [isShow, setIsShow] = useState(false);
   const blocksContainerRef = useRef(refType);
 
   useLayoutEffect(() => {
     if (!blocksContainerRef.current) return;
-
+    blocksContainerRef.current.querySelectorAll(`*`).forEach(el=>el.remove());
     blocksContainerRef.current.innerHTML = "";
     if (!isShow) {
+      blocksContainerRef.current.querySelectorAll(`*`).forEach(el=>el.remove());
       blocksContainerRef.current.innerHTML = "";
     } else {
     }

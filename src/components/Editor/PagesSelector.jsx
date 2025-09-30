@@ -10,7 +10,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useRecoilValue } from "recoil";
 import { showPreviewState } from "../../helpers/atoms";
 
-export const PagesSelector = memo(() => {
+export const PagesSelector = (() => {
   const editor = useEditorMaybe();
   const projectId = +localStorage.getItem(current_project_id);
   const showPreview = useRecoilValue(showPreviewState);

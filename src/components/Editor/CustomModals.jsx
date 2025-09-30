@@ -10,7 +10,7 @@ import { LibraryInstaller } from "./Protos/LibraryInstaller";
 import { LibraryInstallerModal } from "./Modals/LibraryInstallerModal";
 import { FitTitle } from "./Protos/FitTitle";
 
-export const CustomModals = memo(() => {
+export const CustomModals = (() => {
   const editor = useEditorMaybe();
   const modalData = useRecoilValue(modalDataState);
   const setModalData = useSetRecoilState(modalDataState);

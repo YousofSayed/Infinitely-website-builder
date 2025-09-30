@@ -1,6 +1,8 @@
 import { select_page } from "../constants/InfinitelyCommands";
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
 import { current_page_id } from "../constants/shared";
+import { defineRoot, infinitelyCallback, toMB } from "../helpers/bridge";
+import { opfs } from "../helpers/initOpfs";
 
 /**
  *
@@ -17,15 +19,35 @@ export const addNewBuiltinCommands = (editor) => {
   });
   // const originalRemove = editor.Commands.get('remove');
 
- 
-
-  editor.Commands.add(select_page, (editor, sender, options) => {
+  editor.Commands.add(select_page, async (editor, sender, options) => {
     const pageId = options.pageId;
     if (pageId == localStorage.getItem(current_page_id)) return;
-    localStorage.setItem(current_page_id, pageId);
+    if (!pageId) return;
+    if (editor.getDirtyCount()) {
+      const confirmChange = confirm(
+        "You have unsaved changes, are you sure you want to switch pages and lose those changes?"
+      );
+      if (!confirmChange) return;
+    }
+    const fileSize = toMB(
+      (
+        await (
+          await opfs.getFile(defineRoot(`editor/pages/${pageId}.html`))
+        ).getOriginFile()
+      ).size
+    );
+    console.log(fileSize, fileSize > 0.1, "fileSize");
+    window.dispatchEvent(new CustomEvent("clear:script"));
+    infinitelyCallback(() => {
+      localStorage.setItem(current_page_id, pageId);
+      if (fileSize > 0.1) {
+        location.replace(location.href + `?page=${pageId}`);
+      } else {
+        editor.load();
+      }
+    }, 10);
     //  editor.store();
-    // editor.load();
-    location.reload()
+    // location.replace(location.pathname)
   });
 
   editor.Commands.add("toggle-preview", {

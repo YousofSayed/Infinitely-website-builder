@@ -17,6 +17,7 @@ import { fetcherWorker } from "../../../helpers/defineWorkers";
 import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
 import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 
+//million-ignore
 export const JsLibrary = ({
   library = JSLibraryType,
   fileuploader = false,
