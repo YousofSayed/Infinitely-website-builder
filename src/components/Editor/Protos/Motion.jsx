@@ -1474,10 +1474,10 @@ export const Motion = memo(() => {
     setInstanceId("");
     setIsInstance(false);
     setEditeAsMain(true);
-    const firstMotionCmp = editor
-      .getWrapper()
-      .find(`[${motionId}="${mainId}"]`)[0];
-    firstMotionCmp && preventSelectNavigation(editor, firstMotionCmp);
+    // const firstMotionCmp = editor
+    //   .getWrapper()
+    //   .find(`[${motionId}="${mainId}"]`)[0];
+    // firstMotionCmp && preventSelectNavigation(editor, firstMotionCmp);
   };
 
   const copyInstance = async () => {

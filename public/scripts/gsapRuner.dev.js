@@ -71,6 +71,11 @@ function CompileMotion(
             !key.toLocaleLowerCase().endsWith("params")
           ) {
             const isFn = isFunction(value);
+            value =
+              typeof value === "string"
+                ? value.replaceAll?.("self", attribute)
+                : value;
+                
             return [
               key,
               isFn
@@ -388,10 +393,10 @@ function clearScript(ev) {
 
   gsap = null;
   gsapTween = null;
-  previousMotion=null;
+  previousMotion = null;
 
-  console.log('script cleared from gsapRuner.dev.js');
-  
+  console.log("script cleared from gsapRuner.dev.js");
+
   window.parent.removeEventListener("gsap:all:kill", clearScript);
 }
 

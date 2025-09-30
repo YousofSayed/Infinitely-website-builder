@@ -2,6 +2,8 @@ import { select_page } from "../constants/InfinitelyCommands";
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
 import { current_page_id } from "../constants/shared";
 import { defineRoot, infinitelyCallback, toMB } from "../helpers/bridge";
+import { killAllGsapMotions, runAllGsapMotions } from "../helpers/customEvents";
+import { getProjectData } from "../helpers/functions";
 import { opfs } from "../helpers/initOpfs";
 
 /**
@@ -85,6 +87,20 @@ export const addNewBuiltinCommands = (editor) => {
       const command = `core:component-outline`;
       const isActive = editor.Commands.isActive(command);
       isActive ? editor.stopCommand(command) : editor.runCommand(command);
+      // console.log("isActive : ", isActive);
+    },
+  });
+
+  editor.Commands.add("gsap:run-all", {
+    async run(editor) {
+      runAllGsapMotions((await getProjectData()).motions);
+      // console.log("isActive : ", isActive);
+    },
+  });
+
+  editor.Commands.add("gsap:kill-all", {
+    async run(editor) {
+      killAllGsapMotions((await getProjectData()).motions);
       // console.log("isActive : ", isActive);
     },
   });

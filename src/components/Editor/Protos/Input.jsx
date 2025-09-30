@@ -48,7 +48,11 @@ export const Input = ({
         onChange(ev);
       }}
       onKeyUp={onKeyUp}
-      onKeyDown={onKeyDown}
+      onKeyDown={(ev)=>{
+        const isSave = (ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() == 's' ;
+        if(isSave)ev.preventDefault();
+        onKeyDown(ev);
+      }}
     />
   );
 };

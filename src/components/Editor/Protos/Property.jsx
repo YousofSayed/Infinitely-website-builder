@@ -80,6 +80,7 @@ export const Property = ({
         ""
       )}
       <Input
+        autoCorrect="off"
         className={`${
           inputClassName ? inputClassName : `${wrap ? "w-full" : "w-full"}`
         } h-full   font-semibold bg-slate-900 rounded-lg px-2 py-2 outline-none border-2 border-transparent focus:border-blue-600 transition-colors text-white`}

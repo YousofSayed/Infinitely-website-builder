@@ -743,7 +743,7 @@ function CompileMotion(
         .map(([key, value]) => {
           console.log("key : ", key);
 
-          // if (key == "markers" && removeMarkers) return null;
+          if (key == "markers" && removeMarkers) return null;
           if (typeof value === "object" && !Array.isArray(value)) {
             return [key, parseObjValue(value)];
           } else if (
@@ -752,6 +752,11 @@ function CompileMotion(
             !key.toLocaleLowerCase().endsWith("params")
           ) {
             const isFn = isFunction(value);
+            value =
+              typeof value === "string"
+                ? value.replaceAll?.("self", attribute)
+                : value;
+                
             return [
               key,
               isFn

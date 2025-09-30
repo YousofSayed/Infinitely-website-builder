@@ -112,5 +112,5 @@ export const onKeyUp = ({ ev, isCurrentELChange }) => {
  * @param {{ev:FocusEvent , setUndoAndRedoStatesVal : Function}} param0
  */
 export const onFocus = ({ ev }) => {
-  ev.target.select();
+  // ev.target.select();
 };
