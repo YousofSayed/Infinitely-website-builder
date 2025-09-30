@@ -716,8 +716,8 @@ const isFunction = (value) => {
 function CompileMotion(
   motion,
   paused = false,
-  isInstance = false
-  // removeMarkers = true // this is just in bridge.js for final build (production)
+  isInstance = false,
+  removeMarkers = true // this is just in bridge.js for final build (production)
 ) {
   /**
    * @type {{timeline:object , fromTo : {
