@@ -871,7 +871,7 @@ export function buildGsapMotionsScript(
         ).replaceAll("\\", "\\\\")})\`)())`;
       }
       if (compiledMotion.fromTo.length) {
-        for (const item of compiledMotion.fromTo) {
+        for (const [i,item] of compiledMotion.fromTo.entries()) {
           const toObject = `new Function(\`return (${serializeJavascript(
             item.toValue,
             { space: 2 }
@@ -887,7 +887,7 @@ export function buildGsapMotionsScript(
             item.selector
           }\`, {...${fromObject}}, {...${toObject}} , \`${
             item.positionParameter || ""
-          }\`)${motion.isTimeLine ? "" : ";\n\n"}`;
+          }\`)${motion.isTimeLine ? i == compiledMotion.fromTo.length-1 ? ';\n\n' : '' : ";\n\n"}`;
 
           // console.log(new Function(`return ${serializeJavascript(item.toValue , {space:2, })}`)());
         }

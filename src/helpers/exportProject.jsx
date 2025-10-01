@@ -207,6 +207,8 @@ export async function buildProject(props) {
         page.name
       );
 
+      // console.log('filtered motions : ' , filterdMotions);
+      
       zip.file(
         `js/motions/${page.name}.js`,
         props.projectSetting.minify_Js
