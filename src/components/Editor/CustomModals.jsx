@@ -39,7 +39,8 @@ export const CustomModals = (() => {
   return (
     <section
     style={{
-      contain:'layout , paint , size , content , size , style'
+      contain:'layout , paint , size , content , size , style',
+      willChange:'opacity , transform'
     }}
       onClick={(ev) => {
         // ev.stopPropagation();

@@ -756,7 +756,7 @@ function CompileMotion(
               typeof value === "string"
                 ? value.replaceAll?.("self", attribute)
                 : value;
-                
+
             return [
               key,
               isFn
@@ -880,13 +880,14 @@ export function buildGsapMotionsScript(
             item.fromValue,
             { space: 2 }
           ).replaceAll("\\", "\\\\")})\`)()`;
+
           tween += `${
             motion.isTimeLine ? "" : `${motion.id}.${item.name} = gsap`
           }.fromTo(\`${
             item.selector
-          }\`, {...${fromObject}}, {...${toObject}} , ${
+          }\`, {...${fromObject}}, {...${toObject}} , \`${
             item.positionParameter || ""
-          });\n\n`;
+          }\`)${motion.isTimeLine ? "" : ";\n\n"}`;
 
           // console.log(new Function(`return ${serializeJavascript(item.toValue , {space:2, })}`)());
         }
@@ -2351,11 +2352,15 @@ export async function extractElementStyles({ elementsHTML, cssCode }) {
   };
 }
 
-
-export function infinitelyCallback(callback = () => {} , timeout=0) {
-  if(window.requestIdleCallback){
-    requestIdleCallback(callback , {timeout})
-  }else{
-    setTimeout(callback , timeout)
+export function infinitelyCallback(callback = () => {}, timeout = 0) {
+  if (window.requestIdleCallback) {
+    requestIdleCallback(callback, { timeout });
+  } else {
+    setTimeout(callback, timeout);
   }
+}
+
+
+export function getStringSizeBytes(str) {
+  return new Blob([str]).size;
 }

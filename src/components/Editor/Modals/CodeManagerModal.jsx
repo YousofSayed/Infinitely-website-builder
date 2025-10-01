@@ -27,6 +27,8 @@ import {
   doDocument,
   extractElementStyles,
   getElementRulesWithAst,
+  getStringSizeBytes,
+  toMB,
 } from "../../../helpers/bridge";
 import { css_beautify, html_beautify, js_beautify } from "js-beautify";
 import { minify, syntax } from "csso";
@@ -34,6 +36,9 @@ import { parseHTML } from "linkedom";
 import { isArray, isPlainObject, uniqueId } from "lodash";
 import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
 import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
+import { toast } from "react-toastify";
+import { ToastMsgInfo } from "../Protos/ToastMsgInfo";
+import { renderCssStyles } from "../../../plugins/IDB";
 
 export const CodeManagerModal = () => {
   const timeoutRef = useRef();
@@ -248,16 +253,12 @@ export const CodeManagerModal = () => {
 
   const save = async () => {
     const newChange = {};
+    let isHtmlUpdated = false;
 
     for (const key in filesData) {
       const root = defineRoot(key);
       const isChanged = changed[root];
-      // console.log(
-      //   "chhhhhhhhhhhhhhhhhhhhhhage before : ",
-      //   root,
-      //   changed,
-      //   isChanged
-      // );
+
       if (!isChanged) continue;
       console.log("chhhhhhhhhhhhhhhhhhhhhhage : ", isChanged);
 
@@ -307,6 +308,46 @@ export const CodeManagerModal = () => {
           );
         }
       }
+      //Handle real time saving
+      if (key.includes(`editor/pages/${currentPageName}.html`)) {
+        const htmlContent = filesData[key];
+        const cssContent = filesData[defineRoot(`css/${currentPageName}.css`)];
+        const htmlSize = toMB(getStringSizeBytes(htmlContent)); // size in MB
+        const cssSize = toMB(getStringSizeBytes(cssContent)); // size in MB
+
+        if (htmlSize + cssSize > 0.200) {
+          // ~200 KB
+          toast.warn(
+            <ToastMsgInfo
+              msg={`The HTML & CSS files is too large for real-time updates. Please reload the page.`}
+            />
+          );
+        } else {
+          editor.DomComponents.clear();
+          editor.setComponents (renderCssStyles(editor , filesData) + htmlContent, { avoidStore: true }); // typo: "avoideStore" → "avoidStore"
+          editor.clearDirtyCount();
+          isHtmlUpdated = true;
+        }
+      }
+
+      if (key.includes(`css/${currentPageName}.css`) && !isHtmlUpdated) {
+        const cssContent = filesData[key];
+        const cssSize = toMB(getStringSizeBytes(cssContent)); // size in MB
+
+        if (cssSize > 0.15) {
+          // ~150 KB
+          toast.warn(
+            <ToastMsgInfo
+              msg={`The CSS file is too large for real-time updates. Please reload the page.`}
+            />
+          );
+        } else {
+          editor.Css.clear();
+          editor.setStyle('');
+          editor.addComponents(renderCssStyles(editor, cssContent));
+          editor.clearDirtyCount();
+        }
+      }
 
       // return;
       infinitelyWorker.postMessage({
@@ -346,7 +387,9 @@ export const CodeManagerModal = () => {
     setReloaderKey(createUUID());
     editor.clearDirtyCount();
     // await editor.load();
-    reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {state:true});
+    reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {
+      state: true,
+    });
   };
 
   return (
@@ -460,7 +503,7 @@ export const CodeManagerModal = () => {
           },
         ]}
       />
-      <footer className="h-[8%] flex items-center py-2">
+      <footer className="h-[8%] flex items-center py-2 mt-2">
         <Button
           className="flex-grow-0 flex-shrink"
           onClick={async () => {

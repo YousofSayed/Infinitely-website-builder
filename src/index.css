@@ -7,6 +7,12 @@
   scroll-behavior: smooth;
   font-size: 14px;
 }
+
+.will-change-for-all , .will-change-for-all * {
+  will-change: transform, opacity;
+
+}
+
 ul,
 li {
   list-style: none;
@@ -30,12 +36,15 @@ body {
   font-family: system-ui, "roboto", "poppins";
   /* overflow: hidden; */
 }
+
 [data-slot="indicator"] {
   transition: 0.2s;
 }
-[data-open="true"] > [data-slot="indicator"] {
+
+[data-open="true"]>[data-slot="indicator"] {
   transform: rotate(90deg);
 }
+
 [data-orientation="vertical"] {
   padding: 0;
   will-change: height, width;
@@ -57,16 +66,18 @@ body {
 .monaco-editor .overflow-guard {
   overflow: visible !important;
 }
+
 .monaco-editor-hover,
 .monaco-hover {
   z-index: 999999 !important;
 }
 
-.gjs-cv-canvas iframe , #editor-container {
+.gjs-cv-canvas iframe,
+#editor-container {
   /* transform: translateZ(0); */
   will-change: zoom;
   backface-visibility: hidden;
-  contain: layout paint size ;
+  contain: layout paint size;
 }
 
 
@@ -91,6 +102,7 @@ body {
 /* header , nav , aside  {
   zoom: .8
 } */
+
 #root {
   height: 100%;
   overflow: hidden;
@@ -102,6 +114,7 @@ body {
   top: 0;
   left: 0; */
 }
+
 /* .zoom-80{
   zoom: 80%;
 
@@ -125,10 +138,12 @@ nav ul svg {
   height: 22.5px !important;
 }
 
-.tools ul svg , .btn-arrow svg{
+.tools ul svg,
+.btn-arrow svg {
   width: 19.5px !important;
   height: 19.5px !important;
 }
+
 input,
 textarea,
 [contenteditable] {
@@ -170,13 +185,17 @@ textarea,
 }
 
 .bg-blur {
-  background: rgba(255, 255, 255, 0.1); /* Adjust opacity as needed */
-  backdrop-filter: blur(3px); /* Adjust the blur amount */
+  background: rgba(255, 255, 255, 0.1);
+  /* Adjust opacity as needed */
+  backdrop-filter: blur(3px);
+  /* Adjust the blur amount */
 }
 
 .bg-blur-dark {
-  background: #11182757; /* Adjust opacity as needed */
-  backdrop-filter: blur(3px); /* Adjust the blur amount */
+  background: #11182757;
+  /* Adjust opacity as needed */
+  backdrop-filter: blur(3px);
+  /* Adjust the blur amount */
 }
 
 .custom-grid-col-150 {
@@ -215,7 +234,8 @@ button.clicked svg path {
 
 * {
   scrollbar-color: rgb(37 99 235 /1) rgba(128, 128, 128, 0.315);
-  scrollbar-width: thin; /* 'thin' or 'auto' */
+  scrollbar-width: thin;
+  /* 'thin' or 'auto' */
   -o-backface-visibility: hidden;
   -moz-backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
@@ -246,16 +266,19 @@ button.clicked svg path {
 
 .hideScrollBar {
   scrollbar-color: unset;
-  scrollbar-width: none; /* 'thin' or 'auto' */
+  scrollbar-width: none;
+  /* 'thin' or 'auto' */
 }
 
 @keyframes clickframe {
   0% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(0.5);
   }
+
   100% {
     transform: scale(1);
   }
@@ -276,7 +299,7 @@ button.clicked svg path {
 /* [data-virtuoso-scroller="true"] > div {
   @apply p-2;
 } */
-.gutter{
+.gutter {
   scrollbar-gutter: space;
 
 }
@@ -284,7 +307,7 @@ button.clicked svg path {
 .custom-font-size {
   font-size: clamp(5px, 0.9vw, 50px);
   text-wrap: nowrap;
-  
+
 }
 
 .minion::before {
@@ -307,12 +330,14 @@ button.clicked svg path {
 }
 
 .layout {
-  position: static; /* Reset position */
-  overflow: visible; /* Allow fixed elements to display properly */
+  position: static;
+  /* Reset position */
+  overflow: visible;
+  /* Allow fixed elements to display properly */
 }
 
 .react-colorful {
-  position: absolute !important ;
+  position: absolute !important;
   padding: 1px;
   border-radius: 4px;
   width: 100% !important;
@@ -320,6 +345,7 @@ button.clicked svg path {
   transform: translateX(-50%);
   z-index: 100;
 }
+
 .react-colorful__saturation {
   /* border-radius: 4px 4px 0 0; */
   width: 100% !important;
@@ -329,6 +355,7 @@ button.clicked svg path {
   height: 40px;
   border-radius: 0 0 4px 4px;
 }
+
 .your-component .react-colorful__hue-pointer {
   width: 12px;
   height: inherit;
@@ -380,7 +407,8 @@ details[open] summary::before {
 details[open] summary {
   margin-bottom: 5px;
 }
-[data-accordion-key]{
+
+[data-accordion-key] {
   position: relative !important;
 }
 
@@ -412,7 +440,7 @@ details[open] summary {
 
 .gjs-block {
   align-self: stretch !important;
-  @apply w-full h-full bg-slate-800 border-none p-2 m-0 shadow-none rounded-lg hover:text-slate-200 text-slate-300  font-bold flex justify-evenly items-center self-stretch;
+  @apply w-full h-full bg-slate-800 border-none p-2 m-0 shadow-none rounded-lg hover:text-slate-200 text-slate-300 font-bold flex justify-evenly items-center self-stretch;
 }
 
 .gjs-blocks-c {
@@ -428,7 +456,7 @@ details[open] summary {
 }
 
 .gjs-block-label {
-  @apply text-[13.5px] capitalize  w-full;
+  @apply text-[13.5px] capitalize w-full;
 }
 
 .gjs-badge {
@@ -477,11 +505,11 @@ details[open] summary {
 }
 
 .symbol-bg {
-  background-color:var(--symbol-color-hover) !important;
+  background-color: var(--symbol-color-hover) !important;
 }
 
-.badge-symbol-highlight figure{
-  background-color: var(--symbol-color-hover) !important ;
+.badge-symbol-highlight figure {
+  background-color: var(--symbol-color-hover) !important;
 }
 
 /* .gjs-badge > *{
@@ -508,7 +536,7 @@ details[open] summary {
 }
 
 .gjs-toolbar-items {
-  @apply items-center gap-3 py-[5px] px-2 flex ;
+  @apply items-center gap-3 py-[5px] px-2 flex;
 }
 
 .gjs-toolbar svg {
@@ -522,7 +550,7 @@ details[open] summary {
 }
 
 .gjs-btn-prim {
-  @apply py-[7.5px] px-[30px]  font-bold bg-blue-600 rounded-lg  text-white flex custom-font-size justify-center items-center;
+  @apply py-[7.5px] px-[30px] font-bold bg-blue-600 rounded-lg text-white flex custom-font-size justify-center items-center;
 }
 
 .gjs-am-add-asset {
@@ -536,7 +564,7 @@ details[open] summary {
 .gjs-title,
 .gjs-sm-sector-title {
   direction: rtl;
-  @apply w-full bg-slate-800  p-[10px] flex justify-between items-center  rounded-lg text-slate-300 break-all capitalize custom-font-size  font-bold h-full mr-2 !important;
+  @apply w-full bg-slate-800 p-[10px] flex justify-between items-center rounded-lg text-slate-300 break-all capitalize custom-font-size font-bold h-full mr-2 !important;
 }
 
 .gjs-blocks-cs.gjs-one-bg.gjs-two-color {
@@ -555,7 +583,7 @@ details[open] summary {
   @apply hidden !important;
 }
 
-#gjs-mdl-c .modal-content.gjs-sm-properties > div > div:nth-child(3) {
+#gjs-mdl-c .modal-content.gjs-sm-properties>div>div:nth-child(3) {
   @apply flex gap-[10px] items-center;
 }
 
@@ -594,7 +622,7 @@ details[open] summary {
 }
 
 .gjs-layer-move {
-  @apply z-50  w-[22px];
+  @apply z-50 w-[22px];
 }
 
 .gjs-selected [data-toggle-select=""] {

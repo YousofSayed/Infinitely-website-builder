@@ -110,9 +110,11 @@ export const UploadBlocks = () => {
       },
     });
 
-    editor.load();
+    // editor.load();
     editor.trigger("block:add");
     editor.trigger("block:update");
+    setUploadedBlocks([]);
+    toast.success(<ToastMsgInfo msg={`Blocks saved successfully👍`}/>)
   };
 
   const deleteUploadedBlock = (id) => {
@@ -121,7 +123,7 @@ export const UploadBlocks = () => {
   };
 
   return (
-    <section className="p-1 h-full w-full flex justify-center  flex-col">
+    <section className="p-1 h-full w-full flex justify-center  flex-col overflow-hidden">
       {!uploadedBlocks.length ? (
         <section className=" flex justify-center items-center flex-col gap-2 p-5 rounded-md ">
           {/* <figure>

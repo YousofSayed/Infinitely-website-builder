@@ -1,18 +1,24 @@
 /* svg{
     pointer-events: none;
 } */
- /* html , body , body *{
+/* html , body , body *{
   contain: layout , paint , size , style , content ;
  } */
+* {
+  will-change: transform, opacity;
+}
+
 img,
 video {
   will-change: auto !important;
 }
-.preventWhenScroll *  {
+
+.preventWhenScroll * {
   transition: none !important;
   animation-play-state: paused !important;
   animation: none !important;
 }
+
 [inf-symbol-id].gjs-selected,
 [inf-symbol-id] *.gjs-selected {
   outline: 2px solid #eb2588 !important;
@@ -30,7 +36,8 @@ video {
   height: fit-content;
   display: block;
 }
-[data-gjs-type="media"] > * {
+
+[data-gjs-type="media"]>* {
   left: 0;
   top: 0;
   width: 100%;
@@ -69,7 +76,7 @@ infinitely-svg svg {
   font-weight: 500;
 }
 
-.drop-area > * {
+.drop-area>* {
   pointer-events: none;
 
   display: flex;
@@ -100,7 +107,7 @@ infinitely-svg svg {
   font-weight: bold !important;
 }
 
-swiper-slide.drop{
+swiper-slide.drop {
   height: 500px;
 }
 
@@ -108,7 +115,8 @@ swiper-slide.drop{
   min-height: 60px;
 }
 
-.inf-stop-all-animations  , .inf-stop-all-animations  *{
+.inf-stop-all-animations,
+.inf-stop-all-animations * {
   animation: none !important;
   animation-play-state: paused !important;
   /* transition: none !important; */
@@ -121,10 +129,11 @@ spline-viewer {
 }
 
 spline-viewer.drop {
-  all:  unset !important;
+  all: unset !important;
 }
 
-.enable-swiper , .enable-spline{
+.enable-swiper,
+.enable-spline {
   pointer-events: none;
   position: relative !important;
   height: 150px !important;
@@ -133,7 +142,8 @@ spline-viewer.drop {
   border: #E0E0E0 2px dotted !important;
 }
 
-.enable-swiper::after , .enable-spline::after{
+.enable-swiper::after,
+.enable-spline::after {
   content: '';
   position: absolute !important;
   left: 0 !important;
@@ -143,7 +153,8 @@ spline-viewer.drop {
   background-color: white !important;
 }
 
-.enable-swiper::before , .enable-spline::before{
+.enable-swiper::before,
+.enable-spline::before {
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
@@ -160,22 +171,23 @@ spline-viewer.drop {
   animation: scale 1s alternate-reverse forwards infinite !important;
 }
 
-.enable-swiper::before{
+.enable-swiper::before {
   content: 'Please Enable Swiper To Access This component';
 }
 
-.enable-spline::before{
+.enable-spline::before {
   content: 'Please Enable Spline Viewer To Access This component';
 
 }
 
 
 @keyframes scale {
-  from{
+  from {
     /* transform: scale(0); */
     opacity: .7;
   }
-  to{
+
+  to {
     opacity: 1;
     /* transform: scale(1); */
   }

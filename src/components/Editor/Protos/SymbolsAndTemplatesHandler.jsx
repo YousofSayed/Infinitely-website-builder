@@ -32,6 +32,8 @@ import { opfs } from "../../../helpers/initOpfs";
 import { defineRoot } from "../../../helpers/bridge";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Loader } from "../../Loader";
+import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
+import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 
 export const SymbolsAndTemplatesHandler = ({
   type = "",
@@ -112,7 +114,14 @@ export const SymbolsAndTemplatesHandler = ({
       console.log(`I Recived from worker well this command : ${command}`);
 
       if (command == "deleteAllSymbolsById") {
-        props.done && editor.load();
+        if (props.done && type == "symbol") {
+          reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {
+            state: true,
+          });
+        } else if (props.done && type == "template") {
+          editor.trigger("block:add");
+          editor.trigger("block:update");
+        }
       }
       infinitelyWorker.removeEventListener("message", callback);
     };
@@ -267,7 +276,10 @@ export const SymbolsAndTemplatesHandler = ({
   };
 
   return (
-    <main className="h-full flex p-1 flex-col gap-2 overflow-hidden " ref={animatRef}>
+    <main
+      className="h-full flex p-1 flex-col gap-2 overflow-hidden "
+      ref={animatRef}
+    >
       {showHeader && !!symbols.length && (
         <header className="flex items-center  rounded-lg  gap-2">
           <Input
@@ -336,14 +348,17 @@ export const SymbolsAndTemplatesHandler = ({
                  
                 </section> */}
 
-                  <FitTitle className="flex gap-2 items-center h-full  w-[calc(100%-115px)]">
+                  <FitTitle className="flex gap-2 items-center h-full  w-[calc(100%-115px)] overflow-hidden">
                     <figure
                       className=" h-full py-1 w-[35px]  bg-slate-900 flex justify-center items-center rounded-lg"
                       dangerouslySetInnerHTML={{ __html: symbol.media }}
                     >
                       {/* <img src={URL.createObjectURL(symbol.media)} alt="" /> */}
                     </figure>
-                    <span title={symbol.name} className="font-semibold custom-font-size capitalize text-ellipsis overflow-hidden  text-slate-200 text-[14px] ">
+                    <span
+                      title={symbol.name}
+                      className="font-semibold custom-font-size capitalize text-ellipsis overflow-hidden  text-slate-200 text-[14px] "
+                    >
                       {symbol.name}
                     </span>
                   </FitTitle>
