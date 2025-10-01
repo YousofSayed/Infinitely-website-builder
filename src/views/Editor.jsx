@@ -116,8 +116,14 @@ export function Editor({ params }) {
     const infinitelyWorkerIniter = (ev) => {
       const { command } = ev.data;
       if (command == "updateDB") {
-        reInitInfinitelyWorker();
-        infinitelyWorker.addEventListener("message", infinitelyWorkerIniter);
+        // reInitInfinitelyWorker();
+        infinitelyWorker.reInit((worker) => {
+          worker.postMessage({
+            command: "initOPFS",
+            props: { id: +localStorage.getItem(current_project_id) },
+          });
+        });
+        // infinitelyWorker.addEventListener("message", infinitelyWorkerIniter);
       }
     };
     infinitelyWorker.addEventListener("message", infinitelyWorkerIniter);
@@ -140,10 +146,8 @@ export function Editor({ params }) {
         setIsAssetsWorkerDone(true);
         // assetsWorker.removeEventListener("message", cb);
       }
-
     };
 
-   
     routerWorker.addEventListener("message", cb);
     setCurrentEl({ currentEl: null, addStyle: null });
     return () => {
@@ -174,61 +178,61 @@ export function Editor({ params }) {
         />
         <GJEditor key={reloader}>
           {/* <WithEditor> */}
-            <main
-              className="relative w-full h-full bg-slate-950 flex justify-between"
-              ref={mainAnimate}
+          <main
+            className="relative w-full h-full bg-slate-950 flex justify-between"
+            ref={mainAnimate}
+          >
+            {/* {!showPreview && <HomeNav />} */}
+            <HomeNav />
+            <section
+              // ref={parent}
+              className={`${
+                showPreview
+                  ? "w-full"
+                  : "w-[calc(100%-55px)] border-l-[1.5px] border-slate-400"
+              } flex flex-col h-full `}
             >
-              {/* {!showPreview && <HomeNav />} */}
-              <HomeNav />
-              <section
-                // ref={parent}
-                className={`${
-                  showPreview
-                    ? "w-full"
-                    : "w-[calc(100%-55px)] border-l-[1.5px] border-slate-400"
-                } flex flex-col h-full `}
+              {/* {!showPreview && <HomeHeader />} */}
+              <HomeHeader />
+              <PanelGroup
+                id={"panels-group"}
+                tagName="section"
+                className="flex h-full w-full"
+                direction="horizontal"
+                autoSaveId="panels"
+                // ref={parentForPanelsGroup}
               >
-                {/* {!showPreview && <HomeHeader />} */}
-                <HomeHeader />
-                <PanelGroup
-                  id={"panels-group"}
-                  tagName="section"
-                  className="flex h-full w-full"
-                  direction="horizontal"
-                  autoSaveId="panels"
-                  // ref={parentForPanelsGroup}
-                >
-                  {(showAnimBuilder || showLayers) && !showPreview && (
-                    <>
-                      <Panel defaultSize={300} id="left-panel" order={1}>
-                        <section
-                          // ref={parentForPanelsGroup}
-                          className="h-full w-full"
-                        >
-                          {showLayers && (
-                            <Aside dir="right">
-                              <Layers />
-                            </Aside>
-                          )}
+                {(showAnimBuilder || showLayers) && !showPreview && (
+                  <>
+                    <Panel defaultSize={300} id="left-panel" order={1}>
+                      <section
+                        // ref={parentForPanelsGroup}
+                        className="h-full w-full"
+                      >
+                        {showLayers && (
+                          <Aside dir="right">
+                            <Layers />
+                          </Aside>
+                        )}
 
-                          {showAnimBuilder && (
-                            <Aside>
-                              <AnimationsBuilder />
-                            </Aside>
-                          )}
-                        </section>
-                      </Panel>
-                      <PanelResizeHandle
-                        className={`w-[5px] bg-blue-600  opacity-0 hover:opacity-[1] transition-all`}
-                      />
-                    </>
-                  )}
+                        {showAnimBuilder && (
+                          <Aside>
+                            <AnimationsBuilder />
+                          </Aside>
+                        )}
+                      </section>
+                    </Panel>
+                    <PanelResizeHandle
+                      className={`w-[5px] bg-blue-600  opacity-0 hover:opacity-[1] transition-all`}
+                    />
+                  </>
+                )}
 
-                  <Panel id="center" defaultSize={600} order={2}>
-                    <Iframe />
-                  </Panel>
+                <Panel id="center" defaultSize={600} order={2}>
+                  <Iframe />
+                </Panel>
 
-                  {/* {!showPreview && (
+                {/* {!showPreview && (
                   <>
                     <PanelResizeHandle className="w-[5px] bg-blue-600 opacity-0 hover:opacity-[1] transition-all" />
                     <Panel defaultSize={300} order={3} id="right-panel">
@@ -242,23 +246,21 @@ export function Editor({ params }) {
                   </>
                 )} */}
 
-                  <PanelResizeHandle className="w-[5px] bg-blue-600 opacity-0 hover:opacity-[1] transition-all" />
-                  <Panel defaultSize={300} order={3} id="right-panel">
-                    <Aside>
-                      {pathname.pathname != "/add-blocks" && (
-                        <AsideControllers />
-                      )}
-                      <Outlet />
-                    </Aside>
-                  </Panel>
-                </PanelGroup>
-              </section>
+                <PanelResizeHandle className="w-[5px] bg-blue-600 opacity-0 hover:opacity-[1] transition-all" />
+                <Panel defaultSize={300} order={3} id="right-panel">
+                  <Aside>
+                    {pathname.pathname != "/add-blocks" && <AsideControllers />}
+                    <Outlet />
+                  </Aside>
+                </Panel>
+              </PanelGroup>
+            </section>
 
-              {showCustomModal && <CustomModals />}
+            {showCustomModal && <CustomModals />}
 
-              {/* <CustomModals /> */}
-              {/* <Popover /> */}
-            </main>
+            {/* <CustomModals /> */}
+            {/* <Popover /> */}
+          </main>
           {/* </WithEditor> */}
         </GJEditor>
       </section>

@@ -1,11 +1,10 @@
 import { Canvas, useEditorMaybe } from "@grapesjs/react";
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import React, {  useEffect, useRef, useState } from "react";
+import { useRecoilState, useRecoilValue,  } from "recoil";
 import {
   animationsState,
   animationsWillRemoveState,
   isAnimationsChangedState,
-  projectData,
   reloaderState,
   showAnimationsBuilderState,
   showDragLayerState,
@@ -14,41 +13,22 @@ import {
 } from "../../helpers/atoms";
 import { Button } from "../Protos/Button";
 import { Icons } from "../Icons/Icons";
-import { addClickClass, html, uniqueID } from "../../helpers/cocktail";
+import { addClickClass, } from "../../helpers/cocktail";
 import { iframeType, refType } from "../../helpers/jsDocs";
 import {
-  allowWorkerToBuildPagesForPreview,
-  buildGsapMotionsScript,
   getCurrentPageName,
-  getProjectData,
-  getScripts,
-  getStyles,
-  parseInfinitelyURLForWindow,
 } from "../../helpers/functions";
 import {
   current_page_id,
   current_project_id,
-  mainScripts,
-  preivewScripts,
 } from "../../constants/shared";
 import { InfinitelyEvents } from "../../constants/infinitelyEvents";
 import monacoLoader from "@monaco-editor/loader";
-import { infinitelyWorker } from "../../helpers/infinitelyWorker";
-import { initDBAssetsSw } from "../../serviceWorkers/initDBAssets-sw";
-import { flatMap, random } from "lodash";
-import { isChrome } from "../../helpers/bridge";
-import serializeJavascript from "serialize-javascript";
-import { createRoot } from "react-dom/client";
 import { useSetClassForCurrentEl } from "../../hooks/useSetclassForCurrentEl";
 import { FitTitle } from "./Protos/FitTitle";
-import { SmallButton } from "./Protos/SmallButton";
-import { Infinitely } from "../../helpers/Infinitely";
 import {
   keyframesGetterWorker,
-  pageBuilderWorker,
 } from "../../helpers/defineWorkers";
-import { useLiveQuery } from "dexie-react-hooks";
-import { liveQuery } from "dexie";
 import {
   editorStorageInstance,
   styleInfInstance,
@@ -58,25 +38,9 @@ import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
 import { animationsSavingMsg } from "../../constants/confirms";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Loader } from "../Loader";
-import { GJEditor } from "./GJEditor";
 
-const PreviewIframe = ({
-  content = "",
-  myRef,
-  infinitelyInstance,
-  navigateCallback = (page = "") => {},
-}) => {
-  const previewIframe = myRef || useRef(iframeType);
 
-  return (
-    <iframe
-      ref={previewIframe}
-      id="preview"
-      allowFullScreen
-      className={`bg-white w-full h-[calc(100%-60px)]  transition-all border-[5px] rounded-bl-lg rounded-br-lg border-slate-900`}
-    ></iframe>
-  );
-};
+
 
 export const Iframe = (() => {
   const showLayers = useRecoilValue(showLayersState);
@@ -262,23 +226,6 @@ export const Iframe = (() => {
     setPreviewSrc(urlSrc);
   }, [showPreview]);
 
-  // useEffect(() => {
-  //   if (!(editorWrapper.current && editor)) return;
-  //   if (canvasRoot.current) canvasRoot.current.unmount();
-  //   canvasRoot.current = createRoot(editorWrapper.current);
-  //   canvasRoot.current.render(
-  //     <GJEditor>
-  //       <Canvas
-  //       id="editor-container"
-  //       label="Canvas"
-  //       aria-label="Editor"
-  //       className="overflow-auto "
-  //     />
-  //     </GJEditor>
-  //   );
-  //   // editorWrapper.current.innerHTML = "";
-  //   // editorWrapper.current.appendChild(editor.Canvas.render())
-  // }, [editorWrapper, editor]);
 
   const reloadPreview = () => {
     setPreviewSrc(new String(getCurrentPageName()));

@@ -29,8 +29,7 @@ import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 import { infinitelyCallback } from "../../../helpers/bridge";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./ToastMsgInfo";
-import { uniqueID } from "../../../helpers/cocktail";
-import { destroyEditor } from "../../../grapesjs-react-adapter";
+
 // import { unMountApp } from "../../../main";
 // import { reBuildApp, unMountApp } from "../../../main";
 

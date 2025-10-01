@@ -73,6 +73,8 @@ function App() {
         a.click();
         a.remove();
         URL.revokeObjectURL(url);
+        console.log('export project from main: ');
+        
       } else if (command == "varsToServiceWorker") {
         console.log("recived preview pages from worker , props : ", props);
 

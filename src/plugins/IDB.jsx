@@ -592,7 +592,7 @@ export const IDB = (editor) => {
                       <ToastMsgInfo msg={`Project saved successfully👍`} />
                     );
                   }
-                  reInitInfinitelyWorker();
+                  // reInitInfinitelyWorker();
 
                   // res(true);
                 }
