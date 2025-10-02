@@ -34,7 +34,7 @@ export class WorkerProxy {
   }
 
   // re-init worker & rebind listeners
-  reInit(callback = (workerProxy = this) => {}) {
+  reInit(callback = (workerProxy) => {}) {
     this.worker.terminate();
     this.worker = new Worker(this.scriptURL, this.options);
 

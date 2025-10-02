@@ -1,7 +1,8 @@
 import { current_project_id } from "../constants/shared";
+import workerUrl from "./worker.js?worker&url";
 import { WorkerProxy } from "./WorkerProxy";
 
-let infinitelyWorker = new WorkerProxy(new URL("./worker", import.meta.url), {
+let infinitelyWorker = new WorkerProxy(new URL(workerUrl, import.meta.url), {
   type: "module",
 });
 
