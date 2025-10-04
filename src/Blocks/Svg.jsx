@@ -1,10 +1,8 @@
-import { toJSON } from "linkedom";
 import { Icons } from "../components/Icons/Icons";
-import { parseToHTML } from "../helpers/cocktail";
 import {
   defineTraits,
   doActionAndPreventSaving,
-  preventSelectNavigation,
+  getParentNode,
 } from "../helpers/functions";
 import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
 
@@ -61,17 +59,19 @@ function elToJSON(source, parseType) {
   };
 }
 
+
+
 /**
  *
  * @param {import('grapesjs').Editor} editor
  */
 export const Svg = (editor) => {
-  const parseSvg = (text = "") => {
-    const parser = new DOMParser();
-    const svgDoc = parser.parseFromString(text, "image/svg+xml");
-    const svg = svgDoc.querySelector("svg");
-    return svg;
-  };
+  // const parseSvg = (text = "") => {
+  //   const parser = new DOMParser();
+  //   const svgDoc = parser.parseFromString(text, "image/svg+xml");
+  //   const svg = svgDoc.querySelector("svg");
+  //   return svg;
+  // };
   // editor.getSelected().props().droppable
   // const icon = parseSvg(
   //   reactToStringMarkup(Icons.svg({ width: 40, height: 50, fill: "black" }))
@@ -85,6 +85,48 @@ export const Svg = (editor) => {
   //     { htmlType: "image/svg+xml" }
   //   )
   // );
+
+  //   editor.Components.removeType('svg');
+
+  // editor.DomComponents.addType("svg", {
+  //   isComponent: (el) => el.tagName === "SVG",
+  //   model: {
+  //     defaults: {
+  //       copyable: false,
+  //       removable: true,
+  //       draggable: true,
+  //       resizable: false, // stop GrapesJS attaching resize observers
+  //       highlightable: false,
+  //       selectable: true,
+  //     },
+  //     init() {
+  //       // force stop children parsing
+  //       this.set("void", true);
+  //     },
+  //   },
+  // });
+
+  // editor.DomComponents.addType("svg-in", {
+  //   isComponent: (el) =>
+  //     Boolean(getParentNode(
+  //       (el) => el.tagName && el.tagName.toLowerCase() == "svg",
+  //       el
+  //     )),
+  //   model: {
+  //     defaults: {
+  //       copyable: false,
+  //       removable: true,
+  //       draggable: true,
+  //       resizable: false, // stop GrapesJS attaching resize observers
+  //       highlightable: false,
+  //       selectable: true,
+  //     },
+  //     init() {
+  //       // force stop children parsing
+  //       this.set("void", true);
+  //     },
+  //   },
+  // });
 
   editor.Components.addType("inf-svg", {
     // extend:'svg',
@@ -145,7 +187,7 @@ export const Svg = (editor) => {
         tagName: "infinitely-svg",
         // // content:reactToStringMarkup(Icons.svg({ fill: "white" })),
         droppable: false,
-        resizable: true,
+        resizable: { ratioDefault: true },
         attributes: {
           // xmlns: "http://www.w3.org/2000/svg",
           //   ...Object.fromEntries(
@@ -181,13 +223,13 @@ export const Svg = (editor) => {
               sle.components(textCmp);
               const svg = sle.components().models[0];
               svg.set({
-                draggable:false,
-                draggable:false,
-                layerable:false,
-                selectable:false,
-                highlightable:false,
-                hoverable:false,
-              })
+                draggable: false,
+                draggable: false,
+                layerable: false,
+                selectable: false,
+                highlightable: false,
+                hoverable: false,
+              });
               // const newCmp = sle.replaceWith(textCmp)[0];
               // newCmp.set({ resizable: true });
               // preventSelectNavigation(editor, newCmp);
@@ -228,4 +270,72 @@ export const Svg = (editor) => {
       // },
     },
   });
+
+  // editor.Components.addType("inf-svg", {
+  //   isComponent: (el) => {
+  //     if (!el.tagName) return;
+  //     if (
+  //       el.tagName.toLowerCase() == "object" &&
+  //       el.getAttribute("inf-type") == "svg"
+  //     )
+  //       return true;
+  //     if (el.tagName.toLowerCase() == "svg")
+  //       return {
+  //         tagName: "object",
+  //         attributes: {
+  //           type: "image/svg+xml",
+  //           data: svgToDataURL(el),
+  //         },
+  //       };
+  //   },
+  //   model: {
+  //     defaults: {
+  //       name: "svg",
+  //       icon: reactToStringMarkup(Icons.svg({ fill: "white" })),
+  //       tagName: "object",
+  //       attributes: {
+  //         type: "image/svg+xml",
+  //         "inf-type": "svg",
+  //       },
+
+  //       traits: defineTraits([
+  //         {
+  //           name: "choose-svg",
+  //           label: "Choose svg",
+  //           placeholder: "Enter svg content",
+  //           role: "handler",
+  //           type: "media",
+  //           mediaType: "svg",
+  //           async callback({ editor, newValue, asset }) {
+  //             const sle = editor.getSelected();
+  //             // const type = sle?.props().type;
+  //             if (!sle || !asset) return;
+  //             sle.addAttributes(
+  //               {
+  //                 data: newValue,
+  //               },
+  //               { avoidStore: true }
+  //             );
+  //             // Read the SVG file content
+  //             // const textCmp = await asset.text();
+  //             // const children = sle.components().models;
+  //             // sle.components(textCmp);
+  //             // const svg = sle.components().models[0];
+  //             // svg.set({
+  //             //   draggable: false,
+  //             //   draggable: false,
+  //             //   layerable: false,
+  //             //   selectable: false,
+  //             //   highlightable: false,
+  //             //   hoverable: false,
+  //             // });
+  //             // const newCmp = sle.replaceWith(textCmp)[0];
+  //             // newCmp.set({ resizable: true });
+  //             // preventSelectNavigation(editor, newCmp);
+  //           },
+  //         },
+  //       ]),
+  //     },
+  //   },
+  // });
 };

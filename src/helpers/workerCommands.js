@@ -26,6 +26,7 @@ import {
   handleFilesSize,
   // hasExportDefault,
   installRestModelsAPI,
+  svgToDataURL,
   // needsWrapping,
   uploadProjectToTMP,
   // wrapModule,
@@ -315,7 +316,14 @@ export async function updateDB(props) {
   return new Promise((resolve, reject) => {
     const localTimeout = setTimeout(async () => {
       try {
-        const { files, tailwindcssStyle, projectId, data, updatePreviewPages, pageName } = props;
+        const {
+          files,
+          tailwindcssStyle,
+          projectId,
+          data,
+          updatePreviewPages,
+          pageName,
+        } = props;
 
         if (files && isPlainObject(files)) {
           await opfs.writeFiles(
@@ -357,9 +365,6 @@ export async function updateDB(props) {
     }, 15);
   });
 }
-
-
-
 
 /**
  *
@@ -1263,7 +1268,9 @@ export async function listenToOPFSBroadcastChannel({ id }) {
       }
 
       const fileHandle = await opfs.getFile(
-        `${getProjectRoot(id)}/${data.folderPath ? `${data.folderPath}/` : ""}${data.fileName}`
+        `${getProjectRoot(id)}/${data.folderPath ? `${data.folderPath}/` : ""}${
+          data.fileName
+        }`
       );
       const file = await fileHandle.getOriginFile();
 
@@ -1309,7 +1316,6 @@ export async function listenToOPFSBroadcastChannel({ id }) {
 
   return broadCastCleaner;
 }
-
 
 // export async function listenToOPFSBroadcastChannel({ id }) {
 //   console.log("INited listenToOPFSBroadcastChannel", id);
@@ -1991,7 +1997,29 @@ export async function parseHTMLAndRaplceSymbols({ pageName = "", projectId }) {
         )
       ).text();
     }
+    // document.querySelectorAll("script").forEach((script) => script.remove());
+    // document.querySelectorAll("svg").forEach((svg) => {
+    //   const attributes = [...svg.attributes].concat([
+    //     {
+    //       name: "src",
+    //       value: svgToDataURL(svg.outerHTML),
+    //     },
+    //     {
+    //       name:'type',
+    //       value: "image/xml+svg",
+    //     },
 
+    //     {
+    //       name:'data-gjs-type',
+    //       value:'image'
+    //     }
+    //   ]);
+    //   const img = document.createElement("img");
+    //   attributes.forEach((attr) => {
+    //     img.setAttribute(attr.name, attr.value);
+    //   });
+    //   svg.replaceWith(img);
+    // });
     let response = [...document.body.children].map((el) => el.outerHTML);
     self.postMessage({
       command: "parseHTMLAndRaplceSymbols",

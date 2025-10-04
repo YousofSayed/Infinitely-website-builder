@@ -4,7 +4,7 @@ import { LinearGradient } from "./LinearGradient";
 import { SmallButton } from "./SmallButton";
 import { Icons } from "../../Icons/Icons";
 import { Input } from "./Input";
-import { cloneObject, pushBetween, uniqueID } from "../../../helpers/cocktail";
+import { pushBetween, uniqueID } from "../../../helpers/cocktail";
 import { useSetClassForCurrentEl } from "../../../hooks/useSetclassForCurrentEl";
 import { Adder } from "./Adder";
 import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";

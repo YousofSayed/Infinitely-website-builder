@@ -4,10 +4,7 @@ import { statesKeys } from "../../../constants/cssProps";
 import { Select } from "./Select";
 import { refType, statesType, stateType } from "../../../helpers/jsDocs";
 import { Icons } from "../../Icons/Icons";
-import { Choices } from "./Choices";
 import {
-  addClickClass,
-  cloneObject,
   uniqueID,
 } from "../../../helpers/cocktail";
 import { SmallButton } from "./SmallButton";
@@ -19,12 +16,10 @@ import {
   selectorState,
 } from "../../../helpers/atoms";
 import {
-  extractRulesById,
   extractRulesByIdWithDetails,
   getCurrentMediaDevice,
   getCurrentSelector,
 } from "../../../helpers/functions";
-import { minify } from "csso";
 import { cloneDeep } from "lodash";
 
 // console.log({0:[],1:[]});

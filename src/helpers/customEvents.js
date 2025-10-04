@@ -1,5 +1,4 @@
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
-import { getProjectData } from "./functions";
 
 /**
  *

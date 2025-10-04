@@ -26,7 +26,6 @@ import {
   reloadRequiredInstance,
 } from "../../../constants/InfinitelyInstances";
 import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
-import { infinitelyCallback } from "../../../helpers/bridge";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./ToastMsgInfo";
 
@@ -386,34 +385,54 @@ export const IframeControllers = () => {
         onClick={async (ev) => {
           // editor.off("component:remove:before");
           console.log("reloading");
-          // location.replace(location.pathname)
-          // editor.destroy();
-          function cleanGlobalListeners() {
-            const events = [
-              "resize",
-              "scroll",
-              "mousemove",
-              "mouseup",
-              "keydown",
-              "keyup",
-            ];
 
-            events.forEach((event) => {
-              window.removeEventListener(event, () => {});
-              document.removeEventListener(event, () => {});
-            });
-          }
-          // cleanGlobalListeners();
-          // unMountApp();
-          // editor.destroy();
           window.dispatchEvent(new CustomEvent("clear:script"));
-          
+
           setTimeout(() => {
+            editor.off();
+
             // document.documentElement.replaceWith(document.documentElement.cloneNode(true));
-            location.replace(location.href)
+            location.replace(location.href);
+            // editor.load();
+            // editor
+            //   .getWrapper()
+            //   .findType("svg-in")
+            //   .forEach((cmp) => cmp.view?.resizer?.disable());
+            // editor.destroy();
+            // editor._previousAttributes = null;
+            // editor._previousChanges = null;
+            // editor.destroy();
+            // reBuildApp()
+            // editor.Components = null;
+            // editor.DomComponents = null;
             // editor.load();
             // destroyEditor();
           }, 0);
+
+          // Before destroy, manually clean up
+          // editor.off(); // Stops all listeners/intervals
+          // editor.Canvas.getWindow().MutationObserver = null;
+          // editor.Canvas.getWindow().ResizeObserver = null;
+
+          // editor
+          //   .getWrapper()
+          //   .find("svg")
+          //   .forEach((svg) => {
+          //     const el = svg.getEl();
+          //     const data = new XMLSerializer().serializeToString(el);
+          //     const url = "data:image/svg+xml;base64," + btoa(data);
+          //     svg.replaceWith(`<img src="${url}" />`);
+          //   });
+          // Now call destroy
+          // editor.Components.clear(); // Clears component models (including SVGs)
+
+          // Nullify globals
+          // delete grapesjs.editors[editor.id];
+
+          // Force GC (for testing; not reliable in prod)
+
+          // if (window.gc) window.gc();
+          //  editor.destroy();
           // setReloader(uniqueID());
           // window.location.reload();
         }}

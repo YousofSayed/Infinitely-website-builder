@@ -4,7 +4,6 @@ import {
   isBoolean,
   isNumber,
   isPlainObject,
-  isString,
 } from "lodash";
 import { Icons } from "../components/Icons/Icons";
 import { swiperJsProps } from "../constants/swiperjsProps";

@@ -1,10 +1,8 @@
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilState, useRecoilValue } from "recoil";
 import {
   ruleState,
   selectorState,
   showAnimationsBuilderState,
-  animeStylesState,
-  blocksStt,
 } from "../helpers/atoms";
 
 import { useEditorMaybe } from "@grapesjs/react";
@@ -12,20 +10,12 @@ import { useRemoveCssProp } from "./useRemoveCssProp";
 import {
   getCurrentMediaDevice,
   getCurrentSelector,
-  getInfinitelySymbolInfo,
-  getProjectData,
 } from "../helpers/functions";
 import {
-  current_project_id,
-  current_symbol_id,
   inf_class_name,
 } from "../constants/shared";
-import { db } from "../helpers/db";
-import { dynamicTemplatesType } from "../helpers/jsDocs";
-import { useLiveQuery } from "dexie-react-hooks";
-import { useEffect } from "react";
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
-import { keyBy, random, uniqueId } from "lodash";
+import {  random, uniqueId } from "lodash";
 import { keyframeStylesInstance } from "../constants/InfinitelyInstances";
 import { uniqueID } from "../helpers/cocktail";
 let setStyleTimeout = null;

@@ -1,7 +1,5 @@
 import { editorIcons } from "../components/Icons/editorIcons";
-import { tagNames } from "../constants/hsValues";
-import { html, parseToHTML } from "../helpers/cocktail";
-import { defineTraits } from "../helpers/functions";
+
 
 /**
  *

@@ -197,6 +197,7 @@ export const motionsAndInteractionsCloneHandler = (editor) => {
       //   });
       // }
 
+    
       timeout && clearTimeout(timeout);
       timeout = setTimeout(async () => {
         const cmps = editor
@@ -268,7 +269,7 @@ export const motionsAndInteractionsCloneHandler = (editor) => {
           const keysWillRemoved = {
             [motionId]: mainId,
             [mainMotionId]: mainId,
-            [motionInstanceId]:"",
+            [motionInstanceId]: "",
             ...Object.fromEntries(
               Object.keys(motion.instances).map((key) => [
                 motionInstanceId,

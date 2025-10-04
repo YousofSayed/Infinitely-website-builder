@@ -871,7 +871,7 @@ export function buildGsapMotionsScript(
         ).replaceAll("\\", "\\\\")})\`)())`;
       }
       if (compiledMotion.fromTo.length) {
-        for (const [i,item] of compiledMotion.fromTo.entries()) {
+        for (const [i, item] of compiledMotion.fromTo.entries()) {
           const toObject = `new Function(\`return (${serializeJavascript(
             item.toValue,
             { space: 2 }
@@ -887,7 +887,13 @@ export function buildGsapMotionsScript(
             item.selector
           }\`, {...${fromObject}}, {...${toObject}} , \`${
             item.positionParameter || ""
-          }\`)${motion.isTimeLine ? i == compiledMotion.fromTo.length-1 ? ';\n\n' : '' : ";\n\n"}`;
+          }\`)${
+            motion.isTimeLine
+              ? i == compiledMotion.fromTo.length - 1
+                ? ";\n\n"
+                : ""
+              : ";\n\n"
+          }`;
 
           // console.log(new Function(`return ${serializeJavascript(item.toValue , {space:2, })}`)());
         }
@@ -2360,7 +2366,11 @@ export function infinitelyCallback(callback = () => {}, timeout = 0) {
   }
 }
 
-
 export function getStringSizeBytes(str) {
   return new Blob([str]).size;
+}
+
+export function svgToDataURL(svg) {
+  const url = "data:image/svg+xml;base64," + btoa(svg);
+  return url;
 }

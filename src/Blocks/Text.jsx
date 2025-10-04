@@ -1,6 +1,6 @@
 import { Icons } from "../components/Icons/Icons";
 import { media_types, text_tags } from "../constants/shared";
-import { doActionAndPreventSaving, getParentNode } from "../helpers/functions";
+import {  getParentNode } from "../helpers/functions";
 import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
 
 /**

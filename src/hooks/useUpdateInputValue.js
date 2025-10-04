@@ -35,20 +35,7 @@ export const useUpdateInputValue = ({
   const selector = useRecoilValue(selectorState);
   const showAnimationsBuilder = useRecoilValue(showAnimationsBuilderState);
   const framesStyles = useRecoilValue(framesStylesState);
-  const setter = (value) => (old) => {
-    //  const safeValue = value ?? "";
 
-    if (old !== value) return value;
-    //    console.log(safeValue , old || "");
-    // return old || "";
-  };
-  ///Debounce
-  // const currentElObjDeb = useDebounce(currentElObj , 1000);
-  // const editorDeb = useDebounce(editor , 1000);
-  // const ruleDeb = useDebounce(currentElObj , 1000);
-  // const selectorDev = useDebounce(selector , 1000);
-  // const showAnimationsBuilderDeb = useDebounce(showAnimationsBuilder , 1000);
-  // const frameStylesDeb = useDebounce(framesStyles , 1000);
 
   // const cssPropForAM = useRecoilValue(cssPropForAssetsManagerState);
   function getRuleStyle(isDeviceEvent) {

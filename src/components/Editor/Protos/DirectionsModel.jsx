@@ -12,7 +12,6 @@ import {
 
 import { useSetClassForCurrentEl } from "../../../hooks/useSetclassForCurrentEl";
 import { SidesInput } from "./SidesInput";
-import { cloneObject } from "../../../helpers/cocktail";
 import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
 import { useEditorMaybe } from "@grapesjs/react";
 

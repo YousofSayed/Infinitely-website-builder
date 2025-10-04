@@ -164,33 +164,39 @@ export const GJEditor = ({ children }) => {
         clearStyles: false,
         keepEmptyTextNodes: true,
         avoidDefaults: true,
-        log: true,
+        // log: true,
+        fromElement:false,
         domComponents: { escapeHtml: false },
         richTextEditor: {
           custom: true,
           // adjustToolbar:
           toolbar: [],
         },
-        optsHtml: {
-          withProps: true,
-        },
+        // optsHtml: {
+        //   withProps: true,
+
+        // },
         optsCss: {
           keepUnusedStyles: true,
           clearStyles: false,
           onlyMatched: false,
         },
-        autorender: true,
+        // autorender: true,
 
         parser: {
           // parserCss:(css)=>{
           //  return parse(css , {}).stylesheet.rules
           // },
+        
           optionsHtml: {
-            allowScripts: true,
-            allowUnsafeAttr: true,
-            allowUnsafeAttrValue: true,
+            // preParser(input){
+            //   return input
+            // },
+            // allowScripts: true,
+            // allowUnsafeAttr: true,
+            // allowUnsafeAttrValue: true,
             keepEmptyTextNodes: true,
-            htmlType: "text/html",
+            // htmlType: "text/html",
           },
         },
         showOffsetsSelected: true,
@@ -215,7 +221,6 @@ export const GJEditor = ({ children }) => {
         },
         protectedCss: ``,
         canvas: {
-          frame: document.getElementById("my-iframe"),
           scripts: [
             ...((isChrome() && [
               { src: `/scripts/initSw.js`, name: "initSw.js" },
@@ -247,7 +252,7 @@ export const GJEditor = ({ children }) => {
               `;
             },
         },
-        jsInHtml: true,
+        // jsInHtml: true,
         plugins,
       }}
       onEditor={onEditor}

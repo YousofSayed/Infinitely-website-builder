@@ -1,5 +1,4 @@
-import { inf_symbol_Id_attribute } from "../constants/shared";
-import { getInfinitelySymbolInfo } from "../helpers/functions";
+
 
 /**
  * @param {import('grapesjs').Editor} editor
