@@ -3089,6 +3089,14 @@ export async function reloadEditor(editor) {
       editor.loadProjectData({
         components: elements,
       });
+
+      updatePrevirePage({
+        pageName: localStorage.getItem(current_page_id),
+        projectId: +localStorage.getItem(current_project_id),
+        projectSetting: projectSettings,
+        data: {},
+        editorData: {},
+      });
       // editor.addComponents(elements, { sort: true, merge: true });
       // if (!editor.rendered) {
       //   editor.rendered = 0;
@@ -3098,10 +3106,50 @@ export async function reloadEditor(editor) {
       editor.clearDirtyCount();
       editor.UndoManager.start();
       editor.Storage.setAutosave(projectSettings.enable_auto_save);
-      console.log('reloadin end here');
-      
+      console.log("reloadin end here");
+
       editorStorageInstance.emit(InfinitelyEvents.storage.loadEnd);
     },
   });
   // workerCallbackMaker(infinitelyWorker , 'project-loaded' , (props)=>{
+}
+
+/**
+ *
+ * @param {{
+ * condition : boolean | (...args)=>boolean,
+ * callback : (...args)=>{} ,
+ * delay : number ,
+ * maximumCalls : number,
+ * }} param0
+ * @returns
+ */
+export function ifIntervale({
+  condition,
+  callback,
+  delay = 500,
+  maximumCalls = 500,
+}) {
+  let calls = 0;
+  const interval = setInterval(async () => {
+    if (calls > maximumCalls) {
+      clearInterval(interval);
+      calls = null;
+      return;
+    }
+    calls++;
+    const is = isFunction(condition) ? condition() : Boolean(condition);
+    if (is) {
+      await callback();
+      clearInterval(interval);
+      return;
+    }
+  }, delay);
+
+  return {
+    interval,
+    clearInterval() {
+      clearInterval(interval);
+    },
+  };
 }

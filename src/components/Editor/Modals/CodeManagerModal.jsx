@@ -4,36 +4,15 @@ import { TabLabel } from "../Protos/TabLabel";
 import { Icons } from "../../Icons/Icons";
 import { CodeEditor } from "../Protos/CodeEditor";
 import { Button } from "../../Protos/Button";
-import {
-  current_page_id,
-  current_project_id,
-  inf_symbol_Id_attribute,
-} from "../../../constants/shared";
-import { useLiveQuery } from "dexie-react-hooks";
-import {
-  createGJSComponent,
-  executeAndExtractFunctions,
-  getComponentRules,
-  getProjectData,
-  workerCallbackMaker,
-} from "../../../helpers/functions";
+import { current_page_id, current_project_id } from "../../../constants/shared";
+import { workerCallbackMaker } from "../../../helpers/functions";
 import { useEditorMaybe } from "@grapesjs/react";
-import { db } from "../../../helpers/db";
 import { random, uniqueID } from "../../../helpers/cocktail";
 import { infinitelyWorker } from "../../../helpers/infinitelyWorker";
 import { opfs } from "../../../helpers/initOpfs";
-import {
-  defineRoot,
-  doDocument,
-  extractElementStyles,
-  getElementRulesWithAst,
-  getStringSizeBytes,
-  toMB,
-} from "../../../helpers/bridge";
+import { defineRoot, getStringSizeBytes, toMB } from "../../../helpers/bridge";
 import { css_beautify, html_beautify, js_beautify } from "js-beautify";
-import { minify, syntax } from "csso";
-import { parseHTML } from "linkedom";
-import { isArray, isPlainObject, uniqueId } from "lodash";
+import { isPlainObject, uniqueId } from "lodash";
 import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
 import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 import { toast } from "react-toastify";
@@ -184,7 +163,7 @@ export const CodeManagerModal = () => {
                   css_beautify(
                     editor.getCss({
                       avoidProtected: true,
-                      keepUnusedStyles: false,
+                      keepUnusedStyles: true,
                     })
                   ),
                 ]
@@ -315,7 +294,7 @@ export const CodeManagerModal = () => {
         const htmlSize = toMB(getStringSizeBytes(htmlContent)); // size in MB
         const cssSize = toMB(getStringSizeBytes(cssContent)); // size in MB
 
-        if (htmlSize + cssSize > 0.200) {
+        if (htmlSize + cssSize > 0.2) {
           // ~200 KB
           toast.warn(
             <ToastMsgInfo
@@ -324,7 +303,10 @@ export const CodeManagerModal = () => {
           );
         } else {
           editor.DomComponents.clear();
-          editor.setComponents (renderCssStyles(editor , filesData) + htmlContent, { avoidStore: true }); // typo: "avoideStore" → "avoidStore"
+          editor.setComponents(
+            renderCssStyles(editor, filesData) + htmlContent,
+            { avoidStore: true }
+          ); // typo: "avoideStore" → "avoidStore"
           editor.clearDirtyCount();
           isHtmlUpdated = true;
         }
@@ -343,7 +325,7 @@ export const CodeManagerModal = () => {
           );
         } else {
           editor.Css.clear();
-          editor.setStyle('');
+          editor.setStyle("");
           editor.addComponents(renderCssStyles(editor, cssContent));
           editor.clearDirtyCount();
         }

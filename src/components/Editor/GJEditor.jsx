@@ -152,7 +152,7 @@ export const GJEditor = ({ children }) => {
 
   return (
     <GjsEditor
-    key={reloader}
+      key={reloader}
       grapesjs={grapesjs}
       options={{
         height: "100%",
@@ -165,8 +165,8 @@ export const GJEditor = ({ children }) => {
         keepEmptyTextNodes: true,
         avoidDefaults: true,
         // log: true,
-        fromElement:false,
-        domComponents: { escapeHtml: false },
+        // fromElement: false,
+        domComponents: { useFrameDoc: true  , },
         richTextEditor: {
           custom: true,
           // adjustToolbar:
@@ -187,14 +187,14 @@ export const GJEditor = ({ children }) => {
           // parserCss:(css)=>{
           //  return parse(css , {}).stylesheet.rules
           // },
-        
+
           optionsHtml: {
             // preParser(input){
             //   return input
             // },
-            // allowScripts: true,
-            // allowUnsafeAttr: true,
-            // allowUnsafeAttrValue: true,
+            allowScripts: true,
+            allowUnsafeAttr: true,
+            allowUnsafeAttrValue: true,
             keepEmptyTextNodes: true,
             // htmlType: "text/html",
           },
