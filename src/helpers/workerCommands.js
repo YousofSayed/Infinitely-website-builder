@@ -323,6 +323,8 @@ export async function updateDB(props) {
           data,
           updatePreviewPages,
           pageName,
+          __seq,
+          __requestId,
         } = props;
 
         if (files && isPlainObject(files)) {
@@ -352,6 +354,8 @@ export async function updateDB(props) {
         self.postMessage({
           command: "updateDB",
           props: { done: true, projectId },
+          __ackSeq: __seq, // THIS IS CRUCIAL
+          __requestId: __requestId, // echo request id if present (optional)
         });
 
         resolve(resp);
@@ -2005,14 +2009,14 @@ export async function parseHTMLAndRaplceSymbols({ pageName = "", projectId }) {
           value: svgToDataURL(svg.outerHTML),
         },
         {
-          name:'type',
+          name: "type",
           value: "image/xml+svg",
         },
 
         {
-          name:'data-gjs-type',
-          value:'image'
-        }
+          name: "data-gjs-type",
+          value: "image",
+        },
       ]);
       const img = document.createElement("img");
       attributes.forEach((attr) => {

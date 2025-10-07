@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { Property } from "./Property";
 import { SelectStyle } from "./SelectStyle";
-import { cursorValues, touchActionValues } from "../../../constants/cssProps";
+import { cursorValues, isolationValues, mixBlendModeValues, touchActionValues } from "../../../constants/cssProps";
 
 export const Others = memo(() => {
   return (
@@ -19,6 +19,16 @@ export const Others = memo(() => {
         label="touch-action"
         cssProp="touch-action"
         keywords={touchActionValues}
+      />
+      <SelectStyle
+        label="mix-blend-mode"
+        cssProp="mix-blend-mode"
+        keywords={mixBlendModeValues}
+      />
+      <SelectStyle
+        label="isolation"
+        cssProp="isolation"
+        keywords={isolationValues}
       />
 
       <SelectStyle label="cursor" cssProp="cursor" keywords={cursorValues}/>

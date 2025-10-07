@@ -3140,8 +3140,9 @@ export function ifIntervale({
     calls++;
     const is = isFunction(condition) ? condition() : Boolean(condition);
     if (is) {
-      await callback();
       clearInterval(interval);
+      if (calls > maximumCalls)return;
+      await callback();
       return;
     }
   }, delay);

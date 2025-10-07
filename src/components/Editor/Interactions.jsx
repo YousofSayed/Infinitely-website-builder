@@ -173,10 +173,10 @@ export const Interaction = ({
   // }, [editor]);
 
   const addAction = async (actionName = "") => {
-    if (interaction.actions.some((action) => action.label == actionName)) {
-      toast.warn(<ToastMsgInfo msg={`You already use this action...!`} />);
-      return;
-    }
+    // if (interaction.actions.some((action) => action.label == actionName)) {
+    //   toast.warn(<ToastMsgInfo msg={`You already use this action...!`} />);
+    //   return;
+    // }
     const actionTarget = actions.find(
       (action) => action.label.toLowerCase() == actionName.toLowerCase()
     );
@@ -511,36 +511,6 @@ export const Interactions = () => {
   const interactionUploader = useRef(refType);
   const projectId = +localStorage.getItem(current_project_id);
 
-  /**
-   *
-   * @param {import('../../helpers/types').Actions} actions
-   */
-  const buildFunctionsFromActions = (actions) => {
-    // console.log(actions);
-
-    const functionsFromParams = actions
-      .map(
-        (action) =>
-          `${action.function}(${Object.values(action.params)
-            .map((value) => {
-              value = isPlainObject(value) ? value.value : value;
-              value = advancedParse(value);
-              console.log("value", value);
-              return typeof value == "string"
-                ? value.replaceAll(
-                    `self`,
-                    `[${interactionId}="${interactionsId}"]`
-                  )
-                : value;
-            })
-            .join(",")})`
-      )
-      .join(";");
-
-    console.log(`functionsFromParams 222 : `, functionsFromParams);
-
-    return functionsFromParams;
-  };
 
   useLiveQuery(async () => {
     const projectData = await getProjectData();
@@ -593,37 +563,6 @@ export const Interactions = () => {
     // };
   }, [selectedEl, editor]);
 
-  // useEffect(() => {
-  //   if (!editor) return;
-  //   const originalAutosave = editor.Storage.config.autosave;
-  //   const { projectSettings } = getProjectSettings();
-  //   editor.Storage.setAutosave(false);
-  //   const allSameInteractionsCmps = editor
-  //     .getWrapper()
-  //     .find(`[${interactionId}="${interactionsId}"]`);
-  //   for (const cmp of allSameInteractionsCmps) {
-  //     // if (editor.getSelected() == cmp) continue;
-  //     for (const interaction of interactionsState) {
-  //       cmp.addAttributes({
-  //         [`v-on:${interaction.event}`]: buildFunctionsFromActions(
-  //           interaction.actions
-  //         ),
-  //         ...(viewEvents.includes(interaction.event)
-  //           ? { ["v-view"]: true }
-  //           : {}),
-  //       });
-  //     }
-  //   }
-
-  //   setInteractionsAttributes(interactionsId, () => {
-  //     console.log('doneeeeeeeeeeeeeeeeeee');
-  //     alert('kokokokoo')
-  //     // editor.Storage.setAutosave(originalAutosave);
-  //     // projectSettings.enable_auto_save && store({}, editor);
-  //   });
-
-  //   console.log("interactions from all effetc : ", interactionsState);
-  // }, [interactionsState, interactionsId, editor]);
 
   useEffect(() => {
     if (!editor) return;

@@ -2,12 +2,9 @@ import GjsEditor from "@grapesjs/react";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import grapesjs from "grapesjs";
 // import  "../../helpers/grapesjs.js";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilState,  useSetRecoilState } from "recoil";
 import {
-  blocksStt,
-  currentDynamicTemplateIdState,
   currentElState,
-  dynamicTemplatesState,
   reloaderState,
   ruleState,
   selectorState,
@@ -15,7 +12,7 @@ import {
 import { blocks } from "../../Blocks/blocks.jsx";
 // import gStyles from "../../../styles/style.css?raw";
 
-import { useLocation, useNavigate } from "react-router-dom";
+import {  useNavigate } from "react-router-dom";
 import { addDevices } from "../../plugins/addDevices";
 import { customModal } from "../../plugins/cutomModal";
 import { addNewTools } from "../../plugins/addNewTools.jsx";
@@ -25,25 +22,16 @@ import { html } from "../../helpers/cocktail.js";
 import { IDB } from "../../plugins/IDB";
 import { updateProjectThumbnail } from "../../plugins/updateProjectThumbnail.js";
 import { customInfinitelySymbols } from "../../plugins/customInfinitelySymbols";
-import { updateDynamicTemplates } from "../../plugins/updateDynamicTemplates.js";
 import { current_symbol_id } from "../../constants/shared.js";
-import { cloneDeep } from "lodash";
 import {
   getInfinitelySymbolInfo,
   getProjectSettings,
-  preventSelectNavigation,
 } from "../../helpers/functions.js";
-import { muatationDomElements } from "../../plugins/mutation.js";
 import { isChrome } from "../../helpers/bridge.js";
-import { motionsRemoverHandler } from "../../plugins/motionsRemoverHandler.js";
 import { motionsAndInteractionsCloneHandler } from "../../plugins/motionsAndInteractionsCloneHandler.jsx";
 import { globalTraits } from "../../plugins/globalTraits.jsx";
-import { useSetClassForCurrentEl } from "../../hooks/useSetclassForCurrentEl.js";
-import { toast } from "react-toastify";
-import { handleComponentsOnCreate } from "../../plugins/handleComponentsOnCreate.js";
 import { initTraitsOnRender } from "../../plugins/initTraitsOnRender.jsx";
 import { editorKeymaps } from "../../plugins/editorKeymaps.jsx";
-import { parse } from "css";
 
 export const GJEditor = ({ children }) => {
   const setSelectedEl = useSetRecoilState(currentElState);
@@ -78,10 +66,15 @@ export const GJEditor = ({ children }) => {
     // muatationDomElements,
   ]);
 
+  /**
+   *
+   * @param {import('grapesjs').Editor} ev
+   */
   const onEditor = (ev) => {
-    ev.Blocks.categories.add({ id: "others", title: "Others" });
-
     const editor = ev;
+    ev.Blocks.categories.add({ id: "others", title: "Others" });
+    const lastDevice = sessionStorage.getItem("last-device");
+    if (lastDevice) editor.setDevice(lastDevice);
 
     ev.runCommand("core:component-outline");
     isChrome(() => {
@@ -166,7 +159,7 @@ export const GJEditor = ({ children }) => {
         avoidDefaults: true,
         // log: true,
         // fromElement: false,
-        domComponents: { useFrameDoc: true  , },
+        domComponents: { useFrameDoc: true },
         richTextEditor: {
           custom: true,
           // adjustToolbar:
@@ -222,6 +215,7 @@ export const GJEditor = ({ children }) => {
         protectedCss: ``,
         canvas: {
           scripts: [
+            // {src:'/scripts/willChange.js' , name:'willChange.js'},
             ...((isChrome() && [
               { src: `/scripts/initSw.js`, name: "initSw.js" },
             ]) ||

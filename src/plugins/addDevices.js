@@ -121,7 +121,7 @@ export const addDevices = (editor) => {
 
   editor.on("change:device", () => {
     // editor.getContainer().style.zoom = 1;
-
+    sessionStorage.setItem('last-device' , editor.getDevice());
     zoomToFit();
   });
   // editor.on("canvas:frame:load:body", () => {

@@ -113,19 +113,22 @@ export function Editor({ params }) {
     });
     getProjectSettings();
 
+    let reinitTimeout;
     const infinitelyWorkerIniter = (ev) => {
       const { command } = ev.data;
-      if (command == "updateDB") {
-        // reInitInfinitelyWorker();
-        infinitelyWorker.reInit((worker) => {
-          worker.postMessage({
-            command: "initOPFS",
-            props: { id: +localStorage.getItem(current_project_id) },
+      if (command === "updateDB") {
+        clearTimeout(reinitTimeout);
+        reinitTimeout = setTimeout(() => {
+          infinitelyWorker.reInit((worker) => {
+            worker.postMessage({
+              command: "initOPFS",
+              props: { id: +localStorage.getItem(current_project_id) },
+            });
           });
-        });
-        // infinitelyWorker.addEventListener("message", infinitelyWorkerIniter);
+        }, 200); // wait a bit after last updateDB message
       }
     };
+
     infinitelyWorker.addEventListener("message", infinitelyWorkerIniter);
     window.addEventListener("open:custom:modal", openModal);
     window.addEventListener("close:custom:modal", closeModal);

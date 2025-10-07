@@ -610,4 +610,29 @@ export const touchActionValues = [
   "pan-down", // Allows panning downwards
   "pinch-zoom", // Allows pinch zoom, disables other gestures like panning
 ];
- 
+
+export const mixBlendModeValues = [
+  "normal",
+  "multiply",
+  "screen",
+  "overlay",
+  "darken",
+  "lighten",
+  "color-dodge",
+  "color-burn",
+  "hard-light",
+  "soft-light",
+  "difference",
+  "exclusion",
+  "hue",
+  "saturation",
+  "color",
+  "luminosity",
+  "plus-darker",
+  "plus-lighter"
+];
+
+ export const isolationValues = [
+  "auto",
+  "isolate"
+];

@@ -34,10 +34,10 @@ export const JsLibrary = ({
   });
 
   const install = async ({ fileUrl, isHeader = false, isCDN = false }) => {
+    const tId = toast.loading(
+      <ToastMsgInfo msg={`Installing ${library.name} library`} />
+    );
     try {
-      const tId = toast.loading(
-        <ToastMsgInfo msg={`Installing ${library.name} library`} />
-      );
 
       const projectId = +localStorage.getItem(current_project_id);
       const projectData = await db.projects.get(+projectId);
@@ -113,7 +113,7 @@ export const JsLibrary = ({
         afterInstall({ key: key, lib: newContent });
       };
 
-      installData.globalName = installData.globalName || (await detectGlobalsSandbox(fileUrl))?.[0] || ""
+      installData.globalName = installData.globalName || isJs ? (await detectGlobalsSandbox(fileUrl))?.[0] : ""
       /**
        * @type {import('../../../helpers/types').LibraryConfig}
        */
@@ -160,7 +160,7 @@ export const JsLibrary = ({
       }
 
       // if(installData.globalName){
-      fetcherWorker.postMessage({
+      isJs && fetcherWorker.postMessage({
         command: "installTypes",
         props: {
           projectId,
@@ -173,9 +173,12 @@ export const JsLibrary = ({
       console.log(response);
     } catch (error) {
       console.error(
-        `Failed To Install Library ${library.name} With Error : ${error}`
+        `Failed To Install Library ${library.name}`
       );
+      toast.dismiss(tId);
       toast.error(<ToastMsgInfo msg={`Failed To Install Library`} />);
+
+      throw new Error(error);
     }
   };
 

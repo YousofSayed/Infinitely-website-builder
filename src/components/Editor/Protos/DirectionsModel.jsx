@@ -134,7 +134,7 @@ export const DirectionsModel = ({
   // cssProp:`position`,
   setVal:setProps,
   onEffect(cssProp , props){
-    if(!Object.keys(props).length) return;
+    // if(!Object.keys(props).length) return;
     // console.log('props : ' , props , cssProp);
     
     handlePropsStates(props)

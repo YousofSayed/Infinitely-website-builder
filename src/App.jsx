@@ -164,11 +164,6 @@ function App() {
     };
   }, []);
 
-  // useEffect(() => {
-  //   if (!dbAssetsSw) return;
-  //   sendVarsToSw();
-  //   // dbAssetsSw.addEventListener('')
-  // }, [dbAssetsSw]);
 
   const createProjectFolder = async () => {
     console.log("main rooooot : ", opfs.root);
@@ -180,28 +175,6 @@ function App() {
     }
   };
 
-  // const projectId = +localStorage.getItem(current_project_id);
-  //   console.log("navo");
-  //   if (!projectId) {
-  //     console.log("no project id found, navigating to workspace");
-
-  //     navigate("workspace");
-  //   }
-
-  // const sendVarsToSw = async () => {
-  //   dbAssetsSw.postMessage({
-  //     command: "setVar",
-  //     props: {
-  //       obj: {
-  //         projectId: +localStorage.getItem(current_project_id),
-  //         projectData: await getProjectData(),
-  //       },
-  //       // value: +localStorage.getItem(current_project_id),
-  //     },
-  //   });
-  // };
-
-  // const isProject = Boolean(+localStorage.getItem(current_project_id));
   return (
     // <Suspense fallback={<Loader />}>
     appInstalling ? (

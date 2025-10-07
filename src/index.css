@@ -8,7 +8,23 @@
   font-size: 14px;
 }
 
-.will-change-for-all , .will-change-for-all * {
+.gjs-cv-canvas {
+  /* will-change: transform, opacity; */
+  isolation: isolate;
+  will-change: transform;
+  transform: translateZ(0);
+  /* height: 100%; */
+}
+
+.gjs-cv-canvas  {
+  backface-visibility: hidden;
+  contain: paint;
+  height: 100%;
+}
+
+
+.will-change-for-all,
+.will-change-for-all * {
   will-change: transform, opacity;
 
 }

@@ -14,6 +14,10 @@ import { useRecoilState } from "recoil";
 import { fileInfoState } from "../../../helpers/atoms";
 import { defineRoot, getFileSize } from "../../../helpers/bridge";
 import { opfs } from "../../../helpers/initOpfs";
+import { ToastMsgInfo } from "./ToastMsgInfo";
+import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
+import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
+import { isPlainObject } from "lodash";
 
 //million-ignore
 /**
@@ -46,7 +50,7 @@ export const InstalledLibraryDetails = memo(
         const isCSS = library.type.includes("css");
         const key = (isJS && "scripts") || (isCSS && "styles");
         const index = editor.config.canvas[key].findIndex(
-          (lib) => lib.name.toLowerCase() == library.name.toLowerCase()
+          (lib) => isPlainObject(lib) && lib.name.toLowerCase() == library.name.toLowerCase()
         );
 
         index != -1 && editor.config.canvas[key].splice(index, 1);
@@ -57,10 +61,12 @@ export const InstalledLibraryDetails = memo(
           isJS,
           index
         );
-        editor.load();
-        toast.success("Library Removed Successfully");
+        // editor.load();
+        
+        toast.success(<ToastMsgInfo msg={"Library Removed Successfully"}/>);
+        reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {state:true});
       } catch (error) {
-        toast.success("Faild To Remove Library");
+        toast.error(<ToastMsgInfo msg={"Faild To Remove Library"}/>);
         throw new Error(`Error From Installed Library Details Cmp ${error}`);
       }
     };

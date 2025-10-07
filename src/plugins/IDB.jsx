@@ -498,7 +498,7 @@ export const IDB = (editor) => {
               // Minify full CSS
               let cssCode = editor.getCss({
                 avoidProtected: true,
-                keepUnusedStyles: false,
+                keepUnusedStyles: true,
               });
 
               // minify(
@@ -838,12 +838,12 @@ export const loadScripts = async (editor, projectData) => {
     });
   };
 
-  loadFooterScriptsCallback = async (body) => {
+  loadFooterScriptsCallback = async (ev) => {
     // console.log("evoooooooooooo : ", ev.window.document.body);
     /**
      * @type {HTMLBodyElement}
      */
-    // const body = ev.window.document.body;
+    const body = ev.window.document.body;
     const jsFooterLibs = projectData.jsFooterLibs; //.map(lib=>lib.file);
     // const globalScript = projectData.globalJs;
     // const localScript = projectData.pages[`${currentPageName}`].js;
@@ -869,6 +869,7 @@ export const loadScripts = async (editor, projectData) => {
       if (index > array.length - 1) return true;
       const script = document.createElement("script");
       const lib = array[index];
+      attrsCallback(editor ,projectData);
 
       try {
         callback(script, lib);
@@ -945,6 +946,19 @@ export const loadScripts = async (editor, projectData) => {
           script.src = lib;
         }
       ));
+
+
+      (await appendScript(
+        [
+          '/scripts/willChange.js',
+        ],
+        0,
+        (script, lib) => {
+          script.src = lib;
+        }
+      ));
+
+
     // projectSettings.enable_tailwind &&
     //   (await appendScript(
     //     [
@@ -966,14 +980,16 @@ export const loadScripts = async (editor, projectData) => {
   };
 
   loadHeadScriptsCallback();
-  ifIntervale({
-    condition: () => editor.Canvas.getBody(),
-    async callback() {
-      attrsCallback(editor, projectData);
-      await loadFooterScriptsCallback(editor.Canvas.getBody());
-    },
-  });
-  // editor.on("canvas:frame:load", loadFooterScriptsCallback);
+  // ifIntervale({
+  //   condition: () => editor.Canvas.getBody(),
+  //   async callback() {
+  //     console.log('all done in footer scripts callback..');
+      
+  //     attrsCallback(editor, projectData);
+  //     await loadFooterScriptsCallback(editor.Canvas.getBody());
+  //   },
+  // });
+  editor.on("canvas:frame:load:body", loadFooterScriptsCallback);
   // editor.on("canvas:frame:load:body", loadMainScriptsCallback);
   // editor.on("canvas:frame:load:head", loadHeadScriptsCallback);
 };
