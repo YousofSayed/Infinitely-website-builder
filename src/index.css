@@ -8,19 +8,20 @@
   font-size: 14px;
 }
 
-.gjs-cv-canvas {
+.gjs-cv-canvas,
+.gjs-frame,
+#editor-container {
   /* will-change: transform, opacity; */
-  isolation: isolate;
-  will-change: transform;
-  transform: translateZ(0);
+  isolation: isolate !important;
+  will-change: transform, opacity  , zoom !important;
+  transform: translateZ(0) !important;
+  backface-visibility: hidden !important;
+  contain:layout paint size style !important;
+  height: 100% !important;
   /* height: 100%; */
 }
 
-.gjs-cv-canvas  {
-  backface-visibility: hidden;
-  contain: paint;
-  height: 100%;
-}
+
 
 
 .will-change-for-all,
@@ -45,12 +46,12 @@ li {
   --rt-transition-show-delay: 0.15s;
   --rt-transition-closing-delay: 0.15s;
   --symbol-color-hover: #eb2588;
+  --main-bg: #2563eb;
 }
 
 body {
   cursor: url("./assets/images/mainCursor.png"), auto;
   font-family: system-ui, "roboto", "poppins";
-  /* overflow: hidden; */
 }
 
 [data-slot="indicator"] {

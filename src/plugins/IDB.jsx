@@ -41,13 +41,10 @@ import {
 // import { initDBAssetsSw } from "../serviceWorkers/initDBAssets-sw";
 import { opfs } from "../helpers/initOpfs";
 import { updateThumbnailTimeout } from "./updateProjectThumbnail";
-import { css_beautify } from "js-beautify";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
-import { parseHTML } from "linkedom";
-import { isArray, isFunction } from "lodash";
-import grapesjs from "grapesjs";
-import { editorStorageInstance } from "../constants/InfinitelyInstances";
+import { isFunction } from "lodash";
+
 // import LeakDetector from "jest-leak-detector";
 
 let loadFooterScriptsCallback, loadHeadScriptsCallback, loadMainScriptsCallback;
@@ -623,7 +620,7 @@ export const IDB = (editor) => {
               console.error("Storage failed:", err);
               if (!projectSettings.enable_auto_save) {
                 tId && toast.dismiss(tId);
-                toast.error(<ToastMsgInfo msg={`Faild to save project🙁`} />, {
+                toast.error(<ToastMsgInfo msg={`Faild to save project 🙁`} />, {
                   progressClassName: "bg-[crimson]",
                 });
               }

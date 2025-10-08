@@ -2001,29 +2001,29 @@ export async function parseHTMLAndRaplceSymbols({ pageName = "", projectId }) {
         )
       ).text();
     }
-    document.querySelectorAll("script").forEach((script) => script.remove());
-    document.querySelectorAll("svg").forEach((svg) => {
-      const attributes = [...svg.attributes].concat([
-        {
-          name: "src",
-          value: svgToDataURL(svg.outerHTML),
-        },
-        {
-          name: "type",
-          value: "image/xml+svg",
-        },
+    // document.querySelectorAll("script").forEach((script) => script.remove());
+    // document.querySelectorAll("svg").forEach((svg) => {
+    //   const attributes = [...svg.attributes].concat([
+    //     {
+    //       name: "src",
+    //       value: svgToDataURL(svg.outerHTML),
+    //     },
+    //     {
+    //       name: "type",
+    //       value: "image/xml+svg",
+    //     },
 
-        {
-          name: "data-gjs-type",
-          value: "image",
-        },
-      ]);
-      const img = document.createElement("img");
-      attributes.forEach((attr) => {
-        img.setAttribute(attr.name, attr.value);
-      });
-      svg.replaceWith(img);
-    });
+    //     {
+    //       name: "data-gjs-type",
+    //       value: "image",
+    //     },
+    //   ]);
+    //   const img = document.createElement("img");
+    //   attributes.forEach((attr) => {
+    //     img.setAttribute(attr.name, attr.value);
+    //   });
+    //   svg.replaceWith(img);
+    // });
     let response = [...document.body.children].map((el) => el.outerHTML);
     self.postMessage({
       command: "parseHTMLAndRaplceSymbols",

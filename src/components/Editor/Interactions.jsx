@@ -937,7 +937,8 @@ export const Interactions = () => {
                 }}
               />
 
-              <OptionsButton>
+              <div className="flex-shrink">
+                <OptionsButton>
                 <section className="flex flex-col gap-3 items-center">
                   <button
                     id="inn-clone"
@@ -1003,6 +1004,7 @@ export const Interactions = () => {
                   </Tooltip>
                 </section>
               </OptionsButton>
+              </div>
             </section>
           </section>
         )}

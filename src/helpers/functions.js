@@ -2171,6 +2171,7 @@ export function toggleFastPreview(editor) {
  *   nested?: boolean,
  *    cssCode : string | undefined
  * }} param0
+ * @returns 
  */
 export function getComponentRules({ editor, cmp, nested = false, cssCode }) {
   const cssText = cssCode || editor.getCss(); // Avoid repeated calls
@@ -3085,7 +3086,7 @@ export async function reloadEditor(editor) {
       };
       // render(0);
       // editor.setComponents(elements.join('') , { avoidStore:true});
-      // console.log('componentd setted' , elements);
+      console.log('componentd setted' , elements);
       editor.loadProjectData({
         components: elements,
       });
@@ -3141,7 +3142,7 @@ export function ifIntervale({
     const is = isFunction(condition) ? condition() : Boolean(condition);
     if (is) {
       clearInterval(interval);
-      if (calls > maximumCalls)return;
+      if (calls > maximumCalls) return;
       await callback();
       return;
     }

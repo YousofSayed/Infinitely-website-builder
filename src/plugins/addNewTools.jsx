@@ -1,38 +1,25 @@
 import React from "react";
-import { createSymbolTool } from "./tools/createSymbolTool";
-import { createReusableCmpTool } from "./tools/createReusableCmpTool";
-import { mountAppTool } from "./tools/mountAppTool";
-import { createDynamicTemplate } from "./tools/createDynamicTemplate";
-import { addClickClass, css, html } from "../helpers/cocktail";
+
 import {
   doActionAndPreventSaving,
   getInfinitelySymbolInfo,
-  getProjectData,
-  getProjectSettings,
-  handleCloneComponent,
   initToolbar,
-  isDynamicComponent,
-  preventSelectNavigation,
-  saveProjectByWorker,
 } from "../helpers/functions";
-import { unMountAppTool } from "./tools/unMountAppTool";
-import { cloneDeep, random, uniqueId } from "lodash";
-import {
-  current_page_id,
-  interactionId,
-  mainMotionId,
-  motionId,
-  motionInstanceId,
-} from "../constants/shared";
-import { runGsapMotionTool } from "./tools/runGsapMotionTool";
-import { killGsapMotionTool } from "./tools/killGsapMotion";
-import interact from "interactjs";
-import { Infinitely } from "../helpers/Infinitely";
-import { InfinitelyEvents } from "../constants/infinitelyEvents";
-import { styleInfInstance } from "../constants/InfinitelyInstances";
+
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
-import { cloneMotion } from "../helpers/bridge";
+
+/**
+ *
+ * @param {import('grapesjs').Component} model
+ */
+const isSvgComponent = (model) => {
+  if (model.tagName.toLowerCase() == "svg") return true;
+  if (model.parents().some((parent) => parent.tagName.toLowerCase() == "svg"))
+    return true;
+
+  return false;
+};
 
 /**
  *
@@ -73,6 +60,13 @@ export const addNewTools = (editor) => {
     (model) => {
       // console.log("component create : ", model);
       if (model.get("type") == "wrapper") return;
+      if (isSvgComponent(model)) {
+        model.removeClass(["drop"]);
+        model.set({
+          droppable: false,
+        });
+        return;
+      }
       const props = model.props();
       if (props.droppable && model.components().length == 0) {
         console.log("component create droppp: ", model);
@@ -98,14 +92,15 @@ export const addNewTools = (editor) => {
       const parent = model.parent();
       if (!parent) return;
       if (parent.get("type") == "wrapper") return;
+      if (isSvgComponent(model)) {
+        model.removeClass(["drop"]);
+        model.set({
+          droppable: false,
+        });
+        return;
+      }
       const modelClasses = [...parent.getClasses()];
-      // console.log(
-      //   "mod",
-      //   modelClasses,
-      //   parent.components().length > 1,
-      //   modelClasses.includes("drop")
-      // );
-
+      
       if (modelClasses.includes("drop")) {
         console.log("mod 2", modelClasses);
         doActionAndPreventSaving(
@@ -133,6 +128,13 @@ export const addNewTools = (editor) => {
         return;
       }
       if (model.get("type") == "wrapper") return;
+      if (isSvgComponent(model)) {
+        model.removeClass(["drop"]);
+        model.set({
+          droppable: false,
+        });
+        return;
+      }
       const props = model.props();
       if (props.droppable && !model.components().length) {
         model.addClass(["drop"]);
@@ -152,6 +154,13 @@ export const addNewTools = (editor) => {
       const parent = model.parent();
       if (!parent) return;
       if (parent.get("type") == "wrapper") return;
+      if (isSvgComponent(model)) {
+        model.removeClass(["drop"]);
+        model.set({
+          droppable: false,
+        });
+        return;
+      }
       // const modelClasses = [...parent.getClasses()];
       // console.log(
       //   "mod",
@@ -253,8 +262,8 @@ export const addNewTools = (editor) => {
 
   //         editor.stopCommand(`core:component-outline`);
   //         editor.runCommand(`core:component-outline`);
-          
-  //       } 
+
+  //       }
   //       // console.log('is out line active : ' , editor.Commands.isActive(`core:component-outline`));
   //     }
   //   }, 700);

@@ -1,59 +1,91 @@
 // million-ignore
-import React, { useEffect, useRef, useState, useTransition } from "react";
+import React, { useRef, useState, useTransition } from "react";
 import { SmallButton } from "../Editor/Protos/SmallButton";
 import { Icons } from "../Icons/Icons";
-import { Menu } from "../Editor/Protos/Menu";
-import { Popover } from "../Editor/Popover";
 import { Tooltip } from "react-tooltip";
 import { addClickClass, uniqueID } from "../../helpers/cocktail";
-import { unwrap }from 'million/react'
+import { unwrap } from "million/react";
 
 // million-ignore
 /**
- * @param {import('react').HTMLAttributes<HTMLDivElement>} [props] - All HTML div attributes
+ * @param {import('react').HTMLAttributes<HTMLDivElement>} [props]
  * @returns {JSX.Element}
  */
-export const OptionsButton = (({ children, onClick, ...props }) => {
+export const OptionsButton = ({
+  children,
+  place = "bottom-end",
+  onClick,
+  ...props
+}) => {
   const [showTooltip, setShowTooltip] = useState(false);
-  const [isPending, setTransition] = useTransition();
-  const buttonRef = useRef();
+  const [, startTransition] = useTransition();
   const id = useRef(uniqueID());
-  console.log('id : ' , id);
-  
+
+  const handleClick = (ev) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    startTransition(() => setShowTooltip((prev) => !prev));
+    addClickClass(ev.currentTarget, "click");
+    onClick?.(ev);
+  };
+
+  const handleTooltipClick = (ev) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+  };
+
   return (
-    <>
+    <div
+      className="w-full h-full"
+      onClick={(ev) => {
+        ev.stopPropagation();
+        ev.preventDefault();
+      }}
+    >
       <SmallButton
-        // showTooltip
-        // tooltipTitle="Options"
-        className="w-fit bg-transparent hover:bg-transparent border-none "
-       
-        onClick={(ev) => {
-          addClickClass(ev.currentTarget, "click");
-          onClick?.(ev);
-        }}
+        className="w-full h-full flex justify-center items-center bg-transparent hover:bg-transparent border-none "
+        onClick={handleClick}
         id={id.current}
-        
         {...props}
       >
         {Icons.options({ fill: "#fff" })}
       </SmallButton>
 
       <Tooltip
-        className="w-fit p-[unset] z-[100]"
+        id={`tooltip-${id.current}`}
+        className="w-fit p-[unset] z-[100] shadow-lg bg-slate-800 shadow-slate-950"
         style={{
-          boxShadow:`0px 0px 10px 1px #0f172a`,
-          padding: "10px 5px",
+          boxShadow: "0px 0px 10px 1px #020617",
+          padding: "5px",
+          backgroundColor: "#1e293b",
         }}
+        positionStrategy="fixed"
         anchorSelect={`#${id.current}`}
-        place="bottom-end"
+        place={place}
         clickable
-        opacity={1}
         isOpen={showTooltip}
         setIsOpen={setShowTooltip}
+        openEvents={{
+          click: false,
+          dblclick: false,
+          focus: false,
+          mousedown: false,
+          mouseenter: false,
+          mouseover: false,
+        }}
+        opacity={1}
         openOnClick
+        closeEvents={{
+          click: false,
+          dblclick: false,
+          blur: false,
+          mouseout: false,
+          mouseup: false,
+          mouseleave: false,
+        }}
       >
-        {children}
+        <div onClick={handleTooltipClick}>{children}</div>
       </Tooltip>
-    </>
+    </div>
   );
-});
+};

@@ -328,3 +328,11 @@ export let interactionsType = [];
  * @type {import('./types').InteractionsInDB}
  */
 export let interactionInDBType = {};
+
+
+export let detectedType = {
+    desktop: [],
+    tablet: [],
+    mobile: [],
+    others: [],
+  }

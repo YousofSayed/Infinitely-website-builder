@@ -1,11 +1,14 @@
 import React, { memo, useEffect, useRef, useState } from "react";
-import {  addClickClass, uniqueID } from "../../helpers/cocktail";
+import { addClickClass, uniqueID } from "../../helpers/cocktail";
 import { Link, useParams, useResolvedPath } from "react-router-dom";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import { removeAllActivesState } from "../../helpers/atoms";
 import { refType } from "../../helpers/jsDocs";
 import { Tooltip } from "react-tooltip";
+import { useUlContext } from "./UlProvider";
+import { uniqueId } from "lodash";
 
+//million-ignore
 export const Li = ({
   children,
   className = "",
@@ -23,7 +26,11 @@ export const Li = ({
   refForward,
   linkClassName = "",
   target,
-  required,
+  notify,
+  notifyBg = "bg-blue-600",
+  mode,
+  id ,
+  enableSelecting = false,
   icon = (strokeColor, strokeWidth) => {},
 }) => {
   const path = useResolvedPath();
@@ -34,6 +41,30 @@ export const Li = ({
   const buttonRef = useRef(refType);
   const uuid = useRef(uniqueID());
   const [showTooltip, setShowTooltip] = useState(false);
+  const { selectedId, setSelectedId } = useUlContext();
+  const [selected, setSelected] = useState(null);
+
+  const select = () => {
+    console.log("wow");
+    if (!enableSelecting) return;
+    if(!selectedId && !setSelectedId)return
+    if (mode == "group") {
+      setSelectedId(selected ? null : id);
+    } else {
+      setSelected(!selected);
+    }
+  };
+
+  useEffect(() => {
+    if (!enableSelecting) return;
+    
+    if (mode === "group") {
+      console.log('selecting enabled' , selectedId === id);
+      setSelected(selectedId === id);
+    }
+  }, [selectedId]);
+
+
   return (
     <li
       onMouseOver={() => {
@@ -43,11 +74,16 @@ export const Li = ({
         setShowTooltip(false);
       }}
       tooltib-id={uuid.current}
+      style={{
+        backgroundColor:selected ? 'var(--main-bg)' : ''
+      }}
       className={`group relative li-btn h-[30px] w-[30px]     rounded-lg cursor-pointer grid place-items-center transition-all ${
         to && path.pathname?.match(to)?.filter((link) => link)?.length
           ? "bg-blue-600"
           : ""
-      } ${className}  ${hover ? "hover:bg-blue-600" : ""}`}
+      }  ${className}  ${
+        hover ? "hover:bg-blue-600" : ""
+      }`}
     >
       {to ? (
         <Link
@@ -56,12 +92,26 @@ export const Li = ({
           aria-label={title}
           ref={refForward}
           target={target}
-          className={`w-full h-full   ${
-            linkClassName ? linkClassName : "flex justify-center items-center"
-          } ${
-            fillObjectIconOnHover && "[&_path]:hover:fill-[white!important]"
-          }  ${fillStrokeIcon && "[&_path]:hover:stroke-white"}`}
+          className={`w-full h-full   
+          ${linkClassName ? linkClassName : "flex justify-center items-center"}
+
+          ${fillObjectIconOnHover && "[&_path]:hover:fill-[white!important]"}
+
+          ${fillStrokeIcon && "[&_path]:hover:stroke-white"}
+          
+          ${
+            fillObjectIconOnHover &&
+            selected &&
+            "[&_path]:fill-[white!important]"
+          }
+
+          ${fillStrokeIcon && selected && "[&_path]:stroke-white"}
+
+          `}
           onClick={(ev) => {
+            // ev.preventDefault();
+            // ev.stopPropagation();
+            // select();
             addClickClass(ev.currentTarget, "click");
             onClick(ev);
           }}
@@ -91,12 +141,29 @@ export const Li = ({
           ref={refForward}
           aria-label={title}
           // title={title}
-          className={`w-full h-full  flex justify-center items-center ${
-            fillIcon && "[&_path]:hover:fill-white"
-          } ${fillStrokeIcon && "[&_path]:hover:stroke-white"}`}
+          className={`w-full h-full  flex justify-center items-center 
+          
+          ${fillIcon && "[&_path]:hover:fill-white"}
+          
+          ${fillStrokeIcon && "[&_path]:hover:stroke-white"}
+          
+          ${fillIcon && selected && "[&_path]:fill-white"}
+
+          ${
+            fillObjectIconOnHover &&
+            selected &&
+            "[&_path]:fill-[white!important] [&_svg]:fill-[white!important]"
+          }
+
+          ${fillStrokeIcon && selected && "[&_path]:stroke-white"}
+
+          `}
           onClick={(ev) => {
-            onClick(ev);
+            ev.preventDefault();
+            ev.stopPropagation();
+            select();
             addClickClass(ev.currentTarget, "click");
+            onClick(ev);
 
             // if(justHover)return;
             // [...$a(".clicked")]
@@ -138,8 +205,10 @@ export const Li = ({
         </button>
       )}
 
-      {required && (
-        <div className="absolute w-[10px] h-[10px] bg-[crimson] rounded-full right-0 top-0"></div>
+      {notify && (
+        <div
+          className={`absolute w-[10px] h-[10px] ${notifyBg} rounded-full right-0 top-0`}
+        ></div>
       )}
       {showTooltip && title && (
         <Tooltip

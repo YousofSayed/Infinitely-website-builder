@@ -2,7 +2,7 @@ import GjsEditor from "@grapesjs/react";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import grapesjs from "grapesjs";
 // import  "../../helpers/grapesjs.js";
-import { useRecoilState,  useSetRecoilState } from "recoil";
+import { useRecoilState, useSetRecoilState } from "recoil";
 import {
   currentElState,
   reloaderState,
@@ -12,7 +12,7 @@ import {
 import { blocks } from "../../Blocks/blocks.jsx";
 // import gStyles from "../../../styles/style.css?raw";
 
-import {  useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { addDevices } from "../../plugins/addDevices";
 import { customModal } from "../../plugins/cutomModal";
 import { addNewTools } from "../../plugins/addNewTools.jsx";
@@ -73,9 +73,12 @@ export const GJEditor = ({ children }) => {
   const onEditor = (ev) => {
     const editor = ev;
     ev.Blocks.categories.add({ id: "others", title: "Others" });
-    const lastDevice = sessionStorage.getItem("last-device");
+    const lastDevice = localStorage.getItem("last-device");
+    const lastDeviceJson = localStorage.getItem("last-device-json");
     if (lastDevice) editor.setDevice(lastDevice);
-
+    if (lastDeviceJson) {
+      editor.Devices.add(JSON.parse(lastDeviceJson));
+    }
     ev.runCommand("core:component-outline");
     isChrome(() => {
       editor.on("canvas:frame:load", ({ window, el }) => {

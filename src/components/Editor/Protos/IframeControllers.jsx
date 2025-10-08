@@ -395,7 +395,8 @@ export const IframeControllers = () => {
 
         }}
         title="Reload Canvas"
-        required={reloadRequired}
+        notify={reloadRequired}
+        notifyBg="bg-[crimson]"
       >
         {Icons.refresh({
           width: 20,

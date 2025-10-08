@@ -18,9 +18,8 @@ import {
   getProjectSettings,
   preventSelectNavigation,
 } from "../../../helpers/functions";
-import { parse } from "css";
 
-export const SelectClass = memo(() => {
+export const SelectClass = () => {
   const editor = useEditorMaybe();
   const projectId = +localStorage.getItem(current_project_id);
   const [selector, setSelector] = useRecoilState(selectorState);
@@ -71,32 +70,25 @@ export const SelectClass = memo(() => {
   }, [editor]);
 
   useEffect(() => {
-    if (!editor) return;
-    // console.log("effectoooo");
+  if (!editor) return;
 
-    /**
-     *
-     * @param {MessageEvent} ev
-     */
-    const callback = async (ev) => {
-      console.log(`from classes finder worker`);
+  const callback = (ev) => {
+    const { command, props } = ev.data;
+    if (command === "classes-chunks" && props.classes) {
+      setAllStyleSheetClasses((prev) => [
+        ...new Set([...prev, ...props.classes]),
+      ]);
+    }
+  };
 
-      const { command, props } = ev.data;
-      if (command == "classes-chunks" && props.classes) {
-        // console.log("classes : ", props.classes);
+  classesFinderWorker.addEventListener("message", callback);
+  return () => classesFinderWorker.removeEventListener("message", callback);
+}, [editor]);
 
-        setAllStyleSheetClasses([...allStyleSheetClasses, ...props.classes]);
-      }
-    };
-
-    classesFinderWorker.addEventListener("message", callback);
-
-    return () => {
-      classesFinderWorker.removeEventListener("message", callback);
-    };
-  }, [allStyleSheetClasses]);
 
   useEffect(() => {
+    if (!editor) return;
+    if (!selectedEl.currentEl) return;
     getClassFromInlineWorker();
   }, [editor, selectedEl]);
 
@@ -222,6 +214,9 @@ export const SelectClass = memo(() => {
         projectId,
         editorCss: editor.getCss({
           keepUnusedStyles: true,
+          clearStyles: false,
+          onlyMatched: false,
+          avoidProtected: true,
         }),
         projectSettings: getProjectSettings().projectSettings,
         // inlineStylesInners: [
@@ -303,4 +298,4 @@ export const SelectClass = memo(() => {
       ) : null}
     </section>
   );
-});
+};

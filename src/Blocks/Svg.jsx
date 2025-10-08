@@ -59,6 +59,179 @@ function elToJSON(source, parseType) {
   };
 }
 
+/**
+ * fixSVGSmart(svgString)
+ * - Converts objectBoundingBox-patterns that used <use transform="scale(...)"> into
+ *   userSpaceOnUse patterns with direct <image>.
+ * - Renames defs ids (to avoid collision in editors/iframes) and updates url(#...) refs.
+ * - Cleans common GrapesJS attributes and will-change styles.
+ * @param {string} svgString
+ * @returns {string} fixed SVG string
+ */
+function fixSVGSmart(svgString) {
+  if (typeof svgString !== 'string') return svgString;
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(svgString, 'image/svg+xml');
+  const svg = doc.querySelector('svg');
+  if (!svg) return svgString;
+
+  // Ensure namespaces
+  svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  svg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+
+  // Helper to escape regex
+  const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  // 1) Rename defs children ids to avoid collisions (only defs children)
+  const idMap = {};
+  doc.querySelectorAll('defs [id]').forEach(el => {
+    const old = el.getAttribute('id');
+    if (!old) return;
+    const rand = Math.random().toString(36).slice(2, 8);
+    const neu = `svgfix-${old}-${rand}`;
+    idMap[old] = neu;
+    el.setAttribute('id', neu);
+  });
+
+  // 2) Update references across all attributes (fill, stroke, filter, clip-path, style, href/xlink:href, etc.)
+  doc.querySelectorAll('*').forEach(el => {
+    Array.from(el.attributes).forEach(attr => {
+      let val = attr.value;
+
+      // replace url(#old) occurrences
+      for (const old in idMap) {
+        val = val.replace(new RegExp(`url\\(#${esc(old)}\\)`, 'g'), `url(#${idMap[old]})`);
+      }
+
+      // If an href/xlink:href points to "#old", remap it
+      if ((attr.name === 'href' || attr.name === 'xlink:href') && /^#/.test(val)) {
+        const target = val.slice(1);
+        if (idMap[target]) val = '#' + idMap[target];
+      }
+
+      // update style inline url(...) references too
+      for (const old in idMap) {
+        val = val.replace(new RegExp(`#${esc(old)}`, 'g'), `#${idMap[old]}`);
+      }
+
+      el.setAttribute(attr.name, val);
+    });
+  });
+
+  // 3) Convert xlink:href -> href (keep both for compatibility)
+  doc.querySelectorAll('[xlink\\:href]').forEach(el => {
+    const v = el.getAttribute('xlink:href');
+    if (v && !el.getAttribute('href')) el.setAttribute('href', v);
+  });
+
+  // parse scale(sx [, sy]) from transform
+  function parseScale(transform) {
+    if (!transform) return null;
+    const m = transform.match(/scale\(\s*([0-9.+-eE]+)(?:[,\s]+([0-9.+-eE]+))?\s*\)/);
+    if (!m) return null;
+    return { sx: parseFloat(m[1]), sy: m[2] ? parseFloat(m[2]) : parseFloat(m[1]) };
+  }
+
+  // 4) Normalize patterns: objectBoundingBox + use -> userSpaceOnUse + direct <image>
+  doc.querySelectorAll('pattern').forEach(pattern => {
+    const pc = pattern.getAttribute('patternContentUnits');
+    if (!pc || pc.toLowerCase() !== 'objectboundingbox') return;
+
+    const use = pattern.querySelector('use');
+    if (!use) return;
+
+    // find referenced element (usually <image>)
+    const href = use.getAttribute('href') || use.getAttribute('xlink:href');
+    const refId = href && href.startsWith('#') ? href.slice(1) : null;
+    const refEl = refId ? doc.getElementById(refId) : null;
+
+    // parse transform scale (common in GrapesJS output)
+    const transform = use.getAttribute('transform') || '';
+    const sc = parseScale(transform);
+
+    if (refEl && refEl.tagName && refEl.tagName.toLowerCase() === 'image') {
+      // attempt to get intrinsic width/height from the <image> attributes
+      const iwAttr = refEl.getAttribute('width');
+      const ihAttr = refEl.getAttribute('height');
+      const iw = iwAttr ? parseFloat(iwAttr) : NaN;
+      const ih = ihAttr ? parseFloat(ihAttr) : NaN;
+
+      // If we have width/height, convert pattern into userSpaceOnUse sized to image pixels
+      if (!isNaN(iw) && !isNaN(ih) && iw > 0 && ih > 0) {
+        pattern.setAttribute('patternUnits', 'userSpaceOnUse');
+        pattern.setAttribute('width', String(iw));
+        pattern.setAttribute('height', String(ih));
+        pattern.removeAttribute('patternContentUnits');
+
+        // create a direct <image> to replace the <use>
+        const newImg = refEl.cloneNode(true);
+        // keep href and xlink:href for compatibility
+        const imgHref = refEl.getAttribute('href') || refEl.getAttribute('xlink:href') || '';
+        newImg.setAttribute('href', imgHref);
+        newImg.setAttribute('xlink:href', imgHref);
+        newImg.setAttribute('x', '0');
+        newImg.setAttribute('y', '0');
+        newImg.setAttribute('width', String(iw));
+        newImg.setAttribute('height', String(ih));
+        if (!newImg.getAttribute('preserveAspectRatio')) newImg.setAttribute('preserveAspectRatio', 'none');
+
+        // remove id from cloned image to avoid duplicate IDs inside defs (we already remapped defs ids)
+        if (newImg.hasAttribute('id')) newImg.removeAttribute('id');
+
+        // replace <use> with <image>
+        use.replaceWith(newImg);
+      } else if (sc && sc.sx && sc.sy) {
+        // Fallback: no explicit image width/height but scale exists.
+        // If transform is scale(1/W 1/H), derive W = 1/sx
+        const maybeW = 1 / sc.sx;
+        const maybeH = 1 / sc.sy;
+        if (isFinite(maybeW) && isFinite(maybeH) && maybeW > 0 && maybeH > 0) {
+          pattern.setAttribute('patternUnits', 'userSpaceOnUse');
+          pattern.setAttribute('width', String(Math.round(maybeW)));
+          pattern.setAttribute('height', String(Math.round(maybeH)));
+          pattern.removeAttribute('patternContentUnits');
+
+          const newImg = refEl.cloneNode(true);
+          const imgHref = refEl.getAttribute('href') || refEl.getAttribute('xlink:href') || '';
+          newImg.setAttribute('href', imgHref);
+          newImg.setAttribute('xlink:href', imgHref);
+          newImg.setAttribute('x', '0');
+          newImg.setAttribute('y', '0');
+          newImg.setAttribute('width', String(Math.round(maybeW)));
+          newImg.setAttribute('height', String(Math.round(maybeH)));
+          if (!newImg.getAttribute('preserveAspectRatio')) newImg.setAttribute('preserveAspectRatio', 'none');
+          if (newImg.hasAttribute('id')) newImg.removeAttribute('id');
+          use.replaceWith(newImg);
+        }
+      }
+    }
+  });
+
+  // 5) Remove GrapesJS-specific attributes and sanitize styles (strip will-change)
+  doc.querySelectorAll('[data-gjs-type],[draggable]').forEach(el => {
+    el.removeAttribute('data-gjs-type');
+    el.removeAttribute('draggable');
+  });
+  doc.querySelectorAll('[style]').forEach(el => {
+    let s = el.getAttribute('style') || '';
+    // remove will-change and useless inline bits GrapesJS adds
+    s = s.replace(/(?:^|;)\s*will-change\s*:[^;]+;?/gi, '');
+    s = s.replace(/(?:^|;)\s*cursor\s*:[^;]+;?/gi, ''); // optional
+    s = s.replace(/(?:^|;)\s*pointer-events\s*:[^;]+;?/gi, '');
+    s = s.trim();
+    if (!s) el.removeAttribute('style');
+    else el.setAttribute('style', s);
+  });
+
+  // 6) Ensure images have preserveAspectRatio
+  doc.querySelectorAll('image').forEach(img => {
+    if (!img.getAttribute('preserveAspectRatio')) img.setAttribute('preserveAspectRatio', 'none');
+  });
+
+  // Serialize and return the fixed svg
+  return new XMLSerializer().serializeToString(svg);
+}
+
 
 
 /**
@@ -212,7 +385,7 @@ export const Svg = (editor) => {
             role: "handler",
             type: "media",
             mediaType: "svg",
-            async callback({ editor, newValue, asset }) {
+            async callback({ editor, newValue, asset , }) {
               const sle = editor.getSelected();
               // const type = sle?.props().type;
               if (!sle || !asset) return;
@@ -220,7 +393,7 @@ export const Svg = (editor) => {
               // Read the SVG file content
               const textCmp = await asset.text();
               // const children = sle.components().models;
-              sle.components(textCmp);
+              sle.components(fixSVGSmart(textCmp));
               const svg = sle.components().models[0];
               svg.set({
                 draggable: false,

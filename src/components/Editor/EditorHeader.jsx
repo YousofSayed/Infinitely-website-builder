@@ -5,6 +5,7 @@ import { IframeControllers } from "./Protos/IframeControllers";
 import { useEditorMaybe } from "@grapesjs/react";
 import { Input } from "./Protos/Input";
 import {
+  addClickClass,
   createBlobFileAs,
   html,
   transformToNumInput,
@@ -24,6 +25,7 @@ import {
   buildGsapMotionsScript,
   buildScriptFromCmds,
   exportProject,
+  getComponentRules,
   getCurrentPageName,
   getProjectData,
   getProjectSettings,
@@ -35,22 +37,19 @@ import { PagesSelector } from "./PagesSelector";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
 import { open_code_manager_modal } from "../../constants/InfinitelyCommands";
-import {
-  current_page_id,
-  current_project_id,
-  preview_url,
-} from "../../constants/shared";
-import { infinitelyWorker } from "../../helpers/infinitelyWorker";
-import { db } from "../../helpers/db";
+import { preview_url } from "../../constants/shared";
 import { ScrollableToolbar } from "../Protos/ScrollableToolbar";
 import { Hr } from "../Protos/Hr";
-import { useNavigate } from "react-router-dom";
-import { animationsSavingMsg } from "../../constants/confirms";
 import { editorContainerInstance } from "../../constants/InfinitelyInstances";
 import { InfinitelyEvents } from "../../constants/infinitelyEvents";
 import { fetcherWorker } from "../../helpers/defineWorkers";
+import { OptionsButton } from "../Protos/OptionsButton";
+import { cloneDeep } from "lodash";
+import { detectedType } from "../../helpers/jsDocs";
+import { UlContextProvider, useUlContext } from "../Protos/UlProvider";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 
-export const HomeHeader = (() => {
+export const HomeHeader = () => {
   const editor = useEditorMaybe();
   const widthRef = useRef("");
   const heightRef = useRef("");
@@ -59,6 +58,10 @@ export const HomeHeader = (() => {
   const [currentEl, setCurrentEl] = useRecoilState(currentElState);
   const [zoomValue, setZoomValue] = useRecoilState(zoomValueState);
   const [mediaValue, setMediaValue] = useState("");
+  const [detectedMedia, setDetectedMedia] = useState(detectedType);
+  const [sizeAutoAnimate] = useAutoAnimate();
+  const [widthMedia, setWidthMedia] = useState();
+  const { selectedId, setSeletedId } = useUlContext();
   // const [isAnimationsChanged, setAnimationsChanged] = useRecoilState(
   //   isAnimationsChangedState
   // );
@@ -67,6 +70,12 @@ export const HomeHeader = (() => {
     width: "",
     height: "",
   });
+
+  const setMediaConditon = (value) => {
+    setMediaValue(value);
+    editor.getConfig().mediaCondition = value;
+    localStorage.setItem("media-condition", value);
+  };
   // const [pages, setPages] = useState([]);
 
   const setCustomDevice = (prop, value) => {
@@ -100,7 +109,7 @@ export const HomeHeader = (() => {
   };
 
   useEffect(() => {
-    if (!(editor  && editor.getContainer())) return;
+    if (!(editor && editor.getContainer())) return;
     // console.log('html editor : ' , editor.getWrapper().getInnerHTML({withProps:true , withScripts: true}));
     // getHtml({withProps:true , asDocument:false , })
     setZoomValue((editor.getContainer().style.zoom * 100).toFixed(2));
@@ -122,18 +131,88 @@ export const HomeHeader = (() => {
   }, [editor]);
 
   useEffect(() => {
+    console.log("from lol");
+
+    if (!editor) return;
+    if (!currentEl.currentEl) return;
+    const { rules } = getComponentRules({
+      editor,
+      cmp: editor.getSelected(),
+      nested: true,
+      cssCode: editor.getCss({
+        avoidProtected: true,
+        clearStyles: false,
+        onlyMatched: false,
+        keepUnusedStyles: true,
+      }),
+    });
+
+    const newDetected = cloneDeep(detectedType);
+
+    //       {
+    //  *  id: string;
+    //  * rule: string;
+    //  * fullRule: string | null;
+    //  * styles: {};
+    //  * states: string | null;
+    //  * statesAsArray: never[] | RegExpMatchArray | null;
+    //  * atRuleType: string | null;
+    //  * atRuleParams: string | null;
+    //  * }[]
+    for (const rule of rules) {
+      if (!rule.atRuleParams && rule.fullRule) {
+        newDetected.desktop.push(true);
+      } else if (
+        rule.atRuleParams &&
+        rule.atRuleParams.includes("max-width") &&
+        rule.atRuleParams.includes("768px")
+      ) {
+        newDetected.tablet.push(true);
+      } else if (
+        rule.atRuleParams &&
+        rule.atRuleParams.includes("max-width") &&
+        rule.atRuleParams.includes("360px")
+      ) {
+        newDetected.mobile.push(true);
+      } else if (rule.atRuleParams) {
+        newDetected.others.push(rule.atRuleParams.replace(/\(|\)/gi, ""));
+      }
+    }
+
+    newDetected.others = [...new Set(newDetected.others)];
+    setDetectedMedia(newDetected);
+    console.log("ruules from header :", rules);
+  }, [currentEl, editor]);
+
+  useEffect(() => {
+    if (!editor) return;
     editorContainerInstance.on(
       InfinitelyEvents.editorContainer.update,
       zoomCallback
     );
+
+    const deviceChange = () => {
+      console.log(editor.getDevice());
+      if (!editor.getDevice()) return;
+
+      const widthMedia = editor.Devices.get(editor.getDevice())
+        .getWidthMedia()
+        .match(/\d+/gi)[0];
+      setWidthMedia(+widthMedia);
+    };
+
+    editor.on("change:device", deviceChange);
+    editor.on("canvas:frame:load:body", deviceChange);
 
     return () => {
       editorContainerInstance.off(
         InfinitelyEvents.editorContainer.update,
         zoomCallback
       );
+      editor.off("change:device", deviceChange);
+      editor.off("canvas:frame:load:body", deviceChange);
     };
-  }, []);
+  }, [editor]);
 
   return (
     <header className="w-full h-[60px]  zoom-80 px-2 bg-slate-900  border-b-[1.5px]  border-slate-400    flex items-center justify-between gap-5">
@@ -142,44 +221,148 @@ export const HomeHeader = (() => {
         space={3}
       >
         {/* <ul className="flex gap-[25px] flex-shrink  h-full  items-center"> */}
-        <ul className="flex items-center gap-2 justify-between flex-shrink-0 flex-grow bg-slate-800 shadow-2xl shadow-slate-950 rounded-lg w-[120px] p-1">
+        {/* <UlContextProvider> */}
+        <ul
+          ref={sizeAutoAnimate}
+          className="flex items-center gap-2 justify-between flex-shrink-0 flex-grow bg-slate-800 shadow-2xl shadow-slate-950 rounded-lg w-[150px] p-1"
+        >
           <Li
-            title="desktop size"
+            title="Default size"
             // className="max-xl:flex-shrink-0"
             onClick={(ev) => {
               editor.setDevice("desktop");
+              if (detectedMedia.desktop.length) setMediaConditon("max-width");
               // setCurrentEl({ currentEl: editor?.getSelected()?.getEl() });
               editor.trigger("device:change");
             }}
             isObjectParamsIcon
             icon={Icons.desktop}
+            id={"desktop-size"}
+            notify={Boolean(detectedMedia.desktop.length)}
+            mode={"group"}
+            enableSelecting
           />
           <Li
-            title="tablet size"
+            title="max-width: 768px"
             // className="max-xl:flex-shrink-0"
             onClick={(ev) => {
               editor.setDevice("tablet");
+              if (detectedMedia.tablet.length) setMediaConditon("max-width");
               // setCurrentEl({ currentEl: editor?.getSelected()?.getEl() });
               editor.trigger("device:change");
             }}
             isObjectParamsIcon
             fillObjectIconOnHover
             icon={Icons.tablet}
+            notify={Boolean(detectedMedia.tablet.length)}
+            id={"tablet-size"}
+            mode={"group"}
+            enableSelecting
           />
 
           <Li
-            title="mobile size"
+            title="max-width: 360px"
             // className="max-xl:flex-shrink-0"
             onClick={(ev) => {
               editor.setDevice("mobile");
+              if (detectedMedia.mobile.length) setMediaConditon("max-width");
               // setCurrentEl({ currentEl: editor?.getSelected()?.getEl() });
               editor.trigger("device:change");
             }}
             isObjectParamsIcon
             fillObjectIconOnHover
             icon={Icons.mobile}
+            notify={Boolean(detectedMedia.mobile.length)}
+            id={"mobile-size"}
+            mode={"group"}
+            enableSelecting
           />
+          {Boolean(detectedMedia.others.length) && (
+            <UlContextProvider>
+              <Li
+                // title="Other sizes"
+                // // className="max-xl:flex-shrink-0"
+                // onClick={(ev) => {
+                //   editor.setDevice("mobile");
+                //   // setCurrentEl({ currentEl: editor?.getSelected()?.getEl() });
+                //   editor.trigger("device:change");
+                // }}
+                // isObjectParamsIcon
+                // fillObjectIconOnHover
+                // onClick={(ev) => {
+                //   // ev.stopPropagation();
+                //   ev.preventDefault();
+                // }}
+                // id={"other-sizes"}
+                // mode={"group"}
+                // enableSelecting
+                notify={Boolean(detectedMedia.others.length)}
+              >
+                <OptionsButton role="div">
+                  {
+                    <ul
+                      onMouseOver={(ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                      }}
+                      className=" relative"
+                    >
+                      {detectedMedia.others.map((rule, i) => {
+                        console.log(
+                          "rule : ",
+                          rule,
+                          rule.trim() ==
+                            `${editor.config.mediaCondition}: ${widthMedia}px`
+                        );
+
+                        return (
+                          <li
+                            key={i}
+                            style={{
+                              backgroundColor:
+                                rule.trim() ==
+                                `${editor.config.mediaCondition}: ${widthMedia}px`
+                                  ? "var(--main-bg)"
+                                  : "",
+                            }}
+                            className="p-2 w-[200px!important] flex justify-center items-center bg-slate-800 rounded-md transition-all hover:bg-blue-600"
+                            onClick={(ev) => {
+                              ev.preventDefault();
+                              ev.stopPropagation();
+                              addClickClass(ev.currentTarget, "click");
+                              const widthValue = rule.match(/\d+/gi);
+                              const mediaCondition = rule.split(":")[0];
+                              console.log(widthValue, mediaCondition);
+                              setMediaValue(mediaCondition);
+                              editor.getConfig().mediaCondition =
+                                mediaCondition;
+                              localStorage.setItem(
+                                "media-condition",
+                                mediaCondition
+                              );
+                              const sle = editor.getSelected();
+                              setCustomDevice("width", widthValue);
+                              setDimaonsion({
+                                ...dimansions,
+                                width: widthValue,
+                              });
+
+                              editor.trigger("device:change");
+                              preventSelectNavigation(editor, sle);
+                            }}
+                          >
+                            {rule}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  }
+                </OptionsButton>
+              </Li>
+            </UlContextProvider>
+          )}
         </ul>
+        {/* </UlContextProvider> */}
 
         <li className="flex-shrink-0 w-[100px]">
           <Select
@@ -191,8 +374,8 @@ export const HomeHeader = (() => {
               setMediaValue(value);
               editor.getConfig().mediaCondition = value;
               localStorage.setItem("media-condition", value);
-              const sle =editor.getSelected();
-              preventSelectNavigation(editor , sle);
+              const sle = editor.getSelected();
+              preventSelectNavigation(editor, sle);
             }}
           />
         </li>
@@ -399,4 +582,4 @@ export const HomeHeader = (() => {
       {/* </ToolbarComponent> */}
     </header>
   );
-});
+};

@@ -1,6 +1,7 @@
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
 import { editorContainerInstance } from "../constants/InfinitelyInstances";
-import { restartGSAPMotions } from "../helpers/functions";
+import { killAllGsapMotions } from "../helpers/customEvents";
+import { getProjectData, restartGSAPMotions } from "../helpers/functions";
 
 /**
  * @param {import('grapesjs').Editor} editor
@@ -43,8 +44,9 @@ export const addDevices = (editor) => {
 
   const zoomToFit = () => {
     timeout && clearTimeout(timeout);
-    timeout = setTimeout(() => {
+    timeout = requestAnimationFrame(async () => {
       editor.getContainer().style.zoom = 1;
+      killAllGsapMotions((await getProjectData()).motions);
       // editor.getContainer().style.transform = `scale(1)`;
       if (!editor.Canvas) {
         resizerObserver && resizerObserver.disconnect();
@@ -55,8 +57,8 @@ export const addDevices = (editor) => {
       }
       const iframe = editor.Canvas.getFrameEl();
       const canvasWrapper = editor.getContainer();
-
       if (!iframe || !canvasWrapper) return;
+      // iframe.style.display = "none";
 
       const device = editor.getDevice();
       const deviceDef = deviceManager.get(device)?.attributes;
@@ -95,6 +97,9 @@ export const addDevices = (editor) => {
         // editor.Canvas.refresh({ all: true, spots: true });
         // editor.refresh({ tools: true });
       }
+      // requestAnimationFrame(() => {
+      //   // iframe.style.display = null;
+      // });
       emitEditorContainerZoom();
       restartGSAPMotions(editor);
     }, 80);
@@ -121,7 +126,16 @@ export const addDevices = (editor) => {
 
   editor.on("change:device", () => {
     // editor.getContainer().style.zoom = 1;
-    sessionStorage.setItem('last-device' , editor.getDevice());
+    localStorage.setItem("last-device", editor.getDevice());
+    localStorage.setItem(
+      "last-device-json",
+      JSON.stringify(editor.Devices.get(editor.getDevice()).toJSON())
+    );
+    console.log(
+      "Device is : ",
+      editor.Devices.get(editor.getDevice()).toJSON()
+    );
+
     zoomToFit();
   });
   // editor.on("canvas:frame:load:body", () => {
