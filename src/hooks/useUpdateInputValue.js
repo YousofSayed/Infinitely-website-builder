@@ -72,7 +72,7 @@ export const useUpdateInputValue = ({
       mediaAccordingToRule
     )?.toJSON()?.style;
 
-    console.log("style output : ", outPut);
+    console.log("style output : ", outPut , cssProp , selector , mediaAccordingToRule);
 
     return outPut || {};
   }

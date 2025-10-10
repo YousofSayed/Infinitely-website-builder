@@ -26,7 +26,7 @@ import { useEditorMaybe } from "@grapesjs/react";
 import { classesFinderWorker } from "../../../helpers/defineWorkers";
 import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
 import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
-
+import  {For} from 'million/react'
 export const SettingsModal = () => {
   const editor = useEditorMaybe();
   const projectId = +localStorage.getItem(current_project_id);
@@ -190,9 +190,10 @@ export const SettingsModal = () => {
           }}
         />
         <section className="grid grid-cols-3 gap-2">
-          {Object.entries(
+          <For each={Object.entries(
             searchedSettings ? searchedSettings : projectSettings
-          ).map(([key, value], i) => (
+          )}>
+            {([key, value], i) => (
             <article
               key={i}
               title={key}
@@ -221,11 +222,13 @@ export const SettingsModal = () => {
                 }}
               />
             </article>
-          ))}
+          )}
+          </For>
+          
         </section>
       </section>
       <hr className="border-slate-600" />
-      <section className="flex gap-2">
+      <footer className="flex gap-2">
         <Button
           onClick={async () => {
             const tId = toast.loading(
@@ -287,7 +290,7 @@ export const SettingsModal = () => {
         >
           Clean unused interactions
         </Button>
-      </section>
+      </footer>
     </section>
   );
 };

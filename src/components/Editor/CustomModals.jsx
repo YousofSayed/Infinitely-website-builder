@@ -10,7 +10,7 @@ import { LibraryInstaller } from "./Protos/LibraryInstaller";
 import { LibraryInstallerModal } from "./Modals/LibraryInstallerModal";
 import { FitTitle } from "./Protos/FitTitle";
 
-export const CustomModals = (() => {
+export const CustomModals = () => {
   const editor = useEditorMaybe();
   const modalData = useRecoilValue(modalDataState);
   const setModalData = useSetRecoilState(modalDataState);
@@ -38,10 +38,13 @@ export const CustomModals = (() => {
 
   return (
     <section
-    style={{
-      contain:'layout , paint , size , content , size , style',
-      willChange:'opacity , transform'
-    }}
+      style={{
+        // contain: "layout  paint  size  content  size  style",
+        // willChange: "transform",
+        // isolation:'isolate',
+        // transform: "translateZ(0)",
+        // backfaceVisibility: "hidden",
+      }}
       onClick={(ev) => {
         // ev.stopPropagation();
         // ev.preventDefault();
@@ -51,12 +54,17 @@ export const CustomModals = (() => {
         }
         // editor.Commands.run("close:custom:modal");
       }}
-      className={`fixed  z-[55] backdrop-blur-sm right-0 left-0  w-full h-full flex justify-center items-center`}
+      className={`fixed   z-[55] backdrop-blur-sm right-0 left-0  w-full h-full flex justify-center items-center`}
     >
       <main
         style={{
           width: modalData.width,
           height: modalData.height,
+        //    contain: "layout  paint  size  content  size  style",
+        // willChange: "transform",
+        // isolation:'isolate',
+        // transform: "translateZ(0)",
+        // backfaceVisibility: "hidden",
         }}
         onClick={(ev) => {
           // ev.stopPropagation();
@@ -87,9 +95,14 @@ export const CustomModals = (() => {
         </header>
 
         <section
-          // style={{
-          //   height: modalData.height,
-          // }}
+          style={{
+            // height: modalData.height,
+        //      contain: "layout  paint  size  content  size  style",
+        // willChange: "transform",
+        // isolation:'isolate',
+        // transform: "translateZ(0)",
+        // backfaceVisibility: "hidden",
+          }}
           className=" p-2 h-full max-h-full overflow-auto rounded-bl-lg rounded-br-lg bg-slate-900"
         >
           {modalData.JSXModal}
@@ -100,4 +113,4 @@ export const CustomModals = (() => {
       </main>
     </section>
   );
-});
+};

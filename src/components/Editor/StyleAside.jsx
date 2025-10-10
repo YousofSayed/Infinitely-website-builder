@@ -38,6 +38,7 @@ const SelectElementToStyle = () => (
 
 const StyleAccordion = () => {
   const showAnimeBuilder = useRecoilValue(showAnimationsBuilderState);
+  // const [cmpRules , set ]
   return <Accordion>
     <AccordionItem label={"Layout"}>
       <ErrorBoundary fallbackRender={SelectElementToStyle}>

@@ -58,7 +58,11 @@ import { createReusableCmpTool } from "../plugins/tools/createReusableCmpTool";
 import { createSymbolTool } from "../plugins/tools/createSymbolTool";
 import { infinitelyWorker } from "./infinitelyWorker";
 import { isFunction, isPlainObject, uniqueId, random as _random } from "lodash";
-import { buildInteractionsAttributes, cloneMotion } from "./bridge";
+import {
+  buildInteractionsAttributes,
+  cloneMotion,
+  filterMotionsByPage,
+} from "./bridge";
 import { loadElements } from "../plugins/IDB";
 import { editorStorageInstance } from "../constants/InfinitelyInstances";
 export {
@@ -2146,7 +2150,12 @@ export async function restartGSAPMotions(editor) {
   );
 
   if (!currentGsapStateAnimation) return;
-  const motions = await (await getProjectData()).motions;
+  const motions = filterMotionsByPage(
+    await (
+      await getProjectData()
+    ).motions,
+    localStorage.getItem(current_page_id)
+  );
   killAllGsapMotions(motions);
   runAllGsapMotions(motions);
 }
@@ -2171,7 +2180,7 @@ export function toggleFastPreview(editor) {
  *   nested?: boolean,
  *    cssCode : string | undefined
  * }} param0
- * @returns 
+ * @returns
  */
 export function getComponentRules({ editor, cmp, nested = false, cssCode }) {
   const cssText = cssCode || editor.getCss(); // Avoid repeated calls
@@ -3086,7 +3095,7 @@ export async function reloadEditor(editor) {
       };
       // render(0);
       // editor.setComponents(elements.join('') , { avoidStore:true});
-      console.log('componentd setted' , elements);
+      console.log("componentd setted", elements);
       editor.loadProjectData({
         components: elements,
       });

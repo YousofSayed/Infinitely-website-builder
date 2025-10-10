@@ -52,7 +52,7 @@ export let animeStylesType = {};
 /**
  *  @type {import('css').KeyFrames}
  */
-export let animationType = {}
+export let animationType = {};
 
 /**
  * @type {import('css').KeyFrames[]}
@@ -212,16 +212,17 @@ export let projectSettingsType = {
   is_defer_graped_header_script: false,
   disable_gsap_core: false,
   disable_gsap_scrollTrigger: false,
+  disable_gsap_splitText:false,
   enable_prettier_for_file_editor: true,
   include_canvas_styles_in_build_file: true,
   disable_petite_vue: false,
   enable_tailwind: false,
   enable_spline_viewer: false,
   enable_swiperjs: false,
-  enable_editor_lazy_loading:false,
-  enable_auto_save:true,
+  enable_editor_lazy_loading: false,
+  enable_auto_save: true,
   stop_all_animation_on_page: false,
-  remove_gsap_markers_on_build:true,
+  remove_gsap_markers_on_build: true,
   // purge_css: false,
   include_symbols_in_export: true,
   include_templates_in_export: true,
@@ -329,10 +330,14 @@ export let interactionsType = [];
  */
 export let interactionInDBType = {};
 
-
 export let detectedType = {
-    desktop: [],
-    tablet: [],
-    mobile: [],
-    others: [],
-  }
+  desktop: [],
+  tablet: [],
+  mobile: [],
+  others: [],
+};
+
+/**
+ * @type {import('./types').InfinitelyRules}
+ */
+export let cmpRules = [];

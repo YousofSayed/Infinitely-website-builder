@@ -28,6 +28,8 @@ import {
 import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./ToastMsgInfo";
+import { cleanMotions, filterMotionsByPage } from "../../../helpers/bridge";
+import { current_page_id } from "../../../constants/shared";
 
 // import { unMountApp } from "../../../main";
 // import { reBuildApp, unMountApp } from "../../../main";
@@ -299,7 +301,17 @@ export const IframeControllers = () => {
       <Li
         // refForward={redoRef}
         onClick={async () => {
-          const motions = await (await getProjectData()).motions;
+          // cleanMotions()
+          // console.log("motions : ", await cleanMotions(projectData.motions, projectData.pages),);
+          const projectData = await getProjectData();
+          const pageName = localStorage.getItem(current_page_id);
+          const motions = filterMotionsByPage(
+            await cleanMotions(projectData.motions, projectData.pages, {
+              [pageName]: editor.getWrapper().getInnerHTML({ withProps: true }),
+            }),
+            pageName
+          );
+          console.log("motions : ", motions);
           killAllGsapMotions(motions);
           runAllGsapMotions(motions);
           editor.gsapRunning = true;
@@ -316,7 +328,16 @@ export const IframeControllers = () => {
       <Li
         // refForward={redoRef}
         onClick={async () => {
-          killAllGsapMotions(await (await getProjectData()).motions);
+          const projectData = await getProjectData();
+          const pageName = localStorage.getItem(current_page_id);
+          const motions = filterMotionsByPage(
+            await cleanMotions(projectData.motions, projectData.pages, {
+              [pageName]: editor.getWrapper().getInnerHTML({ withProps: true }),
+            }),
+            pageName
+          );
+
+          killAllGsapMotions(motions);
           editor.gsapRunning = false;
         }}
         title="Kill All Motions"
@@ -392,7 +413,6 @@ export const IframeControllers = () => {
           setTimeout(() => {
             location.replace(location.href);
           }, 0);
-
         }}
         title="Reload Canvas"
         notify={reloadRequired}

@@ -6,11 +6,17 @@ if (!gsap) {
   console.error("GSAP is not loaded");
 }
 gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(SplitText);
 
 /**
  * @type {{[key:string] : gsap.core.Tween[] | gsap.core.Timeline }}
  */
 let gsapTween = {};
+
+/**
+ * @type {{[key:string] : SplitText[] | SplitText }}
+ */
+let gsapSplitTexts = {};
 /**
  * @type {import('../../src/helpers/types').MotionType}
  */
@@ -27,7 +33,7 @@ const isFunction = (value) => {
 
 /**
  *
- * @param {import('./types').MotionType} motion
+ * @param {import('../../src/helpers/types').MotionType} motion
  * @param {Boolean} paused
  * @param {boolean} isInstance
  * @returns
@@ -39,7 +45,10 @@ function CompileMotion(
   // removeMarkers = true // this is just in bridge.js for final build (production)
 ) {
   /**
-   * @type {{timeline:object , fromTo : {
+   * @type {{
+   * timeline:object ,
+   * splitText:SplitText.Vars,
+   *  fromTo : {
    * selector:string,
    * fromValue:CSSStyleDeclaration,
    * toValue:CSSStyleDeclaration,
@@ -75,7 +84,7 @@ function CompileMotion(
               typeof value === "string"
                 ? value.replaceAll?.("self", attribute)
                 : value;
-                
+
             return [
               key,
               isFn
@@ -109,6 +118,10 @@ function CompileMotion(
       };
     }
     motion.timeLineName && (output.timeline.name = motion.timeLineName);
+  }
+
+  if (motion.isSplitText) {
+    output.splitText = parseObjValue(motion.splitText);
   }
 
   motion.animations.forEach((animation) => {
@@ -152,16 +165,94 @@ function CompileMotion(
 /**
  *
  * @param {import('../../src/helpers/types').MotionType} motion
+ * @param {SplitText.Vars} tweens
+ */
+function createSplitText(motion, splitTextVars) {
+  const attribute = `[${
+    motion?.isInstance ? `motion-instance-id` : `motion-id`
+  }=${motion.id}]`;
+
+  const split = new SplitText(
+    motion.splitTextSelector.replaceAll("self", attribute),
+    splitTextVars
+  );
+
+  return split;
+}
+
+/**
+ *
+ * @param {import('../../src/helpers/types').MotionType} motion
+ */
+function killAndRevert(motion) {
+  if (!(motion && motion.id)) throw new Error(`No motion id founded`);
+  const killer = (obj) => {
+    if (Array.isArray(gsapTween[motion.id])) {
+      obj[motion.id].forEach((tween) => {
+        tween.kill && tween.kill(true);
+        tween.revert && tween.revert();
+        ScrollTrigger.refresh();
+      });
+    } else if (obj[motion.id] && motion.isTimeLine) {
+      obj[motion.id].getChildren().forEach((child) => {
+        if (child.scrollTrigger) {
+          child?.scrollTrigger && child.scrollTrigger.revert(); // Kill inner scrollTrigger
+          //child.scrollTrigger.kill(true); // Kill inner scrollTrigger
+        }
+      });
+      obj[motion.id]?.revert && obj[motion.id].revert(); // Kill the timeline
+      obj[motion.id]?.kill && obj[motion.id].kill(true); // Kill the timeline
+      console.log(obj, obj[motion.id]);
+      ScrollTrigger.refresh();
+    } else if (obj[motion.id] && !motion.isTimeLine) {
+      obj[motion.id]?.kill && obj[motion.id].kill(true);
+      obj[motion.id]?.revert && obj[motion.id].revert();
+      ScrollTrigger.refresh();
+    }
+    delete obj[motion.id];
+    console.log("From gsap runner ", motion.id, "killed");
+  };
+
+  killer(gsapTween);
+  killer(gsapSplitTexts);
+}
+
+/**
+ *
+ * @param {import('../../src/helpers/types').MotionType} motion
+ * @param {Boolean} paused
+ * @param {SplitText} split
  */
 function CreateGsap(motion, paused = false) {
-  const { fromTo, timeline } = CompileMotion(motion, paused);
+  const { fromTo, timeline, splitText } = CompileMotion(motion, paused);
   console.log("from copiled motions : ", fromTo, timeline);
+  console.log("from copiled motions splitText : ", splitText);
+
+  const splitKeys = ["chars", "lines", "words"];
+  const split = motion.isSplitText ? createSplitText(motion, splitText) : null;
+
+  const setSelector = (selector = "") => {
+    let splitTarget;
+    const cond =
+      motion.isSplitText &&
+      split &&
+      splitKeys.some((key) => {
+        const cond = key.toLowerCase() == selector.toLowerCase();
+        splitTarget = key;
+        return cond;
+      });
+    console.log("splitTarget", splitTarget, split);
+
+    return cond ? split[splitTarget] : selector;
+  };
+
+  motion.isSplitText && (gsapSplitTexts[motion.id] = split);
 
   if (Object.keys(timeline).length > 0) {
     const tl = gsap.timeline(timeline);
     fromTo.forEach((item) => {
       const { selector, fromValue, toValue, positionParameter } = item;
-      tl.fromTo(selector, fromValue, toValue, positionParameter);
+      tl.fromTo(setSelector(selector), fromValue, toValue, positionParameter);
     });
 
     timeline.name && (window[timeline.name] = tl);
@@ -169,7 +260,7 @@ function CreateGsap(motion, paused = false) {
   } else if (!Object.keys(timeline).length && fromTo.length) {
     return fromTo.map((item) => {
       const { selector, fromValue, toValue } = item;
-      const tween = gsap.fromTo(selector, fromValue, toValue);
+      const tween = gsap.fromTo(setSelector(selector), fromValue, toValue);
       item.name && (window[item.name] = tween);
       return tween;
     });
@@ -196,30 +287,31 @@ function gsapRun(ev) {
     gsapTween[motion.id] &&
     (methods.includes("kill") || methods.includes("revert"))
   ) {
-    if (Array.isArray(gsapTween[motion.id])) {
-      gsapTween[motion.id].forEach((tween) => {
-        tween.kill(true);
-        tween.revert();
-        ScrollTrigger.refresh();
-      });
-    } else if (gsapTween[motion.id] && motion.isTimeLine) {
-      gsapTween[motion.id].getChildren().forEach((child) => {
-        if (child.scrollTrigger) {
-          child.scrollTrigger.revert(); // Kill inner scrollTrigger
-          //child.scrollTrigger.kill(true); // Kill inner scrollTrigger
-        }
-      });
-      gsapTween[motion.id].revert(); // Kill the timeline
-      gsapTween[motion.id].kill(true); // Kill the timeline
-      console.log(gsapTween, gsapTween[motion.id]);
-      ScrollTrigger.refresh();
-    } else if (gsapTween[motion.id] && !motion.isTimeLine) {
-      gsapTween[motion.id].kill(true);
-      gsapTween[motion.id].revert();
-      ScrollTrigger.refresh();
-    }
-    gsapTween[motion.id] = null;
-    console.log("From gsap runner ", motion.id, "killed");
+    killAndRevert(motion);
+    // if (Array.isArray(gsapTween[motion.id])) {
+    //   gsapTween[motion.id].forEach((tween) => {
+    //     tween.kill(true);
+    //     tween.revert();
+    //     ScrollTrigger.refresh();
+    //   });
+    // } else if (gsapTween[motion.id] && motion.isTimeLine) {
+    //   gsapTween[motion.id].getChildren().forEach((child) => {
+    //     if (child.scrollTrigger) {
+    //       child.scrollTrigger.revert(); // Kill inner scrollTrigger
+    //       //child.scrollTrigger.kill(true); // Kill inner scrollTrigger
+    //     }
+    //   });
+    //   gsapTween[motion.id].revert(); // Kill the timeline
+    //   gsapTween[motion.id].kill(true); // Kill the timeline
+    //   console.log(gsapTween, gsapTween[motion.id]);
+    //   ScrollTrigger.refresh();
+    // } else if (gsapTween[motion.id] && !motion.isTimeLine) {
+    //   gsapTween[motion.id].kill(true);
+    //   gsapTween[motion.id].revert();
+    //   ScrollTrigger.refresh();
+    // }
+    // gsapTween[motion.id] = null;
+    // console.log("From gsap runner ", motion.id, "killed");
   } else {
     console.log(
       previousMotion == JSON.stringify(motion),
@@ -228,31 +320,32 @@ function gsapRun(ev) {
     );
 
     if (previousMotion != JSON.stringify(motion)) {
-      if (Array.isArray(gsapTween[motion.id])) {
-        gsapTween[motion.id].forEach((tween) => {
-          tween.kill(true);
-          tween.revert();
-          ScrollTrigger.refresh();
-        });
-      } else if (gsapTween[motion.id] && motion.isTimeLine) {
-        gsapTween[motion.id].getChildren().forEach((child) => {
-          if (child.scrollTrigger) {
-            child.scrollTrigger.revert(); // Kill inner scrollTrigger
-            //child.scrollTrigger.kill(true); // Kill inner scrollTrigger
-          }
-        });
-        gsapTween[motion.id].revert(); // Kill the timeline
-        gsapTween[motion.id].kill(true); // Kill the timeline
-        console.log(gsapTween, gsapTween[motion.id]);
-        ScrollTrigger.refresh();
-      } else if (gsapTween[motion.id] && !motion.isTimeLine) {
-        gsapTween[motion.id].kill(true);
-        gsapTween[motion.id].revert();
-        ScrollTrigger.refresh();
-      }
-      // console.log('Motion changed', motion , CompileMotion(motion) );
+      killAndRevert(motion);
+      // if (Array.isArray(gsapTween[motion.id])) {
+      //   gsapTween[motion.id].forEach((tween) => {
+      //     tween.kill(true);
+      //     tween.revert();
+      //     ScrollTrigger.refresh();
+      //   });
+      // } else if (gsapTween[motion.id] && motion.isTimeLine) {
+      //   gsapTween[motion.id].getChildren().forEach((child) => {
+      //     if (child.scrollTrigger) {
+      //       child.scrollTrigger.revert(); // Kill inner scrollTrigger
+      //       //child.scrollTrigger.kill(true); // Kill inner scrollTrigger
+      //     }
+      //   });
+      //   gsapTween[motion.id].revert(); // Kill the timeline
+      //   gsapTween[motion.id].kill(true); // Kill the timeline
+      //   console.log(gsapTween, gsapTween[motion.id]);
+      //   ScrollTrigger.refresh();
+      // } else if (gsapTween[motion.id] && !motion.isTimeLine) {
+      //   gsapTween[motion.id].kill(true);
+      //   gsapTween[motion.id].revert();
+      //   ScrollTrigger.refresh();
+      // }
+      // // console.log('Motion changed', motion , CompileMotion(motion) );
 
-      gsapTween[motion.id] = null;
+      // gsapTween[motion.id] = null;
       previousMotion = JSON.stringify(motion);
       window.parent.dispatchEvent(
         new CustomEvent("gsap:run", {
@@ -298,6 +391,7 @@ function gsapRun(ev) {
         console.log("Killed");
 
         gsapTween[motion.id] = null;
+        gsapSplitTexts[motion.id] = null;
         // previousMotion = null;
       }
     }
@@ -343,29 +437,30 @@ function gsapKillAll(ev) {
   const { motions } = ev.detail;
   Object.values(motions).forEach((motion) => {
     if (!gsapTween[motion.id]) return;
-    if (Array.isArray(gsapTween[motion.id])) {
-      gsapTween[motion.id].forEach((tween) => {
-        tween.revert();
-        tween.kill(true);
-        ScrollTrigger.refresh();
-      });
-    } else if (gsapTween[motion.id] && motion.isTimeLine) {
-      gsapTween[motion.id].getChildren().forEach((child) => {
-        if (child.scrollTrigger) {
-          child.scrollTrigger.revert(); // Kill inner scrollTrigger
-          //child.scrollTrigger.kill(true); // Kill inner scrollTrigger
-        }
-      });
-      gsapTween[motion.id].revert(); // Kill the timeline
-      gsapTween[motion.id].kill(true); // Kill the timeline
-      console.log(gsapTween, gsapTween[motion.id]);
-      ScrollTrigger.refresh();
-    } else if (gsapTween[motion.id] && !motion.isTimeLine) {
-      gsapTween[motion.id].kill(true);
-      gsapTween[motion.id].revert();
-      ScrollTrigger.refresh();
-    }
-    delete gsapTween[motion.id];
+    killAndRevert(motion);
+    // if (Array.isArray(gsapTween[motion.id])) {
+    //   gsapTween[motion.id].forEach((tween) => {
+    //     tween.revert();
+    //     tween.kill(true);
+    //     ScrollTrigger.refresh();
+    //   });
+    // } else if (gsapTween[motion.id] && motion.isTimeLine) {
+    //   gsapTween[motion.id].getChildren().forEach((child) => {
+    //     if (child.scrollTrigger) {
+    //       child.scrollTrigger.revert(); // Kill inner scrollTrigger
+    //       //child.scrollTrigger.kill(true); // Kill inner scrollTrigger
+    //     }
+    //   });
+    //   gsapTween[motion.id].revert(); // Kill the timeline
+    //   gsapTween[motion.id].kill(true); // Kill the timeline
+    //   console.log(gsapTween, gsapTween[motion.id]);
+    //   ScrollTrigger.refresh();
+    // } else if (gsapTween[motion.id] && !motion.isTimeLine) {
+    //   gsapTween[motion.id].kill(true);
+    //   gsapTween[motion.id].revert();
+    //   ScrollTrigger.refresh();
+    // }
+    // delete gsapTween[motion.id];
     const instanceMotions = {};
 
     Object.entries(motion.instances || {}).forEach(([id, instace]) => {
@@ -393,6 +488,7 @@ function clearScript(ev) {
 
   gsap = null;
   gsapTween = null;
+  gsapSplitTexts = null;
   previousMotion = null;
 
   console.log("script cleared from gsapRuner.dev.js");

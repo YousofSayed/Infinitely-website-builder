@@ -1,5 +1,6 @@
 import { useRecoilState, useRecoilValue } from "recoil";
 import {
+  cmpRulesState,
   ruleState,
   selectorState,
   showAnimationsBuilderState,
@@ -8,14 +9,13 @@ import {
 import { useEditorMaybe } from "@grapesjs/react";
 import { useRemoveCssProp } from "./useRemoveCssProp";
 import {
+  getComponentRules,
   getCurrentMediaDevice,
   getCurrentSelector,
 } from "../helpers/functions";
-import {
-  inf_class_name,
-} from "../constants/shared";
+import { inf_class_name } from "../constants/shared";
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
-import {  random, uniqueId } from "lodash";
+import { random, uniqueId } from "lodash";
 import { keyframeStylesInstance } from "../constants/InfinitelyInstances";
 import { uniqueID } from "../helpers/cocktail";
 let setStyleTimeout = null;
@@ -27,8 +27,9 @@ let setStyleTimeout = null;
 export function useSetClassForCurrentEl() {
   const editor = useEditorMaybe();
   const rule = useRecoilValue(ruleState);
-  const [selector , setSelector] = useRecoilState(selectorState);
+  const [selector, setSelector] = useRecoilState(selectorState);
   const removeProp = useRemoveCssProp();
+  const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
 
   const showAnimationsBuilder = useRecoilValue(showAnimationsBuilderState);
 
@@ -86,7 +87,7 @@ export function useSetClassForCurrentEl() {
       const Media = getCurrentMediaDevice(editor);
       const sle = editor.getSelected();
 
-      let currentSelector = getCurrentSelector(selector, sle); 
+      let currentSelector = getCurrentSelector(selector, sle);
       console.log("from set style current selector is : ", currentSelector);
       const classes = [...sle.getClasses()];
       const isCurrentSelectorAdded = classes.some(
@@ -109,8 +110,8 @@ export function useSetClassForCurrentEl() {
       } else if (currentSelector && !isCurrentSelectorAdded) {
         sle.addClass(currentSelector);
       }
-      console.log('current selector from updater : ' , currentSelector);
-      
+      console.log("current selector from updater : ", currentSelector);
+
       // const symbolInfo = getInfinitelySymbolInfo(sle);
       // console.log(
       //   "from updater  : ",
@@ -138,6 +139,13 @@ export function useSetClassForCurrentEl() {
           // inline:true,
           addStyle: true,
         }
+      );
+
+      setCmpRules(
+        getComponentRules({
+          editor,
+          cmp: editor.getSelected(),
+        }).rules || []
       );
 
       editor.trigger("inf:rules:update", {

@@ -716,11 +716,15 @@ const isFunction = (value) => {
 function CompileMotion(
   motion,
   paused = false,
-  isInstance = false,
-  removeMarkers = true // this is just in bridge.js for final build (production)
+  isInstance = false
+  // removeMarkers = true // this is just in bridge.js for final build (production)
 ) {
   /**
-   * @type {{timeline:object , fromTo : {
+   * @type {{
+   * timeline:object ,
+   * splitText:SplitText.Vars,
+   * splitTextSelector:string,
+   *  fromTo : {
    * selector:string,
    * fromValue:CSSStyleDeclaration,
    * toValue:CSSStyleDeclaration,
@@ -743,7 +747,7 @@ function CompileMotion(
         .map(([key, value]) => {
           console.log("key : ", key);
 
-          if (key == "markers" && removeMarkers) return null;
+          // if (key == "markers" && removeMarkers) return null;
           if (typeof value === "object" && !Array.isArray(value)) {
             return [key, parseObjValue(value)];
           } else if (
@@ -790,6 +794,14 @@ function CompileMotion(
       };
     }
     motion.timeLineName && (output.timeline.name = motion.timeLineName);
+  }
+
+  if (motion.isSplitText) {
+    output.splitText = parseObjValue(motion.splitText);
+    output.splitTextSelector = motion.splitTextSelector.replaceAll(
+      "self",
+      attribute
+    );
   }
 
   motion.animations.forEach((animation) => {
@@ -860,7 +872,41 @@ export function buildGsapMotionsScript(
       isInstance,
       removeMarkers
     );
-    let tween = `let ${motion.id} = {}; \n\n`;
+    let splitTextName =
+      motion.splitTextName || `${uniqueId("spltTxt_")}${random(1, 9999)}`;
+    let tween = `
+    ${
+      motion.isSplitText
+        ? `let ${splitTextName} = new SplitText(
+    \`${compiledMotion.splitTextSelector}\`,
+    new Function(\`return (${serializeJavascript(compiledMotion.splitText, {
+      space: 2,
+    }).replaceAll("\\", "\\\\")})\`)()
+  )`
+        : ``
+    }
+
+    let ${motion.id} = {}; \n\n
+    `;
+
+    const splitKeys = ["chars", "lines", "words"];
+
+    const setSelector = (selector = "") => {
+      let splitTarget;
+      const cond =
+        motion.isSplitText &&
+        splitTextName &&
+        splitKeys.some((key) => {
+          const cond = key.toLowerCase() == selector.toLowerCase();
+          splitTarget = key;
+          return cond;
+        });
+      // console.log("splitTarget", splitTarget, split);
+      return cond ? `${splitTextName}.${splitTarget}` : `\`${selector}\``;
+
+      // return cond ? `new Function( console.log(${splitTextName}[\\\`${splitTarget}\\\`]) ;return ${splitTextName}[\\\`${splitTarget}\\\`])()` : selector;
+    };
+
     const doMotion = () => {
       if (motion.isTimeLine) {
         tween += `${motion.id}.${
@@ -883,9 +929,9 @@ export function buildGsapMotionsScript(
 
           tween += `${
             motion.isTimeLine ? "" : `${motion.id}.${item.name} = gsap`
-          }.fromTo(\`${
+          }.fromTo(${setSelector(
             item.selector
-          }\`, {...${fromObject}}, {...${toObject}} , \`${
+          )}, {...${fromObject}}, {...${toObject}} , \`${
             item.positionParameter || ""
           }\`)${
             motion.isTimeLine
@@ -954,12 +1000,12 @@ export function filterMotionsByPage(motions, pageName) {
  * @param {{[key : string] : import('./types').MotionType}} motions
  * @param {{[key:string] : import('./types').InfinitelyPage}} pages
  */
-export async function cleanMotions(motions, pages) {
+export async function cleanMotions(motions, pages , currentPages = {}) {
   const { parseHTML } = await import("linkedom");
   const pagesContent = {};
   for (const key in pages) {
     const page = pages[key];
-    const pageContent = await (
+    const pageContent = currentPages[key] || await (
       await opfs.getFile(defineRoot(page.pathes.html))
     ).text();
     pagesContent[page.name] = pageContent;
@@ -971,22 +1017,41 @@ export async function cleanMotions(motions, pages) {
     const allowedInstances = {};
 
     for (const name in pagesContent) {
-      if (isChange) break;
+      // if (isChange) break;
       const pageContent = pagesContent[name];
       const { document } = parseHTML(doDocument(pageContent));
       const mainIdEls = document.querySelectorAll(`[${motionId}="${key}"]`);
       const instancesEls = document.querySelectorAll(
         `[${mainMotionId}="${key}"]`
       );
-      console.log(mainIdEls, instancesEls, pageContent, "a3aaaaaaa");
+      // console.log(mainIdEls, instancesEls, pageContent, "a3aaaaaaa");
       if (!mainIdEls.length && instancesEls.length) {
         motion.excludes = [...new Set([...(motion.excludes || []), name])];
       }
 
+      // else {
+      //   motion.excludes = (motion.excludes || []).filter(
+      //     (item) => item != name
+      //   );
+      // }
+
+      // console.log(
+      //   "motions length : ",
+      //   motion,
+      //   mainIdEls.length,
+      //   instancesEls.length,
+      //   name,
+      //   mainIdEls.length || instancesEls.length
+      // );
+
       if (mainIdEls.length || instancesEls.length) {
         isChange = true;
       } else {
-        isChange = false;
+        // isChange = false;
+        motion.pages = (motion.pages || []).filter(
+          (page) => page.toLowerCase() != name.toLowerCase()
+        );
+        // console.log("motions pages : ", motion.pages, motion.id, name);
       }
 
       //clear instances
@@ -1004,7 +1069,15 @@ export async function cleanMotions(motions, pages) {
       if (!allowedInstances[allowedInstance])
         delete motion.instances[allowedInstance];
     }
-    if (!isChange) delete motions[key];
+    // if (!isChange) delete motions[key];
+  }
+
+  for (const key in motions) {
+    if (!motions[key].pages?.length) {
+      console.log("motions not leangth founded");
+
+      delete motions[key];
+    }
   }
 
   // await Promise.all(

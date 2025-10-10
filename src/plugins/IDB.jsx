@@ -439,9 +439,9 @@ export const IDB = (editor) => {
             });
             // if (!editor.getDirtyCount()) return;
             try {
-              toast.clearWaitingQueue({
-                // containerId: `main-toast-container`,
-              });
+              // toast.clearWaitingQueue({
+              //   // containerId: `main-toast-container`,
+              // });
               tId && toast.done(tId);
               if (!projectSettings.enable_auto_save) {
                 tId = toast.loading(<ToastMsgInfo msg={"Saving..."} />);
@@ -593,6 +593,12 @@ export const IDB = (editor) => {
                   console.log("Store complete:", { pageId: currentPageId });
                   console.timeEnd("storing end");
                   editor.trigger(InfinitelyEvents.storage.storeEnd);
+                  infinitelyWorker.reInit((worker) => {
+                    worker.postMessage({
+                      command: "initOPFS",
+                      props: { id: opfs.id },
+                    });
+                  });
                   if (!projectSettings.enable_auto_save) {
                     toast.done(tId);
                     toast.success(
@@ -866,7 +872,7 @@ export const loadScripts = async (editor, projectData) => {
       if (index > array.length - 1) return true;
       const script = document.createElement("script");
       const lib = array[index];
-      attrsCallback(editor ,projectData);
+      attrsCallback(editor, projectData);
 
       try {
         callback(script, lib);
@@ -944,17 +950,9 @@ export const loadScripts = async (editor, projectData) => {
         }
       ));
 
-
-      (await appendScript(
-        [
-          '/scripts/willChange.js',
-        ],
-        0,
-        (script, lib) => {
-          script.src = lib;
-        }
-      ));
-
+    await appendScript(["/scripts/willChange.js"], 0, (script, lib) => {
+      script.src = lib;
+    });
 
     // projectSettings.enable_tailwind &&
     //   (await appendScript(
@@ -981,7 +979,7 @@ export const loadScripts = async (editor, projectData) => {
   //   condition: () => editor.Canvas.getBody(),
   //   async callback() {
   //     console.log('all done in footer scripts callback..');
-      
+
   //     attrsCallback(editor, projectData);
   //     await loadFooterScriptsCallback(editor.Canvas.getBody());
   //   },

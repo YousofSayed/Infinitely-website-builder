@@ -18,6 +18,56 @@ export type gradientValues = {
   ];
 }[];
 
+import type * as CSS from "csstype";
+
+type CSSProperties = CSS.PropertiesHyphen; // ✅ dash-case CSS properties
+
+export type InfinitelyStyle = {
+  type:
+    | "property"
+    | "select"
+    | "choose"
+    | "multi-prop"
+    | "directions"
+    | "title";
+  cssProp: keyof CSSProperties;
+  title?: string;
+  placeholder?: string;
+  keywords?: string[];
+  directions?: {
+    tProp: keyof CSSProperties;
+    rProp: keyof CSSProperties;
+    bProp: keyof CSSProperties;
+    lProp: keyof CSSProperties;
+  };
+};
+
+export type InfinitelyStyles = {
+  [key: string]: InfinitelyStyle[];
+};
+
+export type InfinitelyRule = {
+  id: string;
+  rule: string;
+  fullRule: string | null;
+  styles: {};
+  states: string | null;
+  statesAsArray: never[] | RegExpMatchArray | null;
+  atRuleType: string | null;
+  atRuleParams: string | null;
+};
+
+export type InfinitelyRules = {
+  id: string;
+  rule: string;
+  fullRule: string | null;
+  styles: {};
+  states: string | null;
+  statesAsArray: never[] | RegExpMatchArray | null;
+  atRuleType: string | null;
+  atRuleParams: string | null;
+}[];
+
 export type Animations = {
   name: string;
   values: { percentage: number; styles: CSSStyleDeclaration }[];
@@ -30,7 +80,7 @@ export type TraitCallProps = {
   newValue: string;
   asset: InfinitelyAsset | undefined;
   mediaBreakpoint: number;
-  model : Component;
+  model: Component;
 };
 
 export type TraitCallback = ({
@@ -493,6 +543,7 @@ export type ProjectSetting = {
   disable_petite_vue: boolean;
   disable_gsap_core: boolean;
   disable_gsap_scrollTrigger: boolean;
+  disable_gsap_splitText: boolean;
   enable_prettier_for_file_editor: boolean;
   is_async_graped_header_script: boolean;
   is_defer_graped_header_script: boolean;
@@ -598,10 +649,14 @@ export type MotionType = {
       page: string;
     };
   };
-  excludes? : string[] 
+  excludes?: string[];
   isTimeLine: boolean;
+  isSplitText: boolean;
   timeLineName: string;
   timeline: {};
+  splitText: SplitText.Vars;
+  splitTextSelector: string;
+  splitTextName: string;
   isInstance: boolean;
   timeLineSingleOptions: {};
   timeLineMultiOptions: {};

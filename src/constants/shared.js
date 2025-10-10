@@ -101,6 +101,7 @@ export const codeEditorScripts = ["/scripts/infinitely.js"];
 export const gsapScripts = [
   "/scripts/gsap.min.js",
   "/scripts/scrollTrigger.min.js",
+  "/scripts/splitText.min.js",
   // "https://cdn.jsdelivr.net/npm/gsap@latest/dist/gsap.min.js",
   // "https://cdn.jsdelivr.net/npm/gsap@latest/dist/ScrollTrigger.min.js",
 ];
@@ -198,6 +199,15 @@ export const buildScripts = ({
       {
         name: "scrollTrigger.js",
         localUrl: "/scripts/scrollTrigger.min.js",
+      },
+    ]) ||
+      []),
+
+
+    ...((!projectSetting.disable_gsap_splitText && [
+      {
+        name: "splitText.js",
+        localUrl: "/scripts/splitText.min.js",
       },
     ]) ||
       []),

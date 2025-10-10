@@ -12,8 +12,6 @@ import { useRemoveCssProp } from "../../../hooks/useRemoveCssProp";
 import { ColorPicker } from "./ColorPicker";
 import { getCloneArray } from "../../../helpers/functions";
 
-
-
 /**
  *
  * @param {import("../../../helpers/types").gradientValues} values
@@ -23,7 +21,13 @@ import { getCloneArray } from "../../../helpers/functions";
 const stringifyValues = (values, type) => {
   const finalVal = [];
   values.forEach((key, i) => {
-    if(!key.type || !key.direction || !key.colors.length || key.colors.length < 2)return;
+    if (
+      !key.type ||
+      !key.direction ||
+      !key.colors.length ||
+      key.colors.length < 2
+    )
+      return;
     finalVal.push(
       `${key.type}-gradient(${key.direction} ,  ${key.colors.map(
         (colorObj) => `${colorObj.color} ${colorObj.opacity}`
@@ -35,8 +39,8 @@ const stringifyValues = (values, type) => {
 };
 
 function parseGradient(input = "") {
-  console.log('inpuu : ' , input);
-  
+  console.log("inpuu : ", input);
+  if(input.startsWith('url'))return[];
   const types = input.match(/linear|radial/gi);
   const data = input
     .split(/linear-gradient|radial-gradient/gi)
@@ -47,8 +51,25 @@ function parseGradient(input = "") {
       type: "",
       colors: [],
     };
+
     obj.type = types[i];
-    const splitedData = data.split(/\(|\)|\,/gi).filter((text) => text);
+    const splitedData = data
+      .replace(
+        /rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)/g,
+        (_, r, g, b, a) => {
+          const toHex = (v) => ("0" + parseInt(v).toString(16)).slice(-2);
+          const hex = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+          return a
+            ? `${hex}${Math.round(parseFloat(a) * 255)
+                .toString(16)
+                .padStart(2, "0")}`
+            : hex;
+        }
+      )
+      .split(/\(|\)|\,/gi)
+      .filter((text) => text);
+    // console.log("splitted data : ", splitedData, data);
+
     const direction = splitedData.shift();
     obj.direction = direction;
     splitedData.forEach((data) => {
@@ -70,12 +91,18 @@ function parseGradient(input = "") {
  * @returns
  */
 
-const GradientHandler = ({ values, setValues, index, type , deleteAllContainer=(_ , _1)=>{} }) => {
+const GradientHandler = ({
+  values,
+  setValues,
+  index,
+  type,
+  deleteAllContainer = (_, _1) => {},
+}) => {
   const setClass = useSetClassForCurrentEl();
   const removeProp = useRemoveCssProp();
 
   const updateProp = (cloneValues) => {
-    const prop = "background";
+    const prop = "background-image";
     const value = stringifyValues(cloneValues, type);
     console.log(value);
 
@@ -273,15 +300,15 @@ export const Gradient = () => {
 
   // useEffect(() => {
   // }, [updatedValue]);
-  
+
   useUpdateInputValue({
-    cssProp: "background",
+    cssProp: "background-image",
     setVal: setUpdateValue,
-    onEffect(cssProp , value){
-      console.log(value , 'changeeee');
-      
-      setValues(value ? parseGradient(value) : []); 
-    }
+    onEffect(cssProp, value) {
+      console.log(value, "changeeee");
+
+      setValues(value ? parseGradient(value) : []);
+    },
   });
 
   return (
@@ -292,9 +319,15 @@ export const Gradient = () => {
           placeholder="chose type"
           keywords={["linear", "radial"]}
           value={type}
-          onInput={(value)=>{setType(value)}}
-          onEnterPress={(value)=>{setType(value)}}
-          onItemClicked={(value)=>{setType(value)}}
+          onInput={(value) => {
+            setType(value);
+          }}
+          onEnterPress={(value) => {
+            setType(value);
+          }}
+          onItemClicked={(value) => {
+            setType(value);
+          }}
         />
 
         <SmallButton

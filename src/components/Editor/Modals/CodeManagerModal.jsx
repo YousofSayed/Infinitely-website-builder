@@ -164,6 +164,9 @@ export const CodeManagerModal = () => {
                     editor.getCss({
                       avoidProtected: true,
                       keepUnusedStyles: true,
+                      clearStyles:false,
+                      onlyMatched:false,
+                      
                     })
                   ),
                 ]

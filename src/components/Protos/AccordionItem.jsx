@@ -4,29 +4,35 @@ import { random, uniqueId } from "lodash";
 // import {AccordionItem as RadixAccordionItem , AccordionHeader , AccordionContent} from '@radix-ui/react-accordion'
 
 // million-ignore
-export const AccordionItem = memo(({
-  label,
-  title,
-  allowPopupLength = false,
-  length,
-  children,
-}) => {
-  return (
-    <DetailsNormal 
-      label={label || title}
-      allowPopupLength={allowPopupLength}
-      length={length}
-      mode="accordion"
-      id={uniqueId(`accordion-${random(9999, 100000)}`)}
-    >
-      {children}
-    </DetailsNormal>
-    // <RadixAccordionItem className="bg-blue-600">
-    //   <AccordionHeader>{label || title}</AccordionHeader>
-    //   <AccordionContent>{children}</AccordionContent>
-    // </RadixAccordionItem>
-  );
-});
+export const AccordionItem = memo(
+  ({
+    label,
+    title,
+    allowPopupLength = false,
+    length,
+    children,
+    notify,
+    notifyBg = "bg-blue-600",
+  }) => {
+    return (
+      <DetailsNormal
+        label={label || title}
+        allowPopupLength={allowPopupLength}
+        length={length}
+        mode="accordion"
+        notify={notify}
+        notifyBg={notifyBg}
+        id={uniqueId(`accordion-${random(9999, 100000)}`)}
+      >
+        {children}
+      </DetailsNormal>
+      // <RadixAccordionItem className="bg-blue-600">
+      //   <AccordionHeader>{label || title}</AccordionHeader>
+      //   <AccordionContent>{children}</AccordionContent>
+      // </RadixAccordionItem>
+    );
+  }
+);
 
 // import * as AccordionPrimitive from "@radix-ui/react-accordion";
 // import React from "react";

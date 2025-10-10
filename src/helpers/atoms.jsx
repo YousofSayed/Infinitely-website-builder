@@ -5,6 +5,7 @@ import {
   animeStylesType,
   cmdsContextType,
   cmdType,
+  cmpRules,
   dynamicTemplatesType,
   globalSettingsType,
   IDBType,
@@ -28,6 +29,11 @@ export const widths = atom({
     rightAside: 300,
   },
 });
+
+export const cmpRulesState = atom({
+  key:'cmpRules',
+  default:cmpRules
+})
 
 export const reloaderState = atom({
   key:'reloaderState',

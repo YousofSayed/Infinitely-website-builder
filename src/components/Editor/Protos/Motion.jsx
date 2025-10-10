@@ -18,6 +18,7 @@ import {
   getGsapAnimationOptions,
   getGsapScrollTriggerOptions,
   getGsapTimelineProps,
+  splitTextOptions,
 } from "../../../constants/motion";
 import { SmallButton } from "./SmallButton";
 import { Icons, mainColor } from "../../Icons/Icons";
@@ -273,10 +274,11 @@ const ObjectComponent = ({
   animation = motionAnimationType,
   animationIndex = 0,
   isTimeLine = false,
+  isSplitText = false,
   setMotion = (motion = motionType) => {},
 }) => {
   const addValue = (value, prop) => {
-    if (isTimeLine) {
+    if (isTimeLine || isSplitText) {
       const clone = cloneDeep(motion);
       const editeable = editNestedObject(
         clone,
@@ -288,6 +290,7 @@ const ObjectComponent = ({
       setMotion(clone);
       return;
     }
+
     console.log("from destoooo : ", destination.concat(prop));
     console.log(
       "from destoooo one and second: ",
@@ -523,6 +526,7 @@ const SwitcherSection = ({
   title = "",
   onActive = () => {},
   onUnActive = () => {},
+  onSwitch = () => {},
 }) => {
   return (
     <section className="flex justify-between gap-2 items-center p-2 bg-slate-800 rounded-lg">
@@ -531,6 +535,7 @@ const SwitcherSection = ({
         defaultValue={defaultValue}
         onActive={onActive}
         onUnActive={onUnActive}
+        onSwitch={onSwitch}
       />
     </section>
   );
@@ -1099,22 +1104,6 @@ const Timeline = ({
       <Accordion>
         <AccordionItem title="Timeline options">
           <section className=" flex flex-col gap-2 p-1">
-            {/* {singleProps.map((item, index) => {
-              return (
-                <section
-                  key={index}
-                  className="relative flex flex-col gap-2  mt-3"
-                >
-                  <h1 className="px-2 py-1  bg-blue-600 rounded-lg w-fit">
-                    {item}
-                  </h1>
-                  <Input placeholder={item} className="bg-slate-800 w-full" />
-                </section>
-              );
-
-              
-            })} */}
-
             <ObjectComponent
               isTimeLine
               motion={motion}
@@ -1124,43 +1113,41 @@ const Timeline = ({
             />
           </section>
         </AccordionItem>
-
-        {/* <AccordionItem title="Advanced timeline options">
-          <section className=" flex flex-col gap-2 p-1">
-            {Object.entries(multiGsapProps).map(([key, value], index) => {
-              return (
-                <section
-                  key={index}
-                  className="relative flex flex-col gap-2  mt-3"
-                >
-                  <h1 className="px-2 py-1  bg-blue-600 rounded-lg w-fit">
-                    {key}
-                  </h1>
-                  <Select placeholder={key} keywords={value} />
-                </section>
-              );
-            })}
-          </section>
-        </AccordionItem> */}
       </Accordion>
-      {/* 
-      <SwitcherSection
-        title="ScrollTrigger"
-        defaultValue={motion.isTimelineHasScrollTrigger}
-        onActive={() =>
-          setMotion({ ...motion, isTimelineHasScrollTrigger: true })
-        }
-        onUnActive={() =>
-          setMotion({ ...motion, isTimelineHasScrollTrigger: false })
-        }
-      />
-      {motion.isTimelineHasScrollTrigger && (
-        <ScrollTriggerOptions
-          motion={motion}
-          setMotion={setMotion}
-          isTimeLine
+    </section>
+  );
+};
+
+const SplitText = ({
+  motion = motionType,
+  setMotion = (motion = motionType) => {},
+}) => {
+  return (
+    <section className="flex flex-col gap-3">
+      <section className="flex  gap-2 flex-col ">
+        <FitTitle className={`flex justify-center items-center`}>name</FitTitle>
+        <Input
+          value={motion.timeLineName || ""}
+          onInput={(ev) => {
+            setMotion({ ...motion, splitTextName: ev.target.value });
+          }}
+          placeholder="name"
+          className="bg-slate-900 border-[#1e293b!important] w-full"
         />
-      )} */}
+      </section>
+      <Accordion>
+        <AccordionItem title="SplitText options">
+          <section className=" flex flex-col gap-2 p-1">
+            <ObjectComponent
+              isTimeLine
+              motion={motion}
+              setMotion={setMotion}
+              objectProps={splitTextOptions}
+              destination={["splitText"]}
+            />
+          </section>
+        </AccordionItem>
+      </Accordion>
     </section>
   );
 };
@@ -1184,6 +1171,7 @@ export const Motion = memo(() => {
   const [instanceId, setInstanceId] = useState("");
   const motionUploader = useRef();
   const [autoAnimateRef] = useAutoAnimate();
+  const rId = useRef(null);
   const iconStyle = {
     fill: "white",
     strokeColor: "white",
@@ -1304,16 +1292,19 @@ export const Motion = memo(() => {
       projectSettings.remove_gsap_markers_on_build
     );
 
-    infinitelyWorker.postMessage({
-      command: "updateDB",
-      props: {
-        projectId: +localStorage.getItem(current_project_id),
-        data: { motions: newMotions },
-        updatePreviewPages: projectSettings.enable_auto_save,
-        pageName: localStorage.getItem(current_page_id),
-        projectSetting: projectSettings,
-        // pageUrl: `pages/${localStorage.getItem(current_page_id)}.html`,
-      },
+    rId.current && cancelAnimationFrame(rId.current);
+    rId.current = requestAnimationFrame(() => {
+      infinitelyWorker.postMessage({
+        command: "updateDB",
+        props: {
+          projectId: +localStorage.getItem(current_project_id),
+          data: { motions: newMotions },
+          updatePreviewPages: projectSettings.enable_auto_save,
+          pageName: localStorage.getItem(current_page_id),
+          projectSetting: projectSettings,
+          // pageUrl: `pages/${localStorage.getItem(current_page_id)}.html`,
+        },
+      });
     });
     // projectData.motions = {
     //   ...projectData.motions,
@@ -1790,6 +1781,46 @@ export const Motion = memo(() => {
           /> */}
 
           <SwitcherSection
+            title="SpliteText"
+            defaultValue={motion.isSplitText}
+            onActive={() =>
+              setTransition(() => setMotion({ ...motion, isSplitText: true }))
+            }
+            onUnActive={() => {
+              runGsapMethod(["revert", "kill"], {
+                ...motion,
+                ...(isInstance
+                  ? {
+                      isInstance: isInstance,
+                      id: instanceId,
+                    }
+                  : {}),
+                // id:instance
+              });
+              setTransition(() =>
+                setMotion({ ...motion, isSplitText: false, splitText: null })
+              );
+            }}
+          />
+          {motion.isSplitText && (
+            <>
+              <FitTitle>SplitText selector</FitTitle>
+              <Input
+                value={motion.splitTextSelector || ""}
+                placeholder="SplitText selector"
+                className="bg-slate-900 border-[#1e293b!important] w-full"
+                onInput={(ev) => {
+                  setMotion({
+                    ...motion,
+                    splitTextSelector: ev.target.value,
+                  });
+                }}
+              />
+              <SplitText motion={motion} setMotion={setMotion} />
+            </>
+          )}
+
+          <SwitcherSection
             title="Timeline"
             defaultValue={motion.isTimeLine}
             onActive={() =>
@@ -1846,10 +1877,10 @@ export const Motion = memo(() => {
       ) : (
         <section className=" flex flex-col gap-2 items-center justify-center p-2 bg-slate-800 rounded-lg minion">
           <section className="container bg-slate-900 flex flex-col justify-center p-2 items-center rounded-md gap-2 font-semibold">
-            <FitTitle className= "animate-bounce text-slate-200 font-semibold text-center capitalize">
+            <FitTitle className="animate-bounce text-slate-200 font-semibold text-center capitalize">
               No animations yet
             </FitTitle>
-            
+
             <figure>
               <img src={noData} className="max-h-[150px]" />
             </figure>

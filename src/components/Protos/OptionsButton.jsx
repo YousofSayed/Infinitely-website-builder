@@ -15,6 +15,8 @@ export const OptionsButton = ({
   children,
   place = "bottom-end",
   onClick,
+  notify,
+  notifyBg = "bg-blue-600",
   ...props
 }) => {
   const [showTooltip, setShowTooltip] = useState(false);
@@ -36,19 +38,24 @@ export const OptionsButton = ({
 
   return (
     <div
-      className="w-full h-full"
+      className="flex justify-center items-center w-fit h-full flex-shrink flex-grow-0"
       onClick={(ev) => {
         ev.stopPropagation();
         ev.preventDefault();
       }}
     >
       <SmallButton
-        className="w-full h-full flex justify-center items-center bg-transparent hover:bg-transparent border-none "
+        className="relative w-full h-full flex justify-center items-center bg-transparent hover:bg-transparent border-none "
         onClick={handleClick}
         id={id.current}
         {...props}
       >
         {Icons.options({ fill: "#fff" })}
+      {notify && (
+        <div
+          className={`absolute w-[10px] h-[10px] ${notifyBg} rounded-full right-0 top-0`}
+        ></div>
+      )}
       </SmallButton>
 
       <Tooltip

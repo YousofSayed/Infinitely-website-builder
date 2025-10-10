@@ -31,6 +31,8 @@ export const DetailsNormal = memo(
     allowPopupLength = false,
     length,
     mode = "independent",
+    notify,
+    notifyBg = "bg-blue-600",
     id,
   }) => {
     const { openId, setOpenId } = useContext(AccordionContext) || {};
@@ -56,7 +58,7 @@ export const DetailsNormal = memo(
     useEffect(() => {
       parentRef.current && autoAnimate(parentRef.current);
       childRef.current && autoAnimate(childRef.current);
-    }, [parentRef , childRef]);
+    }, [parentRef, childRef]);
 
     useEffect(() => {
       if (!(parentRef.current && childRef.current)) return;
@@ -139,8 +141,9 @@ export const DetailsNormal = memo(
           className={`cursor-pointer flex justify-between items-center text-slate-200 capitalize rounded-lg font-semibold text-[16px] p-1 ${labelClass}`}
           onClick={toggle}
         >
-          <h1 className="custom-font-size text-slate-200 font-semibold">
-            {label}
+          <h1 className="custom-font-size text-slate-200 font-semibold flex gap-2 items-center">
+            <span className="custom-font-size">{label}</span>
+            {notify && <span className={`w-[7.5px] h-[7.5px] block  ${notifyBg} rounded-full`}></span>}
           </h1>
           {/* <FitTitle className="custom-font-size">{label}</FitTitle> */}
           <span

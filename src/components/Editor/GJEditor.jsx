@@ -4,6 +4,7 @@ import grapesjs from "grapesjs";
 // import  "../../helpers/grapesjs.js";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import {
+  cmpRulesState,
   currentElState,
   reloaderState,
   ruleState,
@@ -24,6 +25,7 @@ import { updateProjectThumbnail } from "../../plugins/updateProjectThumbnail.js"
 import { customInfinitelySymbols } from "../../plugins/customInfinitelySymbols";
 import { current_symbol_id } from "../../constants/shared.js";
 import {
+  getComponentRules,
   getInfinitelySymbolInfo,
   getProjectSettings,
 } from "../../helpers/functions.js";
@@ -40,6 +42,8 @@ export const GJEditor = ({ children }) => {
   const setRule = useSetRecoilState(ruleState);
   const navigate = useNavigate();
   const [reloader, setReloader] = useRecoilState(reloaderState);
+  const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
+
   // const currentDynamicTemplateId = useRecoilValue(
   //   currentDynamicTemplateIdState
   // );
@@ -95,9 +99,10 @@ export const GJEditor = ({ children }) => {
         console.log("iframe work: ", iframe);
       });
     });
-
+    //Go to SetClasses to complete ****
     ev.on("component:deselected", () => {
       setSelectedEl({ currentEl: undefined });
+      setCmpRules([]);
     });
 
     ev.on("component:selected", () => {
@@ -106,7 +111,17 @@ export const GJEditor = ({ children }) => {
       // selectedEl.set({ resizable: false });
       setSelectedEl({ currentEl: JSON.parse(JSON.stringify(selectedEl)) }); //Fuck bug which make me like a crazy was fucken here , and it was because i set Dom Element in atom , old Code : selectedEl?.getEl()
       setRule({ is: false, ruleString: "" });
+      const rules = getComponentRules({
+        editor,
+        // nested:true
+        cmp: selectedEl,
+        cssCode: editor.getCss({
+          keepUnusedStyles: true,
+          avoidProtected: true,
+        }),
+      });
 
+      setCmpRules(rules.rules || []);
       // const location = window.location;
 
       setSelector("");
@@ -136,12 +151,36 @@ export const GJEditor = ({ children }) => {
       setSelectedEl({
         currentEl: JSON.parse(JSON.stringify(editor.getSelected() || {})),
       });
+
+      const rules = getComponentRules({
+        editor,
+        // nested:true
+        cmp: editor.getSelected(),
+        cssCode: editor.getCss({
+          keepUnusedStyles: true,
+          avoidProtected: true,
+        }),
+      });
+
+      setCmpRules(rules.rules || []);
     });
 
     ev.on("undo", (args) => {
       setSelectedEl({
         currentEl: JSON.parse(JSON.stringify(editor.getSelected() || {})),
       });
+
+      const rules = getComponentRules({
+        editor,
+        // nested:true
+        cmp: editor.getSelected(),
+        cssCode: editor.getCss({
+          keepUnusedStyles: true,
+          avoidProtected: true,
+        }),
+      });
+
+      setCmpRules(rules.rules || []);
     });
   };
   console.log("gj-editor : ", getProjectSettings().projectSettings);

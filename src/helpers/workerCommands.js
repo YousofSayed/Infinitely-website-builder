@@ -313,20 +313,22 @@ export async function updateDB(props) {
   if (!opfs.id) throw new Error(`OPFS Id not found!`);
   if (!props.projectId && !opfs.id) throw new Error(`DB Id not found!`);
 
-  return new Promise((resolve, reject) => {
-    const localTimeout = setTimeout(async () => {
-      try {
-        const {
-          files,
-          tailwindcssStyle,
-          projectId,
-          data,
-          updatePreviewPages,
-          pageName,
-          __seq,
-          __requestId,
-        } = props;
+  // copy only the values we need now
+  const {
+    files,
+    tailwindcssStyle,
+    projectId,
+    data,
+    updatePreviewPages,
+    pageName,
+    __seq,
+    __requestId,
+  } = props;
 
+  // Use a microtask instead of setTimeout to avoid closure retention
+  return new Promise((resolve, reject) => {
+    (async () => {
+      try {
         if (files && isPlainObject(files)) {
           await opfs.writeFiles(
             Object.entries(files).map(([key, file]) => ({
@@ -348,7 +350,14 @@ export async function updateDB(props) {
         const resp = await db.projects.update(projectId || opfs.id, data);
 
         if (updatePreviewPages) {
-          await writePreviewPage(props);
+          // pass a minimal props object to avoid capturing the original huge props
+          await writePreviewPage({
+            projectId,
+            data,
+            pageName,
+            editorData: props.editorData,
+            projectSetting: props.projectSetting,
+          });
         }
 
         self.postMessage({
@@ -363,12 +372,14 @@ export async function updateDB(props) {
         console.error("UpdateDB Error:", err);
         reject(err);
       } finally {
-        // Force GC to release `props`
+        // explicitly drop big refs from the outer scope
+        // (note: we copied into local consts, so deleting props is optional but okay)
         for (let key in props) delete props[key];
       }
-    }, 15);
+    })();
   });
 }
+
 
 /**
  *
@@ -381,7 +392,7 @@ export async function updateDB(props) {
  * }} props
  */
 export async function writePreviewPage(props) {
-  const pageFile = (
+  let pageFile = (
     await buildPageAsBlobForSecrviceWorker({
       editorData: props.editorData,
       projectData: {
@@ -409,7 +420,7 @@ export async function writePreviewPage(props) {
       url: `${props.pageName == "index" ? "" : "pages"}/${props.pageName}.html`,
     },
   });
-
+  pageFile = null;
   previewBraodcast.close();
 }
 

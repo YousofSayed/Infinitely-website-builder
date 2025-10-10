@@ -510,8 +510,8 @@ export class OPFS {
     const files: OTFile[] = [];
     const dirHandle = await dir(path);
     const children = await dirHandle.children();
-    console.log('childens: ' , children);
-    
+    console.log("childens: ", children);
+
     // if (options.chunks) {
     //   const chunk = children.slice(
     //     options.chunksStart,
@@ -568,8 +568,8 @@ export class OPFS {
         files.push(entry);
       } else if (entry.kind === "dir" && options.recursive) {
         const subFiles = await this.getAllFiles(entry.path, options);
-        console.log('sups  : ' , subFiles);
-        
+        console.log("sups  : ", subFiles);
+
         files.push(...subFiles);
       }
     }
@@ -638,7 +638,23 @@ export class OPFS {
 
       if (file) {
         const bufferContent =
-          content instanceof Blob ? await content.arrayBuffer() : content;
+          content instanceof Blob ? await content.text() : content;
+
+        // let bufferContent;
+        // if (typeof content === "string") {
+        //   bufferContent = new TextEncoder().encode(content);
+        // } else if (
+        //   content instanceof ArrayBuffer ||
+        //   ArrayBuffer.isView(content)
+        // ) {
+        //   bufferContent = content;
+        // } else if (content as Blob instanceof Blob) {
+        //   // Avoid arrayBuffer() if possible
+        //   bufferContent = new Uint8Array(
+        //     await (content as Blob).text().then((t) => new TextEncoder().encode(t))
+        //   );
+        // }
+
         //  const isSameContent =  await file.arrayBuffer()  == content
         const writer = await file.createWriter();
         const prevWriter = this.#openedWriters.get(file.path);

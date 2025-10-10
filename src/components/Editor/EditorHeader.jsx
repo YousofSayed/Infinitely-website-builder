@@ -15,6 +15,7 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import {
   animationsState,
   cmdsBuildState,
+  cmpRulesState,
   currentElState,
   isAnimationsChangedState,
   previewContentState,
@@ -62,6 +63,7 @@ export const HomeHeader = () => {
   const [sizeAutoAnimate] = useAutoAnimate();
   const [widthMedia, setWidthMedia] = useState();
   const { selectedId, setSeletedId } = useUlContext();
+  const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
   // const [isAnimationsChanged, setAnimationsChanged] = useRecoilState(
   //   isAnimationsChangedState
   // );
@@ -135,17 +137,9 @@ export const HomeHeader = () => {
 
     if (!editor) return;
     if (!currentEl.currentEl) return;
-    const { rules } = getComponentRules({
-      editor,
-      cmp: editor.getSelected(),
-      nested: true,
-      cssCode: editor.getCss({
-        avoidProtected: true,
-        clearStyles: false,
-        onlyMatched: false,
-        keepUnusedStyles: true,
-      }),
-    });
+    if (!cmpRules.length) return;
+
+    // const rules = cmpRules;
 
     const newDetected = cloneDeep(detectedType);
 
@@ -159,8 +153,10 @@ export const HomeHeader = () => {
     //  * atRuleType: string | null;
     //  * atRuleParams: string | null;
     //  * }[]
-    for (const rule of rules) {
-      if (!rule.atRuleParams && rule.fullRule) {
+    for (const rule of cmpRules) {
+      console.log('full rule' , rule);
+      if (!rule.atRuleParams && rule.rule) {
+        
         newDetected.desktop.push(true);
       } else if (
         rule.atRuleParams &&
@@ -181,8 +177,8 @@ export const HomeHeader = () => {
 
     newDetected.others = [...new Set(newDetected.others)];
     setDetectedMedia(newDetected);
-    console.log("ruules from header :", rules);
-  }, [currentEl, editor]);
+    console.log("ruules from header :", cmpRules);
+  }, [currentEl, editor, cmpRules]);
 
   useEffect(() => {
     if (!editor) return;
@@ -228,6 +224,7 @@ export const HomeHeader = () => {
         >
           <Li
             title="Default size"
+            className="flex-shrink-0"
             // className="max-xl:flex-shrink-0"
             onClick={(ev) => {
               editor.setDevice("desktop");
@@ -244,6 +241,7 @@ export const HomeHeader = () => {
           />
           <Li
             title="max-width: 768px"
+            className="flex-shrink-0"
             // className="max-xl:flex-shrink-0"
             onClick={(ev) => {
               editor.setDevice("tablet");
@@ -262,7 +260,7 @@ export const HomeHeader = () => {
 
           <Li
             title="max-width: 360px"
-            // className="max-xl:flex-shrink-0"
+            className="flex-shrink-0"
             onClick={(ev) => {
               editor.setDevice("mobile");
               if (detectedMedia.mobile.length) setMediaConditon("max-width");
@@ -278,88 +276,92 @@ export const HomeHeader = () => {
             enableSelecting
           />
           {Boolean(detectedMedia.others.length) && (
-            <UlContextProvider>
-              <Li
-                // title="Other sizes"
-                // // className="max-xl:flex-shrink-0"
-                // onClick={(ev) => {
-                //   editor.setDevice("mobile");
-                //   // setCurrentEl({ currentEl: editor?.getSelected()?.getEl() });
-                //   editor.trigger("device:change");
-                // }}
-                // isObjectParamsIcon
-                // fillObjectIconOnHover
-                // onClick={(ev) => {
-                //   // ev.stopPropagation();
-                //   ev.preventDefault();
-                // }}
-                // id={"other-sizes"}
-                // mode={"group"}
-                // enableSelecting
-                notify={Boolean(detectedMedia.others.length)}
-              >
-                <OptionsButton role="div">
-                  {
-                    <ul
-                      onMouseOver={(ev) => {
-                        ev.preventDefault();
-                        ev.stopPropagation();
-                      }}
-                      className=" relative"
-                    >
-                      {detectedMedia.others.map((rule, i) => {
-                        console.log(
-                          "rule : ",
-                          rule,
-                          rule.trim() ==
+            // <UlContextProvider>
+            // <Li
+            // title="Other sizes"
+            // // className="max-xl:flex-shrink-0"
+            // onClick={(ev) => {
+            //   editor.setDevice("mobile");
+            //   // setCurrentEl({ currentEl: editor?.getSelected()?.getEl() });
+            //   editor.trigger("device:change");
+            // }}
+            // isObjectParamsIcon
+            // fillObjectIconOnHover
+            // onClick={(ev) => {
+            //   // ev.stopPropagation();
+            //   ev.preventDefault();
+            // }}
+            // id={"other-sizes"}
+            // mode={"group"}
+            // enableSelecting
+            // notify={Boolean(detectedMedia.others.length)}
+            // >
+            // <div className="flex-shrink flex-grow-0  w-[35px] flex justify-center items-center">
+            <OptionsButton
+              className="hover:bg-blue-600 w-[30px!important] h-[30px]"
+              notify={Boolean(detectedMedia.others.length)}
+            >
+              {
+                <ul
+                  onMouseOver={(ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                  }}
+                  className=" relative"
+                >
+                  {detectedMedia.others.map((rule, i) => {
+                    console.log(
+                      "rule : ",
+                      rule,
+                      rule.trim() ==
+                        `${editor.config.mediaCondition}: ${widthMedia}px`
+                    );
+
+                    return (
+                      <li
+                        key={i}
+                        style={{
+                          backgroundColor:
+                            rule.trim() ==
                             `${editor.config.mediaCondition}: ${widthMedia}px`
-                        );
+                              ? "var(--main-bg)"
+                              : "",
+                        }}
+                        className="p-2 w-[200px!important] flex justify-center items-center bg-slate-800 rounded-md transition-all hover:bg-blue-600"
+                        onClick={(ev) => {
+                          ev.preventDefault();
+                          ev.stopPropagation();
+                          addClickClass(ev.currentTarget, "click");
+                          const widthValue = rule.match(/\d+/gi);
+                          const mediaCondition = rule.split(":")[0];
+                          console.log(widthValue, mediaCondition);
+                          setMediaValue(mediaCondition);
+                          editor.getConfig().mediaCondition = mediaCondition;
+                          localStorage.setItem(
+                            "media-condition",
+                            mediaCondition
+                          );
+                          const sle = editor.getSelected();
+                          setCustomDevice("width", widthValue);
+                          setDimaonsion({
+                            ...dimansions,
+                            width: widthValue,
+                          });
 
-                        return (
-                          <li
-                            key={i}
-                            style={{
-                              backgroundColor:
-                                rule.trim() ==
-                                `${editor.config.mediaCondition}: ${widthMedia}px`
-                                  ? "var(--main-bg)"
-                                  : "",
-                            }}
-                            className="p-2 w-[200px!important] flex justify-center items-center bg-slate-800 rounded-md transition-all hover:bg-blue-600"
-                            onClick={(ev) => {
-                              ev.preventDefault();
-                              ev.stopPropagation();
-                              addClickClass(ev.currentTarget, "click");
-                              const widthValue = rule.match(/\d+/gi);
-                              const mediaCondition = rule.split(":")[0];
-                              console.log(widthValue, mediaCondition);
-                              setMediaValue(mediaCondition);
-                              editor.getConfig().mediaCondition =
-                                mediaCondition;
-                              localStorage.setItem(
-                                "media-condition",
-                                mediaCondition
-                              );
-                              const sle = editor.getSelected();
-                              setCustomDevice("width", widthValue);
-                              setDimaonsion({
-                                ...dimansions,
-                                width: widthValue,
-                              });
-
-                              editor.trigger("device:change");
-                              preventSelectNavigation(editor, sle);
-                            }}
-                          >
-                            {rule}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  }
-                </OptionsButton>
-              </Li>
-            </UlContextProvider>
+                          editor.trigger("device:change");
+                          preventSelectNavigation(editor, sle);
+                        }}
+                      >
+                        {rule}
+                      </li>
+                    );
+                  })}
+                </ul>
+              }
+            </OptionsButton>
+            // </div>
+            // </Li>
+            // </UlContextProvider>
           )}
         </ul>
         {/* </UlContextProvider> */}

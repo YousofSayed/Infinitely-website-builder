@@ -396,3 +396,59 @@ export function getGsapScrollTriggerOptions() {
     },
   };
 }
+
+export const splitTextOptions = {
+  // --- Basic split configuration ---
+  type: [
+    "chars", 
+    "words", 
+    "lines", 
+    "chars,words", 
+    "words,lines", 
+    "chars,words,lines"
+  ], 
+  // what to split — you can combine them with commas
+
+  tag: ["div", "span", "p"], // wrapper element tag for each split piece
+
+  linesClass: "",  // custom class for each line (e.g., "line")
+  wordsClass: "",  // custom class for each word
+  charsClass: "",  // custom class for each character
+
+  // --- Positioning & layout ---
+  position: ["absolute", "relative"], // determines how elements are positioned
+  lineThreshold: "0.2", // float - threshold for detecting line breaks
+  wordDelimiter: " ", // char/string that separates words (default is space)
+  reduceWhiteSpace: [true, false], // whether to trim/reduce whitespace
+  // note: this can affect accurate word splitting in some languages
+
+  // --- Processing behavior ---
+  absolute: [true, false], // sets line elements to absolute positioning
+  preserveSpaces: [true, false], // if true, keeps spaces visible when splitting
+  specialChars: "", // a regex or string to define special split chars
+  // Example: specialChars: /[!?.,]/g
+
+  // --- Revert control ---
+  revert: [true, false], // whether SplitText should revert automatically
+  autoRevert: [true, false], // alias to revert automatically after splitting
+
+  // --- Custom callbacks ---
+  onSplit: '', // function callback triggered after splitting
+  //  → function(self) { console.log(self.chars, self.words, self.lines); }
+
+  onRevert: '', // function callback triggered on revert
+
+
+
+  // --- Utility flags ---
+  wordWrap: [true, false], // whether words wrap naturally (useful for responsive text)
+  force3D: [true, false], // apply force3D transforms to child elements
+
+  // --- Metadata (for you, optional) ---
+  id: "", // custom identifier for debugging or storage
+  data: '', // any metadata
+
+  // --- Cleanup control ---
+  autoKill: [true, false], // whether to auto kill tween/timeline on revert
+};
+
