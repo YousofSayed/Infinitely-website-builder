@@ -716,8 +716,8 @@ const isFunction = (value) => {
 function CompileMotion(
   motion,
   paused = false,
-  isInstance = false
-  // removeMarkers = true // this is just in bridge.js for final build (production)
+  isInstance = false,
+  removeMarkers = true // this is just in bridge.js for final build (production)
 ) {
   /**
    * @type {{
@@ -747,7 +747,7 @@ function CompileMotion(
         .map(([key, value]) => {
           console.log("key : ", key);
 
-          // if (key == "markers" && removeMarkers) return null;
+          if ( !((typeof window !== "undefined" ? window : self).gsapRunner) &&  key == "markers" && removeMarkers) return null;
           if (typeof value === "object" && !Array.isArray(value)) {
             return [key, parseObjValue(value)];
           } else if (
