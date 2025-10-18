@@ -179,7 +179,7 @@ export const useUpdateInputValue = ({
     rule,
     showAnimationsBuilder,
     framesStyles,
-    cmpRules
+    isFunction(getAllStyles) ? cmpRules: null,
   ]);
 
   useEffect(() => { //(isFunction(getAllStyles) ? useEffect : useMemo)
@@ -220,6 +220,6 @@ export const useUpdateInputValue = ({
     rule,
     showAnimationsBuilder,
     framesStyles,
-    cmpRules,
+    isFunction(getAllStyles) ? cmpRules: null,
   ]);
 };
