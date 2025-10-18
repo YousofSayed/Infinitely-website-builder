@@ -16,6 +16,7 @@ export const OptionsButton = ({
   place = "bottom-end",
   onClick,
   notify,
+  icon,
   notifyBg = "bg-blue-600",
   ...props
 }) => {
@@ -32,7 +33,10 @@ export const OptionsButton = ({
   };
 
   const handleTooltipClick = (ev) => {
-    ev.preventDefault();
+    console.log("target : ", ev.target);
+    if (!(ev.target && ev.target.tagName == "INPUT")) {
+      ev.preventDefault();
+    }
     ev.stopPropagation();
   };
 
@@ -41,7 +45,7 @@ export const OptionsButton = ({
       className="flex justify-center items-center w-fit h-full flex-shrink flex-grow-0"
       onClick={(ev) => {
         ev.stopPropagation();
-        ev.preventDefault();
+        // ev.preventDefault();
       }}
     >
       <SmallButton
@@ -50,49 +54,51 @@ export const OptionsButton = ({
         id={id.current}
         {...props}
       >
-        {Icons.options({ fill: "#fff" })}
-      {notify && (
-        <div
-          className={`absolute w-[10px] h-[10px] ${notifyBg} rounded-full right-0 top-0`}
-        ></div>
-      )}
+        {icon ? icon : Icons.options({ fill: "#fff" })}
+        {notify && (
+          <div
+            className={`absolute w-[10px] h-[10px] ${notifyBg} rounded-full right-0 top-0`}
+          ></div>
+        )}
       </SmallButton>
 
-      <Tooltip
-        id={`tooltip-${id.current}`}
-        className="w-fit p-[unset] z-[100] shadow-lg bg-slate-800 shadow-slate-950"
-        style={{
-          boxShadow: "0px 0px 10px 1px #020617",
-          padding: "5px",
-          backgroundColor: "#1e293b",
-        }}
-        positionStrategy="fixed"
-        anchorSelect={`#${id.current}`}
-        place={place}
-        clickable
-        isOpen={showTooltip}
-        setIsOpen={setShowTooltip}
-        openEvents={{
-          click: false,
-          dblclick: false,
-          focus: false,
-          mousedown: false,
-          mouseenter: false,
-          mouseover: false,
-        }}
-        opacity={1}
-        openOnClick
-        closeEvents={{
-          click: false,
-          dblclick: false,
-          blur: false,
-          mouseout: false,
-          mouseup: false,
-          mouseleave: false,
-        }}
-      >
-        <div onClick={handleTooltipClick}>{children}</div>
-      </Tooltip>
+      {Boolean(children) && (
+        <Tooltip
+          id={`tooltip-${id.current}`}
+          className="w-fit p-[unset] z-[100] shadow-lg bg-slate-800 shadow-slate-950"
+          style={{
+            boxShadow: "0px 0px 10px 1px #020617",
+            padding: "5px",
+            backgroundColor: "#1e293b",
+          }}
+          positionStrategy="fixed"
+          anchorSelect={`#${id.current}`}
+          place={place}
+          clickable
+          isOpen={showTooltip}
+          setIsOpen={setShowTooltip}
+          openEvents={{
+            click: false,
+            dblclick: false,
+            focus: false,
+            mousedown: false,
+            mouseenter: false,
+            mouseover: false,
+          }}
+          opacity={1}
+          openOnClick
+          closeEvents={{
+            click: false,
+            dblclick: false,
+            blur: false,
+            mouseout: false,
+            mouseup: false,
+            mouseleave: false,
+          }}
+        >
+          <div onClick={handleTooltipClick}>{children}</div>
+        </Tooltip>
+      )}
     </div>
   );
 };

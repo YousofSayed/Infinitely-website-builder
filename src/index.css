@@ -12,16 +12,38 @@
 .gjs-frame,
 #editor-container {
   /* will-change: transform, opacity; */
+  /* will-change: transform, opacity  , zoom !important;
+  contain:layout paint size style !important;
   isolation: isolate !important;
+  transform: translateZ(0) !important;
+  backface-visibility: hidden !important;
+  height: 100% !important; */
+  /* isolation: isolate !important;
   will-change: transform, opacity  , zoom !important;
   transform: translateZ(0) !important;
   backface-visibility: hidden !important;
   contain:layout paint size style !important;
-  height: 100% !important;
+  height: 100% !important; */
   /* height: 100%; */
 }
 
+body:has(#main-modal) #editor-container{
+  display: none !important;
+}
+ body:has(#preview-container) #main-group{
+  display: none !important;
+}
 
+body:has(#main-modal) {
+  #editor-container {
+    display: none;
+  }
+}
+
+button:disabled{
+  cursor: not-allowed;
+  opacity: .7;
+}
 
 
 .will-change-for-all,

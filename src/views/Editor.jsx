@@ -189,6 +189,7 @@ export function Editor({ params }) {
             <HomeNav />
             <section
               // ref={parent}
+              id="main-group"
               className={`${
                 showPreview
                   ? "w-full"

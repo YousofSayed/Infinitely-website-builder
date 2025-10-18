@@ -524,7 +524,7 @@ export async function minifyBlobJSAndCssStream(blob, type = "") {
 }
 
 export function getProjectRoot(id) {
-  return `projects/project-${id || opfs.id}`;
+  return self.opfsRoot || `projects/project-${id || opfs.id}`;
 }
 
 export async function getOPFSProjectDir() {

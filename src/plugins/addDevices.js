@@ -11,6 +11,7 @@ export const addDevices = (editor) => {
   const deviceManager = editor.DeviceManager;
   function emitEditorContainerZoom() {
     console.log("i emit !!");
+    
 
     editorContainerInstance.emit(InfinitelyEvents.editorContainer.update, {
       value: editor.getContainer().style.zoom,
@@ -44,7 +45,7 @@ export const addDevices = (editor) => {
 
   const zoomToFit = () => {
     timeout && clearTimeout(timeout);
-    timeout = requestAnimationFrame(async () => {
+    timeout = setTimeout(async () => {
       editor.getContainer().style.zoom = 1;
       killAllGsapMotions((await getProjectData()).motions);
       // editor.getContainer().style.transform = `scale(1)`;
@@ -135,6 +136,7 @@ export const addDevices = (editor) => {
       "Device is : ",
       editor.Devices.get(editor.getDevice()).toJSON()
     );
+    editor.refresh({tools:true})
 
     zoomToFit();
   });

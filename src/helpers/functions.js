@@ -60,6 +60,7 @@ import { infinitelyWorker } from "./infinitelyWorker";
 import { isFunction, isPlainObject, uniqueId, random as _random } from "lodash";
 import {
   buildInteractionsAttributes,
+  cleanMotions,
   cloneMotion,
   filterMotionsByPage,
 } from "./bridge";
@@ -100,6 +101,17 @@ export function toJsProp(prop) {
       .replace(/\w+(\s+)?:/gi, "")
       .replace(/-([a-z])/gi, (match, letter) => letter.toUpperCase()) || ""
   );
+}
+
+/**
+ *
+ * @param {string} prop
+ */
+export function toKebabCase(prop) {
+  return prop
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2") // insert - before capital letters
+    .replace(/^-/, "") // remove leading dash if any
+    .toLowerCase();
 }
 
 /**
@@ -1926,6 +1938,7 @@ export let screenshotTimout;
  *
  * @param {HTMLElement} el
  * @param {string} mimeType
+ * @param {Partial<import('html2canvas-pro').Options>} options
  * @returns {Promise<Blob> | null}
  */
 export async function getImgAsBlob(el, mimeType = "image/webp", options = {}) {
@@ -1943,8 +1956,8 @@ export async function getImgAsBlob(el, mimeType = "image/webp", options = {}) {
           // allowTaint: true,
           useCORS: true,
           // imageTimeout: 200,
-          windowWidth: window.innerWidth,
-          windowHeight: window.innerHeight,
+          // windowWidth: window.innerWidth,
+          // windowHeight: window.innerHeight,
           ...options,
           // windowHeight: 300,
           // width:300,
@@ -2150,10 +2163,9 @@ export async function restartGSAPMotions(editor) {
   );
 
   if (!currentGsapStateAnimation) return;
+  const projectData = await getProjectData();
   const motions = filterMotionsByPage(
-    await (
-      await getProjectData()
-    ).motions,
+    await cleanMotions(projectData.motions, projectData.pages),
     localStorage.getItem(current_page_id)
   );
   killAllGsapMotions(motions);
@@ -2601,11 +2613,47 @@ export function exportProject() {
   });
 }
 
-export function loadProject(file) {
+/**
+ * 
+ * @returns {Promise<Blob>}
+ */
+export function getProject() {
+  return new Promise((res, rej) => {
+    const projectId = +localStorage.getItem(current_project_id);
+    workerCallbackMaker(infinitelyWorker, "getProject", ({ file }) => {
+      if (!file) {
+        rej(null);
+        throw new Error(`Faild to build project`);
+      }
+      res(file);
+    });
+
+    infinitelyWorker.postMessage({
+      command: "getProject",
+      props: {
+        projectSetting: getProjectSettings().projectSettings,
+        projectId,
+      },
+    });
+  });
+}
+
+/**
+ *
+ * @param {Blob | File} file
+ * @param {import('./types').Project} data
+ * @param {number} projectId
+ * @param {boolean} isUpdate
+ */
+export function loadProject(file, data = {} , projectId , isUpdate , opfsRoot) {
   infinitelyWorker.postMessage({
     command: "loadProject",
     props: {
       file,
+      data,
+      projectId,
+      isUpdate,
+      opfsRoot
     },
   });
 }
@@ -2955,31 +3003,33 @@ export async function handleCloneComponent(model, editor) {
  * @param {string} commandCallback
  * @param {(props : {})=>void} callback
  */
-export function workerCallbackMaker(
-  worker,
-  commandCallback,
-  callback = (props) => {}
-) {
-  /**
-   *
-   * @param {MessageEvent} ev
-   */
-  const callbackWorker = (ev) => {
-    const { msg, command, props } = ev.data;
-    console.log(
-      "from worker callback maker",
-      (command, msg),
-      commandCallback,
-      (command || msg) == commandCallback,
-      command || msg
-    );
-    if ((command || msg) == commandCallback) {
-      callback(props);
+export function workerCallbackMaker(worker, commandCallback, callback = (props) => {}, { timeout = 5000 } = {}) {
+  const callbackWorker = async (ev) => {
+    const data = ev?.data ?? {};
+    const { command, msg, props } = data;
+    const identifier = command ?? msg;
+
+    console.log("worker message received:", { command, msg, expected: commandCallback, identifier });
+
+    if (identifier === commandCallback) {
+      console.log("matched, props:", props);
+      clearTimeout(timeoutId);
+      try {
+        await callback(props);
+      } finally {
+        worker.removeEventListener("message", callbackWorker);
+      }
     }
-    worker.removeEventListener("message", callbackWorker);
   };
+
   worker.addEventListener("message", callbackWorker);
+
+  const timeoutId = setTimeout(() => {
+    worker.removeEventListener("message", callbackWorker);
+    console.warn(`workerCallbackMaker: timeout waiting for '${commandCallback}'`);
+  }, timeout);
 }
+
 
 export function deleteAttributesInAllPages(
   attributes = {},
@@ -3083,22 +3133,32 @@ export async function reloadEditor(editor) {
           editorStorageInstance.emit(InfinitelyEvents.storage.loadEnd);
           return;
         }
+
+        reloaderTimeout && clearTimeout(reloaderTimeout);
         editor.addComponents(elements[index], {
           avoidStore: true,
           at: index,
           sort: true,
         });
         const newIndex = index + 1;
-        setTimeout(() => {
-          render(newIndex);
-        }, 10);
+        reloaderTimeout = setTimeout(
+          () => {
+            render(newIndex);
+          },
+          index == 0 ? 0 : 100
+        );
       };
-      // render(0);
       // editor.setComponents(elements.join('') , { avoidStore:true});
       console.log("componentd setted", elements);
-      editor.loadProjectData({
-        components: elements,
-      });
+
+      if (projectSettings.enable_editor_lazy_loading) {
+        editor.render();
+        render(0);
+      } else {
+        editor.loadProjectData({
+          components: elements,
+        });
+      }
 
       updatePrevirePage({
         pageName: localStorage.getItem(current_page_id),

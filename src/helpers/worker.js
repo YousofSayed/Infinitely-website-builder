@@ -1,5 +1,5 @@
 // import { getElementRulesWithAst } from "./bridge";
-import { exportProject } from "./exportProject";
+import { exportProject , getProject } from "./exportProject";
 import { loadProject } from "./loadProject";
 import {
   clearTimeouts,
@@ -18,7 +18,7 @@ import {
   uploadAssets,
   varsToServiceWorker,
   writeFilesToOPFS,
-  updateSymbolsStylesFiles
+  updateSymbolsStylesFiles,
 } from "./workerCommands";
 import { doWorkerPattern } from "./workersPattern";
 // import { getProjectData } from "./functions";
@@ -45,6 +45,7 @@ const commands = {
   parseHTMLAndRaplceSymbols,
   // getElementRulesWithAst,
   updateSymbolsStylesFiles,
+  getProject,
 };
 
 

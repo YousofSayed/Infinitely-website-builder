@@ -216,6 +216,7 @@ export let projectSettingsType = {
   enable_prettier_for_file_editor: true,
   include_canvas_styles_in_build_file: true,
   disable_petite_vue: false,
+  disable_will_change_in_editor:false,
   enable_tailwind: false,
   enable_spline_viewer: false,
   enable_swiperjs: false,
@@ -227,6 +228,11 @@ export let projectSettingsType = {
   include_symbols_in_export: true,
   include_templates_in_export: true,
 };
+
+/**
+ * @type {import('./types').DropBoxFilesMeta}
+ */
+export let dropBoxFilesMeta = [];
 
 /**
  * @type {import('grapesjs').Component}

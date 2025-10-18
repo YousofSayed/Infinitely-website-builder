@@ -235,32 +235,33 @@ export const loadElements = async (
     // let content = isArray(parsed.html) ? [...parsed.html] : [parsed.html];
     // console.log(content);
     if (justSendToWorker) {
-      workerCallbackMaker(
-        infinitelyWorker,
-        "parseHTMLAndRaplceSymbols",
-        async (props) => {
-          editor.select(null);
-          // editor.off("canvas:frame:load:body");
-          await loadScripts(editor, projectData);
-          // editor.on("canvas:frame:load:body", () => {
-          //   attrsCallback(editor, projectData);
-          // });
-          editor.clearDirtyCount();
-          console.log("props : ", props);
+      return await new Promise((res, rej) => {
+        workerCallbackMaker(
+          infinitelyWorker,
+          "parseHTMLAndRaplceSymbols",
+          async (props) => {
+            editor.select(null);
+            // editor.off("canvas:frame:load:body");
+            await loadScripts(editor, projectData);
+            // editor.on("canvas:frame:load:body", () => {
+            //   attrsCallback(editor, projectData);
+            // });
+            editor.clearDirtyCount();
+            console.log("props : ", props);
+            res(props);
+            onSend([renderCssStyles(editor, cssCode), ...props.response]);
+            editor.on("component:remove:before", editor.removerBeforeHandler);
+          }
+        );
 
-          onSend([renderCssStyles(editor, cssCode), ...props.response]);
-          editor.on("component:remove:before", editor.removerBeforeHandler);
-        }
-      );
-
-      infinitelyWorker.postMessage({
-        command: "parseHTMLAndRaplceSymbols",
-        props: {
-          pageName: currentPageId,
-          projectId: +projectID,
-        },
+        infinitelyWorker.postMessage({
+          command: "parseHTMLAndRaplceSymbols",
+          props: {
+            pageName: currentPageId,
+            projectId: +projectID,
+          },
+        });
       });
-      return [];
     } else {
       editor.select(null);
       // editor.off("canvas:frame:load");
@@ -839,6 +840,16 @@ export const loadScripts = async (editor, projectData) => {
       },
       condition: Object.values(projectData.fonts).length,
     });
+
+    appendToHeader({
+      type: "styles",
+      attributes: {
+        href: `/styles/will-change.css`,
+        rel: "stylesheet",
+        name: "will-change",
+      },
+      condition: !projectSettings.disable_will_change_in_editor,
+    });
   };
 
   loadFooterScriptsCallback = async (ev) => {
@@ -950,9 +961,10 @@ export const loadScripts = async (editor, projectData) => {
         }
       ));
 
-    await appendScript(["/scripts/willChange.js"], 0, (script, lib) => {
-      script.src = lib;
-    });
+    !projectSettings.disable_will_change_in_editor &&
+      (await appendScript(["/scripts/willChange.js"], 0, (script, lib) => {
+        script.src = lib;
+      }));
 
     // projectSettings.enable_tailwind &&
     //   (await appendScript(

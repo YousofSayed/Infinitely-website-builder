@@ -164,9 +164,8 @@ export const CodeManagerModal = () => {
                     editor.getCss({
                       avoidProtected: true,
                       keepUnusedStyles: true,
-                      clearStyles:false,
-                      onlyMatched:false,
-                      
+                      clearStyles: false,
+                      onlyMatched: false,
                     })
                   ),
                 ]
@@ -236,6 +235,7 @@ export const CodeManagerModal = () => {
   const save = async () => {
     const newChange = {};
     let isHtmlUpdated = false;
+    let isCssUpdated = false;
 
     for (const key in filesData) {
       const root = defineRoot(key);
@@ -248,13 +248,6 @@ export const CodeManagerModal = () => {
         key.includes(`editor/pages/${currentPageName}.html`) ||
         key.includes(`css/${currentPageName}.css`)
       ) {
-        infinitelyWorker.postMessage({
-          command: "parseHTMLAndRaplceSymbols",
-          props: {
-            pageName: currentPageName,
-            projectId,
-          },
-        });
         const response = await new Promise((res, rej) => {
           workerCallbackMaker(
             infinitelyWorker,
@@ -263,15 +256,21 @@ export const CodeManagerModal = () => {
               res(props);
             }
           );
-        });
-        if (response.done && isPlainObject(response.symbols)) {
+
           infinitelyWorker.postMessage({
-            command: "updateSymbolsStylesFiles",
+            command: "parseHTMLAndRaplceSymbols",
             props: {
-              symbols: response.symbols,
-              cssCode: filesData[defineRoot(`css/${currentPageName}.css`)],
+              pageName: currentPageName,
+              projectId,
             },
           });
+        });
+
+        if (
+          response.done &&
+          isPlainObject(response.symbols) &&
+          key.includes(`css/${currentPageName}.css`)
+        ) {
           const symbolsCssContent = {};
           const cssSymbolsRes = await new Promise((res, rej) => {
             workerCallbackMaker(
@@ -281,7 +280,16 @@ export const CodeManagerModal = () => {
                 res(props);
               }
             );
+
+            infinitelyWorker.postMessage({
+              command: "updateSymbolsStylesFiles",
+              props: {
+                symbols: response.symbols,
+                cssCode: filesData[defineRoot(`css/${currentPageName}.css`)],
+              },
+            });
           });
+
           console.log(
             "response  : ",
             // filesData[defineRoot(`css/${currentPageName}.css`)],
@@ -305,12 +313,12 @@ export const CodeManagerModal = () => {
             />
           );
         } else {
-          editor.DomComponents.clear();
-          editor.setComponents(
-            renderCssStyles(editor, filesData) + htmlContent,
-            { avoidStore: true }
-          ); // typo: "avoideStore" → "avoidStore"
-          editor.clearDirtyCount();
+          // editor.DomComponents.clear();
+          // editor.setComponents(
+          //   renderCssStyles(editor, filesData) + htmlContent,
+          //   { avoidStore: true }
+          // ); // typo: "avoideStore" → "avoidStore"
+          // editor.clearDirtyCount();
           isHtmlUpdated = true;
         }
       }
@@ -327,28 +335,31 @@ export const CodeManagerModal = () => {
             />
           );
         } else {
-          editor.Css.clear();
-          editor.setStyle("");
-          editor.addComponents(renderCssStyles(editor, cssContent));
-          editor.clearDirtyCount();
+          // editor.Css.clear();
+          // editor.setStyle("");
+          // editor.addComponents(renderCssStyles(editor, cssContent));
+          // editor.clearDirtyCount();
+          isCssUpdated = true;
         }
       }
 
       // return;
-      infinitelyWorker.postMessage({
-        command: "writeFilesToOPFS",
-        props: {
-          files: [
-            {
-              path: root,
-              content: filesData[root],
-            },
-          ],
-        },
-      });
+
       const fileWriteRes = await new Promise((res, rej) => {
         workerCallbackMaker(infinitelyWorker, "writeFilesToOPFS", (props) => {
           res(props);
+        });
+
+        infinitelyWorker.postMessage({
+          command: "writeFilesToOPFS",
+          props: {
+            files: [
+              {
+                path: root,
+                content: filesData[root],
+              },
+            ],
+          },
         });
       });
       // await opfs.writeFiles([
@@ -372,9 +383,14 @@ export const CodeManagerModal = () => {
     setReloaderKey(createUUID());
     editor.clearDirtyCount();
     // await editor.load();
-    reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {
-      state: true,
-    });
+
+    if (isHtmlUpdated || isCssUpdated) {
+      editor.load();
+    } else {
+      reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {
+        state: true,
+      });
+    }
   };
 
   return (

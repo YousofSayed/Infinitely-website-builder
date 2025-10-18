@@ -208,7 +208,7 @@ export async function buildProject(props) {
       );
 
       // console.log('filtered motions : ' , filterdMotions);
-      
+
       zip.file(
         `js/motions/${page.name}.js`,
         props.projectSetting.minify_Js
@@ -531,6 +531,27 @@ export async function buildProject(props) {
   console.log(`Project end loading`);
   return zip;
 }
+
+/**
+ *
+ * @param {{asJson:boolean , projectId:number , toastId:string, projectSetting : import('./types').ProjectSetting}} props
+ */
+export const getProject = async (props) => {
+  const projectData = await db.projects.get(props.projectId);
+
+  const project = await buildProject(props);
+  self.postMessage({
+    command: "getProject",
+    props: {
+      file: await project.generateAsync({
+        type: "blob",
+        compression: "STORE",
+        streamFiles: true,
+      }),
+      name: `${projectData.name}`,
+    },
+  });
+};
 
 /**
  *

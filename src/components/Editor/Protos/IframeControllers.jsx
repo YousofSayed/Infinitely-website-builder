@@ -336,7 +336,8 @@ export const IframeControllers = () => {
             }),
             pageName
           );
-
+          console.log('filterd motions : ' , motions);
+          
           killAllGsapMotions(motions);
           editor.gsapRunning = false;
         }}

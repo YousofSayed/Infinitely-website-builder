@@ -141,18 +141,29 @@ export const DetailsNormal = memo(
           className={`cursor-pointer flex justify-between items-center text-slate-200 capitalize rounded-lg font-semibold text-[16px] p-1 ${labelClass}`}
           onClick={toggle}
         >
-          <h1 className="custom-font-size text-slate-200 font-semibold flex gap-2 items-center">
+          <h1 className="custom-font-size text-slate-200 font-semibold flex gap-2 items-center  justify-between">
             <span className="custom-font-size">{label}</span>
-            {notify && <span className={`w-[7.5px] h-[7.5px] block  ${notifyBg} rounded-full`}></span>}
+            {notify && (
+              <span
+                className={`w-[7.5px] h-[7.5px] block animate-pulse  ${notifyBg} rounded-full`}
+              ></span>
+            )}
           </h1>
           {/* <FitTitle className="custom-font-size">{label}</FitTitle> */}
-          <span
-            className={`transition-transform duration-100 ${
-              isOpen ? "rotate-90" : ""
-            }`}
-          >
-            <i className="rotate-[-90deg] block">{Icons.arrow("")}</i>
-          </span>
+          <div className="flex items-center gap-2">
+            {/* {notify && (
+              <span
+                className={`w-[7.5px] h-[7.5px] block animate-pulse  ${notifyBg} rounded-full`}
+              ></span>
+            )} */}
+            <span
+              className={`transition-transform duration-100 ${
+                isOpen ? "rotate-90" : ""
+              }`}
+            >
+              <i className="rotate-[-90deg] block">{Icons.arrow("")}</i>
+            </span>
+          </div>
         </div>
         <div
           // style={{ transition: "5s", transitionDelay: "0", opacity: 0 }}
@@ -192,7 +203,7 @@ export const DetailsNormal = memo(
         </div> */}
 
         {allowPopupLength && !!length && (
-          <p className="w-[20px] h-[20px] bg-blue-500 text-white flex justify-center items-center font-semibold rounded-full absolute right-[-5px] top-[-7px]">
+          <p className="w-[20px] h-[20px] bg-blue-500  text-white flex justify-center items-center font-semibold rounded-full absolute right-[-5px] top-[-7px]">
             {length}
           </p>
         )}

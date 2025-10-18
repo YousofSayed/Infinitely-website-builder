@@ -14,12 +14,60 @@ import {
   open_symbols_and_templates_manager_modal,
 } from "../../constants/InfinitelyCommands";
 
-import { refType } from "../../helpers/jsDocs";
+import { dropBoxFilesMeta, refType } from "../../helpers/jsDocs";
+import { useLiveQuery } from "dexie-react-hooks";
+import {
+  getProject,
+  getProjectData,
+  loadProject,
+  workerCallbackMaker,
+} from "../../helpers/functions";
+import { OptionsButton } from "../Protos/OptionsButton";
+import { Button } from "../Protos/Button";
+import { addClickClass } from "../../helpers/cocktail";
+import {
+  getDropboxFileBlob,
+  getDropboxFileMeta,
+  pullProject,
+  shareLink,
+  uploadDbxFileWithToastProgress,
+  uploadDropboxFile,
+} from "../../helpers/dropboxHandlers";
+import { db } from "../../helpers/db";
+import { current_project_id } from "../../constants/shared";
+import { toast } from "react-toastify";
+import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
+import { globalInstance } from "../../constants/InfinitelyInstances";
+import { InfinitelyEvents } from "../../constants/infinitelyEvents";
+import { opfs } from "../../helpers/initOpfs";
+import { infinitelyWorker } from "../../helpers/infinitelyWorker";
+import { FitTitle } from "./Protos/FitTitle";
 
 export const HomeNav = () => {
   const editor = useEditorMaybe();
   const navigate = useNavigate();
-  const testRef = useRef(refType);
+  const pushRef = useRef(refType);
+  const pullRef = useRef(refType);
+  const projectData = useLiveQuery(async () => {
+    return await getProjectData();
+  });
+  useEffect(() => {
+    const callback = async ({ detail }) => {
+      console.log("req :", detail);
+
+      if (detail.req) {
+        await db.projects.update(+projectData.id, {
+          dbx_pull_requried: true,
+        });
+      }
+    };
+
+    globalInstance.on(InfinitelyEvents.global.pull_require, callback);
+
+    return () => {
+      globalInstance.off(InfinitelyEvents.global.pull_require, callback);
+    };
+  }, [projectData]);
 
   // useEffect(() => {
   //   (async () => {
@@ -123,6 +171,94 @@ export const HomeNav = () => {
               editor.runCommand(open_files_manager_modal);
             }}
           />
+
+          {Boolean(projectData?.apps) && (
+            <li className="group relative li-btn h-[30px] w-[30px]     rounded-lg cursor-pointer grid place-items-center transition-all hover:bg-blue-600   [&_#dbx-svg]:hover:fill-white [&_#dbx-svg_g]:hover:fill-white ">
+              {Boolean(
+                projectData.apps == "Dropbox" && projectData.dropboxFileMeta
+              ) && (
+                <OptionsButton icon={Icons.dropbox({})}>
+                  <menu className="flex flex-col gap-2 w-[100px]">
+                    <Button
+                      refForward={pushRef}
+                      disabled={projectData.dbx_pull_requried}
+                      onClick={async (ev) => {
+                        // let tId = toast.loading(
+                        //   <ToastMsgInfo msg={`Pushing project...`} />
+                        // );
+                        try {
+                          addClickClass(ev.currentTarget, "click");
+                          const dataMeta = await uploadDbxFileWithToastProgress(
+                            projectData.dropboxFileMeta.path_lower,
+                            await getProject(),
+                            projectData.dropboxFileMeta.rev
+                          );
+                          if (!dataMeta) {
+                            throw new Error(`No data meta founded`);
+                          }
+                          console.log("data meta : ", dataMeta);
+                          await db.projects.update(
+                            +localStorage.getItem(current_project_id),
+                            {
+                              dropboxFileMeta: dataMeta,
+                            }
+                          );
+                          // toast.done(tId);
+                        } catch (error) {
+                          // if(error.message.includes("conflict")){
+                          //   console.error('hahahahahahahahahah');
+
+                          // }
+                          // toast.dismiss(tId);
+                          throw new Error(error);
+                        }
+                      }}
+                    >
+                      {Icons.upload({ strokeColor: "white" })}
+                      <h1>Push</h1>
+                    </Button>
+                    <Button
+                      refForward={pullRef}
+                      // disabled={!projectData.dbx_pull_requried}
+                      onClick={async (ev) => {
+                        console.log("refff : ", pushRef.current);
+                        const btn = ev.currentTarget;
+                        addClickClass(btn, "click");
+
+                        // pushRef.current.disabled = true;
+                        try {
+                          await pullProject(projectData);
+                          btn.disabled = true;
+                        } catch (error) {
+                          throw new Error(error);
+                        } finally {
+                          btn.disabled = null;
+                          // pushRef.current.disabled = null;
+                        }
+                      }}
+                      style={{
+                        backgroundColor: projectData.dbx_pull_requried
+                          ? "crimson"
+                          : null,
+                      }}
+                    >
+                      {Icons.export("white")}
+                      <h1>Pull</h1>
+                    </Button>
+                    {/* <Button
+                      onClick={async (ev) => {
+                        addClickClass(ev.currentTarget, "click");
+                        await shareLink(projectData);
+                      }}
+                    >
+                      {Icons.share({ strokeColor: "white" })}
+                      <span>Share</span>
+                    </Button> */}
+                  </menu>
+                </OptionsButton>
+              )}
+            </li>
+          )}
           {/* <Li title="Github" icon={Icons.git} /> */}
         </ul>
       </div>

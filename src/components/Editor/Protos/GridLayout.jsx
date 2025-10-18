@@ -1,16 +1,5 @@
 import React from "react";
 import { SharedBetweenFlexAndGridLayout } from "./SharedBetweenFlexAndGridLayout";
-import {
-  alignContentValues,
-  alignItemsValues,
-  justifyContentValues,
-  justifyItemsValues,
-} from "../../../constants/cssProps";
-import { P } from "../../Protos/P";
-import { MultiChoice } from "./MultiChoice";
-import { getIconForMultiChoice } from "../../../helpers/functions";
-import { Icons } from "../../Icons/Icons";
-import { Select } from "./Select";
 import { Property } from "./Property";
 // Icons.
 export const GridLayout = () => {
@@ -34,10 +23,10 @@ export const GridLayout = () => {
       />
 
       <Property label="Grid auto rows" cssProp="grid-auto-rows" />
-      <Property label="column gap" cssProp="column-gap"  />
-      <Property label="row gap" cssProp="row-gap"  />
+      <Property label="column gap" cssProp="column-gap" />
+      <Property label="row gap" cssProp="row-gap" />
 
-        <SharedBetweenFlexAndGridLayout/>
+      <SharedBetweenFlexAndGridLayout />
     </section>
   );
 };

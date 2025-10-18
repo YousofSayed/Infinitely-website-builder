@@ -25,47 +25,26 @@ import { Textarea } from "./Textarea";
 import { useRemoveCssProp } from "../../../hooks/useRemoveCssProp";
 import { ChooseFile } from "../../Protos/ChooseFile";
 import { FitTitle } from "./FitTitle";
+import { BackgroundImage } from "./BackgroundImage";
 
 export const Background = memo(() => {
-  const editor = useEditorMaybe();
-  const setCssPropForAm = useSetRecoilState(cssPropForAssetsManagerState);
-  const setClass = useSetClassForCurrentEl();
-  const [bgImage, setBgImage] = useState("");
-  const removeProp = useRemoveCssProp();
 
-  useUpdateInputValue({
-    cssProp: "background-image",
-    onEffect(cssProp, value) {
-      // console.log("effecte for bg image", value);
 
-      setBgImage(typeof value == 'string' ? value.replace(/url\(|\)|\'|\"/gi, "") : '');
-    },
-  });
+  // useEffect(() => {
+  //   if(!editor) return;
+  //   const callback = () => {
+  //     const bgImgUrl =
+  //       editor?.getSelected()?.getStyle()["background-image"] || "";
+  //     if (!bgImgUrl) return;
+  //     setBgImage(bgImgUrl);
+  //   };
 
-  useEffect(() => {
-    if (!bgImage) {
-      // console.log("removing : ", bgImage);
+  //   editor.on("update", callback);
 
-      removeProp({ cssProp: "background-image" });
-    }
-    // console.log(editor.getCss());
-  }, [bgImage]);
-
-  useEffect(() => {
-    if(!editor) return;
-    const callback = () => {
-      const bgImgUrl =
-        editor?.getSelected()?.getStyle()["background-image"] || "";
-      if (!bgImgUrl) return;
-      setBgImage(bgImgUrl);
-    };
-
-    editor.on("update", callback);
-
-    return () => {
-      editor.off("update", callback);
-    };
-  }, [editor]);
+  //   return () => {
+  //     editor.off("update", callback);
+  //   };
+  // }, [editor]);
 
   return (
     <section className=" bg-slate-900 rounded-lg flex flex-col gap-3 p-1">
@@ -73,23 +52,8 @@ export const Background = memo(() => {
       <Color cssProp="background-color" />
 
       <MiniTitle>Image</MiniTitle>
-     
+      <BackgroundImage/>
 
-       <section className="bg-slate-800 rounded-lg flex flex-col gap-2 p-1">
-         <ChooseFile
-          mediaType="image"
-          placeholder="Choose image"
-          value={bgImage}
-          isCssProp
-          callback={(asset, url) => {
-            setBgImage(url);
-            setClass({
-              cssProp: "background-image",
-              value: `url("${url}")`,
-            });
-          }}
-        />
-       </section>
       <Property cssProp="background-position-x" label="position-x" />
       <Property cssProp="background-position-y" label="position-y" />
       <SelectStyle

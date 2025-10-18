@@ -1,0 +1,12 @@
+* {
+  will-change: auto !important;
+}
+
+[style*="transform"],
+[style*="opacity"],
+[class*="animate"],
+[class*="transition"],
+[data-gjs-type="splitter"],
+[data-gjs-type="splitter"] * {
+  will-change: transform, opacity !important;
+}

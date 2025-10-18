@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
-import { useRecoilValue } from "recoil";
+import { useRecoilState, useRecoilValue } from "recoil";
 import {
+  cmpRulesState,
   cssPropForAssetsManagerState,
   currentElState,
   framesStylesState,
@@ -18,15 +19,20 @@ import {
 import { inf_symbol_Id_attribute } from "../constants/shared";
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
 import { useDebounce } from "use-debounce";
+import { isFunction } from "lodash";
+import { infinitelyCallback } from "../helpers/bridge";
 let saveTimeout;
+let idleId;
+
 /**
  *
- * @param {{ cssProp:string ,setVal:Function ,returnPropsAsIt:boolean, onEffect :(cssProp:string , Value : Function)=>{} }}} param0
+ * @param {{ cssProp:string ,setVal:Function ,returnPropsAsIt:boolean, getAllStyles:(styles:CSSStyleDeclaration)=>void, onEffect :(cssProp:string , Value : Function)=>{} }}} param0
  */
 export const useUpdateInputValue = ({
   cssProp,
   setVal = (_) => {},
   returnPropsAsIt = false,
+  getAllStyles,
   onEffect = (cssProp, setVal) => {},
 }) => {
   const currentElObj = useRecoilValue(currentElState);
@@ -35,7 +41,7 @@ export const useUpdateInputValue = ({
   const selector = useRecoilValue(selectorState);
   const showAnimationsBuilder = useRecoilValue(showAnimationsBuilderState);
   const framesStyles = useRecoilValue(framesStylesState);
-
+  const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
 
   // const cssPropForAM = useRecoilValue(cssPropForAssetsManagerState);
   function getRuleStyle(isDeviceEvent) {
@@ -72,7 +78,7 @@ export const useUpdateInputValue = ({
       mediaAccordingToRule
     )?.toJSON()?.style;
 
-    console.log("style output : ", outPut , cssProp , selector , mediaAccordingToRule);
+    // console.log("style output : ", outPut , cssProp , selector , mediaAccordingToRule);
 
     return outPut || {};
   }
@@ -83,6 +89,11 @@ export const useUpdateInputValue = ({
     const Media = getCurrentMediaDevice(editor);
     const currentSelector = getCurrentSelector(selector, slEL);
     console.log("styles : ", cssProp, currentSelector);
+
+    if (isFunction(getAllStyles)) {
+      getAllStyles(getRuleStyle(isDeviceEvent) || {});
+      return;
+    }
 
     if (!currentSelector) {
       setVal((old) => {
@@ -168,9 +179,10 @@ export const useUpdateInputValue = ({
     rule,
     showAnimationsBuilder,
     framesStyles,
+    cmpRules
   ]);
 
-  useMemo(() => {
+  useEffect(() => { //(isFunction(getAllStyles) ? useEffect : useMemo)
     // console.log(!currentElObj?.currentEl  && !showAnimationsBuilder && !editor.getSelected());
     if (!editor) return;
     if (
@@ -194,8 +206,13 @@ export const useUpdateInputValue = ({
     //  saveTimeout = setTimeout(() => {
     // }, 5);
     // console.log("i should work", cssProp);
-
-    handler({});
+    if (idleId) {
+      window.cancelIdleCallback && cancelIdleCallback(idleId);
+      clearTimeout(idleId);
+    }
+    idleId = infinitelyCallback(() => {
+      handler({});
+    }, 10);
   }, [
     editor,
     currentElObj,
@@ -203,14 +220,6 @@ export const useUpdateInputValue = ({
     rule,
     showAnimationsBuilder,
     framesStyles,
-
-    // editorDeb,
-    // currentElObjDeb,
-    // selectorDev,
-    // ruleDeb,
-    // showAnimationsBuilderDeb,
-    // frameStylesDeb,
-
-    // cssPropForAM,
+    cmpRules,
   ]);
 };

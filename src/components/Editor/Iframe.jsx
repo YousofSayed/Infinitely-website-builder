@@ -1,6 +1,6 @@
 import { Canvas, useEditorMaybe } from "@grapesjs/react";
-import React, {  useEffect, useRef, useState } from "react";
-import { useRecoilState, useRecoilValue,  } from "recoil";
+import React, { useEffect, useRef, useState } from "react";
+import { useRecoilState, useRecoilValue } from "recoil";
 import {
   animationsState,
   animationsWillRemoveState,
@@ -13,22 +13,15 @@ import {
 } from "../../helpers/atoms";
 import { Button } from "../Protos/Button";
 import { Icons } from "../Icons/Icons";
-import { addClickClass, } from "../../helpers/cocktail";
+import { addClickClass } from "../../helpers/cocktail";
 import { iframeType, refType } from "../../helpers/jsDocs";
-import {
-  getCurrentPageName,
-} from "../../helpers/functions";
-import {
-  current_page_id,
-  current_project_id,
-} from "../../constants/shared";
+import { getCurrentPageName } from "../../helpers/functions";
+import { current_page_id, current_project_id } from "../../constants/shared";
 import { InfinitelyEvents } from "../../constants/infinitelyEvents";
 import monacoLoader from "@monaco-editor/loader";
 import { useSetClassForCurrentEl } from "../../hooks/useSetclassForCurrentEl";
 import { FitTitle } from "./Protos/FitTitle";
-import {
-  keyframesGetterWorker,
-} from "../../helpers/defineWorkers";
+import { keyframesGetterWorker } from "../../helpers/defineWorkers";
 import {
   editorStorageInstance,
   styleInfInstance,
@@ -38,11 +31,9 @@ import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
 import { animationsSavingMsg } from "../../constants/confirms";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Loader } from "../Loader";
+import Portal from "./Portal";
 
-
-
-
-export const Iframe = (() => {
+export const Iframe = () => {
   const showLayers = useRecoilValue(showLayersState);
   const [showAnimBuilder, setShowAnimBuilder] = useRecoilState(
     showAnimationsBuilderState
@@ -170,7 +161,6 @@ export const Iframe = (() => {
     const loaderStartCallback = () => {
       setShowLoader(true);
       console.log("should start");
-      
     };
 
     const loaderEndCallback = () => {
@@ -226,7 +216,6 @@ export const Iframe = (() => {
     setPreviewSrc(urlSrc);
   }, [showPreview]);
 
-
   const reloadPreview = () => {
     setPreviewSrc(new String(getCurrentPageName()));
     // getAndSetPreviewData(previewPageName, false, { firstPreview: false });
@@ -235,7 +224,7 @@ export const Iframe = (() => {
   return (
     <section className="relative bg-[#aaa]    h-full" ref={autoAnimate}>
       {showAnimBuilder && (
-        <section className="grid place-items-center p-2 absolute top-0 left-0 z-20 bg-blur-dark w-full h-full">
+        <section className="grid place-items-center p-2 absolute top-0 left-0 z-20 bg-black/40 w-full h-full">
           <section className="flex flex-col items-center justify-center self-center p-3 bg-slate-900 shadow-2xl shadow-slate-950 rounded-lg gap-5">
             <figure className="relative  w-fit ">
               {Icons.animation(undefined, undefined, "#2563eb", 60, 60)}
@@ -327,11 +316,11 @@ export const Iframe = (() => {
         }}
       >
         <Canvas
-        id="editor-canvas"
-        label="Canvas"
-        aria-label="Editor"
-        className="overflow-auto "
-      />
+          id="editor-canvas"
+          label="Canvas"
+          aria-label="Editor"
+          className="overflow-auto "
+        />
       </section>
 
       {/* <FloatingButton/> */}
@@ -344,7 +333,7 @@ export const Iframe = (() => {
 
       {showLoader && (
         <section className="absolute top-0 left-0 w-full h-full z-[1000000] bg-slate-900 flex justify-center items-center">
-          <Loader zIndex={1000}/>
+          <Loader zIndex={1000} />
         </section>
       )}
 
@@ -354,103 +343,111 @@ export const Iframe = (() => {
           display: showPreview ? "block" : "none",
           contain: "layout , size , paint",
         }}
-        className="w-full h-full rounded-xl overflow-hidden p-1 fixed left-0 top-0 z-[1000] backdrop-blur-md"
+        className="w-full h-full rounded-xl overflow-hidden p-1 fixed left-0 top-0 z-[1000] "
         // style={{ display: showPreview ? "block" : "none" }}
       >
         {showPreview && (
           <>
-            <header className="w-full h-[60px] flex items-center justify-between p-2 rounded-tl-lg rounded-tr-lg  bg-slate-900">
-              <section className="flex items-center  gap-5 w-[50%]">
-                <FitTitle className=" w-[30%!important] h-full rounded-lg font-semibold capitalize text-xl text-center">
-                  {localStorage.getItem(current_page_id)}
-                </FitTitle>
+            <Portal>
+              <main
+                id="preview-container"
+                className="fixed  left-0 top-0 h-full w-full z-[1000]"
+                ref={iframeContainer}
+              >
+                {/* {isChrome() && ( */}
+                {/* {showPreview && ( */}
+                <header className="w-full h-[60px] flex items-center justify-between p-2 rounded-tl-lg rounded-tr-lg  bg-slate-900">
+                  <section className="flex items-center  gap-5 w-[50%]">
+                    <FitTitle className=" w-[30%!important] h-full rounded-lg font-semibold capitalize text-xl text-center">
+                      {localStorage.getItem(current_page_id)}
+                    </FitTitle>
 
-                <button
-                  onClick={(ev) => {
-                    addClickClass(ev.currentTarget, "click");
-                    reloadPreview();
-                  }}
-                >
-                  {Icons.refresh({ width: 20, height: 20 })}
-                </button>
-              </section>
-              <ul className="flex items-center gap-3 flex-wrap">
-                <li className="group w-[20px] h-[20px] bg-green-600 rounded-full overflow-hidden flex justify-center items-center cursor-pointer">
-                  <button
-                    className="opacity-0 group-hover:opacity-[1] text-white font-bold  scale-[.8]  transition-all  w-full h-full flex justify-center items-center"
-                    onClick={(ev) => {
-                      addClickClass(ev.currentTarget, "click");
-                      document.exitFullscreen();
-                    }}
-                  >
-                    {Icons.minimize({ strokeColor: "white", strokWidth: 2 })}
-                  </button>
-                </li>
-                <li className="group w-[20px] h-[20px] bg-yellow-600 rounded-full flex justify-center items-center cursor-pointer">
-                  <button
-                    className="opacity-0 group-hover:opacity-[1] scale-[.7] transition-all text-sm w-full h-full flex justify-center items-center"
-                    onClick={(ev) => {
-                      addClickClass(ev.currentTarget, "click");
-                      virtualBrowserWindow.current.requestFullscreen();
-                    }}
-                  >
-                    {Icons.square("white")}
-                  </button>
-                </li>
-                <li
-                  className="group w-[20px] h-[20px] bg-red-600 rounded-full flex justify-center items-center cursor-pointer"
-                  onClick={(ev) => {
-                    addClickClass(ev.currentTarget, "click");
-                    setShowPreview(!showPreview);
-                    setTimeout(() => {
-                      editor.trigger(InfinitelyEvents.pages.all);
-                    }, 0);
-                    // window.dispatchEvent(
-                    //   changePageName({
-                    //     pageName: localStorage.getItem(current_page_id),
-                    //   })
-                    // );
-                    // editor.load();
-                  }}
-                >
-                  <button className="opacity-0 group-hover:opacity-[1] transition-all text-sm w-full h-full flex justify-center items-center">
-                    {Icons.close("white")}
-                  </button>
-                </li>
-              </ul>
-            </header>
+                    <button
+                      onClick={(ev) => {
+                        addClickClass(ev.currentTarget, "click");
+                        reloadPreview();
+                      }}
+                    >
+                      {Icons.refresh({ width: 20, height: 20 })}
+                    </button>
+                  </section>
+                  <ul className="flex items-center gap-3 flex-wrap">
+                    <li className="group w-[20px] h-[20px] bg-green-600 rounded-full overflow-hidden flex justify-center items-center cursor-pointer">
+                      <button
+                        className="opacity-0 group-hover:opacity-[1] text-white font-bold  scale-[.8]  transition-all  w-full h-full flex justify-center items-center"
+                        onClick={(ev) => {
+                          addClickClass(ev.currentTarget, "click");
+                          document.exitFullscreen();
+                        }}
+                      >
+                        {Icons.minimize({
+                          strokeColor: "white",
+                          strokWidth: 2,
+                        })}
+                      </button>
+                    </li>
+                    <li className="group w-[20px] h-[20px] bg-yellow-600 rounded-full flex justify-center items-center cursor-pointer">
+                      <button
+                        className="opacity-0 group-hover:opacity-[1] scale-[.7] transition-all text-sm w-full h-full flex justify-center items-center"
+                        onClick={(ev) => {
+                          addClickClass(ev.currentTarget, "click");
+                          virtualBrowserWindow.current.requestFullscreen();
+                        }}
+                      >
+                        {Icons.square("white")}
+                      </button>
+                    </li>
+                    <li
+                      className="group w-[20px] h-[20px] bg-red-600 rounded-full flex justify-center items-center cursor-pointer"
+                      onClick={(ev) => {
+                        addClickClass(ev.currentTarget, "click");
+                        setShowPreview(!showPreview);
+                        setTimeout(() => {
+                          editor.trigger(InfinitelyEvents.pages.all);
+                        }, 0);
+                        // window.dispatchEvent(
+                        //   changePageName({
+                        //     pageName: localStorage.getItem(current_page_id),
+                        //   })
+                        // );
+                        // editor.load();
+                      }}
+                    >
+                      <button className="opacity-0 group-hover:opacity-[1] transition-all text-sm w-full h-full flex justify-center items-center">
+                        {Icons.close("white")}
+                      </button>
+                    </li>
+                  </ul>
+                </header>
+                <iframe
+                  ref={previewIframe}
+                  id="preview"
+                  allowFullScreen
+                  src={previewSrc || urlSrc}
+                  security="restricted"
+                  about="target"
+                  allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
+                  unselectable="on"
+                  // sandbox=""
+                  // sandbox="allow-same-origin allow-scripts allow-modals allow-forms allow-popups"
+                  // src="about:srcdoc"
+                  // srcDoc=""
+                  // srcDoc={`<video
+                  //    src="../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4"
+                  //    controls
+                  //  ></video>`}
+                  className={`bg-white w-full h-full  transition-all border-[5px] rounded-bl-lg rounded-br-lg border-slate-900`}
+                  // srcDoc={srcDoc}
+                ></iframe>
+                {/* )} */}
 
-            <main className="h-[calc(100%-60px)] w-full" ref={iframeContainer}>
-              {/* {isChrome() && ( */}
-              {/* {showPreview && ( */}
-              <iframe
-                ref={previewIframe}
-                id="preview"
-                allowFullScreen
-                src={previewSrc || urlSrc}
-                security="restricted"
-                about="target"
-                allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
-                unselectable="on"
-                // sandbox=""
-                // sandbox="allow-same-origin allow-scripts allow-modals allow-forms allow-popups"
-                // src="about:srcdoc"
-                // srcDoc=""
-                // srcDoc={`<video
-                //    src="../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4"
-                //    controls
-                //  ></video>`}
-                className={`bg-white w-full h-full  transition-all border-[5px] rounded-bl-lg rounded-br-lg border-slate-900`}
-                // srcDoc={srcDoc}
-              ></iframe>
-              {/* )} */}
-
-              {/* )} */}
-            </main>
+                {/* )} */}
+              </main>
+            </Portal>
           </>
         )}
       </section>
       {/* )} */}
     </section>
   );
-});
+};

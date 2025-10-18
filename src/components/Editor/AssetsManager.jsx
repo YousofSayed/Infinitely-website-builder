@@ -55,13 +55,14 @@ import { Hr } from "../Protos/Hr";
 import { FileView } from "../Protos/FileView";
 import { opfs } from "../../helpers/initOpfs";
 import { assetsWorker } from "../../helpers/defineWorkers";
+import { For } from "million/react";
 
 /**
  *
  * @param {{editor: import('grapesjs').Editor}} param0
  * @returns
  */
-export const AssetsManager = (() => {
+export const AssetsManager = () => {
   /**
    * @type {import('../../helpers/types').InfinitelyAsset[]}
    */
@@ -280,7 +281,7 @@ export const AssetsManager = (() => {
     // await db.projects.update(projectId, {
     //   assets: [],
     // });
-    
+
     // const toastId = toast.loading(<ToastMsgInfo msg={`Deleting Files...`} />);
     // await opfs.remove({
     //   dirOrFile: await opfs.getFolder(defineRoot(`assets`)),
@@ -288,12 +289,12 @@ export const AssetsManager = (() => {
     // toast.done(toastId);
     // toast.success(<ToastMsgInfo msg={`All assets deleted successfully`} />);
     assetsWorker.postMessage({
-      command:'removeOPFSEntry',
-      props:{
-        path : defineRoot(`assets`),
-        toastMsg : `Deleting Files...`,
-      }
-    })
+      command: "removeOPFSEntry",
+      props: {
+        path: defineRoot(`assets`),
+        toastMsg: `Deleting Files...`,
+      },
+    });
   };
 
   const search = async (value = "") => {
@@ -355,11 +356,11 @@ export const AssetsManager = (() => {
             <article className="font-semibold text-[14px] text-slate-200 flex items-center gap-2">
               <FitTitle className="custom-font-size">Available Space</FitTitle>{" "}
               <p className="h-full py-1 px-2 bg-slate-900 rounded-lg custom-font-size">
-                {storageDetails.availableSpaceInMB }
+                {storageDetails.availableSpaceInMB}
                 MB
               </p>{" "}
             </article>
-{/* >= MAX_UPLOAD_SIZE
+            {/* >= MAX_UPLOAD_SIZE
                   ? (
                       MAX_UPLOAD_SIZE -
                       getFilesSize(files.map((file) => file)).MB
@@ -390,29 +391,42 @@ export const AssetsManager = (() => {
         )}
 
         {/* <section
-          className={`w-full h-full  bg-gray-950 rounded-lg p-2 overflow-auto grid grid-cols-[repeat(auto-fill,minmax(25%,1fr))] grid-rows-[repeat(auto-fill,minmax(200px,200px))] justify-start gap-[15px] `}
+        style={{
+          contain:'layout paint size'
+        }}
+          className={`w-full h-full will-change-[transform,opacity] isolate   bg-gray-950 rounded-lg p-2 overflow-auto grid grid-cols-[repeat(auto-fill,minmax(25%,1fr))] grid-rows-[repeat(auto-fill,minmax(200px,200px))] justify-start gap-[15px] `}
         > */}
+
         {showLoader && <Loader />}
-        {!!files.length && (
-          <VirtuosoGrid
-            totalCount={files.length}
-            components={GridComponents}
-            style={{
-              height: "100%",
-            }}
-            // className="h-full"
-            className="p-[unset] h-full"
-            // itemClassName="p-[unset]"
-            listClassName=" pr-2"
-            itemContent={(index) => {
-              const i = index,
-                asset = files[index];
+        {/* {Boolean(files.length) && <For each={files} memo>
+            {(asset ,i) => {
               console.log("files from virtuso : ", asset);
 
-              return <FileView asset={asset} />;
+              return <FileView key={i} asset={asset} />;
             }}
-          />
-        )}
+          </For>} */}
+        
+          {!!files.length && (
+            <VirtuosoGrid
+              totalCount={files.length}
+              components={GridComponents}
+              style={{
+                height: "100%",
+              }}
+              // className="h-full"
+              className="p-[unset] h-full"
+              // itemClassName="p-[unset]"
+              listClassName=" pr-2"
+              itemContent={(index) => {
+                const i = index,
+                  asset = files[index];
+                console.log("files from virtuso : ", asset);
+
+                return <FileView asset={asset} />;
+              }}
+            />
+          )}
+        {/* </section> */}
 
         {!files.length && !showLoader && (
           <section className="w-full h-full flex flex-col gap-2 justify-center items-center">
@@ -435,6 +449,6 @@ export const AssetsManager = (() => {
       </section>
     </main>
   );
-});
+};
 
 // console.log(encodeURI(`WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4`) == 'whatsapp%20video%202025-04-09%20at%206.37.02%20am.mp4');

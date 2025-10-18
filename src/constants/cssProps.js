@@ -636,3 +636,135 @@ export const mixBlendModeValues = [
   "auto",
   "isolate"
 ];
+
+
+
+export const wordWrap = [
+  "normal",
+  "break-word" // alias for overflow-wrap
+];
+
+export const whiteSpaceCollapse = [
+  "collapse",
+  "preserve",
+  "preserve-breaks",
+  "break-spaces"
+];
+
+export const whiteSpaceTrim = [
+  "none",
+  "start",
+  "end",
+  "both"
+];
+
+export const transformOriginValues = [
+  // Keyword values (2D)
+  "top",
+  "right",
+  "bottom",
+  "left",
+  "center",
+
+  // Paired keyword values (2D)
+  "top left",
+  "top center",
+  "top right",
+  "center left",
+  "center center",
+  "center right",
+  "bottom left",
+  "bottom center",
+  "bottom right",
+
+  // Length values (2D, examples)
+  "0px",
+  "10px",
+  "50px",
+  "100px",
+  "0px 0px",
+  "10px 20px",
+  "50px 50px",
+
+  // Percentage values (2D, examples)
+  "0%",
+  "50%",
+  "100%",
+  "0% 0%",
+  "50% 50%",
+  "100% 50%",
+
+  // Mixed length and percentage (2D, examples)
+  "10px 50%",
+  "50% 20px",
+
+  // 3D transform-origin values (includes z-axis)
+  "0px 0px 0px",
+  "50% 50% 10px",
+  "center center 20px",
+  "left top 30px"
+];
+
+export const willChangeValues = [
+  // Special values
+  "auto",
+  "scroll-position",
+  "contents",
+
+  // Common CSS properties used with will-change
+  "transform",
+  "opacity",
+  "filter",
+  "top",
+  "left",
+  "right",
+  "bottom",
+  "width",
+  "height",
+  "background-color",
+  "color",
+  "font-size",
+  "z-index",
+  "clip-path",
+  "box-shadow",
+  "border-radius",
+  "perspective",
+  "scale",
+  "rotate",
+  "translate",
+  "skew"
+];
+
+export const containValues = [
+  "none",
+  "strict",
+  "content",
+  "layout",
+  "style",
+  "paint",
+  "size"
+];
+
+export const userSelectValues = [
+  "auto",
+  "none",
+  "text",
+  "all",
+  "contain"
+];
+
+export const tabSizeValues = [
+  // Integer values (number of spaces)
+  "0",
+  "1",
+  "2",
+  "4",
+  "8",
+
+  // Length values (examples)
+  "8px",
+  "16px",
+  "1rem",
+  "2em",
+  "10pt"
+];

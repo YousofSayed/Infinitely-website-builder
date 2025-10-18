@@ -41,6 +41,7 @@ import { isDevMode } from "./helpers/bridge";
 import { Opfs } from "./views/Opfs";
 import { Interactions } from "./components/Editor/Interactions";
 import { AppInstalling } from "./views/AppInstalling";
+import { Share } from "./views/Share";
 // import { esmToUmd } from "./helpers/initBabel";
 
 function App() {
@@ -210,6 +211,7 @@ function App() {
         <Route path="/preview" element={<Preview />} />
 
         <Route path="/workspace" element={<Workspace />}></Route>
+        <Route path="/share" element={<Share />}></Route>
 
         {isDevMode() && <Route path="opfs-dev" element={<Opfs />} />}
       </Routes>

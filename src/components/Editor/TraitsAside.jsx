@@ -529,6 +529,7 @@ export const TraitsAside = (() => {
                         {trait.label}
                       </FitTitle>
                     )}
+                    
                     {(trait.type == "text" || trait.type == "number") &&
                       isShow && (
                         <Input

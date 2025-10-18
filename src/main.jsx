@@ -5,7 +5,7 @@ import App from "./App.jsx";
 import "grapesjs/dist/css/grapes.min.css";
 import "./index.css";
 import { makeAppResponsive } from "./helpers/cocktail.js";
-import { RecoilEnv, RecoilRoot ,  } from "recoil";
+import { RecoilEnv, RecoilRoot } from "recoil";
 import { ErrorBoundary } from "react-error-boundary";
 import { BrowserRouter, HashRouter } from "react-router-dom";
 import { version } from "./constants/Version.js";
@@ -42,7 +42,7 @@ if (!isDevMode()) {
 
 setProjectSettings();
 RecoilEnv.RECOIL_DUPLICATE_ATOM_KEY_CHECKING_ENABLED = false;
-let cleaner ;
+let cleaner;
 const originalFetch = window.fetch;
 
 window.fetch = async (input, init) => {
@@ -68,7 +68,7 @@ const Main = () => {
   const uniqueKey = Date.now();
 
   return (
-    <RecoilRoot >
+    <RecoilRoot>
       <BrowserRouter basename="/">
         <ErrorBoundary
           key={uniqueKey}
@@ -125,8 +125,7 @@ function mountApp() {
 
 mountApp();
 
-
-export function  unMountApp () {
+export function unMountApp() {
   root.unmount();
   root = null;
   cleaner && cleaner();
@@ -137,15 +136,30 @@ export function  unMountApp () {
 
 export function reBuildApp() {
   unMountApp();
-  requestIdleCallback(()=>{
+  requestIdleCallback(() => {
     mountApp();
-  })
+  });
 }
 
-window.addEventListener("unmout",()=>{
-  console.log('unmounted');
-  
+window.addEventListener("unmout", () => {
+  console.log("unmounted");
+
   unMountApp();
-})
+});
 
 window.__initialWindowKeys = new Set(Object.getOwnPropertyNames(window));
+
+(() => {
+  console.log("%c🇵🇸  FREE PALESTINE 🇵🇸", "font-size: 50px;");
+  console.log(
+    "%c     \n%c     \n%c     \n%c     ",
+    "background:#000; padding:20px 100px;",
+    "background:#fff; padding:20px 100px;",
+    "background:#009739; padding:20px 100px;",
+    "background:linear-gradient(135deg, #ce1126 50%, transparent 50%); padding:20px 100px;"
+  );
+  console.log(
+    "%c🇵🇸  FREE PALESTINE 🇵🇸",
+    "font-size: 40px; font-weight:bold; color:#009739; text-shadow:2px 2px 4px #000;"
+  );
+})();

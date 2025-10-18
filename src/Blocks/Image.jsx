@@ -142,6 +142,7 @@ export const Image = ({ editor }) => {
         });
       },
     },
+    isComponent: (el) => el.tagName && el.tagName.toLowerCase() == "img",
     model: {
       defaults: {
         droppable: false,

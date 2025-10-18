@@ -26,7 +26,10 @@ import { useEditorMaybe } from "@grapesjs/react";
 import { classesFinderWorker } from "../../../helpers/defineWorkers";
 import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
 import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
-import  {For} from 'million/react'
+import { For } from "million/react";
+import { Icons } from "../../Icons/Icons";
+import { addClickClass } from "../../../helpers/cocktail";
+import { takeScreenShot } from "../../../plugins/updateProjectThumbnail";
 export const SettingsModal = () => {
   const editor = useEditorMaybe();
   const projectId = +localStorage.getItem(current_project_id);
@@ -83,7 +86,9 @@ export const SettingsModal = () => {
             },
           });
           // editor.load();
-          reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {state:true});
+          reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {
+            state: true,
+          });
         };
 
         isCurrentChange("enable_tailwind", () => {
@@ -98,7 +103,9 @@ export const SettingsModal = () => {
           console.log("lalalalalalaala");
 
           // editor.load();
-          reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {state:true});
+          reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {
+            state: true,
+          });
         });
 
         isCurrentChange("stop_all_animation_on_page", (key) => {
@@ -125,10 +132,19 @@ export const SettingsModal = () => {
           );
         });
 
-        isCurrentChange('enable_swiperjs' , ()=>{
+        isCurrentChange("enable_swiperjs", () => {
           // editor.load();
-          reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {state:true});
-        })
+          reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {
+            state: true,
+          });
+        });
+
+        isCurrentChange("disable_will_change_in_editor", () => {
+          // editor.load();
+          reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {
+            state: true,
+          });
+        });
       }, 100);
     },
     [currentChange]
@@ -190,47 +206,49 @@ export const SettingsModal = () => {
           }}
         />
         <section className="grid grid-cols-3 gap-2">
-          <For each={Object.entries(
-            searchedSettings ? searchedSettings : projectSettings
-          )}>
+          <For
+            each={Object.entries(
+              searchedSettings ? searchedSettings : projectSettings
+            )}
+          >
             {([key, value], i) => (
-            <article
-              key={i}
-              title={key}
-              className="flex justify-between  gap-2 items-center px-2 py-3 rounded-lg bg-slate-800"
-            >
-              <h1 className="custom-font-size overflow-hidden text-ellipsis  flex-shrink capitalize">
-                {key.replaceAll("_", " ")}
-              </h1>
-              <SwitchButton
-                defaultValue={
-                  searchedSettings?.[key]
-                    ? searchedSettings?.[key]
-                    : projectSettings[key]
-                }
-                onActive={(ev) => {
-                  setCurrentChange(key);
-                  setTimeout(() => {
-                    setProjectSetting({ [key]: true });
-                  });
-                }}
-                onUnActive={(ev) => {
-                  setCurrentChange(key);
-                  setTimeout(() => {
-                    setProjectSetting({ [key]: false });
-                  });
-                }}
-              />
-            </article>
-          )}
+              <article
+                key={i}
+                title={key}
+                className="flex justify-between  gap-2 items-center px-2 py-3 rounded-lg bg-slate-800"
+              >
+                <h1 className="custom-font-size overflow-hidden text-ellipsis  flex-shrink capitalize">
+                  {key.replaceAll("_", " ")}
+                </h1>
+                <SwitchButton
+                  defaultValue={
+                    searchedSettings?.[key]
+                      ? searchedSettings?.[key]
+                      : projectSettings[key]
+                  }
+                  onActive={(ev) => {
+                    setCurrentChange(key);
+                    setTimeout(() => {
+                      setProjectSetting({ [key]: true });
+                    });
+                  }}
+                  onUnActive={(ev) => {
+                    setCurrentChange(key);
+                    setTimeout(() => {
+                      setProjectSetting({ [key]: false });
+                    });
+                  }}
+                />
+              </article>
+            )}
           </For>
-          
         </section>
       </section>
       <hr className="border-slate-600" />
       <footer className="flex gap-2">
         <Button
-          onClick={async () => {
+          onClick={async (ev) => {
+            // addClickClass(ev.currentTarget , 'click')
             const tId = toast.loading(
               <ToastMsgInfo msg={`Process cleaning...`} />
             );
@@ -259,7 +277,8 @@ export const SettingsModal = () => {
           Clean unused motions
         </Button>
         <Button
-          onClick={async () => {
+          onClick={async (ev) => {
+            // addClickClass(ev.currentTarget , 'click')
             const tId = toast.loading(
               <ToastMsgInfo msg={`Process cleaning...`} />
             );
@@ -289,6 +308,17 @@ export const SettingsModal = () => {
           }}
         >
           Clean unused interactions
+        </Button>
+        <Button
+          onClick={(ev) => {
+            addClickClass(ev.currentTarget , 'click');
+            takeScreenShot(editor, false , ()=>{
+              toast.success(<ToastMsgInfo msg={`Screenshot taked successfully 💙`}/>)
+            });
+          }}
+        >
+          {Icons.image({ fill: "white" })}
+          <h1>Take Screenshot</h1>
         </Button>
       </footer>
     </section>

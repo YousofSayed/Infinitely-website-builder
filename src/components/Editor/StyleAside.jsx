@@ -1,9 +1,12 @@
-import React, { memo, useEffect, useLayoutEffect, useState } from "react";
+import React, {
+  memo,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { Layout } from "./Protos/Layout";
-import {
-  useRecoilState,
-  useRecoilValue,
-} from "recoil";
+import { useRecoilState, useRecoilValue } from "recoil";
 import {
   currentElState,
   ruleState,
@@ -24,11 +27,57 @@ import {
 } from "../../constants/cssProps";
 import { Others } from "./Protos/Others";
 import { Backdrop } from "./Protos/Backdrop";
-import { random, uniqueId } from "lodash";
+import { isArray, random, uniqueId } from "lodash";
 import { Accordion } from "../Protos/Accordion";
 import { AccordionItem } from "../Protos/AccordionItem";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { ErrorBoundary } from "react-error-boundary";
+import { styles } from "../../constants/styles";
+import { For } from "million/react";
+import { Property } from "./Protos/Property";
+import { MiniTitle } from "./Protos/MiniTitle";
+import { SelectStyle } from "./Protos/SelectStyle";
+import { Color } from "./Protos/Color";
+import { DirectionsModel } from "./Protos/DirectionsModel";
+import { MultiChoice } from "./Protos/MultiChoice";
+import { AddMultiValuestoSingleProp } from "./Protos/AddMultiValuestoSingleProp";
+import { useUpdateInputValue } from "../../hooks/useUpdateInputValue";
+import { toKebabCase } from "../../helpers/functions";
+
+const allCssProps = Object.fromEntries(
+  Object.entries(styles).map(([key, style]) => {
+    // style.forEach((props) => {
+    //   if (props.cssProp) {
+    //     isArray(props.cssProp)
+    //       ? prev.push(...props.cssProp)
+    //       : prev.push(props.cssProp);
+    //   }
+
+    //   if (props.directions) {
+    //     console.log(
+    //       "all css props : directions ,",
+    //       Object.values(props.directions)
+    //     );
+
+    //     prev.push(...Object.values(props.directions));
+    //   }
+    // });
+    const cssProps = style.reduce((prev, { cssProp, directions }) => {
+      if (cssProp) {
+        isArray(cssProp) ? prev.push(...cssProp) : prev.push(cssProp);
+      }
+
+      if (directions) {
+        console.log("all css props : directions ,", Object.values(directions));
+
+        prev.push(...Object.values(directions));
+      }
+
+      return prev;
+    }, []);
+    return [key, cssProps];
+  })
+);
 
 const SelectElementToStyle = () => (
   <h1 className="text-slate-400 custom-font-size text-center animate-pulse capitalize font-semibold bg-slate-900 rounded-lg p-2">
@@ -37,74 +86,193 @@ const SelectElementToStyle = () => (
 );
 
 const StyleAccordion = () => {
-  const showAnimeBuilder = useRecoilValue(showAnimationsBuilderState);
+  // const showAnimeBuilder = useRecoilValue(showAnimationsBuilderState);
+  const [notifires, setNotifires] = useState({});
+
+  console.log("all css props : ", allCssProps);
+
+  useUpdateInputValue({
+    getAllStyles(styles) {
+      let newNotf = {};
+      for (const key in styles) {
+        const kebabProp = toKebabCase(key);
+        for (const [ctg, props] of Object.entries(allCssProps)) {
+          if (styles[key] && props.includes(kebabProp)) {
+            newNotf[ctg] = true;
+          } 
+        }
+      }
+      console.log('notifires : ' ,newNotf , styles);
+      
+      setNotifires(newNotf);
+    },
+  });
+
+  return (
+    <Accordion>
+      <For each={Object.entries(styles)}>
+        {([key, styles], i) => (
+          <AccordionItem key={i} title={key} notify={notifires[key]}>
+            <ErrorBoundary fallbackRender={SelectElementToStyle}>
+              <section className="flex flex-col gap-1 w-full  bg-slate-900 rounded-lg">
+                <For each={styles}>
+                  {(
+                    {
+                      cssProp,
+                      type,
+                      title,
+                      separator,
+                      keywords,
+                      directions,
+                      choices,
+                      placeholder,
+                      splitHyphen,
+                      Component,
+                      special,
+                      units,
+                    },
+                    i
+                  ) => (
+                    <section
+                      title={cssProp}
+                      key={i}
+                      className="flex flex-col gap-1 w-full p-1 bg-slate-900 rounded-lg"
+                    >
+                      {type == "title" && <MiniTitle>{title}</MiniTitle>}
+                      {type == "property" && (
+                        <Property
+                          cssProp={cssProp}
+                          label={title}
+                          placeholder={placeholder || title}
+                          special={special}
+                        />
+                      )}
+                      {type == "select" && (
+                        <SelectStyle
+                          cssProp={cssProp}
+                          label={title}
+                          placeholder={placeholder || title}
+                          keywords={keywords}
+                          splitHyphen={splitHyphen}
+                        />
+                      )}
+                      {type == "color" && (
+                        <Color
+                          label={title}
+                          cssProp={cssProp}
+                          placeholder={placeholder || title}
+                        />
+                      )}
+                      {type == "directions" && (
+                        <DirectionsModel
+                          tProp={directions.tProp}
+                          rProp={directions.rProp}
+                          bProp={directions.bProp}
+                          lProp={directions.lProp}
+                        />
+                      )}
+                      {type == "multi-choice" && (
+                        <MultiChoice
+                          cssProp={cssProp}
+                          choices={choices}
+                          label={title}
+                        />
+                      )}
+                      {type == "multi-function-prop" && (
+                        <MultiFunctionProp
+                          cssProp={cssProp}
+                          placeholder={placeholder || title}
+                          keywords={keywords}
+                          units={units}
+                        />
+                      )}
+                      {type == "multi-values-for-single-prop" && (
+                        <AddMultiValuestoSingleProp
+                          cssProp={cssProp}
+                          label={title}
+                          keywords={keywords}
+                          placeholder={placeholder || title}
+                          separator={separator}
+                        />
+                      )}
+                      {type == "custom" && <Component />}
+                    </section>
+                  )}
+                </For>
+              </section>
+            </ErrorBoundary>
+          </AccordionItem>
+        )}
+      </For>
+    </Accordion>
+  );
   // const [cmpRules , set ]
-  return <Accordion>
-    <AccordionItem label={"Layout"}>
-      <ErrorBoundary fallbackRender={SelectElementToStyle}>
-        <Layout />
-      </ErrorBoundary>
-    </AccordionItem>
+  // return <Accordion>
+  //   <AccordionItem label={"Layout"}>
+  //     <ErrorBoundary fallbackRender={SelectElementToStyle}>
+  //       <Layout />
+  //     </ErrorBoundary>
+  //   </AccordionItem>
 
-    <AccordionItem title={"Typography"}>
-      <ErrorBoundary fallbackRender={SelectElementToStyle}>
-        <StyleTypography />
-      </ErrorBoundary>
-    </AccordionItem>
+  //   <AccordionItem title={"Typography"}>
+  //     <ErrorBoundary fallbackRender={SelectElementToStyle}>
+  //       <StyleTypography />
+  //     </ErrorBoundary>
+  //   </AccordionItem>
 
-    <AccordionItem title={"border"}>
-      <ErrorBoundary fallbackRender={SelectElementToStyle}>
-        <Border />
-      </ErrorBoundary>
-    </AccordionItem>
+  //   <AccordionItem title={"border"}>
+  //     <ErrorBoundary fallbackRender={SelectElementToStyle}>
+  //       <Border />
+  //     </ErrorBoundary>
+  //   </AccordionItem>
 
-    <AccordionItem title={"background"}>
-      <ErrorBoundary fallbackRender={SelectElementToStyle}>
-        <Background />
-      </ErrorBoundary>
-    </AccordionItem>
+  //   <AccordionItem title={"background"}>
+  //     <ErrorBoundary fallbackRender={SelectElementToStyle}>
+  //       <Background />
+  //     </ErrorBoundary>
+  //   </AccordionItem>
 
-    <AccordionItem title={"backdrop"}>
-      <ErrorBoundary fallbackRender={SelectElementToStyle}>
-        <Backdrop />
-      </ErrorBoundary>
-    </AccordionItem>
+  //   <AccordionItem title={"backdrop"}>
+  //     <ErrorBoundary fallbackRender={SelectElementToStyle}>
+  //       <Backdrop />
+  //     </ErrorBoundary>
+  //   </AccordionItem>
 
-    <AccordionItem title={"Filters"}>
-      <ErrorBoundary fallbackRender={SelectElementToStyle}>
-        <MultiFunctionProp
-          cssProp={"filter"}
-          keywords={filterTypes}
-          units={filterUnits}
-          placeholder={"Select Filter"}
-        />
-      </ErrorBoundary>
-    </AccordionItem>
+  //   <AccordionItem title={"Filters"}>
+  //     <ErrorBoundary fallbackRender={SelectElementToStyle}>
+  //       <MultiFunctionProp
+  //         cssProp={"filter"}
+  //         keywords={filterTypes}
+  //         units={filterUnits}
+  //         placeholder={"Select Filter"}
+  //       />
+  //     </ErrorBoundary>
+  //   </AccordionItem>
 
-    <AccordionItem title={"Transform"}>
-      <ErrorBoundary fallbackRender={SelectElementToStyle}>
-        <MultiFunctionProp
-          cssProp={"transform"}
-          keywords={transformValues}
-          placeholder={"Select Prop"}
-        />
-      </ErrorBoundary>
-    </AccordionItem>
+  //   <AccordionItem title={"Transform"}>
+  //     <ErrorBoundary fallbackRender={SelectElementToStyle}>
+  //       <MultiFunctionProp
+  //         cssProp={"transform"}
+  //         keywords={transformValues}
+  //         placeholder={"Select Prop"}
+  //       />
+  //     </ErrorBoundary>
+  //   </AccordionItem>
 
-    {!showAnimeBuilder && (
-      <AccordionItem title={"Animation"}>
-        <ErrorBoundary fallbackRender={SelectElementToStyle}>
-          <Animation />
-        </ErrorBoundary>
-      </AccordionItem>
-    )}
+  //   {!showAnimeBuilder && (
+  //     <AccordionItem title={"Animation"}>
+  //       <ErrorBoundary fallbackRender={SelectElementToStyle}>
+  //         <Animation />
+  //       </ErrorBoundary>
+  //     </AccordionItem>
+  //   )}
 
-    <AccordionItem title={"Others"}>
-      <ErrorBoundary fallbackRender={SelectElementToStyle} >
-        <Others />
-      </ErrorBoundary>
-    </AccordionItem>
-  </Accordion>;
+  //   <AccordionItem title={"Others"}>
+  //     <ErrorBoundary fallbackRender={SelectElementToStyle} >
+  //       <Others />
+  //     </ErrorBoundary>
+  //   </AccordionItem>
+  // </Accordion>;
 };
 /**
  *

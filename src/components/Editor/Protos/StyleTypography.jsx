@@ -23,20 +23,21 @@ import {
 import { SelectStyle } from "./SelectStyle";
 import { AddMultiValuestoSingleProp } from "./AddMultiValuestoSingleProp";
 import { useLiveQuery } from "dexie-react-hooks";
+import { FontFamily } from "./FontFamily";
 
 export const StyleTypography = memo(() => {
-  const [customFonts, setCustomFonts] = useState([]);
-  const currentEl = useRecoilValue(currentElState);
+  // const [customFonts, setCustomFonts] = useState([]);
+  // const currentEl = useRecoilValue(currentElState);
 
-  useLiveQuery(async () => {
-    const projectData = await await getProjectData();
-    const fontKeys = Object.keys(projectData.fonts);
-    setCustomFonts(fontKeys);
-  });
+  // useLiveQuery(async () => {
+  //   const projectData = await await getProjectData();
+  //   const fontKeys = Object.keys(projectData.fonts);
+  //   setCustomFonts(fontKeys);
+  // });
 
   return (
     <section className=" flex flex-col gap-2 p-1 rounded-lg bg-slate-900">
-      <SelectStyle
+      {/* <SelectStyle
         label="Font"
         cssProp="font-family"
         currentEl={currentEl}
@@ -44,13 +45,14 @@ export const StyleTypography = memo(() => {
           .concat(customFonts)
           .map((font) => font.split(/\.\w+/gi).join("").trim())
         }
-      />
+      /> */}
+      <FontFamily/>
       <SelectStyle
         label="weight"
         cssProp="font-weight"
-        currentEl={currentEl}
         keywords={fontWeights}
         splitHyphen={true}
+        currentEl={currentEl}
       />
       <Color cssProp={"color"} />
       <Property label="Size" cssProp="font-size" />

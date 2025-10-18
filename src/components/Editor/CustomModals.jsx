@@ -38,13 +38,7 @@ export const CustomModals = () => {
 
   return (
     <section
-      style={{
-        // contain: "layout  paint  size  content  size  style",
-        // willChange: "transform",
-        // isolation:'isolate',
-        // transform: "translateZ(0)",
-        // backfaceVisibility: "hidden",
-      }}
+      id="main-modal"
       onClick={(ev) => {
         // ev.stopPropagation();
         // ev.preventDefault();
@@ -54,17 +48,17 @@ export const CustomModals = () => {
         }
         // editor.Commands.run("close:custom:modal");
       }}
-      className={`fixed   z-[55] backdrop-blur-sm right-0 left-0  w-full h-full flex justify-center items-center`}
+      className={`fixed   z-[1000]  bg-black/40 right-0 left-0  w-full h-full flex justify-center items-center`}
     >
       <main
         style={{
           width: modalData.width,
           height: modalData.height,
-        //    contain: "layout  paint  size  content  size  style",
-        // willChange: "transform",
-        // isolation:'isolate',
-        // transform: "translateZ(0)",
-        // backfaceVisibility: "hidden",
+          //    contain: "layout  paint  size  content  size  style",
+          // willChange: "transform",
+          // isolation:'isolate',
+          // transform: "translateZ(0)",
+          // backfaceVisibility: "hidden",
         }}
         onClick={(ev) => {
           // ev.stopPropagation();
@@ -96,12 +90,8 @@ export const CustomModals = () => {
 
         <section
           style={{
-            // height: modalData.height,
-        //      contain: "layout  paint  size  content  size  style",
-        // willChange: "transform",
-        // isolation:'isolate',
-        // transform: "translateZ(0)",
-        // backfaceVisibility: "hidden",
+            transform: "translateZ(0)",
+            willChange: "transform",
           }}
           className=" p-2 h-full max-h-full overflow-auto rounded-bl-lg rounded-br-lg bg-slate-900"
         >

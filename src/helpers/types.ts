@@ -19,6 +19,8 @@ export type gradientValues = {
 }[];
 
 import type * as CSS from "csstype";
+import type { JSX } from "react";
+import type { Editor, Component as GjsComponent } from "grapesjs";
 
 type CSSProperties = CSS.PropertiesHyphen; // ✅ dash-case CSS properties
 
@@ -27,13 +29,31 @@ export type InfinitelyStyle = {
     | "property"
     | "select"
     | "choose"
-    | "multi-prop"
+    | "color"
+    | "multi-choice"
+    | "multi-function-prop"
+    | "multi-values-for-single-prop"
     | "directions"
-    | "title";
-  cssProp: keyof CSSProperties;
+    | "title"
+    | "custom";
+  cssProp: keyof CSSProperties | (keyof CSSProperties)[];
   title?: string;
   placeholder?: string;
   keywords?: string[];
+  units?: {};
+  Component?: ({
+    editor,
+    cssProp,
+    value,
+  }: {
+    editor: Editor;
+    cssProp: keyof CSSProperties | (keyof CSSProperties)[];
+    value: string;
+  }) => JSX.Element;
+  splitHyphen?: boolean;
+  choices?: { choice: string; Icon: JSX.Element }[];
+  separator?: string;
+  special: boolean;
   directions?: {
     tProp: keyof CSSProperties;
     rProp: keyof CSSProperties;
@@ -74,7 +94,7 @@ export type Animations = {
 }[];
 
 export type TraitCallProps = {
-  editor: import("grapesjs").Editor;
+  editor: Editor;
   trait: InfinitelyTrait;
   oldValue: string;
   newValue: string;
@@ -519,6 +539,9 @@ export interface Project {
   };
   fonts: InfinitelyFonts;
   motions: { [key: string]: MotionType };
+  apps : 'Dropbox';
+  dropboxFileMeta? : DropBoxFileMeta;
+  dbx_pull_requried?:boolean;
   interactions: InteractionsInDB;
   inited: boolean;
   lastScreenshot: Date | string;
@@ -544,6 +567,7 @@ export type ProjectSetting = {
   disable_gsap_core: boolean;
   disable_gsap_scrollTrigger: boolean;
   disable_gsap_splitText: boolean;
+  disable_will_change_in_editor: boolean;
   enable_prettier_for_file_editor: boolean;
   is_async_graped_header_script: boolean;
   is_defer_graped_header_script: boolean;
@@ -595,6 +619,34 @@ export interface GoogleFontsSchema {
     menu: string;
   }[];
 }
+
+export type DropBoxFileMeta = {
+  [".tag"]: string;
+  client_modified: string;
+  content_hash: string;
+  id: string;
+  is_downloadable: boolean;
+  name: string;
+  path_display: string;
+  path_lower: string;
+  rev: string;
+  server_modified: Date;
+  size: number;
+};
+
+export type DropBoxFilesMeta = {
+  [".tag"]: string;
+  client_modified: string;
+  content_hash: string;
+  id: string;
+  is_downloadable: boolean;
+  name: string;
+  path_display: string;
+  path_lower: string;
+  rev: string;
+  server_modified: Date;
+  size: number;
+}[];
 
 export type GlobalSymbolRule = {
   ruleName: string;

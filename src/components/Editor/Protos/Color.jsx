@@ -14,52 +14,57 @@ import { useEditorMaybe } from "@grapesjs/react";
 import { useRecoilValue } from "recoil";
 import { currentElState } from "../../../helpers/atoms";
 import { ColorPicker } from "./ColorPicker";
+import { FitTitle } from "./FitTitle";
 
+//million-ignore
 /**
  *
- * @param {{cssProp:string , placeholder:string , hideOpacityField:boolean ,disableSetClassMethod:boolean , colorState:string ,  onColorChange : (color:string)=>void}} param0
+ * @param {{cssProp:string , placeholder:string , label:string, hideOpacityField:boolean ,disableSetClassMethod:boolean , colorState:string ,  onColorChange : (color:string)=>void}} param0
  * @returns
  */
-export const Color = memo(
-  ({
-    cssProp,
-    placeholder,
-    hideOpacityField = false,
-    disableSetClassMethod = false,
-    colorState = "",
-    onColorChange = (_) => {},
-  }) => {
-    const setClass = useSetClassForCurrentEl();
-    const [color, setColor] = useState(colorState);
-    const [showHexColor, setShowHexColor] = useState(false);
-    const [isPending, setTransition] = useTransition();
-    const selectedEl = useRecoilValue(currentElState);
-    /**
-     * @type {{current:HTMLElement}}
-     */
-    const hexColorRef = useRef();
-    useEffect(() => {
-      if (hexColorRef.current) {
-        hexColorRef.current.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      }
-    }, [showHexColor]);
-
-    useCloseMenu(hexColorRef, setShowHexColor);
-
-    !disableSetClassMethod &&
-      useUpdateInputValue({
-        cssProp,
-        onEffect(cssProp, value) {
-          // console.log('vvaaaaaaal : ' , value , typeof value);
-          
-          setColor(typeof value == 'string' ?  rgbStringToHex(value) :'' );
-        },
+export const Color = ({
+  cssProp,
+  placeholder,
+  hideOpacityField = false,
+  disableSetClassMethod = false,
+  label,
+  colorState = "",
+  onColorChange = (_) => {},
+}) => {
+  const setClass = useSetClassForCurrentEl();
+  const [color, setColor] = useState(colorState);
+  const [showHexColor, setShowHexColor] = useState(false);
+  const [isPending, setTransition] = useTransition();
+  const selectedEl = useRecoilValue(currentElState);
+  /**
+   * @type {{current:HTMLElement}}
+   */
+  const hexColorRef = useRef();
+  useEffect(() => {
+    if (hexColorRef.current) {
+      hexColorRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
       });
+    }
+  }, [showHexColor]);
 
-    return (
+  useCloseMenu(hexColorRef, setShowHexColor);
+
+  !disableSetClassMethod &&
+    useUpdateInputValue({
+      cssProp,
+      onEffect(cssProp, value) {
+        // console.log('vvaaaaaaal : ' , value , typeof value);
+
+        setColor(typeof value == "string" ? rgbStringToHex(value) : "");
+      },
+    });
+
+  return (
+    <section className={`flex flex-col gap-2`}>
+      {label && <FitTitle className="custom-font-size">{label}</FitTitle>}
+
       <section
         className={`relative flex justify-between items-center bg-slate-800 w-full ${
           hideOpacityField ? "p-1 gap-2" : "p-2"
@@ -109,6 +114,6 @@ export const Color = memo(
           </p>
         )}
       </section>
-    );
-  }
-);
+    </section>
+  );
+};

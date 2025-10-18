@@ -1,7 +1,11 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { assetType, refType } from "../../helpers/jsDocs";
 import { useEditorMaybe } from "@grapesjs/react";
-import { current_page_id, current_project_id, file_deleted_success_msg } from "../../constants/shared";
+import {
+  current_page_id,
+  current_project_id,
+  file_deleted_success_msg,
+} from "../../constants/shared";
 import {
   getProjectData,
   getProjectSettings,
@@ -74,7 +78,9 @@ export const FileView = ({
     );
     const pageName = localStorage.getItem(current_page_id);
     const isIndex = pageName.toLowerCase() == "index";
-    const src = isCssProp ? `../assets/${asset.name}` : `${isIndex ? "." : ".."}/assets/${asset.name}`;
+    const src = isCssProp
+      ? `../assets/${asset.name}`
+      : `${isIndex ? "." : ".."}/assets/${asset.name}`;
 
     callback(asset, src);
   };
@@ -87,17 +93,18 @@ export const FileView = ({
     //   assets: newAssets,
     // });
 
-    await opfs.removeFiles([defineRoot(`assets/${asset.name}`)])
-    toast.success(<ToastMsgInfo msg={file_deleted_success_msg}/>)
+    await opfs.removeFiles([defineRoot(`assets/${asset.name}`)]);
+    toast.success(<ToastMsgInfo msg={file_deleted_success_msg} />);
   };
-console.log('size : ' , toMB(asset.size , 2) , asset.size);
+  console.log("size : ", toMB(asset.size, 2), asset.size);
 
   return (
     <section
-      className={`group relative rounded-lg p-3 bg-slate-800  flex flex-col justify-center items-center gap-2`}
+      
+      className={`group   relative rounded-lg p-3 bg-slate-800  flex flex-col justify-center items-center gap-2`}
     >
-      <FitTitle className="absolute left-0 top-0">
-        {toMB(asset.size , 3)}MB
+      <FitTitle className="absolute left-0 top-0 z-[100] will-change-transform">
+        {toMB(asset.size, 3)}MB
       </FitTitle>
       <button
         onClick={(ev) => {
@@ -140,7 +147,7 @@ console.log('size : ' , toMB(asset.size , 2) , asset.size);
         )) ||
           (asset.type.includes("audio") && (
             <section className="h-full flex justify-between gap-2 items-center flex-col bg-slate-900 rounded-lg overflow-hidden pt-2">
-              {Icons.headphone('white' , undefined , 75 , 75)}
+              {Icons.headphone("white", undefined, 75, 75)}
               <audio
                 onClick={(ev) => onItemClicked(ev, asset)}
                 className="w-full"
@@ -154,8 +161,13 @@ console.log('size : ' , toMB(asset.size , 2) , asset.size);
               // onLoad={(ev) => {
               //   console.log("image load...");
               // }}
+              loading="lazy"
+              style={{
+                willChange:'transform',
+                zIndex:'-1'
+              }}
               onClick={(ev) => onItemClicked(ev, asset)}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain "
               src={`/assets/${asset.name}`}
             ></img>
           ))}
@@ -176,7 +188,7 @@ console.log('size : ' , toMB(asset.size , 2) , asset.size);
           anchorSelect={`[tooltib-id="${asset.name}"]`}
           place="bottom-end"
           opacity={1}
-          className="shadow-sm shadow-slate-950 z-10"
+          className="shadow-sm shadow-slate-950 z-[1001]"
           positionStrategy="fixed"
         >
           {asset.name}

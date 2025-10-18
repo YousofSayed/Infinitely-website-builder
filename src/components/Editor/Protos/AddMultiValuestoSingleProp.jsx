@@ -8,10 +8,11 @@ import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
 import { useRecoilValue } from "recoil";
 import { currentElState } from "../../../helpers/atoms";
 import { P } from "../../Protos/P";
+import { FitTitle } from "./FitTitle";
 
 /**
  *
- * @param {{cssProp : string , keywords: string[] , placeholder:string , label:string}} param0
+ * @param {{cssProp : string , keywords: string[] , placeholder:string , label:string , separator:string}} param0
  * @returns
  */
 export const AddMultiValuestoSingleProp = ({
@@ -19,6 +20,7 @@ export const AddMultiValuestoSingleProp = ({
   keywords,
   placeholder = "",
   label = "",
+  separator = ","
 }) => {
   const [value, setValue] = useState("");
   const [values, setValues] = useState([]);
@@ -31,7 +33,7 @@ export const AddMultiValuestoSingleProp = ({
     setValues(newValues);
     setClass({
       cssProp,
-      value: Array.from(newValues).join(","),
+      value: Array.from(newValues).join(separator),
     });
     setValue("");
   };
@@ -46,12 +48,12 @@ export const AddMultiValuestoSingleProp = ({
       setValues([]);
       return;
     }
-    setValues(!updatedValue.split(",")[0] ? [] : updatedValue.split(","));
+    setValues(!updatedValue.split(separator)[0] ? [] : updatedValue.split(separator));
   }, [updatedValue]);
 
   return (
     <section className=" flex flex-col gap-3 p-1 bg-slate-800 rounded-lg">
-      {label ? label : null}
+      {label ? <FitTitle className="custom-font-size">{label}</FitTitle> : null}
       <section className="flex justify-between gap-2">
         <Select
           className="p-[unset] px-[unset]"
@@ -81,14 +83,14 @@ export const AddMultiValuestoSingleProp = ({
 
       {values[0] ? (
         <Choices
-          className="bg-slate-900"
+          className="bg-slate-900 flex-wrap"
           keywords={values}
           onCloseClick={(ev, keyword) => {
             const newValues = values.filter((value) => value != keyword);
             setValues(newValues);
             setClass({
               cssProp,
-              value: newValues.join(","),
+              value: newValues.join(separator),
             });
           }}
         />

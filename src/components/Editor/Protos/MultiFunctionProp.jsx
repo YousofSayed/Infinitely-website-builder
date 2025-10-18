@@ -13,7 +13,7 @@ import { useEditorMaybe } from "@grapesjs/react";
 import { Textarea } from "./Textarea";
 import { FitTitle } from "./FitTitle";
 
-export const MultiFunctionProp = memo(
+export const MultiFunctionProp = (
   ({ cssProp, placeholder, keywords, units = {} }) => {
     const editor = useEditorMaybe();
     const [filters, setFilters] = useState([]);
@@ -104,7 +104,7 @@ export const MultiFunctionProp = memo(
     });
 
     return (
-      <section className=" flex flex-col p-1 bg-slate-900 rounded-lg">
+      <section className=" flex flex-col  bg-slate-900 rounded-lg">
         <section className="flex gap-2">
           <Select
             placeholder={placeholder}

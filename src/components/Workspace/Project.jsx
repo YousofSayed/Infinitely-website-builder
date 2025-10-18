@@ -19,6 +19,7 @@ import { getProjectRoot } from "../../helpers/bridge";
 import { random } from "lodash";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { uniqueID } from "../../helpers/cocktail";
+import { ToastMsgInfo } from "../Editor/Protos/ToastMsgInfo";
 
 // million-ignore
 /**
@@ -36,42 +37,42 @@ export const Project = ({ project }) => {
   const urlsRef = useRef([]);
   // console.log(project.imgSrc);
   useLayoutEffect(() => {
-      let canceled = false;
-  (async () => {
-    const root = `projects/project-${project.id}`;
-    const file = await (
-      await opfs.getFile(`${root}/screenshot.webp`)
-    ).getOriginFile();
+    let canceled = false;
+    (async () => {
+      const root = `projects/project-${project.id}`;
+      const file = await (
+        await opfs.getFile(`${root}/screenshot.webp`)
+      ).getOriginFile();
 
-    if (canceled) return;
+      if (canceled) return;
 
-    if (!file || file.size === 0) {
-      setImg("/images/blank.jpg");
-      return;
-    }
+      if (!file || file.size === 0) {
+        setImg("/images/blank.jpg");
+        return;
+      }
 
-    const url = URL.createObjectURL(file);
-    setImg(url);
-    urlsRef.current.push(url);
-  })();
+      const url = URL.createObjectURL(file);
+      setImg(url);
+      urlsRef.current.push(url);
+    })();
 
-  return () => {
-    canceled = true;
-    urlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-    urlsRef.current = [];
-  };
+    return () => {
+      canceled = true;
+      urlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      urlsRef.current = [];
+    };
   }, [project]);
 
   return (
     <article
       ref={autoAminRef}
-      className="p-2 bg-slate-900  rounded-lg flex flex-col h-[320px] justify-evenly  gap-2"
+      className="relative px-2 py-1 bg-slate-900  rounded-lg flex flex-col h-[320px] justify-evenly  gap-2"
     >
       <figure className="flex flex-col gap-2 h-[70%]  items-center ">
         <img
           key={project.inited}
           src={img || "/images/blank.jpg"}
-          className={`max-w-full max-h-full ${
+          className={`max-w-full max-h-full select-none ${
             project.imgSrc ? "h-full " : "h-full  object-cover"
           }  w-full   max-h-[190px!important] rounded`}
           alt="project image"
@@ -95,6 +96,11 @@ export const Project = ({ project }) => {
           {project.name}
         </figcaption>
       </figure>
+      {Boolean(project.apps) && (
+        <div className="absolute right-[.5rem] top-[1rem] backdrop-blur-md p-2 rounded-lg bg-[rgb(0,0,0,0.255)]">
+          {project.apps == "Dropbox" && Icons.dropbox({ fill: "white" })}
+        </div>
+      )}
       <ul className="flex gap-2 items-center justify-center p-1 bg-slate-950 rounded-lg">
         <Li
           onClick={async () => {
@@ -120,7 +126,9 @@ export const Project = ({ project }) => {
         <Li
           onClick={async () => {
             if (!project.inited) return;
-            const tId = toast.loading("Deleting project");
+            const cnfrm= confirm(`Are you sure to delete ${project.name} project ?`);
+            if(!cnfrm)return;
+            const tId = toast.loading(<ToastMsgInfo msg={"Deleting project"}/>);
             await opfs.remove({
               dirOrFile: await opfs.getFolder(`projects/project-${project.id}`),
             });

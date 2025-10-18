@@ -10,6 +10,7 @@ import {
   getProjectSettings,
   initToolbar,
   preventSelectNavigation,
+  workerCallbackMaker,
 } from "../../../helpers/functions";
 import { Adder } from "./Adder";
 import { Input } from "./Input";
@@ -1171,6 +1172,7 @@ export const Motion = memo(() => {
   const [instanceId, setInstanceId] = useState("");
   const motionUploader = useRef();
   const [autoAnimateRef] = useAutoAnimate();
+  const isStoring = useRef(false);
   const rId = useRef(null);
   const iconStyle = {
     fill: "white",
@@ -1253,6 +1255,7 @@ export const Motion = memo(() => {
       return;
     }
     if (!selectedEl.currentEl) return;
+    if (isStoring.current) return;
     console.log(selectedEl, "selectedEl");
     const sle = editor.getSelected();
     if (!sle) return;
@@ -1267,7 +1270,9 @@ export const Motion = memo(() => {
 
     // instanceId ? setIsInstance(true) : setIsInstance(false);
     // instanceId ? setEditeAsMain(false) : setEditeAsMain(true);
-    getMotion(mId);
+    (async () => {
+      await getMotion(mId);
+    })();
   }, [selectedEl, editor]);
 
   /**
@@ -1275,7 +1280,7 @@ export const Motion = memo(() => {
    * @param {import('../../../helpers/types').MotionType} newMotion
    * @returns
    */
-  const updateDB = async (newMotion) => {
+  const updateDB = async (newMotion, callback = () => {}) => {
     if (!newMotion?.id) return;
     const projectData = await getProjectData();
     const { projectSettings } = getProjectSettings();
@@ -1292,8 +1297,10 @@ export const Motion = memo(() => {
       projectSettings.remove_gsap_markers_on_build
     );
 
-    rId.current && cancelAnimationFrame(rId.current);
-    rId.current = requestAnimationFrame(() => {
+    rId.current && clearTimeout(rId.current);
+    rId.current = setTimeout(() => {
+      console.log("update from insdie ", newMotion);
+      workerCallbackMaker(infinitelyWorker, "updateDB", callback);
       infinitelyWorker.postMessage({
         command: "updateDB",
         props: {
@@ -1305,7 +1312,7 @@ export const Motion = memo(() => {
           // pageUrl: `pages/${localStorage.getItem(current_page_id)}.html`,
         },
       });
-    });
+    }, 10);
     // projectData.motions = {
     //   ...projectData.motions,
     //   ...newMotions,
@@ -1535,24 +1542,28 @@ export const Motion = memo(() => {
         page: localStorage.getItem(current_page_id),
       },
     };
-    await updateDB(targetMotion);
-    // const projectSettings = getProjectSettings();
-    // const oldSelectValue =
-    //   projectSettings.projectSettings.navigate_to_style_when_Select;
-    // projectSettings.set({ navigate_to_style_when_Select: false });
+    console.log("motion instance should created");
     sle.addAttributes({
       [motionInstanceId]: instanceId,
       [mainMotionId]: targetId,
     });
-    setInstanceId(instanceId);
-    initToolbar(editor, sle);
+
+    await updateDB(targetMotion, () => {
+      initToolbar(editor, sle);
+      preventSelectNavigation(editor, sle);
+    });
+    // const projectSettings = getProjectSettings();
+    // const oldSelectValue =
+    //   projectSettings.projectSettings.navigate_to_style_when_Select;
+    // projectSettings.set({ navigate_to_style_when_Select: false });
+
+    // setInstanceId(instanceId);
     // editor.select(null);
     // editor.select(sle);
     // projectSettings.set({ navigate_to_style_when_Select: oldSelectValue });
-    setIsInstance(true);
-    setEditeAsMain(false);
-    setMotion(targetMotion);
-    preventSelectNavigation(editor, sle);
+    // setIsInstance(true);
+    // setEditeAsMain(false);
+    // setMotion(targetMotion);
   };
 
   const downloadMotion = async (targetId) => {
@@ -1671,7 +1682,7 @@ export const Motion = memo(() => {
           </ScrollableToolbar>
           <section className="relative flex gap-2 p-3 justify-between bg-slate-800 w-full rounded-md">
             {/* <FitTitle className="absolute top-[-50%]  left-0">{isInstance ? 'Instance' : 'Main'}</FitTitle> */}
-            <FitTitle className="custom-font-size  text-slate-200 ">
+            <FitTitle className="custom-font-size flex items-center  text-slate-200 ">
               {isInstance ? "Main ID :" : ""} {motion.id}
             </FitTitle>
             <OptionsButton>
@@ -1735,7 +1746,7 @@ export const Motion = memo(() => {
           {isInstance && (
             <section className="relative  flex gap-2 p-3 justify-between bg-slate-800 w-full rounded-lg">
               {/* <FitTitle className="absolute top-[-50%]  left-0">{isInstance ? 'Instance' : 'Main'}</FitTitle> */}
-              <FitTitle className="custom-font-size  text-slate-200 flex-shrink ">
+              <FitTitle className="custom-font-size flex items-center  text-slate-200 flex-shrink ">
                 Instance ID : {instanceId}
               </FitTitle>
               <OptionsButton>
@@ -2009,6 +2020,8 @@ export const Motion = memo(() => {
                       id="mt-upload-btn"
                       onClick={(ev) => {
                         addClickClass(ev.currentTarget, "click");
+                        console.log('motionUploader' , motionUploader.current);
+                        
                         motionUploader.current.click();
                       }}
                     >

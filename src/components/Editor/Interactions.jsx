@@ -510,7 +510,7 @@ export const Interactions = () => {
   const [autoAnimateHeaderRef] = useAutoAnimate();
   const interactionUploader = useRef(refType);
   const projectId = +localStorage.getItem(current_project_id);
-
+  const timeout = useRef(null);
 
   useLiveQuery(async () => {
     const projectData = await getProjectData();
@@ -563,7 +563,6 @@ export const Interactions = () => {
     // };
   }, [selectedEl, editor]);
 
-
   useEffect(() => {
     if (!editor) return;
     if (mainId && Array.isArray(interactionsState)) {
@@ -606,23 +605,10 @@ export const Interactions = () => {
           // }
         }
 
-        infinitelyWorker.postMessage({
-          command: "updateDB",
-          props: {
-            data: {
-              interactions: {
-                ...(projectData?.interactions || {}),
-                [mainId]: interactionsState,
-              },
-            },
-          },
-        });
-
         workerCallbackMaker(infinitelyWorker, "updateDB", () => {
           setInteractionsAttributes(interactionsId, async () => {
             console.log("doneeeeeeeeeeeeeeeeeee", originalAutosave);
             // alert("kokokokoo");
-            editor.Storage.setAutosave(originalAutosave);
             // projectSettings.enable_auto_save && store({}, editor);
             if (projectSettings.enable_auto_save) {
               updatePrevirePage({
@@ -633,9 +619,25 @@ export const Interactions = () => {
                 editorData: {},
               });
               editor.clearDirtyCount();
+              editor.Storage.setAutosave(originalAutosave);
             }
           });
         });
+
+        timeout.current && clearTimeout(timeout.current);
+        timeout.current = setTimeout(() => {
+          infinitelyWorker.postMessage({
+            command: "updateDB",
+            props: {
+              data: {
+                interactions: {
+                  ...(projectData?.interactions || {}),
+                  [mainId]: interactionsState,
+                },
+              },
+            },
+          });
+        }, 10);
 
         console.log("interactions from all effetc : ", interactionsState);
       })();
@@ -939,71 +941,75 @@ export const Interactions = () => {
 
               <div className="flex-shrink">
                 <OptionsButton>
-                <section className="flex flex-col gap-3 items-center">
-                  <button
-                    id="inn-clone"
-                    onClick={async (ev) => {
-                      addClickClass(ev.currentTarget, "click");
-                      await cloneInteractions();
-                    }}
-                  >
-                    {Icons.copy({ fill: "white", height: 18 })}
-                  </button>
-                  <Tooltip
-                    anchorSelect="#inn-clone"
-                    opacity={1}
-                    place="left-end"
-                  >
-                    Clone
-                  </Tooltip>
+                  <section className="flex flex-col gap-3 items-center">
+                    <button
+                      id="inn-clone"
+                      onClick={async (ev) => {
+                        addClickClass(ev.currentTarget, "click");
+                        await cloneInteractions();
+                      }}
+                    >
+                      {Icons.copy({ fill: "white", height: 18 })}
+                    </button>
+                    <Tooltip
+                      anchorSelect="#inn-clone"
+                      opacity={1}
+                      place="left-end"
+                    >
+                      Clone
+                    </Tooltip>
 
-                  <button
-                    id="int-instance-btn"
-                    onClick={(ev) => {
-                      createInstance(selectedInteractionId);
-                    }}
-                  >
-                    {Icons.link({ fill: "white", strokWidth: 2.4, height: 19 })}{" "}
-                  </button>
-                  <Tooltip
-                    anchorSelect="#int-instance-btn"
-                    place="left-end"
-                    opacity={1}
-                  >
-                    Create Instance
-                  </Tooltip>
+                    <button
+                      id="int-instance-btn"
+                      onClick={(ev) => {
+                        createInstance(selectedInteractionId);
+                      }}
+                    >
+                      {Icons.link({
+                        fill: "white",
+                        strokWidth: 2.4,
+                        height: 19,
+                      })}{" "}
+                    </button>
+                    <Tooltip
+                      anchorSelect="#int-instance-btn"
+                      place="left-end"
+                      opacity={1}
+                    >
+                      Create Instance
+                    </Tooltip>
 
-                  <button
-                    id="mt-upload-btn"
-                    onClick={(ev) => {
-                      addClickClass(ev.currentTarget, "click");
-                      interactionUploader.current.click();
-                    }}
-                  >
-                    {Icons.upload({
-                      strokeColor: "white",
-                      strokWidth: 2.4,
-                      width: 18,
-                      height: 18,
-                    })}{" "}
-                  </button>
-                  <input
-                    ref={interactionUploader}
-                    type="file"
-                    accept=".json"
-                    hidden
-                    onChange={uploadInteractions}
-                  />
+                    <button
+                      id="mt-upload-btn"
+                      onClick={(ev) => {
+                        addClickClass(ev.currentTarget, "click");
+                        interactionUploader.current.click();
+                      }}
+                    >
+                      {Icons.upload({
+                        strokeColor: "white",
+                        strokWidth: 2.4,
+                        width: 18,
+                        height: 18,
+                      })}{" "}
+                    </button>
+                    <input
+                      ref={interactionUploader}
+                      type="file"
+                      accept=".json"
+                      hidden
+                      onChange={uploadInteractions}
+                    />
 
-                  <Tooltip
-                    anchorSelect="#mt-upload-btn"
-                    place="left-end"
-                    opacity={1}
-                  >
-                    Upload Interactions
-                  </Tooltip>
-                </section>
-              </OptionsButton>
+                    <Tooltip
+                      anchorSelect="#mt-upload-btn"
+                      place="left-end"
+                      opacity={1}
+                    >
+                      Upload Interactions
+                    </Tooltip>
+                  </section>
+                </OptionsButton>
               </div>
             </section>
           </section>
@@ -1014,7 +1020,9 @@ export const Interactions = () => {
           <>
             {mainId && isInstance && (
               <section className="flex justify-between gap-2 p-1 bg-slate-800 rounded-lg items-center">
-                <FitTitle className="custom-font-size  text-slate-200 rounded-md">Instance ID : {instanceId}</FitTitle>
+                <FitTitle className="custom-font-size  text-slate-200 rounded-md">
+                  Instance ID : {instanceId}
+                </FitTitle>
 
                 <section className="flex justify-center items-center">
                   <button
@@ -1141,7 +1149,9 @@ export const Interactions = () => {
           </>
         }
       </header>
-      {interactionsId && interactionsState?.length && <MiniTitle>Interactions</MiniTitle>}
+      {interactionsId && interactionsState?.length && (
+        <MiniTitle>Interactions</MiniTitle>
+      )}
       <Accordion>
         {interactionsState.map((interaction, i) => (
           <AccordionItem key={i} title={interaction.event}>

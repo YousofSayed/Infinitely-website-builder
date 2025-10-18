@@ -638,7 +638,7 @@ export class OPFS {
 
       if (file) {
         const bufferContent =
-          content instanceof Blob ? await content.text() : content;
+          content instanceof Blob ? await content.arrayBuffer() : content;
 
         // let bufferContent;
         // if (typeof content === "string") {

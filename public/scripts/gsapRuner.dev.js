@@ -73,7 +73,12 @@ function CompileMotion(
         .map(([key, value]) => {
           console.log("key : ", key);
 
-          if ( !((typeof window !== "undefined" ? window : self).gsapRunner)  && key == "markers" && removeMarkers) return null;
+          if (
+            !(typeof window !== "undefined" ? window : self).gsapRunner &&
+            key == "markers" &&
+            removeMarkers
+          )
+            return null;
           if (typeof value === "object" && !Array.isArray(value)) {
             return [key, parseObjValue(value)];
           } else if (
@@ -254,6 +259,12 @@ function CreateGsap(motion, paused = false) {
     const tl = gsap.timeline(timeline);
     fromTo.forEach((item) => {
       const { selector, fromValue, toValue, positionParameter } = item;
+      if (!document.querySelectorAll(selector).length) {
+        // console.warn('A7a mafesh elements hena');
+        console.warn(`Infinitely : No element with this selector : ${selector} founded`);
+
+        // return;
+      }
       tl.fromTo(setSelector(selector), fromValue, toValue, positionParameter);
     });
 
@@ -262,6 +273,12 @@ function CreateGsap(motion, paused = false) {
   } else if (!Object.keys(timeline).length && fromTo.length) {
     return fromTo.map((item) => {
       const { selector, fromValue, toValue } = item;
+      if (!document.querySelectorAll(selector).length) {
+        // console.warn('A7a mafesh elements hena');
+        console.warn(`Infinitely : No element with this selector : ${selector} founded`);
+
+        // return;
+      }
       const tween = gsap.fromTo(setSelector(selector), fromValue, toValue);
       item.name && (window[item.name] = tween);
       return tween;

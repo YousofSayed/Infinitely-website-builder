@@ -70,10 +70,11 @@ export const PagesSelector = (() => {
   });
 
   const getAndSetAllPages = async () => {
-    const pages = await (await db.projects.get(projectId)).pages;
+    const pages = await (await db.projects.get(projectId))?.pages;
+    if(!pages)return;
     // console.log("pages names : ", Object.keys(pages));
 
-    setPages(Object.keys(pages));
+    setPages(Object.keys(pages) || {});
   };
 
   return (

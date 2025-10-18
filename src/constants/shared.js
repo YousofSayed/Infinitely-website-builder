@@ -2,7 +2,7 @@ import { interpolate } from "gsap/src/all";
 import { isChrome } from "../helpers/bridge";
 
 export const current_project_id = `currentProjectId`;
-export const gsap_animation_state = 'gsap_animation_state';
+export const gsap_animation_state = "gsap_animation_state";
 export const current_page_id = `currentPageId`;
 export const current_symbol_rule = "current-symbol-rule";
 export const current_page_helmet = "current-page-helmet";
@@ -32,7 +32,10 @@ export const global_settings = "global_settings";
 export const project_settings = "project_settings";
 export const preview_url = "preview_url";
 export const is_installation_checked = "is_installation_checked";
-
+export const dbx_sign_in_state = "dbx_sign_in_state";
+export const dropbox_token = "dropbox_token";
+export const dropbox_refresh_token = "dropbox_refresh_token";
+export const dropbox_code_verifier = 'dropbox_code_verifier';
 export const heading_tags = ["h1", "h2", "h3", "h4", "h5", "h6"];
 export const text_tags = [
   ...heading_tags,
@@ -203,7 +206,6 @@ export const buildScripts = ({
     ]) ||
       []),
 
-
     ...((!projectSetting.disable_gsap_splitText && [
       {
         name: "splitText.js",
@@ -212,7 +214,7 @@ export const buildScripts = ({
     ]) ||
       []),
 
-    ...((!disablePvue && [
+    ...((!projectSetting.disable_petite_vue && [
       {
         name: "pVuePlugins.js",
         localUrl: `/scripts/pVuePlugins.js`,
@@ -232,7 +234,7 @@ export const buildScripts = ({
   ];
 
   inserts.forEach(({ index, useLastIndex, item }) => {
-    scripts.splice(useLastIndex ? scripts.length : index  , 0, item);
+    scripts.splice(useLastIndex ? scripts.length : index, 0, item);
   });
 
   return scripts;
