@@ -82,6 +82,7 @@ export const styles = {
     },
     {
       type: "property",
+      cssProp:'max-height',
       title: "max height",
     },
     {

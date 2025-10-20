@@ -186,6 +186,9 @@ export const HomeNav = () => {
                         // let tId = toast.loading(
                         //   <ToastMsgInfo msg={`Pushing project...`} />
                         // );
+                        pushRef.current.disabled = true;
+                        pullRef.current.disabled = true;
+
                         try {
                           addClickClass(ev.currentTarget, "click");
                           const dataMeta = await uploadDbxFileWithToastProgress(
@@ -211,6 +214,9 @@ export const HomeNav = () => {
                           // }
                           // toast.dismiss(tId);
                           throw new Error(error);
+                        } finally {
+                          pushRef.current.disabled = false;
+                          pullRef.current.disabled = false;
                         }
                       }}
                     >

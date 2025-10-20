@@ -68,7 +68,7 @@ export const MultiChoice = ({
   return (
     // <ul  className="flex ll justify-between flex-nowrap items-center  w-full p-2 bg-slate-800 rounded-lg transition-all">
     <section className="flex flex-col gap-2">
-      <FitTitle className="custom-font-size">{label}</FitTitle>
+      {label && <FitTitle className="custom-font-size">{label}</FitTitle>}
       <ScrollableToolbar
         className="w-full h-full items-center justify-between  bg-slate-800 rounded-lg transition-all"
         space={3}

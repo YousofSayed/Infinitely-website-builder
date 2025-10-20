@@ -55,7 +55,8 @@ export const Display = () => {
   useUpdateInputValue(({
     cssProp:'display',
     setVal:setOption
-  }))
+  }));
+  
   return (
     <>
       <section className=" flex flex-col gap-2  rounded-lg bg-slate-900">
