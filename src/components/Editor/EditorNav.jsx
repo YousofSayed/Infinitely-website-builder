@@ -231,7 +231,8 @@ export const HomeNav = () => {
                         const btn = ev.currentTarget;
                         addClickClass(btn, "click");
 
-                        // pushRef.current.disabled = true;
+                        btn.disabled = true;
+                        pushRef.current.disabled = true;
                         try {
                           await pullProject(projectData);
                           btn.disabled = true;

@@ -77,12 +77,7 @@ export const GJEditor = ({ children }) => {
   const onEditor = (ev) => {
     const editor = ev;
     ev.Blocks.categories.add({ id: "others", title: "Others" });
-    const lastDevice = localStorage.getItem("last-device");
-    const lastDeviceJson = localStorage.getItem("last-device-json");
-    if (lastDevice) editor.setDevice(lastDevice);
-    if (lastDeviceJson) {
-      editor.Devices.add(JSON.parse(lastDeviceJson));
-    }
+    
     ev.runCommand("core:component-outline");
     isChrome(() => {
       editor.on("canvas:frame:load", ({ window, el }) => {

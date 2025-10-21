@@ -9,9 +9,18 @@ import { Property } from "./Property";
 import { SelectStyle } from "./SelectStyle";
 import { Icons } from "../../Icons/Icons";
 import { FitTitle } from "./FitTitle";
+import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
 
 export const FlexLayout = () => {
   const [dir, setDir] = useState("");
+
+  useUpdateInputValue({
+    cssProp:'flex-direction' ,
+    setVal:(val)=>{
+      console.log('val : ' , val);
+      setDir(val || '')
+    }
+  })
 
   return (
     <section className="flex flex-col gap-2">

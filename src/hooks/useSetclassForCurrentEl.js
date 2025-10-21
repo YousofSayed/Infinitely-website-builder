@@ -110,7 +110,7 @@ export function useSetClassForCurrentEl() {
       } else if (currentSelector && !isCurrentSelectorAdded) {
         sle.addClass(currentSelector);
       }
-      console.log("current selector from updater : ", currentSelector);
+      console.log("current selector from updater : ", currentSelector , newCssProps);
 
       // const symbolInfo = getInfinitelySymbolInfo(sle);
       // console.log(

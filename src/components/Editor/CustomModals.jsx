@@ -48,7 +48,7 @@ export const CustomModals = () => {
         }
         // editor.Commands.run("close:custom:modal");
       }}
-      className={`fixed   z-[1000]  bg-black/40 right-0 left-0  w-full h-full flex justify-center items-center`}
+      className={`fixed   z-[2000]  bg-black/40 right-0 left-0  w-full h-full flex justify-center items-center`}
     >
       <main
         style={{

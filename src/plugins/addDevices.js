@@ -11,7 +11,6 @@ export const addDevices = (editor) => {
   const deviceManager = editor.DeviceManager;
   function emitEditorContainerZoom() {
     console.log("i emit !!");
-    
 
     editorContainerInstance.emit(InfinitelyEvents.editorContainer.update, {
       value: editor.getContainer().style.zoom,
@@ -42,6 +41,13 @@ export const addDevices = (editor) => {
     width: "100%",
     widthMedia: "360px",
   });
+
+  const lastDevice = localStorage.getItem("last-device");
+  const lastDeviceJson = localStorage.getItem("last-device-json");
+  if (lastDevice) editor.setDevice(lastDevice);
+  if (lastDeviceJson) {
+    editor.Devices.add(JSON.parse(lastDeviceJson));
+  }
 
   const zoomToFit = () => {
     timeout && clearTimeout(timeout);
@@ -136,7 +142,7 @@ export const addDevices = (editor) => {
       "Device is : ",
       editor.Devices.get(editor.getDevice()).toJSON()
     );
-    editor.refresh({tools:true})
+    editor.refresh({ tools: true });
 
     zoomToFit();
   });

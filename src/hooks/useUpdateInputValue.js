@@ -96,9 +96,7 @@ export const useUpdateInputValue = ({
     }
 
     if (!currentSelector) {
-      setVal((old) => {
-        if (old) return "";
-      });
+      setVal("");
       onEffect(cssProp, "");
       return;
     }
@@ -111,9 +109,7 @@ export const useUpdateInputValue = ({
     ) {
       // console.log("!sadsadsa", cssProp, getRuleStyle());
 
-      setVal((old) => {
-        if (old) return "";
-      });
+      setVal("");
       onEffect(cssProp, "");
       return;
     }

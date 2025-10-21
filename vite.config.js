@@ -66,7 +66,7 @@ export default defineConfig({
         theme_color: "#1e293b",
         background_color: "#1e293b",
         display: "standalone",
-        short_name: "Infinitely",
+        short_name: "Infinitely Studio",
         start_url: "/",
         ...icons,
       },

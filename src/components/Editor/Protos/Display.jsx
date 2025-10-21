@@ -17,6 +17,7 @@ export const Display = () => {
   const currentEl = useRecoilValue(currentElState);
   const [isParentFlex , setIsParentFlex] = useState(false);
   const [isParentGrid , setIsParentGrid] = useState(false);
+  
   useEffect(()=>{
     if(!editor || !editor?.getSelected?.())return; 
     /**
@@ -39,7 +40,7 @@ export const Display = () => {
 
       const gridCond = displayParent == 'grid'|| displayChild =='grid'
       // console.log('cond :' , cond);
-      
+
       return {
         flex:flexCond,
         grid:gridCond
@@ -54,9 +55,12 @@ export const Display = () => {
 
   useUpdateInputValue(({
     cssProp:'display',
-    setVal:setOption
+    setVal:(val)=>{
+      !val &&  isParentFlex && setOption('flex');
+      !val &&  isParentGrid && setOption('grid');
+    }
   }));
-  
+
   return (
     <>
       <section className=" flex flex-col gap-2  rounded-lg bg-slate-900">
@@ -64,6 +68,7 @@ export const Display = () => {
         <SelectStyle
           label="display"
           cssProp="display"
+          
           keywords={displayValues}
           setKeyword={setOption}
         />

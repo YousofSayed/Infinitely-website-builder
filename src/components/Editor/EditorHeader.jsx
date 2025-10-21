@@ -137,7 +137,11 @@ export const HomeHeader = () => {
 
     if (!editor) return;
     if (!currentEl.currentEl) return;
-    if (!cmpRules.length) return;
+    // if (!cmpRules.length) return;
+    if (!cmpRules.length) {
+      setDetectedMedia(cloneDeep(detectedType));
+      return;
+    }
 
     // const rules = cmpRules;
 
@@ -154,9 +158,8 @@ export const HomeHeader = () => {
     //  * atRuleParams: string | null;
     //  * }[]
     for (const rule of cmpRules) {
-      console.log('full rule' , rule);
+      console.log("full rule", rule);
       if (!rule.atRuleParams && rule.rule) {
-        
         newDetected.desktop.push(true);
       } else if (
         rule.atRuleParams &&

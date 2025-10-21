@@ -53,8 +53,8 @@ export const Header = () => {
       sessionStorage.getItem(dbx_sign_in_state)
     );
     if (isDropBoxInSignInState) {
-      await handleDropboxRedirect();
-      toast.success(<ToastMsgInfo msg={`Dropbox sign in successfully 💙`} />);
+    const res =  await handleDropboxRedirect();
+     res && toast.success(<ToastMsgInfo msg={`Dropbox sign in successfully 💙`} />);
     }
   };
 
