@@ -48,6 +48,7 @@ export const addDevices = (editor) => {
   if (lastDeviceJson) {
     editor.Devices.add(JSON.parse(lastDeviceJson));
   }
+  let firstTime = 0;
 
   const zoomToFit = () => {
     timeout && clearTimeout(timeout);
@@ -109,7 +110,7 @@ export const addDevices = (editor) => {
       // });
       emitEditorContainerZoom();
       restartGSAPMotions(editor);
-    }, 80);
+    }, Boolean(firstTime ) ? 80 : 0);
   };
 
   resizerObserver = new ResizeObserver(() => {
@@ -163,6 +164,7 @@ export const addDevices = (editor) => {
       console.log("from load window", window);
       window.document;
       zoomToFit();
+      firstTime++;
       if (mutationsObserver && mutationsObserver instanceof MutationObserver) {
         mutationsObserver.disconnect();
         mutationsObserver = null;
