@@ -113,7 +113,7 @@ export const JsLibrary = ({
         afterInstall({ key: key, lib: newContent });
       };
 
-      installData.globalName = installData.globalName || isJs ? (await detectGlobalsSandbox(fileUrl))?.[0] : ""
+     !installData.globalName && (installData.globalName = installData.globalName || isJs ? (await detectGlobalsSandbox(fileUrl))?.[0] : "")
       /**
        * @type {import('../../../helpers/types').LibraryConfig}
        */

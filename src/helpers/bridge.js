@@ -747,7 +747,12 @@ function CompileMotion(
         .map(([key, value]) => {
           console.log("key : ", key);
 
-          if ( !((typeof window !== "undefined" ? window : self).gsapRunner) &&  key == "markers" && removeMarkers) return null;
+          if (
+            !(typeof window !== "undefined" ? window : self).gsapRunner &&
+            key == "markers" &&
+            removeMarkers
+          )
+            return null;
           if (typeof value === "object" && !Array.isArray(value)) {
             return [key, parseObjValue(value)];
           } else if (
@@ -1000,14 +1005,14 @@ export function filterMotionsByPage(motions, pageName) {
  * @param {{[key : string] : import('./types').MotionType}} motions
  * @param {{[key:string] : import('./types').InfinitelyPage}} pages
  */
-export async function cleanMotions(motions, pages , currentPages = {}) {
+export async function cleanMotions(motions, pages, currentPages = {}) {
   const { parseHTML } = await import("linkedom");
   const pagesContent = {};
   for (const key in pages) {
     const page = pages[key];
-    const pageContent = currentPages[key] || await (
-      await opfs.getFile(defineRoot(page.pathes.html))
-    ).text();
+    const pageContent =
+      currentPages[key] ||
+      (await (await opfs.getFile(defineRoot(page.pathes.html))).text());
     pagesContent[page.name] = pageContent;
   }
 
@@ -2143,35 +2148,55 @@ export async function uploadProjectToTMP(props) {
 }
 
 export function doGlobalType(libName, globalTypeName, isExportDefault = false) {
-  if (!libName) {
-    throw new Error(`libName param is required`);
-  }
+  if (!libName) throw new Error(`libName param is required`);
 
   const importStatement = isExportDefault
     ? `import _lf from "${libName}";`
     : `import * as _lf from "${libName}";`;
 
+  const moduleDeclaration = `
+declare module "${libName}" {
+  ${isExportDefault ? "export default _lf;" : "export = _lf;"}
+}
+`;
+
   const globalDeclaration =
     globalTypeName && globalTypeName.trim().length > 0
       ? `
 declare global {
-  const ${globalTypeName}: typeof _lf;
+  var ${globalTypeName}: typeof _lf;
 }
-export {};`
+`
       : "";
 
   return `
 ${importStatement}
+${moduleDeclaration}
 ${globalDeclaration}
-  `;
+export {};
+`;
 }
 
+
+
 export function needsWrapping(code) {
-  return (
-    /\bexport\s+(interface|type|class|function|const|enum)/.test(code) &&
-    !/\bdeclare\s+module\s+['"]/.test(code)
-  );
+  // Normalize for easier regex detection
+  const clean = code.replace(/\s+/g, ' ');
+
+  // Skip if already wrapped in a module declaration
+  if (/\bdeclare\s+module\s+['"][^'"]+['"]\s*{/.test(clean)) {
+    return false;
+  }
+
+  // Skip if it's declaring globals only (no exports)
+  if (/\bdeclare\s+(global|namespace)\b/.test(clean)) {
+    return false;
+  }
+
+  // Wrap only if it has real exports (ESM or TS)
+  return /\bexport\s+(default|const|class|function|interface|type|enum|namespace)\b/.test(clean);
 }
+
 
 export function wrapModule(libName, code) {
   return `declare module "${libName}" {\n${code}\n}`;

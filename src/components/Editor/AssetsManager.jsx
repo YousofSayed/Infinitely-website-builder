@@ -307,7 +307,7 @@ export const AssetsManager = () => {
   };
 
   return (
-    <main className="w-full h-[500px]">
+    <main className="w-full h-full">
       <section className=" w-full h-full m-auto  rounded-lg overflow-hidden flex flex-col gap-2">
         <header className="h-[50px!important] flex justify-between items-center gap-2 p-2  rounded-tl-full rounded-tr-2xl rounded-br-2xl rounded-bl-full bg-slate-800 ">
           <figure>{Icons.logo({ width: 38 })}</figure>
@@ -391,22 +391,20 @@ export const AssetsManager = () => {
         )}
 
         {/* <section
-        style={{
-          contain:'layout paint size'
-        }}
-          className={`w-full h-full will-change-[transform,opacity] isolate   bg-gray-950 rounded-lg p-2 overflow-auto grid grid-cols-[repeat(auto-fill,minmax(25%,1fr))] grid-rows-[repeat(auto-fill,minmax(200px,200px))] justify-start gap-[15px] `}
-        > */}
+          className={`w-full h-full  bg-gray-950 rounded-lg p-2 overflow-auto grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))]  justify-start gap-[15px] `}
+        >
+          {Boolean(files.length) && (
+            <For each={files} memo>
+              {(asset, i) => {
+                console.log("files from virtuso : ", asset);
 
+                return <FileView key={i} asset={asset} />;
+              }}
+            </For>
+          )}
+        </section> */}
         {showLoader && <Loader />}
-        {/* {Boolean(files.length) && <For each={files} memo>
-            {(asset ,i) => {
-              console.log("files from virtuso : ", asset);
-
-              return <FileView key={i} asset={asset} />;
-            }}
-          </For>} */}
-        
-          {!!files.length && (
+        {!!files.length && (
             <VirtuosoGrid
               totalCount={files.length}
               components={GridComponents}
@@ -426,7 +424,6 @@ export const AssetsManager = () => {
               }}
             />
           )}
-        {/* </section> */}
 
         {!files.length && !showLoader && (
           <section className="w-full h-full flex flex-col gap-2 justify-center items-center">

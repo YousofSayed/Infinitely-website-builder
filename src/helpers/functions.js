@@ -2738,7 +2738,8 @@ export async function detectGlobalsSandbox(url) {
 
   // Cleanup iframe if you want
   document.body.removeChild(iframe);
-
+  console.log('news in window' , newGlobals);
+  
   return newGlobals;
 }
 

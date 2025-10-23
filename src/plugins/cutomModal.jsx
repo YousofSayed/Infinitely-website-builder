@@ -65,6 +65,7 @@ export function customModal(editor) {
     editor.runCommand("open:custom:modal", {
       title: <ModalTitle icon={Icons.gallery('white')} title={"Files Manager"} />,
       JSXModal: <AssetsManager editor={editor} />,
+      height:'90%'
     });
   });
 

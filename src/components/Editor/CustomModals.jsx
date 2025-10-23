@@ -9,13 +9,14 @@ import { RestAPIModels } from "./Modals/RestAPIModels";
 import { LibraryInstaller } from "./Protos/LibraryInstaller";
 import { LibraryInstallerModal } from "./Modals/LibraryInstallerModal";
 import { FitTitle } from "./Protos/FitTitle";
+import { Button } from "../Protos/Button";
 
 export const CustomModals = () => {
   const editor = useEditorMaybe();
   const modalData = useRecoilValue(modalDataState);
   const setModalData = useSetRecoilState(modalDataState);
   const [isClose, setClose] = useState(false);
-
+  const [modalProps, setModalProps] = useState({});
   // useEffect(() => {
   //   /**
   //    *
@@ -48,7 +49,7 @@ export const CustomModals = () => {
         }
         // editor.Commands.run("close:custom:modal");
       }}
-      className={`fixed   z-[2000]  bg-black/40 right-0 left-0  w-full h-full flex justify-center items-center`}
+      className={`fixed  transition-all z-[2000]  bg-black/40 right-0 left-0  w-full h-full flex justify-center items-center`}
     >
       <main
         style={{
@@ -59,6 +60,7 @@ export const CustomModals = () => {
           // isolation:'isolate',
           // transform: "translateZ(0)",
           // backfaceVisibility: "hidden",
+          ...modalProps,
         }}
         onClick={(ev) => {
           // ev.stopPropagation();
@@ -76,15 +78,30 @@ export const CustomModals = () => {
             <FitTitle className="flex items-center gap-2">
               {modalData.title}
             </FitTitle>
-            <button
-              onClick={(ev) => {
-                addClickClass(ev.currentTarget, "click");
-                editor.Commands.run("close:custom:modal");
-              }}
-              className="cursor-pointer z-50 flex items-center  justify-center w-[27px] h-[27px] bg-blue-600 rounded-full"
-            >
-              {Icons.close("white", 2, "blue")}
-            </button>
+            <section className=" flex items-center gap-2">
+              <button
+                className="cursor-pointer z-50 flex items-center  justify-center w-[27px] h-[27px] bg-yellow-600 rounded-full"
+                onClick={(ev) => {
+                  addClickClass(ev.currentTarget, "click");
+                  if (modalProps.width || modalProps.height) {
+                    setModalProps({});
+                  } else {
+                    setModalProps({ width: "100%", height: "100%" });
+                  }
+                }}
+              >
+                {Icons.fullscreen({ fill: "white", height: 17, width: 17 })}
+              </button>
+              <button
+                onClick={(ev) => {
+                  addClickClass(ev.currentTarget, "click");
+                  editor.Commands.run("close:custom:modal");
+                }}
+                className="cursor-pointer z-50 flex items-center  justify-center w-[27px] h-[27px] bg-blue-600 rounded-full"
+              >
+                {Icons.close("white", 2, "blue")}
+              </button>
+            </section>
           </section>
         </header>
 

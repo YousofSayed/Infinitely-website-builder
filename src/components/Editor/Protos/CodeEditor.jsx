@@ -17,8 +17,9 @@ import {
   doGlobalType,
   getProjectRoot,
   hasExportDefault,
+  needsWrapping,
+  wrapModule,
 } from "../../../helpers/bridge";
-import { setupTypeAcquisition } from "@typescript/ata";
 // import infImport from "/scripts/infinitely.js?raw";
 /**
  *
@@ -57,6 +58,9 @@ export const CodeEditor = ({
           monaco.languages.typescript.ModuleResolutionKind.NodeJs,
         module: monaco.languages.typescript.ModuleKind.CommonJS,
         target: monaco.languages.typescript.ScriptTarget.ES2020,
+        // typeRoots: ["node_modules/@types"],
+        // noEmit:true,
+        // allowSyntheticDefaultImports: true,
       });
       // const ata = setupTypeAcquisition({
       //   projectName: "lolo",
@@ -110,36 +114,58 @@ export const CodeEditor = ({
             recursive: true,
           }
         );
-        // console.log(
-        //   "pendding loop : ",
-        //   libTypesHandles,
-        //   defineRoot(lib.typesPath)
-        // );
+        const libs = new Set();
 
         for (const libTypeHandle of libTypesHandles) {
-          const fileContent = await libTypeHandle.text();
-          // console.log(
-          //   fileContent,
-          //   `file:///${libTypeHandle.path.replace(
-          //     `${getProjectRoot(projectData.id)}/types`,
-          //     `node_modules/@types`
-          //   )}`
-          // );
+          //file:///node_modules/public-google-sheets-parser/@types/index.d.ts --> Good URL
 
+          let fileContent = await libTypeHandle.text();
+          console.log('path : ' , libTypeHandle.path);
+          
+          // Step 1: Build raw virtual path
+          let typePath = libTypeHandle.path.replace(
+            `${getProjectRoot(projectData.id)}/types`,
+            "node_modules/@types"
+          );
+
+          // Step 2: Clean up duplicated node_modules/<lib>/<lib>
+          typePath = typePath.replace(
+            /node_modules\/@types\/([^/]+)\/node_modules\/\1\//g,
+            "node_modules/$1/"
+          );
+
+          // Step 3: Normalize to Monaco virtual file URL
+          typePath = "file:///" + typePath.replace(/\\/g, "/");
+
+          if(!typePath.includes('@types')){
+            typePath = typePath.replace(lib.nameWithoutExt , `${lib.nameWithoutExt}/@types`)
+          }
+          console.log("🧩 Cleaned typePath:", typePath);
+
+          // Step 4: Register with Monaco
+          const isNeedWrappingToModule = needsWrapping(fileContent);
+          fileContent = isNeedWrappingToModule ? wrapModule(lib.nameWithoutExt , fileContent)  : fileContent
           monaco.languages.typescript.javascriptDefaults.addExtraLib(
             fileContent,
-            `file:///${libTypeHandle.path.replace(
-              `${getProjectRoot(projectData.id)}/types`,
-              `node_modules/@types`
-            )}`
+            typePath
           );
+          console.log('file content : ' ,isNeedWrappingToModule, fileContent , );
+          
+
           if (libTypeHandle.path.endsWith(".ts")) {
+            const globalType = doGlobalType(
+              lib.nameWithoutExt,
+              lib.globalName,
+              // fileContent,
+              hasExportDefault(fileContent),
+              fileContent
+            );
+            if (libs.has(globalType)) continue;
+            libs.add(globalType);
+            console.log("global type : ", globalType);
+
             monaco.languages.typescript.javascriptDefaults.addExtraLib(
-              doGlobalType(
-                lib.nameWithoutExt,
-                lib.globalName,
-                hasExportDefault(fileContent)
-              ),
+              globalType,
               `file:///globals/${lib.nameWithoutExt}-global.d.ts`
             );
           }
@@ -461,51 +487,50 @@ export const CodeEditor = ({
       );
 
     // Force the model to use the right language
-// monaco.editor.setModelLanguage(editor.getModel(), props.language);
+    // monaco.editor.setModelLanguage(editor.getModel(), props.language);
 
-// monaco.languages.registerDocumentFormattingEditProvider({language:"javascript"}, {
-//   provideDocumentFormattingEdits(model) {
-//     const text = model.getValue();
-//     const formatted = js_beautify(text, { indent_size: 2 });
-//     return [
-//       {
-//         range: model.getFullModelRange(),
-//         text: formatted,
-//       },
-//     ];
-//   },
-// });
+    // monaco.languages.registerDocumentFormattingEditProvider({language:"javascript"}, {
+    //   provideDocumentFormattingEdits(model) {
+    //     const text = model.getValue();
+    //     const formatted = js_beautify(text, { indent_size: 2 });
+    //     return [
+    //       {
+    //         range: model.getFullModelRange(),
+    //         text: formatted,
+    //       },
+    //     ];
+    //   },
+    // });
 
-// monaco.languages.registerDocumentFormattingEditProvider({language:'css'}, {
-//   provideDocumentFormattingEdits(model) {
-//     const text = model.getValue();
-//     const formatted = css_beautify(text, { indent_size: 2 });
-//     return [
-//       {
-//         range: model.getFullModelRange(),
-//         text: formatted,
-//       },
-//     ];
-//   },
-// });
+    // monaco.languages.registerDocumentFormattingEditProvider({language:'css'}, {
+    //   provideDocumentFormattingEdits(model) {
+    //     const text = model.getValue();
+    //     const formatted = css_beautify(text, { indent_size: 2 });
+    //     return [
+    //       {
+    //         range: model.getFullModelRange(),
+    //         text: formatted,
+    //       },
+    //     ];
+    //   },
+    // });
 
-// monaco.languages.registerDocumentFormattingEditProvider({language:'html'}, {
-//   provideDocumentFormattingEdits(model) {
-//     const text = model.getValue();
-//     const formatted = html_beautify(text, { indent_size: 2 });
-//     console.log("HTML formatting triggered");
-//     return [
-//       {
-//         range: model.getFullModelRange(),
-//         text: formatted,
-//       },
-//     ];
-//   },
-// });
+    // monaco.languages.registerDocumentFormattingEditProvider({language:'html'}, {
+    //   provideDocumentFormattingEdits(model) {
+    //     const text = model.getValue();
+    //     const formatted = html_beautify(text, { indent_size: 2 });
+    //     console.log("HTML formatting triggered");
+    //     return [
+    //       {
+    //         range: model.getFullModelRange(),
+    //         text: formatted,
+    //       },
+    //     ];
+    //   },
+    // });
 
-// 🔑 Ensure formatting is triggered programmatically if you want auto-format
-// editor.getAction("editor.action.formatDocument").run();
-
+    // 🔑 Ensure formatting is triggered programmatically if you want auto-format
+    // editor.getAction("editor.action.formatDocument").run();
 
     // console.log("replaced :", replacedInfImport, finalLibs.join("\n\n"));
   };

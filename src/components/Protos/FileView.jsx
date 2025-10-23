@@ -103,7 +103,7 @@ export const FileView = ({
       
       className={`group   relative rounded-lg p-3 bg-slate-800  flex flex-col justify-center items-center gap-2`}
     >
-      <FitTitle className="absolute left-0 top-0 z-[100] will-change-transform">
+      <FitTitle className="absolute left-0 top-0 z-[100] ">
         {toMB(asset.size, 3)}MB
       </FitTitle>
       <button
