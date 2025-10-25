@@ -746,6 +746,30 @@ async function buildPage({
       )
     ).text();
   }
+  const dv = await (
+    await import("../constants/directivesAttributes")
+  ).directivesAttributes;
+
+   document
+    .querySelectorAll(`${dv.map((dvItem) => `[${dvItem}]`).join(",")}`)
+    .forEach((el) => {
+      dv.forEach((dvItem) => {
+        const attrVal = el.getAttribute(dvItem);
+        if (!attrVal) return;
+        el.setAttribute(
+          dvItem,
+          `
+      (()=>  {try {
+         return (${attrVal})
+    } catch (error) {
+      console.error(error  , 'error at ${dvItem} directive in this el : ', $el  );
+      throw new Error(error);
+    }})()
+        `
+        );
+      });
+    });
+
 
   const pageRaw = html`
     <!DOCTYPE html>
@@ -776,7 +800,7 @@ async function buildPage({
                             ? lib.path.replace("/", "")
                             : lib.path
                         }`
-                  }" />`
+                  }" ></script>`
               )
               .join("\n")}
 

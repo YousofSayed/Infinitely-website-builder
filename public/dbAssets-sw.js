@@ -68,17 +68,19 @@ const folders = [
 const opfsBroadcastChannel = new BroadcastChannel("opfs");
 
 self.addEventListener("fetch", (event) => {
-  // 🛑 Skip cross-origin requests immediately
-  // if (
-  //   event.request.url.startsWith("http") &&
-  //   !event.request.url.startsWith(self.location.origin)
-  // ) {
-  //   return; // don't intercept YouTube or any external requests
-  // }
-
-  
   const url = new URL(event.request.url);
-  // if (url.protocol === 'blob:' || url.protocol === 'data:') return;
+  const req = event.request;
+
+  if (
+    (req.destination === "iframe" || req.destination === "frame") &&
+    !req.url.startsWith(self.location.origin)
+  ) {
+    event.respondWith(fetch(req));
+    return;
+  }
+
+  if (url.protocol === "blob:" || url.protocol === "data:") return;
+  if (url.origin !== self.location.origin) return;
   let pathname = parseTextToURI(url.pathname);
 
   const routePrefixes = [
@@ -164,11 +166,11 @@ self.addEventListener("fetch", (event) => {
           status: 200,
           headers: {
             "Content-Type": responseFile.type || "image/webp",
-            "Access-Control-Allow-Origin": self.location.origin,
+            "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Credentials": "true",
-            "Cross-Origin-Resource-Policy": "cross-origin",
-            "Cross-Origin-Embedder-Policy": "require-corp",
-            "Cross-Origin-Opener-Policy": "same-origin",
+            // 🟢 Disable isolation, match Vite’s relaxed mode
+            "Cross-Origin-Embedder-Policy": "unsafe-none",
+            "Cross-Origin-Opener-Policy": "unsafe-none",
           },
         });
       } catch (err) {

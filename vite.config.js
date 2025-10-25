@@ -22,9 +22,8 @@ export default defineConfig({
       ignored: ['**/node_modules/**', '**/.git/**']
     },
      headers: {
-      'Referrer-Policy': 'no-referrer-when-downgrade',
-      'Cross-Origin-Embedder-Policy': 'require-corp',
-      'Cross-Origin-Opener-Policy': 'same-origin'
+       "Cross-Origin-Embedder-Policy": "unsafe-none",
+      "Cross-Origin-Opener-Policy": "unsafe-none",
     }
   },
   optimizeDeps: {

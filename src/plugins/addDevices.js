@@ -161,8 +161,7 @@ export const addDevices = (editor) => {
     ({ window }) => {
       // console.log('from load ;' , document.querySelector(`#right-panel`));
       //document.querySelector(`#panel-group`)
-      console.log("from load window", window);
-      window.document;
+
       zoomToFit();
       firstTime++;
       if (mutationsObserver && mutationsObserver instanceof MutationObserver) {
