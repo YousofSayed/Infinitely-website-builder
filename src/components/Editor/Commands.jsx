@@ -37,7 +37,7 @@ import { parse } from "../../helpers/cocktail";
 import { Accordion } from "../Protos/Accordion";
 import { AccordionItem } from "../Protos/AccordionItem";
 
-export const Commands = (() => {
+export const Commands = () => {
   const editor = useEditorMaybe();
   const [cmds, setCmds] = useState(directives);
   const [dataObject, setDataObject] = useState({});
@@ -184,7 +184,7 @@ export const Commands = (() => {
           { avoidStore: true }
         );
       }
-      editor.trigger(InfinitelyEvents.directives.update);
+      // editor.trigger(InfinitelyEvents.directives.update);
       const symbolInfo = getInfinitelySymbolInfo(sle);
       if (symbolInfo.isSymbol) {
         sessionStorage.setItem(current_symbol_id, symbolInfo.mainId);
@@ -195,7 +195,7 @@ export const Commands = (() => {
           JSON.stringify(symbolInfo.symbol)
         );
       }
-      editor.store();
+      // editor.store();
       editor.trigger(InfinitelyEvents.directives.update);
     }, 300);
   };
@@ -213,13 +213,22 @@ export const Commands = (() => {
   const handleStyleAndClassAttributes = (
     mEditor,
     suffixes,
-    value,
+    value = "",
     isSetValue = true
   ) => {
     console.log("suffixes from : ", suffixes);
+    console.log('new Val before: ' , value);
+    
     value = clearCommnets(value);
     if (suffixes?.includes?.("class")) {
-      const newVal = js_beautify(`(${value || `{\n\n}`})`);
+      if (value) {
+        if (value.startsWith("(")) value = value.slice(1);
+        if (value.endsWith(")")) value = value.slice(0, -1);
+      }
+
+      const newVal = js_beautify(
+        `(${value?.replace(/\(|\)/gi, "") || `{\n\n}`})`
+      );
       isSetValue && mEditor.setValue(newVal);
       return newVal;
     } else if (suffixes?.includes?.("style")) {
@@ -236,6 +245,8 @@ export const Commands = (() => {
       return newVal;
     } else {
       const newVal = js_beautify(value);
+      console.log('new Val : ' , newVal);
+      
       isSetValue && mEditor.setValue(newVal);
       return newVal;
     }
@@ -299,6 +310,7 @@ export const Commands = (() => {
                   placeholder="array"
                   isCode
                   allowCmdsContext
+                  allowRestAPIModelsContext
                   value={customDirevtives["v-for"]?.array || ""}
                   codeProps={{
                     language: "javascript",
@@ -355,6 +367,7 @@ export const Commands = (() => {
                   placeholder="Code"
                   isCode
                   allowCmdsContext
+                  allowRestAPIModelsContext
                   className="p-[unset]"
                   value={selectedAttributes["v-if"]}
                   codeProps={{
@@ -506,6 +519,7 @@ export const Commands = (() => {
                     <Select
                       isCode
                       allowCmdsContext
+                      allowRestAPIModelsContext
                       className="p-[unset]"
                       placeholder="Code..."
                       value={
@@ -567,17 +581,18 @@ export const Commands = (() => {
                   <section className="flex items-center justify-between gap-2 p-1 bg-slate-900 rounded-lg">
                     <FitTitle>{cmd.name}</FitTitle>
                     <SwitchButton
-                    defaultValue={parse(getDirectiveContext(
+                      defaultValue={parse(
+                        getDirectiveContext(
                           selectedAttributes,
                           cmd.directive
-                        )?.[cmd.directive]?.value)}
+                        )?.[cmd.directive]?.value
+                      )}
                       onActive={() => {
                         cmd.callback({
                           editor,
                           value: `true`,
                         });
                       }}
-
                       onUnActive={() => {
                         cmd.callback({
                           editor,
@@ -656,6 +671,7 @@ export const Commands = (() => {
                         value={cmd.value}
                         isCode
                         allowCmdsContext
+                        allowRestAPIModelsContext
                         placeholder={isRequired(
                           "Add Value",
                           cmd.isValueRequired
@@ -713,9 +729,12 @@ export const Commands = (() => {
                         try {
                           cmd.callback({
                             editor,
-                            value: cmd.nestedMaybeObjectModel
-                              ? objectSplitter(cmd.value)
-                              : cmd.value,
+                            value:
+                              cmd.nestedMaybeObjectModel &&
+                              (cmd.suffixValue == "class" ||
+                                cmd.suffixValue == "style")
+                                ? objectSplitter(cmd.value)
+                                : cmd.value,
                             suffix: cmd.suffixValue,
                             modifiers: cmd.selectedModifiers,
                             // callback() {
@@ -750,7 +769,7 @@ export const Commands = (() => {
                         selectedAttributes,
                         cmd.directive
                       );
-                      console.log("nested : ", cmd.nestedInputType);
+                      console.log("nested : ", cmd);
 
                       return (
                         <section
@@ -831,11 +850,11 @@ export const Commands = (() => {
                                     //   console.log("dsa", obj, key);
 
                                     // }, 50);
-                                    console.log('vaaaaaaaaaaaaaaaaalls' , value);
-                                     cmd.nestedCallback({
-                                    editor,
-                                    targetAttribute: key,
-                                    value:  cmd.nestedMaybeObjectModel
+                                    console.log("vaaaaaaaaaaaaaaaaalls", value);
+                                    cmd.nestedCallback({
+                                      editor,
+                                      targetAttribute: key,
+                                      value: cmd.nestedMaybeObjectModel
                                         ? (() => {
                                             const clearedValue =
                                               clearCommnets(value);
@@ -848,15 +867,19 @@ export const Commands = (() => {
                                               return (
                                                 objectSplitter(value) || value
                                               );
+                                            }else{
+                                              return value
                                             }
                                           })()
                                         : value,
-                                  });
-                                   
+                                    });
                                   },
                                   onMount(mEditor) {
-                                    console.log("obj[key].value", obj[key].value);
-                                    
+                                    console.log(
+                                      "obj[key].value",
+                                      obj[key].value
+                                    );
+
                                     handleStyleAndClassAttributes(
                                       mEditor,
                                       obj?.[key]?.suffixes,
@@ -910,4 +933,4 @@ export const Commands = (() => {
       </Accordion>
     </section>
   );
-});
+};

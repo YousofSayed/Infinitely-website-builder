@@ -13,6 +13,7 @@ import { db } from "./db";
 import { uploadAssets, workerSendToast } from "./workerCommands";
 import { opfs } from "./initOpfs";
 import { preivewScripts } from "../constants/shared";
+import { installTypes } from "./installTypes";
 
 /**
  *
@@ -102,12 +103,14 @@ export const loadProject = async (props) => {
         if (path.startsWith("pages/") || path.startsWith("index.html")) {
           pages[path] = zipHandle;
         }
+
         if (path.startsWith("editor/infinitely.json")) {
           dbJSONData = {
             ...(await restoreBlobs(JSON.parse(await zipHandle.async("text")))),
             ...props.data,
           };
         }
+
 
         if (notIncludedFiles.some((noPath) => noPath.startsWith(path))) {
           continue;
@@ -155,6 +158,19 @@ export const loadProject = async (props) => {
       }
     }
     dbJSONData.id = projectDBId;
+    dbJSONData.installStates = {
+      ... (dbJSONData.installStates || {}),
+      types:false
+    }
+    // for (const lib of [...dbJSONData.jsFooterLibs , ...dbJSONData.jsHeaderLibs]) {
+    //   console.log('lib type : ' , lib);
+      
+    //  await installTypes({
+    //     projectId:dbJSONData.id , 
+    //     code:await(await opfs.getFile(defineRoot(lib.path))).text(),
+    //     libConfig:lib,
+    //   })
+    // }
     //Write DB Json Data
     await db.projects.update(projectDBId, dbJSONData);
 

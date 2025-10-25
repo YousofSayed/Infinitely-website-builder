@@ -1,4 +1,3 @@
-
 /**
  *
  * @param {{code:string , projectId:number , libConfig : import('./types').LibraryConfig }} props
@@ -7,16 +6,31 @@ export async function installTypes({ projectId, code, libConfig }) {
   if (!code) return;
   const ts = (await import("typescript")).default;
   const { setupTypeAcquisition } = await import("@typescript/ata");
-  const {uniqueId} = await import ('lodash')
+  const { uniqueId } = await import("lodash");
   const opfs = (await import("./initOpfs")).opfs;
   const db = (await import("./db")).db;
   const tId = uniqueId("install-types-id-");
-  const {workerSendToast , initOPFS} = await import('./workerCommands');
-  const {defineRoot , needsWrapping , wrapModule} = await import('./bridge');
+  const { workerSendToast, initOPFS } = await import("./workerCommands");
+  const { defineRoot, needsWrapping, wrapModule } = await import("./bridge");
   const projectData = await db.projects.get(projectId);
   await initOPFS({ id: +projectId });
 
-  try {
+  return await new Promise(async (res, rej) => {
+    let done = false;
+    const resolveOnce = (val) => {
+      if (!done) {
+        done = true;
+        res(val);
+      }
+    };
+
+    const rejectOnce = (err) => {
+      if (!done) {
+        done = true;
+        rej(err);
+      }
+    };
+    // try {
     const ata = setupTypeAcquisition({
       projectName: projectData.name,
       logger: console,
@@ -35,12 +49,13 @@ export async function installTypes({ projectId, code, libConfig }) {
             msg: userErrorMessage,
             type: "error",
           });
-          throw new Error(error);
+
+          rejectOnce(false);
         },
 
         started: () => {
           workerSendToast({
-            msg: "Installing library types...",
+            msg: `Installing ${libConfig.nameWithoutExt} types...`,
             type: "loading",
             dataProps: {
               toastId: tId,
@@ -48,11 +63,13 @@ export async function installTypes({ projectId, code, libConfig }) {
           });
         },
 
-        finished: (files) => {
-          files.forEach((value, path) => {
-            opfs.writeFiles([
+        finished: async (files) => {
+          const filesObj = Object.fromEntries(files);
+          for (const path in filesObj) {
+            const value = filesObj[path];
+            await opfs.writeFiles([
               {
-                path: defineRoot(`types/${libConfig.nameWithoutExt}${path}`),
+                path: `projects/project-${projectId}/types/${libConfig.nameWithoutExt}${path}`, // defineRoot(`types/${libConfig.nameWithoutExt}${path}`),
                 content:
                   needsWrapping(value) && libConfig.globalName
                     ? wrapModule(
@@ -65,7 +82,8 @@ export async function installTypes({ projectId, code, libConfig }) {
                     : value,
               },
             ]);
-          });
+          }
+          // files.forEach((value, path) => {});
           console.log("Type installed successfully");
           workerSendToast({
             isNotMessage: true,
@@ -75,25 +93,29 @@ export async function installTypes({ projectId, code, libConfig }) {
               progressClassName: "bg-green-500",
             },
           });
+          resolveOnce(true);
         },
       },
     });
+    console.log("from types installer : ", projectId, code, libConfig);
 
     ata(code);
-  } catch (error) {
-    workerSendToast({
-      isNotMessage: true,
-      msg: tId,
-      type: "dismiss",
-      dataProps: {
-        progressClassName: "bg-[crimson]",
-      },
-    });
+    // } catch (error) {
+    //   workerSendToast({
+    //     isNotMessage: true,
+    //     msg: tId,
+    //     type: "dismiss",
+    //     dataProps: {
+    //       progressClassName: "bg-[crimson]",
+    //     },
+    //   });
 
-    workerSendToast({
-      msg: error.message,
-      type: "error",
-    });
-    throw new Error(error);
-  }
+    //   workerSendToast({
+    //     msg: error.message,
+    //     type: "error",
+    //   });
+    //   rej(false);
+    //   throw new Error(error);
+    // }
+  });
 }

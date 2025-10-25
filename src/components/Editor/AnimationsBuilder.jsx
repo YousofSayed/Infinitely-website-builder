@@ -498,9 +498,9 @@ export const AnimationsBuilder = (() => {
 
   return (
     <Memo>
-      <section className="flex flex-col gap-2  h-full will-change-[contents,height] ">
+      <section className="flex flex-col gap-2  h-full  ">
         <MiniTitle>Animations Builder</MiniTitle>
-        <section className="flex flex-col gap-2 rounded-lg will-change-[contents,height]">
+        <section className="flex flex-col gap-2 rounded-lg ">
           <Input
             type="search"
             placeholder="Search..."
@@ -534,7 +534,7 @@ export const AnimationsBuilder = (() => {
             <For
               // memo
               // each={(i)=>}
-              className="will-change-[contents,height,scroll] flex flex-col gap-2"
+              className=" flex flex-col gap-2"
               each={animations}
             >
               {(animation, i) => (

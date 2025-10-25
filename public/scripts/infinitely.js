@@ -6,6 +6,15 @@ async function doAsync(callback = async () => {}) {
   }
 }
 
+function tryCatch(callack=()=>{}) {
+  try {
+      callack()
+  } catch (error) {
+    console.error(error);
+    throw new Error(error);
+  }
+}
+
 function hideElement(selector) {
   const elements = document.querySelectorAll(selector);
   elements.forEach((el) => (el.style.display = "none"));

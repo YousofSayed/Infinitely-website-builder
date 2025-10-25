@@ -23,6 +23,7 @@ export const Popover = ({
   isTextarea = false,
   isCode = false,
   language = "",
+  zIndex = 1000,
   width = 0,
   height = 0,
   isOpen = false,
@@ -327,7 +328,7 @@ export const Popover = ({
               isResize && `[&_*]:select-none`
             }  fixed zoom-80  resize ${
               !isCode && `overflow-hidden`
-            } bg-slate-900 border border-slate-600 shadow-md shadow-slate-950 rounded-lg  z-[1000] ${
+            } bg-slate-900 border border-slate-600 shadow-md shadow-slate-950 rounded-lg  ${zIndex && `z-[${zIndex}]`} ${
               popoverData.isOpen ? "block" : "hidden"
             } ${popoverData.className}`}
             style={{

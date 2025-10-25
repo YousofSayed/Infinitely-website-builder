@@ -13,7 +13,7 @@ export const Aside = ({ children, className = "", dir = "left" , style }) => {
 
     style={style}
       ref={parent}
-      className={`${className}  relative backdrop-blur-lg  h-full  bg-slate-900 p-2 flex flex-col will-change-[contents,height]   overflow-y-auto hideScrollBar`}
+      className={`${className}  relative backdrop-blur-lg  h-full  bg-slate-900 p-2 flex flex-col   overflow-y-auto hideScrollBar`}
     >
       {/* <section id="" className="h-full w-full  flex flex-col gap-3  overflow-y-auto hideScrollBar">
         {children}

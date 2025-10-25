@@ -211,7 +211,7 @@ export const RestAPIModels = memo(() => {
 
   return (
     <section
-      className="flex flex-col gap-3 h-full max-h-[800px] will-change-contents"
+      className="flex flex-col gap-3 h-full max-h-[800px]"
       ref={animatRef}
     >
       {!currentViewModel.show && (
@@ -269,6 +269,7 @@ export const RestAPIModels = memo(() => {
 
             <section className="flex gap-2 h-full">
               <Select
+              zIndex={2000}
                 value={modleData.method}
                 className="bg-slate-900 border-2  border-slate-600 px-[unset] py-[unset]"
                 placeholder="Method"
@@ -351,7 +352,7 @@ export const RestAPIModels = memo(() => {
 
       <main
         ref={animatContentRef}
-        className={`flex flex-col gap-2 w-full h-full overflow-auto will-change-contents ${
+        className={`flex flex-col gap-2 w-full h-full overflow-auto  ${
           restModels?.length && ""
         }`}
       >

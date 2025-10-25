@@ -68,7 +68,17 @@ const folders = [
 const opfsBroadcastChannel = new BroadcastChannel("opfs");
 
 self.addEventListener("fetch", (event) => {
+  // 🛑 Skip cross-origin requests immediately
+  // if (
+  //   event.request.url.startsWith("http") &&
+  //   !event.request.url.startsWith(self.location.origin)
+  // ) {
+  //   return; // don't intercept YouTube or any external requests
+  // }
+
+  
   const url = new URL(event.request.url);
+  // if (url.protocol === 'blob:' || url.protocol === 'data:') return;
   let pathname = parseTextToURI(url.pathname);
 
   const routePrefixes = [
@@ -148,8 +158,8 @@ self.addEventListener("fetch", (event) => {
           });
         });
 
-        console.log('file from response : ' , responseFile);
-        
+        console.log("file from response : ", responseFile);
+
         return new Response(responseFile.stream(), {
           status: 200,
           headers: {

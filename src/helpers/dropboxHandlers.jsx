@@ -197,7 +197,7 @@ export async function refreshTokenIfNot(res, callback) {
   }
 }
 
-export async function getDropboxFileBlob(path ) {
+export async function getDropboxFileBlob(path) {
   const token = await getDBXAccessToken();
   if (!token) throw new Error("Missing Dropbox access token");
 
@@ -220,6 +220,87 @@ export async function getDropboxFileBlob(path ) {
 
   return await res.blob();
 }
+
+export async function getDropboxFileBlobWithToastProgress(path) {
+  let toastId;
+  let processTId;
+  toastId = toast.loading(<ToastMsgInfo msg={"Downloading file..."} />);
+  processTId = toast.loading(<ToastMsgInfo msg={"Processing..."} />);
+
+  try {
+    const accessToken = await getDBXAccessToken();
+
+    const xhr = new XMLHttpRequest();
+    const downloadUrl = "https://content.dropboxapi.com/2/files/download";
+
+    xhr.open("POST", downloadUrl, true);
+    xhr.responseType = "blob";
+
+    xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
+    xhr.setRequestHeader("Dropbox-API-Arg", JSON.stringify({ path }));
+
+    // ✅ Progress (if available)
+    xhr.onprogress = (e) => {
+      if (e.lengthComputable) {
+        const progress = Math.round((e.loaded / e.total) * 100);
+        toast.update(toastId, {
+          render: <ToastMsgInfo msg={`Downloading... ${progress}%`} />,
+          progress: progress / 100,
+          progressClassName: "bg-[#07bc0c]",
+        });
+      }
+    };
+
+    const blob = await new Promise((resolve, reject) => {
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          toast.done(toastId);
+          toast.done(processTId);
+          toast.success(
+            <ToastMsgInfo msg="✅ File downloaded successfully!" />,
+            {
+              autoClose: 3000,
+              progressClassName: "bg-[green]",
+            }
+          );
+          resolve(xhr.response); // ✅ Blob
+        } else {
+          let errorMsg = `Dropbox download failed (${xhr.status})`;
+          try {
+            const json = JSON.parse(xhr.responseText);
+            if (json?.error_summary) errorMsg = json.error_summary;
+          } catch {}
+          toast.dismiss(toastId);
+          toast.dismiss(processTId);
+          toast.error(<ToastMsgInfo msg={`❌ ${errorMsg}`} />);
+          reject(new Error(errorMsg));
+        }
+      };
+
+      xhr.onerror = () => {
+        toast.dismiss(toastId);
+        toast.dismiss(processTId);
+        toast.error(
+          <ToastMsgInfo msg={`❌ Network error during download`} />
+        );
+        reject(new Error("Network error during download"));
+      };
+
+      xhr.send();
+    });
+
+    return blob;
+  } catch (err) {
+    console.error("Download failed:", err);
+    toast.dismiss(toastId);
+    toast.dismiss(processTId);
+    toast.error(
+      <ToastMsgInfo msg={`❌ Download failed: ${err.message}`} />
+    );
+    throw err;
+  }
+}
+
 
 export async function getDropboxFileMeta(path) {
   const token = localStorage.getItem(dropbox_token);
@@ -259,7 +340,7 @@ export async function loadDropBoxProject(path, data = {}) {
   const tId = toast.loading(
     <ToastMsgInfo msg={`Fetching project from dropbox...`} />
   );
-  const file = await getDropboxFileBlob(path);
+  const file = await getDropboxFileBlobWithToastProgress(path);
   await loadProject(file, data);
   toast.done(tId);
 }
@@ -334,23 +415,23 @@ export async function uploadDbxFileWithToastProgress(
   toastId = toast.loading(<ToastMsgInfo msg={"Uploading file..."} />);
   processTId = toast.loading(<ToastMsgInfo msg={"processing..."} />);
 
-  const { conflict } = await checkDropboxFileConflict(path, rev);
-  // return;
-  console.log("conflict : ", conflict);
-  if (conflict) {
-    toast.dismiss(toastId);
-    toast.dismiss(processTId);
-    toast.error(
-      <ToastMsgInfo msg={`⚠️ Conflict: File was updated elsewhere!`} />
-    );
-    globalInstance.emit(InfinitelyEvents.global.pull_require, {
-      req: true,
-    });
-    return;
-  }
-  const accessToken = await getDBXAccessToken();
-
   try {
+    const { conflict } = await checkDropboxFileConflict(path, rev);
+    // return;
+    console.log("conflict : ", conflict);
+    if (conflict) {
+      toast.dismiss(toastId);
+      toast.dismiss(processTId);
+      toast.error(
+        <ToastMsgInfo msg={`⚠️ Conflict: File was updated elsewhere!`} />
+      );
+      globalInstance.emit(InfinitelyEvents.global.pull_require, {
+        req: true,
+      });
+      return;
+    }
+    const accessToken = await getDBXAccessToken();
+
     const uploadUrl = "https://content.dropboxapi.com/2/files/upload";
     const dropboxArg = {
       path,
@@ -396,23 +477,6 @@ export async function uploadDbxFileWithToastProgress(
             onSuccess?.(json);
             resolve(json);
           } else {
-            // ✅ handle expired or invalid tokens
-            // await refreshTokenIfNot(
-            //   {
-            //     ok: xhr.status === 200,
-            //     status: xhr.status,
-            //     json: async () => json,
-            //   },
-            //   async () => {
-            //     await uploadDbxFileWithToastProgress(
-            //       path,
-            //       blob,
-            //       rev,
-            //       onSuccess
-            //     );
-            //   }
-            // );
-
             if (json?.error_summary?.includes("conflict")) {
               toast.dismiss(toastId);
               toast.dismiss(processTId);
@@ -440,24 +504,40 @@ export async function uploadDbxFileWithToastProgress(
             }
           }
         } catch (err) {
+          toast.dismiss(toastId);
+          toast.dismiss(processTId);
+          toast.error(
+            <ToastMsgInfo
+              msg={`❌ Upload failed: ${json?.error_summary || xhr.statusText}`}
+            />
+          );
           reject(err);
         }
       };
 
-      xhr.onerror = () => reject(new Error("Network error during upload"));
+      xhr.onerror = () => {
+        toast.dismiss(toastId);
+        toast.dismiss(processTId);
+        toast.error(
+          <ToastMsgInfo
+            msg={`❌ Upload failed: ${json?.error_summary || xhr.statusText}`}
+          />
+        );
+        reject(new Error("Network error during upload"));
+      };
       xhr.send(blob);
     });
 
     return result;
   } catch (err) {
     console.error("Upload failed:", err);
-    toast.update(toastId, {
-      render: `❌ ${err.message}`,
-      type: "error",
-      isLoading: false,
-      progress: undefined,
-      autoClose: 4000,
-    });
+    toast.dismiss(toastId);
+    toast.dismiss(processTId);
+    toast.error(
+      <ToastMsgInfo
+        msg={`❌ Upload failed: ${json?.error_summary || xhr.statusText}`}
+      />
+    );
     throw err;
   }
 }
@@ -502,15 +582,17 @@ export async function pullProject(projectData, callback = () => {}) {
   // }
   const tId = toast.loading(<ToastMsgInfo msg={"Pulling project..."} />);
   try {
-    await opfs.remove({
-      dirOrFile: await opfs.getFolder(`projects/project-${projectData.id}`),
-    });
     const dropboxFileMeta = projectData.dropboxFileMeta;
 
     // await db.projects.delete(projectData.id);
     await getDBXAccessToken();
-    const newProject = await getDropboxFileBlob(dropboxFileMeta.path_lower);
+    const newProject = await getDropboxFileBlobWithToastProgress(
+      dropboxFileMeta.path_lower
+    );
     const newFileMeta = await getDropboxFileMeta(dropboxFileMeta.path_lower);
+    await opfs.remove({
+      dirOrFile: await opfs.getFolder(`projects/project-${projectData.id}`),
+    });
     workerCallbackMaker(
       infinitelyWorker,
       "project-loaded",
@@ -603,10 +685,18 @@ export async function checkDropboxFileConflict(path, localRev) {
 }
 
 /**
- * 
- * @param {import('./types').Project} projectData 
+ *
+ * @param {import('./types').Project} projectData
  */
 export async function shareLink(projectData) {
-  await navigator.clipboard.writeText(`${window.origin}/share?app=dropbox&file_path=${projectData.dropboxFileMeta.path_lower}&rev=${projectData.dropboxFileMeta.rev}&access_token=${btoa(localStorage.getItem(dropbox_token))}&refresh_token=${btoa(localStorage.getItem(dropbox_refresh_token))}`);
-  toast.success(<ToastMsgInfo msg={`Share link copied successfully to clipboard 👍`}/>)
+  await navigator.clipboard.writeText(
+    `${window.origin}/share?app=dropbox&file_path=${
+      projectData.dropboxFileMeta.path_lower
+    }&rev=${projectData.dropboxFileMeta.rev}&access_token=${btoa(
+      localStorage.getItem(dropbox_token)
+    )}&refresh_token=${btoa(localStorage.getItem(dropbox_refresh_token))}`
+  );
+  toast.success(
+    <ToastMsgInfo msg={`Share link copied successfully to clipboard 👍`} />
+  );
 }

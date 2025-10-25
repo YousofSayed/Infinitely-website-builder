@@ -22,7 +22,7 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 
 /**
  *
- * @param {{label:string , keywords:string[], ignoreCurlyBrackets:boolean , allowCmdsContext:boolean, allowRestAPIModelsContext:boolean, setValue : (value:string)=>void , onValue:(value:string)=>void , isTextarea:false ,className:string , inputClassName:string ,containerClassName:string, placeholder:string, isCode:boolean , isTemplateEngine:boolean, codeProps:import('@monaco-editor/react').EditorProps, language:string,  replaceLastWorld:boolean, preventInput:boolean, icon:import('react').ReactNode, value:string , setValue:Function , isRelative : boolean, onKeywordsSeted : (keywords:string[])=>void, onItemClicked:(keyword ,index : number)=>void , onAll : (value:string)=>void, onMenuOpen : ({menu , setKeywords , keywords } : {menu:HTMLElement , setKeywords : Function , keywords: string[]})=>void , onMenuClose:({menu , setKeywords , keywords } : {menu:HTMLElement , setKeywords : Function , keywords: string[]})=>void, onEnterPress: (keyword:string )=>void,  onInput:(value:string)=>void, wrap:boolean, setKeyword:(keyword:string )=>void , respectParenthesis : boolean,splitHyphen:boolean}} param0
+ * @param {{label:string , keywords:string[], zIndex : number , ignoreCurlyBrackets:boolean , allowCmdsContext:boolean, allowRestAPIModelsContext:boolean, setValue : (value:string)=>void , onValue:(value:string)=>void , isTextarea:false ,className:string , inputClassName:string ,containerClassName:string, placeholder:string, isCode:boolean , isTemplateEngine:boolean, codeProps:import('@monaco-editor/react').EditorProps, language:string,  replaceLastWorld:boolean, preventInput:boolean, icon:import('react').ReactNode, value:string , setValue:Function , isRelative : boolean, onKeywordsSeted : (keywords:string[])=>void, onItemClicked:(keyword ,index : number)=>void , onAll : (value:string)=>void, onMenuOpen : ({menu , setKeywords , keywords } : {menu:HTMLElement , setKeywords : Function , keywords: string[]})=>void , onMenuClose:({menu , setKeywords , keywords } : {menu:HTMLElement , setKeywords : Function , keywords: string[]})=>void, onEnterPress: (keyword:string )=>void,  onInput:(value:string)=>void, wrap:boolean, setKeyword:(keyword:string )=>void , respectParenthesis : boolean,splitHyphen:boolean}} param0
  * @returns
  */
 export const Select = ({
@@ -31,6 +31,7 @@ export const Select = ({
   className = "",
   inputClassName = "",
   containerClassName = "",
+  zIndex = 1000,
   setKeyword = (_, _2) => {},
   onItemClicked = (_) => {},
   onInput = (_) => {},
@@ -419,6 +420,7 @@ export const Select = ({
             targetRef={selectRef}
             isTextarea={isTextarea}
             isCode={isCode}
+            zIndex={zIndex}
             width={
               isCode
                 ? 600

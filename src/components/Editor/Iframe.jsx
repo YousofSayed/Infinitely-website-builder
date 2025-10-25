@@ -32,12 +32,14 @@ import { animationsSavingMsg } from "../../constants/confirms";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Loader } from "../Loader";
 import Portal from "./Portal";
+import interact from "interactjs";
 
 export const Iframe = () => {
   const showLayers = useRecoilValue(showLayersState);
   const [showAnimBuilder, setShowAnimBuilder] = useRecoilState(
     showAnimationsBuilderState
   );
+  const [isResize, setIsResize] = useState(false);
   const [reloader, setReloader] = useRecoilState(reloaderState);
   const [showPreview, setShowPreview] = useRecoilState(showPreviewState);
   const [showDragLayer, setShowDragLayer] = useRecoilState(showDragLayerState);
@@ -65,7 +67,7 @@ export const Iframe = () => {
   const [autoAnimate] = useAutoAnimate();
   const [showLoader, setShowLoader] = useState(true);
   const editorWrapper = useRef(refType);
-  const canvasRoot = useRef();
+  const previewRef = useRef(refType);
   const saveAnimations = () => {
     if (isAnimationsChanged) {
       setSaveLoad(true);
@@ -107,6 +109,97 @@ export const Iframe = () => {
       }
     }
   };
+
+//   useEffect(() => {
+//   const iframe = previewIframe.current;
+//   if (!iframe || !iframe.parentElement) return;
+
+//   const container = iframe.parentElement;
+//   let resizeFrame;
+
+//   const resizeObserver = new ResizeObserver((entries) => {
+//     // Prevent too-frequent paint by using requestAnimationFrame
+//     cancelAnimationFrame(resizeFrame);
+//     resizeFrame = requestAnimationFrame(() => {
+//       for (const entry of entries) {
+//         const { width, height } = entry.contentRect;
+
+//         // Apply style directly to the iframe
+//         iframe.style.width = width + 'px';
+//         iframe.style.height = height + 'px';
+//       }
+//     });
+//   });
+
+//   // Disable pointer events during resize to prevent iframe content blocking
+//   const onResizeStart = () => (iframe.style.pointerEvents = 'none');
+//   const onResizeEnd = () => (iframe.style.pointerEvents = 'auto');
+
+//   // Attach to global resize or your resizer if available
+//   window.addEventListener('resize', onResizeStart);
+//   window.addEventListener('mouseup', onResizeEnd);
+//   window.addEventListener('touchend', onResizeEnd);
+
+//   // Observe parent container
+//   resizeObserver.observe(container);
+
+//   return () => {
+//     cancelAnimationFrame(resizeFrame);
+//     resizeObserver.disconnect();
+//     window.removeEventListener('resize', onResizeStart);
+//     window.removeEventListener('mouseup', onResizeEnd);
+//     window.removeEventListener('touchend', onResizeEnd);
+//   };
+// }, [previewIframe]);
+
+  // interact(previewIframe.current).resizable({
+  //   // resize from all edges and corners
+  //   edges: { bottom: true, top: true, left: true, right: true },
+  //   // left: true, right: true,
+  //   // margin: 155,
+  //   listeners: {
+  //     move(event) {
+  //       var target = event.target;
+  //       var x = parseFloat(target.getAttribute("data-x")) || 0;
+  //       var y = parseFloat(target.getAttribute("data-y")) || 0;
+
+  //       // update the element's style
+  //       target.style.width = event.rect.width + "px";
+  //       target.style.height = event.rect.height + "px";
+
+  //       // translate when resizing from top or left edges
+  //       x += event.deltaRect.left;
+  //       y += event.deltaRect.top;
+
+  //       target.style.transform = "translate(" + x + "px," + y + "px)";
+
+  //       target.setAttribute("data-x", x);
+  //       target.setAttribute("data-y", y);
+  //       // setIsResize(true);
+  //       // setShowDragLayer(true);
+  //       // target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height)
+  //     },
+  //     end() {
+  //       console.log("up");
+  //       // setIsResize(false);
+  //       // setShowDragLayer(false);
+  //     },
+  //   },
+  //   modifiers: [
+  //     // keep the edges inside the parent
+  //     interact.modifiers.restrictEdges({
+  //       outer: "parent",
+  //     }),
+
+  //     // minimum size
+  //     interact.modifiers.restrictSize({
+  //       min: { width: 100, height: 50 },
+  //     }),
+  //   ],
+
+  //   inertia: true,
+  // });
+  // }, [previewIframe]);
 
   useEffect(() => {
     if (!editor) return;
@@ -354,7 +447,11 @@ export const Iframe = () => {
                 className="fixed  left-0 top-0 h-full w-full z-[1000]"
                 ref={iframeContainer}
               >
-                {/* {isChrome() && ( */}
+                {/* resizing elements */}
+                <div className="absolute top-0 left-[calc(50%-40px)] w-[80px] h-[5px] bg-blue-600"></div>
+                <div></div>
+                <div></div>
+                {/* resizing elements */}
                 {/* {showPreview && ( */}
                 <header className="w-full h-[60px] flex items-center justify-between p-2 rounded-tl-lg rounded-tr-lg  bg-slate-900">
                   <section className="flex items-center  gap-5 w-[50%]">
@@ -419,26 +516,42 @@ export const Iframe = () => {
                     </li>
                   </ul>
                 </header>
-                <iframe
-                  ref={previewIframe}
-                  id="preview"
-                  allowFullScreen
-                  src={previewSrc || urlSrc}
-                  security="restricted"
-                  about="target"
-                  allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
-                  unselectable="on"
-                  // sandbox=""
-                  // sandbox="allow-same-origin allow-scripts allow-modals allow-forms allow-popups"
-                  // src="about:srcdoc"
-                  // srcDoc=""
-                  // srcDoc={`<video
-                  //    src="../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4"
-                  //    controls
-                  //  ></video>`}
-                  className={`bg-white w-full h-full  transition-all border-[5px] rounded-bl-lg rounded-br-lg border-slate-900`}
-                  // srcDoc={srcDoc}
-                ></iframe>
+
+                <section
+                  className="h-[calc(100%-60px)] w-full resize rounded-lg bg-white p-2 border-2 border-blue-700"
+                  style={{
+                    contain: "layout paint",
+                    transform: "translateZ(0)",
+                  }}
+                >
+                  <section ref={previewRef} className="h-full w-full">
+                    <iframe
+                      ref={previewIframe}
+                      id="preview"
+                      allowFullScreen
+                      src={previewSrc || urlSrc}
+                      security="restricted"
+                      about="target"
+                      allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
+                      unselectable="on"
+                      style={{
+                        willChange: "transform",
+                        contain: `strict`,
+                        transform:`translateZ(0)`
+                      }}
+                      // sandbox=""
+                      // sandbox="allow-same-origin allow-scripts allow-modals allow-forms allow-popups"
+                      // src="about:srcdoc"
+                      // srcDoc=""
+                      // srcDoc={`<video
+                      //    src="../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4"
+                      //    controls
+                      //  ></video>`}
+                      className={`bg-white w-full h-full   transition-all border-[5px] rounded-bl-lg rounded-br-lg border-slate-900`}
+                      // srcDoc={srcDoc}
+                    ></iframe>
+                  </section>
+                </section>
                 {/* )} */}
 
                 {/* )} */}

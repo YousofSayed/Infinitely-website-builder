@@ -38,7 +38,7 @@ export const useCmdsContext = () => {
       }else{
         setCmdsContextRv((old) => '');
       }
-      
+      window.monacoLoaded = false;
     },
   ];
 };

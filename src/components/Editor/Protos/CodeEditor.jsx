@@ -1,5 +1,5 @@
 import { Editor, useMonaco } from "@monaco-editor/react";
-import React, { memo, useEffect, useRef } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import { Loader } from "../../Loader";
 import { codeEditorScripts, current_page_id } from "../../../constants/shared";
 import {
@@ -20,6 +20,9 @@ import {
   needsWrapping,
   wrapModule,
 } from "../../../helpers/bridge";
+import { random, uniqueID } from "../../../helpers/cocktail";
+import { isBoolean } from "lodash";
+// import {  } from 'lodash'
 // import infImport from "/scripts/infinitely.js?raw";
 /**
  *
@@ -42,11 +45,16 @@ export const CodeEditor = ({
   const monacoRef = useRef();
   const editorRef = useRef();
   const [cmdsContext, setCmdsContext] = useCmdsContext();
+  const [fileName, setFileName] = useState(uniqueID() + random(1000000));
 
   /**
    * @type {import("@monaco-editor/react").OnMount}
    */
   const loadLibs = async (editor, monaco) => {
+    console.log('condo : ' ,window.monacoLoaded, window.monacoNeedToLoad);
+if (window.monacoLoaded) return;
+    // console.log();
+    
     const currentPageName = localStorage.getItem(current_page_id);
     const projectData = await await getProjectData();
     const restAPIModels = projectData.restAPIModels;
@@ -58,43 +66,8 @@ export const CodeEditor = ({
           monaco.languages.typescript.ModuleResolutionKind.NodeJs,
         module: monaco.languages.typescript.ModuleKind.CommonJS,
         target: monaco.languages.typescript.ScriptTarget.ES2020,
-        // typeRoots: ["node_modules/@types"],
-        // noEmit:true,
-        // allowSyntheticDefaultImports: true,
       });
-      // const ata = setupTypeAcquisition({
-      //   projectName: "lolo",
-      //   typescript: ts,
-      //   logger: console,
 
-      //   delegate: {
-      //     started: () => {
-      //       console.error("ATA start");
-      //     },
-      //     progress: (downloaded, total) => {
-      //       console.log(`Got ${downloaded} out of ${total}`);
-      //     },
-      //     //  receivedFile: (code, path) => {
-      //     //   console.log("ATA received:", path);
-      //     //   monaco.languages.typescript.javascriptDefaults.addExtraLib(code, `file://`+path);
-      //     // },
-      //     finished: (vfs) => {
-      //       console.log("ATA finished");
-      //       vfs.forEach((value, key) => {
-      //         console.log(value, key);
-
-      //         monaco.languages.typescript.typescriptDefaults.addExtraLib(
-      //           value,
-      //           `file://` + key
-      //         );
-      //         monaco.languages.typescript.javascriptDefaults.addExtraLib(
-      //           value,
-      //           `file://` + key
-      //         );
-      //       });
-      //     },
-      //   },
-      // });
       const globalJs = await (
         await opfs.getFile(defineRoot(`global/global.js`))
       ).text();
@@ -120,8 +93,8 @@ export const CodeEditor = ({
           //file:///node_modules/public-google-sheets-parser/@types/index.d.ts --> Good URL
 
           let fileContent = await libTypeHandle.text();
-          console.log('path : ' , libTypeHandle.path);
-          
+          console.log("path : ", libTypeHandle.path);
+
           // Step 1: Build raw virtual path
           let typePath = libTypeHandle.path.replace(
             `${getProjectRoot(projectData.id)}/types`,
@@ -137,20 +110,24 @@ export const CodeEditor = ({
           // Step 3: Normalize to Monaco virtual file URL
           typePath = "file:///" + typePath.replace(/\\/g, "/");
 
-          if(!typePath.includes('@types')){
-            typePath = typePath.replace(lib.nameWithoutExt , `${lib.nameWithoutExt}/@types`)
+          if (!typePath.includes("@types")) {
+            typePath = typePath.replace(
+              lib.nameWithoutExt,
+              `${lib.nameWithoutExt}/@types`
+            );
           }
           console.log("🧩 Cleaned typePath:", typePath);
 
           // Step 4: Register with Monaco
           const isNeedWrappingToModule = needsWrapping(fileContent);
-          fileContent = isNeedWrappingToModule ? wrapModule(lib.nameWithoutExt , fileContent)  : fileContent
+          fileContent = isNeedWrappingToModule
+            ? wrapModule(lib.nameWithoutExt, fileContent)
+            : fileContent;
           monaco.languages.typescript.javascriptDefaults.addExtraLib(
             fileContent,
             typePath
           );
-          console.log('file content : ' ,isNeedWrappingToModule, fileContent , );
-          
+          console.log("file content : ", isNeedWrappingToModule, fileContent);
 
           if (libTypeHandle.path.endsWith(".ts")) {
             const globalType = doGlobalType(
@@ -170,70 +147,7 @@ export const CodeEditor = ({
             );
           }
         }
-
-        // monaco.languages.typescript.javascriptDefaults.addExtraLib(
-        //   doGlobalType(lib.nameWithoutExt, lib.globalName , hasExportDefault(fileContent)),
-        //   `file:///globals/${lib.nameWithoutExt}-global.d.ts`
-        // );
       }
-
-      // const libsTypes = await Promise.all(
-      //   [...projectData.jsHeaderLibs, ...projectData.jsFooterLibs]
-      //     .filter((lib) => lib.globalName && lib.typesPath)
-      //     .map(
-      //       async (lib) =>
-      //         await (
-      //           await opfs.getAllFiles(defineRoot(lib.typesPath), {
-      //             recursive: true,
-      //           })
-      //         )
-      //           .map(async (file) => await file.text())
-      //           .join("\n")
-      //     )
-      // );
-      const libs = await Promise.all(
-        (
-          await opfs.getAllFiles(defineRoot(`libs/js`), { recursive: true })
-        ).map((handle) => handle.text())
-      );
-      console.log("libs : ", projectData.jsFooterLibs);
-
-      // await ata(libs[0]);
-
-      //   await ata( `
-      // import * as _lf from "animejs";
-      // declare global {
-      //   const anime: typeof _lf;
-      // }
-      // export {};
-      // `);
-
-      //   monaco.languages.typescript.javascriptDefaults.addExtraLib(
-      //   `
-      //   import * as _lf from "animejs";
-      //   declare global {
-      //     const anime: typeof _lf;
-      //   }
-      //   export {};
-      //   `,
-      //   "file:///globals/animejs-global.d.ts"
-      // );
-
-      // const libs = await Promise.all(
-      //   [...projectData.jsHeaderLibs, ...projectData.jsFooterLibs].map(
-      //     async (lib) => {
-      //       // console.log("await lib.blob.text() : ", lib, await lib.file.text());
-
-      //       return `${await lib.file.text()};`.replaceAll(
-      //         /module\.exports(\s+)?=(\s+)?\w+\;/gi,
-      //         " "
-      //       );
-      //     }
-      //   )
-      // );
-      // const assetsUrls = projectData.assets
-      //   .map((asset) => `"${asset.file.name}"`)
-      //   .join("|");
 
       const devLibs = (
         await Promise.all(
@@ -244,6 +158,7 @@ export const CodeEditor = ({
         )
       ).join("\n");
 
+      
       const restModelsContext = restAPIModels
         .map((model) => `var ${model.varName} = ${model.response}`)
         .join("\n");
@@ -259,6 +174,7 @@ export const CodeEditor = ({
 
         ,
       ];
+      console.log('contentnsss : ' , restModelsContext , cmdsContext);
 
       allowExtraLibs &&
         monaco.languages.typescript.javascriptDefaults.addExtraLib(
@@ -270,137 +186,6 @@ export const CodeEditor = ({
         libSource,
         "global.d.ts"
       );
-      //     monaco.languages.typescript.javascriptDefaults.addExtraLib(
-      //       `interface LocalForageDbInstanceOptions {
-      //     name?: string;
-
-      //     storeName?: string;
-      // }
-
-      // interface LocalForageOptions extends LocalForageDbInstanceOptions {
-      //     driver?: string | string[];
-
-      //     size?: number;
-
-      //     version?: number;
-
-      //     description?: string;
-      // }
-
-      // interface LocalForageDbMethodsCore {
-      //     getItem<T>(key: string, callback?: (err: any, value: T | null) => void): Promise<T | null>;
-
-      //     setItem<T>(key: string, value: T, callback?: (err: any, value: T) => void): Promise<T>;
-
-      //     removeItem(key: string, callback?: (err: any) => void): Promise<void>;
-
-      //     clear(callback?: (err: any) => void): Promise<void>;
-
-      //     length(callback?: (err: any, numberOfKeys: number) => void): Promise<number>;
-
-      //     key(keyIndex: number, callback?: (err: any, key: string) => void): Promise<string>;
-
-      //     keys(callback?: (err: any, keys: string[]) => void): Promise<string[]>;
-
-      //     iterate<T, U>(iteratee: (value: T, key: string, iterationNumber: number) => U,
-      //             callback?: (err: any, result: U) => void): Promise<U>;
-      // }
-
-      // interface LocalForageDropInstanceFn {
-      //     (dbInstanceOptions?: LocalForageDbInstanceOptions, callback?: (err: any) => void): Promise<void>;
-      // }
-
-      // interface LocalForageDriverMethodsOptional {
-      //     dropInstance?: LocalForageDropInstanceFn;
-      // }
-
-      // // duplicating LocalForageDriverMethodsOptional to preserve TS v2.0 support,
-      // // since Partial<> isn't supported there
-      // interface LocalForageDbMethodsOptional {
-      //     dropInstance: LocalForageDropInstanceFn;
-      // }
-
-      // interface LocalForageDriverDbMethods extends LocalForageDbMethodsCore, LocalForageDriverMethodsOptional {}
-
-      // interface LocalForageDriverSupportFunc {
-      //     (): Promise<boolean>;
-      // }
-
-      // interface LocalForageDriver extends LocalForageDriverDbMethods {
-      //     _driver: string;
-
-      //     _initStorage(options: LocalForageOptions): void;
-
-      //     _support?: boolean | LocalForageDriverSupportFunc;
-      // }
-
-      // interface LocalForageSerializer {
-      //     serialize<T>(value: T | ArrayBuffer | Blob, callback: (value: string, error: any) => void): void;
-
-      //     deserialize<T>(value: string): T | ArrayBuffer | Blob;
-
-      //     stringToBuffer(serializedString: string): ArrayBuffer;
-
-      //     bufferToString(buffer: ArrayBuffer): string;
-      // }
-
-      // interface LocalForageDbMethods extends LocalForageDbMethodsCore, LocalForageDbMethodsOptional {}
-
-      // interface LocalForage extends LocalForageDbMethods {
-      //     LOCALSTORAGE: string;
-      //     WEBSQL: string;
-      //     INDEXEDDB: string;
-
-      //     /**
-      //      * Set and persist localForage options. This must be called before any other calls to localForage are made, but can be called after localForage is loaded.
-      //      * If you set any config values with this method they will persist after driver changes, so you can call config() then setDriver()
-      //      * @param {LocalForageOptions} options?
-      //      */
-      //     config(options: LocalForageOptions): boolean;
-      //     config(options: string): any;
-      //     config(): LocalForageOptions;
-
-      //     /**
-      //      * Create a new instance of localForage to point to a different store.
-      //      * All the configuration options used by config are supported.
-      //      * @param {LocalForageOptions} options
-      //      */
-      //     createInstance(options: LocalForageOptions): LocalForage;
-
-      //     driver(): string;
-
-      //     /**
-      //      * Force usage of a particular driver or drivers, if available.
-      //      * @param {string} driver
-      //      */
-      //     setDriver(driver: string | string[], callback?: () => void, errorCallback?: (error: any) => void): Promise<void>;
-
-      //     defineDriver(driver: LocalForageDriver, callback?: () => void, errorCallback?: (error: any) => void): Promise<void>;
-
-      //     /**
-      //      * Return a particular driver
-      //      * @param {string} driver
-      //      */
-      //     getDriver(driver: string): Promise<LocalForageDriver>;
-
-      //     getSerializer(callback?: (serializer: LocalForageSerializer) => void): Promise<LocalForageSerializer>;
-
-      //     supports(driverName: string): boolean;
-
-      //     ready(callback?: (error: any) => void): Promise<void>;
-      // }
-
-      // declare module "localforage" {
-      //     let localforage: LocalForage;
-      //     export = localforage;
-      // }
-      //  `,
-      //       "localforage.d.ts"
-      //     );
-      // monaco.languages.typescript.typescriptDefaults.addExtraLib(
-      //   libSource,
-      //   "global.d.ts"
-      // );
 
       monaco.languages.registerCompletionItemProvider("javascript", {
         // Trigger suggestions on typing 'try' or a space
@@ -453,92 +238,50 @@ export const CodeEditor = ({
           return { suggestions: suggestions };
         },
       });
+
+      window.monacoLoaded = true;
+    window.monacoNeedToLoad = false;
     }
 
-    toFormateValue &&
-      isProjectSettingPropTrue(
-        "enable_prettier_for_file_editor",
-        async () => {
-          const formatedValue =
-            props.language == "javascript"
-              ? js_beautify(toFormateValue, {
-                  indent_size: 2, // 2 spaces
-                  space_in_empty_paren: true,
-                })
-              : props.language == "css"
-              ? css_beautify(toFormateValue, {
-                  indent_size: 2, // 2 spaces
-                  space_in_empty_paren: true,
-                })
-              : props.language == "html"
-              ? html_beautify(toFormateValue, {
-                  indent_size: 2, // 2 spaces
-                  space_in_empty_paren: true,
-                })
-              : toFormateValue;
+    // toFormateValue &&
+    //   isProjectSettingPropTrue(
+    //     "enable_prettier_for_file_editor",
+    //     async () => {
+    //       const formatedValue =
+    //         props.language == "javascript"
+    //           ? js_beautify(toFormateValue, {
+    //               indent_size: 2, // 2 spaces
+    //               space_in_empty_paren: true,
+    //             })
+    //           : props.language == "css"
+    //           ? css_beautify(toFormateValue, {
+    //               indent_size: 2, // 2 spaces
+    //               space_in_empty_paren: true,
+    //             })
+    //           : props.language == "html"
+    //           ? html_beautify(toFormateValue, {
+    //               indent_size: 2, // 2 spaces
+    //               space_in_empty_paren: true,
+    //             })
+    //           : toFormateValue;
 
-          console.log(formatedValue);
+    //       console.log(formatedValue);
 
-          editor.setValue(formatedValue);
-        },
-        () => {
-          editor.setValue(toFormateValue);
-        }
-      );
+    //       editor.setValue(formatedValue);
+    //     },
+    //     () => {
+    //       editor.setValue(toFormateValue);
+    //     }
+    //   );
 
-    // Force the model to use the right language
-    // monaco.editor.setModelLanguage(editor.getModel(), props.language);
-
-    // monaco.languages.registerDocumentFormattingEditProvider({language:"javascript"}, {
-    //   provideDocumentFormattingEdits(model) {
-    //     const text = model.getValue();
-    //     const formatted = js_beautify(text, { indent_size: 2 });
-    //     return [
-    //       {
-    //         range: model.getFullModelRange(),
-    //         text: formatted,
-    //       },
-    //     ];
-    //   },
-    // });
-
-    // monaco.languages.registerDocumentFormattingEditProvider({language:'css'}, {
-    //   provideDocumentFormattingEdits(model) {
-    //     const text = model.getValue();
-    //     const formatted = css_beautify(text, { indent_size: 2 });
-    //     return [
-    //       {
-    //         range: model.getFullModelRange(),
-    //         text: formatted,
-    //       },
-    //     ];
-    //   },
-    // });
-
-    // monaco.languages.registerDocumentFormattingEditProvider({language:'html'}, {
-    //   provideDocumentFormattingEdits(model) {
-    //     const text = model.getValue();
-    //     const formatted = html_beautify(text, { indent_size: 2 });
-    //     console.log("HTML formatting triggered");
-    //     return [
-    //       {
-    //         range: model.getFullModelRange(),
-    //         text: formatted,
-    //       },
-    //     ];
-    //   },
-    // });
-
-    // 🔑 Ensure formatting is triggered programmatically if you want auto-format
-    // editor.getAction("editor.action.formatDocument").run();
-
-    // console.log("replaced :", replacedInfImport, finalLibs.join("\n\n"));
+    
   };
 
+  //main
   return (
-    <section className="h-full rounded-md">
+    <section className="h-full rounded-md overflow-hidden">
       <Editor
-        path="file:///main.tsx"
+        path={`file:///${fileName}.tsx`}
         // defaultLanguage="javascript"
         theme="vs-dark"
         className="rounded-[inherit]"
@@ -547,7 +290,7 @@ export const CodeEditor = ({
         saveViewState
         loading={<Loader />}
         {...props}
-        onMount={(editor, monaco) => {
+        onMount={async (editor, monaco) => {
           monacoRef.current = monaco;
           editorRef.current = editor;
           editor.focus();
@@ -567,26 +310,10 @@ export const CodeEditor = ({
             }
           });
 
-          loadLibs(editor, monaco);
-
-          // if (isTemplateEngine) {
-          //   // Set the value in the editor
-          //   editor.setValue(
-          //     `\`\n\n${editor.getValue().slice(1, -1).replaceAll("\n", "")}\n\``
-          //   );
-          //   // Move the caret to the position of "here"
-          //   editor.setPosition({
-          //     lineNumber: 2, // Line 3 (1-based: "`" is line 1, empty line is line 2, "here" is line 3)
-          //     column: 1, // Column 1 (start of "here")
-          //   });
-
-          //   // Optional: Ensure the caret is visible by revealing the position
-          //   editor.revealPosition({
-          //     lineNumber: 3,
-          //     column: 1,
-          //   });
-          // }
           props?.onMount?.(editor);
+
+          await loadLibs(editor, monaco);
+
         }}
         options={{
           autoClosingQuotes: true,

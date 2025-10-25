@@ -19,6 +19,7 @@ import {
   buildPagesAsBlobForSecrviceWorker,
   defineRoot,
   doDocument,
+  doGlobalType,
   extractElementStyles,
   getFileSize,
   // getOPFSProjectDir,
@@ -37,6 +38,7 @@ import { opfs } from "./initOpfs";
 // import { css_beautify } from "js-beautify";
 // import { stringify } from "css";
 import { minify } from "csso";
+import { installTypes } from "./installTypes";
 // import { walk, parse } from "css-tree";
 // import { initDBAssetsSw } from "../serviceWorkers/initDBAssets-sw";
 // import Dexie from "dexie";
@@ -379,7 +381,6 @@ export async function updateDB(props) {
     })();
   });
 }
-
 
 /**
  *
@@ -821,6 +822,7 @@ export async function offlineInstaller(props) {
     await initOPFS({ id: props.projectId });
     const projectData = await db.projects.get(props.projectId);
     const mime = (await import("mime")).default;
+    let isTypesInstalled = false;
     await installRestModelsAPI(projectData.restAPIModels);
     await Promise.all(
       projectData.jsFooterLibs
@@ -850,6 +852,22 @@ export async function offlineInstaller(props) {
           return lib;
         })
     );
+    
+    if (!projectData?.installStates?.types) {
+      for (const lib of [
+        ...projectData.jsFooterLibs,
+        ...projectData.jsHeaderLibs,
+      ]) {
+        
+        await installTypes({
+          projectId: projectData.id,
+          code: doGlobalType(lib.nameWithoutExt , lib.globalName),
+          libConfig: lib,
+        });
+      }
+      // console.log("lib type after: ", defineRoot(lib.path), lib  ,await (await opfs.getFile(defineRoot(lib.path))).text());
+      projectData.installStates.types = true;
+    }
 
     await db.projects.update(props.projectId, {
       // fonts: projectData.fonts,
@@ -857,6 +875,7 @@ export async function offlineInstaller(props) {
       jsFooterLibs: projectData.jsFooterLibs,
       cssLibs: projectData.cssLibs,
       restAPIModels: projectData.restAPIModels,
+      installStates:projectData.installStates
     });
 
     self.postMessage({

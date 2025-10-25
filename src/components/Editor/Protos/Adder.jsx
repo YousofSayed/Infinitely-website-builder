@@ -45,13 +45,13 @@ export const Adder = memo((
       <section
         id={id}
         ref={itemRef}
-        className={`flex w-full flex-col gap-2 p-2 rounded-lg will-change-contents ${
+        className={`flex w-full flex-col gap-2 p-2 rounded-lg  ${
           className ? className : "bg-slate-900"
         } relative`}
       >
-        {children ? <section className="will-change-contents">{children}</section> : null}
+        {children ? <section className="">{children}</section> : null}
         {/* {children} */}
-        <section className="flex items-center will-change-contents text-slate-200 font-semibold   justify-end  w-full  gap-2   bottom-[-40px] right-[0]  ">
+        <section className="flex items-center  text-slate-200 font-semibold   justify-end  w-full  gap-2   bottom-[-40px] right-[0]  ">
           {showInput && (
             <input
               className={`p-2 rounded-lg w-[calc(100%-80px)] outline-none border-2 border-transparent focus:border-blue-600 ${

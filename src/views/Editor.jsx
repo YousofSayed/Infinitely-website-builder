@@ -39,6 +39,7 @@ import {
 import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
 import {
   assetsWorker,
+  offlineInstallerWorker,
   pageBuilderWorker,
   routerWorker,
 } from "../helpers/defineWorkers";
@@ -50,6 +51,8 @@ import { minify } from "csso";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Memo } from "../components/Protos/Memo";
 import { WithEditor } from "@grapesjs/react";
+import { useOfflineHandler } from "../hooks/useOfflineHandler";
+import { useWorkreFetch } from "../hooks/useWorkreFetch";
 // import { tailwindClasses } from "../constants/tailwindClasses";
 // tailwindClasses
 export function Editor({ params }) {
@@ -122,7 +125,7 @@ export function Editor({ params }) {
           infinitelyWorker.reInit((worker) => {
             worker.postMessage({
               command: "initOPFS",
-             props: { id: opfs.id },
+              props: { id: opfs.id },
             });
           });
         }, 0); // wait a bit after last updateDB message
@@ -141,6 +144,9 @@ export function Editor({ params }) {
       // clearInterval(swAliveInterval);
     };
   }, []);
+
+  useOfflineHandler();
+  useWorkreFetch(offlineInstallerWorker);
 
   useEffect(() => {
     const cb = (ev) => {

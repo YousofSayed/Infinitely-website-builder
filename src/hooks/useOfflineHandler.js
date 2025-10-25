@@ -3,18 +3,29 @@ import {
   is_installation_checked,
 } from "../constants/shared";
 import { useEffect } from "react";
-import { offlineInstallerWorker } from "../helpers/defineWorkers";
+import { offlineInstallerWorker, routerWorker } from "../helpers/defineWorkers";
+import { workerCallbackMaker } from "../helpers/functions";
 
 export const useOfflineHandler = () => {
   useEffect(() => {
     const projectId = +localStorage.getItem(current_project_id);
-    if(!projectId)return;
-    offlineInstallerWorker.postMessage({
-      command: "offlineInstaller",
-      props: {
-        projectId: +localStorage.getItem(current_project_id),
-      },
-    });
+    if (!projectId) return;
+    workerCallbackMaker(
+      routerWorker,
+      "listenToOPFSBroadcastChannel",
+      async({ done }) => {
+        console.log('doneee for ofline worker' , done , await(await fetch(`./assets/videos.json`)).text());
+        
+        if (done) {
+          offlineInstallerWorker.postMessage({
+            command: "offlineInstaller",
+            props: {
+              projectId: +localStorage.getItem(current_project_id),
+            },
+          });
+        }
+      }
+    );
 
     /**
      *

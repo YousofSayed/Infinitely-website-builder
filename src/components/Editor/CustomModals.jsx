@@ -49,7 +49,7 @@ export const CustomModals = () => {
         }
         // editor.Commands.run("close:custom:modal");
       }}
-      className={`fixed  transition-all z-[2000]  bg-black/40 right-0 left-0  w-full h-full flex justify-center items-center`}
+      className={`fixed   transition-all z-[2000]  bg-black/40 right-0 left-0  w-full h-full flex justify-center items-center`}
     >
       <main
         style={{
@@ -107,8 +107,8 @@ export const CustomModals = () => {
 
         <section
           style={{
-            transform: "translateZ(0)",
-            willChange: "transform",
+            // transform: "translateZ(0)",
+            // willChange: "transform",
           }}
           className=" p-2 h-full max-h-full overflow-auto rounded-bl-lg rounded-br-lg bg-slate-900"
         >

@@ -236,6 +236,19 @@ export const CodeManagerModal = () => {
     const newChange = {};
     let isHtmlUpdated = false;
     let isCssUpdated = false;
+    let totalHTMLAndCssSize = await (
+      await Promise.all(
+        (
+          await opfs.getFiles([
+            {
+              path: defineRoot(`editor/pages/${currentPageName}.html`),
+              as: "File",
+            },
+            { path: defineRoot(`css/${currentPageName}.css`), as: "File" },
+          ])
+        ).map(async (file) => await file.getSize())
+      )
+    ).reduce((prev, current) => (prev += current), 0);
 
     for (const key in filesData) {
       const root = defineRoot(key);
@@ -300,47 +313,47 @@ export const CodeManagerModal = () => {
       }
       //Handle real time saving
       if (key.includes(`editor/pages/${currentPageName}.html`)) {
-        const htmlContent = filesData[key];
-        const cssContent = filesData[defineRoot(`css/${currentPageName}.css`)];
-        const htmlSize = toMB(getStringSizeBytes(htmlContent)); // size in MB
-        const cssSize = toMB(getStringSizeBytes(cssContent)); // size in MB
+        // const htmlContent = filesData[key];
+        // const cssContent = filesData[defineRoot(`css/${currentPageName}.css`)];
+        // const htmlSize = toMB(getStringSizeBytes(htmlContent)); // size in MB
+        // const cssSize = toMB(getStringSizeBytes(cssContent)); // size in MB
 
-        if (htmlSize + cssSize > 0.2) {
-          // ~200 KB
-          toast.warn(
-            <ToastMsgInfo
-              msg={`The HTML & CSS files is too large for real-time updates. Please reload the page.`}
-            />
-          );
-        } else {
-          // editor.DomComponents.clear();
-          // editor.setComponents(
-          //   renderCssStyles(editor, filesData) + htmlContent,
-          //   { avoidStore: true }
-          // ); // typo: "avoideStore" → "avoidStore"
-          // editor.clearDirtyCount();
-          isHtmlUpdated = true;
-        }
+        // if (htmlSize + cssSize > 0.2) {
+        //   // ~200 KB
+        //   toast.warn(
+        //     <ToastMsgInfo
+        //       msg={`The HTML & CSS files is too large for real-time updates. Please reload the page.`}
+        //     />
+        //   );
+        // } else {
+        //   // editor.DomComponents.clear();
+        //   // editor.setComponents(
+        //   //   renderCssStyles(editor, filesData) + htmlContent,
+        //   //   { avoidStore: true }
+        //   // ); // typo: "avoideStore" → "avoidStore"
+        //   // editor.clearDirtyCount();
+        //   isHtmlUpdated = true;
+        // }
       }
 
       if (key.includes(`css/${currentPageName}.css`) && !isHtmlUpdated) {
-        const cssContent = filesData[key];
-        const cssSize = toMB(getStringSizeBytes(cssContent)); // size in MB
+        // const cssContent = filesData[key];
+        // const cssSize = toMB(getStringSizeBytes(cssContent)); // size in MB
 
-        if (cssSize > 0.15) {
-          // ~150 KB
-          toast.warn(
-            <ToastMsgInfo
-              msg={`The CSS file is too large for real-time updates. Please reload the page.`}
-            />
-          );
-        } else {
-          // editor.Css.clear();
-          // editor.setStyle("");
-          // editor.addComponents(renderCssStyles(editor, cssContent));
-          // editor.clearDirtyCount();
-          isCssUpdated = true;
-        }
+        // if (cssSize > 0.15) {
+        //   // ~150 KB
+        //   toast.warn(
+        //     <ToastMsgInfo
+        //       msg={`The CSS file is too large for real-time updates. Please reload the page.`}
+        //     />
+        //   );
+        // } else {
+        //   // editor.Css.clear();
+        //   // editor.setStyle("");
+        //   // editor.addComponents(renderCssStyles(editor, cssContent));
+        //   // editor.clearDirtyCount();
+        //   isCssUpdated = true;
+        // }
       }
 
       // return;
@@ -384,7 +397,9 @@ export const CodeManagerModal = () => {
     editor.clearDirtyCount();
     // await editor.load();
 
-    if (isHtmlUpdated || isCssUpdated) {
+    console.log('totalHTMLAndCssSize : ' , totalHTMLAndCssSize);
+    
+    if (toMB(totalHTMLAndCssSize , 2) <= 0.25) {
       editor.load();
     } else {
       reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {

@@ -544,6 +544,13 @@ export interface Project {
   dbx_pull_requried?:boolean;
   interactions: InteractionsInDB;
   inited: boolean;
+  installStates : {
+    types:boolean;
+    fonts:boolean;
+    jsHeaderLibs:boolean;
+    jsFooterLibs:boolean;
+    cssLibs:boolean;
+  }
   lastScreenshot: Date | string;
 }
 

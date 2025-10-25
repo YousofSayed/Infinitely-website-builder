@@ -7,6 +7,7 @@ import { Loader } from "../../Loader";
 import { Virtuoso } from "react-virtuoso";
 import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
 import { Input } from "./Input";
+import { For } from "million/react";
 
 //million-ignore
 export const LibraryInstaller = () => {
@@ -92,7 +93,13 @@ export const LibraryInstaller = () => {
           </div>
         </div>
 
-        <section className="h-full overflow-auto  flex flex-col gap-2">
+        {/* <section className="grid grid-cols-3 gap-2">
+          <For each={libraries}>
+            {(lib,i)=><JsLibrary key={i} library={lib} />}
+          </For>
+        </section> */}
+
+        {/* <section className="h-full overflow-auto  flex flex-col gap-2"> */}
           <Virtuoso
             totalCount={libraries.length}
             itemContent={(i) => {
@@ -101,7 +108,7 @@ export const LibraryInstaller = () => {
             }}
             components={{ Item: VirtosuoVerticelWrapper  }}
           />
-        </section>
+        {/* </section> */}
       </main>
     </section>
   );

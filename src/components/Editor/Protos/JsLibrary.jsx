@@ -169,7 +169,7 @@ export const JsLibrary = ({
         },
       });
       // }
-
+      window.monacoLoaded = false;
       console.log(response);
     } catch (error) {
       console.error(
@@ -217,7 +217,7 @@ export const JsLibrary = ({
 
               <hr className="h-[2px] w-[80px] bg-red-300 border-2 border-blue-600" />
 
-              <div className="w-full flex items-center justify-between bg-slate-900 p-2 rounded-lg">
+              <div className="w-full flex items-center justify-between flex-wrap gap-2 bg-slate-900 p-2 rounded-lg">
                 {(library?.fileType == "js" ||
                   library?.latest?.endsWith("js")) && (
                   <>

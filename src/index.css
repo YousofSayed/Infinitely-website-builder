@@ -46,11 +46,11 @@ button:disabled{
 }
 
 
-.will-change-for-all,
+/* .will-change-for-all,
 .will-change-for-all * {
   will-change: transform, opacity;
 
-}
+} */
 
 ul,
 li {

@@ -3014,7 +3014,7 @@ export function workerCallbackMaker(worker, commandCallback, callback = (props) 
 
     if (identifier === commandCallback) {
       console.log("matched, props:", props);
-      clearTimeout(timeoutId);
+      // clearTimeout(timeoutId);
       try {
         await callback(props);
       } finally {
@@ -3025,10 +3025,10 @@ export function workerCallbackMaker(worker, commandCallback, callback = (props) 
 
   worker.addEventListener("message", callbackWorker);
 
-  const timeoutId = setTimeout(() => {
-    worker.removeEventListener("message", callbackWorker);
-    console.warn(`workerCallbackMaker: timeout waiting for '${commandCallback}'`);
-  }, timeout);
+  // const timeoutId = setTimeout(() => {
+  //   worker.removeEventListener("message", callbackWorker);
+  //   console.warn(`workerCallbackMaker: timeout waiting for '${commandCallback}'`);
+  // }, timeout);
 }
 
 

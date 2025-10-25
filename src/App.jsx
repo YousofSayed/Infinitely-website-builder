@@ -55,7 +55,6 @@ function App() {
   const navigate = useNavigate();
   // const location = useLocation();
 
-  useOfflineHandler();
 
   useEffect(() => {
     /**

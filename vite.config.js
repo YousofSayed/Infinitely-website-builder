@@ -20,6 +20,11 @@ export default defineConfig({
    server: {
     watch: {
       ignored: ['**/node_modules/**', '**/.git/**']
+    },
+     headers: {
+      'Referrer-Policy': 'no-referrer-when-downgrade',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Opener-Policy': 'same-origin'
     }
   },
   optimizeDeps: {

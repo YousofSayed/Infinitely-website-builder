@@ -331,7 +331,7 @@ export const Media = ({ editor }) => {
         const child = this.components().models[0];
         if (!child) return;
         const childEl = child.getEl();
-
+        if(!childEl)return;
         const originalAttributes = child.getAttributes();
         const childAttributes = { ...attributes };
         delete childAttributes["id"];

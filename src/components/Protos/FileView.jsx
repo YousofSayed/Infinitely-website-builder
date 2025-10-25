@@ -162,10 +162,10 @@ export const FileView = ({
               //   console.log("image load...");
               // }}
               loading="lazy"
-              style={{
-                willChange:'transform',
-                zIndex:'-1'
-              }}
+              // style={{
+              //   willChange:'transform',
+              //   zIndex:'-1'
+              // }}
               onClick={(ev) => onItemClicked(ev, asset)}
               className="w-full h-full object-contain "
               src={`/assets/${asset.name}`}

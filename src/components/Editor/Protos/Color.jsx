@@ -62,7 +62,7 @@ export const Color = ({
     });
 
   return (
-    <section className={`flex flex-col gap-2`}>
+    <section className={`flex flex-col gap-2 w-full`}>
       {label && <FitTitle className="custom-font-size">{label}</FitTitle>}
 
       <section

@@ -17,6 +17,7 @@ import { db } from "./db";
 import { opfs } from "./initOpfs";
 import { buildProject } from "./exportProject";
 import { tmp } from "../constants/RestAPIEndpoints";
+import { parseHTML } from "linkedom";
 
 export const html = String.raw;
 export const css = String.raw;
@@ -1291,6 +1292,38 @@ export async function installFonts(fonts) {
     });
   }
 }
+
+/**
+ *
+ * @param {string | URL | Request} input
+ * @param {RequestInit | undefined} init
+ * @returns {Promise<Response>}
+ */
+export async function fetchFromMain(input, init, type) {
+  try {
+    return new Promise(async (res, rej) => {
+      const callack = (ev) => {
+        const { data } = ev;
+        const { props, command } = data;
+        if (command !== "fetchFromMain") return;
+        // const { response } = props;
+        res(props);
+        self.removeEventListener("message", callack);
+      };
+      self.addEventListener("message", callack);
+      self.postMessage({
+        command: "fetchFromMain",
+        props: {
+          input,
+          init,
+          type,
+        },
+      });
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+}
 /**
  *
  * @param {import('./types').RestAPIModel[]} rModels
@@ -1306,7 +1339,36 @@ export async function installRestModelsAPI(rModels) {
         return await new Promise((res, rej) => res(model));
       }
 
+      // if(model.response){
+      //   return await new Promise((res, rej) => res(model));
+      // }
+
       try {
+        if (model.url.startsWith(".") || model.url.startsWith("/")) {
+          const response = await fetchFromMain(
+            model.url,
+            {
+              method: model.method,
+              headers: Object.keys(model.headers || {}).length
+                ? model.headers
+                : undefined,
+              body: Object.keys(model.body || {}).length
+                ? model.body
+                : undefined,
+            },
+            "blob"
+          );
+          const dataBlob = await response.response;
+          console.log("data type : ", dataBlob);
+
+          if (!dataBlob.type.includes("html")) {
+            model.response = await dataBlob.text();
+            model.waitToInstall = false;
+          } else {
+            throw new Error(`Faild to install ${model.name}`);
+          }
+          return;
+        }
         const response = await fetch(model.url, {
           method: model.method,
           headers: Object.keys(model.headers || {}).length
@@ -1314,9 +1376,15 @@ export async function installRestModelsAPI(rModels) {
             : undefined,
           body: Object.keys(model.body || {}).length ? model.body : undefined,
         });
-        const data = await response.json();
-        model.response = JSON.stringify(data);
-        model.waitToInstall = false;
+        const dataBlob = await response.blob();
+        console.log("data type : ", dataBlob);
+
+        if (!dataBlob.type.includes("html")) {
+          model.response = await dataBlob.text();
+          model.waitToInstall = false;
+        } else {
+          throw new Error(`Faild to install ${model.name}`);
+        }
       } catch (error) {
         console.error(`Error fetching ${model.name}:`, error);
         model.response = null;
@@ -1490,9 +1558,52 @@ export const buildPageData = async (page = "", projectData, projectSetting) => {
   //   mainRoot,
   //   `projects/project-${projectId}` //OR opfs.id
   // );
-  const pageContent = await (
+  let pageContent = await (
     await opfs.getFile(defineRoot(`editor/pages/${currentPageId}.html`))
   ).text();
+
+  const { document } = parseHTML(doDocument(pageContent));
+  const dv = await (
+    await import("../constants/directivesAttributes")
+  ).directivesAttributes;
+
+  document
+    .querySelectorAll(`${dv.map((dvItem) => `[${dvItem}]`).join(",")}`)
+    .forEach((el) => {
+      dv.forEach((dvItem) => {
+        const attrVal = el.getAttribute(dvItem);
+        if (!attrVal) return;
+        el.setAttribute(
+          dvItem,
+          `
+      (()=>  {try {
+         return (${attrVal})
+    } catch (error) {
+      console.error(error  , 'error at ${dvItem} directive in this el : ', $el  );
+      throw new Error(error);
+    }})()
+        `
+        );
+      });
+    });
+
+  pageContent = document.body.innerHTML;
+  //  ()=>  {try {
+  //         ${attrVal}
+  //   } catch (error) {
+  //     console.error(error);
+  //     throw new Error(error);
+  //   }}
+  //  tryCatch(()=>{
+  //         (${attrVal})
+  //         })
+
+  //  ( try {
+
+  //   } catch (error) {
+  //     console.error(error);
+  //     throw new Error(error);
+  //   })
   // const libsFolder = await opfs.getFolder(projectDir, "libs");
   // const libsFolders = await opfs.getFolders(libsFolder, ["js", "css"]);
   // const jsFolders = await opfs.getFolders(libsFolders[0], ["header", "footer"]);
@@ -1668,8 +1779,8 @@ export async function buildPageContentFromData({
           .map((key) => `${key}="${pageData.bodyAttributes[key]}"`)
           .join(" ")}
       >
-        ${pageData.content} ${pageData.footerScripts} ${pageData.mainScripts}
-        ${pageData.motions} ${pageData.globalScript} ${pageData.localScript}
+        ${pageData.content} ${pageData.footerScripts} ${pageData.globalScript}
+        ${pageData.localScript} ${pageData.mainScripts} ${pageData.motions}
       </body>
     </html>
   `;
@@ -2154,11 +2265,11 @@ export function doGlobalType(libName, globalTypeName, isExportDefault = false) {
     ? `import _lf from "${libName}";`
     : `import * as _lf from "${libName}";`;
 
-  const moduleDeclaration = `
-declare module "${libName}" {
-  ${isExportDefault ? "export default _lf;" : "export = _lf;"}
-}
-`;
+  //   const moduleDeclaration = `
+  // declare module "${libName}" {
+  //   ${isExportDefault ? "export default _lf;" : ""}
+  // }
+  // `;
 
   const globalDeclaration =
     globalTypeName && globalTypeName.trim().length > 0
@@ -2171,17 +2282,14 @@ declare global {
 
   return `
 ${importStatement}
-${moduleDeclaration}
 ${globalDeclaration}
 export {};
 `;
 }
 
-
-
 export function needsWrapping(code) {
   // Normalize for easier regex detection
-  const clean = code.replace(/\s+/g, ' ');
+  const clean = code.replace(/\s+/g, " ");
 
   // Skip if already wrapped in a module declaration
   if (/\bdeclare\s+module\s+['"][^'"]+['"]\s*{/.test(clean)) {
@@ -2194,9 +2302,10 @@ export function needsWrapping(code) {
   }
 
   // Wrap only if it has real exports (ESM or TS)
-  return /\bexport\s+(default|const|class|function|interface|type|enum|namespace)\b/.test(clean);
+  return /\bexport\s+(default|const|class|function|interface|type|enum|namespace)\b/.test(
+    clean
+  );
 }
-
 
 export function wrapModule(libName, code) {
   return `declare module "${libName}" {\n${code}\n}`;

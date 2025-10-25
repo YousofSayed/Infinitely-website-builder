@@ -63,13 +63,13 @@ export const Choices = ({
     currentIndex.current = index;
     const active = index <= -1 ? false : true;
     setActive(Boolean(active));
-    // console.log(
-    //   "indexoo : ",
-    //   index,
-    //   currentIndex.current,
-    //   keywords[index],
-    //   active && currentIndex.current == 0
-    // );
+    console.log(
+      "indexoo : ",
+      index,
+      currentIndex.current,
+      keywords[index],
+      active && currentIndex.current == 0
+    );
 
     // active ? onActive({ keyword, index: currentIndex.current }) :  onUnActive({ keyword, index: currentIndex.current });
     setKeyword(keywords[index]);
@@ -87,7 +87,7 @@ export const Choices = ({
     }
 
     // setCurrentSelcetor(currentSelector);
-  }, [selector, active, sle, editor]);
+  }, [selector, active, sle, editor , keywords]);
 
   const makeNotifiers = ()=>{
   const newNotifiers = {};
