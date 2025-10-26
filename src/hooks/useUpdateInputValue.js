@@ -26,7 +26,7 @@ let idleId;
 
 /**
  *
- * @param {{ cssProp:string ,setVal:Function ,returnPropsAsIt:boolean, getAllStyles:(styles:CSSStyleDeclaration)=>void, onEffect :(cssProp:string , Value : Function)=>{} }}} param0
+ * @param {{ cssProp:string ,setVal:Function ,returnPropsAsIt:boolean, getAllStyles:(styles:CSSStyleDeclaration)=>void, onEffect :(cssProp:string , Value : Function)=>{} , debs:any[]}}} param0
  */
 export const useUpdateInputValue = ({
   cssProp,
@@ -34,6 +34,7 @@ export const useUpdateInputValue = ({
   returnPropsAsIt = false,
   getAllStyles,
   onEffect = (cssProp, setVal) => {},
+  debs=[],
 }) => {
   const currentElObj = useRecoilValue(currentElState);
   const editor = useEditorMaybe();
@@ -176,6 +177,7 @@ export const useUpdateInputValue = ({
     showAnimationsBuilder,
     framesStyles,
     isFunction(getAllStyles) ? cmpRules: null,
+    ...debs
   ]);
 
   useEffect(() => { //(isFunction(getAllStyles) ? useEffect : useMemo)
@@ -217,5 +219,6 @@ export const useUpdateInputValue = ({
     showAnimationsBuilder,
     framesStyles,
     isFunction(getAllStyles) ? cmpRules: null,
+    ...debs
   ]);
 };

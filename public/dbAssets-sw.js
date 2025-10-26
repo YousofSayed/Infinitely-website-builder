@@ -71,16 +71,15 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   const req = event.request;
 
-  if (
-    (req.destination === "iframe" || req.destination === "frame") &&
-    !req.url.startsWith(self.location.origin)
-  ) {
-    event.respondWith(fetch(req));
-    return;
-  }
+  // if (
+  //   (req.destination === "iframe" || req.destination === "frame") &&
+  //   !req.url.startsWith(self.location.origin)
+  // ) {
+  //   event.respondWith(fetch(req));
+  //   return;
+  // }
 
-  if (url.protocol === "blob:" || url.protocol === "data:") return;
-  if (url.origin !== self.location.origin) return;
+
   let pathname = parseTextToURI(url.pathname);
 
   const routePrefixes = [

@@ -9,8 +9,9 @@ import {
 } from "../../../helpers/cocktail";
 import { SmallButton } from "./SmallButton";
 import { ChoicesForStates } from "./ChoicesForStates";
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import {
+  cmpRulesState,
   currentElState,
   ruleState,
   selectorState,
@@ -39,7 +40,7 @@ export const SelectState = ({ placeholder }) => {
     if (!selectedEl.currentEl || selectedEl.currentEl.tagName == "body") return;
     extractRules();
     // updateCurrentIndex();
-  }, [selectedEl, selector]);
+  }, [selectedEl, selector ]);
 
   useEffect(() => {
     const callback = () => {
@@ -115,47 +116,8 @@ export const SelectState = ({ placeholder }) => {
       currentSelector
     ).filter((r) => r.states);
 
-    // .filter((sdt) => {
-    //   const output =
-    //     sdt.states &&
-    //     sdt.statesAsArray.length &&
-    //     !filterHandledRules.includes(sdt.states);
-    //   filterHandledRules.push(sdt.states);
-    //   return output;
-    // });
     console.log("ruuules : ", selectorRules);
 
-    // const selectorRules = editor.CssComposer.getRules(`${currentSelector}`).map(
-    //   (rule) => {
-    //     return {
-    //       states: rule.attributes.state,
-    //       styles: rule.attributes.style,
-    //       id: rule.id,
-    //       atRuleType: rule.attributes.atRuleType,
-    //       atRuleParams: rule.attributes.mediaText,
-    //       rule:`${currentSelector}${rule.attributes.state}`,
-    //       states : rule.attributes.selectors.map(sl=>sl.getFullName())
-    //       // rule: string;
-    //       // fullRule: string | null;
-    //       // styles: {};
-    //       // states: string | null;
-    //       // statesAsArray: RegExpMatchArray | never[] | null;
-    //       // atRuleType: string | null;
-    //       // atRuleParams: string | null;
-    //     };
-    //   }
-    // );
-    // console.log(
-    //   "a3aaaa : ",
-    //   `${currentSelector}${rule.ruleString}`,
-    //   currentSelector,
-    //   selectorRules,
-    //   editor.CssComposer.getRules(`${currentSelector}`),
-    //   editor.CssComposer.getRule(
-    //     `${currentSelector}${rule.ruleString}`
-    //   ).styleToString()
-    // );
-    // return {rules }
     isSetRules && setStates([...selectorRules]);
     return selectorRules;
   }

@@ -30,6 +30,7 @@ export const Color = ({
   label,
   colorState = "",
   onColorChange = (_) => {},
+  debs = [],
 }) => {
   const setClass = useSetClassForCurrentEl();
   const [color, setColor] = useState(colorState);
@@ -49,16 +50,25 @@ export const Color = ({
     }
   }, [showHexColor]);
 
+  useEffect(()=>{
+    setColor(colorState);
+  },[colorState])
+
   useCloseMenu(hexColorRef, setShowHexColor);
 
   !disableSetClassMethod &&
     useUpdateInputValue({
       cssProp,
       onEffect(cssProp, value) {
-        // console.log('vvaaaaaaal : ' , value , typeof value);
+        // console.log('vvaaaaaaal : ' , value , cssProp,rgbStringToHex(value), typeof value);
+        if(typeof value !== "string"){
+          setColor("");
+          return;
+        }
 
-        setColor(typeof value == "string" ? rgbStringToHex(value) : "");
+        setColor(CSS.supports(cssProp , value) ? rgbStringToHex(value) || value : "");
       },
+      debs,
     });
 
   return (

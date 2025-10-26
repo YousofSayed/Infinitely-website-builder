@@ -21,10 +21,10 @@ export default defineConfig({
     watch: {
       ignored: ['**/node_modules/**', '**/.git/**']
     },
-     headers: {
-       "Cross-Origin-Embedder-Policy": "unsafe-none",
-      "Cross-Origin-Opener-Policy": "unsafe-none",
-    }
+    //  headers: {
+    //    "Cross-Origin-Embedder-Policy": "unsafe-none",
+    //   "Cross-Origin-Opener-Policy": "unsafe-none",
+    // }
   },
   optimizeDeps: {
     esbuildOptions: {

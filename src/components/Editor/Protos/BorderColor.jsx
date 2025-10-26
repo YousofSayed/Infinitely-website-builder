@@ -4,10 +4,12 @@ import { Color } from "./Color";
 import { SelectedBorder } from "./SelectedBorder";
 import { FitTitle } from "./FitTitle";
 import { ScrollableToolbar } from "../../Protos/ScrollableToolbar";
+import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
 
 export const BorderColor = () => {
-  const [option, setOption] = useState("");
-  const [cssProps, setCssProps] = useState([]);
+  const [option, setOption] = useState("all");
+  const [cssProps, setCssProps] = useState("");
+  const [colorState, setColorState] = useState("");
   const handleCssProps = () => {
     switch (option) {
       case "top":
@@ -33,11 +35,25 @@ export const BorderColor = () => {
     handleCssProps();
   }, [option]);
 
+  useUpdateInputValue({
+    cssProp: cssProps,
+    // debs: [],
+
+    // onEffect(cssProp , value){
+    //   console.log('options : ' , cssProp , value);
+
+    //   setColorState(value);
+    // }
+  });
+
   return (
     <section className="flex flex-col gap-3  justify-between ">
       {/* <P> </P> */}
       <FitTitle className="capitalize">border color</FitTitle>
-      <ScrollableToolbar className="flex justify-between gap-1 bg-slate-800 p-2 rounded-lg" space="3">
+      <ScrollableToolbar
+        className="flex justify-between gap-1 bg-slate-800 p-2 rounded-lg"
+        space="3"
+      >
         <SelectedBorder
           borderName={"border-t-2"}
           borderDir="top"
@@ -70,7 +86,7 @@ export const BorderColor = () => {
         />
       </ScrollableToolbar>
       <div className="flex gap-2">
-        <Color cssProp={cssProps} />
+        <Color cssProp={cssProps} colorState={colorState} debs={[option , cssProps]} />
       </div>
     </section>
   );

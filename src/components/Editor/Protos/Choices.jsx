@@ -12,6 +12,7 @@ import {
   cmpRulesState,
   currentElState,
   editorStt,
+  ruleState,
   selectorState,
 } from "../../../helpers/atoms";
 import { useEditorMaybe } from "@grapesjs/react";
@@ -44,7 +45,7 @@ export const Choices = ({
   const currentIndex = useRef();
   const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
   const [notifiers, setNotifiers] = useState({});
-
+  const [rule, setRule] = useRecoilState(ruleState);
   // useEffect(() => {
   //   setActive(false);
   // }, [sle]);
@@ -87,10 +88,10 @@ export const Choices = ({
     }
 
     // setCurrentSelcetor(currentSelector);
-  }, [selector, active, sle, editor , keywords]);
+  }, [selector, active, sle, editor, keywords]);
 
-  const makeNotifiers = ()=>{
-  const newNotifiers = {};
+  const makeNotifiers = () => {
+    const newNotifiers = {};
     const currentMedia = getCurrentMediaDevice(editor);
     console.log("crm:", cmpRules, currentMedia);
 
@@ -107,48 +108,55 @@ export const Choices = ({
         rule.atRuleType &&
         rule.atRuleParams == currentMedia.atRuleParams &&
         keywords.some((item) => {
-          const className = rule.rule.match(/\..+\{/ig)?.[0]?.replace?.('.','')?.replace?.('{','');
-          console.log('className  : ' , className);
+          const className = rule.rule
+            .match(/\..+\{/gi)?.[0]
+            ?.replace?.(".", "")
+            ?.replace?.("{", "");
+          console.log("className  : ", className);
+
+          const cond = item == className || className.startsWith(`${item}:`);
+          console.log('cond : ' , cond , 'item:' , item);
           
-          const cond = item == className;
           cond && (keyword = item);
           return cond;
         })
       ) {
         newNotifiers[keyword] = true;
-      } 
-      
-      else if (
+      } else if (
         !rule.atRuleType &&
         Boolean(rule.atRuleParams) == Boolean(currentMedia.atRuleParams) &&
-       keywords.some((item) => {
-          const className = rule.rule.match(/\..+\{/ig)?.[0]?.replace?.('.','')?.replace?.('{','');
-          console.log('className  : ' , className);
+        keywords.some((item) => {
+          const className = rule.rule
+            .match(/\..+\{/gi)?.[0]
+            ?.replace?.(".", "")
+            ?.replace?.("{", "");
+          console.log("className  : ", className);
           
-          const cond = item == className;
+          const cond = item == className || className.startsWith(`${item}:`);
+          console.log('cond : ' , cond , 'item:' , item , className);
           cond && (keyword = item);
           return cond;
         })
       ) {
-        console.log('cr from elsooooo');
-        
+        console.log("cr from elsooooo");
+
         newNotifiers[keyword] = true;
       }
     }
 
     setNotifiers(newNotifiers);
     console.log("cr notf : ", newNotifiers);
-  }
+  };
 
   useEffect(() => {
     if (!enableSelecting) return;
     if (!(editor && cmpRules.length)) return;
     makeNotifiers();
-    editor.on('device:change',makeNotifiers);
-    return ()=>{
-      editor.off('device:change',makeNotifiers);
-    }
-  }, [cmpRules, editor, sle , keywords]);
+    editor.on("device:change", makeNotifiers);
+    return () => {
+      editor.off("device:change", makeNotifiers);
+    };
+  }, [cmpRules, editor, sle, keywords]);
 
   useEffect(() => {
     const selected = editor.getSelected();
@@ -203,7 +211,12 @@ export const Choices = ({
                 // currentIndex.current = i;
                 // setKeyword(keyword);
                 console.log("selector setttting");
-
+                setRule({
+                  is: false,
+                  ruleString: "",
+                  atRuleParams: null,
+                  atRuleType: null,
+                });
                 setSelector(
                   selector.toLowerCase() === keyword.toLowerCase()
                     ? ""

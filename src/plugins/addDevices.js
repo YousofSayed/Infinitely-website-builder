@@ -67,7 +67,8 @@ export const addDevices = (editor) => {
       const canvasWrapper = editor.getContainer();
       if (!iframe || !canvasWrapper) return;
       // iframe.style.display = "none";
-
+      console.log('from zoom fit');
+      
       const device = editor.getDevice();
       const deviceDef = deviceManager.get(device)?.attributes;
 
@@ -110,7 +111,8 @@ export const addDevices = (editor) => {
       // });
       emitEditorContainerZoom();
       restartGSAPMotions(editor);
-    }, Boolean(firstTime ) ? 80 : 0);
+    }, 80);
+    // Boolean(firstTime ) ? 80 : 0
   };
 
   resizerObserver = new ResizeObserver(() => {
@@ -153,7 +155,7 @@ export const addDevices = (editor) => {
   // });
 
   editor.on(
-    "canvas:frame:load",
+    "canvas:frame:load:body",
     /**
      *
      * @param {{window:Window}} param0
@@ -162,7 +164,6 @@ export const addDevices = (editor) => {
       // console.log('from load ;' , document.querySelector(`#right-panel`));
       //document.querySelector(`#panel-group`)
 
-      zoomToFit();
       firstTime++;
       if (mutationsObserver && mutationsObserver instanceof MutationObserver) {
         mutationsObserver.disconnect();
@@ -183,6 +184,9 @@ export const addDevices = (editor) => {
         childList: true,
         subtree: true,
       });
+
+      zoomToFit();
+
       // resizerObserver.observe(document.querySelector(`#right-panel`));
       // resizerObserver.observe(document.querySelector(`#left-panel`));
     }

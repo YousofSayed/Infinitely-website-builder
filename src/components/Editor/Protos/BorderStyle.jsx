@@ -8,7 +8,7 @@ import { FitTitle } from "./FitTitle";
 import { ScrollableToolbar } from "../../Protos/ScrollableToolbar";
 
 export const BorderStyle = () => {
-  const [option, setOption] = useState("");
+  const [option, setOption] = useState("all");
   const [cssProps, setCssProps] = useState("");
 
   const handleCssProps = () => {
@@ -82,7 +82,7 @@ export const BorderStyle = () => {
           setOption={setOption}
         />
       </ScrollableToolbar>
-      <SelectStyle cssProp={cssProps} keywords={borderStyles} placeholder="border style"/>
+      <SelectStyle cssProp={cssProps} keywords={borderStyles} debs={[cssProps]} placeholder="border style"/>
     </section>
   );
 };

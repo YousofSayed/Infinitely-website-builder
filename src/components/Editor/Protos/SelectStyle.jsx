@@ -5,7 +5,7 @@ import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
 
 /**
  *
- * @param {{cssProp:string , wrap :boolean, splitHyphen : boolean , placeholder:string , label:string , keywords:string[] , setKeyword:(keyword : string)=>void}} param0
+ * @param {{cssProp:string , wrap :boolean, splitHyphen : boolean , placeholder:string , label:string , keywords:string[] , setKeyword:(keyword : string)=>void , debs:any[]}} param0
  * @returns
  */
 export const SelectStyle = ({
@@ -15,12 +15,13 @@ export const SelectStyle = ({
   label,
   keywords,
   placeholder='',
-  setKeyword=(_)=>{}
+  setKeyword=(_)=>{},
+  debs=[],
 }) => {
   const setClass = useSetClassForCurrentEl();
   const [val , setVal] = useState('');
 
-  useUpdateInputValue({setVal , cssProp});
+  useUpdateInputValue({setVal , cssProp , debs});
 
   const onInput = (value) => {
     setVal(value);

@@ -8,8 +8,10 @@ import React, {
 import { Layout } from "./Protos/Layout";
 import { useRecoilState, useRecoilValue } from "recoil";
 import {
+  cmpRulesState,
   currentElState,
   ruleState,
+  selectorState,
   showAnimationsBuilderState,
 } from "../../helpers/atoms";
 import { StyleTypography } from "./Protos/StyleTypography";
@@ -42,7 +44,7 @@ import { DirectionsModel } from "./Protos/DirectionsModel";
 import { MultiChoice } from "./Protos/MultiChoice";
 import { AddMultiValuestoSingleProp } from "./Protos/AddMultiValuestoSingleProp";
 import { useUpdateInputValue } from "../../hooks/useUpdateInputValue";
-import { toKebabCase } from "../../helpers/functions";
+import { getCurrentSelector, toKebabCase } from "../../helpers/functions";
 
 const allCssProps = Object.fromEntries(
   Object.entries(styles).map(([key, style]) => {
@@ -99,11 +101,11 @@ const StyleAccordion = () => {
         for (const [ctg, props] of Object.entries(allCssProps)) {
           if (styles[key] && props.includes(kebabProp)) {
             newNotf[ctg] = true;
-          } 
+          }
         }
       }
-      console.log('notifires : ' ,newNotf , styles);
-      
+      console.log("notifires : ", newNotf, styles);
+
       setNotifires(newNotf);
     },
   });
@@ -284,10 +286,15 @@ export const StyleAside = memo(({ className }) => {
   const editor = useEditorMaybe();
   const showAnimeBuilder = useRecoilValue(showAnimationsBuilderState);
   const [currentEl, setCurrentEl] = useRecoilState(currentElState);
-  const [selector, setSelector] = useRecoilState(ruleState);
+  const [globalRule, setGlobalRule] = useRecoilState(ruleState);
+  const [selector, setSelector] = useRecoilState(selectorState);
   const [showClasses, setShowClasses] = useState(false);
   const [animateRef] = useAutoAnimate();
   const [key, setKey] = useState(uniqueId("Accordion-id-"));
+  const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
+  // const [globalRule , setGlobalRule] = useRecoilState(ruleState);
+  const [notifyStates, setNotifyStates] = useState(false);
+  const [notifyClasses, setNotifyClasses] = useState(false);
   // useEffect(() => {
   //   /**
   //    *
@@ -312,14 +319,59 @@ export const StyleAside = memo(({ className }) => {
     //     !selector.ruleString.includes("::after")
     // );
     const showVal =
-      selector.ruleString.includes("::before") ||
-      !selector.ruleString.includes("::after");
+      globalRule.ruleString.includes("::before") ||
+      !globalRule.ruleString.includes("::after");
     setShowClasses(showVal);
-  }, [selector]);
+  }, [globalRule]);
+
+  useEffect(() => {
+    if(!editor) return;
+    const sel = editor.getSelected();
+    if(!sel) {
+      setNotifyClasses(false);
+      return;
+    }
+    const classes = sel.getClasses() || [];
+    setNotifyClasses(classes.length > 0 );
+  }, [editor, currentEl]);
 
   useEffect(() => {
     setKey(uniqueId("Accordion-id-"));
   }, [showAnimeBuilder]);
+
+  useEffect(() => {
+    if (!editor) {
+      setNotifyStates(false);
+      return;
+    }
+    if (!editor.getSelected()) {
+      setNotifyStates(false);
+      return;
+    }
+
+    const currentSelector = getCurrentSelector(selector, editor.getSelected());
+    console.log(
+      "seco currentSelector for states notify : ",
+      currentSelector,
+      selector
+    );
+
+    // for (const rule of cmpRules) {
+    //   console.log(`seco : `  , rule.states && currentSelector && rule.rule.startsWith(currentSelector));
+
+    //   if (rule.states && currentSelector && rule.rule.startsWith(currentSelector)) {
+    //     return;
+    //   }
+    // }
+    setNotifyStates(
+      cmpRules.some(
+        (rule) =>
+          rule.states &&
+          currentSelector &&
+          rule.rule.startsWith(currentSelector)
+      )
+    );
+  }, [cmpRules, currentEl, editor, selector]);
 
   return (
     <section
@@ -367,11 +419,11 @@ export const StyleAside = memo(({ className }) => {
       <>
         {!showAnimeBuilder && (
           <Accordion>
-            <AccordionItem title={"classes"}>
+            <AccordionItem title={"classes"} notify={notifyClasses} >
               {showClasses ? <SelectClass /> : null}
             </AccordionItem>
 
-            <AccordionItem key={2} title={"states"}>
+            <AccordionItem key={2} title={"states"} notify={notifyStates}>
               <SelectState />
             </AccordionItem>
           </Accordion>

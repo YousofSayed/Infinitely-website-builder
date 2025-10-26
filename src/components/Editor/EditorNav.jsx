@@ -227,6 +227,10 @@ export const HomeNav = () => {
                       refForward={pullRef}
                       // disabled={!projectData.dbx_pull_requried}
                       onClick={async (ev) => {
+                        const cnfrm = confirm(
+                          `Are you sure you want to pull from dropbox? This will overwrite your local project files.`
+                        );
+                        if (!cnfrm) return;
                         console.log("refff : ", pushRef.current);
                         const btn = ev.currentTarget;
                         addClickClass(btn, "click");
