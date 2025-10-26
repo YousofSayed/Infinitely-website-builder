@@ -1272,20 +1272,20 @@ export async function listenToOPFSBroadcastChannel({ id }) {
   console.log("Initialized listenToOPFSBroadcastChannel", id);
 
   await initOPFS({ id });
-  const opfsBc = new BroadcastChannel("opfs");
+  // const opfsBc = new BroadcastChannel("opfs");
 
-  opfsBc.addEventListener("message", (ev) => {
-    console.log(`opfcBc message:`, ev.data);
-  });
+  // opfsBc.addEventListener("message", (ev) => {
+  //   console.log(`opfcBc message:`, ev.data);
+  // });
 
   const broadCastCleaner = opfs.onBroadcast("getFile", async (data) => {
     const path = `${data.folderPath}/${data.fileName}`;
-    console.log(
-      "Received getFile event from broadcast",
-      opfs.id,
-      data.projectId,
-      path
-    );
+    // console.log(
+    //   "Received getFile event from broadcast",
+    //   opfs.id,
+    //   data.projectId,
+    //   path
+    // );
 
     let fileBraodcast;
 

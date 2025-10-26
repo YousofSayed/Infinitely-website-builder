@@ -20,6 +20,7 @@ import { random } from "lodash";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { uniqueID } from "../../helpers/cocktail";
 import { ToastMsgInfo } from "../Editor/Protos/ToastMsgInfo";
+import { checkDropBoxSignInState } from "../../helpers/dropboxHandlers";
 
 // million-ignore
 /**
@@ -105,6 +106,10 @@ export const Project = ({ project }) => {
         <Li
           onClick={async () => {
             if (!project.inited) return;
+            if(project.apps == 'Dropbox' && !(await checkDropBoxSignInState())){
+              toast.error(<ToastMsgInfo msg={"Please sign in to Dropbox to continue."} />);
+              return;
+            };
             opfs.id = project.id;
             localStorage.setItem(current_project_id, project.id);
             localStorage.setItem(current_page_id, "index");

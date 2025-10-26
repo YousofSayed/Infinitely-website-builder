@@ -28,15 +28,30 @@ const appStatus = {
   msg: "Contact me if you need any thing 💙",
   version: version,
 };
+
+(() => {
+  console.log("%c🇵🇸  FREE PALESTINE 🇵🇸", "font-size: 50px;");
+  console.log(
+    "%c     \n%c     \n%c     \n%c     ",
+    "background:#000; padding:20px 100px;",
+    "background:#fff; padding:20px 100px;",
+    "background:#009739; padding:20px 100px;",
+    "background:linear-gradient(135deg, #ce1126 50%, transparent 50%); padding:20px 100px;"
+  );
+  console.log(
+    "%c🇵🇸  FREE PALESTINE 🇵🇸",
+    "font-size: 40px; font-weight:bold; color:#009739; text-shadow:2px 2px 4px #000;"
+  );
+})();
 console.table(appStatus);
 if (!isDevMode()) {
   const originalLog = window.console.log;
   window.console.log = (...data) => {
-    // Prevent infinite loop
-    if (data.includes("[APP_STATUS]")) return;
-    window.console.clear();
-    console.table(appStatus);
-    // originalLog(...data);
+    // // Prevent infinite loop
+    // if (data.includes("[APP_STATUS]")) return;
+    // window.console.clear();
+    // console.table(appStatus);
+    // // originalLog(...data);
   };
 }
 
@@ -149,17 +164,3 @@ window.addEventListener("unmout", () => {
 
 window.__initialWindowKeys = new Set(Object.getOwnPropertyNames(window));
 
-(() => {
-  console.log("%c🇵🇸  FREE PALESTINE 🇵🇸", "font-size: 50px;");
-  console.log(
-    "%c     \n%c     \n%c     \n%c     ",
-    "background:#000; padding:20px 100px;",
-    "background:#fff; padding:20px 100px;",
-    "background:#009739; padding:20px 100px;",
-    "background:linear-gradient(135deg, #ce1126 50%, transparent 50%); padding:20px 100px;"
-  );
-  console.log(
-    "%c🇵🇸  FREE PALESTINE 🇵🇸",
-    "font-size: 40px; font-weight:bold; color:#009739; text-shadow:2px 2px 4px #000;"
-  );
-})();
