@@ -45,43 +45,7 @@ import { MultiChoice } from "./Protos/MultiChoice";
 import { AddMultiValuestoSingleProp } from "./Protos/AddMultiValuestoSingleProp";
 import { useUpdateInputValue } from "../../hooks/useUpdateInputValue";
 import { getCurrentSelector, toKebabCase } from "../../helpers/functions";
-import { keyframeStylesInstance } from "../../constants/InfinitelyInstances";
-import { InfinitelyEvents } from "../../constants/infinitelyEvents";
 
-const allCssProps = Object.fromEntries(
-  Object.entries(styles).map(([key, style]) => {
-    // style.forEach((props) => {
-    //   if (props.cssProp) {
-    //     isArray(props.cssProp)
-    //       ? prev.push(...props.cssProp)
-    //       : prev.push(props.cssProp);
-    //   }
-
-    //   if (props.directions) {
-    //     console.log(
-    //       "all css props : directions ,",
-    //       Object.values(props.directions)
-    //     );
-
-    //     prev.push(...Object.values(props.directions));
-    //   }
-    // });
-    const cssProps = style.reduce((prev, { cssProp, directions }) => {
-      if (cssProp) {
-        isArray(cssProp) ? prev.push(...cssProp) : prev.push(cssProp);
-      }
-
-      if (directions) {
-        console.log("all css props : directions ,", Object.values(directions));
-
-        prev.push(...Object.values(directions));
-      }
-
-      return prev;
-    }, []);
-    return [key, cssProps];
-  })
-);
 
 const SelectElementToStyle = () => (
   <h1 className="text-slate-400 custom-font-size text-center animate-pulse capitalize font-semibold bg-slate-900 rounded-lg p-2">
@@ -93,15 +57,52 @@ const StyleAccordion = () => {
   // const showAnimeBuilder = useRecoilValue(showAnimationsBuilderState);
   const [notifires, setNotifires] = useState({});
   const showAnimationsBuilder = useRecoilValue(showAnimationsBuilderState);
+  const allCssProps = useRef(Object.fromEntries(
+    Object.entries(styles).map(([key, style]) => {
+      // style.forEach((props) => {
+      //   if (props.cssProp) {
+      //     isArray(props.cssProp)
+      //       ? prev.push(...props.cssProp)
+      //       : prev.push(props.cssProp);
+      //   }
+
+      //   if (props.directions) {
+      //     console.log(
+      //       "all css props : directions ,",
+      //       Object.values(props.directions)
+      //     );
+
+      //     prev.push(...Object.values(props.directions));
+      //   }
+      // });
+      const cssProps = style.reduce((prev, { cssProp, directions }) => {
+        if (cssProp) {
+          isArray(cssProp) ? prev.push(...cssProp) : prev.push(cssProp);
+        }
+
+        if (directions) {
+          console.log(
+            "all css props : directions ,",
+            Object.values(directions)
+          );
+
+          prev.push(...Object.values(directions));
+        }
+
+        return prev;
+      }, []);
+      return [key, cssProps];
+    })
+  ));
 
   function notifing(styles) {
     let newNotf = {};
     // styles = styles.framesStyles ? styles.framesStyles : styles;
-    console.log('frames : ' , styles , styles.framesStyles);
-    
+    console.log("frames : ", styles, styles.framesStyles);
+
     for (const key in styles) {
       const kebabProp = toKebabCase(key);
-      for (const [ctg, props] of Object.entries(allCssProps)) {
+      for (const [ctg, props] of Object.entries(allCssProps.current)) {
         if (styles[key] && props.includes(kebabProp)) {
           newNotf[ctg] = true;
         }
@@ -112,12 +113,12 @@ const StyleAccordion = () => {
     setNotifires(newNotf);
   }
 
-  console.log("all css props : ", allCssProps);
+  console.log("all css props : ", allCssProps.current);
   function getAllStyles(styles) {
-    if (showAnimationsBuilder) {
-      // setNotifires({});
-      // return;
-    }
+    // if (showAnimationsBuilder) {
+    //   // setNotifires({});
+    //   // return;
+    // }
     notifing(styles);
   }
 

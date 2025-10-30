@@ -44,16 +44,16 @@ const appStatus = {
   );
 })();
 console.table(appStatus);
-if (!isDevMode()) {
-  const originalLog = window.console.log;
-  window.console.log = (...data) => {
-    // // Prevent infinite loop
-    // if (data.includes("[APP_STATUS]")) return;
-    // window.console.clear();
-    // console.table(appStatus);
-    // // originalLog(...data);
-  };
-}
+// if (!isDevMode()) {
+//   const originalLog = window.console.log;
+//   window.console.log = (...data) => {
+//     // // Prevent infinite loop
+//     // if (data.includes("[APP_STATUS]")) return;
+//     // window.console.clear();
+//     // console.table(appStatus);
+//     // // originalLog(...data);
+//   };
+// }
 
 setProjectSettings();
 RecoilEnv.RECOIL_DUPLICATE_ATOM_KEY_CHECKING_ENABLED = false;

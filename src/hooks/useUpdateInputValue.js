@@ -196,7 +196,8 @@ export const useUpdateInputValue = ({
     showAnimationsBuilder,
     // animations,
     framesStyles,
-    isFunction(getAllStyles) ? cmpRules : null,
+    cmpRules,
+    // isFunction(getAllStyles) ? cmpRules : null,
     ...debs,
   ]);
 
@@ -230,7 +231,7 @@ export const useUpdateInputValue = ({
       window.cancelIdleCallback && cancelIdleCallback(idleId);
       clearTimeout(idleId);
     }
-    idleId = infinitelyCallback(() => {
+    idleId = setTimeout(() => {
      handler({});
     }, 10);
   }, [
@@ -241,7 +242,9 @@ export const useUpdateInputValue = ({
     showAnimationsBuilder,
     framesStyles,
     // animations,
-    isFunction(getAllStyles) ? cmpRules : null,
+    cmpRules,
+    
+    // isFunction(getAllStyles) ? cmpRules : null,
     ...debs,
   ]);
 };

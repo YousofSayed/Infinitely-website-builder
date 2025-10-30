@@ -47,7 +47,7 @@ export default defineConfig({
     // MillionLint.vite({}),
     // tailwindcss(),
 
-    removeConsole(),
+    // removeConsole(),
     VitePWA({
       registerType: "autoUpdate",
       minify: true,
