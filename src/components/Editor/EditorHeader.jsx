@@ -170,7 +170,7 @@ export const HomeHeader = () => {
       } else if (
         rule.atRuleParams &&
         rule.atRuleParams.includes("max-width") &&
-        rule.atRuleParams.includes("360px")
+        rule.atRuleParams.includes("480px")
       ) {
         newDetected.mobile.push(true);
       } else if (rule.atRuleParams) {

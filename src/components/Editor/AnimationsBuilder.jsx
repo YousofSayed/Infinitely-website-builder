@@ -190,7 +190,7 @@ import { For } from "million/react";
 //     />
 //   );
 // };
-
+// million-ignore
 export const AnimationsBuilder = (() => {
   const editor = useEditorMaybe();
   const [animation, setAnimation] = useState("");
@@ -204,8 +204,6 @@ export const AnimationsBuilder = (() => {
   const [load, setLoad] = useState(true);
   const [currentEditing, setCurrentEditing] = useState("");
   const searchedAnimations = useRef(animationsType);
-  // const [currentEditingIndex, setCurrentEditingIndex] = useState(0);
-  // const [currentEditingIndexStyles, setCurrentEditingIndexStyles] = useState(0);
   const [indexes, setIndexes] = useState({
     animationIndex: null,
     keyframeIndex: null,
@@ -216,52 +214,7 @@ export const AnimationsBuilder = (() => {
   const [frameStyles, setFramesStyles] = useRecoilState(framesStylesState);
   const pageName = localStorage.getItem(current_page_id);
 
-  // const getKeyFrames = async () => {
-  //   // console.log('frames : ' , editor.Css.getAll().models.filter(r=>r.attributes.atRuleType == 'keyframes'));
-
-  //   let projectData = await getProjectData();
-
-  //   let cssLibs = (
-  //     await Promise.all(
-  //       projectData.cssLibs.map(
-  //         async (lib) => await (await opfs.getFile(defineRoot(lib.path))).text()
-  //       )
-  //     )
-  //   ).join("\n");
-
-  //   const animationsReady = editor.Parser.parseCss(
-  //     `${editor.getCss()} \n ${cssLibs || ""}`
-  //   ).filter((rule) => rule.atRuleType == "keyframes");
-  //   projectData = null;
-  //   cssLibs = null;
-
-  //   /**
-  //    * @type {import('../../helpers/types')}
-  //    */
-  //   const animes = {};
-  //   animationsReady.forEach((anime) => {
-  //     animes[anime.mediaText] = {
-  //       name: anime.mediaText,
-  //       values: animes[anime.mediaText]?.values
-  //         ? [
-  //             ...animes[anime.mediaText].values,
-  //             {
-  //               percentage: +anime.selectorsAdd.replace("%", ""),
-  //               styles: anime.style,
-  //             },
-  //           ]
-  //         : [
-  //             {
-  //               percentage: +anime.selectorsAdd.replace("%", ""),
-  //               styles: anime.style,
-  //             },
-  //           ],
-  //     };
-  //   });
-  //   // console.log(animes, animationsReady, Object.values(animes));
-  //   setAnimations([...Object.values(animes)]);
-  // };
-  const sendToKeyframesGetterWorker = ({ data }) => {
+    const sendToKeyframesGetterWorker = ({ data }) => {
     const { command, props } = data;
     if (data.command == "getKeyFrames") {
       setLoad(false);
@@ -465,7 +418,7 @@ export const AnimationsBuilder = (() => {
     return () => {
       keyframeStylesInstance.off(InfinitelyEvents.keyframe.set, callback);
     };
-  }, [animations, indexes]);
+  }, [animations, indexes ]);
 
   useEffect(() => {
     if (!(showAnimeBuilder && editor)) return;
@@ -473,6 +426,7 @@ export const AnimationsBuilder = (() => {
 
     const cleaner = getKeyFrames();
     return () => {
+      setFramesStyles({});
       cleaner();
     };
   }, [showAnimeBuilder, editor]);

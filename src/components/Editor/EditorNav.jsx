@@ -181,7 +181,7 @@ export const HomeNav = () => {
                   <menu className="flex flex-col gap-2 w-[100px]">
                     <Button
                       refForward={pushRef}
-                      disabled={projectData.dbx_pull_requried}
+                      // disabled={projectData.dbx_pull_requried}
                       onClick={async (ev) => {
                         // let tId = toast.loading(
                         //   <ToastMsgInfo msg={`Pushing project...`} />
@@ -203,6 +203,7 @@ export const HomeNav = () => {
                           await db.projects.update(
                             +localStorage.getItem(current_project_id),
                             {
+                              dbx_pull_requried:false,
                               dropboxFileMeta: dataMeta,
                             }
                           );

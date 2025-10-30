@@ -39,7 +39,7 @@ export const addDevices = (editor) => {
   deviceManager.add({
     name: "mobile",
     width: "100%",
-    widthMedia: "360px",
+    widthMedia: "480px",
   });
 
   const lastDevice = localStorage.getItem("last-device");

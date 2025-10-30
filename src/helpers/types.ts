@@ -546,6 +546,7 @@ export interface Project {
   inited: boolean;
   installStates : {
     types:boolean;
+    globalTypes:boolean;
     fonts:boolean;
     jsHeaderLibs:boolean;
     jsFooterLibs:boolean;

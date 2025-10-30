@@ -455,8 +455,11 @@ function gsapKillAll(ev) {
    */
   const { motions } = ev.detail;
   Object.values(motions).forEach((motion) => {
-    if (!gsapTween[motion.id]) return;
-    killAndRevert(motion);
+    console.log('motion killing - 1 : ', motion.id , motion);
+    // if (!gsapTween[motion.id]) return;
+    console.log('motion killing - 2 : ', motion.id , motion);
+    
+  gsapTween[motion.id]&&  killAndRevert(motion);
     // if (Array.isArray(gsapTween[motion.id])) {
     //   gsapTween[motion.id].forEach((tween) => {
     //     tween.revert();

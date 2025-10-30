@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
 import {
+  animationsState,
   cmpRulesState,
   cssPropForAssetsManagerState,
   currentElState,
@@ -21,6 +22,7 @@ import { InfinitelyEvents } from "../constants/infinitelyEvents";
 import { useDebounce } from "use-debounce";
 import { isFunction } from "lodash";
 import { infinitelyCallback } from "../helpers/bridge";
+import { keyframeStylesInstance } from "../constants/InfinitelyInstances";
 let saveTimeout;
 let idleId;
 
@@ -34,7 +36,7 @@ export const useUpdateInputValue = ({
   returnPropsAsIt = false,
   getAllStyles,
   onEffect = (cssProp, setVal) => {},
-  debs=[],
+  debs = [],
 }) => {
   const currentElObj = useRecoilValue(currentElState);
   const editor = useEditorMaybe();
@@ -43,6 +45,7 @@ export const useUpdateInputValue = ({
   const showAnimationsBuilder = useRecoilValue(showAnimationsBuilderState);
   const framesStyles = useRecoilValue(framesStylesState);
   const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
+  const [animations, setAnimations] = useRecoilState(animationsState);
 
   // const cssPropForAM = useRecoilValue(cssPropForAssetsManagerState);
   function getRuleStyle(isDeviceEvent) {
@@ -84,7 +87,7 @@ export const useUpdateInputValue = ({
     return outPut || {};
   }
 
-  const handler = ({ isDeviceEvent = false }) => {
+  const handler = ({ isDeviceEvent = false,}) => {
     if (!editor) return;
     const slEL = editor?.getSelected();
     const Media = getCurrentMediaDevice(editor);
@@ -92,7 +95,10 @@ export const useUpdateInputValue = ({
     console.log("styles : ", cssProp, currentSelector);
 
     if (isFunction(getAllStyles)) {
-      getAllStyles(getRuleStyle(isDeviceEvent) || {});
+      showAnimationsBuilder && console.log('framesStyles : ' ,framesStyles)
+      getAllStyles(
+        showAnimationsBuilder ? framesStyles : getRuleStyle(isDeviceEvent) || {}
+      );
       return;
     }
 
@@ -163,11 +169,24 @@ export const useUpdateInputValue = ({
     editor.on(InfinitelyEvents.pages.select, pageHandler);
     editor.on("device:change", deviceHandler);
     editor.on("inf:rules:set", setRuleHandler);
-
+    // const frameStylesHandler = (ev) => {
+    //   console.log('lol');
+      
+    //   const framesStyles = ev.detail;
+    //   handler({ framesStyles });
+    // };
+    // keyframeStylesInstance.on(
+    //   InfinitelyEvents.keyframe.set,
+    //   frameStylesHandler
+    // );
     return () => {
       editor.off(InfinitelyEvents.pages.select, pageHandler);
       editor.off("device:change", deviceHandler);
-      editor.off("inf:rules:set", setRuleHandler);
+      // editor.off("inf:rules:set", setRuleHandler);
+      // keyframeStylesInstance.off(
+      //   InfinitelyEvents.keyframe.set,
+      //   frameStylesHandler
+      // );
     };
   }, [
     editor,
@@ -175,14 +194,17 @@ export const useUpdateInputValue = ({
     selector,
     rule,
     showAnimationsBuilder,
+    // animations,
     framesStyles,
-    isFunction(getAllStyles) ? cmpRules: null,
-    ...debs
+    isFunction(getAllStyles) ? cmpRules : null,
+    ...debs,
   ]);
 
-  useEffect(() => { //(isFunction(getAllStyles) ? useEffect : useMemo)
+  useEffect(() => {
+    //(isFunction(getAllStyles) ? useEffect : useMemo)
     // console.log(!currentElObj?.currentEl  && !showAnimationsBuilder && !editor.getSelected());
     if (!editor) return;
+    // if(showAnimationsBuilder)return;
     if (
       !currentElObj?.currentEl &&
       !showAnimationsBuilder &&
@@ -209,7 +231,7 @@ export const useUpdateInputValue = ({
       clearTimeout(idleId);
     }
     idleId = infinitelyCallback(() => {
-      handler({});
+     handler({});
     }, 10);
   }, [
     editor,
@@ -218,7 +240,8 @@ export const useUpdateInputValue = ({
     rule,
     showAnimationsBuilder,
     framesStyles,
-    isFunction(getAllStyles) ? cmpRules: null,
-    ...debs
+    // animations,
+    isFunction(getAllStyles) ? cmpRules : null,
+    ...debs,
   ]);
 };

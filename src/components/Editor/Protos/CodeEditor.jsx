@@ -1,7 +1,7 @@
 import { Editor, useMonaco } from "@monaco-editor/react";
 import React, { memo, useEffect, useRef, useState } from "react";
 import { Loader } from "../../Loader";
-import { codeEditorScripts, current_page_id } from "../../../constants/shared";
+import { codeEditorScripts, current_page_id, global_types } from "../../../constants/shared";
 import {
   getProjectData,
   getProjectSettings,
@@ -149,6 +149,74 @@ if (window.monacoLoaded) return;
         }
       }
 
+
+      ///// Global types
+      for (const globalType of global_types) {
+
+        const typesFiles = await opfs.getAllFiles(
+          defineRoot(`types/${globalType.nameWithoutExt}`),
+          {
+            recursive: true,
+          }
+        );
+
+        for (const typeFile of typesFiles) {
+          // const content = await typeFile.text();
+          let fileContent = await typeFile.text();
+          console.log("path : ", typeFile.path);
+
+          // Step 1: Build raw virtual path
+          let typePath = typeFile.path.replace(
+            `${getProjectRoot(projectData.id)}/types`,
+            "node_modules/@types"
+          );
+
+          // Step 2: Clean up duplicated node_modules/<lib>/<lib>
+          typePath = typePath.replace(
+            /node_modules\/@types\/([^/]+)\/node_modules\/\1\//g,
+            "node_modules/$1/"
+          );
+
+          // Step 3: Normalize to Monaco virtual file URL
+          typePath = "file:///" + typePath.replace(/\\/g, "/");
+
+          if (!typePath.includes("@types")) {
+            typePath = typePath.replace(
+              globalType.nameWithoutExt,
+              `${globalType.nameWithoutExt}/@types`
+            );
+          }
+          console.log("🧩 Cleaned typePath:", typePath , );
+          
+          // Step 4: Register with Monaco
+          const isNeedWrappingToModule = needsWrapping(fileContent);
+          fileContent = isNeedWrappingToModule
+            ? wrapModule(globalType.nameWithoutExt, fileContent)
+            : fileContent;
+
+          console.log("🧩 Cleaned typePath:", typePath , );
+            
+
+          monaco.languages.typescript.javascriptDefaults.addExtraLib(
+            fileContent,
+            typePath
+          );
+
+          const globalTypeContent = doGlobalType(
+            globalType.nameWithoutExt,
+            globalType.globalName,
+            hasExportDefault(fileContent),
+          );
+          monaco.languages.typescript.javascriptDefaults.addExtraLib(
+            globalTypeContent,
+            `file:///globals/${globalType.nameWithoutExt}-global.d.ts`
+          );
+
+        }
+
+       
+      }
+
       const devLibs = (
         await Promise.all(
           codeEditorScripts.map(async (url) => {
@@ -176,6 +244,7 @@ if (window.monacoLoaded) return;
       ];
       console.log('contentnsss : ' , restModelsContext , cmdsContext);
 
+
       allowExtraLibs &&
         monaco.languages.typescript.javascriptDefaults.addExtraLib(
           finalLibs.join("\n\n"),
@@ -193,8 +262,8 @@ if (window.monacoLoaded) return;
         provideCompletionItems: function (model, position) {
           // Get the text until the cursor position
           var textUntilPosition = model.getValueInRange({
-            startLineNumber: 1,
-            startColumn: 1,
+            startLineNumber: 3,
+            startColumn: 3,
             endLineNumber: position.lineNumber,
             endColumn: position.column,
           });
@@ -222,11 +291,16 @@ if (window.monacoLoaded) return;
               label: "trycatch",
               kind: monaco.languages.CompletionItemKind.Snippet,
               insertText: [
+                "(()=>(",
                 "try {",
+                "retrun (",
                 "\t${1:// Your code here}",
+                ")",
                 "} catch (error) {",
-                "\tconsole.error(error);",
+                "\tconsole.error(error, 'error in this el:', \$el);",
+                "throw new Error({message: error.message, stack: error.stack});",
                 "}",
+                "))()",
               ].join("\n"),
               insertTextRules:
                 monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,

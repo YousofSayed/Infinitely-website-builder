@@ -1,6 +1,7 @@
 import { parseHTML } from "linkedom";
 import { db } from "./db";
 import {
+  global_types,
   inf_cmds_id,
   inf_symbol_Id_attribute,
   interactionId,
@@ -867,6 +868,21 @@ export async function offlineInstaller(props) {
       }
       // console.log("lib type after: ", defineRoot(lib.path), lib  ,await (await opfs.getFile(defineRoot(lib.path))).text());
       projectData.installStates.types = true;
+    }
+
+    if (!projectData?.installStates?.globalTypes) {
+    
+      for (const lib of global_types) {
+        await installTypes({
+          projectId: projectData.id,
+          code: doGlobalType(lib.nameWithoutExt , lib.globalName),
+          libConfig: lib,
+        });
+
+      }
+      
+      // console.log("lib type after: ", defineRoot(lib.path), lib  ,await (await opfs.getFile(defineRoot(lib.path))).text());
+      projectData.installStates.globalTypes = true;
     }
 
     await db.projects.update(props.projectId, {

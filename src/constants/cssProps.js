@@ -768,3 +768,25 @@ export const tabSizeValues = [
   "2em",
   "10pt"
 ];
+
+export const pointerEventsValues = [
+  'auto',
+  'none',
+
+  // SVG-specific values
+  'visiblePainted',
+  'visibleFill',
+  'visibleStroke',
+  'visible',
+  'painted',
+  'fill',
+  'stroke',
+  'all',
+
+  // Global CSS values
+  'inherit',
+  'initial',
+  'revert',
+  'revert-layer',
+  'unset'
+];

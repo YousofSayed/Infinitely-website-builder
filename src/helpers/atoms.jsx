@@ -31,14 +31,26 @@ export const widths = atom({
 });
 
 export const cmpRulesState = atom({
-  key:'cmpRules',
-  default:cmpRules
-})
+  key: "cmpRules",
+  default: cmpRules,
+});
+
+export const asideControllersNotifiresState = atom({
+  key: "asideControllersNotifiresState",
+  default: {
+    commands: false,
+    traits: false,
+    interactions: false,
+    motion: false,
+    styling: false,
+    elementAttributes: false,
+  },
+});
 
 export const reloaderState = atom({
-  key:'reloaderState',
-  default:''
-})
+  key: "reloaderState",
+  default: "",
+});
 
 export const popoverState = atom({
   key: "popoverState",
@@ -80,7 +92,7 @@ export const blocksStt = atom({
 
 export const appInstallingState = atom({
   key: "appInstallingState",
-  default: !Boolean(parse(localStorage.getItem('installed'))),
+  default: !Boolean(parse(localStorage.getItem("installed"))),
 });
 
 /**

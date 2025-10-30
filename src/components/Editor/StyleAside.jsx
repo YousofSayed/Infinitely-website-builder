@@ -45,6 +45,8 @@ import { MultiChoice } from "./Protos/MultiChoice";
 import { AddMultiValuestoSingleProp } from "./Protos/AddMultiValuestoSingleProp";
 import { useUpdateInputValue } from "../../hooks/useUpdateInputValue";
 import { getCurrentSelector, toKebabCase } from "../../helpers/functions";
+import { keyframeStylesInstance } from "../../constants/InfinitelyInstances";
+import { InfinitelyEvents } from "../../constants/infinitelyEvents";
 
 const allCssProps = Object.fromEntries(
   Object.entries(styles).map(([key, style]) => {
@@ -90,25 +92,59 @@ const SelectElementToStyle = () => (
 const StyleAccordion = () => {
   // const showAnimeBuilder = useRecoilValue(showAnimationsBuilderState);
   const [notifires, setNotifires] = useState({});
+  const showAnimationsBuilder = useRecoilValue(showAnimationsBuilderState);
 
-  console.log("all css props : ", allCssProps);
-
-  useUpdateInputValue({
-    getAllStyles(styles) {
-      let newNotf = {};
-      for (const key in styles) {
-        const kebabProp = toKebabCase(key);
-        for (const [ctg, props] of Object.entries(allCssProps)) {
-          if (styles[key] && props.includes(kebabProp)) {
-            newNotf[ctg] = true;
-          }
+  function notifing(styles) {
+    let newNotf = {};
+    // styles = styles.framesStyles ? styles.framesStyles : styles;
+    console.log('frames : ' , styles , styles.framesStyles);
+    
+    for (const key in styles) {
+      const kebabProp = toKebabCase(key);
+      for (const [ctg, props] of Object.entries(allCssProps)) {
+        if (styles[key] && props.includes(kebabProp)) {
+          newNotf[ctg] = true;
         }
       }
-      console.log("notifires : ", newNotf, styles);
+    }
+    console.log("notifires : ", newNotf, styles);
 
-      setNotifires(newNotf);
-    },
+    setNotifires(newNotf);
+  }
+
+  console.log("all css props : ", allCssProps);
+  function getAllStyles(styles) {
+    if (showAnimationsBuilder) {
+      // setNotifires({});
+      // return;
+    }
+    notifing(styles);
+  }
+
+  useUpdateInputValue({
+    getAllStyles,
   });
+
+  // useEffect(() => {
+  //   const frameStylesHandler = (ev) => {
+
+  //     const framesStyles = ev.detail;
+  //     console.log("lol" , framesStyles);
+  //     notifing({ framesStyles });
+  //   };
+
+  //   keyframeStylesInstance.on(
+  //     InfinitelyEvents.keyframe.set,
+  //     frameStylesHandler
+  //   );
+
+  //   () => {
+  //     keyframeStylesInstance.off(
+  //       InfinitelyEvents.keyframe.set,
+  //       frameStylesHandler
+  //     );
+  //   };
+  // }, [showAnimationsBuilder]);
 
   return (
     <Accordion>
@@ -325,14 +361,14 @@ export const StyleAside = memo(({ className }) => {
   }, [globalRule]);
 
   useEffect(() => {
-    if(!editor) return;
+    if (!editor) return;
     const sel = editor.getSelected();
-    if(!sel) {
+    if (!sel) {
       setNotifyClasses(false);
       return;
     }
     const classes = sel.getClasses() || [];
-    setNotifyClasses(classes.length > 0 );
+    setNotifyClasses(classes.length > 0);
   }, [editor, currentEl]);
 
   useEffect(() => {
@@ -419,7 +455,7 @@ export const StyleAside = memo(({ className }) => {
       <>
         {!showAnimeBuilder && (
           <Accordion>
-            <AccordionItem title={"classes"} notify={notifyClasses} >
+            <AccordionItem title={"classes"} notify={notifyClasses}>
               {showClasses ? <SelectClass /> : null}
             </AccordionItem>
 

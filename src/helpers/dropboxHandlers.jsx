@@ -280,9 +280,7 @@ export async function getDropboxFileBlobWithToastProgress(path) {
       xhr.onerror = () => {
         toast.dismiss(toastId);
         toast.dismiss(processTId);
-        toast.error(
-          <ToastMsgInfo msg={`❌ Network error during download`} />
-        );
+        toast.error(<ToastMsgInfo msg={`❌ Network error during download`} />);
         reject(new Error("Network error during download"));
       };
 
@@ -294,13 +292,10 @@ export async function getDropboxFileBlobWithToastProgress(path) {
     console.error("Download failed:", err);
     toast.dismiss(toastId);
     toast.dismiss(processTId);
-    toast.error(
-      <ToastMsgInfo msg={`❌ Download failed: ${err.message}`} />
-    );
+    toast.error(<ToastMsgInfo msg={`❌ Download failed: ${err.message}`} />);
     throw err;
   }
 }
-
 
 export async function getDropboxFileMeta(path) {
   const token = localStorage.getItem(dropbox_token);
@@ -416,20 +411,28 @@ export async function uploadDbxFileWithToastProgress(
   processTId = toast.loading(<ToastMsgInfo msg={"processing..."} />);
 
   try {
-    const { conflict } = await checkDropboxFileConflict(path, rev);
+    const { conflict, remoteRev } = await checkDropboxFileConflict(path, rev);
     // return;
-    console.log("conflict : ", conflict);
+    console.log("conflict : ", conflict, remoteRev, "&&&&", rev);
     if (conflict) {
-      toast.dismiss(toastId);
-      toast.dismiss(processTId);
-      toast.error(
-        <ToastMsgInfo msg={`⚠️ Conflict: File was updated elsewhere!`} />
+      const cnfrm = confirm(
+        `⚠️ Conflict detected: The file has been updated elsewhere. Do you want to push anyway?`
       );
-      globalInstance.emit(InfinitelyEvents.global.pull_require, {
-        req: true,
-      });
-      return;
+      if (cnfrm) {
+        rev = remoteRev;
+      } else {
+        toast.dismiss(toastId);
+        toast.dismiss(processTId);
+        toast.error(
+          <ToastMsgInfo msg={`⚠️ Conflict: File was updated elsewhere!`} />
+        );
+        globalInstance.emit(InfinitelyEvents.global.pull_require, {
+          req: true,
+        });
+        return;
+      }
     }
+
     const accessToken = await getDBXAccessToken();
 
     const uploadUrl = "https://content.dropboxapi.com/2/files/upload";

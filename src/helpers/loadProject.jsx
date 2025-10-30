@@ -6,6 +6,7 @@ import {
   installLibs,
   installRestModelsAPI,
   restoreBlobs,
+  reversTryCatchInDirectives,
 } from "./bridge";
 import { parseHTML } from "linkedom";
 import { random, sortBy, uniqueId } from "lodash";
@@ -137,6 +138,8 @@ export const loadProject = async (props) => {
             el.remove();
           }
         });
+
+        // reversTryCatchInDirectives(document);
 
         await opfs.createFile(
           defineRoot(`editor/pages/${path.replace("pages/", "")}`),

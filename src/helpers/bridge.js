@@ -916,7 +916,7 @@ export function buildGsapMotionsScript(
     const doMotion = () => {
       if (motion.isTimeLine) {
         tween += `${motion.id}.${
-          motion.timeLineName
+          motion.timeLineName || `${uniqueId("timeline_")}${random(1, 9999)}` 
         } = gsap.timeline( new Function(\`return (${serializeJavascript(
           compiledMotion.timeline,
           { space: 2 }
@@ -1541,6 +1541,169 @@ export const buildHeadFromEditorCanvasHeader = ({
 
 /**
  *
+ * @param {Document} document
+ */
+export function setTryCatchInDirectives(document) {
+  document
+    .querySelectorAll("*") // select all elements
+    .forEach((el) => {
+      // Loop over all attributes of the element
+      for (const attr of el.attributes) {
+        if (!attr.name.startsWith("v-")) continue; // only process v-* attributes
+
+        const attrName = attr.name;
+        const attrVal = attr.value;
+        if (attrName == "v-scope") return;
+        if (!attrVal) continue;
+
+        el.setAttribute(
+          attrName,
+          `
+      (() => {
+        try {
+          return (${attrVal})
+        } catch (error) {
+          console.error(error, 'error at ${attrName} directive in this el:', $el);
+          throw new Error(error);
+        }
+      })()
+        `
+        );
+      }
+    });
+
+  return document.body.innerHTML;
+}
+
+/**
+ *
+ * @param {Document} document
+ */
+export function reversTryCatchInDirectives(document) {
+  // document.querySelectorAll("*").forEach((el) => {
+  //   for (const attr of el.attributes) {
+  //     const name = attr.name;
+  //     if (!name.startsWith("v-")) continue;
+
+  //     const rawVal = attr.value;
+  //     if (!rawVal) continue;
+
+  //     const s = rawVal.trim();
+
+  //     // Quick wrapper check
+  //     if (!s.startsWith("(() =>") || !s.endsWith(")()")) {
+  //       continue;
+  //     }
+
+  //     // Find first “{” after “=>” and last “}” before “)()”
+  //     const arrowIndex = s.indexOf("=>");
+  //     const openBraceIndex = s.indexOf("{", arrowIndex);
+  //     const closeBraceIndex = s.lastIndexOf("}");
+  //     if (
+  //       openBraceIndex < 0 ||
+  //       closeBraceIndex < 0 ||
+  //       closeBraceIndex <= openBraceIndex
+  //     ) {
+  //       continue;
+  //     }
+
+  //     const innerBlock = s.slice(openBraceIndex + 1, closeBraceIndex).trim();
+
+  //     // Now expect “try { … } catch (…) { … }”
+  //     const tryIndex = innerBlock.indexOf("try");
+  //     const catchIndex = innerBlock.lastIndexOf("catch");
+  //     if (tryIndex < 0 || catchIndex < 0 || catchIndex <= tryIndex) {
+  //       continue;
+  //     }
+
+  //     // Extract content inside the try { … }
+  //     const tryBraceOpen = innerBlock.indexOf("{", tryIndex);
+  //     const tryBraceClose = findMatchingBrace(innerBlock, tryBraceOpen);
+  //     if (tryBraceOpen < 0 || tryBraceClose < 0) {
+  //       continue;
+  //     }
+
+  //     const tryContent = innerBlock
+  //       .slice(tryBraceOpen + 1, tryBraceClose)
+  //       .trim();
+
+  //     // Now find the “return ( … )” inside tryContent
+  //     const returnIndex = tryContent.indexOf("return");
+  //     if (returnIndex < 0) {
+  //       continue;
+  //     }
+
+  //     const parenOpen = tryContent.indexOf("(", returnIndex);
+  //     const parenClose = findMatchingParen(tryContent, parenOpen);
+  //     if (parenOpen < 0 || parenClose < 0) {
+  //       continue;
+  //     }
+
+  //     const expr = tryContent.slice(parenOpen + 1, parenClose).trim();
+
+  //     // Finally set attribute value to expr
+  //     el.setAttribute(name, expr);
+  //   }
+  // });
+
+  // // Helper to find matching brace “}” for “{” at given pos
+  // function findMatchingBrace(str, pos) {
+  //   if (str[pos] !== "{") return -1;
+  //   let depth = 1;
+  //   for (let i = pos + 1; i < str.length; i++) {
+  //     if (str[i] === "{") depth++;
+  //     else if (str[i] === "}") {
+  //       depth--;
+  //       if (depth === 0) return i;
+  //     }
+  //   }
+  //   return -1;
+  // }
+
+  // // Helper to find matching parenthesis “)” for “(” at given pos
+  // function findMatchingParen(str, pos) {
+  //   if (str[pos] !== "(") return -1;
+  //   let depth = 1;
+  //   for (let i = pos + 1; i < str.length; i++) {
+  //     if (str[i] === "(") depth++;
+  //     else if (str[i] === ")") {
+  //       depth--;
+  //       if (depth === 0) return i;
+  //     }
+  //   }
+  //   return -1;
+  // }
+
+  document.querySelectorAll("*").forEach((el) => {
+    for (const attr of el.attributes) {
+      if (!attr.name.startsWith("v-")) continue;
+
+      let val = attr.value?.trim();
+      if (!val) continue;
+
+      // Simplified cleanup: repeatedly remove wrapper pattern
+      while (
+        val.startsWith("(() =>") &&
+        val.includes("return") &&
+        val.endsWith(")()")
+      ) {
+        val = val
+          // remove (() => { try { return (
+          .replace(/^.*?return\s*\(/s, "")
+          // remove ) } catch ... })()
+          .replace(/\)\s*\}\s*catch[\s\S]*?\}\s*\)\(\)\s*$/, "")
+          .trim();
+      }
+
+      el.setAttribute(attr.name, val);
+    }
+  });
+
+  return document.body.innerHTML;
+}
+
+/**
+ *
  * @param {string} page
  * @param {import('./types').Project} projectData
  * @param {import('./types').ProjectSetting} projectSetting
@@ -1562,32 +1725,12 @@ export const buildPageData = async (page = "", projectData, projectSetting) => {
     await opfs.getFile(defineRoot(`editor/pages/${currentPageId}.html`))
   ).text();
 
-  const { document } = parseHTML(doDocument(pageContent));
-  const dv = await (
-    await import("../constants/directivesAttributes")
-  ).directivesAttributes;
+  // const { document } = parseHTML(doDocument(pageContent));
 
-  document
-    .querySelectorAll(`${dv.map((dvItem) => `[${dvItem}]`).join(",")}`)
-    .forEach((el) => {
-      dv.forEach((dvItem) => {
-        const attrVal = el.getAttribute(dvItem);
-        if (!attrVal) return;
-        el.setAttribute(
-          dvItem,
-          `
-      (()=>  {try {
-         return (${attrVal})
-    } catch (error) {
-      console.error(error  , 'error at ${dvItem} directive in this el : ', $el  );
-      throw new Error(error);
-    }})()
-        `
-        );
-      });
-    });
+  // setTryCatchInDirectives(document);
 
-  pageContent = document.body.innerHTML;
+  // pageContent = document.body.innerHTML;
+
   //  ()=>  {try {
   //         ${attrVal}
   //   } catch (error) {

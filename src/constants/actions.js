@@ -961,4 +961,15 @@ export const actions = [
       selector: "",
     },
   },
+  {
+    name:'addClickClass',
+    function:'addClickClass',
+    placeholder:'Add Click Class',
+    label:'Add Click Class',
+    params:{
+      selector:"",
+      clickClass:"",
+    }
+  }
 ];
+

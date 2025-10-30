@@ -36,6 +36,7 @@ export const dbx_sign_in_state = "dbx_sign_in_state";
 export const dropbox_token = "dropbox_token";
 export const dropbox_refresh_token = "dropbox_refresh_token";
 export const dropbox_code_verifier = 'dropbox_code_verifier';
+export const global_types = [{nameWithoutExt:'gsap' , globalName:'gsap'}  , {nameWithoutExt:'swiper' , globalName:'swiper'} ];
 export const heading_tags = ["h1", "h2", "h3", "h4", "h5", "h6"];
 export const text_tags = [
   ...heading_tags,

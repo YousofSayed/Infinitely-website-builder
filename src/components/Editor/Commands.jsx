@@ -226,13 +226,13 @@ export const Commands = () => {
         if (value.endsWith(")")) value = value.slice(0, -1);
       }
 
-      const newVal = js_beautify(
+      const newVal = (
         `(${value?.replace(/\(|\)/gi, "") || `{\n\n}`})`
       );
       isSetValue && mEditor.setValue(newVal);
       return newVal;
     } else if (suffixes?.includes?.("style")) {
-      const newVal = js_beautify(
+      const newVal = (
         `
                                   ${setType("CSSStyleDeclaration")}
                                   ${
@@ -244,7 +244,7 @@ export const Commands = () => {
       isSetValue && mEditor.setValue(newVal);
       return newVal;
     } else {
-      const newVal = js_beautify(value);
+      const newVal = (value);
       console.log('new Val : ' , newVal);
       
       isSetValue && mEditor.setValue(newVal);
@@ -273,7 +273,7 @@ export const Commands = () => {
 
         {editor?.getSelected?.()?.parent?.()?.get?.("type") != "wrapper" &&
           editor?.getSelected?.()?.get?.("type") != "wrapper" && (
-            <AccordionItem title={"for"}>
+            <AccordionItem title={"for"} notify={Boolean(selectedAttributes["v-for"])}>
               <section className="mt-2 flex flex-col  gap-2 p-1 text-[14px] bg-slate-900 rounded-lg">
                 <FitTitle>Var </FitTitle>
                 <Input
@@ -361,7 +361,7 @@ export const Commands = () => {
 
         {editor?.getSelected?.()?.parent?.()?.get?.("type") != "wrapper" &&
           editor?.getSelected?.()?.get?.("type") != "wrapper" && (
-            <AccordionItem title={"if"}>
+            <AccordionItem title={"if"} notify={Boolean(selectedAttributes["v-if"])}>
               <section className="mt-2 ">
                 <Select
                   placeholder="Code"
@@ -415,6 +415,7 @@ export const Commands = () => {
             return (
               <AccordionItem
                 title={cmd.name}
+                notify={Boolean(selectedAttributes[cmd.directive])}
                 key={i}
                 className={`${
                   Object.keys(selectedAttributes).includes(cmd.directive)

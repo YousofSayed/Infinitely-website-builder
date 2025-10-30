@@ -58,6 +58,8 @@ export const Display = () => {
     setVal:(val)=>{
       !val &&  isParentFlex && setOption('flex');
       !val &&  isParentGrid && setOption('grid');
+      !val && setOption('');
+      val && setOption(val);
     }
   }));
 

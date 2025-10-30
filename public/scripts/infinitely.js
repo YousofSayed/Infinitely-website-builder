@@ -6,13 +6,32 @@ async function doAsync(callback = async () => {}) {
   }
 }
 
-function tryCatch(callack=()=>{}) {
+function tryCatch(callack = () => {}) {
   try {
-      callack()
+    callack();
   } catch (error) {
     console.error(error);
     throw new Error(error);
   }
+}
+
+/**
+ * It handle click class that you created by css
+ * @param {selector} string
+ * @param {string} clickClass
+ */
+function addClickClass(selector, clickClass) {
+  if (!selector) {
+    throw new Error(`Selector is required`);
+  }
+  const element = selector instanceof Element ? selector : document.querySelector(selector);
+  if (!element) {
+    throw new Error(`Element not founded with selector : ${selector}`);
+  }
+  element.classList.add(clickClass);
+  element.addEventListener("animationend", () => {
+    element.classList.remove(clickClass);
+  });
 }
 
 function hideElement(selector) {
@@ -37,28 +56,16 @@ function toggleElement(selector) {
     if (isHidden) {
       // Show element
       el.style.display = ""; // make it visible first
-      el.animate(
-        [
-          { opacity: 0 },
-          { opacity: 1 }
-        ],
-        {
-          duration: 200,
-          easing: "ease-in-out"
-        }
-      );
+      el.animate([{ opacity: 0 }, { opacity: 1 }], {
+        duration: 200,
+        easing: "ease-in-out",
+      });
     } else {
       // Fade out, then hide
-      const animation = el.animate(
-        [
-          { opacity: 1 },
-          { opacity: 0 }
-        ],
-        {
-          duration: 200,
-          easing: "ease-in-out"
-        }
-      );
+      const animation = el.animate([{ opacity: 1 }, { opacity: 0 }], {
+        duration: 200,
+        easing: "ease-in-out",
+      });
 
       // When fade-out finishes, set display: none
       animation.onfinish = () => {
@@ -76,7 +83,7 @@ function toggleAnimationClass(selector, animationClass) {
 
     if (isHidden) {
       // Show element first, then animate in
-      el.style.display = ""; 
+      el.style.display = "";
       el.classList.add(animationClass);
 
       el.addEventListener(
@@ -101,7 +108,6 @@ function toggleAnimationClass(selector, animationClass) {
     }
   });
 }
-
 
 function addClass(selector, className) {
   const elements = document.querySelectorAll(selector);

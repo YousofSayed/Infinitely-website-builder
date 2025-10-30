@@ -1,6 +1,7 @@
 import { useRecoilState, useRecoilValue } from "recoil";
 import {
   cmpRulesState,
+  framesStylesState,
   ruleState,
   selectorState,
   showAnimationsBuilderState,
@@ -30,6 +31,7 @@ export function useSetClassForCurrentEl() {
   const [selector, setSelector] = useRecoilState(selectorState);
   const removeProp = useRemoveCssProp();
   const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
+  const [frameStyles , setFrameStyles] = useRecoilState(framesStylesState);
 
   const showAnimationsBuilder = useRecoilValue(showAnimationsBuilderState);
 
@@ -72,7 +74,7 @@ export function useSetClassForCurrentEl() {
         // setAnimeStyles((old) => ({ ...old, ...newCssProps }));
         // setAnimeStyles({ ...newCssProps });
         console.log(newCssProps, "from animations");
-
+        setFrameStyles(newCssProps);
         keyframeStylesInstance.emit(InfinitelyEvents.keyframe.set, newCssProps);
         return;
       } //stop any action if animation builder is on

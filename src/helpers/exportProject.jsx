@@ -665,6 +665,7 @@ async function buildPage({
 
   const urlDots = urlException ? "." : "..";
   const helmetRaw = html`
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="author" content="${helmet.author || ""}" />
     <meta name="description" content="${helmet.description || ""}" />
     <meta name="keywords" content="${helmet.keywords || ""}" />
@@ -673,6 +674,7 @@ async function buildPage({
       rel="icon"
       href="${projectData.logo ? `${urlDots}/${projectData.logo}` : ""}"
     />
+    <link rel="stylesheet" href="${urlDots}/global/style.css" />
     <link rel="stylesheet" href="${urlDots}/global/infinitely.css" />
     <link rel="stylesheet" href="${urlDots}/global/global.css" />
     <link rel="stylesheet" href="${urlDots}/css/fonts.css" />
@@ -687,17 +689,22 @@ async function buildPage({
     ).length
       ? `<link href="${urlDots}/css/templates.css" rel="stylesheet"/>`
       : ""}
-    <link rel="stylesheet" href="${urlDots}/css/${page.name}.css" />
     ${!grapStyles
       ? projectData.cssLibs
-          .map(
-            (lib) =>
-              `<link rel="stylesheet" href="${urlDots}/${
-                lib.path.startsWith("/") ? lib.path.replace("/", "") : lib.path
-              }" />`
+          .map((lib) =>
+            lib.isCDN
+              ? `<link rel="stylesheet" href="${lib.fileUrl}" />`
+              : `<link rel="stylesheet" href="${urlDots}/${
+                  lib.path.startsWith("/")
+                    ? lib.path.replace("/", "")
+                    : lib.path
+                }" />`
           )
           .join("\n")
       : `<link rel="stylesheet" href="${urlDots}/libs/css/lib.css"/>`}
+
+    <link rel="stylesheet" href="${urlDots}/css/${page.name}.css" />
+
     ${!grapHeaderScripts
       ? projectData.jsHeaderLibs
           .map(
@@ -746,30 +753,29 @@ async function buildPage({
       )
     ).text();
   }
-  const dv = await (
-    await import("../constants/directivesAttributes")
-  ).directivesAttributes;
+  // const dv = await (
+  //   await import("../constants/directivesAttributes")
+  // ).directivesAttributes;
 
-   document
-    .querySelectorAll(`${dv.map((dvItem) => `[${dvItem}]`).join(",")}`)
-    .forEach((el) => {
-      dv.forEach((dvItem) => {
-        const attrVal = el.getAttribute(dvItem);
-        if (!attrVal) return;
-        el.setAttribute(
-          dvItem,
-          `
-      (()=>  {try {
-         return (${attrVal})
-    } catch (error) {
-      console.error(error  , 'error at ${dvItem} directive in this el : ', $el  );
-      throw new Error(error);
-    }})()
-        `
-        );
-      });
-    });
-
+  //  document
+  //   .querySelectorAll(`${dv.map((dvItem) => `[${dvItem}]`).join(",")}`)
+  //   .forEach((el) => {
+  //     dv.forEach((dvItem) => {
+  //       const attrVal = el.getAttribute(dvItem);
+  //       if (!attrVal) return;
+  //       el.setAttribute(
+  //         dvItem,
+  //         `
+  //     (()=>  {try {
+  //        return (${attrVal})
+  //   } catch (error) {
+  //     console.error(error  , 'error at ${dvItem} directive in this el : ', $el  );
+  //     throw new Error(error);
+  //   }})()
+  //       `
+  //       );
+  //     });
+  //   });
 
   const pageRaw = html`
     <!DOCTYPE html>

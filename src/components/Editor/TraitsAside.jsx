@@ -8,8 +8,9 @@ import {
   refType,
   traitsType,
 } from "../../helpers/jsDocs";
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import {
+  asideControllersNotifiresState,
   assetTypeState,
   currentElState,
   showPreviewState,
@@ -54,7 +55,7 @@ import { Accordion } from "../Protos/Accordion";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Hint } from "../Protos/Hint";
 
-export const TraitsAside = (() => {
+export const TraitsAside = () => {
   const editor = useEditorMaybe();
   const [newAttributeName, setNewAttributeName] = useState("");
   const [traits, setTraits] = useState(traitsType);
@@ -71,6 +72,7 @@ export const TraitsAside = (() => {
   const [cmdsContext, setCmdsContext] = useCmdsContext();
   const [projectData, setProjectData] = useState({});
   const [traitsAnimate] = useAutoAnimate();
+  const [notify, setNotify] = useRecoilState(asideControllersNotifiresState);
 
   const [codeSettings, setCodeSettings] = useState({
     defaultLanguage: "html" || "javascript",
@@ -170,7 +172,7 @@ export const TraitsAside = (() => {
         delete elementAttributes[key];
       }
     });
-    delete elementAttributes["id"];
+    // delete elementAttributes["id"];
     delete elementAttributes["class"];
 
     return elementAttributes;
@@ -211,11 +213,14 @@ export const TraitsAside = (() => {
         delete elementAttributes[key];
       }
     });
-    delete elementAttributes["id"];
+    // delete elementAttributes["id"];
     delete elementAttributes["class"];
     setTraits(traits);
     // setAttributesTraits(attributesTraits);
     // setHandlerTraits(handlerTraits);
+    if (Object.keys(elementAttributes).length) {
+      setNotify((old) => ({ ...old, elementAttributes: true }));
+    }
     setAttributes(elementAttributes);
     console.log("traits is me : ", traits);
   };
@@ -460,7 +465,7 @@ export const TraitsAside = (() => {
                           ...editor.getSelected().props(),
                           [prop]: value,
                         });
-                        editor.trigger(InfinitelyEvents.layers.update)
+                        editor.trigger(InfinitelyEvents.layers.update);
                       }}
                     />
                   </li>
@@ -470,7 +475,7 @@ export const TraitsAside = (() => {
         </AccordionItem>
 
         {!!traits.length && (
-          <AccordionItem title={"Traits"}>
+          <AccordionItem title={"Traits"} notify={notify.traits}>
             <ul
               ref={traitsAnimate}
               className="p-1 flex flex-col gap-2 bg-slate-900 rounded-lg"
@@ -487,7 +492,7 @@ export const TraitsAside = (() => {
                   editor,
                   trait,
                   mediaBreakpoint: mediaBreakpoint,
-                  model:editor.getSelected(),
+                  model: editor.getSelected(),
                 };
                 // console.log(
                 //   isBoolean(trait.value || trait.default)
@@ -529,7 +534,7 @@ export const TraitsAside = (() => {
                         {trait.label}
                       </FitTitle>
                     )}
-                    
+
                     {(trait.type == "text" || trait.type == "number") &&
                       isShow && (
                         <Input
@@ -868,7 +873,7 @@ export const TraitsAside = (() => {
                               ...mainCallbackProps,
                               newValue: value,
                             });
-                            trait.command && editor.runCommand(trait.command);
+                          trait.command && editor.runCommand(trait.command);
                           updateTraitValue({
                             name: trait.name,
                             key: "value",
@@ -944,7 +949,7 @@ export const TraitsAside = (() => {
           </AccordionItem>
         )}
 
-        <AccordionItem title={"Attributes"}>
+        <AccordionItem title={"Attributes"} notify={notify.elementAttributes}>
           <section className="p-1 flex flex-col gap-2 bg-slate-900 rounded-lg">
             <MiniTitle className={`py-3 w-full`}>Attributes</MiniTitle>
             {!!Object.keys(attributes).length &&
@@ -999,4 +1004,4 @@ export const TraitsAside = (() => {
       </Accordion>
     </section>
   );
-});
+};

@@ -28,6 +28,7 @@ import {
   isolationValues,
   mixBlendModeValues,
   overflowValues,
+  pointerEventsValues,
   positionValues,
   tabSizeValues,
   textDecorationLineValues,
@@ -485,6 +486,10 @@ export const styles = {
       keywords: transformOriginValues,
     },
     {
+      title:'Transform',
+      type:'title',
+    },
+    {
       cssProp: "transform",
       type: "multi-function-prop",
       title: "Transform",
@@ -611,5 +616,11 @@ export const styles = {
       type: "select",
       keywords: cursorValues,
     },
+    {
+      title:'pointer',
+      cssProp:'pointer-events',
+      type:'select',
+      keywords:pointerEventsValues
+    }
   ],
 };
