@@ -1,7 +1,11 @@
 import { Editor, useMonaco } from "@monaco-editor/react";
 import React, { memo, useEffect, useRef, useState } from "react";
 import { Loader } from "../../Loader";
-import { codeEditorScripts, current_page_id, global_types } from "../../../constants/shared";
+import {
+  codeEditorScripts,
+  current_page_id,
+  global_types,
+} from "../../../constants/shared";
 import {
   getProjectData,
   getProjectSettings,
@@ -17,6 +21,7 @@ import {
   doGlobalType,
   getProjectRoot,
   hasExportDefault,
+  infinitelyCallback,
   needsWrapping,
   wrapModule,
 } from "../../../helpers/bridge";
@@ -51,10 +56,11 @@ export const CodeEditor = ({
    * @type {import("@monaco-editor/react").OnMount}
    */
   const loadLibs = async (editor, monaco) => {
-    console.log('condo : ' ,window.monacoLoaded, window.monacoNeedToLoad);
-if (window.monacoLoaded) return;
+    console.log("condo : ", window.monacoLoaded, window.monacoNeedToLoad);
+    // if (window.monacoLoaded) return;
     // console.log();
-    
+    if (!window.monacoTypesPathes) window.monacoTypesPathes = new Set();
+
     const currentPageName = localStorage.getItem(current_page_id);
     const projectData = await await getProjectData();
     const restAPIModels = projectData.restAPIModels;
@@ -91,10 +97,11 @@ if (window.monacoLoaded) return;
 
         for (const libTypeHandle of libTypesHandles) {
           //file:///node_modules/public-google-sheets-parser/@types/index.d.ts --> Good URL
+          if (window.monacoTypesPathes.has(libTypeHandle.path)) continue;
+          window.monacoTypesPathes.add(libTypeHandle.path);
 
           let fileContent = await libTypeHandle.text();
           console.log("path : ", libTypeHandle.path);
-
           // Step 1: Build raw virtual path
           let typePath = libTypeHandle.path.replace(
             `${getProjectRoot(projectData.id)}/types`,
@@ -149,10 +156,8 @@ if (window.monacoLoaded) return;
         }
       }
 
-
       ///// Global types
       for (const globalType of global_types) {
-
         const typesFiles = await opfs.getAllFiles(
           defineRoot(`types/${globalType.nameWithoutExt}`),
           {
@@ -164,7 +169,8 @@ if (window.monacoLoaded) return;
           // const content = await typeFile.text();
           let fileContent = await typeFile.text();
           console.log("path : ", typeFile.path);
-
+          if (window.monacoTypesPathes.has(typeFile.path)) continue;
+          window.monacoTypesPathes.add(typeFile.path);
           // Step 1: Build raw virtual path
           let typePath = typeFile.path.replace(
             `${getProjectRoot(projectData.id)}/types`,
@@ -186,16 +192,15 @@ if (window.monacoLoaded) return;
               `${globalType.nameWithoutExt}/@types`
             );
           }
-          console.log("🧩 Cleaned typePath:", typePath , );
-          
+          console.log("🧩 Cleaned typePath:", typePath);
+
           // Step 4: Register with Monaco
           const isNeedWrappingToModule = needsWrapping(fileContent);
           fileContent = isNeedWrappingToModule
             ? wrapModule(globalType.nameWithoutExt, fileContent)
             : fileContent;
 
-          console.log("🧩 Cleaned typePath:", typePath , );
-            
+          console.log("🧩 Cleaned typePath:", typePath);
 
           monaco.languages.typescript.javascriptDefaults.addExtraLib(
             fileContent,
@@ -205,16 +210,13 @@ if (window.monacoLoaded) return;
           const globalTypeContent = doGlobalType(
             globalType.nameWithoutExt,
             globalType.globalName,
-            hasExportDefault(fileContent),
+            hasExportDefault(fileContent)
           );
           monaco.languages.typescript.javascriptDefaults.addExtraLib(
             globalTypeContent,
             `file:///globals/${globalType.nameWithoutExt}-global.d.ts`
           );
-
         }
-
-       
       }
 
       const devLibs = (
@@ -226,7 +228,6 @@ if (window.monacoLoaded) return;
         )
       ).join("\n");
 
-      
       const restModelsContext = restAPIModels
         .map((model) => `var ${model.varName} = ${model.response}`)
         .join("\n");
@@ -242,8 +243,7 @@ if (window.monacoLoaded) return;
 
         ,
       ];
-      console.log('contentnsss : ' , restModelsContext , cmdsContext);
-
+      console.log("contentnsss : ", restModelsContext, cmdsContext);
 
       allowExtraLibs &&
         monaco.languages.typescript.javascriptDefaults.addExtraLib(
@@ -297,7 +297,7 @@ if (window.monacoLoaded) return;
                 "\t${1:// Your code here}",
                 ")",
                 "} catch (error) {",
-                "\tconsole.error(error, 'error in this el:', \$el);",
+                "\tconsole.error(error, 'error in this el:', $el);",
                 "throw new Error({message: error.message, stack: error.stack});",
                 "}",
                 "))()",
@@ -314,7 +314,7 @@ if (window.monacoLoaded) return;
       });
 
       window.monacoLoaded = true;
-    window.monacoNeedToLoad = false;
+      window.monacoNeedToLoad = false;
     }
 
     // toFormateValue &&
@@ -347,8 +347,6 @@ if (window.monacoLoaded) return;
     //       editor.setValue(toFormateValue);
     //     }
     //   );
-
-    
   };
 
   //main
@@ -386,8 +384,7 @@ if (window.monacoLoaded) return;
 
           props?.onMount?.(editor);
 
-          await loadLibs(editor, monaco);
-
+          infinitelyCallback(async () => await loadLibs(editor, monaco));
         }}
         options={{
           autoClosingQuotes: true,
