@@ -665,6 +665,7 @@ async function buildPage({
 
   const urlDots = urlException ? "." : "..";
   const helmetRaw = html`
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="author" content="${helmet.author || ""}" />
     <meta name="description" content="${helmet.description || ""}" />
@@ -719,7 +720,7 @@ async function buildPage({
                         ? lib.path.replace("/", "")
                         : lib.path
                     }`
-              }" />`
+              }" ></script>`
           )
           .join("\n")
       : `<script ${(isHeaderGrapedDefer && 'defer="true"') || ""} ${
@@ -857,7 +858,7 @@ async function buildPage({
     </html>
   `;
 
-  return html_beautify(pageRaw);
+  return (pageRaw);
 }
 
 /**

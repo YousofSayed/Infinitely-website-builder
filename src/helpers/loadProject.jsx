@@ -74,7 +74,7 @@ export const loadProject = async (props) => {
       throw new Error(`infinitely.json config file not founded!!`);
     }
     const projectDBId = props.projectId || (await db.projects.add({}));
-    const projectPath = props.opfsRoot ||  `projects/project-${projectDBId}`;
+    const projectPath = props.opfsRoot || `projects/project-${projectDBId}`;
     const defineRoot = (root = "") =>
       `${projectPath}/${root.replace(projectPath, "")}`;
 
@@ -112,7 +112,6 @@ export const loadProject = async (props) => {
           };
         }
 
-
         if (notIncludedFiles.some((noPath) => noPath.startsWith(path))) {
           continue;
         }
@@ -131,7 +130,17 @@ export const loadProject = async (props) => {
         page.name.split("/").pop().split(".").shift() || page.name;
       // const fileContent = await page.async("text");
       if (isInfinitelyJson) {
-        const { document } = parseHTML(await page.async("text"));
+        const buffer = await page.async("arraybuffer");
+        let text;
+        try {
+          text = new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+        } catch {
+          // Fallback if bad UTF-8 sequences exist
+          text = new TextDecoder("windows-1252").decode(buffer);
+        }
+        text = text.replace(/[\x00-\x09\x0B-\x1F\x7F]/g, "");
+
+        const { document } = parseHTML(text);
         // console.log(`page content : ` , document.body.innerHTML);
         document.body.querySelectorAll(`script , link`).forEach((el) => {
           if (el.src || el.href) {
@@ -162,14 +171,14 @@ export const loadProject = async (props) => {
     }
     dbJSONData.id = projectDBId;
     dbJSONData.installStates = {
-      ... (dbJSONData.installStates || {}),
-      types:false
-    }
+      ...(dbJSONData.installStates || {}),
+      types: false,
+    };
     // for (const lib of [...dbJSONData.jsFooterLibs , ...dbJSONData.jsHeaderLibs]) {
     //   console.log('lib type : ' , lib);
-      
+
     //  await installTypes({
-    //     projectId:dbJSONData.id , 
+    //     projectId:dbJSONData.id ,
     //     code:await(await opfs.getFile(defineRoot(lib.path))).text(),
     //     libConfig:lib,
     //   })
@@ -194,15 +203,12 @@ export const loadProject = async (props) => {
       command: "project-loaded",
       props: {
         done: true,
-        projectId : projectDBId,
-        projectData : dbJSONData
+        projectId: projectDBId,
+        projectData: dbJSONData,
       },
     });
 
-    
-
     return true;
-   
   } catch (error) {
     toastIds.forEach((id) => {
       workerSendToast({

@@ -308,10 +308,30 @@ export class OPFS {
     const fileHandle = await file(path);
     const isExist = await fileHandle.exists();
     if (!isExist) {
-      content = content instanceof Blob ? await content.arrayBuffer() : content;
-      // const writer = fileHandle.createWriter();
-      // (await writer).write(content as any)
-      await write(fileHandle, content);
+      // content = content instanceof Blob ? await content.arrayBuffer() : content;
+      // // const writer = fileHandle.createWriter();
+      // // (await writer).write(content as any)
+      // await write(fileHandle, content);
+
+      let bufferContent;
+      if (typeof content === "string") {
+        bufferContent = new TextEncoder().encode(content); // ✅ pure UTF-8
+      } else if (content instanceof Blob) {
+        // ✅ Read blob as UTF-8 text first
+        const text = await content.text();
+        bufferContent = new TextEncoder().encode(text);
+      } else if (
+        content instanceof ArrayBuffer ||
+        ArrayBuffer.isView(content)
+      ) {
+        // ⚠️ Only do this if you’re *sure* it’s binary (not HTML)
+        bufferContent = content;
+      } else {
+        throw new TypeError("Unsupported content type for writeFile");
+      }
+
+      await write(fileHandle, bufferContent);
+
       if (!offEvents) {
         const event = {
           type: "fileCreated",
@@ -637,8 +657,8 @@ export class OPFS {
       }
 
       if (file) {
-        const bufferContent =
-          content instanceof Blob ? await content.arrayBuffer() : content;
+        // const bufferContent =
+        //   content instanceof Blob ? await content.arrayBuffer() : content;
 
         // let bufferContent;
         // if (typeof content === "string") {
@@ -656,6 +676,24 @@ export class OPFS {
         // }
 
         //  const isSameContent =  await file.arrayBuffer()  == content
+
+        let bufferContent;
+        if (typeof content === "string") {
+          bufferContent = new TextEncoder().encode(content); // ✅ pure UTF-8
+        } else if (content instanceof Blob) {
+          // ✅ Read blob as UTF-8 text first
+          const text = await content.text();
+          bufferContent = new TextEncoder().encode(text);
+        } else if (
+          content instanceof ArrayBuffer ||
+          ArrayBuffer.isView(content)
+        ) {
+          // ⚠️ Only do this if you’re *sure* it’s binary (not HTML)
+          bufferContent = content;
+        } else {
+          throw new TypeError("Unsupported content type for writeFile");
+        }
+
         const writer = await file.createWriter();
         const prevWriter = this.#openedWriters.get(file.path);
         prevWriter && prevWriter.close();
