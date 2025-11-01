@@ -1517,6 +1517,8 @@ export const Motion = memo(() => {
     for (const animation of clone.animations) {
       animation.name = uniqueId(`varName_${uniqueID()}${random(99, 999)}`);
     }
+    clone.instances = {},
+    clone.isInstance = false;
     sle.addAttributes({ [motionId]: newId });
     initToolbar(editor, sle);
     await updateDB(clone);
@@ -1591,6 +1593,12 @@ export const Motion = memo(() => {
     const motion = JSON.parse(await file.text());
     const sle = editor.getSelected();
     if (!motion || !sle) return;
+    const projectData = await getProjectData();
+    if(projectData.motions[motion.id]){
+      const cnfrm = confirm(`Motion with the same id already exists , Do you want to overwrite it ?`);
+      if(!cnfrm) return;
+      motion.id = uniqueId(`mt${uniqueID()}`);
+    }
     sle.addAttributes({ [motionId]: motion.id });
     await updateDB(motion);
     setMotion(motion);
