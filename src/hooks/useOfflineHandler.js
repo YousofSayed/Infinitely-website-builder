@@ -14,7 +14,7 @@ export const useOfflineHandler = () => {
       routerWorker,
       "listenToOPFSBroadcastChannel",
       async({ done }) => {
-        console.log('doneee for ofline worker' , done , await(await fetch(`./assets/videos.json`)).text());
+        // console.log('doneee for ofline worker' , done , await(await fetch(`./assets/videos.json`)).text());
         
         if (done) {
           offlineInstallerWorker.postMessage({

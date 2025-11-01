@@ -26,6 +26,7 @@ import { OptionsButton } from "../Protos/OptionsButton";
 import { Button } from "../Protos/Button";
 import { addClickClass } from "../../helpers/cocktail";
 import {
+  checkDropBoxSignInState,
   getDropboxFileBlob,
   getDropboxFileMeta,
   pullProject,
@@ -172,91 +173,125 @@ export const HomeNav = () => {
             }}
           />
 
-          {Boolean(projectData?.apps) && (
+          {
             <li className="group relative li-btn h-[30px] w-[30px]     rounded-lg cursor-pointer grid place-items-center transition-all hover:bg-blue-600   [&_#dbx-svg]:hover:fill-white [&_#dbx-svg_g]:hover:fill-white ">
-              {Boolean(
-                projectData.apps == "Dropbox" && projectData.dropboxFileMeta
-              ) && (
+              {Boolean(checkDropBoxSignInState()) && (
                 <OptionsButton icon={Icons.dropbox({})}>
-                  <menu className="flex flex-col gap-2 w-[100px]">
-                    <Button
-                      refForward={pushRef}
-                      // disabled={projectData.dbx_pull_requried}
-                      onClick={async (ev) => {
-                        // let tId = toast.loading(
-                        //   <ToastMsgInfo msg={`Pushing project...`} />
-                        // );
-                        pushRef.current.disabled = true;
-                        pullRef.current.disabled = true;
+                  <menu className="flex flex-col gap-2 min-w-[100px]">
+                    {projectData?.dropboxFileMeta?.path_lower && (
+                      <>
+                        <Button
+                          refForward={pushRef}
+                          // disabled={projectData.dbx_pull_requried}
+                          onClick={async (ev) => {
+                            // let tId = toast.loading(
+                            //   <ToastMsgInfo msg={`Pushing project...`} />
+                            // );
+                            pushRef.current.disabled = true;
+                            pullRef.current.disabled = true;
 
-                        try {
-                          addClickClass(ev.currentTarget, "click");
-                          const dataMeta = await uploadDbxFileWithToastProgress(
-                            projectData.dropboxFileMeta.path_lower,
-                            await getProject(),
-                            projectData.dropboxFileMeta.rev
-                          );
-                          if (!dataMeta) {
-                            throw new Error(`No data meta founded`);
-                          }
-                          console.log("data meta : ", dataMeta);
-                          await db.projects.update(
-                            +localStorage.getItem(current_project_id),
-                            {
-                              dbx_pull_requried:false,
-                              dropboxFileMeta: dataMeta,
+                            try {
+                              addClickClass(ev.currentTarget, "click");
+                              const dataMeta =
+                                await uploadDbxFileWithToastProgress(
+                                  projectData.dropboxFileMeta.path_lower,
+                                  await getProject(),
+                                  projectData.dropboxFileMeta.rev
+                                );
+                              if (!dataMeta) {
+                                throw new Error(`No data meta founded`);
+                              }
+                              console.log("data meta : ", dataMeta);
+                              await db.projects.update(
+                                +localStorage.getItem(current_project_id),
+                                {
+                                  dbx_pull_requried: false,
+                                  dropboxFileMeta: dataMeta,
+                                }
+                              );
+                              // toast.done(tId);
+                            } catch (error) {
+                              // if(error.message.includes("conflict")){
+                              //   console.error('hahahahahahahahahah');
+
+                              // }
+                              // toast.dismiss(tId);
+                              throw new Error(error);
+                            } finally {
+                              pushRef.current.disabled = false;
+                              pullRef.current.disabled = false;
                             }
-                          );
-                          // toast.done(tId);
-                        } catch (error) {
-                          // if(error.message.includes("conflict")){
-                          //   console.error('hahahahahahahahahah');
+                          }}
+                        >
+                          {Icons.upload({ strokeColor: "white" })}
+                          <h1>Push</h1>
+                        </Button>
+                        <Button
+                          refForward={pullRef}
+                          // disabled={!projectData.dbx_pull_requried}
+                          onClick={async (ev) => {
+                            const cnfrm = confirm(
+                              `Are you sure you want to pull from dropbox? This will overwrite your local project files.`
+                            );
+                            if (!cnfrm) return;
+                            console.log("refff : ", pushRef.current);
+                            const btn = ev.currentTarget;
+                            addClickClass(btn, "click");
 
-                          // }
-                          // toast.dismiss(tId);
-                          throw new Error(error);
-                        } finally {
-                          pushRef.current.disabled = false;
-                          pullRef.current.disabled = false;
-                        }
-                      }}
-                    >
-                      {Icons.upload({ strokeColor: "white" })}
-                      <h1>Push</h1>
-                    </Button>
-                    <Button
-                      refForward={pullRef}
-                      // disabled={!projectData.dbx_pull_requried}
-                      onClick={async (ev) => {
-                        const cnfrm = confirm(
-                          `Are you sure you want to pull from dropbox? This will overwrite your local project files.`
-                        );
-                        if (!cnfrm) return;
-                        console.log("refff : ", pushRef.current);
-                        const btn = ev.currentTarget;
-                        addClickClass(btn, "click");
+                            btn.disabled = true;
+                            pushRef.current.disabled = true;
+                            try {
+                              await pullProject(projectData);
+                              btn.disabled = true;
+                            } catch (error) {
+                              throw new Error(error);
+                            } finally {
+                              btn.disabled = null;
+                              // pushRef.current.disabled = null;
+                            }
+                          }}
+                          style={{
+                            backgroundColor: projectData.dbx_pull_requried
+                              ? "crimson"
+                              : null,
+                          }}
+                        >
+                          {Icons.export("white")}
+                          <h1>Pull</h1>
+                        </Button>
+                      </>
+                    )}
 
-                        btn.disabled = true;
-                        pushRef.current.disabled = true;
-                        try {
-                          await pullProject(projectData);
-                          btn.disabled = true;
-                        } catch (error) {
-                          throw new Error(error);
-                        } finally {
-                          btn.disabled = null;
-                          // pushRef.current.disabled = null;
-                        }
-                      }}
-                      style={{
-                        backgroundColor: projectData.dbx_pull_requried
-                          ? "crimson"
-                          : null,
-                      }}
-                    >
-                      {Icons.export("white")}
-                      <h1>Pull</h1>
-                    </Button>
+                    {checkDropBoxSignInState() &&
+                      projectData?.apps != "Dropbox" &&
+                      !projectData?.dropboxFileMeta?.path_lower && (
+                        <Button
+                          onClick={async (ev) => {
+                            const trgBtn = ev.currentTarget;
+                            trgBtn.disabled = true;
+                            const dataMeta =
+                              await uploadDbxFileWithToastProgress(
+                                `/${projectData.name}.zip`,
+                                await getProject(),
+                                ""
+                              );
+                            if (!dataMeta) {
+                              throw new Error(`No data meta founded`);
+                            }
+                            console.log("data meta : ", dataMeta);
+                            await db.projects.update(
+                              +localStorage.getItem(current_project_id),
+                              {
+                                dbx_pull_requried: false,
+                                dropboxFileMeta: dataMeta,
+                              }
+                            );
+                            trgBtn.disabled = false;
+                          }}
+                        >
+                          {Icons.initial({ strokeColor: "white" })} Init Project
+                        </Button>
+                      )}
                     {/* <Button
                       onClick={async (ev) => {
                         addClickClass(ev.currentTarget, "click");
@@ -270,7 +305,7 @@ export const HomeNav = () => {
                 </OptionsButton>
               )}
             </li>
-          )}
+          }
           {/* <Li title="Github" icon={Icons.git} /> */}
         </ul>
       </div>
