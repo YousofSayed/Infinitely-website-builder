@@ -29,7 +29,7 @@ import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 import { For } from "million/react";
 import { Icons } from "../../Icons/Icons";
 import { addClickClass } from "../../../helpers/cocktail";
-import { takeScreenShot } from "../../../plugins/updateProjectThumbnail";
+import { takeScreenShot } from "../../../plugins/updateProjectThumbnail.jsx";
 export const SettingsModal = () => {
   const editor = useEditorMaybe();
   const projectId = +localStorage.getItem(current_project_id);
@@ -311,10 +311,8 @@ export const SettingsModal = () => {
         </Button>
         <Button
           onClick={(ev) => {
-            addClickClass(ev.currentTarget , 'click');
-            takeScreenShot(editor, false , ()=>{
-              toast.success(<ToastMsgInfo msg={`Screenshot taked successfully 💙`}/>)
-            });
+            // addClickClass(ev.currentTarget, "click");
+            takeScreenShot(editor, false);
           }}
         >
           {Icons.image({ fill: "white" })}

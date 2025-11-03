@@ -4,6 +4,7 @@ import { Loader } from "../../Loader";
 import {
   codeEditorScripts,
   current_page_id,
+  current_project_id,
   global_types,
 } from "../../../constants/shared";
 import {
@@ -17,8 +18,11 @@ import { useCmdsContext } from "../../../hooks/useCmdsContext";
 import libSource from "../../../helpers/alpineType?raw";
 import { opfs } from "../../../helpers/initOpfs";
 import {
+  buildGsapMotionsScript,
+  cleanMotions,
   defineRoot,
   doGlobalType,
+  filterMotionsByPage,
   getProjectRoot,
   hasExportDefault,
   infinitelyCallback,
@@ -250,6 +254,21 @@ export const CodeEditor = ({
           finalLibs.join("\n\n"),
           "ts:filename/infinitely.d.ts"
         );
+
+      // const projectId = +localStorage.getItem(current_project_id);
+      // const {projectSettings} = await getProjectSettings(projectId);
+      // monaco.languages.typescript.javascriptDefaults.addExtraLib(
+      //   buildGsapMotionsScript(
+      //     filterMotionsByPage(
+      //       await cleanMotions(projectData.motions, projectData.pages),
+      //       currentPageName
+      //     ),
+      //     false,
+      //     projectSettings.remove_gsap_markers_on_build,
+      //     currentPageName
+      //   ),
+      //   `ts:filename/motions.${currentPageName}.d.ts`
+      // );
 
       monaco.languages.typescript.javascriptDefaults.addExtraLib(
         libSource,

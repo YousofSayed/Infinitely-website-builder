@@ -21,7 +21,7 @@ import { addNewBuiltinCommands } from "../../plugins/addNewBuiltinCommands.jsx";
 import { customCmps } from "../../plugins/customCmps.jsx";
 import { html } from "../../helpers/cocktail.js";
 import { IDB } from "../../plugins/IDB";
-import { updateProjectThumbnail } from "../../plugins/updateProjectThumbnail.js";
+import { updateProjectThumbnail } from "../../plugins/updateProjectThumbnail.jsx";
 import { customInfinitelySymbols } from "../../plugins/customInfinitelySymbols";
 import { current_symbol_id } from "../../constants/shared.js";
 import {

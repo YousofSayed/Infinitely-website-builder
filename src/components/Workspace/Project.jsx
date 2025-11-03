@@ -37,7 +37,7 @@ export const Project = ({ project }) => {
     useRecoilState(isProjectInitedState);
   const urlsRef = useRef([]);
   // console.log(project.imgSrc);
-  useLayoutEffect(() => {
+  useEffect(() => {
     let canceled = false;
     (async () => {
       const root = `projects/project-${project.id}`;
@@ -53,6 +53,8 @@ export const Project = ({ project }) => {
       }
 
       const url = URL.createObjectURL(file);
+      console.log('image url : ' , url , file);
+      
       setImg(url);
       urlsRef.current.push(url);
     })();

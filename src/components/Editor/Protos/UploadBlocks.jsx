@@ -5,7 +5,11 @@ import { Button } from "../../Protos/Button";
 import { SymbolsAndTemplatesHandler } from "./SymbolsAndTemplatesHandler";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./ToastMsgInfo";
-import { getProjectData, restoreBlobs } from "../../../helpers/functions";
+import {
+  advancedSearchSuggestions,
+  getProjectData,
+  restoreBlobs,
+} from "../../../helpers/functions";
 import { Input } from "./Input";
 import { db } from "../../../helpers/db";
 import { current_project_id } from "../../../constants/shared";
@@ -16,9 +20,11 @@ import { FitTitle } from "./FitTitle";
 import { SmallButton } from "./SmallButton";
 import { opfs } from "../../../helpers/initOpfs";
 import { defineRoot } from "../../../helpers/bridge";
+import { For } from "million/react";
 
 export const UploadBlocks = () => {
   const [uploadedBlocks, setUploadedBlocks] = useState(blocksArrayType);
+  const allBlocks = useRef(blocksArrayType);
   const projectId = +localStorage.getItem(current_project_id);
   const inputRef = useRef();
   const editor = useEditorMaybe();
@@ -32,7 +38,7 @@ export const UploadBlocks = () => {
      * @type {File}
      */
     const file = input.files[0];
-    input.value = '';
+    input.value = "";
     const symbolsOrTemplates = await restoreBlobs(
       JSON.parse((await file.text()) || "{}")
     );
@@ -49,11 +55,12 @@ export const UploadBlocks = () => {
           }
         />
       );
-      input.value = '';
+      input.value = "";
       return;
     }
     setUploadedBlocks(symbolsOrTemplates);
-    input.value = '';
+    allBlocks.current = symbolsOrTemplates;
+    input.value = "";
   };
 
   const saveBlocksToDB = async () => {
@@ -85,8 +92,8 @@ export const UploadBlocks = () => {
           },
         ]);
 
-        block.content = '';
-        block.style = '';
+        block.content = "";
+        block.style = "";
 
         blocks[block.id] = block;
         if (block.type == "symbol") {
@@ -114,12 +121,27 @@ export const UploadBlocks = () => {
     editor.trigger("block:add");
     editor.trigger("block:update");
     setUploadedBlocks([]);
-    toast.success(<ToastMsgInfo msg={`Blocks saved successfully👍`}/>)
+    toast.success(<ToastMsgInfo msg={`Blocks saved successfully👍`} />);
   };
 
   const deleteUploadedBlock = (id) => {
     const newArr = uploadedBlocks.filter((block) => block.id != id);
     setUploadedBlocks(newArr);
+  };
+
+  const search = (value = "") => {
+    if (!value) {
+      setUploadedBlocks(allBlocks.current);
+      return;
+    }
+
+    const filtered = advancedSearchSuggestions(
+      allBlocks.current,
+      value,
+      undefined,
+      "name"
+    );
+    setUploadedBlocks(filtered);
   };
 
   return (
@@ -146,7 +168,7 @@ export const UploadBlocks = () => {
       ) : (
         <section className="h-full flex flex-col gap-2">
           <header className="flex gap-2 rounded-md">
-            <Input placeholder="Search..." className="w-full bg-slate-800" />
+            <Input type="search" placeholder="Search..." className="w-full bg-slate-800" onInput={(ev)=>search(ev.target.value)}/>
             <SmallButton
               title={"save blocks"}
               onClick={() => {
@@ -156,54 +178,45 @@ export const UploadBlocks = () => {
               {Icons.saveData({ fill: "white", height: 17 })}
             </SmallButton>
           </header>
-          <section className="h-full w-full ">
-            <VirtuosoGrid
-              totalCount={uploadedBlocks.length}
-              components={GridComponents}
-              listClassName="p-[unset!important]"
-              itemContent={(i) => {
-                const symbol = uploadedBlocks[i];
-                return (
-                  <section
-                    key={i}
-                    className="p-2 bg-slate-800 max-h-[200px] rounded-lg flex justify-between items-center  gap-2"
-                  >
-                    {/* <section className="bg-slate-900 flex gap-2 items-center  px-2 w-full rounded-md h-full">
-                      {" "}
-                      <figure
-                        className=" h-full py-2 flex justify-center items-center rounded-lg"
-                        dangerouslySetInnerHTML={{ __html: symbol.media }}
-                      ></figure>
-                      <h1 className="font-semibold capitalize text-slate-200 text-lg custom-font-size first-letter:text-blue-400">
-                        {symbol.name}
-                      </h1>
-                    </section> */}
+          <section
+            className="w-full  grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-2 overflow-y-auto hideScrollBar  rounded-lg"
+            style={{
+              scrollbarGutter: "stable",
+            }}
+          >
+            <For each={uploadedBlocks}>
+              {(symbol, i) => (
+                <section
+                  key={i}
+                  className="p-2 pl-[2px!important] bg-slate-800 h-[50px] rounded-lg flex justify-between items-center  gap-2"
+                >
+                  <FitTitle className="flex items-center gap-2 w-full justify-center ">
+                    <figure
+                      className=" h-full py-2 flex justify-center items-center rounded-lg"
+                      dangerouslySetInnerHTML={{ __html: symbol.media }}
+                    ></figure>
+                    <span
+                      style={{ textWrap: "wrap" }}
+                      className="font-semibold custom-font-size  capitalize text-slate-200 text-[14px]"
+                    >
+                      {symbol.name}
+                    </span>
+                  </FitTitle>
 
-                    <FitTitle className="flex items-center gap-2 w-full justify-center">
-                      <figure
-                        className=" h-full py-2 flex justify-center items-center rounded-lg"
-                        dangerouslySetInnerHTML={{ __html: symbol.media }}
-                      ></figure>
-                      <span className="font-semibold capitalize text-slate-200 text-[14px]">
-                        {symbol.name}
-                      </span>
-                    </FitTitle>
-
-                    <section className="flex h-full gap-2">
-                      <SmallButton
-                        title={"delete"}
-                        className="p-2 bg-slate-900  hover:bg-[crimson!important] transition-all"
-                        onClick={() => {
-                          deleteUploadedBlock(symbol.id);
-                        }}
-                      >
-                        {Icons.trash("white")}
-                      </SmallButton>
-                    </section>
+                  <section className="flex h-full gap-2">
+                    <SmallButton
+                      title={"delete"}
+                      className="p-2 bg-slate-900  hover:bg-[crimson!important] transition-all"
+                      onClick={() => {
+                        deleteUploadedBlock(symbol.id);
+                      }}
+                    >
+                      {Icons.trash("white")}
+                    </SmallButton>
                   </section>
-                );
-              }}
-            />
+                </section>
+              )}
+            </For>
           </section>
         </section>
       )}

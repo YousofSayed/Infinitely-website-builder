@@ -35,8 +35,11 @@ export const is_installation_checked = "is_installation_checked";
 export const dbx_sign_in_state = "dbx_sign_in_state";
 export const dropbox_token = "dropbox_token";
 export const dropbox_refresh_token = "dropbox_refresh_token";
-export const dropbox_code_verifier = 'dropbox_code_verifier';
-export const global_types = [{nameWithoutExt:'gsap' , globalName:'gsap'}  , {nameWithoutExt:'swiper' , globalName:'swiper'} ];
+export const dropbox_code_verifier = "dropbox_code_verifier";
+export const global_types = [
+  { nameWithoutExt: "gsap", globalName: "gsap" },
+  { nameWithoutExt: "swiper", globalName: "swiper" },
+];
 export const heading_tags = ["h1", "h2", "h3", "h4", "h5", "h6"];
 export const text_tags = [
   ...heading_tags,
@@ -134,6 +137,12 @@ export const preivewScripts = [
   // },
 ];
 
+export const pVueScripts = [
+  "/scripts/pVuePlugins.js",
+  "/scripts/p-vue.js",
+  "/scripts/initPVue.js",
+];
+
 export const MAX_UPLOAD_SIZE = 250;
 export const MAX_FILE_SIZE = isChrome() ? 10 : 5;
 export const MAX_FILES_COUNT = 500;
@@ -154,6 +163,7 @@ export const file_deleted_success_msg = `File deleted successfully`;
  *  index:number,
  *  item:{
  *  name:string,
+ *  content:string,
  *  localUrl:string,
  *  buildUrl:string,
  *  },
@@ -163,9 +173,6 @@ export const file_deleted_success_msg = `File deleted successfully`;
  * @returns {{name:string, localUrl:string , buildUrl?:string}[]}
  */
 export const buildScripts = ({
-  disablePvue = false,
-  disableGsapCore = false,
-  disableGsapScrollTrigger = false,
   projectSetting = {},
   inserts = [],
 }) => {
@@ -191,7 +198,7 @@ export const buildScripts = ({
         ]
       : []),
 
-    ...((!disableGsapCore && [
+    ...((!projectSetting.disable_gsap_core && [
       {
         name: "gsap.min.js",
         localUrl: "/scripts/gsap.min.js",
@@ -199,7 +206,7 @@ export const buildScripts = ({
     ]) ||
       []),
 
-    ...((!disableGsapScrollTrigger && [
+    ...((!projectSetting.disable_gsap_scrollTrigger && [
       {
         name: "scrollTrigger.js",
         localUrl: "/scripts/scrollTrigger.min.js",

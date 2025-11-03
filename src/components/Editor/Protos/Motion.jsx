@@ -1517,8 +1517,7 @@ export const Motion = memo(() => {
     for (const animation of clone.animations) {
       animation.name = uniqueId(`varName_${uniqueID()}${random(99, 999)}`);
     }
-    clone.instances = {},
-    clone.isInstance = false;
+    (clone.instances = {}), (clone.isInstance = false);
     sle.addAttributes({ [motionId]: newId });
     initToolbar(editor, sle);
     await updateDB(clone);
@@ -1594,9 +1593,11 @@ export const Motion = memo(() => {
     const sle = editor.getSelected();
     if (!motion || !sle) return;
     const projectData = await getProjectData();
-    if(projectData.motions[motion.id]){
-      const cnfrm = confirm(`Motion with the same id already exists , Do you want to overwrite it ?`);
-      if(!cnfrm) return;
+    if (projectData.motions[motion.id]) {
+      const cnfrm = confirm(
+        `Motion with the same id already exists , Do you want to overwrite it ?`
+      );
+      if (!cnfrm) return;
       motion.id = uniqueId(`mt${uniqueID()}`);
     }
     sle.addAttributes({ [motionId]: motion.id });
@@ -1896,7 +1897,13 @@ export const Motion = memo(() => {
       ) : (
         <section className=" flex flex-col gap-2 items-center justify-center p-2 bg-slate-800 rounded-lg minion">
           <section className="container bg-slate-900 flex flex-col justify-center p-2 items-center rounded-md gap-2 font-semibold">
-            <FitTitle className="animate-bounce text-slate-200 font-semibold text-center capitalize">
+            <FitTitle
+              style={{
+                willChange: "transform, opacity",
+                transform: "translateZ(0)",
+              }}
+              className="animate-bounce text-slate-200 font-semibold text-center capitalize"
+            >
               No animations yet
             </FitTitle>
 
@@ -2028,8 +2035,8 @@ export const Motion = memo(() => {
                       id="mt-upload-btn"
                       onClick={(ev) => {
                         addClickClass(ev.currentTarget, "click");
-                        console.log('motionUploader' , motionUploader.current);
-                        
+                        console.log("motionUploader", motionUploader.current);
+
                         motionUploader.current.click();
                       }}
                     >

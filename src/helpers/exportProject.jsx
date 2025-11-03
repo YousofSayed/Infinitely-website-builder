@@ -106,13 +106,18 @@ export async function buildProject(props) {
 
   zip.file(
     "index.html",
-    buildPage({
-      page: projectData.pages[`index`],
-      projectData,
-      projectSetting: props.projectSetting,
-      ...pageBuildSettings,
-      urlException: true,
-    })
+    new Blob(
+      [
+        await buildPage({
+          page: projectData.pages[`index`],
+          projectData,
+          projectSetting: props.projectSetting,
+          ...pageBuildSettings,
+          urlException: true,
+        }),
+      ],
+      { type: "text/html;charset=UTF-8" }
+    )
   );
   // zip.file("libs/alpine.js", alpineBlob);
   // zip.file("libs/infImportsBuild.js", infImportsBuildBlob);
@@ -470,12 +475,17 @@ export async function buildProject(props) {
   for (const page of pages) {
     zip.file(
       page.pathes.html.replace("editor/", ""),
-      await buildPage({
-        projectData,
-        page,
-        projectSetting: props.projectSetting,
-        ...pageBuildSettings,
-      })
+      new Blob(
+        [
+          await buildPage({
+            projectData,
+            page,
+            projectSetting: props.projectSetting,
+            ...pageBuildSettings,
+          }),
+        ],
+        { type: "text/html;charset=UTF-8" }
+      )
     );
   }
   console.log(`End loading pages`);
@@ -820,20 +830,25 @@ async function buildPage({
           projectSetting,
           inserts: [
             {
-              index:
-                projectSetting.disable_gsap_core &&
-                projectSetting.disable_gsap_scrollTrigger
-                  ? 0
-                  : (!projectSetting.disable_gsap_core &&
-                      projectSetting.disable_gsap_scrollTrigger) ||
-                    (projectSetting.disable_gsap_core &&
-                      !projectSetting.disable_gsap_scrollTrigger)
-                  ? 1
-                  : !projectSetting.disable_gsap_core &&
-                    !projectSetting.disable_gsap_scrollTrigger
-                  ? 2
-                  : null,
-              useLastIndex: true,
+              index: (() => {
+                // Base scripts order:
+                // 0 - infinitely.js
+                // 1+ - gsap.min.js (if enabled)
+                // 2+ - scrollTrigger.js (if enabled)
+                // 3+ - splitText.js (if enabled)
+                // 4+ - pVue (if enabled)
+                // So we want to insert after all GSAP-related scripts, before petite-vue.
+
+                let index = 1; // after infinitely.js by default
+
+                if (!projectSetting.disable_gsap_core) index++;
+                if (!projectSetting.disable_gsap_scrollTrigger) index++;
+                if (!projectSetting.disable_gsap_splitText) index++;
+
+                // if petite-vue is disabled, insert remains after gsap group
+                return index;
+              })(),
+              // useLastIndex: true,
               item: {
                 name: `${page.name}.js`,
                 buildUrl: `/js/motions/${page.name}.js`,
@@ -858,7 +873,7 @@ async function buildPage({
     </html>
   `;
 
-  return (pageRaw);
+  return pageRaw;
 }
 
 /**

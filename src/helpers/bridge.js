@@ -3,6 +3,7 @@ import { parse as parseCss, stringify as stringifyCss } from "css";
 import { cloneDeep, isArray, isPlainObject, random, uniqueId } from "lodash";
 import serializeJavascript from "serialize-javascript";
 import {
+  buildScripts,
   interactionId,
   interactionInstanceId,
   mainMotionId,
@@ -916,7 +917,7 @@ export function buildGsapMotionsScript(
     const doMotion = () => {
       if (motion.isTimeLine) {
         tween += `${motion.id}.${
-          motion.timeLineName || `${uniqueId("timeline_")}${random(1, 9999)}` 
+          motion.timeLineName || `${uniqueId("timeline_")}${random(1, 9999)}`
         } = gsap.timeline( new Function(\`return (${serializeJavascript(
           compiledMotion.timeline,
           { space: 2 }
@@ -1769,16 +1770,16 @@ export const buildPageData = async (page = "", projectData, projectSetting) => {
     templatesStyles: "",
     fonts: "",
     bodyAttributes: projectData.pages[`${currentPageId}`].bodyAttributes || {},
-    motions:
-      `<script>${buildGsapMotionsScript(
-        filterMotionsByPage(
-          await cleanMotions(projectData.motions, projectData.pages),
-          currentPageId
-        ),
-        false,
-        projectSetting.remove_gsap_markers_on_build,
-        currentPageId
-      )}</script>` || "",
+    // motions:
+    //   `<script>${buildGsapMotionsScript(
+    //     filterMotionsByPage(
+    //       await cleanMotions(projectData.motions, projectData.pages),
+    //       currentPageId
+    //     ),
+    //     false,
+    //     projectSetting.remove_gsap_markers_on_build,
+    //     currentPageId
+    //   )}</script>` || "",
   };
 
   // console.log("motions script: ", cleanMotions(projectData.motions, projectData.pages),);
@@ -1790,22 +1791,74 @@ export const buildPageData = async (page = "", projectData, projectSetting) => {
   const footerScritps = getScripts(projectData.jsFooterLibs, urlException);
 
   const cssLibs = getStyles(projectData.cssLibs, urlException);
+ 
 
-  const viewMainScripts = preivewScripts
-    .map((src) => {
-      if (typeof src === "string") {
-        return html` <script src="${src}"></script> `;
-      } else if (isPlainObject(src)) {
-        return html`
-          <script
-            ${Object.entries(src)
-              .map(([key, value]) => `${key}=${value} `)
-              .join(" ")}
-          ></script>
-        `;
-      }
-    })
+  const viewMainScripts = buildScripts({
+    projectSetting,
+    inserts: [
+      {
+        index: (() => {
+          // Base scripts order:
+          // 0 - infinitely.js
+          // 1+ - gsap.min.js (if enabled)
+          // 2+ - scrollTrigger.js (if enabled)
+          // 3+ - splitText.js (if enabled)
+          // 4+ - pVue (if enabled)
+          // So we want to insert after all GSAP-related scripts, before petite-vue.
+
+          let index = 1; // after infinitely.js by default
+
+          if (!projectSetting.disable_gsap_core) index++;
+          if (!projectSetting.disable_gsap_scrollTrigger) index++;
+          if (!projectSetting.disable_gsap_splitText) index++;
+
+          // if petite-vue is disabled, insert remains after gsap group
+          return index;
+        })(),
+        // useLastIndex: true,
+        item: {
+          name: `${page.name}.js`,
+          content: buildGsapMotionsScript(
+            filterMotionsByPage(
+              await cleanMotions(projectData.motions, projectData.pages),
+              currentPageId
+            ),
+            false,
+            projectSetting.remove_gsap_markers_on_build,
+            currentPageId
+          ),
+        },
+      },
+    ],
+  })
+    .map(
+      (url) =>
+        `<script src="${url.localUrl||""}" ${
+          url.attributes && isPlainObject(url.attributes)
+            ? Object.entries(url.attributes).map(
+                ([key, value]) => `${key}="${value}"`
+              )
+            : ""
+        }>${url.content||""}</script>`
+    )
     .join("\n");
+  
+  
+  // preivewScripts
+  //   .map((src) => {
+  //     if (typeof src === "string") {
+  //       return html` <script src="${src}"></script> `;
+  //     } else if (isPlainObject(src)) {
+  //       return html`
+  //         <script
+  //           ${Object.entries(src)
+  //             .map(([key, value]) => `${key}=${value} `)
+  //             .join(" ")}
+  //         ></script>
+  //       `;
+  //     }
+  //   })
+  //   .join("\n");
 
   const globalScrtip = html`
     <script src="${urlException}/global/global.js"></script>
@@ -1923,7 +1976,7 @@ export async function buildPageContentFromData({
           .join(" ")}
       >
         ${pageData.content} ${pageData.footerScripts} ${pageData.globalScript}
-        ${pageData.localScript} ${pageData.mainScripts} ${pageData.motions}
+        ${pageData.localScript} ${pageData.mainScripts} 
       </body>
     </html>
   `;

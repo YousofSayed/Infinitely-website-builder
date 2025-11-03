@@ -34,6 +34,7 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Loader } from "../../Loader";
 import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
 import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
+import { For } from "million/react";
 
 export const SymbolsAndTemplatesHandler = ({
   type = "",
@@ -283,6 +284,7 @@ export const SymbolsAndTemplatesHandler = ({
       {showHeader && !!symbols.length && (
         <header className="flex items-center  rounded-lg  gap-2">
           <Input
+          type="search"
             placeholder="Search..."
             className="bg-slate-800 w-full"
             onInput={(ev) => {
@@ -329,77 +331,71 @@ export const SymbolsAndTemplatesHandler = ({
         </header>
       )}
 
-      <section className="h-full w-full ">
-        {!!symbols.length && (
-          <VirtuosoGrid
-            totalCount={symbols.length}
-            components={GridComponents}
-            itemClassName="p-[unset!important]"
-            listClassName="p-[unset!important]"
-            itemContent={(i) => {
-              const symbol = symbols[i];
-              return (
-                <section
-                  key={i}
-                  className="p-1 bg-slate-800 max-h-[200px] rounded-lg flex justify-between items-center  gap-3"
-                >
-                  {/* <section className="bg-slate-900 flex gap-2 items-center  px-2 w-full rounded-md h-full">
+      {Boolean(symbols.length) && (
+        <section className="w-full  grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] overflow-y-auto hideScrollBar  gap-2">
+          <For each={symbols}>
+            {(symbol, i) => (
+              <section
+                key={i}
+                className="p-1 bg-slate-800 h-[50px] rounded-lg flex justify-between items-center  gap-3"
+              >
+                {/* <section className="bg-slate-900 flex gap-2 items-center  px-2 w-full rounded-md h-full">
                   {" "}
                  
                 </section> */}
 
-                  <FitTitle className="flex gap-2 items-center h-full  w-[calc(100%-115px)] overflow-hidden">
-                    <figure
-                      className=" h-full py-1 w-[35px]  bg-slate-900 flex justify-center items-center rounded-lg"
-                      dangerouslySetInnerHTML={{ __html: symbol.media }}
-                    >
-                      {/* <img src={URL.createObjectURL(symbol.media)} alt="" /> */}
-                    </figure>
-                    <span
-                      title={symbol.name}
-                      className="font-semibold custom-font-size capitalize text-ellipsis overflow-hidden  text-slate-200 text-[14px] "
-                    >
-                      {symbol.name}
-                    </span>
-                  </FitTitle>
+                <FitTitle className="flex gap-2 items-center h-full  w-[calc(100%-115px)] overflow-hidden">
+                  <figure
+                    className=" h-full py-1 w-[35px]  bg-slate-900 flex justify-center items-center rounded-lg"
+                    dangerouslySetInnerHTML={{ __html: symbol.media }}
+                  >
+                    {/* <img src={URL.createObjectURL(symbol.media)} alt="" /> */}
+                  </figure>
+                  <span
+                    title={symbol.name}
+                    className="font-semibold custom-font-size capitalize text-ellipsis overflow-hidden  text-slate-200 text-[14px] "
+                  >
+                    {symbol.name}
+                  </span>
+                </FitTitle>
 
-                  {/* <section>
+                {/* <section>
     </section> */}
-                  <section className="flex gap-2">
-                    {showDeleteBtn && (
-                      <SmallButton
-                        title={"delete"}
-                        className="p-1 bg-slate-900 hover:bg-blue-600 transition-all"
-                        onClick={() => {
-                          deleteSymbol(symbol.id, symbol.name);
-                        }}
-                      >
-                        {Icons.trash("white")}
-                      </SmallButton>
-                    )}
+                <section className="flex gap-2">
+                  {showDeleteBtn && (
+                    <SmallButton
+                      title={"delete"}
+                      className="p-1 bg-slate-900 hover:bg-blue-600 transition-all"
+                      onClick={() => {
+                        deleteSymbol(symbol.id, symbol.name);
+                      }}
+                    >
+                      {Icons.trash("white")}
+                    </SmallButton>
+                  )}
 
-                    {showDownloadBtn && (
-                      <SmallButton
-                        title={"export as json"}
-                        className="p-1 bg-slate-900 hover:bg-blue-600 transition-all"
-                        onClick={() => {
-                          exportSymbol(symbol);
-                        }}
-                      >
-                        {Icons.export("white")}
-                      </SmallButton>
-                    )}
+                  {showDownloadBtn && (
+                    <SmallButton
+                      title={"export as json"}
+                      className="p-1 bg-slate-900 hover:bg-blue-600 transition-all"
+                      onClick={() => {
+                        exportSymbol(symbol);
+                      }}
+                    >
+                      {Icons.export("white")}
+                    </SmallButton>
+                  )}
 
-                    {children}
-                    {btns({ id: symbol.id, name: symbol.name })}
-                  </section>
+                  {children}
+                  {btns({ id: symbol.id, name: symbol.name })}
                 </section>
-              );
-            }}
-          />
-        )}
+              </section>
+            )}
+          </For>
+        </section>
+      )}
 
-        {!symbols.length && !loading && (
+    {!symbols.length && !loading && (
           <section className="h-full w-full flex flex-col gap-2 items-center justify-center">
             {!symbols.length && !loading ? (
               <>
@@ -416,7 +412,6 @@ export const SymbolsAndTemplatesHandler = ({
             ) : null}
           </section>
         )}
-      </section>
     </main>
   );
 };
