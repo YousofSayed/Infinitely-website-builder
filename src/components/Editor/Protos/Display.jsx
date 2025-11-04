@@ -12,56 +12,63 @@ import { currentElState } from "../../../helpers/atoms";
 import { displayValues } from "../../../constants/cssProps";
 
 export const Display = () => {
-    const [option, setOption] = useState("");
-  const editor = useEditorMaybe()
+  const [option, setOption] = useState("");
+  const editor = useEditorMaybe();
   const currentEl = useRecoilValue(currentElState);
-  const [isParentFlex , setIsParentFlex] = useState(false);
-  const [isParentGrid , setIsParentGrid] = useState(false);
-  
-  useEffect(()=>{
-    if(!editor || !editor?.getSelected?.())return; 
-    /**
-     * 
-     * @param {HTMLElement} el 
-     * @returns 
-     */
-    const getParentDisplayValue = (el)=>{
-      if(!el.parentElement){
-        return {
-          flex:false,
-          grid:false,
-        }
-      }
-      const computedChildStyle =  editor.Canvas.getWindow().getComputedStyle(el.parentElement)
-      const computedParentStyle =  editor.Canvas.getWindow().getComputedStyle(el.parentElement)
-      const displayParent =computedParentStyle.display;
-      const displayChild = computedChildStyle.display;
-      const flexCond = displayParent == 'flex' || displayChild == 'flex' ;
+  const [isParentFlex, setIsParentFlex] = useState(false);
+  const [isParentGrid, setIsParentGrid] = useState(false);
 
-      const gridCond = displayParent == 'grid'|| displayChild =='grid'
+  useEffect(() => {
+    if (!editor || !editor?.getSelected?.()) return;
+    /**
+     *
+     * @param {HTMLElement} el
+     * @returns
+     */
+    const getParentDisplayValue = (el) => {
+      if (!el.parentElement) {
+        return {
+          flex: false,
+          grid: false,
+        };
+      }
+      const computedChildStyle = editor.Canvas.getWindow().getComputedStyle(
+        el.parentElement
+      );
+      const computedParentStyle = editor.Canvas.getWindow().getComputedStyle(
+        el.parentElement
+      );
+      const displayParent = computedParentStyle.display;
+      const displayChild = computedChildStyle.display;
+      const flexCond = displayParent == "flex" || displayChild == "flex";
+
+      const gridCond = displayParent == "grid" || displayChild == "grid";
       // console.log('cond :' , cond);
 
       return {
-        flex:flexCond,
-        grid:gridCond
-      }
-    }
+        flex: flexCond,
+        grid: gridCond,
+      };
+    };
     const displayValue = getParentDisplayValue(editor.getSelected().getEl());
     setIsParentFlex(displayValue.flex);
     setIsParentGrid(displayValue.grid);
-  },[currentEl , editor])
+  }, [currentEl, editor]);
 
-  
-
-  useUpdateInputValue(({
-    cssProp:'display',
-    setVal:(val)=>{
-      !val &&  isParentFlex && setOption('flex');
-      !val &&  isParentGrid && setOption('grid');
-      !val && setOption('');
+  useUpdateInputValue({
+    cssProp: "display",
+    onEffect(cssProp, val) {
+      console.log("display effect : ", val);
+      !val && isParentFlex && setOption("flex");
+      !val && isParentGrid && setOption("grid");
+      !val && setOption("");
       val && setOption(val);
+    },
+    setVal:(val)=>{
+      console.log("display effect from setval: ", val);
+
     }
-  }));
+  });
 
   return (
     <>
@@ -70,7 +77,6 @@ export const Display = () => {
         <SelectStyle
           label="display"
           cssProp="display"
-          
           keywords={displayValues}
           setKeyword={setOption}
         />

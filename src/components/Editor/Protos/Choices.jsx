@@ -69,11 +69,10 @@ export const Choices = ({
       index,
       currentIndex.current,
       keywords[index],
-      active && currentIndex.current == 0
     );
 
     // active ? onActive({ keyword, index: currentIndex.current }) :  onUnActive({ keyword, index: currentIndex.current });
-    setKeyword(keywords[index]);
+    setKeyword(new String(keywords[index] || ""));
   };
 
   useEffect(() => {
@@ -171,7 +170,7 @@ export const Choices = ({
     return () => {
       selected.off("change:attributes", selectingCallback);
     };
-  }, [editor]);
+  }, [selector, active, sle, editor, keywords]);
 
   return (
     <section
@@ -184,32 +183,12 @@ export const Choices = ({
           keyword && (
             <p
               onClick={(ev) => {
-                ev.preventDefault();
                 ev.stopPropagation();
-                const classNameAttrebute = editor.getSelected().getAttributes()[
-                  inf_class_name
-                ];
-
+                ev.preventDefault();
+               
                 if (!enableSelecting) return;
 
-                // if (
-                //   classNameAttrebute &&
-                //   classNameAttrebute.toLowerCase() == keyword.toLowerCase()
-                // ) {
-                //   console.log('hahah');
 
-                //   currentIndex.current = i;
-                //   setActive(Boolean(true));
-                //   setKeyword(keyword)
-                //   return;
-                // }
-
-                // const newActive = !active;
-                // setActive(
-                //   currentIndex.current != i ? Boolean(true) : newActive
-                // );
-                // currentIndex.current = i;
-                // setKeyword(keyword);
                 console.log("selector setttting");
                 setRule({
                   is: false,

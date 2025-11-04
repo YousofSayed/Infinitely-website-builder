@@ -113,7 +113,7 @@ export const ReusableCmb = () => {
               // }),
               // style: minify(stringStyle).css,
               type: "template",
-              media: sle.getIcon() || editorIcons.templates({}),
+              media: sle.getIcon() || editorIcons.templates({fill:'white'}),
             },
           },
         },

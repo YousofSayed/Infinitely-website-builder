@@ -1830,10 +1830,10 @@ export const buildPageData = async (page = "", projectData, projectSetting) => {
         },
       },
     ],
-  })
+  }).concat([{localUrl:'/scripts/previewHmr.dev.js',name:'previewHmr.dev.js'}])
     .map(
       (url) =>
-        `<script src="${url.localUrl||""}" ${
+        `<script ${url.localUrl ? `src="${url.localUrl||""}"` : ''} ${
           url.attributes && isPlainObject(url.attributes)
             ? Object.entries(url.attributes).map(
                 ([key, value]) => `${key}="${value}"`

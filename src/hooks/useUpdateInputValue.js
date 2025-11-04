@@ -212,6 +212,7 @@ export const useUpdateInputValue = ({
       !editor.getSelected()
     )
       return;
+      
     // if(!editor.getSelected()) return;
     saveTimeout && clearTimeout(saveTimeout);
     // if(`requestIdleCallback` in window){
@@ -227,13 +228,15 @@ export const useUpdateInputValue = ({
     //  saveTimeout = setTimeout(() => {
     // }, 5);
     // console.log("i should work", cssProp);
-    if (idleId) {
-      window.cancelIdleCallback && cancelIdleCallback(idleId);
-      clearTimeout(idleId);
-    }
-    idleId = setTimeout(() => {
-     handler({});
-    }, 10);
+    // if (idleId) {
+    //   window.cancelIdleCallback && cancelIdleCallback(idleId);
+    //   clearTimeout(idleId);
+    // }
+    // idleId = setTimeout(() => {
+    //   console.log('updating display effect :' ,cssProp);
+
+    // }, 10);
+    handler({});
   }, [
     editor,
     currentElObj,

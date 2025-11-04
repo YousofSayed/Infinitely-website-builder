@@ -24,6 +24,7 @@ self.addEventListener("message", (ev) => {
         url: `${props?.obj?.pageUrl}`,
       },
     });
+    previewBroadCastChannel.close();
     console.log(
       `Send Preview URL to Broadcast Channel Is Done 👍`,
       props?.obj?.pageUrl,
