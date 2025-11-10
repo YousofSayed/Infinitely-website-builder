@@ -475,7 +475,11 @@ export const Commands = () => {
                           //   console.log(objectSplitter(value));
                           // }, 300);
                           if (!value) {
-                            cmd;
+                            cmd.callback({
+                              value:'',
+                              editor,
+                            })
+                            return;
                           }
 
                           cmd.callback({
@@ -752,14 +756,14 @@ export const Commands = () => {
                             // },
                           });
 
-                          // const clone = cloneDeep(cmds);
-                          // clone[i].suffixValue = "";
-                          // clone[i].selectedModifiers = [];
-                          // clone[i].value = "";
-                          // clone[i].modifierValue = "";
-                          // setCmds(clone);
-                          // setTimeout(() => {
-                          // });
+                          setTimeout(() => {
+                            const clone = cloneDeep(cmds);
+                            clone[i].suffixValue = "";
+                            clone[i].selectedModifiers = [];
+                            clone[i].value = "";
+                            clone[i].modifierValue = "";
+                            setCmds(clone);
+                          });
                         } catch (error) {
                           throw new Error(`Directives Error :  ${error}`, {
                             cause: "Directives Error",

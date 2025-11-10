@@ -25,44 +25,51 @@ export const useNotifiers = () => {
     if (!editor || !sle || !sle.currentEl) return;
     const selectedCmp = editor?.getSelected();
     if (!selectedCmp) return;
-    /**
-     *
-     * @param {import('grapesjs').Component} selectedCmp
-     */
-    const checkers = (selectedCmp) => {
-      const attributes = selectedCmp.getAttributes();
-      const checkCommands = () =>
-        Object.keys(attributes).some((attrKey) => attrKey.startsWith("v-"));
-      const checkTraits = () =>
-        selectedCmp
-          .getTraits()
-          .some((trait) => Boolean(trait.attributes.value));
-      const checkInteractions = () =>
-        attributes[interactionId] || attributes[mainInteractionId];
-      const checkMotion = () =>
-        attributes[motionId] || attributes[mainMotionId];
-      const checkStyling = () =>
-        cmpRules.length > 0 || selectedCmp.getClasses().length > 0;
+    const callback = () => {
+      /**
+       *
+       * @param {import('grapesjs').Component} selectedCmp
+       */
+      const checkers = (selectedCmp) => {
+        const attributes = selectedCmp.getAttributes();
+        const checkCommands = () =>
+          Object.keys(attributes).some((attrKey) => attrKey.startsWith("v-"));
+        const checkTraits = () =>
+          selectedCmp
+            .getTraits()
+            .some((trait) => Boolean(trait.attributes.value));
+        const checkInteractions = () =>
+          attributes[interactionId] || attributes[mainInteractionId];
+        const checkMotion = () =>
+          attributes[motionId] || attributes[mainMotionId];
+        const checkStyling = () =>
+          cmpRules.length > 0 || selectedCmp.getClasses().length > 0;
 
-      return {
-        commands: checkCommands(),
-        traits: checkTraits(),
-        interactions: checkInteractions(),
-        motion: checkMotion(),
-        styling: checkStyling(),
+        return {
+          commands: checkCommands(),
+          traits: checkTraits(),
+          interactions: checkInteractions(),
+          motion: checkMotion(),
+          styling: checkStyling(),
+        };
       };
+      try {
+        setCmp(selectedCmp);
+        setNotify(checkers(selectedCmp));
+      } catch (error) {
+        console.error(`Error : ${error.message}`);
+      }
     };
-    try {
-      setCmp(selectedCmp);
-      setNotify(checkers(selectedCmp));
-    } catch (error) {
-      console.error(`Error : ${error.message}`);
-    }
 
+    callback();
+
+    editor.on('component:update' , callback);
+    
     return () => {
       setNotify((old) =>
         Object.fromEntries(Object.keys(old).map((key) => [key, false]))
-      );
+    );
+    editor.off('component:update' , callback);
     };
   }, [sle, cmpRules, editor]);
 };
