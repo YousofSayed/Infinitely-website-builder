@@ -9,7 +9,6 @@ import {
   preventSelectNavigation,
 } from "../helpers/functions";
 import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
-import { Button } from "../components/Protos/Button";
 
 /**
  *
@@ -151,8 +150,8 @@ export const Media = ({ editor }) => {
         tagName: "infinitely-media",
         attributes: {
           // class: "h-60 w-full h-full ",
-          controls: true,
-          poster: "",
+          // controls: true,
+          // poster: "",
         },
         components: html` Please select media 💙 `,
         traits: defineTraits([
@@ -328,43 +327,62 @@ export const Media = ({ editor }) => {
       handleAttrChange(model, attributes) {
         timeout && clearTimeout(timeout);
         // timeout = setTimeout(() => {
-        const child = this.components().models[0];
-        if (!child) return;
-        const childEl = child.getEl();
-        if(!childEl)return;
-        const originalAttributes = child.getAttributes();
-        const childAttributes = { ...attributes };
-        delete childAttributes["id"];
-        const allAttributes = { ...originalAttributes, ...childAttributes };
-        const currentSrc = childEl.getAttribute("src");
+          const child = this.components().models[0];
+          if (!child) return;
+          const childEl = child.getEl();
+          if (!childEl) return;
+          const originalAttributes = Object.fromEntries(
+            [...this.getEl().attributes].map((attr) => [attr.name, attr.value])
+          );;
 
-        console.log(originalAttributes, childAttributes);
+          const allChildAttrsWillRemoved = Object.fromEntries(
+            [...childEl.attributes].map((attr) => [attr.name, attr.value])
+          );
+          
+          const childAttributes = { ...attributes };
+          delete childAttributes["id"];
+          const allAttributes = { ...childAttributes };
+          const currentSrc = allChildAttrsWillRemoved["src"];
 
-        if (
-          allAttributes.src &&
-          currentSrc &&
-          currentSrc == allAttributes.src
-        ) {
           console.log(
-            "srcccccccccccccccccccccccccccc updated",
-            childAttributes
+            "originalAttributes, childAttributes",
+            originalAttributes,
+            childAttributes,
+            currentSrc,
+            allAttributes.src
           );
 
-          delete allAttributes["src"];
-          delete allAttributes["controls"];
-          delete allAttributes["poster"];
-        }
+          if (
+            allAttributes.src &&
+            currentSrc &&
+            currentSrc == allAttributes.src
+          ) {
+            console.log(
+              "srcccccccccccccccccccccccccccc updated",
+              childAttributes
+            );
 
-        Object.entries(allAttributes).forEach(([key, value]) => {
-          childEl.setAttribute(key, value);
-        });
+            delete allAttributes["src"];
+            delete allChildAttrsWillRemoved["src"];
+            // delete allAttributes["controls"];
+            // delete allAttributes["poster"];
+          }
 
-        // child.addAttributes(childAttributes, {
-        //   avoidStore: true,
-        //   // addStyle: true,
-        //   // skipWatcherUpdates: true,
-        //   partial: true,
-        // });
+          for (const attrKey of Object.keys(allChildAttrsWillRemoved)) {
+            // if (childEl.hasAttribute(attrKey)) continue;
+            childEl.removeAttribute(attrKey);
+          }
+
+          Object.entries(allAttributes).forEach(([key, value]) => {
+            childEl.setAttribute(key, value);
+          });
+
+          // child.addAttributes(childAttributes, {
+          //   avoidStore: true,
+          //   // addStyle: true,
+          //   // skipWatcherUpdates: true,
+          //   partial: true,
+          // });
         // }, 100);
         // const isAccessed = Boolean(parse(childAttributes["access-media"]));
         // isAccessed

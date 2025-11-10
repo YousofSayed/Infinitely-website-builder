@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { SharedBetweenFlexAndGridLayout } from "./SharedBetweenFlexAndGridLayout";
 import { alignSelfValues } from "../../../constants/cssProps";
 import { getIconForMultiChoice } from "../../../helpers/functions";
@@ -10,9 +10,20 @@ import { SelectStyle } from "./SelectStyle";
 import { Icons } from "../../Icons/Icons";
 import { FitTitle } from "./FitTitle";
 import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
+import { useRecoilState } from "recoil";
+import { currentElState } from "../../../helpers/atoms";
+import { useEditorMaybe } from "@grapesjs/react";
 
 export const FlexLayout = () => {
   const [dir, setDir] = useState("");
+  // const editor = useEditorMaybe();
+  // const [currentEl , setCurrentEl] = useRecoilState(currentElState);
+  // useEffect(()=>{
+  //   if(!editor)return;
+  //   const sle = editor.getSelected();
+  //   if(!sle)return;
+  //   const computedStyle = getComputedStyle()
+  // },[currentEl , editor])
 
   useUpdateInputValue({
     cssProp:'flex-direction' ,
@@ -42,7 +53,7 @@ export const FlexLayout = () => {
         />
       </section>
 
-      <SharedBetweenFlexAndGridLayout isFlex={dir.includes('column')}/>
+      <SharedBetweenFlexAndGridLayout isFlex={dir.includes('column')} dir={dir}/>
 
       <SelectStyle
         label="flex wrap"

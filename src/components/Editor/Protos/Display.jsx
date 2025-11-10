@@ -10,10 +10,13 @@ import { SelectStyle } from "./SelectStyle";
 import { MiniTitle } from "./MiniTitle";
 import { currentElState } from "../../../helpers/atoms";
 import { displayValues } from "../../../constants/cssProps";
+import { Select } from "./Select";
+import { useSetClassForCurrentEl } from "../../../hooks/useSetclassForCurrentEl";
 
 export const Display = () => {
   const [option, setOption] = useState("");
   const editor = useEditorMaybe();
+  const setStyle = useSetClassForCurrentEl();
   const currentEl = useRecoilValue(currentElState);
   const [isParentFlex, setIsParentFlex] = useState(false);
   const [isParentGrid, setIsParentGrid] = useState(false);
@@ -53,6 +56,8 @@ export const Display = () => {
     const displayValue = getParentDisplayValue(editor.getSelected().getEl());
     setIsParentFlex(displayValue.flex);
     setIsParentGrid(displayValue.grid);
+    displayValue.flex && setOption('flex');
+    displayValue.grid && setOption('grid');
   }, [currentEl, editor]);
 
   useUpdateInputValue({
@@ -61,24 +66,40 @@ export const Display = () => {
       console.log("display effect : ", val);
       !val && isParentFlex && setOption("flex");
       !val && isParentGrid && setOption("grid");
-      !val && setOption("");
+      !val && !isParentFlex && !isParentGrid && setOption("");
       val && setOption(val);
     },
-    setVal:(val)=>{
-      console.log("display effect from setval: ", val);
+    // setVal:(val)=>{
+    //   console.log("display effect from setval: ", val);
 
-    }
+    // }
   });
 
   return (
     <>
       <section className=" flex flex-col gap-2  rounded-lg bg-slate-900">
         <MiniTitle>display</MiniTitle>
-        <SelectStyle
+        <Select
           label="display"
           cssProp="display"
           keywords={displayValues}
           setKeyword={setOption}
+          value={option}
+          onAll={(value) => {
+            // if (!value) {
+            //   isParentFlex && setOption("flex");
+            //   isParentGrid && setOption("grid");
+            //   !isParentFlex && !isParentGrid && setOption("");
+            //   return;
+            // }
+            console.log("value  : ", value);
+
+            setOption(value);
+            setStyle({
+              cssProp: "display",
+              value,
+            });
+          }}
         />
       </section>
 

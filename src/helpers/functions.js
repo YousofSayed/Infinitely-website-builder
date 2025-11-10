@@ -301,7 +301,7 @@ export function addItemInToolBarForEditor({
     tb.id = hash(tb.label);
     return tb;
   });
-  const isExist = toolbar.find((item) => item.command == commandName);
+  // const isExist = toolbar.find((item) => item.command == commandName);
   if (selectedEl.tagName == "body") return;
 
   const setToolbar = () => {
@@ -454,12 +454,46 @@ export function renderToolbar(editor) {
   //  }, 0);
 }
 
+/**
+ *
+ * @param {import('grapesjs').Editor} editor
+ * @param {import('grapesjs').Component} cmp
+ * @returns
+ */
 export function initToolbar(editor, cmp) {
   const sle = cmp || editor.getSelected();
   if (!sle) {
     console.error(`No element selected to init toolbar`);
     return;
   }
+  const moveTool = {
+    id: "MTU0NDc=",
+    command: "tlb-move",
+    label: `<svg viewBox="0 0 24 24">
+            <path fill="currentColor" d="M13,6V11H18V7.75L22.25,12L18,16.25V13H13V18H16.25L12,22.25L7.75,18H11V13H6V16.25L1.75,12L6,7.75V11H11V6H7.75L12,1.75L16.25,6H13Z"/>
+          </svg>`,
+    attributes: {
+      class: "gjs-no-touch-actions",
+      draggable: true,
+    },
+  };
+  const props = sle.props();
+  const newTools = sle.toolbar
+    .map((tool) => {
+      if (props.draggable && tool.command == "tlb-move") return tool;
+      if (!props.draggable && tool.command == "tlb-move") return null;
+
+      return tool;
+    })
+    .filter(Boolean);
+
+  if (props.draggable && !newTools.find((tb) => tb.command == "tlb-move")) {
+    newTools.unshift(moveTool);
+  }
+
+  sle.set({
+    toolbar: newTools,
+  });
 
   mountAppTool(editor);
   unMountAppTool(editor);
@@ -2614,7 +2648,7 @@ export function exportProject() {
 }
 
 /**
- * 
+ *
  * @returns {Promise<Blob>}
  */
 export function getProject() {
@@ -2645,7 +2679,7 @@ export function getProject() {
  * @param {number} projectId
  * @param {boolean} isUpdate
  */
-export function loadProject(file, data = {} , projectId , isUpdate , opfsRoot) {
+export function loadProject(file, data = {}, projectId, isUpdate, opfsRoot) {
   infinitelyWorker.postMessage({
     command: "loadProject",
     props: {
@@ -2653,7 +2687,7 @@ export function loadProject(file, data = {} , projectId , isUpdate , opfsRoot) {
       data,
       projectId,
       isUpdate,
-      opfsRoot
+      opfsRoot,
     },
   });
 }
@@ -2738,8 +2772,8 @@ export async function detectGlobalsSandbox(url) {
 
   // Cleanup iframe if you want
   document.body.removeChild(iframe);
-  console.log('news in window' , newGlobals);
-  
+  console.log("news in window", newGlobals);
+
   return newGlobals;
 }
 
@@ -3004,13 +3038,23 @@ export async function handleCloneComponent(model, editor) {
  * @param {string} commandCallback
  * @param {(props : {})=>void} callback
  */
-export function workerCallbackMaker(worker, commandCallback, callback = (props) => {}, { timeout = 5000 } = {}) {
+export function workerCallbackMaker(
+  worker,
+  commandCallback,
+  callback = (props) => {},
+  { timeout = 5000 } = {}
+) {
   const callbackWorker = async (ev) => {
     const data = ev?.data ?? {};
     const { command, msg, props } = data;
     const identifier = command ?? msg;
 
-    console.log("worker message received:", { command, msg, expected: commandCallback, identifier });
+    console.log("worker message received:", {
+      command,
+      msg,
+      expected: commandCallback,
+      identifier,
+    });
 
     if (identifier === commandCallback) {
       console.log("matched, props:", props);
@@ -3030,7 +3074,6 @@ export function workerCallbackMaker(worker, commandCallback, callback = (props) 
   //   console.warn(`workerCallbackMaker: timeout waiting for '${commandCallback}'`);
   // }, timeout);
 }
-
 
 export function deleteAttributesInAllPages(
   attributes = {},
@@ -3059,6 +3102,40 @@ export function setInteractionsAttributes(interactionsId, onDone = () => {}) {
   });
 
   workerCallbackMaker(infinitelyWorker, "interctions-setted", onDone);
+}
+
+
+
+export async function setAttributesInAllPages({  selectors = {}}) {
+ return await new Promise((res, rej) => {
+    workerCallbackMaker(infinitelyWorker, "attributes-setted", ({ done }) => {
+      done ? res(done) : rej(false);
+    });
+
+    infinitelyWorker.postMessage({
+      command: "setAttributesInAllPages",
+      props: {
+        projectId: +localStorage.getItem(current_project_id),
+        selectors,
+      },
+    });
+  });
+}
+
+export async function removeAttributesInAllPages({  selectors = {}}) {
+ return await new Promise((res, rej) => {
+    workerCallbackMaker(infinitelyWorker, "attributes-removed", ({ done }) => {
+      done ? res(done) : rej(false);
+    });
+
+    infinitelyWorker.postMessage({
+      command: "removeAttributesInAllPages",
+      props: {
+        projectId: +localStorage.getItem(current_project_id),
+        selectors,
+      },
+    });
+  });
 }
 
 /**

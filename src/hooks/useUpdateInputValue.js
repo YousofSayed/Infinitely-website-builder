@@ -46,6 +46,7 @@ export const useUpdateInputValue = ({
   const framesStyles = useRecoilValue(framesStylesState);
   const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
   const [animations, setAnimations] = useRecoilState(animationsState);
+  const conditionalCmpRules = isFunction(getAllStyles) ? cmpRules : null;
 
   // const cssPropForAM = useRecoilValue(cssPropForAssetsManagerState);
   function getRuleStyle(isDeviceEvent) {
@@ -196,7 +197,7 @@ export const useUpdateInputValue = ({
     showAnimationsBuilder,
     // animations,
     framesStyles,
-    cmpRules,
+    conditionalCmpRules,
     // isFunction(getAllStyles) ? cmpRules : null,
     ...debs,
   ]);
@@ -245,8 +246,8 @@ export const useUpdateInputValue = ({
     showAnimationsBuilder,
     framesStyles,
     // animations,
-    cmpRules,
-    
+    // cmpRules,
+    conditionalCmpRules,
     // isFunction(getAllStyles) ? cmpRules : null,
     ...debs,
   ]);

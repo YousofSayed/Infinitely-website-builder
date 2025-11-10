@@ -11,6 +11,10 @@ video {
   will-change: auto !important;
 }
 
+/* video:not([controls]) {
+all: unset ;
+} */
+
 .preventWhenScroll * {
   transition: none !important;
   animation-play-state: paused !important;

@@ -14,10 +14,12 @@ import {
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import {
   animationsState,
+  asideControllersNotifiresState,
   cmdsBuildState,
   cmpRulesState,
   currentElState,
   isAnimationsChangedState,
+  mediaConditionState,
   previewContentState,
   showPreviewState,
   zoomValueState,
@@ -49,6 +51,7 @@ import { cloneDeep } from "lodash";
 import { detectedType } from "../../helpers/jsDocs";
 import { UlContextProvider, useUlContext } from "../Protos/UlProvider";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { useNotifiers } from "../../hooks/useNotifiers";
 
 export const HomeHeader = () => {
   const editor = useEditorMaybe();
@@ -64,6 +67,9 @@ export const HomeHeader = () => {
   const [widthMedia, setWidthMedia] = useState();
   const { selectedId, setSeletedId } = useUlContext();
   const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
+  const [mediaCond , setMediaCond] = useRecoilState(mediaConditionState);
+  const [asideControllersNotifires, setAsideControllersNotifires] =
+    useRecoilState(asideControllersNotifiresState);
   // const [isAnimationsChanged, setAnimationsChanged] = useRecoilState(
   //   isAnimationsChangedState
   // );
@@ -74,6 +80,7 @@ export const HomeHeader = () => {
   });
 
   const setMediaConditon = (value) => {
+    setMediaCond(value);
     setMediaValue(value);
     editor.getConfig().mediaCondition = value;
     localStorage.setItem("media-condition", value);
@@ -164,7 +171,7 @@ export const HomeHeader = () => {
       } else if (
         rule.atRuleParams &&
         rule.atRuleParams.includes("max-width") &&
-        rule.atRuleParams.includes("768px")
+        rule.atRuleParams.includes("900px")
       ) {
         newDetected.tablet.push(true);
       } else if (
@@ -213,6 +220,8 @@ export const HomeHeader = () => {
     };
   }, [editor]);
 
+  useNotifiers();
+
   return (
     <header className="w-full h-[60px]  zoom-80 px-2 bg-slate-900  border-b-[1.5px]  border-slate-400    flex items-center justify-between gap-5">
       <ScrollableToolbar
@@ -231,7 +240,7 @@ export const HomeHeader = () => {
             // className="max-xl:flex-shrink-0"
             onClick={(ev) => {
               editor.setDevice("desktop");
-              if (detectedMedia.desktop.length) setMediaConditon("max-width");
+              setMediaConditon("max-width");
               // setCurrentEl({ currentEl: editor?.getSelected()?.getEl() });
               editor.trigger("device:change");
             }}
@@ -243,12 +252,12 @@ export const HomeHeader = () => {
             enableSelecting
           />
           <Li
-            title="max-width: 768px"
+            title="max-width: 900px"
             className="flex-shrink-0"
             // className="max-xl:flex-shrink-0"
             onClick={(ev) => {
               editor.setDevice("tablet");
-              if (detectedMedia.tablet.length) setMediaConditon("max-width");
+              setMediaConditon("max-width");
               // setCurrentEl({ currentEl: editor?.getSelected()?.getEl() });
               editor.trigger("device:change");
             }}
@@ -266,7 +275,7 @@ export const HomeHeader = () => {
             className="flex-shrink-0"
             onClick={(ev) => {
               editor.setDevice("mobile");
-              if (detectedMedia.mobile.length) setMediaConditon("max-width");
+              setMediaConditon("max-width");
               // setCurrentEl({ currentEl: editor?.getSelected()?.getEl() });
               editor.trigger("device:change");
             }}
@@ -339,6 +348,7 @@ export const HomeHeader = () => {
                           const mediaCondition = rule.split(":")[0];
                           console.log(widthValue, mediaCondition);
                           setMediaValue(mediaCondition);
+                          setMediaCond(mediaCondition);
                           editor.getConfig().mediaCondition = mediaCondition;
                           localStorage.setItem(
                             "media-condition",
@@ -568,6 +578,9 @@ export const HomeHeader = () => {
             isObjectParamsIcon
             fillObjIcon={false}
             fillObjectIconOnHover
+            notify={Object.values(asideControllersNotifires).some(
+              (val) => val === true
+            )}
             title="edite component"
           />
           <Li

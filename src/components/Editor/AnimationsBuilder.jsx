@@ -13,6 +13,7 @@ import {
   framesStylesState,
   isAnimationsChangedState,
   showAnimationsBuilderState,
+  showsState,
 } from "../../helpers/atoms";
 import { useEditorMaybe } from "@grapesjs/react";
 import {
@@ -29,6 +30,8 @@ import { Memo } from "../Protos/Memo";
 import { keyframeStylesInstance } from "../../constants/InfinitelyInstances";
 import { InfinitelyEvents } from "../../constants/infinitelyEvents";
 import { For } from "million/react";
+import { useInfinitelyUndoRedo } from "../../hooks/useInfinitelyUndoRedo";
+import { UndoRedoContainer } from "../Protos/UndoRedoContainer";
 // const KeyframesList = ({
 //   type,
 //   animations = keyframesType,
@@ -191,7 +194,7 @@ import { For } from "million/react";
 //   );
 // };
 // million-ignore
-export const AnimationsBuilder = (() => {
+export const AnimationsBuilder = () => {
   const editor = useEditorMaybe();
   const [animation, setAnimation] = useState("");
   const [animations, setAnimations] = useRecoilState(animationsState);
@@ -214,7 +217,9 @@ export const AnimationsBuilder = (() => {
   const [frameStyles, setFramesStyles] = useRecoilState(framesStylesState);
   const pageName = localStorage.getItem(current_page_id);
 
-    const sendToKeyframesGetterWorker = ({ data }) => {
+  // useInfinitelyUndoRedo([animations, setAnimations]);
+
+  const sendToKeyframesGetterWorker = ({ data }) => {
     const { command, props } = data;
     if (data.command == "getKeyFrames") {
       setLoad(false);
@@ -418,7 +423,7 @@ export const AnimationsBuilder = (() => {
     return () => {
       keyframeStylesInstance.off(InfinitelyEvents.keyframe.set, callback);
     };
-  }, [animations, indexes ]);
+  }, [animations, indexes]);
 
   useEffect(() => {
     if (!(showAnimeBuilder && editor)) return;
@@ -430,6 +435,12 @@ export const AnimationsBuilder = (() => {
       cleaner();
     };
   }, [showAnimeBuilder, editor]);
+
+  // useEffect(() => {
+  //   return () => {
+  //     setShows((old) => ({ ...old, animationBuilder: false }));
+  //   };
+  // }, []);
 
   /**
    *
@@ -451,249 +462,261 @@ export const AnimationsBuilder = (() => {
   };
 
   return (
-    <Memo>
-      <section className="flex flex-col gap-2  h-full  ">
-        <MiniTitle>Animations Builder</MiniTitle>
-        <section className="flex flex-col gap-2 rounded-lg ">
-          <Input
-            type="search"
-            placeholder="Search..."
-            className="bg-slate-800"
-            onInput={search}
-          />
-          <section className="flex gap-2">
+    <Memo className="h-full">
+      <UndoRedoContainer
+        className="h-full"
+        showProp="animationBuilder"
+        state={[animations, setAnimations]}
+      >
+        <section className="flex flex-col gap-2  h-full  ">
+          <MiniTitle>Animations Builder</MiniTitle>
+          <section className="flex flex-col gap-2 rounded-lg ">
             <Input
-              className="bg-slate-800 w-full"
-              value={animation}
-              placeholder="Enter Name"
-              onInput={(ev) => {
-                setAnimation(ev.target.value);
-              }}
+              type="search"
+              placeholder="Search..."
+              className="bg-slate-800"
+              onInput={search}
             />
+            <section className="flex gap-2">
+              <Input
+                className="bg-slate-800 w-full"
+                autoFocus={false}
+                value={animation}
+                placeholder="Enter Name"
+                onInput={(ev) => {
+                  setAnimation(ev.target.value);
+                }}
+              />
 
-            <SmallButton
-              tooltipTitle="Add Animation"
-              onClick={(ev) => {
-                addAnimation(animation);
-              }}
-            >
-              {Icons.plus("white")}
-            </SmallButton>
+              <SmallButton
+                tooltipTitle="Add Animation"
+                onClick={(ev) => {
+                  addAnimation(animation);
+                }}
+              >
+                {Icons.plus("white")}
+              </SmallButton>
+            </section>
           </section>
-        </section>
-        <Accordion>
-          {/* <section className="w-full h-full flex flex-col gap-2 "> */}
+          <Accordion>
+            {/* <section className="w-full h-full flex flex-col gap-2 "> */}
 
-          {!!animations.length && (
-            <For
-              // memo
-              // each={(i)=>}
-              className=" flex flex-col gap-2"
-              each={animations}
-            >
-              {(animation, i) => (
-                // <InfAccordion>
-                <AccordionItem
-                  title={animation.name}
-                  key={i}
-                  // labelClass="p-[3px!important]"
-                  // className=""
-                >
-                  <Memo>
-                    <Adder
-                      className={`p-2 bg-slate-950`}
-                      addClassName="bg-slate-900"
-                      delClassName="bg-slate-900"
-                      onAddClick={(ev) => {
-                        addKeyframe(i);
-                      }}
-                      onDeleteClick={(ev) => {
-                        removeAnimation(i);
-                      }}
-                    >
-                      <main className="w-full flex flex-col gap-2">
-                        <p className="text-white w-full font-semibold bg-blue-600 py-2 text-center rounded-lg">
-                          {animation.name}
-                        </p>
+            {!!animations.length && (
+              <For
+                // memo
+                // each={(i)=>}
+                className=" flex flex-col gap-2"
+                each={animations}
+              >
+                {(animation, i) => (
+                  // <InfAccordion>
+                  <AccordionItem
+                    title={animation.name}
+                    key={i}
+                    // labelClass="p-[3px!important]"
+                    // className=""
+                  >
+                    <Memo>
+                      <Adder
+                        className={`p-2 bg-slate-950`}
+                        addClassName="bg-slate-900"
+                        delClassName="bg-slate-900"
+                        onAddClick={(ev) => {
+                          addKeyframe(i);
+                        }}
+                        onDeleteClick={(ev) => {
+                          removeAnimation(i);
+                        }}
+                      >
+                        <main className="w-full flex flex-col gap-2">
+                          <p className="text-white w-full font-semibold bg-blue-600 py-2 text-center rounded-lg">
+                            {animation.name}
+                          </p>
 
-                        {animation.keyframes
-                          .filter((kf) => kf.type == "keyframe")
-                          .map((keyframe, x) => {
-                            // const uId = uniqueId()
-                            const id = `keyframe-${animation.name}-${i}-${x}-${
-                              animation.path.startsWith(`css/${pageName}.css`)
-                                ? "editor"
-                                : "libs"
-                            }`;
-                            return (
-                              // <section key={x} className="flex flex-col bg-slate-900 px-1 py-2 gap-[100px] ">
+                          {animation.keyframes
+                            .filter((kf) => kf.type == "keyframe")
+                            .map((keyframe, x) => {
+                              // const uId = uniqueId()
+                              const id = `keyframe-${
+                                animation.name
+                              }-${i}-${x}-${
+                                animation.path.startsWith(`css/${pageName}.css`)
+                                  ? "editor"
+                                  : "libs"
+                              }`;
+                              return (
+                                // <section key={x} className="flex flex-col bg-slate-900 px-1 py-2 gap-[100px] ">
 
-                              <section
-                                key={x}
-                                keyframe-id={id}
-                                className={`flex  flex-col  gap-2 bg-gray-950 p-2 border-[2.5px]  w-full rounded-lg ${
-                                  // currentEditingIndexStyles == x &&
-                                  indexes.animationIndex == i && indexes.keyframeIndex == x
-                                    ? "border-blue-600"
-                                    : "border-slate-600"
-                                } `}
-                              >
-                                <section className="flex gap-2 ">
-                                  <section className="w-full flex items-center  bg-slate-800 px-1 rounded-lg">
-                                    {" "}
-                                    <Input
-                                      className="bg-slate-800 w-full"
-                                      value={
-                                        keyframe?.values?.join?.(",") || ""
-                                      }
-                                      onInput={(ev) => {
-                                        console.log(
-                                          "keyframe.values",
-                                          keyframe.values
-                                        );
+                                <section
+                                  key={x}
+                                  keyframe-id={id}
+                                  className={`flex  flex-col  gap-2 bg-gray-950 p-2 border-[2.5px]  w-full rounded-lg ${
+                                    // currentEditingIndexStyles == x &&
+                                    indexes.animationIndex == i &&
+                                    indexes.keyframeIndex == x
+                                      ? "border-blue-600"
+                                      : "border-slate-600"
+                                  } `}
+                                >
+                                  <section className="flex gap-2 ">
+                                    <section className="w-full flex items-center  bg-slate-800 px-1 rounded-lg">
+                                      {" "}
+                                      <Input
+                                        className="bg-slate-800 w-full"
+                                        value={
+                                          keyframe?.values?.join?.(",") || ""
+                                        }
+                                        onInput={(ev) => {
+                                          console.log(
+                                            "keyframe.values",
+                                            keyframe.values
+                                          );
 
-                                        if (!ev.target.value) return;
-                                        setValues(i, x, ev.target.value);
+                                          if (!ev.target.value) return;
+                                          setValues(i, x, ev.target.value);
 
-                                        setIsChangedAnimations(animation, i);
-                                        // !isAnimationsChanged && setAnimationsChanged(true);
-                                        // updatePercentageValue({
-                                        //   index: i,
-                                        //   propsIndex: x,
-                                        //   newValue: ev.target.value,
-                                        // });
-                                      }}
-                                    />
-                                    {/* <p className="font-semibold select-none text-slate-200 px-2">
+                                          setIsChangedAnimations(animation, i);
+                                          // !isAnimationsChanged && setAnimationsChanged(true);
+                                          // updatePercentageValue({
+                                          //   index: i,
+                                          //   propsIndex: x,
+                                          //   newValue: ev.target.value,
+                                          // });
+                                        }}
+                                      />
+                                      {/* <p className="font-semibold select-none text-slate-200 px-2">
                             %
                           </p> */}
+                                    </section>
+
+                                    <SmallButton
+                                      title="delete frame"
+                                      className="flex-shrink-0 bg-slate-800"
+                                      onClick={() => {
+                                        removeKeyframe(i, x);
+                                      }}
+                                    >
+                                      {Icons.trash("white")}
+                                    </SmallButton>
+
+                                    <SmallButton
+                                      title="select frame"
+                                      className="flex-shrink-0 bg-slate-800"
+                                      onClick={(ev) => {
+                                        // setCurrentEditingIndex(i);
+                                        // setCurrentEditing(id);
+                                        setIndexes({
+                                          keyframeIndex: x,
+                                          animationIndex: i,
+                                        });
+                                        // setCurrentEditingIndexStyles(
+                                        //   currentEditingIndexStyles == x &&
+                                        //     currentEditingIndex == i
+                                        //     ? undefined
+                                        //     : x
+                                        // );
+
+                                        // console.log(
+                                        //   Object.fromEntries(
+                                        //     keyframe?.declarations
+                                        //       .filter(
+                                        //         (dclr) =>
+                                        //           dclr.type == "declaration"
+                                        //       )
+                                        //       .map((dclr) => [
+                                        //         dclr.property,
+                                        //         dclr.value,
+                                        //       ])
+                                        //   )
+                                        // );
+
+                                        console.log(
+                                          "indexing",
+                                          Object.fromEntries(
+                                            keyframe?.declarations
+                                              .filter(
+                                                (dclr) =>
+                                                  dclr.type == "declaration"
+                                              )
+                                              .map((dclr) => [
+                                                dclr.property,
+                                                dclr.value,
+                                              ])
+                                          )
+                                        );
+
+                                        setFramesStyles(
+                                          Object.fromEntries(
+                                            keyframe?.declarations
+                                              .filter(
+                                                (dclr) =>
+                                                  dclr.type == "declaration"
+                                              )
+                                              .map((dclr) => [
+                                                dclr.property,
+                                                dclr.value,
+                                              ])
+                                          )
+                                        );
+                                      }}
+                                    >
+                                      {Icons.select("white")}
+                                    </SmallButton>
                                   </section>
 
-                                  <SmallButton
-                                    title="delete frame"
-                                    className="flex-shrink-0 bg-slate-800"
-                                    onClick={() => {
-                                      removeKeyframe(i, x);
-                                    }}
-                                  >
-                                    {Icons.trash("white")}
-                                  </SmallButton>
-
-                                  <SmallButton
-                                    title="select frame"
-                                    className="flex-shrink-0 bg-slate-800"
-                                    onClick={(ev) => {
-                                      // setCurrentEditingIndex(i);
-                                      // setCurrentEditing(id);
-                                      setIndexes({
-                                        keyframeIndex: x,
-                                        animationIndex: i,
-                                      });
-                                      // setCurrentEditingIndexStyles(
-                                      //   currentEditingIndexStyles == x &&
-                                      //     currentEditingIndex == i
-                                      //     ? undefined
-                                      //     : x
-                                      // );
-
-                                      // console.log(
-                                      //   Object.fromEntries(
-                                      //     keyframe?.declarations
-                                      //       .filter(
-                                      //         (dclr) =>
-                                      //           dclr.type == "declaration"
-                                      //       )
-                                      //       .map((dclr) => [
-                                      //         dclr.property,
-                                      //         dclr.value,
-                                      //       ])
-                                      //   )
-                                      // );
-
-                                      console.log('indexing' ,  Object.fromEntries(
-                                          keyframe?.declarations
-                                            .filter(
-                                              (dclr) =>
-                                                dclr.type == "declaration"
-                                            )
-                                            .map((dclr) => [
-                                              dclr.property,
-                                              dclr.value,
-                                            ])
-                                        ));
-                                      
-
-                                      setFramesStyles(
-                                        Object.fromEntries(
-                                          keyframe?.declarations
-                                            .filter(
-                                              (dclr) =>
-                                                dclr.type == "declaration"
-                                            )
-                                            .map((dclr) => [
-                                              dclr.property,
-                                              dclr.value,
-                                            ])
+                                  {keyframe.declarations.length ? (
+                                    <ul className="flex flex-col gap-2  bg-slate-900 p-2 rounded-lg">
+                                      {keyframe.declarations
+                                        .filter(
+                                          (dclr) => dclr.type == "declaration"
                                         )
-                                      );
-                                    }}
-                                  >
-                                    {Icons.select("white")}
-                                  </SmallButton>
+                                        .map(({ property, value }, z) => {
+                                          return (
+                                            <li
+                                              key={z}
+                                              className="w-full flex justify-between items-center gap-2 text-center "
+                                            >
+                                              <article className="w-full flex justify-between  gap-2 text-center">
+                                                <p className="w-[45%] whitespace-break-spaces break-inside-avoid-column text-slate-200 text-sm  flex items-center justify-center bg-blue-600 p-2 font-semibold rounded-lg flex-shrink-0 flex-grow">
+                                                  {property}
+                                                </p>
+                                                <p className="text-white font-bold self-center">
+                                                  :
+                                                </p>
+                                                <p className="w-[45%] whitespace-break-spaces break-all flex items-center justify-center  text-slate-200 text-sm bg-blue-600 p-2 font-semibold rounded-lg flex-grow">
+                                                  {property.includes("color")
+                                                    ? rgbStringToHex(value)
+                                                    : value}{" "}
+                                                </p>
+                                              </article>
+                                            </li>
+                                          );
+                                        })}
+                                    </ul>
+                                  ) : (
+                                    <p className="bg-yellow-500 text-sm text-white font-bold w-full p-1 rounded-xl text-center">
+                                      Append Styles from style Manager
+                                    </p>
+                                  )}
                                 </section>
-
-                                {keyframe.declarations.length ? (
-                                  <ul className="flex flex-col gap-2  bg-slate-900 p-2 rounded-lg">
-                                    {keyframe.declarations
-                                      .filter(
-                                        (dclr) => dclr.type == "declaration"
-                                      )
-                                      .map(({ property, value }, z) => {
-                                        return (
-                                          <li
-                                            key={z}
-                                            className="w-full flex justify-between items-center gap-2 text-center "
-                                          >
-                                            <article className="w-full flex justify-between  gap-2 text-center">
-                                              <p className="w-[45%] whitespace-break-spaces break-inside-avoid-column text-slate-200 text-sm  flex items-center justify-center bg-blue-600 p-2 font-semibold rounded-lg flex-shrink-0 flex-grow">
-                                                {property}
-                                              </p>
-                                              <p className="text-white font-bold self-center">
-                                                :
-                                              </p>
-                                              <p className="w-[45%] whitespace-break-spaces break-all flex items-center justify-center  text-slate-200 text-sm bg-blue-600 p-2 font-semibold rounded-lg flex-grow">
-                                                {property.includes("color")
-                                                  ? rgbStringToHex(value)
-                                                  : value}{" "}
-                                              </p>
-                                            </article>
-                                          </li>
-                                        );
-                                      })}
-                                  </ul>
-                                ) : (
-                                  <p className="bg-yellow-500 text-sm text-white font-bold w-full p-1 rounded-xl text-center">
-                                    Append Styles from style Manager
-                                  </p>
-                                )}
-                              </section>
-                              // </section>
-                            );
-                          })}
-                      </main>
-                    </Adder>
-                  </Memo>
-                </AccordionItem>
-                // </InfAccordion>
-              )}
-            </For>
-          )}
-          {/* </section> */}
-        </Accordion>
-      </section>
+                                // </section>
+                              );
+                            })}
+                        </main>
+                      </Adder>
+                    </Memo>
+                  </AccordionItem>
+                  // </InfAccordion>
+                )}
+              </For>
+            )}
+            {/* </section> */}
+          </Accordion>
+        </section>
+      </UndoRedoContainer>
     </Memo>
   );
-});
+};
 
 {
   /* {animations.length

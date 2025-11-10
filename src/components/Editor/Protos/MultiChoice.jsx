@@ -14,12 +14,13 @@ import { FitTitle } from "./FitTitle";
 
 /**
  *
- * @param {{label:string , setChoice:(choice:string)=>void ,cssProp : string , choices :{choice:string , Icon: HTMLOrSVGElement}[]}} param0
+ * @param {{label:string , dir:string, setChoice:(choice:string)=>void ,cssProp : string , choices :{choice:string , Icon: HTMLOrSVGElement}[]}} param0
  * @returns
  */
 export const MultiChoice = ({
   label,
   icons,
+  dir,
   rotate = false,
   cssProp,
   choices,
@@ -37,7 +38,9 @@ export const MultiChoice = ({
     const currentElCssIndex = choices.findIndex(
       ({ choice }) => choice.trim() == val?.trim()
     );
+    console.log("indooooooooooo : ", currentElCssIndex);
 
+    lastIndex.current = currentElCssIndex;
     setCurrentChoice(currentElCssIndex);
   }, [val]);
 
@@ -65,6 +68,22 @@ export const MultiChoice = ({
     setCurrentChoice(index);
   };
 
+  // console.log('loprp : ' ,  rotate ,
+  //             dir ,
+  //             `${
+  //               dir.includes("column") && cssProp === "align-items"
+  //                 ? "rotate-0"
+  //                 : "rotate-[90deg]"
+  //             }`,
+              
+  //             rotate &&
+  //             dir &&
+  //             `${
+  //               !dir.includes("column") && cssProp === "align-items"
+  //                 ? "rotate-0"
+  //                 : "rotate-[90deg]"
+  //             }` );
+  
   return (
     // <ul  className="flex ll justify-between flex-nowrap items-center  w-full p-2 bg-slate-800 rounded-lg transition-all">
     <section className="flex flex-col gap-2">
@@ -77,9 +96,18 @@ export const MultiChoice = ({
           <li
             title={choice}
             key={i}
-            className={`group ${
-              rotate && "rotate-90"
-            } transition-all cursor-pointer flex flex-shrink-0 justify-center items-center w-[37.5px] h-[37.5px] rounded-lg ${
+            className={`group  
+              
+              ${
+              rotate && dir && cssProp =='align-items' ? 
+             'rotate-[0]' :  dir && cssProp =='align-items' ? 'rotate-[90deg]'  : ''
+            }
+              ${
+              rotate && dir && cssProp =='justify-content' ? 
+             'rotate-[90deg]' :  dir&& cssProp =='justify-content' ? 'rotate-[0]'  : ''
+            }
+            
+            transition-all cursor-pointer flex flex-shrink-0 justify-center items-center w-[37.5px] h-[37.5px] rounded-lg ${
               i == currentChoice
                 ? " bg-blue-600 shadow-md shadow-slate-900 "
                 : ""

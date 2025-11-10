@@ -853,16 +853,15 @@ export async function offlineInstaller(props) {
           return lib;
         })
     );
-    
+
     if (!projectData?.installStates?.types) {
       for (const lib of [
         ...projectData.jsFooterLibs,
         ...projectData.jsHeaderLibs,
       ]) {
-        
         await installTypes({
           projectId: projectData.id,
-          code: doGlobalType(lib.nameWithoutExt , lib.globalName),
+          code: doGlobalType(lib.nameWithoutExt, lib.globalName),
           libConfig: lib,
         });
       }
@@ -871,16 +870,14 @@ export async function offlineInstaller(props) {
     }
 
     if (!projectData?.installStates?.globalTypes) {
-    
       for (const lib of global_types) {
         await installTypes({
           projectId: projectData.id,
-          code: doGlobalType(lib.nameWithoutExt , lib.globalName),
+          code: doGlobalType(lib.nameWithoutExt, lib.globalName),
           libConfig: lib,
         });
-
       }
-      
+
       // console.log("lib type after: ", defineRoot(lib.path), lib  ,await (await opfs.getFile(defineRoot(lib.path))).text());
       projectData.installStates.globalTypes = true;
     }
@@ -891,7 +888,7 @@ export async function offlineInstaller(props) {
       jsFooterLibs: projectData.jsFooterLibs,
       cssLibs: projectData.cssLibs,
       restAPIModels: projectData.restAPIModels,
-      installStates:projectData.installStates
+      installStates: projectData.installStates,
     });
 
     self.postMessage({
@@ -1156,18 +1153,18 @@ export async function createProject({ data }) {
       },
       // globalCss: new Blob([``], { type: "text/css" }),
       // globalJs: new Blob([``], { type: "text/javascript" }),
-      apps:undefined,
-      installStates:{
-        types:false,
-        cssLibs:false,
-        fonts:false,
-        globalTypes:false,
-        jsFooterLibs:false,
-        jsHeaderLibs:false,
+      apps: undefined,
+      installStates: {
+        types: false,
+        cssLibs: false,
+        fonts: false,
+        globalTypes: false,
+        jsFooterLibs: false,
+        jsHeaderLibs: false,
       },
-      lastScreenshot:'',
-      dropboxFileMeta:{},
-      dbx_pull_requried:false,
+      lastScreenshot: "",
+      dropboxFileMeta: {},
+      dbx_pull_requried: false,
       symbols: {},
       assets: [],
       dynamicTemplates: {},
@@ -1948,6 +1945,132 @@ export async function deleteAttributesInAllPages({
       done: true,
     },
   });
+}
+
+/**
+ *
+ * @param {{ projectId:number  , attributes : {[key:string]:string | null } ,  selectors:{[key:string]:{}}}} props
+ */
+export async function setAttributesInAllPages({ projectId, selectors = {} }) {
+  try {
+    const projectData = await db.projects.get(projectId);
+    !opfs.id && (await initOPFS({ id: projectId }));
+    const content = [];
+    for (const key in projectData.pages) {
+      const page = projectData.pages[key];
+      const { document } = parseHTML(
+        doDocument(
+          await (await opfs.getFile(defineRoot(page.pathes.html))).text()
+        )
+      );
+
+      for (const selector in selectors) {
+        const attributes = selectors[selector];
+        /**
+         * @type {NodeListOf<Element>}
+         */
+        let els = [];
+
+        selector && (els = document.querySelectorAll(selector));
+        console.log('els from worker : ' , els);
+        
+        for (const key in attributes) {
+          if (els && els.length) {
+            els.forEach((el) => {
+              el.setAttribute(key, attributes[key]);
+            });
+
+            content.push({
+              path: defineRoot(page.pathes.html),
+              content: document.body.innerHTML,
+            });
+          }
+        }
+      }
+
+      await opfs.writeFiles(content);
+      self.postMessage({
+        command: "attributes-setted",
+        props: {
+          done: true,
+        },
+      });
+    }
+  } catch (error) {
+    self.postMessage({
+      command: "attributes-setted",
+      props: {
+        done: false,
+      },
+    });
+
+    throw new Error(error);
+  }
+}
+
+/**
+ *
+ * @param {{ projectId:number  , attributes : {[key:string]:string | null } ,  selectors:{[key:string]:{}}}} props
+ */
+export async function removeAttributesInAllPages({ projectId,  selectors = {} }) {
+  try {
+    console.log('projectoooooo:' , projectId);
+    
+    const projectData = await db.projects.get(projectId);
+    console.log('projectData : ', projectData );
+    
+    !opfs.id && (await initOPFS({ id: projectId }));
+    const content = [];
+    for (const key in projectData.pages) {
+      const page = projectData.pages[key];
+      const { document } = parseHTML(
+        doDocument(
+          await (await opfs.getFile(defineRoot(page.pathes.html))).text()
+        )
+      );
+
+      for (const selector in selectors) {
+        const attributes = selectors[selector];
+        /**
+         * @type {NodeListOf<Element>}
+         */
+        let els = [];
+
+        selector && (els = document.querySelectorAll(selector));
+        console.log('els from worker : ' , els);
+        
+        for (const key in attributes) {
+          if (els && els.length) {
+            els.forEach((el) => {
+              el.removeAttribute(key);
+            });
+
+            content.push({
+              path: defineRoot(page.pathes.html),
+              content: document.body.innerHTML,
+            });
+          }
+        }
+      }
+
+      await opfs.writeFiles(content);
+      self.postMessage({
+        command: "attributes-removed",
+        props: {
+          done: true,
+        },
+      });
+    }
+  } catch (error) {
+    self.postMessage({
+      command: "attributes-removed",
+      props: {
+        done: false,
+      },
+    });
+
+    throw new Error(error);
+  }
 }
 
 /**

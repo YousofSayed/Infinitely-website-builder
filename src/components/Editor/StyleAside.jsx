@@ -10,6 +10,7 @@ import { useRecoilState, useRecoilValue } from "recoil";
 import {
   cmpRulesState,
   currentElState,
+  mediaConditionState,
   ruleState,
   selectorState,
   showAnimationsBuilderState,
@@ -29,7 +30,7 @@ import {
 } from "../../constants/cssProps";
 import { Others } from "./Protos/Others";
 import { Backdrop } from "./Protos/Backdrop";
-import { isArray, random, uniqueId } from "lodash";
+import { isArray, isBoolean, isString, random, uniqueId } from "lodash";
 import { Accordion } from "../Protos/Accordion";
 import { AccordionItem } from "../Protos/AccordionItem";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
@@ -44,8 +45,19 @@ import { DirectionsModel } from "./Protos/DirectionsModel";
 import { MultiChoice } from "./Protos/MultiChoice";
 import { AddMultiValuestoSingleProp } from "./Protos/AddMultiValuestoSingleProp";
 import { useUpdateInputValue } from "../../hooks/useUpdateInputValue";
-import { getCurrentSelector, toKebabCase } from "../../helpers/functions";
-
+import {
+  getCurrentMediaDevice,
+  getCurrentSelector,
+  toKebabCase,
+} from "../../helpers/functions";
+import { SmallButton } from "./Protos/SmallButton";
+import { Icons } from "../Icons/Icons";
+import { FitTitle } from "./Protos/FitTitle";
+import { useRemoveCurrentMedia } from "../../hooks/useRemoveCurrentMedia";
+import { OptionsButton } from "../Protos/OptionsButton";
+import { toast } from "react-toastify";
+import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
+import { parse } from "../../helpers/cocktail";
 
 const SelectElementToStyle = () => (
   <h1 className="text-slate-400 custom-font-size text-center animate-pulse capitalize font-semibold bg-slate-900 rounded-lg p-2">
@@ -57,43 +69,45 @@ const StyleAccordion = () => {
   // const showAnimeBuilder = useRecoilValue(showAnimationsBuilderState);
   const [notifires, setNotifires] = useState({});
   const showAnimationsBuilder = useRecoilValue(showAnimationsBuilderState);
-  const allCssProps = useRef(Object.fromEntries(
-    Object.entries(styles).map(([key, style]) => {
-      // style.forEach((props) => {
-      //   if (props.cssProp) {
-      //     isArray(props.cssProp)
-      //       ? prev.push(...props.cssProp)
-      //       : prev.push(props.cssProp);
-      //   }
+  const allCssProps = useRef(
+    Object.fromEntries(
+      Object.entries(styles).map(([key, style]) => {
+        // style.forEach((props) => {
+        //   if (props.cssProp) {
+        //     isArray(props.cssProp)
+        //       ? prev.push(...props.cssProp)
+        //       : prev.push(props.cssProp);
+        //   }
 
-      //   if (props.directions) {
-      //     console.log(
-      //       "all css props : directions ,",
-      //       Object.values(props.directions)
-      //     );
+        //   if (props.directions) {
+        //     console.log(
+        //       "all css props : directions ,",
+        //       Object.values(props.directions)
+        //     );
 
-      //     prev.push(...Object.values(props.directions));
-      //   }
-      // });
-      const cssProps = style.reduce((prev, { cssProp, directions }) => {
-        if (cssProp) {
-          isArray(cssProp) ? prev.push(...cssProp) : prev.push(cssProp);
-        }
+        //     prev.push(...Object.values(props.directions));
+        //   }
+        // });
+        const cssProps = style.reduce((prev, { cssProp, directions }) => {
+          if (cssProp) {
+            isArray(cssProp) ? prev.push(...cssProp) : prev.push(cssProp);
+          }
 
-        if (directions) {
-          console.log(
-            "all css props : directions ,",
-            Object.values(directions)
-          );
+          if (directions) {
+            console.log(
+              "all css props : directions ,",
+              Object.values(directions)
+            );
 
-          prev.push(...Object.values(directions));
-        }
+            prev.push(...Object.values(directions));
+          }
 
-        return prev;
-      }, []);
-      return [key, cssProps];
-    })
-  ));
+          return prev;
+        }, []);
+        return [key, cssProps];
+      })
+    )
+  );
 
   function notifing(styles) {
     let newNotf = {};
@@ -245,73 +259,6 @@ const StyleAccordion = () => {
       </For>
     </Accordion>
   );
-  // const [cmpRules , set ]
-  // return <Accordion>
-  //   <AccordionItem label={"Layout"}>
-  //     <ErrorBoundary fallbackRender={SelectElementToStyle}>
-  //       <Layout />
-  //     </ErrorBoundary>
-  //   </AccordionItem>
-
-  //   <AccordionItem title={"Typography"}>
-  //     <ErrorBoundary fallbackRender={SelectElementToStyle}>
-  //       <StyleTypography />
-  //     </ErrorBoundary>
-  //   </AccordionItem>
-
-  //   <AccordionItem title={"border"}>
-  //     <ErrorBoundary fallbackRender={SelectElementToStyle}>
-  //       <Border />
-  //     </ErrorBoundary>
-  //   </AccordionItem>
-
-  //   <AccordionItem title={"background"}>
-  //     <ErrorBoundary fallbackRender={SelectElementToStyle}>
-  //       <Background />
-  //     </ErrorBoundary>
-  //   </AccordionItem>
-
-  //   <AccordionItem title={"backdrop"}>
-  //     <ErrorBoundary fallbackRender={SelectElementToStyle}>
-  //       <Backdrop />
-  //     </ErrorBoundary>
-  //   </AccordionItem>
-
-  //   <AccordionItem title={"Filters"}>
-  //     <ErrorBoundary fallbackRender={SelectElementToStyle}>
-  //       <MultiFunctionProp
-  //         cssProp={"filter"}
-  //         keywords={filterTypes}
-  //         units={filterUnits}
-  //         placeholder={"Select Filter"}
-  //       />
-  //     </ErrorBoundary>
-  //   </AccordionItem>
-
-  //   <AccordionItem title={"Transform"}>
-  //     <ErrorBoundary fallbackRender={SelectElementToStyle}>
-  //       <MultiFunctionProp
-  //         cssProp={"transform"}
-  //         keywords={transformValues}
-  //         placeholder={"Select Prop"}
-  //       />
-  //     </ErrorBoundary>
-  //   </AccordionItem>
-
-  //   {!showAnimeBuilder && (
-  //     <AccordionItem title={"Animation"}>
-  //       <ErrorBoundary fallbackRender={SelectElementToStyle}>
-  //         <Animation />
-  //       </ErrorBoundary>
-  //     </AccordionItem>
-  //   )}
-
-  //   <AccordionItem title={"Others"}>
-  //     <ErrorBoundary fallbackRender={SelectElementToStyle} >
-  //       <Others />
-  //     </ErrorBoundary>
-  //   </AccordionItem>
-  // </Accordion>;
 };
 /**
  *
@@ -332,29 +279,12 @@ export const StyleAside = memo(({ className }) => {
   // const [globalRule , setGlobalRule] = useRecoilState(ruleState);
   const [notifyStates, setNotifyStates] = useState(false);
   const [notifyClasses, setNotifyClasses] = useState(false);
-  // useEffect(() => {
-  //   /**
-  //    *
-  //    * @param {CustomEvent} ev
-  //    */
-  //   const onCurrentEl = (ev) => {
-  //     setCurrentEl((oldVal) => ({ currentEl: ev.detail.currentEl }));
-  //   };
+  const [mediaCondTitle, setMediaCondTitle] = useState("");
+  const [mediaCond, setMediaCond] = useRecoilState(mediaConditionState);
 
-  //   window.addEventListener("currentel", onCurrentEl);
-
-  //   return () => {
-  //     window.removeEventListener("currentel", onCurrentEl);
-  //   };
-  // });
+  const removeCurrentMediaRule = useRemoveCurrentMedia();
 
   useLayoutEffect(() => {
-    // console.log(
-    //   selector.ruleString,
-    //   "selloooooooooooooooooo",
-    //   selector.ruleString.includes("::before") ||
-    //     !selector.ruleString.includes("::after")
-    // );
     const showVal =
       globalRule.ruleString.includes("::before") ||
       !globalRule.ruleString.includes("::after");
@@ -371,6 +301,58 @@ export const StyleAside = memo(({ className }) => {
     const classes = sel.getClasses() || [];
     setNotifyClasses(classes.length > 0);
   }, [editor, currentEl]);
+
+  useEffect(() => {
+    if (!editor) return;
+    const sle = editor.getSelected();
+    if (!sle) return;
+    const callback = () => {
+      let currentSelector = getCurrentSelector(selector, sle);
+      const currentMedia = getCurrentMediaDevice(editor);
+      const mediaPx = editor.Devices.get(editor.getDevice()).attributes
+        .widthMedia;
+      // const mediaCond = editor.getConfig().mediaCondition;
+      const selectorWithRule = `${currentSelector}${globalRule.ruleString}`;
+      console.log(
+        "cmprs",
+        cmpRules,
+        selectorWithRule,
+        !cmpRules.some((rule) => {
+          const mainCond = rule?.rule?.trim?.() === selectorWithRule;
+          const isBoolCond =
+            isBoolean(rule.atRuleType) && isBoolean(currentMedia.atRuleType)
+              ? Boolean(rule.atRuleType) == Boolean(currentMedia.atRuleType)
+              : false;
+          const isMediaStringCond =
+            isString(rule.atRuleType) && isString(currentMedia.atRuleType)
+              ? rule.atRuleType == currentMedia.atRuleType
+              : false;
+
+          return mainCond && (isBoolCond || isMediaStringCond);
+        })
+      );
+      const title = `${mediaCond} ${mediaPx ? `(${mediaPx})` : ""} ${
+        editor.config.mediaCondition ? ":" : ""
+      } 
+    ${selectorWithRule}`;
+
+      const edRule = editor.CssComposer.getRule(selectorWithRule.trim(), {
+        ...currentMedia,
+      });
+
+      if (edRule) {
+        setMediaCondTitle(title);
+      } else {
+        setMediaCondTitle("");
+      }
+    };
+
+    callback();
+    editor.on("change:device", callback);
+    return () => {
+      editor.off("change:device", callback);
+    };
+  }, [cmpRules, editor, currentEl, globalRule, mediaCond]);
 
   useEffect(() => {
     setKey(uniqueId("Accordion-id-"));
@@ -410,12 +392,109 @@ export const StyleAside = memo(({ className }) => {
     );
   }, [cmpRules, currentEl, editor, selector]);
 
+  const copyStyles = async () => {
+    if (!editor) return;
+    const slEL = editor?.getSelected();
+    const Media = getCurrentMediaDevice(editor);
+    const currentSelector = getCurrentSelector(selector, slEL);
+
+    //==========
+    const outPut = editor.Css.getRule(
+      `${currentSelector}${globalRule.ruleString}`,
+      { ...Media }
+    )?.toJSON()?.style;
+
+    console.log("style output : ", outPut, JSON.stringify(outPut));
+    await navigator.clipboard.writeText(JSON.stringify(outPut));
+    toast.success(<ToastMsgInfo msg={`Styles copied successfully 👍`} />);
+    return outPut || {};
+  };
+
+  const pasteStyles = async () => {
+    const styles = parse(await navigator.clipboard.readText());
+    if (!styles) {
+      toast.error(<ToastMsgInfo msg={`Styles not valied 🥺`} />);
+      return;
+    }
+    const cnfrm = confirm(`Are You Sure To Overwrite Styles ?`);
+    if(!cnfrm)return;
+    const slEL = editor?.getSelected();
+    const Media = getCurrentMediaDevice(editor);
+    const currentSelector = getCurrentSelector(selector, slEL);
+
+    const rule = editor.Css.getRule(
+      `${currentSelector}${globalRule.ruleString}`,
+      { ...Media }
+    );
+
+    editor.CssComposer.remove(rule);
+    editor.CssComposer.setRule(
+      `${currentSelector}${globalRule.ruleString}`,
+      styles,
+      {
+        ...Media,
+        addStyles: true,
+        validate: false,
+        // inline:true,
+        addStyle: true,
+      }
+    );
+
+    setCurrentEl({
+      currentEl: JSON.parse(JSON.stringify(slEL)),
+    });
+  };
+
   return (
     <section
       // key={key}
       ref={animateRef}
       className="flex flex-col w-full h-full gap-2 mt-2"
     >
+      { (
+        <section className="flex gap-2">
+          <FitTitle
+            isShowTooltib={Boolean(mediaCondTitle)}
+            className={`custom-font-size w-full ${!mediaCondTitle && 'justify-center font-bold animate-pulse will-change-[transform,opacity] capitalize'}  text-ellipsis whitespace-nowrap overflow-hidden flex items-center py-2`}
+          >
+            {mediaCondTitle || 'There is no rule yet'}
+          </FitTitle>
+          <OptionsButton className="w-[35p] h-full bg-slate-800">
+            <section className="flex flex-col items-center gap-3">
+              <SmallButton
+                className="h-[35px]"
+                showTooltip
+                tooltipTitle="Copy Styles"
+                onClick={() => {
+                  copyStyles();
+                }}
+              >
+                {Icons.copy({ fill: "white" })}
+              </SmallButton>
+              <SmallButton
+                className="h-[35px]"
+                showTooltip
+                tooltipTitle="Paste Styles"
+                onClick={() => {
+                  pasteStyles();
+                }}
+              >
+                {Icons.paste({ fill: "white" })}
+              </SmallButton>
+            </section>
+          </OptionsButton>
+          <SmallButton
+            className="hover:bg-[crimson!important] bg-slate-800"
+            showTooltip
+            tooltipTitle="Delete Current Rule"
+            onClick={() => {
+              removeCurrentMediaRule();
+            }}
+          >
+            {Icons.trash("white")}
+          </SmallButton>
+        </section>
+      )}
       {/* {!showAnimeBuilder && (
         <>
           <DetailsNormal className="bg-slate-950 " label={"Classes"}>

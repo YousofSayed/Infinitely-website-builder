@@ -191,6 +191,7 @@ export const styles = {
     {
       type: "custom",
       title: "Font",
+      cssProp:'font-family',
       Component: () => <FontFamily />,
     },
     {

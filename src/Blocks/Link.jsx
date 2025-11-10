@@ -28,7 +28,7 @@ export const Link = async ({ editor }) => {
           })
         ),
         droppable: false,
-        draggable:true,
+        draggable: true,
         editable: true,
         tagName: "a",
         traits: defineTraits([
@@ -68,9 +68,14 @@ export const Link = async ({ editor }) => {
             label: "Open in new tap",
             role: "handler",
             type: "switch",
+            init({ editor, trait, model }) {
+              trait.value = Boolean(model.getAttributes().target);
+            },
             onSwitch(value) {
               const sle = editor.getSelected();
               if (!sle) return;
+              console.log("sitch value  : ", value);
+
               sle.addAttributes({ target: value ? "_blank" : "" });
             },
           },

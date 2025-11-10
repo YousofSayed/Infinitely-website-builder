@@ -1,6 +1,6 @@
 import parseObjectLiteral from "object-literal-parse";
 import { parse as parseCss, stringify as stringifyCss } from "css";
-import { cloneDeep, isArray, isPlainObject, random, uniqueId } from "lodash";
+import { cloneDeep, flatMapDeep, isArray, isObject, isPlainObject, random, uniqueId } from "lodash";
 import serializeJavascript from "serialize-javascript";
 import {
   buildScripts,
@@ -2776,4 +2776,12 @@ export function getStringSizeBytes(str) {
 export function svgToDataURL(svg) {
   const url = "data:image/svg+xml;base64," + btoa(svg);
   return url;
+}
+
+
+
+export function deepValues(obj = {}) {
+  return flatMapDeep(obj, val =>
+    isObject(val) ? deepValues(val) : val
+  );
 }

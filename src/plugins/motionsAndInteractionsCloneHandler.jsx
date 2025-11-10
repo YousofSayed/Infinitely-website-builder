@@ -1,4 +1,4 @@
-import { cloneDeep, random, uniqueId } from "lodash";
+import { cloneDeep, isPlainObject, random, uniqueId } from "lodash";
 import {
   current_page_id,
   current_project_id,
@@ -87,6 +87,9 @@ export const motionsAndInteractionsCloneHandler = (editor) => {
 
     if (mainId && (isNotMainMotion || isThereSameMotionInstance)) {
       const uuid = uniqueId(`mt${random(99, 9999)}${random(99, 599)}`);
+      console.log('motion will update : ' ,mainId,projectData?.motions?.[mainId]);
+      
+      !isPlainObject(projectData?.motions?.[mainId]?.instances) && (projectData.motions[mainId].instances = {})
       projectData.motions[mainId].instances[uuid] = {
         id: uuid,
         page: localStorage.getItem(current_page_id),

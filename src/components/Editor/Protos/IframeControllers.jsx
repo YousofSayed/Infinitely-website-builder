@@ -5,10 +5,12 @@ import { useEditorMaybe } from "@grapesjs/react";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import {
   animationsState,
+  globalUndoAndRedoStates,
   isAnimationsChangedState,
   reloaderState,
   showAnimationsBuilderState,
   showLayersState,
+  showsState,
   zoomValueState,
 } from "../../../helpers/atoms";
 import { useNavigate } from "react-router-dom";
@@ -52,51 +54,64 @@ export const IframeControllers = () => {
   // const projectSettings = useRef(getProjectSettings());
   const [projectSetting, setProjectSettings] = useProjectSettings();
   const [reloader, setReloader] = useRecoilState(reloaderState);
+  const [globalUndoAndRedo, setGlobalUndoAndRedo] = useRecoilState(
+    globalUndoAndRedoStates
+  );
+  const [shows, setShows] = useRecoilState(showsState);
   const [reloadRequired, setReloadRequired] = useState(false);
+  const redoTimeoutRef = useRef();
+  const undoTimeoutRef = useRef();
   useEffect(() => {
     if (!editor) return;
-    // const cb = () => {
-    //   isEditorLoad.current = false;
-    //   editor?.Canvas?.getBody?.()?.setAttribute("loaded", true);
-    //   console.log("i should load");
-    // };
+    editor.Keymaps.remove("core:undo");
+    editor.Keymaps.remove("core:redo");
+
     /**
      *
      * @param {KeyboardEvent} ev
      */
     const callback = (ev) => {
-      const isUndo = (ev.ctrlKey || ev.metaKey) && ev.key === "z";
-      const isRedo = (ev.ctrlKey || ev.metaKey) && ev.key === "y";
+      const isUndo = (ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "z";
+      const isRedo = (ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "y";
+    
+      // If in an input/textarea/contenteditable, allow native undo
+      const active = document.activeElement;
+      const isTextInput =
+        active.tagName === "INPUT" ||
+        active.tagName === "TEXTAREA" ||
+        active.isContentEditable;
 
-      // Check if the event should be intercepted
+        console.log('active : ' , active);
+        
+      if (isTextInput) {
+        // ✅ Allow browser native undo/redo in inputs but keep focus
+        // prevent GrapesJS or other listeners from stealing it
+
+        return;
+      }
+
+      
+
       if (isUndo || isRedo) {
-        const activeElement = document.activeElement;
-        const isTextInput =
-          activeElement.tagName === "INPUT" ||
-          activeElement.tagName === "TEXTAREA" ||
-          activeElement.isContentEditable; // Include contenteditable elements if needed
+        ev.preventDefault();
+        ev.stopImmediatePropagation(); // stop ALL other listeners
+        ev.stopPropagation();
 
-        // If focused on an input or textarea, prevent GrapesJS from handling it
-        if (isTextInput) {
-          // ev.stopPropagation(); // Stop the event from reaching GrapesJS
-          console.log("Allowing native undo/redo in input");
-          return;
+        if (isUndo) {
+          clearTimeout(undoTimeoutRef.current);
+          undoTimeoutRef.current = setTimeout(() => {
+            undoRef.current?.click();
+          }, 0);
+        }
+
+        if (isRedo) {
+          clearTimeout(redoTimeoutRef.current);
+          redoTimeoutRef.current = setTimeout(() => {
+            redoRef.current?.click();
+          }, 0);
         }
       }
-      if (isUndo) {
-        ev.preventDefault();
-        ev.stopPropagation();
-        // undo();
-        undoRef.current.click();
-      }
-      if (isRedo) {
-        ev.preventDefault();
-        ev.stopPropagation();
-        // redo();
-        redoRef.current.click();
-      }
     };
-
     /**
      *
      * @param {CustomEvent} ev
@@ -110,7 +125,7 @@ export const IframeControllers = () => {
     };
 
     // window.addEventListener("click", clickCallback);
-    window.addEventListener("keyup", callback, { capture: true });
+    window.addEventListener("keyup", callback, true);
     reloadRequiredInstance.on(
       InfinitelyEvents.editor.require,
       reloadRequiredCallback
@@ -118,7 +133,7 @@ export const IframeControllers = () => {
     // editor.on("canvas:frame:load:body", cb);
     return () => {
       // editor.off("canvas:frame:load:body", cb);
-      window.removeEventListener("keyup", callback, { capture: true });
+      window.removeEventListener("keyup", callback, true);
       reloadRequiredInstance.off(
         InfinitelyEvents.editor.require,
         reloadRequiredCallback
@@ -126,13 +141,33 @@ export const IframeControllers = () => {
     };
   }, [editor]);
 
-  const undo = () => {
+  /**
+   *
+   * @param {MouseEvent} ev
+   */
+  const undo = (ev) => {
     // editor.runCommand("core:undo");
+    if (Object.values(shows).includes(true)) {
+      window.undo();
+      console.log("undoo ", window.undo);
+
+      return;
+    }
     editor.UndoManager.undo();
   };
 
-  const redo = () => {
+  /**
+   *
+   * @param {MouseEvent} ev
+   */
+  const redo = (ev) => {
     // editor.runCommand("core:redo");
+    if (Object.values(shows).includes(true)) {
+      window.redo();
+      console.log("redoo ", window.redo);
+
+      return;
+    }
     editor.UndoManager.redo();
   };
 
@@ -336,8 +371,8 @@ export const IframeControllers = () => {
             }),
             pageName
           );
-          console.log('filterd motions : ' , motions);
-          
+          console.log("filterd motions : ", motions);
+
           killAllGsapMotions(motions);
           editor.gsapRunning = false;
         }}

@@ -36,6 +36,7 @@ import { SwitchButton } from "../Protos/SwitchButton";
 import { parse } from "../../helpers/cocktail";
 import { Accordion } from "../Protos/Accordion";
 import { AccordionItem } from "../Protos/AccordionItem";
+import { useInfinitelyUndoRedo } from "../../hooks/useInfinitelyUndoRedo";
 
 export const Commands = () => {
   const editor = useEditorMaybe();
@@ -56,6 +57,8 @@ export const Commands = () => {
     "x-teleport": "",
   });
 
+  // useInfinitelyUndoRedo([cmds , setCmds])
+
   useEffect(() => {
     const sle = editor?.getSelected?.();
     if (!sle) return;
@@ -74,7 +77,7 @@ export const Commands = () => {
         ...(parseForDirective(selectedAttributes["v-for"]) || {}),
       },
     });
-    console.log(parseForDirective(selectedAttributes["v-for"]));
+    // console.log(parseForDirective(selectedAttributes["v-for"]));
     setCmdsContext();
   }, [selectedEl]);
 
@@ -217,8 +220,8 @@ export const Commands = () => {
     isSetValue = true
   ) => {
     console.log("suffixes from : ", suffixes);
-    console.log('new Val before: ' , value);
-    
+    console.log("new Val before: ", value);
+
     value = clearCommnets(value);
     if (suffixes?.includes?.("class")) {
       if (value) {
@@ -226,27 +229,23 @@ export const Commands = () => {
         if (value.endsWith(")")) value = value.slice(0, -1);
       }
 
-      const newVal = (
-        `(${value?.replace(/\(|\)/gi, "") || `{\n\n}`})`
-      );
+      const newVal = `(${value?.replace(/\(|\)/gi, "") || `{\n\n}`})`;
       isSetValue && mEditor.setValue(newVal);
       return newVal;
     } else if (suffixes?.includes?.("style")) {
-      const newVal = (
-        `
+      const newVal = `
                                   ${setType("CSSStyleDeclaration")}
                                   ${
                                     isStartsAndEndsWithParens(value)
                                       ? value
                                       : (value && `(${value})`) || `({\n\n})`
-                                  }`
-      );
+                                  }`;
       isSetValue && mEditor.setValue(newVal);
       return newVal;
     } else {
-      const newVal = (value);
-      console.log('new Val : ' , newVal);
-      
+      const newVal = value;
+      console.log("new Val : ", newVal);
+
       isSetValue && mEditor.setValue(newVal);
       return newVal;
     }
@@ -273,7 +272,10 @@ export const Commands = () => {
 
         {editor?.getSelected?.()?.parent?.()?.get?.("type") != "wrapper" &&
           editor?.getSelected?.()?.get?.("type") != "wrapper" && (
-            <AccordionItem title={"for"} notify={Boolean(selectedAttributes["v-for"])}>
+            <AccordionItem
+              title={"for"}
+              notify={Boolean(selectedAttributes["v-for"])}
+            >
               <section className="mt-2 flex flex-col  gap-2 p-1 text-[14px] bg-slate-900 rounded-lg">
                 <FitTitle>Var </FitTitle>
                 <Input
@@ -361,7 +363,10 @@ export const Commands = () => {
 
         {editor?.getSelected?.()?.parent?.()?.get?.("type") != "wrapper" &&
           editor?.getSelected?.()?.get?.("type") != "wrapper" && (
-            <AccordionItem title={"if"} notify={Boolean(selectedAttributes["v-if"])}>
+            <AccordionItem
+              title={"if"}
+              notify={Boolean(selectedAttributes["v-if"])}
+            >
               <section className="mt-2 ">
                 <Select
                   placeholder="Code"
@@ -415,7 +420,11 @@ export const Commands = () => {
             return (
               <AccordionItem
                 title={cmd.name}
-                notify={Boolean(selectedAttributes[cmd.directive])}
+                notify={Boolean(
+                  Object.keys(selectedAttributes).some((dv) =>
+                    dv.startsWith(cmd.directive)
+                  )
+                )}
                 key={i}
                 className={`${
                   Object.keys(selectedAttributes).includes(cmd.directive)
@@ -743,14 +752,14 @@ export const Commands = () => {
                             // },
                           });
 
-                          setTimeout(() => {
-                            const clone = cloneDeep(cmds);
-                            clone[i].suffixValue = "";
-                            clone[i].selectedModifiers = [];
-                            clone[i].value = "";
-                            clone[i].modifierValue = "";
-                            setCmds(clone);
-                          });
+                          // const clone = cloneDeep(cmds);
+                          // clone[i].suffixValue = "";
+                          // clone[i].selectedModifiers = [];
+                          // clone[i].value = "";
+                          // clone[i].modifierValue = "";
+                          // setCmds(clone);
+                          // setTimeout(() => {
+                          // });
                         } catch (error) {
                           throw new Error(`Directives Error :  ${error}`, {
                             cause: "Directives Error",
@@ -868,8 +877,8 @@ export const Commands = () => {
                                               return (
                                                 objectSplitter(value) || value
                                               );
-                                            }else{
-                                              return value
+                                            } else {
+                                              return value;
                                             }
                                           })()
                                         : value,

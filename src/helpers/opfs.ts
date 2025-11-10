@@ -706,10 +706,11 @@ export class OPFS {
           );
         }
 
-        const writer = await file.createWriter();
         const prevWriter = this.#openedWriters.get(file.path);
-        prevWriter && prevWriter.close();
-
+        prevWriter && await prevWriter.close();
+        const writer = await file.createWriter();
+        console.log('prevWriter : ' , prevWriter , file.path);
+        // await write(file , bufferContent);
         this.#openedWriters.set(file.path, writer);
         await writer.truncate(0); // Clear old content
         await writer.write(bufferContent);

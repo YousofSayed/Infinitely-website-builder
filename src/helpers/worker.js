@@ -19,6 +19,8 @@ import {
   varsToServiceWorker,
   writeFilesToOPFS,
   updateSymbolsStylesFiles,
+  removeAttributesInAllPages,
+  setAttributesInAllPages,
 } from "./workerCommands";
 import { doWorkerPattern } from "./workersPattern";
 // import { getProjectData } from "./functions";
@@ -43,8 +45,10 @@ const commands = {
   setInteractionsAttributes,
   deleteAttributesInAllPages,
   parseHTMLAndRaplceSymbols,
+  removeAttributesInAllPages,
   // getElementRulesWithAst,
   updateSymbolsStylesFiles,
+  setAttributesInAllPages,
   getProject,
 };
 

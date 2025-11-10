@@ -17,6 +17,7 @@ import {
   sharedLayerType,
   swType,
   tooltipDataType,
+  undoRedoShowProps,
   varType,
 } from "./jsDocs";
 import { getGlobalSettings, getProjectSettings } from "./functions";
@@ -45,6 +46,24 @@ export const asideControllersNotifiresState = atom({
     styling: false,
     elementAttributes: false,
   },
+});
+
+export const showsState = atom({
+  key: "showsState",
+  default: undoRedoShowProps,
+});
+
+export const globalUndoAndRedoStates = atom({
+  key: "globalUndoAndRedoStates",
+  default: {
+    undo: () => {},
+    redo: () => {},
+  },
+});
+
+export const mediaConditionState = atom({
+  key: "mediaCondition",
+  default: "",
 });
 
 export const reloaderState = atom({

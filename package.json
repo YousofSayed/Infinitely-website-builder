@@ -29,6 +29,7 @@
     }
   },
   "dependencies": {
+    "@anandarizki/use-undo-redo": "^1.0.9",
     "@babel/plugin-transform-modules-umd": "^7.27.1",
     "@babel/standalone": "^7.28.0",
     "@formkit/auto-animate": "^0.8.2",

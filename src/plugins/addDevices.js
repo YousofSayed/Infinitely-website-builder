@@ -22,6 +22,8 @@ export const addDevices = (editor) => {
     (device) => deviceManager.remove(device)
   );
 
+  
+
   // Add device presets
   // window.outerWidth
   deviceManager.add({
@@ -33,7 +35,7 @@ export const addDevices = (editor) => {
   deviceManager.add({
     name: "tablet",
     width: "100%",
-    widthMedia: "768px",
+    widthMedia: "900px",
   });
 
   deviceManager.add({

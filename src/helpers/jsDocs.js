@@ -212,11 +212,11 @@ export let projectSettingsType = {
   is_defer_graped_header_script: false,
   disable_gsap_core: false,
   disable_gsap_scrollTrigger: false,
-  disable_gsap_splitText:false,
+  disable_gsap_splitText: false,
   enable_prettier_for_file_editor: true,
   include_canvas_styles_in_build_file: true,
   disable_petite_vue: false,
-  disable_will_change_in_editor:false,
+  disable_will_change_in_editor: false,
   enable_tailwind: false,
   enable_spline_viewer: false,
   enable_swiperjs: false,
@@ -347,3 +347,15 @@ export let detectedType = {
  * @type {import('./types').InfinitelyRules}
  */
 export let cmpRules = [];
+
+/**
+ * @type {import('./types').ShowProps}
+ */
+export let undoRedoShowProps = {
+  motionBuilder: false,
+  interactionsBuilder: false,
+  commandsBuilder: false,
+  stylesBuilder: false,
+  attributesBuilder: false,
+  animationBuilder: false,
+};

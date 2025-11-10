@@ -31,10 +31,10 @@ export const ColorPicker = memo(
     const colorPickerContainerRef = useRef();
     const [isPending, setTransition] = useTransition();
 
-    useEffect(()=>{
-      if(!hexColorRef.current)return;
+    useEffect(() => {
+      if (!hexColorRef.current) return;
       hexColorRef.current && animate(hexColorRef.current);
-    },[hexColorRef])
+    }, [hexColorRef]);
 
     /**
      * @type {{current:HTMLElement}}
@@ -90,6 +90,13 @@ export const ColorPicker = memo(
       setSavedColors(savedColors);
     });
 
+    const removeColor = async (color) => {
+      if (!color) throw new Error(`Color is not founded`);
+      await db.projects.update(+localStorage.getItem(current_project_id), {
+        colors: savedColors.filter((cl) => cl !== color),
+      });
+    };
+
     return (
       <section ref={colorPickerContainerRef} className="relative ">
         <button
@@ -109,7 +116,9 @@ export const ColorPicker = memo(
               width: `${width - 5}px`,
               maxWidth: `370px`,
             }}
-            className={` max-w-[370px] absolute left-[0] z-[60]  top-[calc(100%+5px)] flex flex-col h-[400px] shadow-md shadow-slate-950 `}
+            className={` max-w-[370px]  absolute left-[0] z-[60]  top-[calc(100%+5px)] flex flex-col ${
+              Boolean(savedColors.length) && "h-[400px]"
+            }  shadow-md shadow-slate-950 `}
             ref={hexColorRef}
           >
             <HexAlphaColorPicker
@@ -142,7 +151,7 @@ export const ColorPicker = memo(
               }}
               id="colors"
               style={{
-                height : Boolean(savedColors.length) ? '250px' : ''
+                height: Boolean(savedColors.length) ? "250px" : "",
               }}
               className="transition-all absolute flex flex-col gap-2 top-[195px] rounded-bl-lg rounded-br-lg p-2 pt-[13px] bg-slate-800 shadow-md shadow-slate-950  w-full z-[70] "
             >
@@ -182,7 +191,7 @@ export const ColorPicker = memo(
                     {savedColors.map((savedColor, i) => (
                       <button
                         key={i}
-                        className="h-[30px] rounded-lg border-[2.2px] border-slate-600 hover:border-blue-500  transition-all "
+                        className="relative h-[30px] rounded-lg border-[2.2px] border-slate-600 hover:border-blue-500  transition-all "
                         style={{
                           backgroundColor: savedColor,
                           borderColor: savedColor == color ? "#3b82f6" : null,
@@ -195,7 +204,18 @@ export const ColorPicker = memo(
                           setColor(savedColor);
                           onEffect(savedColor, setColor);
                         }}
-                      ></button>
+                      >
+                        <span
+                          role="button"
+                          className="hover:opacity-[1] opacity-0 transition-all shadow-sm shadow-slate-900 absolute top-[-7px] right-[-7px] rounded-full w-[20px] h-[20px] bg-[crimson] flex items-center justify-center"
+                          onClick={async(ev)=>{
+                            addClickClass(ev.currentTarget , 'click');
+                            await removeColor(savedColor);
+                          }}
+                        >
+                          {Icons.x({ fill: "white", width: 15, height: 15 })}
+                        </span>
+                      </button>
                     ))}
                   </div>
                 </main>

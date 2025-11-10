@@ -21,8 +21,8 @@ import {
   updatePrevirePage,
   workerCallbackMaker,
 } from "../../helpers/functions";
-import { useRecoilValue } from "recoil";
-import { currentElState } from "../../helpers/atoms";
+import { useRecoilState, useRecoilValue } from "recoil";
+import { currentElState, showsState } from "../../helpers/atoms";
 import { useEditorMaybe } from "@grapesjs/react";
 import {
   current_page_id,
@@ -59,6 +59,10 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { OptionsButton } from "../Protos/OptionsButton";
 import { Tooltip } from "react-tooltip";
 import { buildInteractionsAttributes } from "../../helpers/bridge";
+import { useInfinitelyUndoRedo } from "../../hooks/useInfinitelyUndoRedo";
+import { removeAttributesInAllPages } from "../../helpers/functions";
+import { Memo } from "../Protos/Memo";
+import { UndoRedoContainer } from "../Protos/UndoRedoContainer";
 
 const actionsKeywords = actions.map((action) => action.label);
 const advancedParse = (value) => {
@@ -496,6 +500,7 @@ export const Interaction = ({
 
 export const Interactions = () => {
   const [interactionsState, setInteractions] = useState(interactionsType);
+  const [shows, setShows] = useRecoilState(showsState);
   const [interactionsId, setInteractionsId] = useState("");
   const [isInstance, setIsInstance] = useState(false);
   const [editeAsMain, setEditeAsMain] = useState(true);
@@ -511,11 +516,14 @@ export const Interactions = () => {
   const interactionUploader = useRef(refType);
   const projectId = +localStorage.getItem(current_project_id);
   const timeout = useRef(null);
+  const oldInteractionsIdRef = useRef();
 
   useLiveQuery(async () => {
     const projectData = await getProjectData();
     setInteractionsIds(Object.keys(projectData.interactions) || []);
   });
+
+  // useInfinitelyUndoRedo([interactionsState, setInteractions]);
 
   useEffect(() => {
     if (!selectedEl) return;
@@ -885,12 +893,47 @@ export const Interactions = () => {
      */
     const files = [...ev.target.files];
     const sle = editor.getSelected();
+    ev.target.value = "";
+
     if (!sle) return;
     const projectData = await getProjectData();
+    /**
+     * @type {import('../../helpers/types').Interactions}
+     */
     const fileContent = JSON.parse(await files[0].text());
+    ev.target.value = "";
+
     const newUUID = createINNUUID();
-    sle.addAttributes({ [interactionId]: newUUID });
-    projectData.interactions[newUUID] = fileContent;
+    if (!mainId) {
+      sle.addAttributes({ [interactionId]: newUUID });
+    } else {
+      const attrbiutesV = buildInteractionsAttributes(
+        interactionsState,
+        mainId,
+        isInstance
+      );
+
+      console.log("v attrs  : ", attrbiutesV);
+
+      editor
+        .getWrapper()
+        .find(
+          `[${interactionId}="${mainId}"] , [${mainInteractionId}="${mainId}"]`
+        )
+        .forEach((cmp) => {
+          cmp.removeAttributes(Object.keys(attrbiutesV));
+        });
+
+      await removeAttributesInAllPages({
+        selectors: {
+          [`[${interactionId}="${mainId}"] , [${mainInteractionId}="${mainId}"]`]:
+            {
+              ...attrbiutesV,
+            },
+        },
+      });
+    }
+    projectData.interactions[mainId || newUUID] = fileContent;
     await db.projects.update(+localStorage.getItem(current_project_id), {
       interactions: projectData.interactions,
     });
@@ -913,210 +956,297 @@ export const Interactions = () => {
     );
   };
 
+  // useEffect(() => {
+  //   return () => {
+  //     setShows((old) => ({ ...old, interactionsBuilder: false }));
+  //   };
+  // }, []);
+
   return (
-    <section
-      ref={autoAnimateRef}
-      className={`relative  w-full h-full flex flex-col gap-2 my-2 ${
-        isInstance && !editeAsMain ? "overflow-hidden" : "overflow-auto"
-      } hideScrollBar`}
-    >
-      <header
-        ref={autoAnimateHeaderRef}
-        className="flex flex-col  gap-2 justify-between"
+    <Memo className="h-full">
+      <UndoRedoContainer
+        className="h-full"
+        state={[interactionsState, setInteractions]}
+        showProp="interactionsBuilder"
       >
-        {!interactionsId && (
-          <section className="flex flex-col gap-2 ">
-            <FitTitle>Select Interaction Id</FitTitle>
-            <section className="flex justify-between gap-2   bg-slate-800 p-1 rounded-lg">
-              <Select
-                className="p-[unset]"
-                placeholder="Select Interaction"
-                keywords={interactionsIds}
-                value={selectedInteractionId}
-                onAll={(value) => {
-                  // selectNewMotion(value);
-                  setSelectedInteractionId(value);
-                }}
-              />
-
-              <div className="flex-shrink">
-                <OptionsButton>
-                  <section className="flex flex-col gap-3 items-center">
-                    <button
-                      id="inn-clone"
-                      onClick={async (ev) => {
-                        addClickClass(ev.currentTarget, "click");
-                        await cloneInteractions();
-                      }}
-                    >
-                      {Icons.copy({ fill: "white", height: 18 })}
-                    </button>
-                    <Tooltip
-                      anchorSelect="#inn-clone"
-                      opacity={1}
-                      place="left-end"
-                    >
-                      Clone
-                    </Tooltip>
-
-                    <button
-                      id="int-instance-btn"
-                      onClick={(ev) => {
-                        createInstance(selectedInteractionId);
-                      }}
-                    >
-                      {Icons.link({
-                        fill: "white",
-                        strokWidth: 2.4,
-                        height: 19,
-                      })}{" "}
-                    </button>
-                    <Tooltip
-                      anchorSelect="#int-instance-btn"
-                      place="left-end"
-                      opacity={1}
-                    >
-                      Create Instance
-                    </Tooltip>
-
-                    <button
-                      id="mt-upload-btn"
-                      onClick={(ev) => {
-                        addClickClass(ev.currentTarget, "click");
-                        interactionUploader.current.click();
-                      }}
-                    >
-                      {Icons.upload({
-                        strokeColor: "white",
-                        strokWidth: 2.4,
-                        width: 18,
-                        height: 18,
-                      })}{" "}
-                    </button>
-                    <input
-                      ref={interactionUploader}
-                      type="file"
-                      accept=".json"
-                      hidden
-                      onChange={uploadInteractions}
-                    />
-
-                    <Tooltip
-                      anchorSelect="#mt-upload-btn"
-                      place="left-end"
-                      opacity={1}
-                    >
-                      Upload Interactions
-                    </Tooltip>
-                  </section>
-                </OptionsButton>
-              </div>
-            </section>
-          </section>
-        )}
-
-        {!mainId && <FitTitle>Or Add New</FitTitle>}
-        {
-          <>
-            {mainId && isInstance && (
-              <section className="flex justify-between gap-2 p-1 bg-slate-800 rounded-lg items-center">
-                <FitTitle className="custom-font-size  text-slate-200 rounded-md">
-                  Instance ID : {instanceId}
-                </FitTitle>
-
-                <section className="flex justify-center items-center">
-                  <button
-                    className="[&_path]:hover:stroke-[white!important]"
-                    id="int-remove-instance-btn"
-                    onClick={(ev) => {
-                      removeInstance(instanceId);
+        <section
+          ref={autoAnimateRef}
+          className={`relative  w-full h-full flex flex-col gap-2 my-2 ${
+            isInstance && !editeAsMain ? "overflow-hidden" : "overflow-auto"
+          } hideScrollBar`}
+        >
+          <header
+            ref={autoAnimateHeaderRef}
+            className="flex flex-col  gap-2 justify-between"
+          >
+            <input
+              ref={interactionUploader}
+              type="file"
+              accept=".json"
+              hidden
+              onChange={uploadInteractions}
+            />
+            {!interactionsId && (
+              <section className="flex flex-col gap-2 ">
+                <FitTitle>Select Interaction Id</FitTitle>
+                <section className="flex justify-between gap-2   bg-slate-800 p-1 rounded-lg">
+                  <Select
+                    className="p-[unset]"
+                    placeholder="Select Interaction"
+                    keywords={interactionsIds}
+                    value={selectedInteractionId}
+                    onAll={(value) => {
+                      // selectNewMotion(value);
+                      setSelectedInteractionId(value);
                     }}
-                  >
-                    {Icons.trash()}{" "}
-                  </button>
-                  <Tooltip
-                    className="z-[1000]"
-                    anchorSelect="#int-remove-instance-btn"
-                    place="left-end"
-                    opacity={1}
-                  >
-                    Remove Instance
-                  </Tooltip>
+                  />
+
+                  <div className="flex-shrink">
+                    <OptionsButton>
+                      <section className="flex flex-col gap-3 items-center">
+                        <button
+                          id="inn-clone"
+                          onClick={async (ev) => {
+                            addClickClass(ev.currentTarget, "click");
+                            await cloneInteractions();
+                          }}
+                        >
+                          {Icons.copy({ fill: "white", height: 18 })}
+                        </button>
+                        <Tooltip
+                          anchorSelect="#inn-clone"
+                          opacity={1}
+                          place="left-end"
+                        >
+                          Clone
+                        </Tooltip>
+
+                        <button
+                          id="int-instance-btn"
+                          onClick={(ev) => {
+                            createInstance(selectedInteractionId);
+                          }}
+                        >
+                          {Icons.link({
+                            fill: "white",
+                            strokWidth: 2.4,
+                            height: 19,
+                          })}{" "}
+                        </button>
+                        <Tooltip
+                          anchorSelect="#int-instance-btn"
+                          place="left-end"
+                          opacity={1}
+                        >
+                          Create Instance
+                        </Tooltip>
+
+                        <button
+                          id="mt-upload-btn"
+                          onClick={(ev) => {
+                            addClickClass(ev.currentTarget, "click");
+                            interactionUploader.current.click();
+                          }}
+                        >
+                          {Icons.upload({
+                            strokeColor: "white",
+                            strokWidth: 2.4,
+                            width: 18,
+                            height: 18,
+                          })}{" "}
+                        </button>
+
+                        <Tooltip
+                          anchorSelect="#mt-upload-btn"
+                          place="left-end"
+                          opacity={1}
+                        >
+                          Upload Interactions
+                        </Tooltip>
+                      </section>
+                    </OptionsButton>
+                  </div>
                 </section>
               </section>
             )}
 
-            {mainId && (
-              <section className="relative flex gap-2 p-1 py-2 justify-between bg-slate-800 w-full rounded-lg">
-                {/* <FitTitle className="absolute top-[-50%]  left-0">{isInstance ? 'Instance' : 'Main'}</FitTitle> */}
-                <FitTitle className="custom-font-size  text-slate-200 rounded-md">
-                  Main ID : {mainId}
-                </FitTitle>
-                <OptionsButton>
-                  <section className="flex flex-col items-center gap-5">
-                    <button
-                      id="inn-copy"
-                      onClick={async (ev) => {
-                        addClickClass(ev.currentTarget, "click");
-                        await navigator.clipboard.writeText(mainId);
-                        toast.success(
-                          <ToastMsgInfo
-                            msg={`Interactions Id Copied Successfully`}
-                          />
-                        );
-                      }}
-                    >
-                      {Icons.copy({ fill: "white", height: 18 })}
-                    </button>
-                    <Tooltip
-                      anchorSelect="#inn-copy"
-                      opacity={1}
-                      place="left-end"
-                    >
-                      Copy
-                    </Tooltip>
+            {!mainId && <FitTitle>Or Add New</FitTitle>}
+            {
+              <>
+                {mainId && isInstance && (
+                  <section className="flex justify-between gap-2 p-1 bg-slate-800 rounded-lg items-center">
+                    <FitTitle className="custom-font-size  text-slate-200 rounded-md">
+                      Instance ID : {instanceId}
+                    </FitTitle>
 
-                    <button
-                      id="inn-delete-interactions"
-                      onClick={async (ev) => {
-                        addClickClass(ev.currentTarget, "click");
-                        await deleteInteractions();
-                      }}
-                    >
-                      {Icons.trash("white", undefined, undefined, 18)}
-                    </button>
-                    <Tooltip
-                      className="z-[1000]"
-                      anchorSelect="#inn-delete-interactions"
-                      opacity={1}
-                      place="left-end"
-                    >
-                      Delete Interactions
-                    </Tooltip>
-
-                    <button
-                      id="inn-download-interactions"
-                      onClick={async (ev) => {
-                        addClickClass(ev.currentTarget, "click");
-                        await downloadInteractions();
-                      }}
-                    >
-                      {Icons.export("white", 2, 18, 18)}
-                    </button>
-                    <Tooltip
-                      className="z-[1000]"
-                      anchorSelect="#inn-download-interactions"
-                      opacity={1}
-                      place="left-end"
-                    >
-                      Download Interactions
-                    </Tooltip>
+                    <section className="flex justify-center items-center">
+                      <button
+                        className="[&_path]:hover:stroke-[white!important]"
+                        id="int-remove-instance-btn"
+                        onClick={(ev) => {
+                          removeInstance(instanceId);
+                        }}
+                      >
+                        {Icons.trash()}{" "}
+                      </button>
+                      <Tooltip
+                        className="z-[1000]"
+                        anchorSelect="#int-remove-instance-btn"
+                        place="left-end"
+                        opacity={1}
+                      >
+                        Remove Instance
+                      </Tooltip>
+                    </section>
                   </section>
-                </OptionsButton>
-              </section>
-            )}
+                )}
 
-            <section className="flex justify-between gap-2">
+                {mainId && (
+                  <section className="relative flex gap-2 p-1 py-2 justify-between bg-slate-800 w-full rounded-lg">
+                    {/* <FitTitle className="absolute top-[-50%]  left-0">{isInstance ? 'Instance' : 'Main'}</FitTitle> */}
+                    <FitTitle className="custom-font-size  text-slate-200 rounded-md">
+                      Main ID : {mainId}
+                    </FitTitle>
+                    <OptionsButton>
+                      <section className="flex flex-col items-center gap-5">
+                        <button
+                          id="inn-copy"
+                          onClick={async (ev) => {
+                            addClickClass(ev.currentTarget, "click");
+                            await navigator.clipboard.writeText(mainId);
+                            toast.success(
+                              <ToastMsgInfo
+                                msg={`Interactions Id Copied Successfully`}
+                              />
+                            );
+                          }}
+                        >
+                          {Icons.copy({ fill: "white", height: 18 })}
+                        </button>
+                        <Tooltip
+                          anchorSelect="#inn-copy"
+                          opacity={1}
+                          place="left-end"
+                        >
+                          Copy
+                        </Tooltip>
+
+                        <button
+                          id="inn-delete-interactions"
+                          onClick={async (ev) => {
+                            addClickClass(ev.currentTarget, "click");
+                            await deleteInteractions();
+                          }}
+                        >
+                          {Icons.trash("white", undefined, undefined, 18)}
+                        </button>
+                        <Tooltip
+                          className="z-[1000]"
+                          anchorSelect="#inn-delete-interactions"
+                          opacity={1}
+                          place="left-end"
+                        >
+                          Delete Interactions
+                        </Tooltip>
+
+                        <button
+                          id="inn-upload-interactions"
+                          onClick={async (ev) => {
+                            addClickClass(ev.currentTarget, "click");
+                            interactionUploader.current.click();
+                          }}
+                        >
+                          {Icons.upload({
+                            strokeColor: "white",
+                            strokeWidth: 2,
+                            width: 18,
+                            height: 18,
+                          })}
+                        </button>
+                        <Tooltip
+                          className="z-[1000]"
+                          anchorSelect="#inn-upload-interactions"
+                          opacity={1}
+                          place="left-end"
+                        >
+                          Upload Interactions
+                        </Tooltip>
+
+                        <button
+                          id="inn-download-interactions"
+                          onClick={async (ev) => {
+                            addClickClass(ev.currentTarget, "click");
+                            await downloadInteractions();
+                          }}
+                        >
+                          {Icons.export("white", 2, 18, 18)}
+                        </button>
+                        <Tooltip
+                          className="z-[1000]"
+                          anchorSelect="#inn-download-interactions"
+                          opacity={1}
+                          place="left-end"
+                        >
+                          Download Interactions
+                        </Tooltip>
+                      </section>
+                    </OptionsButton>
+                  </section>
+                )}
+
+                <section className="flex justify-between gap-2">
+                  <Select
+                    value={eventName}
+                    setValue={setEventName}
+                    placeholder="Add Interaction"
+                    keywords={eventNames}
+                    onItemClicked={(value) => {
+                      addInteraction(value);
+                    }}
+                    onEnterPress={(value) => {
+                      addInteraction(value);
+                    }}
+                  />
+                  <SmallButton
+                    tooltipTitle="Paste Interaction"
+                    onClick={async () => {
+                      pasteInteraction(await navigator.clipboard.readText());
+                    }}
+                  >
+                    {Icons.paste({ fill: "white" })}
+                  </SmallButton>
+                  <SmallButton
+                    tooltipTitle="Add Interaction"
+                    onClick={(ev) => {
+                      addInteraction(eventName);
+                    }}
+                  >
+                    {Icons.plus("white")}
+                  </SmallButton>
+                </section>
+              </>
+            }
+          </header>
+          {interactionsId && Boolean(interactionsState?.length) && (
+            <MiniTitle>Interactions</MiniTitle>
+          )}
+          <Accordion>
+            {interactionsState.map((interaction, i) => (
+              <AccordionItem key={i} title={interaction.event}>
+                <Interaction
+                  id={interactionsId}
+                  index={i}
+                  interactions={interactionsState}
+                  setInteractions={setInteractions}
+                  setInteractionsId={setInteractionsId}
+                  interaction={interaction}
+                />
+              </AccordionItem>
+            ))}
+          </Accordion>
+
+          {interactionsState.length > 2 && (
+            <footer className="flex gap-2 justify-between">
               <Select
                 value={eventName}
                 setValue={setEventName}
@@ -1130,14 +1260,6 @@ export const Interactions = () => {
                 }}
               />
               <SmallButton
-                tooltipTitle="Paste Interaction"
-                onClick={async () => {
-                  pasteInteraction(await navigator.clipboard.readText());
-                }}
-              >
-                {Icons.paste({ fill: "white" })}
-              </SmallButton>
-              <SmallButton
                 tooltipTitle="Add Interaction"
                 onClick={(ev) => {
                   addInteraction(eventName);
@@ -1145,76 +1267,34 @@ export const Interactions = () => {
               >
                 {Icons.plus("white")}
               </SmallButton>
+            </footer>
+          )}
+
+          {isInstance && !editeAsMain && (
+            <section className="absolute left-0 top-[0] w-full h-full min-h-full backdrop-blur-md z-[1001] rounded-lg p-2">
+              <section className="sticky top-0 flex flex-col gap-3 items-center p-2 py-3 bg-slate-900 rounded-lg">
+                {Icons.info({
+                  fill: "yellow",
+                  strokeColor: "yellow",
+                  width: 30,
+                  height: 30,
+                })}
+                <p className="text-center text-slate-200 font-semibold">
+                  You can’t edite instance , If you wanna to edite so you should
+                  edite as main
+                </p>
+                <Button
+                  onClick={(ev) => {
+                    setEditeAsMain(true);
+                  }}
+                >
+                  Edite As Main
+                </Button>
+              </section>
             </section>
-          </>
-        }
-      </header>
-      {interactionsId && interactionsState?.length && (
-        <MiniTitle>Interactions</MiniTitle>
-      )}
-      <Accordion>
-        {interactionsState.map((interaction, i) => (
-          <AccordionItem key={i} title={interaction.event}>
-            <Interaction
-              id={interactionsId}
-              index={i}
-              interactions={interactionsState}
-              setInteractions={setInteractions}
-              setInteractionsId={setInteractionsId}
-              interaction={interaction}
-            />
-          </AccordionItem>
-        ))}
-      </Accordion>
-
-      {interactionsState.length > 2 && (
-        <footer className="flex gap-2 justify-between">
-          <Select
-            value={eventName}
-            setValue={setEventName}
-            placeholder="Add Interaction"
-            keywords={eventNames}
-            onItemClicked={(value) => {
-              addInteraction(value);
-            }}
-            onEnterPress={(value) => {
-              addInteraction(value);
-            }}
-          />
-          <SmallButton
-            tooltipTitle="Add Interaction"
-            onClick={(ev) => {
-              addInteraction(eventName);
-            }}
-          >
-            {Icons.plus("white")}
-          </SmallButton>
-        </footer>
-      )}
-
-      {isInstance && !editeAsMain && (
-        <section className="absolute left-0 top-[0] w-full h-full min-h-full backdrop-blur-md z-[1001] rounded-lg p-2">
-          <section className="sticky top-0 flex flex-col gap-3 items-center p-2 py-3 bg-slate-900 rounded-lg">
-            {Icons.info({
-              fill: "yellow",
-              strokeColor: "yellow",
-              width: 30,
-              height: 30,
-            })}
-            <p className="text-center text-slate-200 font-semibold">
-              You can’t edite instance , If you wanna to edite so you should
-              edite as main
-            </p>
-            <Button
-              onClick={(ev) => {
-                setEditeAsMain(true);
-              }}
-            >
-              Edite As Main
-            </Button>
-          </section>
+          )}
         </section>
-      )}
-    </section>
+      </UndoRedoContainer>
+    </Memo>
   );
 };

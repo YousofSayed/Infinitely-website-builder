@@ -1,60 +1,60 @@
-import React, { useEffect, useLayoutEffect, useState } from "react";
+import React from "react";
 import { Icons } from "../../Icons/Icons";
 import { Li } from "../../Protos/Li";
-import { useEditorMaybe } from "@grapesjs/react";
-import { useRecoilState, useRecoilValue } from "recoil";
-import { asideControllersNotifiresState, cmpRulesState, currentElState } from "../../../helpers/atoms";
-import {
-  interactionId,
-  mainInteractionId,
-  mainMotionId,
-  motionId,
-} from "../../../constants/shared";
+// import { useEditorMaybe } from "@grapesjs/react";
+import { useRecoilState } from "recoil";
+import { asideControllersNotifiresState} from "../../../helpers/atoms";
+// import {
+//   interactionId,
+//   mainInteractionId,
+//   mainMotionId,
+//   motionId,
+// } from "../../../constants/shared";
 // import { dynamic_container } from "../../../constants/cmpsTypes";
 // import { isDynamicComponent } from "../../../helpers/functions";
 
 export const AsideControllers = () => {
-  const editor = useEditorMaybe();
-  const [select, setSelect] = useState("style");
-  const sle = useRecoilValue(currentElState);
-  const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
-  const [cmp, setCmp] = useState("");
+  // const editor = useEditorMaybe();
+  // const [select, setSelect] = useState("style");
+  // const sle = useRecoilValue(currentElState);
+  // const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
+  // const [cmp, setCmp] = useState("");
   const [notify, setNotify] = useRecoilState(asideControllersNotifiresState);
 
-  useEffect(() => {
-    if (!editor || !sle || !sle.currentEl) return;
-    const selectedCmp = editor?.getSelected();
-    if (!selectedCmp) return;
-    /**
-     *
-     * @param {import('grapesjs').Component} selectedCmp
-     */
-    const checkers = (selectedCmp) => {
-      const attributes = selectedCmp.getAttributes();
-      const checkCommands = () =>
-        Object.keys(attributes).some((attrKey) => attrKey.startsWith("v-"));
-      const checkTraits = () => selectedCmp.getTraits().some(trait=>Boolean(trait.attributes.value));
-      const checkInteractions = () =>
-        attributes[interactionId] || attributes[mainInteractionId];
-      const checkMotion = () =>
-        attributes[motionId] || attributes[mainMotionId];
-      const checkStyling = ()=> cmpRules.length > 0;
+  // useEffect(() => {
+  //   if (!editor || !sle || !sle.currentEl) return;
+  //   const selectedCmp = editor?.getSelected();
+  //   if (!selectedCmp) return;
+  //   /**
+  //    *
+  //    * @param {import('grapesjs').Component} selectedCmp
+  //    */
+  //   const checkers = (selectedCmp) => {
+  //     const attributes = selectedCmp.getAttributes();
+  //     const checkCommands = () =>
+  //       Object.keys(attributes).some((attrKey) => attrKey.startsWith("v-"));
+  //     const checkTraits = () => selectedCmp.getTraits().some(trait=>Boolean(trait.attributes.value));
+  //     const checkInteractions = () =>
+  //       attributes[interactionId] || attributes[mainInteractionId];
+  //     const checkMotion = () =>
+  //       attributes[motionId] || attributes[mainMotionId];
+  //     const checkStyling = ()=> cmpRules.length > 0 || selectedCmp.getClasses().length > 0;
 
-      return {
-        commands: checkCommands(),
-        traits: checkTraits(),
-        interactions: checkInteractions(),
-        motion: checkMotion(),
-        styling: checkStyling(),
-      };
-    };
-    try {
-      setCmp(selectedCmp);
-      setNotify(checkers(selectedCmp));
-    } catch (error) {
-      console.error(`Error : ${error.message}`);
-    }
-  }, [sle , cmpRules , editor]);
+  //     return {
+  //       commands: checkCommands(),
+  //       traits: checkTraits(),
+  //       interactions: checkInteractions(),
+  //       motion: checkMotion(),
+  //       styling: checkStyling(),
+  //     };
+  //   };
+  //   try {
+  //     setCmp(selectedCmp);
+  //     setNotify(checkers(selectedCmp));
+  //   } catch (error) {
+  //     console.error(`Error : ${error.message}`);
+  //   }
+  // }, [sle , cmpRules , editor]);
 
   return (
     <ul className="w-full flex items-center  bg-slate-800 p-1 rounded-lg gap-2 [&_svg]:w-[22px]">

@@ -2911,6 +2911,7 @@ export const Icons = {
     <svg
       width={width}
       height={height}
+      // className="rotate-[-90deg]"
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 128 128"
     >
@@ -3104,6 +3105,7 @@ export const Icons = {
       height={height}
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 128 128"
+      // className="rotate-[-90deg]"
     >
       <Path
         fill="#cbd5e1"

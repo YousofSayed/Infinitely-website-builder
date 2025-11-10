@@ -1,4 +1,11 @@
-import React, { memo, useEffect, useRef, useState, useTransition } from "react";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { SwitchButton } from "../../Protos/SwitchButton";
 // import { InfAccordion } from "../../Protos/InfAccordion";
 // import { Accordion, AccordionItem } from "@heroui/accordion";
@@ -10,6 +17,8 @@ import {
   getProjectSettings,
   initToolbar,
   preventSelectNavigation,
+  setAttributesInAllPages,
+  store,
   workerCallbackMaker,
 } from "../../../helpers/functions";
 import { Adder } from "./Adder";
@@ -50,7 +59,11 @@ import {
   uniqueID,
 } from "../../../helpers/cocktail";
 import { useRecoilState } from "recoil";
-import { currentElState } from "../../../helpers/atoms";
+import {
+  currentElState,
+  globalUndoAndRedoStates,
+  showsState,
+} from "../../../helpers/atoms";
 import { infinitelyWorker } from "../../../helpers/infinitelyWorker";
 import {
   current_page_id,
@@ -63,21 +76,21 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { runGsapMethod } from "../../../helpers/customEvents";
 import { FitTitle } from "./FitTitle";
 import {
+  deepValues,
   editNestedObject,
   getNestedValue,
   removeNestedKey,
 } from "../../../helpers/bridge";
 import { Tooltip } from "react-tooltip";
-import serializeJavascript from "serialize-javascript";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./ToastMsgInfo";
 import { OptionsButton } from "../../Protos/OptionsButton";
 import { ScrollableToolbar } from "../../Protos/ScrollableToolbar";
-import { pageBuilderWorker } from "../../../helpers/defineWorkers";
 import { AccordionItem } from "../../Protos/AccordionItem";
 import { Accordion } from "../../Protos/Accordion";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { Hr } from "../../Protos/Hr";
+import { Memo } from "../../Protos/Memo";
+import { UndoRedoContainer } from "../../Protos/UndoRedoContainer";
 const parseValue = (value) => {
   try {
     return (
@@ -372,9 +385,18 @@ const ObjectComponent = ({
     });
   };
 
+  // console.log('deeeeeeeeeeepooo : ' , deepValues({
+  //   name:'yousef',
+  //   ll:{
+  //     lol:'lol'
+  //   }
+  // }));
+
   return (
     <section className="flex flex-col gap-2 p-1 bg-slate-950 rounded-lg">
       {Object.entries(objectProps).map(([key, value], index) => {
+        // console.log(Boolean(Object.values(value)?.length),Object.values(isPlainObject(value)?value : {}) , 'deeeeeeeeeeepooo');
+
         return (
           <section key={index} className="relative flex flex-col gap-2  ">
             <FitTitle
@@ -393,7 +415,10 @@ const ObjectComponent = ({
               //   indicator: `text-[18px] transition-all`,
               // }}
               >
-                <AccordionItem title={key}>
+                <AccordionItem
+                  title={key}
+                  notify={Boolean(Object.values(getNestedValue(motion , [...destination, key]) || {})?.length)}
+                >
                   <ObjectComponent
                     motion={motion}
                     setMotion={setMotion}
@@ -867,7 +892,10 @@ const FromTo = ({
       /> */}
 
       <Accordion>
-        <AccordionItem title="From">
+        <AccordionItem
+          title="From"
+          notify={Boolean(Object.values(animation?.from || {})?.length)}
+        >
           {/* <section className="flex  gap-2 p-2 bg-slate-950 rounded-lg">
             <Select
               className="p-[unset]"
@@ -942,7 +970,10 @@ const FromTo = ({
           </section>
         </AccordionItem>
 
-        <AccordionItem title="From Options">
+        <AccordionItem
+          title="From Options"
+          notify={Boolean(Object.values(animation?.fromOptions || {})?.length)}
+        >
           <ObjectComponent
             motion={motion}
             setMotion={setMotion}
@@ -969,10 +1000,14 @@ const FromTo = ({
             objectProps={advancedGsapOptions}
           />
         </AccordionItem>
+        {/* notify={Boolean(Object.values(animation?.fromOptions || {})?.length)} */}
       </Accordion>
 
       <Accordion>
-        <AccordionItem title="To">
+        <AccordionItem
+          title="To"
+          notify={Boolean(Object.values(animation?.to || {})?.length)}
+        >
           <section className="w-full p-1 bg-slate-950 rounded-lg">
             <AddNestedProps
               motion={motion}
@@ -985,7 +1020,10 @@ const FromTo = ({
           </section>
         </AccordionItem>
 
-        <AccordionItem title="To Options">
+        <AccordionItem
+          title="To Options"
+          notify={Boolean(Object.values(animation?.toOptions || {})?.length)}
+        >
           <ObjectComponent
             motion={motion}
             setMotion={setMotion}
@@ -1012,6 +1050,7 @@ const FromTo = ({
             objectProps={advancedGsapOptions}
           />
         </AccordionItem>
+        {/* notify={Boolean(Object.values(animation?.from || {})?.length)} */}
       </Accordion>
 
       {/* <SwitcherSection
@@ -1103,7 +1142,10 @@ const Timeline = ({
         />
       </section>
       <Accordion>
-        <AccordionItem title="Timeline options">
+        <AccordionItem
+          title="Timeline options"
+          notify={Boolean(Object.values(motion?.timeline || {})?.length)}
+        >
           <section className=" flex flex-col gap-2 p-1">
             <ObjectComponent
               isTimeLine
@@ -1137,7 +1179,10 @@ const SplitText = ({
         />
       </section>
       <Accordion>
-        <AccordionItem title="SplitText options">
+        <AccordionItem
+          title="SplitText options"
+          notify={Boolean(Object.values(motion?.splitText || {})?.length)}
+        >
           <section className=" flex flex-col gap-2 p-1">
             <ObjectComponent
               isTimeLine
@@ -1153,7 +1198,7 @@ const SplitText = ({
   );
 };
 
-export const Motion = memo(() => {
+export const Motion = () => {
   const editor = useEditorMaybe();
   const [timeline, setTimeline] = useState(false);
 
@@ -1162,6 +1207,9 @@ export const Motion = memo(() => {
    */
   const mType = null;
   const [motion, setMotion] = useState(mType);
+  const [globalUndoAndRedo, setGlobalUndoAndRedo] = useRecoilState(
+    globalUndoAndRedoStates
+  );
   const [selectedEl, setSelectedEl] = useRecoilState(currentElState);
   const [selectedElMotionId, setSelectedElMotionId] = useState("");
   const [isPending, setTransition] = useTransition();
@@ -1173,6 +1221,7 @@ export const Motion = memo(() => {
   const motionUploader = useRef();
   const [autoAnimateRef] = useAutoAnimate();
   const isStoring = useRef(false);
+  const oldMotionIdRef = useRef();
   const rId = useRef(null);
   const iconStyle = {
     fill: "white",
@@ -1239,15 +1288,56 @@ export const Motion = memo(() => {
     setMotionKeys(Object.keys(currentMotion || {}));
   });
 
+  useEffect(()=>{
+      oldMotionIdRef.current = '';
+  },[selectedEl])
+
   useEffect(() => {
     if (!editor || !editor?.getSelected?.() || !motion?.animations?.length)
       return;
     // console.log("bonbone");
+    (async () => {
+      if (
+        motion.id &&
+        oldMotionIdRef.current &&
+        oldMotionIdRef.current !== motion.id
+      ) {
+        editor
+          .getWrapper()
+          .find(`[${motionId}="${oldMotionIdRef.current}"]`)
+          .forEach((cmp) => {
+            cmp.addAttributes({
+              [motionId]: motion.id,
+            });
+          });
+        editor
+          .getWrapper()
+          .find(`[${mainMotionId}="${oldMotionIdRef.current}"]`)
+          .forEach((cmp) => {
+            cmp.addAttributes({
+              [mainMotionId]: motion.id,
+            });
+          });
+        const res = await setAttributesInAllPages({
+          selectors: {
+            [`[${motionId}="${oldMotionIdRef.current}"]`]: {
+              [motionId]: motion.id,
+            },
+            [`[${mainMotionId}="${oldMotionIdRef.current}"]`]: {
+              [mainMotionId]: motion.id,
+            },
+          },
+        });
+
+        console.log("old mId ref : ", oldMotionIdRef.current, res, motion);
+        // store({} , editor)
+      }
+      oldMotionIdRef.current = motion.id || "";
+    })();
 
     motion.id && updateDB(motion);
-
     console.log("motion", motion);
-  }, [motion]);
+  }, [motion, editor]);
 
   useEffect(() => {
     if (!editor || !selectedEl) {
@@ -1268,12 +1358,23 @@ export const Motion = memo(() => {
     setInstanceId(instanceId);
     console.log("mide : ", mId);
 
+    // console.log(
+    //   "Undo motion update → restoring: (stack) : ",
+    //   editor.UndoManager.getStack()
+    // );
+
     // instanceId ? setIsInstance(true) : setIsInstance(false);
     // instanceId ? setEditeAsMain(false) : setEditeAsMain(true);
     (async () => {
       await getMotion(mId);
     })();
+
+    // return () => {
+    //   editor.off("undo", undoCallback);
+    // };
   }, [selectedEl, editor]);
+
+  // useInfinitelyUndoRedo([motion, setMotion]);
 
   /**
    *
@@ -1296,7 +1397,11 @@ export const Motion = memo(() => {
       "project settings  ::: ",
       projectSettings.remove_gsap_markers_on_build
     );
+    // editor.UndoManager.s
 
+    console.log("Undo motion update → restoring: (clone) :", clone);
+
+    // editor.UndoManager.
     rId.current && clearTimeout(rId.current);
     rId.current = setTimeout(() => {
       console.log("update from insdie ", newMotion);
@@ -1589,209 +1694,280 @@ export const Motion = memo(() => {
     /**
      * @type {import('../../../helpers/types').MotionType}
      */
-    const motion = JSON.parse(await file.text());
+    const motionUploaded = JSON.parse(await file.text());
     const sle = editor.getSelected();
-    if (!motion || !sle) return;
-    const projectData = await getProjectData();
-    if (projectData.motions[motion.id]) {
-      const cnfrm = confirm(
-        `Motion with the same id already exists , Do you want to overwrite it ?`
-      );
-      if (!cnfrm) return;
-      motion.id = uniqueId(`mt${uniqueID()}`);
+    console.log("upload start : ");
+    if (!motionUploaded || !sle) return;
+    if (!(motionUploaded.id && isArray(motionUploaded.animations))) {
+      ev.target.value = "";
+      toast.error(<ToastMsgInfo msg={`Motion is not valid 🤨`} />);
+      return;
     }
-    sle.addAttributes({ [motionId]: motion.id });
-    await updateDB(motion);
-    setMotion(motion);
+    const projectData = await getProjectData();
+    if (projectData.motions[motionUploaded.id]) {
+      const cnfrm = confirm(
+        `Motion with the same id (${motionUploaded.id}) already exists , Do you want to overwrite it (Id will overwrite too) ?`
+      );
+      if (!cnfrm) {
+        const newCnfrm = confirm(
+          `Do you want to import as a new motion with a new id ?`
+        );
+        if (!newCnfrm) {
+          ev.target.value = "";
+          return;
+        }
+        motionUploaded.id = uniqueId(`mt${uniqueID()}`);
+      }
+    } else if (motionUploaded.id != mainId) {
+      console.log("elsooooooooooo");
+
+      const newCnfrm = confirm(
+        `Do you want to overwrite current motion (Id will overwrite too) ?`
+      );
+      if (!newCnfrm) {
+        const createNewWithNewId = confirm(
+          `Do you want to import as a new motion with a new id ?`
+        );
+        if (createNewWithNewId) {
+          motionUploaded.id = uniqueId(`mt${uniqueID()}`);
+        } else {
+          ev.target.value = "";
+          return;
+        }
+      }
+    }
+    motion.instances && (motionUploaded.instances = motion.instances);
+    sle.addAttributes({ [motionId]: motionUploaded.id });
+    await updateDB(motionUploaded);
+    setMotion(motionUploaded);
     initToolbar(editor, sle);
+    ev.target.value = "";
     // reSelect();
     // preventSelectNavigation(editor , sle)
   };
 
   return (
-    <section
-      ref={autoAnimateRef}
-      className="flex flex-col gap-2 w-full relative mt-2"
-    >
-      {isInstance && !editeAsMain && (
-        <section className="absolute left-0 top-[0] w-full h-full min-h-full backdrop-blur-md z-[50] rounded-lg p-2">
-          <section className="sticky top-0 flex flex-col gap-3 items-center p-2 py-3 bg-slate-900 rounded-lg">
-            {Icons.info({
-              fill: "yellow",
-              strokeColor: "yellow",
-              width: 30,
-              height: 30,
-            })}
-            <p className="text-center text-slate-200 font-semibold">
-              You can’t edite instance , If you wanna to edite so you should
-              edite as main
-            </p>
-            <Button
-              onClick={(ev) => {
-                setEditeAsMain(true);
-              }}
-            >
-              Edite As Main
-            </Button>
-          </section>
-        </section>
-      )}
-      {!!motion?.animations?.length ? (
-        <>
-          <ScrollableToolbar
-            className="p-2  flex  justify-between rounded-lg bg-slate-800 sticky top-0 z-[40]"
-            space={2}
-          >
-            {controllerIcons
-              .reverse()
-              .map(({ icon, methods, tooltipTitle }, index) => {
-                return (
-                  <button
-                    key={index}
-                    id={`motion-controller-${index}`}
-                    onClick={async (ev) => {
-                      addClickClass(
-                        ev.currentTarget || ev.target.parentNode,
-                        "click"
-                      );
-                      // console.log('motcheeeeeeeeeee : ' , {
-                      //   ...motion,
-                      //   isInstance: isInstance,
-                      //   id: isInstance ? instanceId : mainId,
-                      //   // id:instance
-                      // } , methods);
-
-                      runGsapMethod(methods, {
-                        ...motion,
-                        ...(isInstance
-                          ? {
-                              isInstance: isInstance,
-                              id: instanceId,
-                            }
-                          : {}),
-                        // id:instance
-                      });
-                    }}
-                    className="relative cursor-pointer  p-2 rounded-md bg-slate-900 transition-all hover:bg-blue-600 "
-                  >
-                    {icon}
-                    <Tooltip
-                      anchorSelect={`#motion-controller-${index}`}
-                      place={isInstance ? "top-end" : "bottom-end"}
-                      // position={{x: 0, y: 0}}
-
-                      positionStrategy="fixed"
-                      className=" text-slate-200 font-semibold "
-                    >
-                      {tooltipTitle}
-                    </Tooltip>
-                  </button>
-                );
-              })}
-          </ScrollableToolbar>
-          <section className="relative flex gap-2 p-3 justify-between bg-slate-800 w-full rounded-md">
-            {/* <FitTitle className="absolute top-[-50%]  left-0">{isInstance ? 'Instance' : 'Main'}</FitTitle> */}
-            <FitTitle className="custom-font-size flex items-center  text-slate-200 ">
-              {isInstance ? "Main ID :" : ""} {motion.id}
-            </FitTitle>
-            <OptionsButton>
-              <section className="flex flex-col items-center gap-5">
-                <button
-                  id="mt-copy"
-                  onClick={async (ev) => {
-                    addClickClass(ev.currentTarget, "click");
-                    await navigator.clipboard.writeText(motion.id);
-                    toast.success(
-                      <ToastMsgInfo msg={`Motion Id Copied Successfully`} />
-                    );
+    <Memo className="h-full">
+      <UndoRedoContainer className="h-full" showProp="motionBuilder" state={[motion, setMotion]}>
+        <section
+          ref={autoAnimateRef}
+          className="flex flex-col gap-2 w-full relative mt-2"
+        >
+          <input
+            ref={motionUploader}
+            type="file"
+            accept=".json"
+            hidden
+            onChange={uploadMotion}
+          />
+          {isInstance && !editeAsMain && (
+            <section className="absolute left-0 top-[0] w-full h-full min-h-full backdrop-blur-md z-[1050] rounded-lg p-2">
+              <section className="sticky top-0 flex flex-col gap-3 items-center p-2 py-3 bg-slate-900 rounded-lg">
+                {Icons.info({
+                  fill: "yellow",
+                  strokeColor: "yellow",
+                  width: 30,
+                  height: 30,
+                })}
+                <p className="text-center text-slate-200 font-semibold">
+                  You can’t edite instance , If you wanna to edite so you should
+                  edite as main
+                </p>
+                <Button
+                  onClick={(ev) => {
+                    setEditeAsMain(true);
                   }}
                 >
-                  {Icons.copy({ fill: "white", height: 18 })}
-                </button>
-                <Tooltip anchorSelect="#mt-copy" opacity={1} place="left-end">
-                  Copy
-                </Tooltip>
-
-                <button
-                  id="mt-delete-motion"
-                  onClick={async (ev) => {
-                    addClickClass(ev.currentTarget, "click");
-                    await deleteMotion(motion.id);
-                    editor
-                      .getSelected()
-                      .removeAttributes([motionId, motionInstanceId]);
-                    setMotion(cloneDeep(motionType));
-                  }}
-                >
-                  {Icons.trash("white", undefined, undefined, 18)}
-                </button>
-                <Tooltip
-                  anchorSelect="#mt-delete-motion"
-                  opacity={1}
-                  place="left-end"
-                >
-                  Delete All Motion
-                </Tooltip>
-
-                <button
-                  id="mt-download-motion"
-                  onClick={async (ev) => {
-                    downloadMotion(motion.id);
-                  }}
-                >
-                  {Icons.export("white", 2, 18, 18)}
-                </button>
-                <Tooltip
-                  anchorSelect="#mt-download-motion"
-                  opacity={1}
-                  place="left-end"
-                >
-                  Download Motion
-                </Tooltip>
+                  Edite As Main
+                </Button>
               </section>
-            </OptionsButton>
-          </section>
-
-          {isInstance && (
-            <section className="relative  flex gap-2 p-3 justify-between bg-slate-800 w-full rounded-lg">
-              {/* <FitTitle className="absolute top-[-50%]  left-0">{isInstance ? 'Instance' : 'Main'}</FitTitle> */}
-              <FitTitle className="custom-font-size flex items-center  text-slate-200 flex-shrink ">
-                Instance ID : {instanceId}
-              </FitTitle>
-              <OptionsButton>
-                <section className="flex flex-col items-center gap-5">
-                  <button
-                    id="mt-copy"
-                    onClick={async (ev) => {
-                      await copyInstance();
-                    }}
-                  >
-                    {Icons.copy({ fill: "white", height: 18 })}
-                  </button>
-                  <Tooltip anchorSelect="#mt-copy" opacity={1} place="left-end">
-                    Copy Instance ID
-                  </Tooltip>
-
-                  <button
-                    id="mt-delete-motion"
-                    onClick={async (ev) => {
-                      await removeInstance();
-                    }}
-                  >
-                    {Icons.trash("white", undefined, undefined, 18)}
-                  </button>
-                  <Tooltip
-                    anchorSelect="#mt-delete-motion"
-                    opacity={1}
-                    place="left-end"
-                  >
-                    Delete Instance
-                  </Tooltip>
-                </section>
-              </OptionsButton>
             </section>
           )}
-          {/* <SwitcherSection
+          {!!motion?.animations?.length ? (
+            <>
+              <ScrollableToolbar
+                className="p-2  flex  justify-between rounded-lg bg-slate-800 sticky top-0 z-[40]"
+                space={2}
+              >
+                {controllerIcons
+                  .reverse()
+                  .map(({ icon, methods, tooltipTitle }, index) => {
+                    return (
+                      <button
+                        key={index}
+                        id={`motion-controller-${index}`}
+                        onClick={async (ev) => {
+                          addClickClass(
+                            ev.currentTarget || ev.target.parentNode,
+                            "click"
+                          );
+                          // console.log('motcheeeeeeeeeee : ' , {
+                          //   ...motion,
+                          //   isInstance: isInstance,
+                          //   id: isInstance ? instanceId : mainId,
+                          //   // id:instance
+                          // } , methods);
+
+                          runGsapMethod(methods, {
+                            ...motion,
+                            ...(isInstance
+                              ? {
+                                  isInstance: isInstance,
+                                  id: instanceId,
+                                }
+                              : {}),
+                            // id:instance
+                          });
+                        }}
+                        className="relative cursor-pointer  p-2 rounded-md bg-slate-900 transition-all hover:bg-blue-600 "
+                      >
+                        {icon}
+                        <Tooltip
+                          anchorSelect={`#motion-controller-${index}`}
+                          place={isInstance ? "top-end" : "bottom-end"}
+                          // position={{x: 0, y: 0}}
+
+                          positionStrategy="fixed"
+                          className=" text-slate-200 font-semibold "
+                        >
+                          {tooltipTitle}
+                        </Tooltip>
+                      </button>
+                    );
+                  })}
+              </ScrollableToolbar>
+              <section className="relative flex gap-2 p-3 justify-between bg-slate-800 w-full rounded-md">
+                {/* <FitTitle className="absolute top-[-50%]  left-0">{isInstance ? 'Instance' : 'Main'}</FitTitle> */}
+                <FitTitle className="custom-font-size flex items-center  text-slate-200 ">
+                  {isInstance ? "Main ID :" : ""} {motion.id}
+                </FitTitle>
+                <OptionsButton>
+                  <section className="flex flex-col items-center gap-5">
+                    <button
+                      id="mt-copy"
+                      onClick={async (ev) => {
+                        addClickClass(ev.currentTarget, "click");
+                        await navigator.clipboard.writeText(motion.id);
+                        toast.success(
+                          <ToastMsgInfo msg={`Motion Id Copied Successfully`} />
+                        );
+                      }}
+                    >
+                      {Icons.copy({ fill: "white", height: 18 })}
+                    </button>
+                    <Tooltip
+                      anchorSelect="#mt-copy"
+                      opacity={1}
+                      place="left-end"
+                    >
+                      Copy
+                    </Tooltip>
+
+                    <button
+                      id="mt-delete-motion"
+                      onClick={async (ev) => {
+                        addClickClass(ev.currentTarget, "click");
+                        await deleteMotion(motion.id);
+                        // editor
+                        //   .getSelected()
+                        //   .removeAttributes([motionId, motionInstanceId]);
+                        // setMotion(cloneDeep(motionType));
+                      }}
+                    >
+                      {Icons.trash("white", undefined, undefined, 18)}
+                    </button>
+                    <Tooltip
+                      anchorSelect="#mt-delete-motion"
+                      opacity={1}
+                      place="left-end"
+                    >
+                      Delete All Motion
+                    </Tooltip>
+
+                    <button
+                      id="mt-upload-motion"
+                      onClick={async (ev) => {
+                        addClickClass(ev.currentTarget, "click");
+                        motionUploader.current.click();
+                      }}
+                    >
+                      {Icons.upload({
+                        height: 18,
+                        width: 18,
+                        strokeColor: "white",
+                        strokeWidth: 2,
+                      })}
+                    </button>
+                    <Tooltip
+                      anchorSelect="#mt-upload-motion"
+                      opacity={1}
+                      place="left-end"
+                    >
+                      Upload Motion
+                    </Tooltip>
+                    <button
+                      id="mt-download-motion"
+                      onClick={async (ev) => {
+                        downloadMotion(motion.id);
+                      }}
+                    >
+                      {Icons.export("white", 2, 18, 18)}
+                    </button>
+                    <Tooltip
+                      anchorSelect="#mt-download-motion"
+                      opacity={1}
+                      place="left-end"
+                    >
+                      Download Motion
+                    </Tooltip>
+                  </section>
+                </OptionsButton>
+              </section>
+
+              {isInstance && (
+                <section className="relative  flex gap-2 p-3 justify-between bg-slate-800 w-full rounded-lg">
+                  {/* <FitTitle className="absolute top-[-50%]  left-0">{isInstance ? 'Instance' : 'Main'}</FitTitle> */}
+                  <FitTitle className="custom-font-size flex items-center  text-slate-200 flex-shrink ">
+                    Instance ID : {instanceId}
+                  </FitTitle>
+                  <OptionsButton>
+                    <section className="flex flex-col items-center gap-5">
+                      <button
+                        id="mt-copy"
+                        onClick={async (ev) => {
+                          await copyInstance();
+                        }}
+                      >
+                        {Icons.copy({ fill: "white", height: 18 })}
+                      </button>
+                      <Tooltip
+                        anchorSelect="#mt-copy"
+                        opacity={1}
+                        place="left-end"
+                      >
+                        Copy Instance ID
+                      </Tooltip>
+
+                      <button
+                        id="mt-delete-motion"
+                        onClick={async (ev) => {
+                          await removeInstance();
+                        }}
+                      >
+                        {Icons.trash("white", undefined, undefined, 18)}
+                      </button>
+                      <Tooltip
+                        anchorSelect="#mt-delete-motion"
+                        opacity={1}
+                        place="left-end"
+                      >
+                        Delete Instance
+                      </Tooltip>
+                    </section>
+                  </OptionsButton>
+                </section>
+              )}
+              {/* <SwitcherSection
             title="Use Globally"
             defaultValue={isGlobally}
             onActive={() => setIsGlobally(true)}
@@ -1800,144 +1976,154 @@ export const Motion = memo(() => {
             }}
           /> */}
 
-          <SwitcherSection
-            title="SpliteText"
-            defaultValue={motion.isSplitText}
-            onActive={() =>
-              setTransition(() => setMotion({ ...motion, isSplitText: true }))
-            }
-            onUnActive={() => {
-              runGsapMethod(["revert", "kill"], {
-                ...motion,
-                ...(isInstance
-                  ? {
-                      isInstance: isInstance,
-                      id: instanceId,
-                    }
-                  : {}),
-                // id:instance
-              });
-              setTransition(() =>
-                setMotion({ ...motion, isSplitText: false, splitText: null })
-              );
-            }}
-          />
-          {motion.isSplitText && (
-            <>
-              <FitTitle>SplitText selector</FitTitle>
-              <Input
-                value={motion.splitTextSelector || ""}
-                placeholder="SplitText selector"
-                className="bg-slate-900 border-[#1e293b!important] w-full"
-                onInput={(ev) => {
-                  setMotion({
+              <SwitcherSection
+                title="SpliteText"
+                defaultValue={motion.isSplitText}
+                onActive={() =>
+                  setTransition(() =>
+                    setMotion({ ...motion, isSplitText: true })
+                  )
+                }
+                onUnActive={() => {
+                  runGsapMethod(["revert", "kill"], {
                     ...motion,
-                    splitTextSelector: ev.target.value,
+                    ...(isInstance
+                      ? {
+                          isInstance: isInstance,
+                          id: instanceId,
+                        }
+                      : {}),
+                    // id:instance
                   });
+                  setTransition(() =>
+                    setMotion({
+                      ...motion,
+                      isSplitText: false,
+                      splitText: null,
+                    })
+                  );
                 }}
               />
-              <SplitText motion={motion} setMotion={setMotion} />
+              {motion.isSplitText && (
+                <>
+                  <FitTitle>SplitText selector</FitTitle>
+                  <Input
+                    value={motion.splitTextSelector || ""}
+                    placeholder="SplitText selector"
+                    className="bg-slate-900 border-[#1e293b!important] w-full"
+                    onInput={(ev) => {
+                      setMotion({
+                        ...motion,
+                        splitTextSelector: ev.target.value,
+                      });
+                    }}
+                  />
+                  <SplitText motion={motion} setMotion={setMotion} />
+                </>
+              )}
+
+              <SwitcherSection
+                title="Timeline"
+                defaultValue={motion.isTimeLine}
+                onActive={() =>
+                  setTransition(() =>
+                    setMotion({ ...motion, isTimeLine: true })
+                  )
+                }
+                onUnActive={() => {
+                  runGsapMethod(["revert", "kill"], {
+                    ...motion,
+                    ...(isInstance
+                      ? {
+                          isInstance: isInstance,
+                          id: instanceId,
+                        }
+                      : {}),
+                    // id:instance
+                  });
+                  setTransition(() =>
+                    setMotion({ ...motion, isTimeLine: false, timeline: null })
+                  );
+                }}
+              />
+
+              {motion.isTimeLine && (
+                <Timeline motion={motion} setMotion={setMotion} />
+              )}
+
+              <MiniTitle className={"sticky top-0"}>Animations</MiniTitle>
+              {motion?.animations?.map?.((animation, index) => {
+                return (
+                  <Adder
+                    key={index}
+                    className={`flex flex-col gap-3 p-2 bg-slate-950 rounded-lg minion ${
+                      motion.animations.length > 1 && "mb-[30px]"
+                    }`}
+                    addClassName="bg-slate-800"
+                    delClassName="bg-slate-800"
+                    onAddClick={() => {
+                      addAnimation();
+                    }}
+                    onDeleteClick={() => {
+                      removeAnimation(index);
+                    }}
+                  >
+                    <FromTo
+                      motion={motion}
+                      setMotion={setMotion}
+                      animation={animation}
+                      animationIndex={index}
+                    />
+                  </Adder>
+                );
+              })}
             </>
-          )}
+          ) : (
+            <section className=" flex flex-col gap-2 items-center justify-center p-2 bg-slate-800 rounded-lg minion">
+              <section className="container bg-slate-900 flex flex-col justify-center p-2 items-center rounded-md gap-2 font-semibold">
+                <FitTitle
+                  style={{
+                    willChange: "transform, opacity",
+                    transform: "translateZ(0)",
+                  }}
+                  className="animate-bounce text-slate-200 font-semibold text-center capitalize"
+                >
+                  No animations yet
+                </FitTitle>
 
-          <SwitcherSection
-            title="Timeline"
-            defaultValue={motion.isTimeLine}
-            onActive={() =>
-              setTransition(() => setMotion({ ...motion, isTimeLine: true }))
-            }
-            onUnActive={() => {
-              runGsapMethod(["revert", "kill"], {
-                ...motion,
-                ...(isInstance
-                  ? {
-                      isInstance: isInstance,
-                      id: instanceId,
-                    }
-                  : {}),
-                // id:instance
-              });
-              setTransition(() =>
-                setMotion({ ...motion, isTimeLine: false, timeline: null })
-              );
-            }}
-          />
+                <figure>
+                  <img src={noData} className="max-h-[150px]" />
+                </figure>
 
-          {motion.isTimeLine && (
-            <Timeline motion={motion} setMotion={setMotion} />
-          )}
-
-          <MiniTitle className={"sticky top-0"}>Animations</MiniTitle>
-          {motion?.animations?.map?.((animation, index) => {
-            return (
-              <Adder
-                key={index}
-                className={`flex flex-col gap-3 p-2 bg-slate-950 rounded-lg minion ${
-                  motion.animations.length > 1 && "mb-[30px]"
-                }`}
-                addClassName="bg-slate-800"
-                delClassName="bg-slate-800"
-                onAddClick={() => {
-                  addAnimation();
-                }}
-                onDeleteClick={() => {
-                  removeAnimation(index);
-                }}
-              >
-                <FromTo
-                  motion={motion}
-                  setMotion={setMotion}
-                  animation={animation}
-                  animationIndex={index}
-                />
-              </Adder>
-            );
-          })}
-        </>
-      ) : (
-        <section className=" flex flex-col gap-2 items-center justify-center p-2 bg-slate-800 rounded-lg minion">
-          <section className="container bg-slate-900 flex flex-col justify-center p-2 items-center rounded-md gap-2 font-semibold">
-            <FitTitle
-              style={{
-                willChange: "transform, opacity",
-                transform: "translateZ(0)",
-              }}
-              className="animate-bounce text-slate-200 font-semibold text-center capitalize"
-            >
-              No animations yet
-            </FitTitle>
-
-            <figure>
-              <img src={noData} className="max-h-[150px]" />
-            </figure>
-
-            <p className="text-slate-400 text-sm text-center">
-              Click the add button to add an animation
-            </p>
-            <Button
-              onClick={() => {
-                addAnimation();
-              }}
-            >
-              Add Animation
-              {Icons.plus("white")}
-            </Button>
-            {/* <h1 className="text-slate-400 text-sm text-center">OR</h1> */}
-            <p className="text-slate-400 text-sm text-center">Or Select One</p>
-            <section className="flex justify-between gap-2   rounded-md">
-              <Select
-                className="p-[unset] bg-[#1e293b!important]"
-                containerClassName="bg-slate-800"
-                inputClassName="bg-slate-800"
-                placeholder="Select Animation"
-                keywords={motionKeys}
-                value={selectedElMotionId}
-                onAll={(value) => {
-                  // selectNewMotion(value);
-                  setSelectedElMotionId(value);
-                }}
-              />
-              {/* <SmallButton id="mt-options-btn" className="bg-slate-900">
+                <p className="text-slate-400 text-sm text-center">
+                  Click the add button to add an animation
+                </p>
+                <Button
+                  onClick={() => {
+                    addAnimation();
+                  }}
+                >
+                  Add Animation
+                  {Icons.plus("white")}
+                </Button>
+                {/* <h1 className="text-slate-400 text-sm text-center">OR</h1> */}
+                <p className="text-slate-400 text-sm text-center">
+                  Or Select One
+                </p>
+                <section className="flex justify-between gap-2   rounded-md">
+                  <Select
+                    className="p-[unset] bg-[#1e293b!important]"
+                    containerClassName="bg-slate-800"
+                    inputClassName="bg-slate-800"
+                    placeholder="Select Animation"
+                    keywords={motionKeys}
+                    value={selectedElMotionId}
+                    onAll={(value) => {
+                      // selectNewMotion(value);
+                      setSelectedElMotionId(value);
+                    }}
+                  />
+                  {/* <SmallButton id="mt-options-btn" className="bg-slate-900">
               {Icons.options({ fill: "white", width: 20, height: 16.5 })}
             </SmallButton>
             <Tooltip
@@ -1988,87 +2174,85 @@ export const Motion = memo(() => {
               </section>
             </Tooltip> */}
 
-              <div className="flex-shrink-1">
-                <OptionsButton>
-                  <section className="flex flex-col gap-3 items-center">
-                    <button
-                      id="mt-clone-btn"
-                      onClick={(ev) => {
-                        addClickClass(ev.currentTarget, "click");
-                        cloneMotion(selectedElMotionId);
-                      }}
-                    >
-                      {Icons.paste({
-                        fill: "white",
-                        height: 18,
-                        strokWidth: 0.9,
-                      })}{" "}
-                    </button>
-                    <Tooltip
-                      anchorSelect="#mt-clone-btn"
-                      place="left-end"
-                      opacity={1}
-                    >
-                      Clone
-                    </Tooltip>
-                    <button
-                      id="mt-instance-btn"
-                      onClick={(ev) => {
-                        createInstance(selectedElMotionId);
-                      }}
-                    >
-                      {Icons.link({
-                        fill: "white",
-                        strokWidth: 2.4,
-                        height: 19,
-                      })}{" "}
-                    </button>
-                    <Tooltip
-                      anchorSelect="#mt-instance-btn"
-                      place="left-end"
-                      opacity={1}
-                    >
-                      Create Instance
-                    </Tooltip>
+                  <div className="flex-shrink-1">
+                    <OptionsButton>
+                      <section className="flex flex-col gap-3 items-center">
+                        <button
+                          id="mt-clone-btn"
+                          onClick={(ev) => {
+                            addClickClass(ev.currentTarget, "click");
+                            cloneMotion(selectedElMotionId);
+                          }}
+                        >
+                          {Icons.paste({
+                            fill: "white",
+                            height: 18,
+                            strokWidth: 0.9,
+                          })}{" "}
+                        </button>
+                        <Tooltip
+                          anchorSelect="#mt-clone-btn"
+                          place="left-end"
+                          opacity={1}
+                        >
+                          Clone
+                        </Tooltip>
+                        <button
+                          id="mt-instance-btn"
+                          onClick={(ev) => {
+                            createInstance(selectedElMotionId);
+                          }}
+                        >
+                          {Icons.link({
+                            fill: "white",
+                            strokWidth: 2.4,
+                            height: 19,
+                          })}{" "}
+                        </button>
+                        <Tooltip
+                          anchorSelect="#mt-instance-btn"
+                          place="left-end"
+                          opacity={1}
+                        >
+                          Create Instance
+                        </Tooltip>
 
-                    <button
-                      id="mt-upload-btn"
-                      onClick={(ev) => {
-                        addClickClass(ev.currentTarget, "click");
-                        console.log("motionUploader", motionUploader.current);
+                        <button
+                          id="mt-upload-btn"
+                          onClick={(ev) => {
+                            addClickClass(ev.currentTarget, "click");
+                            console.log(
+                              "motionUploader",
+                              motionUploader.current
+                            );
 
-                        motionUploader.current.click();
-                      }}
-                    >
-                      {Icons.upload({
-                        strokeColor: "white",
-                        strokWidth: 2.4,
-                        width: 18,
-                        height: 18,
-                      })}{" "}
-                    </button>
-                    <input
-                      ref={motionUploader}
-                      type="file"
-                      accept=".json"
-                      hidden
-                      onChange={uploadMotion}
-                    />
+                            motionUploader.current.click();
+                          }}
+                        >
+                          {Icons.upload({
+                            strokeColor: "white",
+                            strokWidth: 2.4,
+                            width: 18,
+                            height: 18,
+                          })}{" "}
+                        </button>
 
-                    <Tooltip
-                      anchorSelect="#mt-upload-btn"
-                      place="left-end"
-                      opacity={1}
-                    >
-                      Upload Motion
-                    </Tooltip>
-                  </section>
-                </OptionsButton>
-              </div>
+                        <Tooltip
+                          anchorSelect="#mt-upload-btn"
+                          place="left-end"
+                          opacity={1}
+                        >
+                          Upload Motion
+                        </Tooltip>
+                      </section>
+                    </OptionsButton>
+                  </div>
+                </section>
+              </section>
             </section>
-          </section>
+          )}
         </section>
-      )}
-    </section>
+      </UndoRedoContainer>
+    </Memo>
   );
-});
+};

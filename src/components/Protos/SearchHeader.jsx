@@ -14,6 +14,7 @@ export const SearchHeader = ({
         {Icons.search({ fill: "white" })}
       </i>
       <Input
+      type="search"
         placeholder="Search..."
         className="bg-slate-800 w-full py-3 rounded-none focus:border-transparent"
         onInput={(ev) => {

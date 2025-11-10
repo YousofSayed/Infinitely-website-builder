@@ -6,6 +6,7 @@ import { useRecoilState, useSetRecoilState } from "recoil";
 import {
   cmpRulesState,
   currentElState,
+  mediaConditionState,
   reloaderState,
   ruleState,
   selectorState,
@@ -43,6 +44,7 @@ export const GJEditor = ({ children }) => {
   const navigate = useNavigate();
   const [reloader, setReloader] = useRecoilState(reloaderState);
   const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
+    const [mediaCond , setMediaCond] = useRecoilState(mediaConditionState);
 
   // const currentDynamicTemplateId = useRecoilValue(
   //   currentDynamicTemplateIdState
@@ -77,7 +79,7 @@ export const GJEditor = ({ children }) => {
   const onEditor = (ev) => {
     const editor = ev;
     ev.Blocks.categories.add({ id: "others", title: "Others" });
-    
+    setMediaCond(localStorage.getItem("media-condition") || "max-width");
     ev.runCommand("core:component-outline");
     isChrome(() => {
       editor.on("canvas:frame:load", ({ window, el }) => {

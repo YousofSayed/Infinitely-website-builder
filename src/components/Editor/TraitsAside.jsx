@@ -33,7 +33,9 @@ import {
   getMediaBreakpoint,
   getProjectData,
   getProjectSettings,
+  initToolbar,
   isValidAttribute,
+  preventSelectNavigation,
 } from "../../helpers/functions";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
@@ -461,10 +463,24 @@ export const TraitsAside = () => {
                     <SwitchButton
                       defaultValue={val}
                       onSwitch={(value) => {
-                        editor.getSelected().set({
-                          ...editor.getSelected().props(),
-                          [prop]: value,
-                        });
+                        console.log("switch : ", value);
+
+                        const selectedCmp = editor.getSelected();
+
+                        selectedCmp.set(prop, value);
+                        console.log(
+                          "switch after set: ",
+                          selectedCmp.get(prop),
+                          selectedCmp.props()
+                        );
+                        selectedCmp.view.render();
+                        editor.trigger("component:update", selectedCmp);
+
+                        // editor.refresh({tools:true});
+                        // const newCmp = selectedCmp.clone();
+                        initToolbar(editor, selectedCmp);
+                        // selectedCmp.replaceWith(newCmp);
+                        // preventSelectNavigation(editor, newCmp);
                         editor.trigger(InfinitelyEvents.layers.update);
                       }}
                     />
@@ -873,6 +889,7 @@ export const TraitsAside = () => {
                               ...mainCallbackProps,
                               newValue: value,
                             });
+                          trait.onSwitch && trait.onSwitch(value);
                           trait.command && editor.runCommand(trait.command);
                           updateTraitValue({
                             name: trait.name,

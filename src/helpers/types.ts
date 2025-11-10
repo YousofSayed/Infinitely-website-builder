@@ -522,7 +522,7 @@ export interface Project {
   jsHeaderLibs: LibraryConfig[];
   jsFooterLibs: LibraryConfig[];
   cssLibs: LibraryConfig[];
-
+  colors: string[];
   blocks: {
     [key: string]: InfinitelyBlock;
   };
@@ -539,19 +539,19 @@ export interface Project {
   };
   fonts: InfinitelyFonts;
   motions: { [key: string]: MotionType };
-  apps : 'Dropbox';
-  dropboxFileMeta? : DropBoxFileMeta;
-  dbx_pull_requried?:boolean;
+  apps: "Dropbox";
+  dropboxFileMeta?: DropBoxFileMeta;
+  dbx_pull_requried?: boolean;
   interactions: InteractionsInDB;
   inited: boolean;
-  installStates : {
-    types:boolean;
-    globalTypes:boolean;
-    fonts:boolean;
-    jsHeaderLibs:boolean;
-    jsFooterLibs:boolean;
-    cssLibs:boolean;
-  }
+  installStates: {
+    types: boolean;
+    globalTypes: boolean;
+    fonts: boolean;
+    jsHeaderLibs: boolean;
+    jsFooterLibs: boolean;
+    cssLibs: boolean;
+  };
   lastScreenshot: Date | string;
 }
 
@@ -726,6 +726,15 @@ export type MotionType = {
     multiOptions: { [key: string]: string[] };
   };
   animations: MotionAnimationType[];
+};
+
+export type ShowProps = {
+  motionBuilder: boolean;
+  interactionsBuilder: boolean;
+  commandsBuilder: boolean;
+  stylesBuilder: boolean;
+  attributesBuilder: boolean;
+  animationBuilder: boolean;
 };
 
 export type StorageDetails = {

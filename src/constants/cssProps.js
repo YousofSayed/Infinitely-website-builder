@@ -254,15 +254,6 @@ export const cursorValues = [
 ];
 
 
-export const alignSelfValues = [
-  "flex-start", // Aligns the item to the start of the container
-  "center", // Centers the item in the container
-  "flex-end", // Aligns the item to the end of the container
-  "baseline", // Aligns the item to the baseline of the container
-  "stretch", // Stretches the item to fill the container
-  "auto", // Default. Aligns the item according to the parent's align-items value
-];
-
 export const transformValues = [
   "none", // No transformation
   "matrix", // 2D Matrix transformation
@@ -407,6 +398,14 @@ export const textDecorationLineValues = [
   "initial", // Sets the property to its default value.
   "unset", // Removes any inherited value and sets it to initial or inherit, based on context.
 ];
+
+export const alignSelfValues = [
+  'start',
+  'center',
+  'end',
+  'stretch',
+  'space-evenly',
+]
 
 export const textDecorationStyleValues = [
   "solid", // A solid line (default).

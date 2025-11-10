@@ -2,6 +2,6 @@ import React from 'react'
 
 export const HostApp = () => {
   return (
-    <div>HostApp</div>
+    <div className='text-nowrap'>HostApp</div>
   )
 }

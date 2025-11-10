@@ -14,7 +14,10 @@ import { SelectStyle } from "./SelectStyle";
 import { Icons } from "../../Icons/Icons";
 import { FitTitle } from "./FitTitle";
 
-export const SharedBetweenFlexAndGridLayout = ({ isFlex = false }) => {
+export const SharedBetweenFlexAndGridLayout = ({
+  isFlex = false,
+  dir = "",
+}) => {
   return (
     <section className="flex flex-col gap-3">
       <section className="flex flex-col gap-2">
@@ -22,6 +25,7 @@ export const SharedBetweenFlexAndGridLayout = ({ isFlex = false }) => {
         <MultiChoice
           cssProp="align-items"
           rotate={isFlex}
+          dir={dir}
           choices={[
             { choice: "start", Icon: Icons.alignSelfStart },
             { choice: "center", Icon: Icons.alignSelfCenter },
@@ -37,6 +41,7 @@ export const SharedBetweenFlexAndGridLayout = ({ isFlex = false }) => {
         <MultiChoice
           cssProp="justify-content"
           rotate={isFlex}
+          dir={dir}
           choices={[
             { choice: "start", Icon: Icons.justifyStart },
             { choice: "center", Icon: Icons.justifyCenter },
@@ -47,27 +52,30 @@ export const SharedBetweenFlexAndGridLayout = ({ isFlex = false }) => {
         />
       </section>
 
-      <section className="flex flex-col gap-2">
+      {/* <section className="flex flex-col gap-2">
         <FitTitle>Algin self </FitTitle>
         <MultiChoice
           cssProp="align-self"
           rotate={isFlex}
+          dir={dir}
           choices={[
             { choice: "start", Icon: Icons.alignSelfStart },
-            { choice: "center", Icon: Icons.alignSelfEnd },
-            { choice: "end", Icon: Icons.alignSelfCenter },
+            { choice: "end", Icon: Icons.alignSelfEnd },
+            { choice: "center", Icon: Icons.alignSelfCenter },
             { choice: "stretch", Icon: Icons.alignSelfStretch },
             { choice: "space-evenly", Icon: Icons.justifyEvenly },
           ]}
         />
-      </section>
+      </section> */}
 
-      {/* <SelectStyle
+
+
+      <SelectStyle
         splitHyphen={false}
-        label="align items"
-        cssProp="align-items"
-        keywords={alignItemsValues}
-      /> */}
+        label="align self"
+        cssProp="align-self"
+        keywords={alignSelfValues}
+      />
       <SelectStyle
         splitHyphen={false}
         label="justify items"

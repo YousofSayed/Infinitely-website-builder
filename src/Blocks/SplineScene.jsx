@@ -1,6 +1,10 @@
 import { Icons } from "../components/Icons/Icons";
 import { html } from "../helpers/bridge";
-import { defineTraits, doActionAndPreventSaving, getProjectSettings } from "../helpers/functions";
+import {
+  defineTraits,
+  doActionAndPreventSaving,
+  getProjectSettings,
+} from "../helpers/functions";
 import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
 
 /**
@@ -44,6 +48,14 @@ export const SplineScene = ({ editor }) => {
                     [...el.attributes].map((attr) => [attr.name, attr.value])
                   )
                 : {},
+              layerable: false,
+              selectable: false,
+              draggable: false,
+              droppable: false,
+              resizable: false,
+              hoverable: false,
+              highlightable: false,
+              locked: true,
             },
           ],
         };
@@ -71,41 +83,46 @@ export const SplineScene = ({ editor }) => {
         //   // }
         // );
 
+        // model.set({
+        //   layerable:false,
+        //   selectable:false,
+        //   draggable:false,
+        //   droppable:false,
+        //   resizable:false,
+        //   hoverable:false,
+        //   highlightable:false,
+        //   locked:true,
+        // })
         const child = model.components().models[0];
         if (!child) {
           console.warn(`No child in spline viewer component`);
           return;
         }
 
-        const attrs = { ...(child.getAttributes() || {}) }
-        delete attrs['droppable'];
-        delete attrs['draggable'];
+        const attrs = { ...(child.getAttributes() || {}) };
+        delete attrs["droppable"];
+        delete attrs["draggable"];
         doActionAndPreventSaving(editor, (ed) => {
           child.addClass("no-pointer");
-          model.setAttributes(
-            attrs,
-            {
-              avoidStore: true,
-              // skipWatcherUpdates: true,
-              // avoidTransformers: true,
-              // noEvent: true,
-            }
-          );
+          model.setAttributes(attrs, {
+            avoidStore: true,
+            // skipWatcherUpdates: true,
+            // avoidTransformers: true,
+            // noEvent: true,
+          });
           model.removeClass("no-pointer");
         });
 
         editor.clearDirtyCount();
 
-        const {projectSettings} = getProjectSettings();
-        if(!projectSettings.enable_spline_viewer ){
-
-          this.el.classList.add('enable-spline') 
-          this.el.classList.remove('drop')
+        const { projectSettings } = getProjectSettings();
+        if (!projectSettings.enable_spline_viewer) {
+          this.el.classList.add("enable-spline");
+          this.el.classList.remove("drop");
           // el.querySelectorAll('*').forEach(el=>{
           //   el.classList.remove('drop')
           // })
         }
-         
       },
     },
     model: {
@@ -114,7 +131,7 @@ export const SplineScene = ({ editor }) => {
         icon: reactToStringMarkup(Icons.spline({ strokeColor: "white" })),
         tagName: `spline-wrapper`,
         name: "Spline",
-        components: [{ tagName: "spline-viewer" , droppable:false}],
+        components: [{ tagName: "spline-viewer", droppable: false }],
         attributes: {
           // class: "p-10 min-h-60",
           type: "spline-wrapper",
@@ -145,7 +162,14 @@ export const SplineScene = ({ editor }) => {
         if (!child && !childEl) return;
 
         const newAttrs = { ...this.getAttributes(), ...attributes };
+        const childAttrs = child.getAttributes();
         delete newAttrs.id; // Avoid overwriting ID
+        const currentUrl = childAttrs["url"];
+        const newUrl = newAttrs["url"];
+        if (newUrl && currentUrl && newUrl === currentUrl) {
+          delete childAttrs["url"];
+        }
+        child.removeAttributes(Object.keys(childAttrs || {}));
         Object.entries(newAttrs).forEach(([key, value]) => {
           childEl.setAttribute(key, value);
         });

@@ -1,16 +1,8 @@
 import React, { memo, useEffect, useRef, useState, useTransition } from "react";
-import {
-  HexAlphaColorPicker,
-  HexColorInput,
-  HexColorPicker,
-  HslColorPicker,
-  HsvaColorPicker,
-} from "react-colorful";
 import { hexToRgbA, rgbStringToHex } from "../../../helpers/functions";
 import { useSetClassForCurrentEl } from "../../../hooks/useSetclassForCurrentEl";
 import { useCloseMenu } from "../../../hooks/useCloseMenu";
 import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
-import { useEditorMaybe } from "@grapesjs/react";
 import { useRecoilValue } from "recoil";
 import { currentElState } from "../../../helpers/atoms";
 import { ColorPicker } from "./ColorPicker";
@@ -60,7 +52,7 @@ export const Color = ({
     useUpdateInputValue({
       cssProp,
       onEffect(cssProp, value) {
-        // console.log('vvaaaaaaal : ' , value , cssProp,rgbStringToHex(value), typeof value);
+        console.log('vvaaaaaaal : ' , value || undefined , cssProp,rgbStringToHex(value) || undefined, typeof value);
         if(typeof value !== "string"){
           setColor("");
           return;
