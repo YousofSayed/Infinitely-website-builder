@@ -136,6 +136,7 @@ export type InfinitelyTrait = {
   //End
   label: string;
   name: string;
+  allowToSetTraitValueToEditor:boolean;
   unit: string;
   step: number;
   value: string;

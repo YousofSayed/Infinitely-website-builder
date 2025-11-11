@@ -533,7 +533,7 @@ export const TraitsAside = () => {
                             }rem`
                           : "",
                     }}
-                    className={`relative flex   justify-between gap-2 bg-slate-950 p-2 rounded-lg `}
+                    className={`relative flex   justify-between items-center gap-2 bg-slate-950 p-2 rounded-lg `}
                   >
                     {/* <h1 className="text-[14px!important] px-2 text-white capitalize font-semibold">
                     {trait.name}
@@ -546,7 +546,7 @@ export const TraitsAside = () => {
                       </Hint>
                     ) : null}
                     {trait.label && (
-                      <FitTitle className="custom-font-size flex justify-center items-center">
+                      <FitTitle className="custom-font-size self-stretch flex justify-center items-center">
                         {trait.label}
                       </FitTitle>
                     )}
@@ -636,7 +636,7 @@ export const TraitsAside = () => {
                         isCode
                         codeProps={{
                           language: trait.textareaLanguage || "text",
-                          // value: trait.value,
+                          value: trait.allowToSetTraitValueToEditor?trait.value : '',
                           ...(trait?.codeEditorProps || {}),
                           onMount(ed, mon) {
                             trait?.onMountHandler?.(ed, mon);
@@ -664,7 +664,7 @@ export const TraitsAside = () => {
                     )}
 
                     {trait.type == "add-props" && isShow && (
-                      <>
+                      <section className="flex justify-between">
                         <section className="flex justify-between gap-2">
                           <Select
                             placeholder={trait.placeholder || trait.label}
@@ -812,7 +812,7 @@ export const TraitsAside = () => {
                                       codeProps={{
                                         language:
                                           trait.addPropsCodeLanguage || "text",
-                                        value,
+                                        value:value || "",
                                         onChange: (value) => {
                                           const newVal = stringify({
                                             ...parse(trait.value || {}),
@@ -873,7 +873,7 @@ export const TraitsAside = () => {
                             );
                           })}
                         </section>
-                      </>
+                      </section>
                     )}
 
                     {trait.type.toLowerCase() == "switch" && isShow && (

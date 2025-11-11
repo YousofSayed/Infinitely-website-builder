@@ -1,8 +1,4 @@
 import { defaultAttributeNames, tagNames } from "../constants/hsValues";
-import {
-  DollarBracePlaceholderRgx,
-  DoubleBracePlaceholderRgx,
-} from "../constants/rgxs";
 import { parse } from "../helpers/cocktail";
 import {
   defineTraits,
@@ -177,6 +173,7 @@ export const globalTraits = (editor) => {
             type: "textarea",
             textareaLanguage: "javascript",
             allowCmdsContext: true,
+            allowToSetTraitValueToEditor:true,
             keywords: () => [
               editor
                 .getSelected()
