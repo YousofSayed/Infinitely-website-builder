@@ -188,19 +188,7 @@ export const TraitsAside = () => {
       .filter((tr) => tr.attributes.role)
       .map((tr) => tr.attributes);
 
-    // const attributesTraits = traits
-    //   .map((trait) => trait.attributes)
-    //   .filter((trait) => trait.role == "attribute");
-
-    // const handlerTraits = traits
-    //   .map((trait) => trait.attributes)
-    //   .filter((trait) => trait.role == "handler");
-
     const elementAttributes = sle.getAttributes();
-
-    // attributesTraits.concat(handlerTraits).forEach((trait) => {
-    //   delete elementAttributes[trait.name];
-    // });
 
     traits.forEach((trait) => {
       delete elementAttributes[trait.name];
@@ -215,11 +203,9 @@ export const TraitsAside = () => {
         delete elementAttributes[key];
       }
     });
-    // delete elementAttributes["id"];
+
     delete elementAttributes["class"];
     setTraits(traits);
-    // setAttributesTraits(attributesTraits);
-    // setHandlerTraits(handlerTraits);
     if (Object.keys(elementAttributes).length) {
       setNotify((old) => ({ ...old, elementAttributes: true }));
     }
@@ -232,9 +218,10 @@ export const TraitsAside = () => {
     // sle.updateTrait(name, { [key]: value });
     const trait = sle.getTrait(name);
 
-    trait.set({
-      [key]: value,
-    });
+    // trait.set({
+    //   [key]: value,
+    // });
+    trait.set(key, value);
 
     console.log(trait);
 
@@ -507,8 +494,10 @@ export const TraitsAside = () => {
                 const mainCallbackProps = {
                   editor,
                   trait,
+                  traits,
                   mediaBreakpoint: mediaBreakpoint,
                   model: editor.getSelected(),
+                  oldValue:trait.value,
                 };
                 // console.log(
                 //   isBoolean(trait.value || trait.default)
@@ -520,8 +509,11 @@ export const TraitsAside = () => {
 
                 const isShow =
                   trait?.showCallback && isFunction(trait?.showCallback)
-                    ? trait?.showCallback?.(trait)
+                    ? isBoolean(trait?.showCallback?.(trait))
+                      ? Boolean(trait?.showCallback?.(trait))
+                      : Boolean(parse(trait?.showCallback?.(trait)))
                     : true;
+
                 return isShow ? (
                   <li
                     key={i}
@@ -533,7 +525,11 @@ export const TraitsAside = () => {
                             }rem`
                           : "",
                     }}
-                    className={`relative flex   justify-between items-center gap-2 bg-slate-950 p-2 rounded-lg `}
+                    className={`relative flex  ${
+                      !["switch"].includes(trait.type)
+                        ? "flex-col"
+                        : ""
+                    } justify-between items-center gap-2 bg-slate-950 p-2 rounded-lg `}
                   >
                     {/* <h1 className="text-[14px!important] px-2 text-white capitalize font-semibold">
                     {trait.name}
@@ -546,7 +542,7 @@ export const TraitsAside = () => {
                       </Hint>
                     ) : null}
                     {trait.label && (
-                      <FitTitle className="custom-font-size self-stretch flex justify-center items-center">
+                      <FitTitle className="custom-font-size self-stretch flex justify-center  items-center">
                         {trait.label}
                       </FitTitle>
                     )}
@@ -559,37 +555,21 @@ export const TraitsAside = () => {
                           placeholder={trait.placeholder || trait.label}
                           className="py-2 w-full bg-slate-800"
                           onInput={(ev) => {
-                            console.log(
-                              "from input trait : ",
-                              mainCallbackProps,
-                              mediaBreakpoint,
-                              {
-                                // editor,
-                                // trait,
-                                ...mainCallbackProps,
-                                // name:'yousef',
-                                // mediaBreakpoint,
-                                oldValue: trait.value,
-                                newValue: ev.target.value,
-                              }
-                            );
+                            updateTraitValue({
+                              name: trait.name,
+                              key: "value",
+                              value: ev.target.value,
+                            });
 
                             trait.callback &&
                               trait.callback({
                                 // editor,
                                 // trait,
                                 ...mainCallbackProps,
-                                name: "yousef",
                                 mediaBreakpoint,
-                                oldValue: trait.value,
                                 newValue: ev.target.value,
                               });
                             trait.command && editor.runCommand(trait.command);
-                            updateTraitValue({
-                              name: trait.name,
-                              key: "value",
-                              value: ev.target.value,
-                            });
 
                             // if (trait.role == "attribute") {
                             //   addAttribute({ [trait.name]: ev.target.value });
@@ -608,20 +588,20 @@ export const TraitsAside = () => {
                         }
                         value={trait.value || trait.default || ""}
                         onAll={(value) => {
-                          trait.callback &&
-                            trait.callback({
-                              // editor,
-                              // trait,
-                              ...mainCallbackProps,
-                              oldValue: trait.value,
-                              newValue: value,
-                            });
-                          trait.command && editor.runCommand(trait.command);
                           updateTraitValue({
                             name: trait.name,
                             key: "value",
                             value,
                           });
+
+                          trait.callback &&
+                            trait.callback({
+                              // editor,
+                              // trait,
+                              ...mainCallbackProps,
+                              newValue: value,
+                            });
+                          trait.command && editor.runCommand(trait.command);
                         }}
                       />
                     )}
@@ -636,36 +616,38 @@ export const TraitsAside = () => {
                         isCode
                         codeProps={{
                           language: trait.textareaLanguage || "text",
-                          value: trait.allowToSetTraitValueToEditor?trait.value : '',
+                          value: trait.allowToSetTraitValueToEditor
+                            ? trait.value
+                            : "",
                           ...(trait?.codeEditorProps || {}),
                           onMount(ed, mon) {
                             trait?.onMountHandler?.(ed, mon);
                           },
                           onChange(value) {
+                            updateTraitValue({
+                              name: trait.name,
+                              key: "value",
+                              value,
+                            });
                             trait?.onChangeHandler?.(value);
                             trait.callback &&
                               trait.callback({
                                 // editor,
                                 // trait,
                                 ...mainCallbackProps,
-                                oldValue: trait.value,
+                                // oldValue: trait.value,
                                 newValue: value,
                               });
 
                             trait.command && editor.runCommand(trait.command);
-                            updateTraitValue({
-                              name: trait.name,
-                              key: "value",
-                              value,
-                            });
                           },
                         }}
                       />
                     )}
 
                     {trait.type == "add-props" && isShow && (
-                      <section className="flex justify-between">
-                        <section className="flex justify-between gap-2">
+                      <section className="flex justify-between w-full items-center flex-wrap gap-2">
+                        <section className="flex justify-between gap-2 w-full">
                           <Select
                             placeholder={trait.placeholder || trait.label}
                             className="w-full bg-slate-800"
@@ -676,12 +658,6 @@ export const TraitsAside = () => {
                                 : trait.keywords || []
                             }
                             onInput={(value) => {
-                              console.log(
-                                "staaaaaaaaaaaaaaaaate props : ",
-                                trait.stateProp,
-                                value
-                              );
-
                               updateTraitValue({
                                 name: trait.name,
                                 key: "stateProp",
@@ -694,20 +670,22 @@ export const TraitsAside = () => {
                                 [value]: "",
                               });
 
+                               updateTraitValue({
+                                name: trait.name,
+                                key: "value",
+                                value: newVal,
+                              });
+
                               trait.callback &&
                                 trait.callback({
                                   // editor,
                                   // trait,
                                   ...mainCallbackProps,
-                                  oldValue: trait.value,
+                                  // oldValue: trait.value,
                                   newValue: newVal,
                                 });
                               trait.command && editor.runCommand(trait.command);
-                              updateTraitValue({
-                                name: trait.name,
-                                key: "value",
-                                value: newVal,
-                              });
+                             
                             }}
                             onItemClicked={(value) => {
                               const newVal = stringify({
@@ -715,22 +693,24 @@ export const TraitsAside = () => {
                                 [value]: "",
                               });
 
+                               updateTraitValue({
+                                name: trait.name,
+                                key: "value",
+                                value: newVal,
+                              });
+
                               trait.callback &&
                                 trait.callback({
                                   // editor,
                                   // trait,
                                   ...mainCallbackProps,
-                                  oldValue: trait.value,
+                                  // oldValue: trait.value,
                                   newValue: newVal,
                                 });
 
                               trait.command && editor.runCommand(trait.command);
 
-                              updateTraitValue({
-                                name: trait.name,
-                                key: "value",
-                                value: newVal,
-                              });
+                             
                             }}
                           />
                           <SmallButton
@@ -740,27 +720,31 @@ export const TraitsAside = () => {
                                 [trait.stateProp]: "",
                               });
 
-                              trait.callback &&
-                                trait.callback({
-                                  // editor,
-                                  // trait,
-                                  ...mainCallbackProps,
-                                  oldValue: trait.value,
-                                  newValue: newVal,
-                                });
-                              trait.command && editor.runCommand(trait.command);
                               updateTraitValue({
                                 name: trait.name,
                                 key: "value",
                                 value: newVal,
                               });
+
+                              trait.callback &&
+                                trait.callback({
+                                  // editor,
+                                  // trait,
+                                  ...mainCallbackProps,
+                                  // oldValue: trait.value,
+                                  newValue: newVal,
+                                });
+                              trait.command && editor.runCommand(trait.command);
+                              
                             }}
                           >
                             {Icons.plus("white")}
                           </SmallButton>
                         </section>
 
-                        <section className="flex flex-col gap-2">
+                        {Boolean(Object.entries(
+                            parse(trait.value || trait.default) || {}
+                          ).length) && <section className="flex flex-col gap-2 w-full">
                           {Object.entries(
                             parse(trait.value || trait.default) || {}
                           ).map(([key, value], i) => {
@@ -780,23 +764,25 @@ export const TraitsAside = () => {
                                           [key]: ev.target.value,
                                         });
 
+                                         updateTraitValue({
+                                          name: trait.name,
+                                          key: "value",
+                                          value: newVal,
+                                        });
+
                                         trait.callback &&
                                           trait.callback({
                                             // editor,
                                             // trait,
                                             ...mainCallbackProps,
-                                            oldValue: trait.value,
+                                            // oldValue: trait.value,
                                             newValue: newVal,
                                           });
 
                                         trait.command &&
                                           editor.runCommand(trait.command);
 
-                                        updateTraitValue({
-                                          name: trait.name,
-                                          key: "value",
-                                          value: newVal,
-                                        });
+                                       
                                       }}
                                     />
                                   )}
@@ -812,17 +798,23 @@ export const TraitsAside = () => {
                                       codeProps={{
                                         language:
                                           trait.addPropsCodeLanguage || "text",
-                                        value:value || "",
+                                        value: value || "",
                                         onChange: (value) => {
                                           const newVal = stringify({
                                             ...parse(trait.value || {}),
                                             [key]: value,
                                           });
 
+                                          updateTraitValue({
+                                            name: trait.name,
+                                            key: "value",
+                                            value: newVal,
+                                          });
+
                                           trait.callback &&
                                             trait.callback({
                                               editor,
-                                              oldValue: trait.value,
+                                              // oldValue: trait.value,
                                               newValue: newVal,
                                               trait,
                                             });
@@ -830,11 +822,7 @@ export const TraitsAside = () => {
                                           trait.command &&
                                             editor.runCommand(trait.command);
 
-                                          updateTraitValue({
-                                            name: trait.name,
-                                            key: "value",
-                                            value: newVal,
-                                          });
+                                          
                                         },
                                       }}
                                     />
@@ -849,20 +837,23 @@ export const TraitsAside = () => {
                                       const newVal = stringify({
                                         ...parsedVal,
                                       });
-                                      trait.callback &&
-                                        trait.callback({
-                                          editor,
-                                          oldValue: trait.value,
-                                          newValue: newVal,
-                                        });
-                                      trait.command &&
-                                        editor.runCommand(trait.command);
 
                                       updateTraitValue({
                                         name: trait.name,
                                         key: "value",
                                         value: newVal,
                                       });
+
+                                      trait.callback &&
+                                        trait.callback({
+                                          editor,
+                                          // oldValue: trait.value,
+                                          newValue: newVal,
+                                        });
+                                      trait.command &&
+                                        editor.runCommand(trait.command);
+
+                                      
                                     }}
                                     className="[&_path]:stroke-white bg-slate-800 hover:bg-[crimson!important]"
                                   >
@@ -872,7 +863,7 @@ export const TraitsAside = () => {
                               </section>
                             );
                           })}
-                        </section>
+                        </section>}
                       </section>
                     )}
 
@@ -884,6 +875,12 @@ export const TraitsAside = () => {
                             : Boolean(parse(trait.value || trait.default))
                         }
                         onSwitch={(value) => {
+                          updateTraitValue({
+                            name: trait.name,
+                            key: "value",
+                            value,
+                          });
+
                           trait.callback &&
                             trait.callback({
                               ...mainCallbackProps,
@@ -891,11 +888,9 @@ export const TraitsAside = () => {
                             });
                           trait.onSwitch && trait.onSwitch(value);
                           trait.command && editor.runCommand(trait.command);
-                          updateTraitValue({
-                            name: trait.name,
-                            key: "value",
-                            value,
-                          });
+                          console.log("switch :", value);
+
+                          
                         }}
                         // onActive={() => {
                         //   trait?.onSwitch?.(true);
@@ -936,22 +931,23 @@ export const TraitsAside = () => {
                         placeholder={trait.placeholder || trait.label}
                         mediaType={trait.mediaType}
                         callback={(asset, url) => {
+                           updateTraitValue({
+                            name: trait.name,
+                            key: "value",
+                            value: url,
+                          });
                           trait.callback({
                             // editor,
                             // trait,
                             ...mainCallbackProps,
                             newValue: url,
-                            oldValue: trait.value,
+                            // oldValue: trait.value,
                             asset: asset,
                           });
                           console.log("url : ", url);
 
                           trait?.command && editor.runCommand(trait.command);
-                          updateTraitValue({
-                            name: trait.name,
-                            key: "value",
-                            value: url,
-                          });
+                         
                         }}
                       />
                     )}

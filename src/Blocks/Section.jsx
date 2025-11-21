@@ -1,5 +1,6 @@
 import { editorIcons } from "../components/Icons/editorIcons";
 import { tagNames } from "../constants/hsValues";
+import { selectTagName } from "../constants/traits";
 import { defineTraits } from "../helpers/functions";
 
 /**
@@ -51,18 +52,7 @@ export const Section = ({ editor }) => {
         //   },
         // ],
         traits: defineTraits([
-          {
-            placeholder: "select tag",
-            label: "Select tag",
-            name: "tag-name",
-            role: "attribute",
-            value: "",
-            keywords: tagNames,
-            type: "select",
-            callback({ editor, trait, newValue }) {
-              editor.getSelected().set("tagName", newValue);
-            },
-          },
+          selectTagName
         ]),
         // components: html`
         //   <template

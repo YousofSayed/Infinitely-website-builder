@@ -8,12 +8,15 @@ import React, {
 import { Layout } from "./Protos/Layout";
 import { useRecoilState, useRecoilValue } from "recoil";
 import {
+  animationsState,
   cmpRulesState,
   currentElState,
+  isAnimationsChangedState,
   mediaConditionState,
   ruleState,
   selectorState,
   showAnimationsBuilderState,
+  showStylesBuilderForMotionBuilderState,
 } from "../../helpers/atoms";
 import { StyleTypography } from "./Protos/StyleTypography";
 import { Border } from "./Protos/Border";
@@ -58,6 +61,7 @@ import { OptionsButton } from "../Protos/OptionsButton";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
 import { parse } from "../../helpers/cocktail";
+import { animationsSavingMsg } from "../../constants/confirms";
 
 const SelectElementToStyle = () => (
   <h1 className="text-slate-400 custom-font-size text-center animate-pulse capitalize font-semibold bg-slate-900 rounded-lg p-2">
@@ -281,6 +285,14 @@ export const StyleAside = memo(({ className }) => {
   const [notifyClasses, setNotifyClasses] = useState(false);
   const [mediaCondTitle, setMediaCondTitle] = useState("");
   const [mediaCond, setMediaCond] = useRecoilState(mediaConditionState);
+  const [isAnimationsChanged, setAnimationsChanged] = useRecoilState(
+    isAnimationsChangedState
+  );
+  const [animations, setAnimations] = useRecoilState(animationsState);
+  const [showAnimBuilder, setShowAnimBuilder] = useRecoilState(
+    showAnimationsBuilderState
+  );
+    const [showStylesBuilder , setShowStylesBuilder] = useRecoilState(showStylesBuilderForMotionBuilderState);
 
   const removeCurrentMediaRule = useRemoveCurrentMedia();
 
@@ -358,6 +370,22 @@ export const StyleAside = memo(({ className }) => {
     setKey(uniqueId("Accordion-id-"));
   }, [showAnimeBuilder]);
 
+  // useEffect(()=>{
+  //   return () => {
+  //     if (isAnimationsChanged) {
+  //       const cnfrm = confirm(animationsSavingMsg);
+  //       if (cnfrm) {
+  //         // setShowAnimBuilder(false);
+  //         setAnimationsChanged(false);
+  //         setAnimations([]);
+  //         setShowAnimBuilder(false);
+  //       }
+  //     } else {
+  //       setShowAnimBuilder(false);
+  //     }
+  //   };
+  // },[isAnimationsChanged])
+
   useEffect(() => {
     if (!editor) {
       setNotifyStates(false);
@@ -417,7 +445,7 @@ export const StyleAside = memo(({ className }) => {
       return;
     }
     const cnfrm = confirm(`Are You Sure To Overwrite Styles ?`);
-    if(!cnfrm)return;
+    if (!cnfrm) return;
     const slEL = editor?.getSelected();
     const Media = getCurrentMediaDevice(editor);
     const currentSelector = getCurrentSelector(selector, slEL);
@@ -451,13 +479,17 @@ export const StyleAside = memo(({ className }) => {
       ref={animateRef}
       className="flex flex-col w-full h-full gap-2 mt-2"
     >
-      { (
+      {
+        !showAnimBuilder && !showStylesBuilder &&
         <section className="flex gap-2">
           <FitTitle
             isShowTooltib={Boolean(mediaCondTitle)}
-            className={`custom-font-size w-full ${!mediaCondTitle && 'justify-center font-bold animate-pulse will-change-[transform,opacity] capitalize'}  text-ellipsis whitespace-nowrap overflow-hidden flex items-center py-2`}
+            className={`custom-font-size w-full ${
+              !mediaCondTitle &&
+              "justify-center font-bold animate-pulse will-change-[transform,opacity] capitalize"
+            }  text-ellipsis whitespace-nowrap overflow-hidden flex items-center py-2`}
           >
-            {mediaCondTitle || 'There is no rule yet'}
+            {mediaCondTitle || "There is no rule yet"}
           </FitTitle>
           <OptionsButton className="w-[35p] h-full bg-slate-800">
             <section className="flex flex-col items-center gap-3">
@@ -494,7 +526,7 @@ export const StyleAside = memo(({ className }) => {
             {Icons.trash("white")}
           </SmallButton>
         </section>
-      )}
+      }
       {/* {!showAnimeBuilder && (
         <>
           <DetailsNormal className="bg-slate-950 " label={"Classes"}>
@@ -533,7 +565,7 @@ export const StyleAside = memo(({ className }) => {
       )} */}
 
       <>
-        {!showAnimeBuilder && (
+        {!showAnimeBuilder && !showStylesBuilder && (
           <Accordion>
             <AccordionItem title={"classes"} notify={notifyClasses}>
               {showClasses ? <SelectClass /> : null}
@@ -551,85 +583,3 @@ export const StyleAside = memo(({ className }) => {
   );
 });
 
-//  <InfAccordion>
-//       {/* <Details label={'content'}>
-//       <Content />
-//     </Details> */}
-
-//       {/* <section id="styles"></section> */}
-//       {/* <AsideControllers /> */}
-
-//       <AccordionItem
-//         title={"layout"}
-//         slotProps={{ transition: { unmountOnExit: true } }}
-//       >
-//         <Layout />
-//       </AccordionItem>
-
-//       <AccordionItem
-//         title={"Typography"}
-//         slotProps={{ transition: { unmountOnExit: true } }}
-//       >
-// <StyleTypography />
-//       </AccordionItem>
-
-//       <AccordionItem
-//         title={"border"}
-//         slotProps={{ transition: { unmountOnExit: true } }}
-//       >
-//         <Border />
-//       </AccordionItem>
-
-//       <AccordionItem
-//         title={"background"}
-//         slotProps={{ transition: { unmountOnExit: true } }}
-//       >
-//         <Background />
-//       </AccordionItem>
-
-//       <AccordionItem
-//         title={"backdrop"}
-//         slotProps={{ transition: { unmountOnExit: true } }}
-//       >
-//         <Backdrop />
-//       </AccordionItem>
-
-//       <AccordionItem
-//         title={"Filters"}
-//         slotProps={{ transition: { unmountOnExit: true } }}
-//       >
-//         <MultiFunctionProp
-//           cssProp={"filter"}
-//           keywords={filterTypes}
-//           units={filterUnits}
-//           placeholder={"Select Filter"}
-//         />
-//       </AccordionItem>
-
-//       <AccordionItem
-//         title={"Transform"}
-//         slotProps={{ transition: { unmountOnExit: true } }}
-//       >
-//         <MultiFunctionProp
-//           cssProp={"transform"}
-//           keywords={transformValues}
-//           placeholder={"Select Prop"}
-//         />
-//       </AccordionItem>
-
-//       {!showAnimeBuilder && (
-//         <AccordionItem
-//           title={"Animation"}
-//           slotProps={{ transition: { unmountOnExit: true } }}
-//         >
-//           <Animation />
-//         </AccordionItem>
-//       )}
-
-//       <AccordionItem
-//         title={"Others"}
-//         slotProps={{ transition: { unmountOnExit: true } }}
-//       >
-//         <Others />
-//       </AccordionItem>
-//     </InfAccordion>

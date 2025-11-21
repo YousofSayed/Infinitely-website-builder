@@ -2030,9 +2030,9 @@ export const Icons = {
       </g>
     </svg>
   ),
-  dropbox: ({width = 25, height = 25,  fill = mainColor }) => (
+  dropbox: ({ width = 25, height = 25, fill = mainColor }) => (
     <svg
-    id="dbx-svg"
+      id="dbx-svg"
       width={width}
       height={height}
       viewBox="0 -0.5 20 20"
@@ -2872,6 +2872,69 @@ export const Icons = {
       ></Path>
     </svg>
   ),
+  loadMore: ({
+    strokeColor = "currentColor",
+    strokeWidth = 2,
+    width = "150",
+    height = "40",
+  }) => (
+    <svg
+      width={width}
+      height={height}
+      viewBox="0 0 150 40"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Text */}
+      <text
+        x="50"
+        y="25"
+        fontFamily="sans-serif"
+        fontSize="14"
+        fontWeight="600"
+        fill={strokeColor}
+      >
+        Load more
+      </text>
+
+      {/* Animated arrow */}
+      <g
+        stroke={strokeColor}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      >
+        {/* Arrow body */}
+        <path d="M10 20 L30 20">
+          <animate
+            attributeName="d"
+            dur="0.65s"
+            repeatCount="indefinite"
+            values="
+            M10 20 L30 20;
+            M10 20 L40 20;
+            M10 20 L30 20
+          "
+          />
+        </path>
+
+        {/* Arrow head */}
+        <path d="M24 15 L30 20 L24 25">
+          <animate
+            attributeName="d"
+            dur="0.65s"
+            repeatCount="indefinite"
+            values="
+            M24 15 L30 20 L24 25;
+            M26 14 L40 20 L26 26;
+            M24 15 L30 20 L24 25
+          "
+          />
+        </path>
+      </g>
+    </svg>
+  ),
+
   alignBaseline: ({
     strokeColor,
     strokeWidth,

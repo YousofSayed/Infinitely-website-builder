@@ -350,6 +350,25 @@ export const AnimationsBuilder = () => {
     setAnimations(clone);
   };
 
+    /**
+   *
+   * @param {InputEvent} ev
+   */
+  const search = (ev) => {
+    if (!ev.target.value) {
+      setAnimations(searchedAnimations.current);
+      searchedAnimations.current = [];
+      return;
+    }
+    const searchAnims = advancedSearchSuggestions(
+      animations,
+      ev.target.value,
+      undefined,
+      "name"
+    );
+    setAnimations(searchAnims);
+  };
+
   useEffect(() => {
     // if (!frameStyles) return;
     // if (!animations.length) return;
@@ -442,24 +461,7 @@ export const AnimationsBuilder = () => {
   //   };
   // }, []);
 
-  /**
-   *
-   * @param {InputEvent} ev
-   */
-  const search = (ev) => {
-    if (!ev.target.value) {
-      setAnimations(searchedAnimations.current);
-      searchedAnimations.current = [];
-      return;
-    }
-    const searchAnims = advancedSearchSuggestions(
-      animations,
-      ev.target.value,
-      undefined,
-      "name"
-    );
-    setAnimations(searchAnims);
-  };
+
 
   return (
     <Memo className="h-full">

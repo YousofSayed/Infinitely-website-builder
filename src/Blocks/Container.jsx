@@ -1,5 +1,6 @@
 import { editorIcons } from "../components/Icons/editorIcons";
 import { tagNames } from "../constants/hsValues";
+import { selectTagName } from "../constants/traits";
 import { defineTraits } from "../helpers/functions";
 
 /**
@@ -28,20 +29,7 @@ export const Container = ({ editor }) => {
           class: "inf-container p-10 drop",
         },
         // components: [{ type: "drop-area" }],
-        traits: defineTraits([
-          {
-            placeholder: "select tag",
-            label: "Select tag",
-            name: "Select tag",
-            role: "attribute",
-
-            keywords: tagNames,
-            type: "select",
-            callback({ editor, trait, newValue }) {
-              editor.getSelected().set("tagName", newValue);
-            },
-          },
-        ]),
+        traits: defineTraits([selectTagName]),
         // components:html`Insert Dynamic Text`
       },
     },

@@ -204,6 +204,8 @@ export const GJEditor = ({ children }) => {
           // adjustToolbar:
           toolbar: [],
         },
+        // baseCss:'body:{background:unset;}',
+        
         // optsHtml: {
         //   withProps: true,
 

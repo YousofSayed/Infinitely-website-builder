@@ -1,6 +1,14 @@
 import parseObjectLiteral from "object-literal-parse";
 import { parse as parseCss, stringify as stringifyCss } from "css";
-import { cloneDeep, flatMapDeep, isArray, isObject, isPlainObject, random, uniqueId } from "lodash";
+import {
+  cloneDeep,
+  flatMapDeep,
+  isArray,
+  isObject,
+  isPlainObject,
+  random,
+  uniqueId,
+} from "lodash";
 import serializeJavascript from "serialize-javascript";
 import {
   buildScripts,
@@ -18,7 +26,6 @@ import { db } from "./db";
 import { opfs } from "./initOpfs";
 import { buildProject } from "./exportProject";
 import { tmp } from "../constants/RestAPIEndpoints";
-import { parseHTML } from "linkedom";
 
 export const html = String.raw;
 export const css = String.raw;
@@ -290,6 +297,23 @@ function transformDataToVars(data = "") {
   } else {
     return;
   }
+}
+
+export function parseStringObjToKV(strObj = "") {
+  let parsed = parseObjectLiteral(strObj.slice(1, -1));
+
+  const parseMaped = parsed.map(([key, value]) => {
+    if (key) {
+      return [key, value];
+    } else if (!key && isFunction(`function ${value}`)) {
+      console.log(new Function(`return function  ${value}`)().name, value);
+      const funcName = new Function(`return function  ${value}`)().name;
+      // return `var ${funcName} = ${value.replace(`function`, "")};`;
+      return [funcName, value];
+    }
+  });
+
+  return parseMaped;
 }
 
 export async function replaceCssURLS(css = "", callback = (url = "") => {}) {
@@ -1791,7 +1815,6 @@ export const buildPageData = async (page = "", projectData, projectSetting) => {
   const footerScritps = getScripts(projectData.jsFooterLibs, urlException);
 
   const cssLibs = getStyles(projectData.cssLibs, urlException);
- 
 
   const viewMainScripts = buildScripts({
     projectSetting,
@@ -1830,20 +1853,22 @@ export const buildPageData = async (page = "", projectData, projectSetting) => {
         },
       },
     ],
-  }).concat([{localUrl:'/scripts/previewHmr.dev.js',name:'previewHmr.dev.js'}])
+  })
+    .concat([
+      { localUrl: "/scripts/previewHmr.dev.js", name: "previewHmr.dev.js" },
+    ])
     .map(
       (url) =>
-        `<script ${url.localUrl ? `src="${url.localUrl||""}"` : ''} ${
+        `<script ${url.localUrl ? `src="${url.localUrl || ""}"` : ""} ${
           url.attributes && isPlainObject(url.attributes)
             ? Object.entries(url.attributes).map(
                 ([key, value]) => `${key}="${value}"`
               )
             : ""
-        }>${url.content||""}</script>`
+        }>${url.content || ""}</script>`
     )
     .join("\n");
-  
-  
+
   // preivewScripts
   //   .map((src) => {
   //     if (typeof src === "string") {
@@ -1976,7 +2001,7 @@ export async function buildPageContentFromData({
           .join(" ")}
       >
         ${pageData.content} ${pageData.footerScripts} ${pageData.globalScript}
-        ${pageData.localScript} ${pageData.mainScripts} 
+        ${pageData.localScript} ${pageData.mainScripts}
       </body>
     </html>
   `;
@@ -2763,9 +2788,9 @@ export async function extractElementStyles({ elementsHTML, cssCode }) {
 
 export function infinitelyCallback(callback = () => {}, timeout = 0) {
   if (window.requestIdleCallback) {
-    requestIdleCallback(callback, { timeout });
+    return requestIdleCallback(callback, { timeout });
   } else {
-    setTimeout(callback, timeout);
+    return setTimeout(callback, timeout);
   }
 }
 
@@ -2778,10 +2803,6 @@ export function svgToDataURL(svg) {
   return url;
 }
 
-
-
 export function deepValues(obj = {}) {
-  return flatMapDeep(obj, val =>
-    isObject(val) ? deepValues(val) : val
-  );
+  return flatMapDeep(obj, (val) => (isObject(val) ? deepValues(val) : val));
 }

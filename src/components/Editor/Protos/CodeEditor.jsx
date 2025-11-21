@@ -85,143 +85,147 @@ export const CodeEditor = ({
         await opfs.getFile(defineRoot(`js/${currentPageName}.js`))
       ).text();
 
-      for (const lib of [
-        ...projectData.jsHeaderLibs,
-        ...projectData.jsFooterLibs,
-      ].filter((lib) => lib.typesPath)) {
-        console.log("starting loop");
+      infinitelyCallback(async () => {
+        for (const lib of [
+          ...projectData.jsHeaderLibs,
+          ...projectData.jsFooterLibs,
+        ].filter((lib) => lib.typesPath)) {
+          console.log("starting loop");
 
-        const libTypesHandles = await opfs.getAllFiles(
-          defineRoot(lib.typesPath),
-          {
-            recursive: true,
-          }
-        );
-        const libs = new Set();
-
-        for (const libTypeHandle of libTypesHandles) {
-          //file:///node_modules/public-google-sheets-parser/@types/index.d.ts --> Good URL
-          if (window.monacoTypesPathes.has(libTypeHandle.path)) continue;
-          window.monacoTypesPathes.add(libTypeHandle.path);
-
-          let fileContent = await libTypeHandle.text();
-          console.log("path : ", libTypeHandle.path);
-          // Step 1: Build raw virtual path
-          let typePath = libTypeHandle.path.replace(
-            `${getProjectRoot(projectData.id)}/types`,
-            "node_modules/@types"
+          const libTypesHandles = await opfs.getAllFiles(
+            defineRoot(lib.typesPath),
+            {
+              recursive: true,
+            }
           );
+          const libs = new Set();
 
-          // Step 2: Clean up duplicated node_modules/<lib>/<lib>
-          typePath = typePath.replace(
-            /node_modules\/@types\/([^/]+)\/node_modules\/\1\//g,
-            "node_modules/$1/"
-          );
+          for (const libTypeHandle of libTypesHandles) {
+            //file:///node_modules/public-google-sheets-parser/@types/index.d.ts --> Good URL
+            if (window.monacoTypesPathes.has(libTypeHandle.path)) continue;
+            window.monacoTypesPathes.add(libTypeHandle.path);
 
-          // Step 3: Normalize to Monaco virtual file URL
-          typePath = "file:///" + typePath.replace(/\\/g, "/");
+            let fileContent = await libTypeHandle.text();
+            console.log("path : ", libTypeHandle.path);
+            // Step 1: Build raw virtual path
+            let typePath = libTypeHandle.path.replace(
+              `${getProjectRoot(projectData.id)}/types`,
+              "node_modules/@types"
+            );
 
-          if (!typePath.includes("@types")) {
+            // Step 2: Clean up duplicated node_modules/<lib>/<lib>
             typePath = typePath.replace(
-              lib.nameWithoutExt,
-              `${lib.nameWithoutExt}/@types`
+              /node_modules\/@types\/([^/]+)\/node_modules\/\1\//g,
+              "node_modules/$1/"
             );
+
+            // Step 3: Normalize to Monaco virtual file URL
+            typePath = "file:///" + typePath.replace(/\\/g, "/");
+
+            if (!typePath.includes("@types")) {
+              typePath = typePath.replace(
+                lib.nameWithoutExt,
+                `${lib.nameWithoutExt}/@types`
+              );
+            }
+            console.log("🧩 Cleaned typePath:", typePath);
+
+            // Step 4: Register with Monaco
+            const isNeedWrappingToModule = needsWrapping(fileContent);
+            fileContent = isNeedWrappingToModule
+              ? wrapModule(lib.nameWithoutExt, fileContent)
+              : fileContent;
+            monaco.languages.typescript.javascriptDefaults.addExtraLib(
+              fileContent,
+              typePath
+            );
+            console.log("file content : ", isNeedWrappingToModule, fileContent);
+
+            if (libTypeHandle.path.endsWith(".ts")) {
+              const globalType = doGlobalType(
+                lib.nameWithoutExt,
+                lib.globalName,
+                // fileContent,
+                hasExportDefault(fileContent),
+                fileContent
+              );
+              if (libs.has(globalType)) continue;
+              libs.add(globalType);
+              console.log("global type : ", globalType);
+
+              monaco.languages.typescript.javascriptDefaults.addExtraLib(
+                globalType,
+                `file:///globals/${lib.nameWithoutExt}-global.d.ts`
+              );
+            }
           }
-          console.log("🧩 Cleaned typePath:", typePath);
+        }
+      }, 10);
 
-          // Step 4: Register with Monaco
-          const isNeedWrappingToModule = needsWrapping(fileContent);
-          fileContent = isNeedWrappingToModule
-            ? wrapModule(lib.nameWithoutExt, fileContent)
-            : fileContent;
-          monaco.languages.typescript.javascriptDefaults.addExtraLib(
-            fileContent,
-            typePath
+      infinitelyCallback(async () => {
+        ///// Global types
+        for (const globalType of global_types) {
+          const typesFiles = await opfs.getAllFiles(
+            defineRoot(`types/${globalType.nameWithoutExt}`),
+            {
+              recursive: true,
+            }
           );
-          console.log("file content : ", isNeedWrappingToModule, fileContent);
 
-          if (libTypeHandle.path.endsWith(".ts")) {
-            const globalType = doGlobalType(
-              lib.nameWithoutExt,
-              lib.globalName,
-              // fileContent,
-              hasExportDefault(fileContent),
-              fileContent
+          for (const typeFile of typesFiles) {
+            // const content = await typeFile.text();
+            if (window.monacoTypesPathes.has(typeFile.path)) continue;
+            let fileContent = await typeFile.text();
+            console.log("path : ", typeFile.path);
+            window.monacoTypesPathes.add(typeFile.path);
+            // Step 1: Build raw virtual path
+            let typePath = typeFile.path.replace(
+              `${getProjectRoot(projectData.id)}/types`,
+              "node_modules/@types"
             );
-            if (libs.has(globalType)) continue;
-            libs.add(globalType);
-            console.log("global type : ", globalType);
+
+            // Step 2: Clean up duplicated node_modules/<lib>/<lib>
+            typePath = typePath.replace(
+              /node_modules\/@types\/([^/]+)\/node_modules\/\1\//g,
+              "node_modules/$1/"
+            );
+
+            // Step 3: Normalize to Monaco virtual file URL
+            typePath = "file:///" + typePath.replace(/\\/g, "/");
+
+            if (!typePath.includes("@types")) {
+              typePath = typePath.replace(
+                globalType.nameWithoutExt,
+                `${globalType.nameWithoutExt}/@types`
+              );
+            }
+            console.log("🧩 Cleaned typePath:", typePath);
+
+            // Step 4: Register with Monaco
+            const isNeedWrappingToModule = needsWrapping(fileContent);
+            fileContent = isNeedWrappingToModule
+              ? wrapModule(globalType.nameWithoutExt, fileContent)
+              : fileContent;
+
+            console.log("🧩 Cleaned typePath:", typePath);
 
             monaco.languages.typescript.javascriptDefaults.addExtraLib(
-              globalType,
-              `file:///globals/${lib.nameWithoutExt}-global.d.ts`
+              fileContent,
+              typePath
             );
-          }
-        }
-      }
 
-      ///// Global types
-      for (const globalType of global_types) {
-        const typesFiles = await opfs.getAllFiles(
-          defineRoot(`types/${globalType.nameWithoutExt}`),
-          {
-            recursive: true,
-          }
-        );
-
-        for (const typeFile of typesFiles) {
-          // const content = await typeFile.text();
-          let fileContent = await typeFile.text();
-          console.log("path : ", typeFile.path);
-          if (window.monacoTypesPathes.has(typeFile.path)) continue;
-          window.monacoTypesPathes.add(typeFile.path);
-          // Step 1: Build raw virtual path
-          let typePath = typeFile.path.replace(
-            `${getProjectRoot(projectData.id)}/types`,
-            "node_modules/@types"
-          );
-
-          // Step 2: Clean up duplicated node_modules/<lib>/<lib>
-          typePath = typePath.replace(
-            /node_modules\/@types\/([^/]+)\/node_modules\/\1\//g,
-            "node_modules/$1/"
-          );
-
-          // Step 3: Normalize to Monaco virtual file URL
-          typePath = "file:///" + typePath.replace(/\\/g, "/");
-
-          if (!typePath.includes("@types")) {
-            typePath = typePath.replace(
+            const globalTypeContent = doGlobalType(
               globalType.nameWithoutExt,
-              `${globalType.nameWithoutExt}/@types`
+              globalType.globalName,
+              hasExportDefault(fileContent)
+            );
+            monaco.languages.typescript.javascriptDefaults.addExtraLib(
+              globalTypeContent,
+              `file:///globals/${globalType.nameWithoutExt}-global.d.ts`
             );
           }
-          console.log("🧩 Cleaned typePath:", typePath);
-
-          // Step 4: Register with Monaco
-          const isNeedWrappingToModule = needsWrapping(fileContent);
-          fileContent = isNeedWrappingToModule
-            ? wrapModule(globalType.nameWithoutExt, fileContent)
-            : fileContent;
-
-          console.log("🧩 Cleaned typePath:", typePath);
-
-          monaco.languages.typescript.javascriptDefaults.addExtraLib(
-            fileContent,
-            typePath
-          );
-
-          const globalTypeContent = doGlobalType(
-            globalType.nameWithoutExt,
-            globalType.globalName,
-            hasExportDefault(fileContent)
-          );
-          monaco.languages.typescript.javascriptDefaults.addExtraLib(
-            globalTypeContent,
-            `file:///globals/${globalType.nameWithoutExt}-global.d.ts`
-          );
         }
-      }
+      }, 10);
 
       const devLibs = (
         await Promise.all(
@@ -244,9 +248,7 @@ export const CodeEditor = ({
         extraLibs,
         allowCmdsContext && restModelsContext,
         allowCmdsContext && cmdsContext,
-
-        ,
-      ];
+      ].filter(Boolean);
       console.log("contentnsss : ", restModelsContext, cmdsContext);
 
       allowExtraLibs &&

@@ -18,7 +18,7 @@ video {
 .section {
   /* padding: 10px; */
   width: 100%;
-  display: flex;
+  /* display: flex; */
   /* height: 60px; */
   /* min-height: 60px; */
 }
@@ -57,7 +57,7 @@ video {
 .inf-container {
   /* height: 100%; */
   width: 100%;
-  display: flex;
+  /* display: flex; */
 }
 
 .p-10 {
@@ -164,4 +164,12 @@ spline-wrapper {
 infinitely-svg svg{
   width: 100%;
   height: 100%;
+}
+
+looper-next-prev-button{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  padding: 10px;
 }

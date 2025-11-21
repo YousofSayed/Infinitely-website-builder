@@ -40,6 +40,7 @@ export const global_types = [
   { nameWithoutExt: "gsap", globalName: "gsap" },
   { nameWithoutExt: "swiper", globalName: "swiper" },
 ];
+export const viewEvents = ["enterview", "leaveview", "view"];
 export const heading_tags = ["h1", "h2", "h3", "h4", "h5", "h6"];
 export const text_tags = [
   ...heading_tags,
@@ -115,6 +116,8 @@ export const gsapScripts = [
 
 export const mainScriptsForEditor = [
   "/scripts/infinitely.js",
+  "/scripts/dev.js",
+
   ...gsapScripts,
   "/scripts/gsapRuner.dev.js",
   "/scripts/pVuePlugins.js",
@@ -125,6 +128,8 @@ export const mainScriptsForEditor = [
 
 export const preivewScripts = [
   "/scripts/infinitely.js",
+  "/scripts/dev.js",
+
   ...gsapScripts,
   "/scripts/initGsap.js",
   "/scripts/pVuePlugins.js",
@@ -172,14 +177,15 @@ export const file_deleted_success_msg = `File deleted successfully`;
  *
  * @returns {{name:string, localUrl:string , buildUrl?:string}[]}
  */
-export const buildScripts = ({
-  projectSetting = {},
-  inserts = [],
-}) => {
+export const buildScripts = ({ projectSetting = {}, inserts = [] }) => {
   let scripts = [
     {
       name: "infinitely.js",
       localUrl: "/scripts/infinitely.js",
+    },
+    {
+      name: "dev.js",
+      localUrl: "/scripts/dev.js",
     },
 
     ...(projectSetting.enable_swiperjs

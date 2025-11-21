@@ -7,10 +7,8 @@ import React, {
   memo,
 } from "react";
 import { Icons } from "../Icons/Icons";
-import { FitTitle } from "../Editor/Protos/FitTitle";
 import { refType } from "../../helpers/jsDocs";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { AnimatePresence, motion } from "framer-motion";
 const AccordionContext = createContext();
 
 export const AccordionProvider = ({ children }) => {
@@ -33,12 +31,13 @@ export const DetailsNormal = memo(
     mode = "independent",
     notify,
     notifyBg = "bg-blue-600",
+    onSwitch = (state)=>{},
     id,
   }) => {
     const { openId, setOpenId } = useContext(AccordionContext) || {};
     const [isOpen, setIsOpen] = useState(false);
     const contentRef = useRef(null);
-    const [autoAnimate] = useAutoAnimate({ duration: 100 });
+    const [autoAnimate] = useAutoAnimate({ duration: 200 });
     const parentRef = useRef(refType);
     const childRef = useRef(refType);
     const toggle = () => {
@@ -82,54 +81,18 @@ export const DetailsNormal = memo(
       }, 200);
     }, [isOpen, parentRef, childRef]);
 
-    // useEffect(() => {
-    //   const el = contentRef.current;
-    //   if (!el) return;
+    useEffect(()=>{
+      onSwitch(isOpen);
+    },[isOpen])
 
-    //   if (isOpen) {
-    //     el.style.display = "block";
-    //     requestAnimationFrame(() => {
-    //       el.style.maxHeight = el.scrollHeight + "px";
-    //     });
-    //   } else {
-    //     el.style.maxHeight = el.scrollHeight + "px";
-    //     requestAnimationFrame(() => {
-    //       el.style.maxHeight = "0px";
-    //     });
-    //   }
-    // }, [isOpen]);
 
-    // Recalculate height when content changes
-    // useEffect(() => {
-    //   const observer = new MutationObserver(() => {
-    //     if (isOpen) {
-    //       const el = contentRef.current;
-    //       if (el) el.style.maxHeight = el.scrollHeight + "px";
-    //     }
-    //   });
-    //   const el = contentRef.current;
-    //   if (el) {
-    //     observer.observe(el, { childList: true, subtree: true });
-    //   }
-    //   return () => observer.disconnect();
-    // }, [isOpen]);
-
-    // useEffect(() => {
-    //   const handleResize = () => {
-    //     if (isOpen && contentRef.current) {
-    //       contentRef.current.style.maxHeight =
-    //         contentRef.current.scrollHeight + "px";
-    //     }
-    //   };
-    //   window.addEventListener("resize", handleResize);
-    //   return () => window.removeEventListener("resize", handleResize);
-    // }, [isOpen]);
 
     return (
       <section
         ref={parentRef}
         style={{
           transition: ".1s",
+          willChange:'transform , opacity , height'
           // overflow: "hidden",
           // overflow : !isOpen ? 'hidden' : ''
         }}
@@ -171,37 +134,7 @@ export const DetailsNormal = memo(
         >
           {isOpen ? children : null}
         </div>
-        {/* {isOpen ? children : null} */}
-        {/* (<AnimatePresence initial={false}  >
-            {isOpen && <motion.div
-              // key="body"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              style={{ overflow: "hidden" , }}
-            >
-              {isOpen && <div className="h-full" ref={contentRef}>{children}</div>}
-            </motion.div>}
-        </AnimatePresence>) */}
-
-        {/* <div
-          ref={contentRef}
-          style={{
-            maxHeight: "0px",
-            overflow: "hidden",
-            transition: "max-height 0.3s ease",
-          }}
-        >
-          <div
-            className={`mt-2 transition-opacity duration-300 ${
-              isOpen ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            {children ? children : "Nothing Here..."}
-          </div>
-        </div> */}
-
+        
         {allowPopupLength && !!length && (
           <p className="w-[20px] h-[20px] bg-blue-500  text-white flex justify-center items-center font-semibold rounded-full absolute right-[-5px] top-[-7px]">
             {length}

@@ -96,6 +96,7 @@ export type Animations = {
 export type TraitCallProps = {
   editor: Editor;
   trait: InfinitelyTrait;
+  traits?: InfinitelyTrait[];
   oldValue: string;
   newValue: string;
   asset: InfinitelyAsset | undefined;
@@ -111,6 +112,7 @@ export type TraitCallback = ({
   asset,
   mediaBreakpoint,
   model,
+  props: {},
 }: TraitCallProps) => void;
 
 export type InfinitelyTrait = {
@@ -136,7 +138,7 @@ export type InfinitelyTrait = {
   //End
   label: string;
   name: string;
-  allowToSetTraitValueToEditor:boolean;
+  allowToSetTraitValueToEditor: boolean;
   unit: string;
   step: number;
   value: string;

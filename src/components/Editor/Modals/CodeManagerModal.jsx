@@ -5,7 +5,7 @@ import { Icons } from "../../Icons/Icons";
 import { CodeEditor } from "../Protos/CodeEditor";
 import { Button } from "../../Protos/Button";
 import { current_page_id, current_project_id } from "../../../constants/shared";
-import { workerCallbackMaker } from "../../../helpers/functions";
+import { store, workerCallbackMaker } from "../../../helpers/functions";
 import { useEditorMaybe } from "@grapesjs/react";
 import { random, uniqueID } from "../../../helpers/cocktail";
 import { infinitelyWorker } from "../../../helpers/infinitelyWorker";
@@ -317,7 +317,6 @@ export const CodeManagerModal = () => {
         // const cssContent = filesData[defineRoot(`css/${currentPageName}.css`)];
         // const htmlSize = toMB(getStringSizeBytes(htmlContent)); // size in MB
         // const cssSize = toMB(getStringSizeBytes(cssContent)); // size in MB
-
         // if (htmlSize + cssSize > 0.2) {
         //   // ~200 KB
         //   toast.warn(
@@ -339,7 +338,6 @@ export const CodeManagerModal = () => {
       if (key.includes(`css/${currentPageName}.css`) && !isHtmlUpdated) {
         // const cssContent = filesData[key];
         // const cssSize = toMB(getStringSizeBytes(cssContent)); // size in MB
-
         // if (cssSize > 0.15) {
         //   // ~150 KB
         //   toast.warn(
@@ -397,10 +395,15 @@ export const CodeManagerModal = () => {
     editor.clearDirtyCount();
     // await editor.load();
 
-    console.log('totalHTMLAndCssSize : ' , totalHTMLAndCssSize);
-    
-    if (toMB(totalHTMLAndCssSize , 2) <= 0.25) {
-      editor.load();
+    console.log("totalHTMLAndCssSize : ", totalHTMLAndCssSize);
+
+    if (toMB(totalHTMLAndCssSize, 2) <= 0.25) {
+      await store({}, editor);
+      const cb = () => {
+        editor.load();
+        editor.off(InfinitelyEvents.storage.storeEnd , cb);
+      };
+      editor.on(InfinitelyEvents.storage.storeEnd, cb);
     } else {
       reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {
         state: true,

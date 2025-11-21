@@ -1,4 +1,6 @@
 import { editorIcons } from "../components/Icons/editorIcons";
+import { selectTagName } from "../constants/traits";
+import { defineTraits } from "../helpers/functions";
 
 
 /**
@@ -32,6 +34,9 @@ export const Block = ({ editor }) => {
         resizable: true,
         draggable: true,
         droppable: true,
+        traits:defineTraits([
+          selectTagName
+        ])
         // traits: defineTraits([
         //   {
         //     placeholder: "select tag",

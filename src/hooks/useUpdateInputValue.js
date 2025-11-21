@@ -9,6 +9,7 @@ import {
   ruleState,
   selectorState,
   showAnimationsBuilderState,
+  showStylesBuilderForMotionBuilderState,
 } from "../helpers/atoms";
 import { useEditorMaybe } from "@grapesjs/react";
 import {
@@ -19,13 +20,13 @@ import {
 } from "../helpers/functions";
 import { inf_symbol_Id_attribute } from "../constants/shared";
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
-import { useDebounce } from "use-debounce";
 import { isFunction } from "lodash";
 import { infinitelyCallback } from "../helpers/bridge";
-import { keyframeStylesInstance } from "../constants/InfinitelyInstances";
+
 let saveTimeout;
 let idleId;
 
+let propsWillChangeForTimeout = {};
 /**
  *
  * @param {{ cssProp:string ,setVal:Function ,returnPropsAsIt:boolean, getAllStyles:(styles:CSSStyleDeclaration)=>void, onEffect :(cssProp:string , Value : Function)=>{} , debs:any[]}}} param0
@@ -43,6 +44,9 @@ export const useUpdateInputValue = ({
   const rule = useRecoilValue(ruleState);
   const selector = useRecoilValue(selectorState);
   const showAnimationsBuilder = useRecoilValue(showAnimationsBuilderState);
+  const [showStylesBuilder, setShowStylesBuilder] = useRecoilState(
+    showStylesBuilderForMotionBuilderState
+  );
   const framesStyles = useRecoilValue(framesStylesState);
   const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
   const [animations, setAnimations] = useRecoilState(animationsState);
@@ -88,46 +92,54 @@ export const useUpdateInputValue = ({
     return outPut || {};
   }
 
-  const handler = ({ isDeviceEvent = false,}) => {
+  const handler = ({ isDeviceEvent = false , keepStylesAsObj = false }) => {
     if (!editor) return;
     const slEL = editor?.getSelected();
     const Media = getCurrentMediaDevice(editor);
     const currentSelector = getCurrentSelector(selector, slEL);
     console.log("styles : ", cssProp, currentSelector);
+    
+    if(keepStylesAsObj){
+      return getRuleStyle(isDeviceEvent);
+    }
 
     if (isFunction(getAllStyles)) {
-      showAnimationsBuilder && console.log('framesStyles : ' ,framesStyles)
+      (showAnimationsBuilder || showStylesBuilder) && console.log("framesStyles : ", framesStyles);
       getAllStyles(
-        showAnimationsBuilder ? framesStyles : getRuleStyle(isDeviceEvent) || {}
+        showAnimationsBuilder || showStylesBuilder ? framesStyles : getRuleStyle(isDeviceEvent) || {}
       );
       return;
     }
 
-    if (!currentSelector) {
+    
+    
+    if (!currentSelector && !showAnimationsBuilder && !showStylesBuilder) {
       setVal("");
       onEffect(cssProp, "");
       return;
     }
+    // console.log("rrrrrrule gog: ", currentSelector , rule.is, cssProp);
 
     if (
       !slEL &&
       !getRuleStyle(isDeviceEvent)[cssProp] &&
       !returnPropsAsIt &&
-      !Object.values(framesStyles || {}).length
+      !Object.values(framesStyles || {}).length &&
+      !showStylesBuilder
     ) {
-      // console.log("!sadsadsa", cssProp, getRuleStyle());
+      // console.log("rrrrrrule gog: sd", cssProp, getRuleStyle());
 
       setVal("");
       onEffect(cssProp, "");
       return;
     }
-
-    if (slEL && !showAnimationsBuilder) {
+    
+    if (slEL && !showAnimationsBuilder && !showStylesBuilder) {
       const slElStyles = slEL.getStyle();
       // const infSymbolAttrValue = slEL.getAttributes()[inf_symbol_Id_attribute];
       // console.log("styles : ");
 
-      // console.log("rrrrrrule : ", currentSelector || rule.is, cssProp);
+      // console.log("rrrrrrule gog: ", currentSelector || rule.is, cssProp);
 
       if (currentSelector || rule.is) {
         const value = returnPropsAsIt
@@ -142,14 +154,17 @@ export const useUpdateInputValue = ({
         onEffect(cssProp, value);
       }
     }
+      // console.log("rrrrrrule gog: ", currentSelector || rule.is, cssProp);
 
-    if (showAnimationsBuilder) {
+    if (showAnimationsBuilder || showStylesBuilder) {
       const value = returnPropsAsIt
         ? framesStyles
         : framesStyles[cssProp] || "";
 
       setVal(value);
       onEffect(cssProp, value);
+      console.log("rrrrrrule gog: 0", currentSelector || rule.is, cssProp);
+
       // console.log('mounted' , value , cssProp);
     }
 
@@ -172,7 +187,7 @@ export const useUpdateInputValue = ({
     editor.on("inf:rules:set", setRuleHandler);
     // const frameStylesHandler = (ev) => {
     //   console.log('lol');
-      
+
     //   const framesStyles = ev.detail;
     //   handler({ framesStyles });
     // };
@@ -195,6 +210,7 @@ export const useUpdateInputValue = ({
     selector,
     rule,
     showAnimationsBuilder,
+    // showStylesBuilder,
     // animations,
     framesStyles,
     conditionalCmpRules,
@@ -207,13 +223,18 @@ export const useUpdateInputValue = ({
     // console.log(!currentElObj?.currentEl  && !showAnimationsBuilder && !editor.getSelected());
     if (!editor) return;
     // if(showAnimationsBuilder)return;
+    // if(showStylesBuilder){
+    //   handler({});
+    //   return;
+    // }
     if (
       !currentElObj?.currentEl &&
       !showAnimationsBuilder &&
+      !showStylesBuilder &&
       !editor.getSelected()
     )
       return;
-      
+
     // if(!editor.getSelected()) return;
     saveTimeout && clearTimeout(saveTimeout);
     // if(`requestIdleCallback` in window){
@@ -233,9 +254,10 @@ export const useUpdateInputValue = ({
     //   window.cancelIdleCallback && cancelIdleCallback(idleId);
     //   clearTimeout(idleId);
     // }
-    // idleId = setTimeout(() => {
+    // idleId = infinitelyCallback(() => {
     //   console.log('updating display effect :' ,cssProp);
 
+    // handler({});
     // }, 10);
     handler({});
   }, [
@@ -244,6 +266,7 @@ export const useUpdateInputValue = ({
     selector,
     rule,
     showAnimationsBuilder,
+    showStylesBuilder,
     framesStyles,
     // animations,
     // cmpRules,

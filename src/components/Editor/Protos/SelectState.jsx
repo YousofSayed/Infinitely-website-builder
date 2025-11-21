@@ -37,7 +37,7 @@ export const SelectState = ({ placeholder }) => {
   const chicesRefEl = useRef(refType);
 
   useEffect(() => {
-    if (!selectedEl.currentEl || selectedEl.currentEl.tagName == "body") return;
+    if (!selectedEl.currentEl) return;
     extractRules();
     // updateCurrentIndex();
   }, [selectedEl, selector ]);
@@ -107,16 +107,20 @@ export const SelectState = ({ placeholder }) => {
       console.warn(`No selected element to extract rules!`);
       return;
     }
+    
     const currentSelector = getCurrentSelector(selector, editor.getSelected());
-    let filterHandledRules = [];
-    if(!currentSelector)return [];
+    console.log('gettting'  , currentSelector);
+    if(!currentSelector) {
+      isSetRules && setStates([]);
+      return [];
+    };
     const selectorRules = extractRulesByIdWithDetails(
       // minify(editor.getCss({ clearStyles: false, keepUnusedStyles: true })).css,
       editor.getCss({ clearStyles: false, keepUnusedStyles: true }),
       currentSelector
     ).filter((r) => r.states);
-
-    console.log("ruuules : ", selectorRules);
+    
+    console.log("gettting ruuules : ", selectorRules);
 
     isSetRules && setStates([...selectorRules]);
     return selectorRules;

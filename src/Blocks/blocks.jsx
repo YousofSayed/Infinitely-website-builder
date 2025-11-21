@@ -132,7 +132,7 @@ export const blocks = [
     category: "Basic",
     media: reactToStringMarkup(Icons.button({ fill: "currentColor" })),
     label: html`<p class="custom-font-size">Button</p>`,
-    content: { type: "button" },
+    content: { type: "button" , components:'Click me' },
   },
   // {
   //   id: "columns",
@@ -290,12 +290,59 @@ export const blocks = [
   },
 
   {
-    id: dynamic_text,
-    label: "Symbol test",
-    media: editorIcons.dynamicText,
-    category: "Tests",
-    content: `<section ${inf_symbol_Id_attribute}="2213sad1">Hello</section>`,
+    id: "looper-load-more-button",
+    label: html`<p class="custom-font-size ">Load More Button</p>`,
+    media: reactToStringMarkup(Icons.button({})),
+    category: "logic",
+    content: {
+      type: "looper-load-more-button",
+      // components:`Click Me`,
+    },
   },
+
+  {
+    id: "looper-next-prev-button",
+    label: html`<p class="custom-font-size ">Next & Prev Button</p>`,
+    media: html`<section class="flex justify-center items-center ">
+      <i class="rotate-[90deg]">${reactToStringMarkup(Icons.arrow("white"))}</i>
+      <i class="rotate-[-90deg]"
+        >${reactToStringMarkup(Icons.arrow("white"))}</i
+      >
+    </section>`,
+    category: "logic",
+    content: {
+      type: "looper-next-prev-button",
+    },
+  },
+
+  {
+    id: "looper-filter-button",
+    label: html`<p class="custom-font-size">Filter Button</p>`,
+    media: reactToStringMarkup(Icons.button({})),
+    category: "logic",
+    content: {
+      type: "filter-button",
+      components: `Filter`,
+    },
+  },
+
+  {
+    id: "looper-input-filter",
+    label: html`<p class="custom-font-size">Filter Input</p>`,
+    media: reactToStringMarkup(Icons.input({ fill: "currentColor" })),
+    category: "logic",
+    content: {
+      type: "looper-input-filter",
+    },
+  },
+
+  // {
+  //   id: dynamic_text,
+  //   label: "Symbol test",
+  //   media: editorIcons.dynamicText,
+  //   category: "Tests",
+  //   content: `<section ${inf_symbol_Id_attribute}="2213sad1">Hello</section>`,
+  // },
   // {
   //   id:'template',
   //   label:'Template',
@@ -306,4 +353,4 @@ export const blocks = [
   //   }
   // }
 ];
-//next steps : shoelace ان شاء الله 
+//next steps : shoelace ان شاء الله

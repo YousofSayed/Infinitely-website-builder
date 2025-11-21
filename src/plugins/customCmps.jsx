@@ -18,6 +18,10 @@ import { SplineScene } from "../Blocks/SplineScene";
 import { DropArea } from "../Blocks/DropArea";
 import { Slider } from "../Blocks/Slider";
 import { Symbol } from "../Blocks/Symbol";
+import { LoadMore } from "../Blocks/LoadMore";
+import { NextAndPrevious } from "../Blocks/NextAndPrevious";
+import { FilterButton } from "../Blocks/FilterButton";
+import { InputFilter } from "../Blocks/InputFilter";
 
 /**
  *
@@ -47,4 +51,8 @@ export const customCmps = (editor) => {
   SplineScene({ editor });
   DropArea({ editor });
   Svg(editor);
+  LoadMore({ editor });
+  NextAndPrevious({ editor });
+  FilterButton({ editor });
+  InputFilter({ editor });
 };

@@ -245,6 +245,11 @@ export const showAnimationsBuilderState = atom({
   default: false,
 });
 
+export const showStylesBuilderForMotionBuilderState = atom({
+  key: "showStylesBuilderForMotionBuilderState",
+  default: false,
+});
+
 export const animeStylesState = atom({
   key: "animeStyles",
   default: animeStylesType,

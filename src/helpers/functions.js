@@ -3216,7 +3216,7 @@ export async function reloadEditor(editor) {
         editor.addComponents(elements[index], {
           avoidStore: true,
           at: index,
-          sort: true,
+          // sort: true,
         });
         const newIndex = index + 1;
         reloaderTimeout = setTimeout(

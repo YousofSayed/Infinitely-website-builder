@@ -22,6 +22,7 @@ import {
   showCustomModalState,
   showLayersState,
   showPreviewState,
+  showStylesBuilderForMotionBuilderState,
 } from "../helpers/atoms";
 import { Layers } from "../components/Editor/Protos/Layers";
 import { CustomModals } from "../components/Editor/CustomModals";
@@ -53,6 +54,7 @@ import { Memo } from "../components/Protos/Memo";
 import { WithEditor } from "@grapesjs/react";
 import { useOfflineHandler } from "../hooks/useOfflineHandler";
 import { useWorkreFetch } from "../hooks/useWorkreFetch";
+import { StyleAside } from "../components/Editor/StyleAside";
 // import { tailwindClasses } from "../constants/tailwindClasses";
 // tailwindClasses
 export function Editor({ params }) {
@@ -71,6 +73,9 @@ export function Editor({ params }) {
   const [mainAnimate] = useAutoAnimate({ duration: 100 });
   const [appInstalling, setAppInstalling] = useRecoilState(appInstallingState);
   const [reloader, setReloader] = useRecoilState(reloaderState);
+  const [showStylesBuilder, setShowStylesBuilder] = useRecoilState(
+    showStylesBuilderForMotionBuilderState
+  );
 
   useEffect(() => {
     /**
@@ -212,31 +217,37 @@ export function Editor({ params }) {
                 autoSaveId="panels"
                 // ref={parentForPanelsGroup}
               >
-                {(showAnimBuilder || showLayers) && !showPreview && (
-                  <>
-                    <Panel defaultSize={300} id="left-panel" order={1}>
-                      <section
-                        // ref={parentForPanelsGroup}
-                        className="h-full w-full"
-                      >
-                        {showLayers && (
-                          <Aside dir="right">
-                            <Layers />
-                          </Aside>
-                        )}
+                {(showAnimBuilder || showLayers || showStylesBuilder) &&
+                  !showPreview && (
+                    <>
+                      <Panel defaultSize={300} id="left-panel" order={1}>
+                        <section
+                          // ref={parentForPanelsGroup}
+                          className="h-full w-full"
+                        >
+                          {showLayers && (
+                            <Aside dir="right">
+                              <Layers />
+                            </Aside>
+                          )}
 
-                        {showAnimBuilder && (
-                          <Aside>
-                            <AnimationsBuilder />
-                          </Aside>
-                        )}
-                      </section>
-                    </Panel>
-                    <PanelResizeHandle
-                      className={`w-[5px] bg-blue-600  opacity-0 hover:opacity-[1] transition-all`}
-                    />
-                  </>
-                )}
+                          {showAnimBuilder && (
+                            <Aside>
+                              <AnimationsBuilder />
+                            </Aside>
+                          )}
+                          {showStylesBuilder && (
+                            <section className="h-full pl-2 pr-1 overflow-y-auto hideScrollBar">
+                              <StyleAside />
+                            </section>
+                          )}
+                        </section>
+                      </Panel>
+                      <PanelResizeHandle
+                        className={`w-[5px] bg-blue-600  opacity-0 hover:opacity-[1] transition-all`}
+                      />
+                    </>
+                  )}
 
                 <Panel id="center" defaultSize={600} order={2}>
                   <Iframe />

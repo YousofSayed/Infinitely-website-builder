@@ -14,6 +14,7 @@ export const Button = ({editor}) => {
             icon:reactToStringMarkup(Icons.button({fill:'white'})),
             tagName:'button',
             components:`Click Me`,
+            //  placeholder: 'Click me',
             attributes:{
                 class:'p-10'
             },

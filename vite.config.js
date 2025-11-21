@@ -17,15 +17,16 @@ export default defineConfig({
     global: "globalThis",
     // 'process.env': {}, // Shim process.env
   },
-   server: {
-    watch: {
-      ignored: ['**/node_modules/**', '**/.git/**']
-    },
-    //  headers: {
-    //    "Cross-Origin-Embedder-Policy": "unsafe-none",
-    //   "Cross-Origin-Opener-Policy": "unsafe-none",
-    // }
-  },
+  
+  //  server: {
+  //   watch: {
+  //     ignored: ['**/node_modules/**', '**/.git/**']
+  //   },
+  //   //  headers: {
+  //   //    "Cross-Origin-Embedder-Policy": "unsafe-none",
+  //   //   "Cross-Origin-Opener-Policy": "unsafe-none",
+  //   // }
+  // },
   optimizeDeps: {
     esbuildOptions: {
       // Node.js global to browser globalThis

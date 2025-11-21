@@ -12,6 +12,7 @@ import {
 import { infinitelyWorker } from "../helpers/infinitelyWorker";
 import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
 import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
+import { setPropToLoopCmp } from "../plugins/globalTraits";
 
 /**
  *
@@ -71,7 +72,7 @@ export const Looper = ({ editor }) => {
             type: "text",
             placeholder: `Loop Name`,
             role: "attribute",
-            async callback({ editor, oldValue, newValue, trait }) {
+            async callback({ editor, oldValue, newValue, trait, model }) {
               const sle = editor.getSelected();
               const projectData = await getProjectData();
               const restModels = projectData.restAPIModels.filter(Boolean);
@@ -84,7 +85,7 @@ export const Looper = ({ editor }) => {
               const oldModel = restModels.find(
                 (model) => model.varName == oldValue
               );
-              const headers = loopHeaders ? parse(loopHeaders || '{}') : null;
+              const headers = loopHeaders ? parse(loopHeaders || "{}") : null;
               console.log(loopUrl, headers);
 
               const responseData = oldModel?.response
@@ -110,9 +111,16 @@ export const Looper = ({ editor }) => {
                   },
                 },
               });
+              const attributes = model.getAttributes();
+              const modelScope = attributes["v-scope"];
+
+              modelScope && setPropToLoopCmp([`${newValue || "data"}`, "[]"] , oldValue , model , {editor , trait});
+              !modelScope &&
+                sle.addAttributes({
+                  "v-scope": `{${newValue || "data"}:[]}`,
+                });
 
               sle.addAttributes({
-                "v-scope": `{${newValue || "data"}:[]}`,
                 "v-effect": `fetch("${loopUrl}",{headers:${
                   loopHeaders ? `JSON.parse('${loopHeaders}')` : "null"
                 }}).then(res=>res.json()).then(res=>${newValue || "data"}=res)`,
@@ -125,17 +133,22 @@ export const Looper = ({ editor }) => {
             type: "button",
             role: "handler",
             showCallback: () => {
-              console.log(
-                "is looper ?",
-                editor.getSelected().get("type") == "looper"
-              );
-
-              return editor.getSelected().get("type") == "looper";
+              if (!editor) return;
+              if (!editor.getSelected()) return;
+              return editor.getSelected()?.get("type") == "looper";
             },
             buttonEvents: ({ editor, oldValue, newValue, trait }) => {
               return {
                 onClick(ev) {
                   const sle = editor.getSelected();
+                  if (!editor) return;
+                  if (!editor.getSelected()) {
+                    toast.warn(
+                      <ToastMsgInfo msg={`please select component`} />
+                    );
+                    return;
+                  }
+
                   if (!navigator.onLine) {
                     toast.warn(<ToastMsgInfo msg={`You are offline..!`} />);
                     return;
@@ -154,6 +167,8 @@ export const Looper = ({ editor }) => {
             type: "button",
             role: "handler",
             showCallback: () => {
+              if (!editor) return;
+              if (!editor.getSelected()) return;
               return editor.getSelected().get("type") == "looper";
             },
             buttonEvents: ({ editor, oldValue, newValue, trait }) => {
@@ -171,6 +186,14 @@ export const Looper = ({ editor }) => {
                   //   .getWrapper()
                   //   .find(`[mount-id]`)[0];
                   // targetSelect && preventSelectNavigation(editor, targetSelect);
+                  if (!editor) return;
+                  if (!editor.getSelected()) {
+                    toast.warn(
+                      <ToastMsgInfo msg={`please select component`} />
+                    );
+                    return;
+                  }
+
                   unMount({
                     editor,
                     specificCmp: sle,

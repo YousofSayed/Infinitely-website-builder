@@ -5,6 +5,7 @@ import {
   ruleState,
   selectorState,
   showAnimationsBuilderState,
+  showStylesBuilderForMotionBuilderState,
 } from "../helpers/atoms";
 
 import { useEditorMaybe } from "@grapesjs/react";
@@ -34,6 +35,7 @@ export function useSetClassForCurrentEl() {
   const [frameStyles , setFrameStyles] = useRecoilState(framesStylesState);
 
   const showAnimationsBuilder = useRecoilValue(showAnimationsBuilderState);
+    const [showStylesBuilder , setShowStylesBuilder] = useRecoilState(showStylesBuilderForMotionBuilderState);
 
   // const setAnimeStyles = useSetRecoilState(animeStylesState);
 
@@ -69,7 +71,7 @@ export function useSetClassForCurrentEl() {
         // console.log("elssssssssssssooooooooooo", newCssProps, !value);
       }
 
-      if (showAnimationsBuilder) {
+      if (showAnimationsBuilder || showStylesBuilder) {
         newCssProps = newCssProps ? newCssProps : { [cssProp]: "" };
         // setAnimeStyles((old) => ({ ...old, ...newCssProps }));
         // setAnimeStyles({ ...newCssProps });

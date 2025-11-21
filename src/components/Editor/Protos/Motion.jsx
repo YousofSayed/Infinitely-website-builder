@@ -61,8 +61,10 @@ import {
 import { useRecoilState } from "recoil";
 import {
   currentElState,
+  framesStylesState,
   globalUndoAndRedoStates,
   showsState,
+  showStylesBuilderForMotionBuilderState,
 } from "../../../helpers/atoms";
 import { infinitelyWorker } from "../../../helpers/infinitelyWorker";
 import {
@@ -417,7 +419,11 @@ const ObjectComponent = ({
               >
                 <AccordionItem
                   title={key}
-                  notify={Boolean(Object.values(getNestedValue(motion , [...destination, key]) || {})?.length)}
+                  notify={Boolean(
+                    Object.values(
+                      getNestedValue(motion, [...destination, key]) || {}
+                    )?.length
+                  )}
                 >
                   <ObjectComponent
                     motion={motion}
@@ -788,6 +794,11 @@ const FromTo = ({
   animation = motionAnimationType,
   animationIndex = 0,
 }) => {
+  const [showStylesBuilder, setShowStylesBuilder] = useRecoilState(
+    showStylesBuilderForMotionBuilderState
+  );
+  const [framesStyles, setFramesStyles] = useRecoilState(framesStylesState);
+
   const setSelector = (value) => {
     setMotion({
       ...motion,
@@ -822,6 +833,11 @@ const FromTo = ({
         return anim;
       }),
     });
+  };
+
+  const onSwitch = (value, obj = {}) => {
+    // setFramesStyles(obj);
+    // setShowStylesBuilder(value);
   };
 
   return (
@@ -895,69 +911,10 @@ const FromTo = ({
         <AccordionItem
           title="From"
           notify={Boolean(Object.values(animation?.from || {})?.length)}
+          onSwitch={(value) => {
+            onSwitch(value, animation.from);
+          }}
         >
-          {/* <section className="flex  gap-2 p-2 bg-slate-950 rounded-lg">
-            <Select
-              className="p-[unset]"
-              inputClassName="bg-slate-800"
-              containerClassName="bg-slate-800"
-              placeholder="Select Prop"
-              keywords={cssProps}
-              value={fromValue}
-              onInput={(value) => setFromValue(value)}
-              onEnterPress={(value) => {
-                addProp(value, "from");
-              }}
-              onItemClicked={(value) => {
-                addProp(value, "from");
-              }}
-            />
-            <SmallButton
-              className="w-[40px!important] bg-slate-800"
-              onClick={() => {
-                addProp(fromValue, "from");
-              }}
-            >
-              {Icons.plus("white")}
-            </SmallButton>
-          </section>
-          {!!Object.keys(animation.from).length && (
-            <section className=" flex flex-col gap-2 p-1">
-              {Object.entries(
-                motion?.animations?.[animationIndex]?.from || {}
-              ).map(([key, value], index) => {
-                return (
-                  <section
-                    key={index}
-                    className="relative flex flex-col gap-2  mt-3"
-                  >
-                    <h1 className="px-2 py-1  bg-blue-600 rounded-lg w-fit">
-                      {key}
-                    </h1>
-
-                    <section className="flex  gap-2">
-                      <Input
-                        placeholder={key}
-                        className="bg-slate-800 w-full"
-                        value={value}
-                        onInput={(ev) => {
-                          addProp(key, "from", ev.target.value);
-                        }}
-                      />
-                      <SmallButton
-                        onClick={(ev) => {
-                          removeProp(key, "from");
-                        }}
-                      >
-                        {Icons.trash("white")}
-                      </SmallButton>
-                    </section>
-                  </section>
-                );
-              })}
-            </section>
-          )} */}
-
           <section className="w-full p-1 bg-slate-950 rounded-lg">
             <AddNestedProps
               motion={motion}
@@ -1007,6 +964,9 @@ const FromTo = ({
         <AccordionItem
           title="To"
           notify={Boolean(Object.values(animation?.to || {})?.length)}
+          onSwitch={(value) => {
+            onSwitch(value, animation.to);
+          }}
         >
           <section className="w-full p-1 bg-slate-950 rounded-lg">
             <AddNestedProps
@@ -1052,50 +1012,6 @@ const FromTo = ({
         </AccordionItem>
         {/* notify={Boolean(Object.values(animation?.from || {})?.length)} */}
       </Accordion>
-
-      {/* <SwitcherSection
-        title="From ScrollTrigger"
-        defaultValue={animation.fromOptions.isScrollTrigger}
-        onActive={() =>
-          setActiveScrollTrigger("fromOptions", "isScrollTrigger")
-        }
-        onUnActive={() =>
-          setUnActiveScrollTrigger("fromOptions", "isScrollTrigger")
-        }
-      />
-
-      {animation.fromOptions.isScrollTrigger && (
-        <ScrollTriggerOptions
-          motion={motion}
-          setMotion={setMotion}
-          animation={animation}
-          animationIndex={animationIndex}
-          main="fromOptions"
-          secondMain={animation.useSameFromScrollTrigger ? "toOptions" : ""}
-          isTimeLine={false}
-        />
-      )}
-
-      <SwitcherSection
-        title="To ScrollTrigger"
-        defaultValue={animation.toOptions.isScrollTrigger}
-        onActive={() => setActiveScrollTrigger("toOptions", "isScrollTrigger")}
-        onUnActive={() =>
-          setUnActiveScrollTrigger("toOptions", "isScrollTrigger")
-        }
-      />
-
-      {animation.toOptions.isScrollTrigger && (
-        <ScrollTriggerOptions
-          motion={motion}
-          setMotion={setMotion}
-          animation={animation}
-          animationIndex={animationIndex}
-          main="toOptions"
-          secondMain={animation.useSameFromScrollTrigger ? "fromOptions" : ""}
-          isTimeLine={false}
-        />
-      )} */}
 
       {motion.isTimeLine && (
         <>
@@ -1210,6 +1126,11 @@ export const Motion = () => {
   const [globalUndoAndRedo, setGlobalUndoAndRedo] = useRecoilState(
     globalUndoAndRedoStates
   );
+  const [showStylesBuilder, setShowStylesBuilder] = useRecoilState(
+    showStylesBuilderForMotionBuilderState
+  );
+  const [framesStyles, setFramesStyles] = useRecoilState(framesStylesState);
+
   const [selectedEl, setSelectedEl] = useRecoilState(currentElState);
   const [selectedElMotionId, setSelectedElMotionId] = useState("");
   const [isPending, setTransition] = useTransition();
@@ -1288,9 +1209,16 @@ export const Motion = () => {
     setMotionKeys(Object.keys(currentMotion || {}));
   });
 
-  useEffect(()=>{
-      oldMotionIdRef.current = '';
-  },[selectedEl])
+  useEffect(() => {
+    oldMotionIdRef.current = "";
+  }, [selectedEl]);
+
+  useEffect(() => {
+    return () => {
+      setShowStylesBuilder(false);
+      setFramesStyles({});
+    };
+  }, []);
 
   useEffect(() => {
     if (!editor || !editor?.getSelected?.() || !motion?.animations?.length)
@@ -1748,7 +1676,11 @@ export const Motion = () => {
 
   return (
     <Memo className="h-full">
-      <UndoRedoContainer className="h-full" showProp="motionBuilder" state={[motion, setMotion]}>
+      <UndoRedoContainer
+        className="h-full"
+        showProp="motionBuilder"
+        state={[motion, setMotion]}
+      >
         <section
           ref={autoAnimateRef}
           className="flex flex-col gap-2 w-full relative mt-2"

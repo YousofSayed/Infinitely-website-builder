@@ -25,10 +25,10 @@ window["vIntersectionObserver"] = new IntersectionObserver(
     // root: null,
     // a thin band around the viewport center (±1%)
     // rootMargin:'-50% 0% -50% 0%',
-    // threshold: 0.5,
-      root: null,
-    threshold: 0,
-    rootMargin: "-50% 0px -50% 0px",
+    threshold: [0,1],
+      // root: null,
+    // threshold: 0,
+    // rootMargin: "-50% 0px -50% 0px",
   }
 ); 
 const vIntersection = (ctx) => {
