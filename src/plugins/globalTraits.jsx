@@ -368,6 +368,24 @@ export const globalTraits = (editor) => {
                 { editor, trait }
               );
               updateVFor(traits);
+              const loopCmp = getLoopComponent(model);
+              const looperPrevNext = loopCmp.find(`looper-next-prev-button`)[0];
+
+              const looperPrevNextTraitCallback =
+                looperPrevNext.getTrait("count-name")?.attributes?.callback;
+                if(looperPrevNext.getTrait("count-name")){
+                  looperPrevNext.getTrait("count-name").attributes.value = newValue;
+                }
+              isFunction(looperPrevNextTraitCallback) &&
+                looperPrevNextTraitCallback({
+                  editor,
+                  model: looperPrevNext,
+                  newValue: newValue,
+                  oldValue: oldValue,
+                  // props: {
+                  //   oldValue,
+                  // },
+                });
             },
           },
 
@@ -494,12 +512,25 @@ export const globalTraits = (editor) => {
             addPropsCodeLanguage: "javascript",
             role: "handler",
             // default: "{}",
-            stateProp: "",
-            keywords: defaultAttributeNames,
-            value: JSON.stringify(
+            mustValue:(
+              {attributes}
+            )=>JSON.stringify(
               Object.fromEntries(
                 Object.entries(
-                  editor.getSelected().getAttributes() || {}
+                  attributes || {}
+                ).filter(([key, value]) => {
+                  return key.startsWith(`v-bind`) || key.startsWith(`:`);
+                })
+              )
+            ),
+            stateProp: "",
+            keywords: defaultAttributeNames,
+            value: (
+              {attributes}
+            )=>JSON.stringify(
+              Object.fromEntries(
+                Object.entries(
+                  attributes || {}
                 ).filter(([key, value]) => {
                   return key.startsWith(`v-bind`) || key.startsWith(`:`);
                 })

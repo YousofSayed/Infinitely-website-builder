@@ -341,6 +341,7 @@ export interface RestAPIModel {
   headers: HeadersInit;
   body: BodyInit;
   response: string;
+  id:string;
 }
 
 export interface DynamicTemplatesType {

@@ -236,26 +236,13 @@ export const CodeManagerModal = () => {
     const newChange = {};
     let isHtmlUpdated = false;
     let isCssUpdated = false;
-    let totalHTMLAndCssSize = await (
-      await Promise.all(
-        (
-          await opfs.getFiles([
-            {
-              path: defineRoot(`editor/pages/${currentPageName}.html`),
-              as: "File",
-            },
-            { path: defineRoot(`css/${currentPageName}.css`), as: "File" },
-          ])
-        ).map(async (file) => await file.getSize())
-      )
-    ).reduce((prev, current) => (prev += current), 0);
 
     for (const key in filesData) {
       const root = defineRoot(key);
       const isChanged = changed[root];
 
       if (!isChanged) continue;
-      console.log("chhhhhhhhhhhhhhhhhhhhhhage : ", isChanged);
+      console.log("chhhhhhhhhhhhhhhhhhhhhhage : ", isChanged, key);
 
       if (
         key.includes(`editor/pages/${currentPageName}.html`) ||
@@ -361,6 +348,8 @@ export const CodeManagerModal = () => {
           res(props);
         });
 
+        console.log("root to write : ", root, filesData[root]);
+
         infinitelyWorker.postMessage({
           command: "writeFilesToOPFS",
           props: {
@@ -395,16 +384,49 @@ export const CodeManagerModal = () => {
     editor.clearDirtyCount();
     // await editor.load();
 
-    console.log("totalHTMLAndCssSize : ", totalHTMLAndCssSize);
+    let totalHTMLAndCssSize = [
+      new Blob(
+        [filesData[defineRoot(`editor/pages/${currentPageName}.html`)]],
+        { type: "text/html" }
+      ),
+      new Blob([filesData[defineRoot(`css/${currentPageName}.css`)]], {
+        type: "text/css",
+      }),
+    ]
+      .map((file) => file.size)
+      .reduce((prev, current) => (prev += current), 0);
+    //  let totalHTMLAndCssSize = await (
+    //   await Promise.all(
+    //     (
+    //       await opfs.getFiles([
+    //         {
+    //           path: defineRoot(`editor/pages/${currentPageName}.html`),
+    //           as: "File",
+    //         },
+    //         { path: defineRoot(`css/${currentPageName}.css`), as: "File" },
+    //       ])
+    //     ).map(async (file) => await file.getSize())
+    //   )
+    // ).reduce((prev, current) => (prev += current), 0);
+
+    console.log(
+      "totalHTMLAndCssSize : ",
+      totalHTMLAndCssSize,
+      toMB(totalHTMLAndCssSize, 2)
+    );
 
     if (toMB(totalHTMLAndCssSize, 2) <= 0.25) {
-      await store({}, editor);
-      const cb = () => {
-        editor.load();
-        editor.off(InfinitelyEvents.storage.storeEnd , cb);
-      };
-      editor.on(InfinitelyEvents.storage.storeEnd, cb);
+      // await store({}, editor);
+      console.log("Less than : ", toMB(totalHTMLAndCssSize, 2));
+      editor.load();
+
+      // const cb = () => {
+      //   editor.off(InfinitelyEvents.storage.storeEnd , cb);
+      // };
+      // editor.on(InfinitelyEvents.storage.storeEnd, cb);
     } else {
+      console.log('Reload required:');
+      
       reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {
         state: true,
       });

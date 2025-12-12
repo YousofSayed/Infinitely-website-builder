@@ -228,38 +228,76 @@ export function objectToString(obj, indentLevel = 0) {
   if (typeof obj === "string") return `"${obj}"`;
   return String(obj); // Numbers, booleans, etc.
 }
-
 export function parseForDirective(xForDirective = "") {
-  console.log("xForDirective : ", xForDirective);
+  if (!xForDirective || typeof xForDirective !== "string") return null;
 
-  const rgxWithIndex = /\((\s+)?\w+(\s+)?,(\s+)?\w+(\s+)?\)(\s+)?in(\s+)?\w+/gi;
-  const rgxWithoutIndex = /(\s+)?\w+(\s+)?in(\s+)?\w+/gi;
-  if (xForDirective.match(rgxWithIndex)?.length) {
-    const firstPart = xForDirective
-      .match(/\(.+\)/gi)
-      .join("")
-      .replaceAll(/\(|\)/gi, "")
-      .split(",");
-    const secondPart = xForDirective
-      .split(/\(.+\)/gi)
-      .join("")
-      .replace(/(\s+)in(\s+)/gi, "");
+  // Normalize whitespace
+  const clean = xForDirective.trim().replace(/\s+/g, " ");
+
+  // --- CASE 1: (item, index) in source ---
+  let match = clean.match(/^\(\s*(\w+)\s*,\s*(\w+)\s*\)\s+in\s+(.+)$/);
+  if (match) {
     return {
-      varName: firstPart[0].trim(),
-      index: firstPart[1].trim(),
-      array: secondPart.trim(),
+      varName: match[1],
+      index: match[2],
+      array: match[3].trim(),
     };
-  } else if (xForDirective.match(rgxWithoutIndex)?.length) {
-    const part = xForDirective.split(/\s|\s+/gi);
-    console.log(part);
-    return {
-      varName: part[0].trim(),
-      array: part[part.length - 1].trim(),
-    };
-  } else {
-    return null;
   }
+
+  // --- CASE 2: (item) in source ---
+  match = clean.match(/^\(\s*(\w+)\s*\)\s+in\s+(.+)$/);
+  if (match) {
+    return {
+      varName: match[1],
+      index: null,
+      array: match[2].trim(),
+    };
+  }
+
+  // --- CASE 3: item in source ---
+  match = clean.match(/^(\w+)\s+in\s+(.+)$/);
+  if (match) {
+    return {
+      varName: match[1],
+      index: null,
+      array: match[2].trim(),
+    };
+  }
+
+  return null;
 }
+
+// export function parseForDirective(xForDirective = "") {
+//   console.log("xForDirective : ", xForDirective);
+
+//   const rgxWithIndex = /\((\s+)?\w+(\s+)?,(\s+)?\w+(\s+)?\)(\s+)?in(\s+)?\w+/gi;
+//   const rgxWithoutIndex = /(\s+)?\w+(\s+)?in(\s+)?\w+/gi;
+//   if (xForDirective.match(rgxWithIndex)?.length) {
+//     const firstPart = xForDirective
+//       .match(/\(.+\)/gi)
+//       .join("")
+//       .replaceAll(/\(|\)/gi, "")
+//       .split(",");
+//     const secondPart = xForDirective
+//       .split(/\(.+\)/gi)
+//       .join("")
+//       .replace(/(\s+)in(\s+)/gi, "");
+//     return {
+//       varName: firstPart[0].trim(),
+//       index: firstPart[1].trim(),
+//       array: secondPart.trim(),
+//     };
+//   } else if (xForDirective.match(rgxWithoutIndex)?.length) {
+//     const part = xForDirective.split(/\s|\s+/gi);
+//     console.log(part);
+//     return {
+//       varName: part[0].trim(),
+//       array: part[part.length - 1].trim(),
+//     };
+//   } else {
+//     return null;
+//   }
+// }
 
 // console.log(
 //   parseForDirective(`(post , i) in respone[2].data`),

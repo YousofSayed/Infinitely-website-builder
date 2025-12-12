@@ -19,9 +19,14 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../../../helpers/db";
 import { current_project_id } from "../../../constants/shared";
 import { downloadFile, getProjectData } from "../../../helpers/functions";
-import { addClickClass, parse, stringify } from "../../../helpers/cocktail";
+import {
+  addClickClass,
+  parse,
+  stringify,
+  uniqueID,
+} from "../../../helpers/cocktail";
 import { FitTitle } from "../Protos/FitTitle";
-import { isPlainObject } from "lodash";
+import { isPlainObject, uniqueId } from "lodash";
 import { CodeEditor } from "../Protos/CodeEditor";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 // import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -79,11 +84,13 @@ export const RestAPIModels = memo(() => {
     body: {},
     respones: "",
     varName: "",
+    id: uniqueId(`rest-api-id-${uniqueID()}-`),
   };
+
   // const [methodsKeys , setMethodsKeys] = useState([...httpGetterMethods, ...httpSetterMethods])
   const [modleData, setModelData] = useState(structuredClone(initModelValue));
 
-  const addModel = async() => {
+  const addModel = async () => {
     if (
       !modleData.name ||
       !modleData.url ||
@@ -94,7 +101,13 @@ export const RestAPIModels = memo(() => {
       return;
     }
     // setRestModels([...restModels, structuredClone(modleData)]);
-    await fetchResponse([...restModels, structuredClone(modleData)]);
+    await fetchResponse([
+      ...restModels,
+      structuredClone({
+        ...modleData,
+        id: uniqueId(`rest-api-id-${uniqueID()}-`),
+      }),
+    ]);
     setModelData(structuredClone(initModelValue));
   };
 
@@ -269,7 +282,7 @@ export const RestAPIModels = memo(() => {
 
             <section className="flex gap-2 h-full">
               <Select
-              zIndex={2000}
+                zIndex={2000}
                 value={modleData.method}
                 className="bg-slate-900 border-2  border-slate-600 px-[unset] py-[unset]"
                 placeholder="Method"

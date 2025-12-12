@@ -11,6 +11,9 @@ export const InfinitelyEvents = {
     reload: "infinitely:editor:reload",
     require: `infinitely:editor:require-reload`,
   },
+  ruleTitle:{
+    update:`infinitely:rule-title:update`
+  },
   symbols: {
     update: "infinitely:symbol:update",
     select: "infinitely:symbol:select",

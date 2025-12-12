@@ -1,7 +1,9 @@
 * {
   box-sizing: border-box;
 }
-
+body{
+  background-color: white;
+}
 img,
 video {
   max-width: 100%;

@@ -4,20 +4,14 @@ import { useEditorMaybe } from "@grapesjs/react";
 import { SmallButton } from "./SmallButton";
 import { Icons } from "../../Icons/Icons";
 import { Choices } from "./Choices";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import {
-  currentElState,
-  projectData,
-  selectorState,
-} from "../../../helpers/atoms";
+import { useRecoilState, useRecoilValue } from "recoil";
+import { currentElState, selectorState } from "../../../helpers/atoms";
 import { current_project_id, inf_class_name } from "../../../constants/shared";
 import { db } from "../../../helpers/db";
-import { inlineWorker } from "../../../helpers/bridge";
 import { classesFinderWorker } from "../../../helpers/defineWorkers";
-import {
-  getProjectSettings,
-  preventSelectNavigation,
-} from "../../../helpers/functions";
+import { getProjectSettings } from "../../../helpers/functions";
+import { infinitelyCallback } from "../../../helpers/bridge";
+import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 
 export const SelectClass = () => {
   const editor = useEditorMaybe();
@@ -70,21 +64,22 @@ export const SelectClass = () => {
   }, [editor]);
 
   useEffect(() => {
-  if (!editor) return;
+    if (!editor) return;
 
-  const callback = (ev) => {
-    const { command, props } = ev.data;
-    if (command === "classes-chunks" && props.classes) {
-      setAllStyleSheetClasses((prev) => [
-        ...new Set([...prev, ...props.classes]),
-      ]);
-    }
-  };
+    const callback = (ev) => {
+      const { command, props } = ev.data;
+      if (command === "classes-chunks" && props.classes) {
+        infinitelyCallback(() => {
+          setAllStyleSheetClasses((prev) => [
+            ...new Set([...prev, ...props.classes]),
+          ]);
+        }, 10);
+      }
+    };
 
-  classesFinderWorker.addEventListener("message", callback);
-  return () => classesFinderWorker.removeEventListener("message", callback);
-}, [editor]);
-
+    classesFinderWorker.addEventListener("message", callback);
+    return () => classesFinderWorker.removeEventListener("message", callback);
+  }, [editor]);
 
   useEffect(() => {
     if (!editor) return;
@@ -131,9 +126,10 @@ export const SelectClass = () => {
   const removeClass = (classNameKeyword = "") => {
     const selected = editor.getSelected();
     selected.removeClass([classNameKeyword]);
-    if (`.${classNameKeyword}` == selector.toString()) {
-      setSelector(new String(""));
-    }
+    // if (`.${classNameKeyword}` == selector.toString()) {
+    //   setSelector(new String(""));
+    // }
+    setSelector(new String(""));
     const infClassName = selected.getAttributes()[inf_class_name];
     if (infClassName == classNameKeyword) {
       selected.removeAttributes([inf_class_name]);
@@ -283,6 +279,7 @@ export const SelectClass = () => {
             className="flex-wrap flex-center bg-slate-800"
             onCloseClick={(ev, keyword) => {
               removeClass(keyword);
+              editor.trigger(InfinitelyEvents.ruleTitle.update , keyword)
             }}
             onActive={({ keyword, index }) => {
               console.log("keeeeyword : ", keyword, "active");

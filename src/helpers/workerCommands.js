@@ -311,9 +311,12 @@ export async function deleteAllSymbolsById(props) {
  * }} props
  */
 export async function updateDB(props) {
-  console.log("From updateDB");
+  console.log("From updateDB" , opfs.id);
 
-  if (!opfs.id) throw new Error(`OPFS Id not found!`);
+  if (!opfs.id && props.projectId){
+    await initOPFS({id : props.projectId});
+    console.error(`OPFS Id not found!`)
+  } 
   if (!props.projectId && !opfs.id) throw new Error(`DB Id not found!`);
 
   // copy only the values we need now

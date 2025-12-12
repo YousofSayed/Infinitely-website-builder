@@ -35,6 +35,7 @@ import { motionsAndInteractionsCloneHandler } from "../../plugins/motionsAndInte
 import { globalTraits } from "../../plugins/globalTraits.jsx";
 import { initTraitsOnRender } from "../../plugins/initTraitsOnRender.jsx";
 import { editorKeymaps } from "../../plugins/editorKeymaps.jsx";
+import { InfinitelyEvents } from "../../constants/infinitelyEvents.js";
 
 export const GJEditor = ({ children }) => {
   const setSelectedEl = useSetRecoilState(currentElState);
@@ -132,6 +133,21 @@ export const GJEditor = ({ children }) => {
         navigate("/edite/styling");
       }
     });
+
+    editor.on(InfinitelyEvents.ruleTitle.update,()=>{
+       const selectedEl = ev.getSelected();
+       const rules = getComponentRules({
+        editor,
+        // nested:true
+        cmp: selectedEl,
+        cssCode: editor.getCss({
+          keepUnusedStyles: true,
+          avoidProtected: true,
+        }),
+      });
+
+      setCmpRules(rules.rules || []);
+    })
 
     ev.on("component:cmds:update", () => {
       console.log("updateeeeeeeeeeeeeeeeeeeeeee 89");

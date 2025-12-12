@@ -105,7 +105,7 @@ export const ScrollableToolbar = ({
     >
       {isScrollableElement && (
         <div
-          className={`z-50 absolute left-0 top-[-25px] h-[calc(100%+50px)] w-[40px]  backdrop-blur-xl bg-[rgba(255,255,255,0.01)] flex items-center justify-center  transition-all `}
+          className={`z-50 absolute left-0 top-[-25px] h-[calc(100%+50px)] w-[40px]  bg-black/40 flex items-center justify-center  transition-all `}
         >
           <button
             onClick={(ev) => {
@@ -137,7 +137,7 @@ export const ScrollableToolbar = ({
 
       {isScrollableElement && (
         <div
-          className={`z-50 absolute right-0 top-[-25px] h-[calc(100%+50px)] w-[40px]  backdrop-blur-xl bg-[rgba(255,255,255,0.01)] flex items-center justify-center  `}
+          className={`z-50 absolute right-0 top-[-25px] h-[calc(100%+50px)] w-[40px]  bg-black/40 flex items-center justify-center  `}
         >
           <button
             onClick={(ev) => {

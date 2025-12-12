@@ -1,5 +1,6 @@
 import React, {
   memo,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -50,30 +51,31 @@ export const Choices = ({
   //   setActive(false);
   // }, [sle]);
 
-  const selectingCallback = () => {
+  const selectingCallback = useCallback(() => {
     const currentSelector = getCurrentSelector(selector, editor.getSelected());
     console.log("current   : ", currentSelector, selector);
 
     const index = keywords.findIndex((item) => {
       // console.log(currentSelector.replace('.','').toLowerCase() == item.toLowerCase() , currentSelector.toLowerCase() , item.toLowerCase());
       return (
-        currentSelector.replace(".", "").toLowerCase() == item.toLowerCase()
+        currentSelector.replace(".", "").toLowerCase() === item.toLowerCase()
       );
     });
 
     currentIndex.current = index;
-    const active = index <= -1 ? false : true;
+    const active = index == -1 ? false : true;
     setActive(Boolean(active));
     console.log(
       "indexoo : ",
+      active,
       index,
       currentIndex.current,
-      keywords[index],
+      keywords[index]
     );
 
     // active ? onActive({ keyword, index: currentIndex.current }) :  onUnActive({ keyword, index: currentIndex.current });
     setKeyword(new String(keywords[index] || ""));
-  };
+  }, [selector, editor, keywords]);
 
   useEffect(() => {
     active
@@ -82,12 +84,12 @@ export const Choices = ({
   }, [active]);
 
   useEffect(() => {
-    if (enableSelecting) {
-      selectingCallback();
-    }
+    if (!enableSelecting) return;
+    if (!editor) return;
+    selectingCallback();
 
     // setCurrentSelcetor(currentSelector);
-  }, [selector, active, sle, editor, keywords]);
+  }, [selectingCallback, sle]);
 
   const makeNotifiers = () => {
     const newNotifiers = {};
@@ -114,8 +116,8 @@ export const Choices = ({
           console.log("className  : ", className);
 
           const cond = item == className || className.startsWith(`${item}:`);
-          console.log('cond : ' , cond , 'item:' , item);
-          
+          console.log("cond : ", cond, "item:", item);
+
           cond && (keyword = item);
           return cond;
         })
@@ -130,9 +132,9 @@ export const Choices = ({
             ?.replace?.(".", "")
             ?.replace?.("{", "");
           console.log("className  : ", className);
-          
+
           const cond = item == className || className.startsWith(`${item}:`);
-          console.log('cond : ' , cond , 'item:' , item , className);
+          console.log("cond : ", cond, "item:", item, className);
           cond && (keyword = item);
           return cond;
         })
@@ -185,22 +187,27 @@ export const Choices = ({
               onClick={(ev) => {
                 ev.stopPropagation();
                 ev.preventDefault();
-               
+
                 if (!enableSelecting) return;
 
-
-                console.log("selector setttting");
+                const valueWithoutDot = selector.startsWith(".")
+                  ? selector.replace(".", "").toLowerCase() ===
+                    keyword.toLowerCase()
+                  : selector.toLowerCase() === keyword.toLowerCase();
+                console.log(
+                  "selector setttting indexoo",
+                  selector,
+                  keyword,
+                  valueWithoutDot
+                );
                 setRule({
                   is: false,
                   ruleString: "",
                   atRuleParams: null,
                   atRuleType: null,
                 });
-                setSelector(
-                  selector.toLowerCase() === keyword.toLowerCase()
-                    ? ""
-                    : `.${keyword}`
-                );
+
+                setSelector(valueWithoutDot ? "" : `.${keyword}`);
               }}
               key={i}
               className={`text-nowrap break-all relative custom-font-size group px-[20px] w-fit cursor-pointer select-none  flex-shrink-0 py-2 text-white ${

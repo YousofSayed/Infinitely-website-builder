@@ -5,7 +5,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Layout } from "./Protos/Layout";
 import { useRecoilState, useRecoilValue } from "recoil";
 import {
   animationsState,
@@ -18,21 +17,10 @@ import {
   showAnimationsBuilderState,
   showStylesBuilderForMotionBuilderState,
 } from "../../helpers/atoms";
-import { StyleTypography } from "./Protos/StyleTypography";
-import { Border } from "./Protos/Border";
 import { useEditorMaybe } from "@grapesjs/react";
 import { SelectState } from "./Protos/SelectState";
 import { SelectClass } from "./Protos/SelectClass";
-import { Background } from "./Protos/Background";
 import { MultiFunctionProp } from "./Protos/MultiFunctionProp";
-import { Animation } from "./Protos/Animation";
-import {
-  filterTypes,
-  filterUnits,
-  transformValues,
-} from "../../constants/cssProps";
-import { Others } from "./Protos/Others";
-import { Backdrop } from "./Protos/Backdrop";
 import { isArray, isBoolean, isString, random, uniqueId } from "lodash";
 import { Accordion } from "../Protos/Accordion";
 import { AccordionItem } from "../Protos/AccordionItem";
@@ -61,7 +49,8 @@ import { OptionsButton } from "../Protos/OptionsButton";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
 import { parse } from "../../helpers/cocktail";
-import { animationsSavingMsg } from "../../constants/confirms";
+import { InfinitelyEvents } from "../../constants/infinitelyEvents";
+
 
 const SelectElementToStyle = () => (
   <h1 className="text-slate-400 custom-font-size text-center animate-pulse capitalize font-semibold bg-slate-900 rounded-lg p-2">
@@ -314,11 +303,12 @@ export const StyleAside = memo(({ className }) => {
     setNotifyClasses(classes.length > 0);
   }, [editor, currentEl]);
 
+  //settingGlobalRuleTitle
   useEffect(() => {
     if (!editor) return;
     const sle = editor.getSelected();
     if (!sle) return;
-    const callback = () => {
+    const settingGlobalRuleTitle = () => {
       let currentSelector = getCurrentSelector(selector, sle);
       const currentMedia = getCurrentMediaDevice(editor);
       const mediaPx = editor.Devices.get(editor.getDevice()).attributes
@@ -357,12 +347,16 @@ export const StyleAside = memo(({ className }) => {
       } else {
         setMediaCondTitle("");
       }
+      console.log(`From settingGlobalRuleTitle`);
     };
 
-    callback();
-    editor.on("change:device", callback);
+    settingGlobalRuleTitle();
+    editor.on("change:device", settingGlobalRuleTitle);
+    // editor.on(InfinitelyEvents.ruleTitle.update, settingGlobalRuleTitle);
+    
     return () => {
-      editor.off("change:device", callback);
+      editor.off("change:device", settingGlobalRuleTitle);
+      // editor.off(InfinitelyEvents.ruleTitle.update, settingGlobalRuleTitle);
     };
   }, [cmpRules, editor, currentEl, globalRule, mediaCond]);
 

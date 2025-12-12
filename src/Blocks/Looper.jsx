@@ -2,7 +2,7 @@ import React from "react";
 import { toast } from "react-toastify";
 import { Icons } from "../components/Icons/Icons";
 import { current_project_id, headersProps } from "../constants/shared";
-import { parse, stringify } from "../helpers/cocktail";
+import { parse, stringify, uniqueID } from "../helpers/cocktail";
 import {
   defineTraits,
   getProjectData,
@@ -13,6 +13,7 @@ import { infinitelyWorker } from "../helpers/infinitelyWorker";
 import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
 import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
 import { setPropToLoopCmp } from "../plugins/globalTraits";
+import { uniqueId } from "lodash";
 
 /**
  *
@@ -20,6 +21,7 @@ import { setPropToLoopCmp } from "../plugins/globalTraits";
  * @returns
  */
 export const Looper = ({ editor }) => {
+  let looperNameTimeout;
   editor.Components.addType("looper", {
     model: {
       defaults: {
@@ -73,58 +75,98 @@ export const Looper = ({ editor }) => {
             placeholder: `Loop Name`,
             role: "attribute",
             async callback({ editor, oldValue, newValue, trait, model }) {
-              const sle = editor.getSelected();
-              const projectData = await getProjectData();
-              const restModels = projectData.restAPIModels.filter(Boolean);
-              const loopUrl = sle.getTrait("loop-url")?.attributes?.value || "";
-              const loopHeaders =
-                sle.getTrait("loop-headers")?.attributes?.value || "";
-              const newModels = [
-                ...restModels.filter((model) => model.varName != oldValue),
-              ];
-              const oldModel = restModels.find(
-                (model) => model.varName == oldValue
-              );
-              const headers = loopHeaders ? parse(loopHeaders || "{}") : null;
-              console.log(loopUrl, headers);
+              const handler = async () => {
+                const sle = editor.getSelected();
+                const projectData = await getProjectData();
+                const restModels = projectData.restAPIModels.filter(Boolean);
+                const uuid = uniqueId(`looper-id-${uniqueID()}-`);
+                const attributes = model.getAttributes();
+                let looperId = attributes["looper-id"];
+                if (!looperId) {
+                  sle.addAttributes({ "looper-id": uuid });
+                  looperId = uuid;
+                }
 
-              const responseData = oldModel?.response
-                ? oldModel.response
-                : stringify(await (await fetch(loopUrl, { headers })).json());
+                const loopUrl =
+                  sle.getTrait("loop-url")?.attributes?.value || "";
+                const loopHeaders =
+                  sle.getTrait("loop-headers")?.attributes?.value || "";
 
-              newModels.push({
-                varName: newValue,
-                name: newValue,
-                method: "GET",
-                url: loopUrl,
-                headers,
-                response: responseData,
-                body: null,
-              });
+                const oldModel = restModels.find(
+                  (model) => model.id == looperId
+                );
 
-              infinitelyWorker.postMessage({
-                command: "updateDB",
-                props: {
-                  projectId: +localStorage.getItem(current_project_id),
-                  data: {
-                    restAPIModels: newModels,
+                const headers = loopHeaders ? parse(loopHeaders || "{}") : null;
+                // console.log(loopUrl, headers);
+
+                // const responseData = oldModel?.response
+                //   ? oldModel.response
+                //   : stringify(await (await fetch(loopUrl, { headers })).json());
+                const responseData = stringify(
+                  await (await fetch(loopUrl, { headers })).json()
+                );
+
+                if (!oldModel) {
+                  restModels.push({
+                    varName: newValue,
+                    name: newValue,
+                    method: "GET",
+                    url: loopUrl,
+                    headers,
+                    response: responseData,
+                    body: null,
+                    id: looperId,
+                  });
+                } else {
+                  const index = restModels.findIndex((r) => r.id == looperId);
+                  if (index >= 0) {
+                    restModels.splice(index, 1);
+                    restModels.push({
+                      varName: newValue,
+                      name: newValue,
+                      method: "GET",
+                      url: loopUrl,
+                      headers,
+                      response: responseData,
+                      body: null,
+                      id: looperId,
+                    });
+                  }
+                }
+
+                infinitelyWorker.postMessage({
+                  command: "updateDB",
+                  props: {
+                    projectId: +localStorage.getItem(current_project_id),
+                    data: {
+                      restAPIModels: restModels,
+                    },
                   },
-                },
-              });
-              const attributes = model.getAttributes();
-              const modelScope = attributes["v-scope"];
-
-              modelScope && setPropToLoopCmp([`${newValue || "data"}`, "[]"] , oldValue , model , {editor , trait});
-              !modelScope &&
-                sle.addAttributes({
-                  "v-scope": `{${newValue || "data"}:[]}`,
                 });
+                const modelScope = attributes["v-scope"];
 
-              sle.addAttributes({
-                "v-effect": `fetch("${loopUrl}",{headers:${
-                  loopHeaders ? `JSON.parse('${loopHeaders}')` : "null"
-                }}).then(res=>res.json()).then(res=>${newValue || "data"}=res)`,
-              });
+                modelScope &&
+                  setPropToLoopCmp(
+                    [`${newValue || "data"}`, "[]"],
+                    oldValue,
+                    model,
+                    { editor, trait }
+                  );
+                !modelScope &&
+                  sle.addAttributes({
+                    "v-scope": `{${newValue || "data"}:[]}`,
+                  });
+
+                sle.addAttributes({
+                  "v-effect": `fetch("${loopUrl}",{headers:${
+                    loopHeaders ? `JSON.parse('${loopHeaders}')` : "null"
+                  }}).then(res=>res.json()).then(res=>${
+                    newValue || "data"
+                  }=res)`,
+                });
+              };
+              looperNameTimeout && clearTimeout(looperNameTimeout);
+              looperNameTimeout = setTimeout(handler, 70);
             },
           },
           {
