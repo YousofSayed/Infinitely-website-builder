@@ -177,41 +177,42 @@ export default defineConfig({
         importScripts: ["/dbAssets-sw.js"],
       },
     }),
-    chunkSplitPlugin({
-      strategy: "default",
-      customSplitting: {
-        vendor0: [/\breact\b/],
-        vendor1: [/\bgrapesjs\b/],
-        vendor2: [
-          /\@monaco-editor\/react/,
-          /react-resizable-panels/,
-          /react-virtuoso/,
-        ],
-        vendor3: [/react-sortablejs/, /linkedom/, /csso/, /css/],
-        vendor4: [
-          /lodash/,
-          /js-beautify/,
-          /interactjs/,
-          /react-error-boundary/,
+    // chunkSplitPlugin({
+    //   strategy: "default",
+    //   // customSplitting: {
+    //   //   vendor0: [/\breact\b/],
+    //   //   vendor1: [/\bgrapesjs\b/],
+    //   //   vendor2: [
+    //   //     /\@monaco-editor\/react/,
+    //   //     /react-resizable-panels/,
+    //   //     /react-virtuoso/,
+    //   //   ],
+    //   //   vendor3: [/react-sortablejs/, /linkedom/, /csso/],
 
-          /mime/,
-        ],
-        vendor5: [
-          /react-sticky-el/,
-          // /react-syntax-highlighter/,
-          /react-toastify/,
-          /react-tooltip/,
-          /react-virtuoso/,
-          /recoil/,
-          /serialize-javascript/,
-        ],
-        vendor6: [/react-dom/, /react-router-dom/],
-        vendor7: [/\@grapesjs\/react/],
-        vendor8: [/html-to-image/, /lodash/, /html2canvas-pro/],
-        typescript:[/\btypescript\b/],
-        icons: [/Icons\.jsx/],
-      },
-    }),
+    //   //   vendor4: [
+    //   //     /lodash/,
+    //   //     /js-beautify/,
+    //   //     /interactjs/,
+    //   //     /react-error-boundary/,
+
+    //   //     /mime/,
+    //   //   ],
+    //   //   vendor5: [
+    //   //     /react-sticky-el/,
+    //   //     // /react-syntax-highlighter/,
+    //   //     /react-toastify/,
+    //   //     /react-tooltip/,
+    //   //     /react-virtuoso/,
+    //   //     /recoil/,
+    //   //     /serialize-javascript/,
+    //   //   ],
+    //   //   vendor6: [/react-dom/, /react-router-dom/],
+    //   //   vendor7: [/\@grapesjs\/react/],
+    //   //   vendor8: [/html-to-image/, /lodash/, /html2canvas-pro/],
+    //   //   typescript:[/\btypescript\b/],
+    //   //   icons: [/Icons\.jsx/],
+    //   // },
+    // }),
     // mergePrecacheIntoDbAssetsSw(),
   ],
   worker: {
@@ -220,12 +221,13 @@ export default defineConfig({
 
   build: {
     rollupOptions:{
-      treeshake:true,
+      // treeshake:false,
       input: {
         main: './index.html',
         app: './app.html',
       },
     },
+    sourcemap:true,
     minify:'esbuild',
     chunkSizeWarningLimit: "5000",
     assetsDir: "static",
