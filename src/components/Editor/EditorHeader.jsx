@@ -240,7 +240,7 @@ export const HomeHeader = () => {
             // className="max-xl:flex-shrink-0"
             onClick={(ev) => {
               editor.setDevice("desktop");
-              setMediaConditon("max-width");
+              setMediaConditon("");
               // setCurrentEl({ currentEl: editor?.getSelected()?.getEl() });
               editor.trigger("device:change");
             }}

@@ -85,7 +85,40 @@ export const CodeEditor = ({
         await opfs.getFile(defineRoot(`js/${currentPageName}.js`))
       ).text();
 
-      infinitelyCallback(async () => {
+      
+
+      const devLibs = (
+        await Promise.all(
+          codeEditorScripts.map(async (url) => {
+            const response = await fetch(url);
+            return await response.text();
+          })
+        )
+      ).join("\n");
+
+      const restModelsContext = restAPIModels
+        .map((model) => `var ${model.varName} = ${model.response}`)
+        .join("\n");
+      const finalLibs = [
+        // ...libs,
+        devLibs,
+        // replacedInfImport,
+        globalJs,
+        localJs,
+        extraLibs,
+        allowCmdsContext && restModelsContext,
+        allowCmdsContext && cmdsContext,
+      ].filter(Boolean);
+      console.log("contentnsss : ", restModelsContext, cmdsContext);
+
+      allowExtraLibs &&
+        monaco.languages.typescript.javascriptDefaults.addExtraLib(
+          finalLibs.join("\n\n"),
+          "ts:filename/infinitely.d.ts"
+        );
+
+
+        setTimeout(async () => {
         for (const lib of [
           ...projectData.jsHeaderLibs,
           ...projectData.jsFooterLibs,
@@ -162,7 +195,7 @@ export const CodeEditor = ({
         }
       }, 10);
 
-      infinitelyCallback(async () => {
+      setTimeout(async () => {
         ///// Global types
         for (const globalType of global_types) {
           const typesFiles = await opfs.getAllFiles(
@@ -226,51 +259,6 @@ export const CodeEditor = ({
           }
         }
       }, 10);
-
-      const devLibs = (
-        await Promise.all(
-          codeEditorScripts.map(async (url) => {
-            const response = await fetch(url);
-            return await response.text();
-          })
-        )
-      ).join("\n");
-
-      const restModelsContext = restAPIModels
-        .map((model) => `var ${model.varName} = ${model.response}`)
-        .join("\n");
-      const finalLibs = [
-        // ...libs,
-        devLibs,
-        // replacedInfImport,
-        globalJs,
-        localJs,
-        extraLibs,
-        allowCmdsContext && restModelsContext,
-        allowCmdsContext && cmdsContext,
-      ].filter(Boolean);
-      console.log("contentnsss : ", restModelsContext, cmdsContext);
-
-      allowExtraLibs &&
-        monaco.languages.typescript.javascriptDefaults.addExtraLib(
-          finalLibs.join("\n\n"),
-          "ts:filename/infinitely.d.ts"
-        );
-
-      // const projectId = +localStorage.getItem(current_project_id);
-      // const {projectSettings} = await getProjectSettings(projectId);
-      // monaco.languages.typescript.javascriptDefaults.addExtraLib(
-      //   buildGsapMotionsScript(
-      //     filterMotionsByPage(
-      //       await cleanMotions(projectData.motions, projectData.pages),
-      //       currentPageName
-      //     ),
-      //     false,
-      //     projectSettings.remove_gsap_markers_on_build,
-      //     currentPageName
-      //   ),
-      //   `ts:filename/motions.${currentPageName}.d.ts`
-      // );
 
       monaco.languages.typescript.javascriptDefaults.addExtraLib(
         libSource,

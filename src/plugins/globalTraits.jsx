@@ -373,9 +373,10 @@ export const globalTraits = (editor) => {
 
               const looperPrevNextTraitCallback =
                 looperPrevNext.getTrait("count-name")?.attributes?.callback;
-                if(looperPrevNext.getTrait("count-name")){
-                  looperPrevNext.getTrait("count-name").attributes.value = newValue;
-                }
+              if (looperPrevNext.getTrait("count-name")) {
+                looperPrevNext.getTrait("count-name").attributes.value =
+                  newValue;
+              }
               isFunction(looperPrevNextTraitCallback) &&
                 looperPrevNextTraitCallback({
                   editor,
@@ -512,25 +513,20 @@ export const globalTraits = (editor) => {
             addPropsCodeLanguage: "javascript",
             role: "handler",
             // default: "{}",
-            mustValue:(
-              {attributes}
-            )=>JSON.stringify(
-              Object.fromEntries(
-                Object.entries(
-                  attributes || {}
-                ).filter(([key, value]) => {
-                  return key.startsWith(`v-bind`) || key.startsWith(`:`);
-                })
-              )
-            ),
+            mustValue: ({ attributes }) =>
+              JSON.stringify(
+                Object.fromEntries(
+                  Object.entries(attributes || {}).filter(([key, value]) => {
+                    return key.startsWith(`v-bind`) || key.startsWith(`:`);
+                  })
+                )
+              ),
             stateProp: "",
             keywords: defaultAttributeNames,
-            value: (
-              {attributes}
-            )=>JSON.stringify(
+            value: JSON.stringify(
               Object.fromEntries(
                 Object.entries(
-                  attributes || {}
+                  editor.getSelected()?.getAttributes() || {}
                 ).filter(([key, value]) => {
                   return key.startsWith(`v-bind`) || key.startsWith(`:`);
                 })
@@ -545,13 +541,19 @@ export const globalTraits = (editor) => {
               const attributes = parse(`${newValue || {}}`);
               const bindedAttributes = Object.fromEntries(
                 Object.entries(attributes).map(([key, value]) => [
-                  `v-bind:${key}`,
+                  key.startsWith("v-bind") ? key : `v-bind:${key}`,
                   value,
                 ])
               );
               console.log("value trait", newValue, parse(`${newValue || {}}`));
 
               sle.addAttributes(bindedAttributes);
+            },
+
+            deleteCallback({ trait, newValue, model, editor }) {
+              model.removeAttributes([newValue]);
+              model.removeTrait(trait.name);
+              // editor.trigger("trait:value");
             },
           },
 

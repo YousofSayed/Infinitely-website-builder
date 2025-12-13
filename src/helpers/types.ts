@@ -158,6 +158,7 @@ export type InfinitelyTrait = {
   textareaLanguage: string;
   allowCmdsContext: boolean;
   callback: TraitCallback;
+  deleteCallback:TraitCallback;
   hint: TraitCallback | string;
   init: ({
     editor,

@@ -171,7 +171,8 @@ export function Editor({ params }) {
 
   useWorkerToast();
   const isProject = Boolean(+localStorage.getItem(current_project_id));
-  const [parentForPanelsGroup] = useAutoAnimate();
+  // const [parentForPanelsGroup] = useAutoAnimate();
+  // backdrop-blur-md bg-[#020617BF]
   return isProject ? (
     isAssetsWorkerDone ? (
       <section className="w-full h-full">
@@ -184,7 +185,7 @@ export function Editor({ params }) {
           limit={10}
           pauseOnHover={true}
           position="top-left"
-          toastClassName={`backdrop-blur-md bg-[#020617BF]`}
+          toastClassName={`bg-slate-900`}
           className={`z-[1000000]    `}
           // containerId={`main-toast-container`}
 

@@ -506,7 +506,7 @@ export const TraitsAside = () => {
                 //   trait.name,
                 //   trait.value
                 // );
-                trait?.mustValue && (trait.value = trait.mustValue)
+                trait?.mustValue && (trait.value = trait.mustValue);
                 isFunction(trait.value) &&
                   (trait.value = trait.value({
                     attributes: selectedCmp.getAttributes(),
@@ -831,28 +831,33 @@ export const TraitsAside = () => {
 
                                     <SmallButton
                                       onClick={() => {
-                                        const parsedVal = parse(
-                                          trait.value || {}
-                                        );
-                                        delete parsedVal[key];
-                                        const newVal = stringify({
-                                          ...parsedVal,
-                                        });
-
-                                        updateTraitValue({
-                                          name: trait.name,
-                                          key: "value",
-                                          value: newVal,
-                                        });
-
-                                        trait.callback &&
-                                          trait.callback({
-                                            editor,
-                                            // oldValue: trait.value,
-                                            newValue: newVal,
+                                        isFunction(trait.deleteCallback) &&
+                                          trait.deleteCallback({
+                                            ...mainCallbackProps,
+                                            newValue: key,
                                           });
-                                        trait.command &&
-                                          editor.runCommand(trait.command);
+                                        // const parsedVal = parse(
+                                        //   trait.value || {}
+                                        // );
+                                        // delete parsedVal[key];
+                                        // const newVal = stringify({
+                                        //   ...parsedVal,
+                                        // });
+
+                                        // updateTraitValue({
+                                        //   name: trait.name,
+                                        //   key: "value",
+                                        //   value: newVal,
+                                        // });
+
+                                        // trait.callback &&
+                                        //   trait.callback({
+                                        //     editor,
+                                        //     // oldValue: trait.value,
+                                        //     newValue: newVal,
+                                        //   });
+                                        // trait.command &&
+                                        //   editor.runCommand(trait.command);
                                       }}
                                       className="[&_path]:stroke-white bg-slate-800 hover:bg-[crimson!important]"
                                     >

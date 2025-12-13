@@ -333,7 +333,7 @@ export const StyleAside = memo(({ className }) => {
           return mainCond && (isBoolCond || isMediaStringCond);
         })
       );
-      const title = `${mediaCond} ${mediaPx ? `(${mediaPx})` : ""} ${
+      const title = `${mediaCond} ${mediaPx && mediaCond? `(${mediaPx})` : ""} ${
         editor.config.mediaCondition ? ":" : ""
       } 
     ${selectorWithRule}`;

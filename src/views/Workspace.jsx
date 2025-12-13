@@ -41,7 +41,7 @@ export const Workspace = memo(() => {
   return (
     <main className=" h-full bg-slate-900 flex flex-col gap-2 pb-2 overflow-hidden">
       <ToastContainer
-        toastClassName={`backdrop-blur-md bg-[#020617BF]`}
+        toastClassName={`bg-slate-900`}
         className={`z-[1000000000000]    `}
         autoClose={3000}
         draggable={true}

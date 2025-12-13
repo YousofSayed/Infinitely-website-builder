@@ -63,11 +63,11 @@ export const Display = () => {
   useUpdateInputValue({
     cssProp: "display",
     onEffect(cssProp, val) {
-      console.log("display effect : ", val);
-      !val && isParentFlex && setOption("flex");
-      !val && isParentGrid && setOption("grid");
-      !val && !isParentFlex && !isParentGrid && setOption("");
-      val && setOption(val);
+      // console.log("display effect : ", val , !val && !isParentFlex && !isParentGrid , val , isParentFlex , isParentGrid);
+      // !val && isParentFlex && setOption("flex");
+      // !val && isParentGrid && setOption("grid");
+      // !val && !isParentFlex && !isParentGrid && setOption(new String(""));
+     setOption(val ||"");
     },
     // setVal:(val)=>{
     //   console.log("display effect from setval: ", val);
