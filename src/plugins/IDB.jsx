@@ -821,15 +821,15 @@ export const loadScripts = async (editor, projectData) => {
       condition: !projectSetting.enable_tailwind,
     });
 
-    appendToHeader({
-      type: "scripts",
-      attributes: {
-        src: `https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js`,
-        name: "spline-viewer.js",
-        type: "module",
-      },
-      condition: projectSetting.enable_spline_viewer,
-    });
+    // appendToHeader({
+    //   type: "scripts",
+    //   attributes: {
+    //     src: `https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js`,
+    //     name: "spline-viewer.js",
+    //     type: "module",
+    //   },
+    //   condition: projectSetting.enable_spline_viewer,
+    // });
 
     appendToHeader({
       type: "styles",
@@ -948,6 +948,17 @@ export const loadScripts = async (editor, projectData) => {
     await appendScript(mainScriptsForEditor, 0, (script, lib) => {
       script.src = lib;
     });
+
+    projectSettings.enable_swiperjs &&
+      (await appendScript(
+        [`https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js`],
+        0,
+        (script, lib) => {
+          script.src = lib;
+          script.type = "module";
+          script.setAttribute("name", "spline-viewer.js");
+        }
+      ));
 
     projectSettings.enable_swiperjs &&
       (await appendScript(
