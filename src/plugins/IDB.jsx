@@ -949,7 +949,7 @@ export const loadScripts = async (editor, projectData) => {
       script.src = lib;
     });
 
-    projectSettings.enable_swiperjs &&
+    projectSettings.enable_spline_viewer &&
       (await appendScript(
         [`https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js`],
         0,
