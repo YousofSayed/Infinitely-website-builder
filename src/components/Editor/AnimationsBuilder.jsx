@@ -350,7 +350,7 @@ export const AnimationsBuilder = () => {
     setAnimations(clone);
   };
 
-    /**
+  /**
    *
    * @param {InputEvent} ev
    */
@@ -461,11 +461,10 @@ export const AnimationsBuilder = () => {
   //   };
   // }, []);
 
-
-
   return (
     <Memo className="h-full">
       <UndoRedoContainer
+        defaultValue={animationsType}
         className="h-full"
         showProp="animationBuilder"
         state={[animations, setAnimations]}

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { currentElState, showsState } from "../../helpers/atoms";
 import { useRecoilState } from "recoil";
 import { useUndoRedo } from "@anandarizki/use-undo-redo";
+import { cloneDeep } from "lodash";
 
 /**
  *
@@ -17,11 +18,12 @@ import { useUndoRedo } from "@anandarizki/use-undo-redo";
  * @typedef {Object} Props
  * @property {keyof import('../../helpers/types').ShowProps} showProp
  * @property {any} state
+ * @property {any} defaultValue
  * @property {React.JSX.Element} children
  * @param {React.HTMLAttributes<HTMLDivElement> & Props} props
  * @returns
  */
-export const UndoRedoContainer = ({ children, showProp, state, ...props }) => {
+export const UndoRedoContainer = ({ children, showProp, state,defaultValue = {}, ...props }) => {
   const [undo, redo, { reset, history }] = useUndoRedo(state);
   const [st, setSt] = state;
   const [isReset, setReset] = useState(false);
@@ -40,10 +42,11 @@ export const UndoRedoContainer = ({ children, showProp, state, ...props }) => {
 
   useEffect(() => {
     if (!currentEl?.currentEl) return;
-
+    console.log("history[0]",history?.[0]?.value);
+    
     // clear undo/redo history and set a fresh state
     reset();
-    setSt({}); // or the default initial state for this element
+    setSt(history?.length && history?.[0]?.value?.constructor?.name ? new Function(`return new ${history[0]?.value?.constructor?.name}()`) : cloneDeep(defaultValue)); // or the default initial state for this element
     history.length = 0;
   }, [currentEl]);
 

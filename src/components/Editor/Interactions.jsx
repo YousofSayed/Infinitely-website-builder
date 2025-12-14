@@ -526,10 +526,12 @@ export const Interactions = () => {
   // useInfinitelyUndoRedo([interactionsState, setInteractions]);
 
   useEffect(() => {
-    if (!selectedEl) return;
+    if (!selectedEl.currentEl) return;
     if (!editor) return;
     if (!editor.getSelected()) return;
     // getAndSetIdHandle();
+  
+    
     const sle = editor.getSelected();
     const handler = async () => {
       const sle = editor.getSelected();
@@ -546,24 +548,24 @@ export const Interactions = () => {
         setInteractionsId(intersectionIdAttr);
       } else {
         const projectData = await getProjectData();
-        console.log("elseeee", projectData.interactions[intersectionIdAttr]);
-        setInteractions(projectData.interactions[intersectionIdAttr]);
+        console.log("elseeee", projectData.interactions[intersectionIdAttr],projectData.interactions[intersectionIdAttr]|| []);
+        setInteractions(projectData.interactions[intersectionIdAttr] || []);
         setInteractionsId(intersectionIdAttr);
         setMainId(intersectionIdAttr);
       }
     };
     handler();
-    const eventHandler = (model, updatedAttributes, others) => {
-      console.log(`updatedAttributes : `, updatedAttributes, others);
+    // const eventHandler = (model, updatedAttributes, others) => {
+    //   console.log(`updatedAttributes : `, updatedAttributes, others);
 
-      if (
-        !Object.keys(updatedAttributes).some(
-          (key) => key == interactionId || key == mainInteractionId
-        )
-      )
-        return;
-      handler();
-    };
+    //   if (
+    //     !Object.keys(updatedAttributes).some(
+    //       (key) => key == interactionId || key == mainInteractionId
+    //     )
+    //   )
+    //     return;
+    //   handler();
+    // };
 
     // sle.on("change:attributes", eventHandler);
     // return () => {
@@ -572,6 +574,7 @@ export const Interactions = () => {
   }, [selectedEl, editor]);
 
   useEffect(() => {
+      console.log("interactionsState : " ,interactionsState);
     if (!editor) return;
     if (mainId && Array.isArray(interactionsState)) {
       (async () => {
@@ -965,6 +968,7 @@ export const Interactions = () => {
   return (
     <Memo className="h-full">
       <UndoRedoContainer
+      defaultValue={interactionsType}
         className="h-full"
         state={[interactionsState, setInteractions]}
         showProp="interactionsBuilder"
@@ -1230,8 +1234,9 @@ export const Interactions = () => {
           {interactionsId && Boolean(interactionsState?.length) && (
             <MiniTitle>Interactions</MiniTitle>
           )}
+
           <Accordion>
-            {interactionsState.map((interaction, i) => (
+            {Array.isArray(interactionsState) && interactionsState.map((interaction, i) => (
               <AccordionItem key={i} title={interaction.event}>
                 <Interaction
                   id={interactionsId}

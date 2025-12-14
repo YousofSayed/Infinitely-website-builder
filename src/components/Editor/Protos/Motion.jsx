@@ -1677,6 +1677,7 @@ export const Motion = () => {
   return (
     <Memo className="h-full">
       <UndoRedoContainer
+        defaultValue={mType}
         className="h-full"
         showProp="motionBuilder"
         state={[motion, setMotion]}
