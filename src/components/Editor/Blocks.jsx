@@ -62,6 +62,11 @@ export const Blocks = (() => {
           block.content instanceof Blob &&
             (block.content = await block.content.text());
 
+            // block.style instanceof Blob &&
+            // (block.style = await block.style.text());
+
+            // block.style && editor.Css.addRules(block.style);
+            
           if (block?.pathes) {
             block.content = await (
               await opfs.getFile(defineRoot(block.pathes.content))

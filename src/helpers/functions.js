@@ -1481,6 +1481,7 @@ export function initSymbol(id, editor) {
         .getWrapper()
         .find(`[${inf_symbol_Id_attribute}="${id}"]`);
       const selectedCmp = editor.getSelected() || cmp;
+      // selectedCmp.off("change:attributes", handler);
       const selectedSymbol = getInfinitelySymbolInfo(selectedCmp);
 
       if (!selectedSymbol.isSymbol) {
@@ -1506,15 +1507,17 @@ export function initSymbol(id, editor) {
         } else {
           // console.error(`replaaaaaaaaaaaaaaaaaaaaaaaaaace here`);
 
-          symbol.replaceWith(JSON.parse(newContent));
+          symbol.replaceWith(JSON.parse(newContent),{});
           console.log("Replaced");
           // symbol.replaceWith(regenerateSymbol(JSON.parse(newContent)));
           // symbol.set('content', regenerateSymbol(JSON.parse(newContent)));
         }
-        selectedCmp.on("change:attributes", () => {
-          handler();
-        });
       });
+      // selectedCmp.on("change:attributes", (change)=>{
+      //   console.log('change : ' , change);
+        
+      //   handler();
+      // });
     }, 10);
   };
 

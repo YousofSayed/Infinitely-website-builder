@@ -91,7 +91,7 @@ export const UploadBlocks = () => {
             content: block.style,
           },
         ]);
-
+        editor.Css.addRules(block.style);
         block.content = "";
         block.style = "";
 
