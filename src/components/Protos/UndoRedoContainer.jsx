@@ -45,9 +45,10 @@ export const UndoRedoContainer = ({ children, showProp, state,defaultValue = {},
     console.log("history[0]",history?.[0]?.value);
     
     // clear undo/redo history and set a fresh state
+    // history?.length && history?.[0]?.value?.constructor?.name ? new Function(`return new ${history[0]?.value?.constructor?.name}()`) : 
     reset();
-    setSt(history?.length && history?.[0]?.value?.constructor?.name ? new Function(`return new ${history[0]?.value?.constructor?.name}()`) : cloneDeep(defaultValue)); // or the default initial state for this element
-    history.length = 0;
+    setSt(cloneDeep(defaultValue)); // or the default initial state for this element
+    // history.length = 0;
   }, [currentEl]);
 
   useEffect(() => {
