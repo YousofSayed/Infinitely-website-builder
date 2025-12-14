@@ -14,8 +14,9 @@ import {
   getComponentRules,
   getCurrentMediaDevice,
   getCurrentSelector,
+  getInfinitelySymbolInfo,
 } from "../helpers/functions";
-import { inf_class_name } from "../constants/shared";
+import { current_symbol_id, inf_class_name } from "../constants/shared";
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
 import { random, uniqueId } from "lodash";
 import { keyframeStylesInstance } from "../constants/InfinitelyInstances";
@@ -116,7 +117,12 @@ export function useSetClassForCurrentEl() {
       }
       console.log("current selector from updater : ", currentSelector , newCssProps);
 
-      // const symbolInfo = getInfinitelySymbolInfo(sle);
+      const symbolInfo = getInfinitelySymbolInfo(sle);
+      if(symbolInfo.isSymbol){
+        sessionStorage.setItem(current_symbol_id, symbolInfo.mainId);
+      }else{
+        sessionStorage.removeItem(current_symbol_id);
+      }
       // console.log(
       //   "from updater  : ",
       //   // editor.getSelectedAll(),

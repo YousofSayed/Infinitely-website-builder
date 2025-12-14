@@ -77,6 +77,7 @@ export const customInfinitelySymbols = (editor) => {
           : null;
 
         }
+        
         sessionStorage.setItem(current_symbol_id, symbolId);
 
         editor.trigger(

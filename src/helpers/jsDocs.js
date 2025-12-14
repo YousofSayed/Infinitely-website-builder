@@ -200,7 +200,7 @@ export let projectSettingsType = {
   minify_Css: true,
   minify_Js: true,
   navigate_to_style_when_Select: true,
-  transform_Image_To_Webp: false,
+  // transform_Image_To_Webp: false,
   excute_commands_after_page_load: true,
   delete_symbols_after_delete_from_page: false,
   grap_all_footer_scripts_in_single_file: false,

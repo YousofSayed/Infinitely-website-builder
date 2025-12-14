@@ -189,8 +189,8 @@ export const loadElements = async (
 
     cssCode = minify(
       `
-            ${allSymbolsStyle}
-            ${cssStyles}
+      ${cssStyles}
+      ${allSymbolsStyle}
         `,
       { restructure: true }
     ).css;
