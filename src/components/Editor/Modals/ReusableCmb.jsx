@@ -51,6 +51,8 @@ export const ReusableCmb = () => {
 
   const save = async () => {
     const tId = toast.loading(<ToastMsgInfo msg={`Saving template...`} />);
+    const {projectSettings} = getProjectSettings();
+    editor.Storage.setAutosave(false);
     // sessionStorage.setItem("clone-disabled", "true");
     const sle = await editor.getSelected();
     sle.set({
@@ -80,7 +82,6 @@ export const ReusableCmb = () => {
     const id = newProps.name + (newProps.ctg || "templates") + sle.getId();
     sle.addAttributes({ [inf_template_id]: id });
     const block = {};
-    const { projectSettings } = getProjectSettings();
     // editor.Blocks.add(id, block);
     const projectId = +localStorage.getItem(current_project_id);
     const projectData = await db.projects.get(projectId);
@@ -95,7 +96,7 @@ export const ReusableCmb = () => {
       content: contentPath,
       style: stylePath,
     };
-
+    editor.clearDirtyCount();
     store(
       {
         data: {

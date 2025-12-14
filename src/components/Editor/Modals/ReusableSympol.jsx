@@ -11,6 +11,7 @@ import {
   getImgAsBlob,
   getInfinitelySymbolInfo,
   getProjectData,
+  getProjectSettings,
   handleCloneComponent,
   initSymbol,
   initToolbar,
@@ -53,6 +54,7 @@ export const ReusableSympol = () => {
 
   const onSave = (ev) => {
     const selectedElMain = editor.getSelected();
+    const { projectSettings } = getProjectSettings();
     const symbolInfo = getInfinitelySymbolInfo(selectedElMain);
     if (symbolInfo.isSymbol) {
       toast.error(<ToastMsgInfo msg={`You Can’t Create symbol From Symbol`} />);
@@ -60,6 +62,7 @@ export const ReusableSympol = () => {
     }
     const projectId = +localStorage.getItem(current_project_id);
     const tId = toast.loading(<ToastMsgInfo msg={`Saving symbol...`} />);
+    editor.Storage.setAutosave(false);
 
     const addSymbolBlock = async () => {
       const projectData = await getProjectData();
@@ -124,7 +127,7 @@ export const ReusableSympol = () => {
         content: contentPath,
         style: stylePath,
       };
-
+      editor.clearDirtyCount();
       store(
         {
           data: {
@@ -173,12 +176,14 @@ export const ReusableSympol = () => {
         },
         editor
       );
-
+      
       initToolbar(editor, selectedElMain);
       if (!isSplitter) {
         initSymbol(uuid, editor);
-      }else{
-        alert(`If you have more than one splitter symbol, they will not update in real time to avoid performance drops.`)
+      } else {
+        alert(
+          `If you have more than one splitter symbol, they will not update in real time to avoid performance drops.`
+        );
       }
       editor.runCommand("close:current:modal");
       toast.done(tId);

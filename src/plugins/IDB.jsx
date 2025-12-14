@@ -606,6 +606,8 @@ export const IDB = (editor) => {
                       <ToastMsgInfo msg={`Project saved successfully👍`} />
                     );
                   }
+
+                  editor.Storage.setAutosave(projectSettings.enable_auto_save);
                   // reInitInfinitelyWorker();
 
                   // res(true);
