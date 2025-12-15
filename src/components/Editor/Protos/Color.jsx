@@ -52,6 +52,7 @@ export const Color = ({
     useUpdateInputValue({
       cssProp,
       onEffect(cssProp, value) {
+        value.includes(`!important`) && (value = value.replace(`!important` , ''))
         console.log('vvaaaaaaal : ' , value || undefined , cssProp,rgbStringToHex(value) || undefined, typeof value);
         if(typeof value !== "string"){
           setColor("");

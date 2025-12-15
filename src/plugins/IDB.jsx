@@ -10,32 +10,20 @@ import {
 } from "../constants/shared";
 import { db } from "../helpers/db";
 import {
-  doDocument,
-  extractAllRulesWithChildRules,
   getComponentRules,
-  getDynamicComponent,
   getInfinitelySymbolInfo,
   getProjectData,
   getProjectSettings,
-  ifIntervale,
   initSymbolTimout,
   reloadEditor,
   screenshotTimout,
-  updatePrevirePage,
   workerCallbackMaker,
 } from "../helpers/functions";
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
 import { changePageName } from "../helpers/customEvents";
-import {
-  infinitelyWorker,
-  reInitInfinitelyWorker,
-} from "../helpers/infinitelyWorker";
+import { infinitelyWorker } from "../helpers/infinitelyWorker";
 import { minify } from "csso";
-import {
-  chunkHtmlElements,
-  defineRoot,
-  getPageURLException,
-} from "../helpers/bridge";
+import { defineRoot, getPageURLException } from "../helpers/bridge";
 // import  "https://cdn.jsdelivr.net/npm/jest-leak-detector@29.7.0/build/index.js";
 
 // import { initDBAssetsSw } from "../serviceWorkers/initDBAssets-sw";
@@ -148,7 +136,7 @@ async function getAllSymbolsStyles() {
  */
 export const loadElements = async (
   editor,
-  { justSendToWorker = false, onSend = (response = []) => {} }
+  { justSendToWorker = false, onSend = (response = [] , styles) => {} }
 ) => {
   editor.Components.clear({});
   editor.DomComponents.clear({});
@@ -192,8 +180,11 @@ export const loadElements = async (
       ${cssStyles}
       ${allSymbolsStyle}
         `,
-      { restructure: true }
+      { restructure: false ,  }
     ).css;
+    // editor.setStyle(cssCode);
+    // console.log('style : ',editor.getCss());
+    
 
     allSymbolsStyle = null; //For garpage collection
     cssStyles = null;
@@ -249,7 +240,10 @@ export const loadElements = async (
             editor.clearDirtyCount();
             console.log("props : ", props);
             res(props);
-            onSend([renderCssStyles(editor, cssCode), ...props.response]);
+            onSend([
+              renderCssStyles(editor, cssCode),
+              ...props.response,
+            ] , cssCode);
             editor.on("component:remove:before", editor.removerBeforeHandler);
           }
         );
@@ -271,6 +265,7 @@ export const loadElements = async (
       // });
       editor.clearDirtyCount();
       editor.on("component:remove:before", editor.removerBeforeHandler);
+      // editor.Css.addRules(cssCode);
       return {
         components: [
           renderCssStyles(editor, cssCode),

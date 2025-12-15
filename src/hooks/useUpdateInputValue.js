@@ -29,7 +29,7 @@ let idleId;
 let propsWillChangeForTimeout = {};
 /**
  *
- * @param {{ cssProp:string ,setVal:Function ,returnPropsAsIt:boolean, getAllStyles:(styles:CSSStyleDeclaration)=>void, onEffect :(cssProp:string , Value : Function)=>{} , debs:any[]}}} param0
+ * @param {{ cssProp:string ,setVal:Function ,returnPropsAsIt:boolean, getAllStyles:(styles:CSSStyleDeclaration)=>void, onEffect :(cssProp:string , value : string )=>{} , debs:any[]}}} param0
  */
 export const useUpdateInputValue = ({
   cssProp,

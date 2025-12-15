@@ -3205,7 +3205,7 @@ export async function reloadEditor(editor) {
   reloaderTimeout && clearTimeout(reloaderTimeout);
   const response = await loadElements(editor, {
     justSendToWorker: true,
-    onSend(elements) {
+    onSend(elements , styles) {
       editorStorageInstance.emit(InfinitelyEvents.storage.loadStart);
       const render = (index) => {
         if (index >= elements.length) {
@@ -3238,7 +3238,9 @@ export async function reloadEditor(editor) {
       } else {
         editor.loadProjectData({
           components: elements,
+          // styles
         });
+        // editor.Css.addRules(styles)
       }
 
       updatePrevirePage({

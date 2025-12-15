@@ -88,6 +88,7 @@ export const GJEditor = ({ children }) => {
          * @type {HTMLIFrameElement}
          */
         const iframe = el;
+        iframe.contentDocument.head.insertAdjacentHTML(`afterbegin` , `<meta name="viewport" content="width=device-width, initial-scale=1.0">`)
 
         if (iframe.hasAttribute("src")) return;
 
