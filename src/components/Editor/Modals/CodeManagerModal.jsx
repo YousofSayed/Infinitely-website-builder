@@ -155,7 +155,12 @@ export const CodeManagerModal = () => {
                 : await handle.text();
             }
 
-            // console.log(`after : `, content, isCssEditorStyles);
+            console.log(`css editor : `, editor.getCss({
+                      avoidProtected: true,
+                      keepUnusedStyles: true,
+                      clearStyles: false,
+                      onlyMatched: false,
+                    }));
 
             return isCssEditorStyles
               ? [

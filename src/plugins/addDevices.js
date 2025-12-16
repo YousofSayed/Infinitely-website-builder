@@ -27,22 +27,29 @@ export const addDevices = (editor) => {
   // Add device presets
   // window.outerWidth
   deviceManager.add({
+    id: "desktop",
     name: "desktop",
     width: "",
     widthMedia: window.outerWidth + "px",
+    priority:1
   });
 
   deviceManager.add({
+    id: "tablet",
     name: "tablet",
-    width: "100%",
+    width: "900px",
     widthMedia: "900px",
+    priority:2,
   });
 
   deviceManager.add({
+    id: "mobile",
     name: "mobile",
-    width: "100%",
+    width: "480px",
     widthMedia: "480px",
+    priority:3
   });
+
 
   const lastDevice = localStorage.getItem("last-device");
   const lastDeviceJson = localStorage.getItem("last-device-json");

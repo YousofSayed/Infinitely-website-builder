@@ -147,7 +147,7 @@ export function useSetClassForCurrentEl() {
           addStyles: true,
           validate: false,
           // inline:true,
-          addStyle: true,
+          // addStyle: true,
         }
       );
 
@@ -157,6 +157,8 @@ export function useSetClassForCurrentEl() {
           cmp: editor.getSelected(),
         }).rules || []
       );
+
+     
 
       editor.trigger("inf:rules:update", {
         rules: newCssProps,

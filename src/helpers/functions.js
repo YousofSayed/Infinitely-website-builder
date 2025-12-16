@@ -1507,7 +1507,7 @@ export function initSymbol(id, editor) {
         } else {
           // console.error(`replaaaaaaaaaaaaaaaaaaaaaaaaaace here`);
 
-          symbol.replaceWith(JSON.parse(newContent),{});
+          symbol.replaceWith(JSON.parse(newContent), {});
           console.log("Replaced");
           // symbol.replaceWith(regenerateSymbol(JSON.parse(newContent)));
           // symbol.set('content', regenerateSymbol(JSON.parse(newContent)));
@@ -1515,7 +1515,7 @@ export function initSymbol(id, editor) {
       });
       // selectedCmp.on("change:attributes", (change)=>{
       //   console.log('change : ' , change);
-        
+
       //   handler();
       // });
     }, 10);
@@ -3107,10 +3107,8 @@ export function setInteractionsAttributes(interactionsId, onDone = () => {}) {
   workerCallbackMaker(infinitelyWorker, "interctions-setted", onDone);
 }
 
-
-
-export async function setAttributesInAllPages({  selectors = {}}) {
- return await new Promise((res, rej) => {
+export async function setAttributesInAllPages({ selectors = {} }) {
+  return await new Promise((res, rej) => {
     workerCallbackMaker(infinitelyWorker, "attributes-setted", ({ done }) => {
       done ? res(done) : rej(false);
     });
@@ -3125,8 +3123,8 @@ export async function setAttributesInAllPages({  selectors = {}}) {
   });
 }
 
-export async function removeAttributesInAllPages({  selectors = {}}) {
- return await new Promise((res, rej) => {
+export async function removeAttributesInAllPages({ selectors = {} }) {
+  return await new Promise((res, rej) => {
     workerCallbackMaker(infinitelyWorker, "attributes-removed", ({ done }) => {
       done ? res(done) : rej(false);
     });
@@ -3205,7 +3203,7 @@ export async function reloadEditor(editor) {
   reloaderTimeout && clearTimeout(reloaderTimeout);
   const response = await loadElements(editor, {
     justSendToWorker: true,
-    onSend(elements , styles) {
+    onSend(elements, styles) {
       editorStorageInstance.emit(InfinitelyEvents.storage.loadStart);
       const render = (index) => {
         if (index >= elements.length) {
@@ -3241,6 +3239,9 @@ export async function reloadEditor(editor) {
           // styles
         });
         // editor.Css.addRules(styles)
+        // Get the CSS Composer
+
+
       }
 
       updatePrevirePage({

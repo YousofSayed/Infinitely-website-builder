@@ -104,6 +104,8 @@ export const GJEditor = ({ children }) => {
       setCmpRules([]);
     });
 
+
+
     ev.on("component:selected", () => {
       const selectedEl = ev.getSelected();
       const symbolInfo = getInfinitelySymbolInfo(selectedEl);

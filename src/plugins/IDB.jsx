@@ -263,6 +263,7 @@ export const loadElements = async (
       // editor.on("canvas:frame:load", () => {
       //   attrsCallback(editor, projectData);
       // });
+      
       editor.clearDirtyCount();
       editor.on("component:remove:before", editor.removerBeforeHandler);
       // editor.Css.addRules(cssCode);
@@ -337,7 +338,7 @@ export const IDB = (editor) => {
   }
 
   editor.on("update", (update) => {
-    console.log("update : ", update, editor.infLoading);
+    // console.log("update : ", update, editor.infLoading);
     if (editor.infLoading) {
       editor.clearDirtyCount();
     }
@@ -394,7 +395,12 @@ export const IDB = (editor) => {
       clearTimeouts();
 
       reloadEditor(editor);
-
+editor.on('style:change', () => {
+  console.log('style changed');
+  
+  const css = editor.getCss({ avoidProtected: true });
+  editor.setStyle(css); // Forces reordering
+});
       // console.log("should load");
       // loadTimeout = setTimeout(async () => {
       //   editor.loadProjectData(await loadElements());
