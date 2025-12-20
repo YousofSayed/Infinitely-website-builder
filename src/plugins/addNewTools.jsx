@@ -100,7 +100,7 @@ export const addNewTools = (editor) => {
         return;
       }
       const modelClasses = [...parent.getClasses()];
-      
+
       if (modelClasses.includes("drop")) {
         console.log("mod 2", modelClasses);
         doActionAndPreventSaving(
@@ -204,11 +204,11 @@ export const addNewTools = (editor) => {
   //     const frameDocument = frameWindow.document; // iframe document
   //     const frameBody = window.document.body; // body inside iframe
 
-  //     console.log("Canvas Frame Loaded:", {
-  //       frameWindow,
-  //       frameDocument,
-  //       frameBody,
-  //     });
+  //     // console.log("Canvas Frame Loaded:", {
+  //     //   frameWindow,
+  //     //   frameDocument,
+  //     //   frameBody,
+  //     // });
 
   //     // Make the canvas always full height of the iframe
   //     frameBody.style.minHeight = frameWindow.outerHeight + "px"; // Full screen height
@@ -234,15 +234,23 @@ export const addNewTools = (editor) => {
   //   }
   // );
 
-  // const offsetConfig = editor.config.showOffsets;
+  const offsetConfig = editor.config.showOffsets;
 
   // editor.on("canvas:frame:scroll", ({ isScroll }) => {
   //   // console.log("is scrollll : ", isScroll , window);
   //   isScrollValue = isScroll;
-  //   if (!editor.Commands.isActive("preview")) {
-  //     isToggleActive = false;
-  //     editor.runCommand("preview");
-  //   }
+  //   scrollTimeout && clearTimeout(scrollTimeout);
+  //   editor
+  //     .getWrapper()
+  //     .find(`*`)
+  //     .forEach((child) => {
+  //       child.addClass("preventWhenScroll");
+  //       editor.clearDirtyCount();
+  //     });
+  //   // if (!editor.Commands.isActive("preview")) {
+  //   //   isToggleActive = false;
+  //   //   editor.runCommand("preview");
+  //   // }
   //   // editor.Canvas.getBody().classList.add("preventWhenScroll");
   //   // const hlt = document.querySelector(`.gjs-highlighter`);
   //   // hlt.style.display = "none";
@@ -255,18 +263,14 @@ export const addNewTools = (editor) => {
   //   // console.log("is scrollll stop: ", isScroll);
   //   scrollTimeout && clearTimeout(scrollTimeout);
   //   scrollTimeout = setTimeout(() => {
-  //     if (!isToggleActive) {
-  //       isToggleActive = true;
-  //       editor.runCommand("toggle-preview");
-  //       if(editor.Commands.isActive(`core:component-outline`)){
-
-  //         editor.stopCommand(`core:component-outline`);
-  //         editor.runCommand(`core:component-outline`);
-
-  //       }
-  //       // console.log('is out line active : ' , editor.Commands.isActive(`core:component-outline`));
-  //     }
-  //   }, 700);
+  //     editor
+  //       .getWrapper()
+  //       .find(`*`)
+  //       .forEach((child) => {
+  //         child.removeClass("preventWhenScroll");
+  //         editor.clearDirtyCount();
+  //       });
+  //   }, 200);
   //   // isScrollValue = isScroll;
   //   // editor.Canvas.getBody().classList.remove("preventWhenScroll");
   //   // const hlt = document.querySelector('.gjs-highlighter');
