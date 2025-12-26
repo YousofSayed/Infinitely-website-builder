@@ -37,7 +37,7 @@ export const ChoicesForStates = ({
     >
      { (atRuleType && atRuleParams) &&
        <section
-       className="absolute p-2 z-[30] top-[3px]  translate-y-[-50%] left-[-7px] shadow-md  overflow-hidden w-[10px] hover:w-fit h-[10px] hover:h-[40px] text-transparent hover:text-slate-200 transition-all rounded-lg  text-sm font-bold capitalize"
+       className="absolute p-2 z-[30] top-[3px]  translate-y-[-50%] left-[-7px] shadow-md flex justify-center items-center  overflow-hidden w-[10px] hover:w-fit h-[10px] hover:h-[40px] text-transparent hover:text-slate-200  transition-all rounded-lg  text-sm font-bold capitalize"
        style={{ background: generateBeautifulHexColor() }}
      >
        {atRuleType} : {atRuleParams.match?.(/\d+/ig)?.[0]||''}px

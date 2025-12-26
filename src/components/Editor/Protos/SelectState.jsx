@@ -4,9 +4,7 @@ import { statesKeys } from "../../../constants/cssProps";
 import { Select } from "./Select";
 import { refType, statesType, stateType } from "../../../helpers/jsDocs";
 import { Icons } from "../../Icons/Icons";
-import {
-  uniqueID,
-} from "../../../helpers/cocktail";
+import { uniqueID } from "../../../helpers/cocktail";
 import { SmallButton } from "./SmallButton";
 import { ChoicesForStates } from "./ChoicesForStates";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
@@ -40,22 +38,29 @@ export const SelectState = ({ placeholder }) => {
     if (!selectedEl.currentEl) return;
     extractRules();
     // updateCurrentIndex();
-  }, [selectedEl, selector ]);
+  }, [selectedEl, selector]);
+
+  // useEffect(()=>{
+  //   if(!editor)return;
+  //   updateCurrentIndex();
+  // },[editor,states])
 
   useEffect(() => {
+    if(!editor)return;
     const callback = () => {
       const rules = extractRules(false);
       rules.length && states.length && setStates(rules);
     };
+    updateCurrentIndex();
 
-    // editor.on("inf:rules:update", callback);
-    // editor.on("device:change", updateCurrentIndex);
+    editor.on("inf:rules:update", callback);
+    editor.on("device:change", updateCurrentIndex);
 
     return () => {
       editor.off("inf:rules:update", callback);
       editor.off("device:change", updateCurrentIndex);
     };
-  });
+  },[editor]);
 
   const updateCurrentIndex = () => {
     const rules = extractRules(false);
@@ -107,19 +112,19 @@ export const SelectState = ({ placeholder }) => {
       console.warn(`No selected element to extract rules!`);
       return;
     }
-    
+
     const currentSelector = getCurrentSelector(selector, editor.getSelected());
-    console.log('gettting'  , currentSelector);
-    if(!currentSelector) {
+    console.log("gettting", currentSelector);
+    if (!currentSelector) {
       isSetRules && setStates([]);
       return [];
-    };
+    }
     const selectorRules = extractRulesByIdWithDetails(
       // minify(editor.getCss({ clearStyles: false, keepUnusedStyles: true })).css,
       editor.getCss({ clearStyles: false, keepUnusedStyles: true }),
       currentSelector
     ).filter((r) => r.states);
-    
+
     console.log("gettting ruuules : ", selectorRules);
 
     isSetRules && setStates([...selectorRules]);
@@ -202,17 +207,21 @@ export const SelectState = ({ placeholder }) => {
     // });
     // const oldRuleStyle = rule.toJSON().style;
     let oldRuleStyle = {};
-      const rulesWillRemoved = editor.Css.getAll().models.filter((r) => {
-     
+    const rulesWillRemoved = editor.Css.getAll().models.filter((r) => {
       const device = r.getDevice();
       // console.log(r.selectorsToString({}), device?.getWidthMedia?.() , r.attributes.mediaText);
       const response = device
         ? r.config.atRuleType != "keyframes" &&
-          (`(max-width: ${device.getWidthMedia()})` || "").replaceAll(' ' , '') == (clone[keywordsIndex].atRuleParams || "").replaceAll(' ' , '') &&
+          (`(max-width: ${device.getWidthMedia()})` || "").replaceAll(
+            " ",
+            ""
+          ) == (clone[keywordsIndex].atRuleParams || "").replaceAll(" ", "") &&
           r.selectorsToString({}) == ruleString
         : r.config.atRuleType != "keyframes" &&
-          (r.config.atRuleType || "") == (clone[keywordsIndex].atRuleType || "") &&
-          (r.config.mediaText || "") == (clone[keywordsIndex].atRuleParams || "") &&
+          (r.config.atRuleType || "") ==
+            (clone[keywordsIndex].atRuleType || "") &&
+          (r.config.mediaText || "") ==
+            (clone[keywordsIndex].atRuleParams || "") &&
           r.selectorsToString({}) == ruleString;
       return response;
     });
@@ -238,7 +247,7 @@ export const SelectState = ({ placeholder }) => {
         `${currentSelector}${clone[keywordsIndex].states}`,
         oldRuleStyle,
         {
-          addStyles:true,
+          addStyles: true,
           atRuleParams: clone[keywordsIndex].atRuleParams,
           atRuleType: clone[keywordsIndex].atRuleType,
         }
@@ -259,12 +268,14 @@ export const SelectState = ({ placeholder }) => {
 
     // console.log(editor.Css.getRule());
     const rulesWillRemoved = editor.Css.getAll().models.filter((r) => {
-     
       const device = r.getDevice();
       // console.log(r.selectorsToString({}), device?.getWidthMedia?.() , r.attributes.mediaText);
       const response = device
         ? r.config.atRuleType != "keyframes" &&
-          (`(max-width: ${device.getWidthMedia()})` || "").replaceAll(' ' , '') == (clone[index].atRuleParams || "").replaceAll(' ' , '') &&
+          (`(max-width: ${device.getWidthMedia()})` || "").replaceAll(
+            " ",
+            ""
+          ) == (clone[index].atRuleParams || "").replaceAll(" ", "") &&
           r.selectorsToString({}) == rule
         : r.config.atRuleType != "keyframes" &&
           (r.config.atRuleType || "") == (clone[index].atRuleType || "") &&

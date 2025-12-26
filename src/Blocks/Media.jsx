@@ -214,6 +214,9 @@ export const Media = ({ editor }) => {
 
             //   return type == "audio" || type == "video";
             // },
+            // showCallback({model , trait}){
+
+            // },
             callback({ editor, newValue }) {
               const sle = editor.getSelected();
               const child = sle.components().models[0];
@@ -330,14 +333,14 @@ export const Media = ({ editor }) => {
           const child = this.components().models[0];
           if (!child) return;
           const childEl = child.getEl();
-          if (!childEl) return;
+          if (!childEl || child?.get('type')?.toLowerCase?.() === 'textnode') return;
           const originalAttributes = Object.fromEntries(
             [...this.getEl().attributes].map((attr) => [attr.name, attr.value])
           );;
 
-          const allChildAttrsWillRemoved = Object.fromEntries(
+          const allChildAttrsWillRemoved =childEl?.attributes ? Object.fromEntries(
             [...childEl.attributes].map((attr) => [attr.name, attr.value])
-          );
+          ) : {};
           
           const childAttributes = { ...attributes };
           delete childAttributes["id"];

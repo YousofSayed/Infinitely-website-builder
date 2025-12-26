@@ -57,7 +57,13 @@ import { killGsapMotionTool } from "../plugins/tools/killGsapMotion";
 import { createReusableCmpTool } from "../plugins/tools/createReusableCmpTool";
 import { createSymbolTool } from "../plugins/tools/createSymbolTool";
 import { infinitelyWorker } from "./infinitelyWorker";
-import { isFunction, isPlainObject, uniqueId, random as _random } from "lodash";
+import {
+  isFunction,
+  isPlainObject,
+  uniqueId,
+  random as _random,
+  cloneDeep,
+} from "lodash";
 import {
   buildInteractionsAttributes,
   cleanMotions,
@@ -704,6 +710,33 @@ export function getCurrentMediaDevice(editor) {
   // }
 
   return Media;
+}
+
+/**
+ *
+ * @param {import('grapesjs').Editor} editor
+ * @returns
+ */
+export function reorderCss(editor) {
+  const css = editor.CssComposer;
+  const rules = css.getAll().toArray();
+
+  const newRules = rules
+    .sort((a, b) => {
+      const aAt = a.getAtRule?.() || "";
+      const bAt = b.getAtRule?.() || "";
+
+      const aNum = parseFloat(aAt.match(/\d+/)?.[0]) ?? Infinity;
+      const bNum = parseFloat(bAt.match(/\d+/)?.[0]) ?? Infinity;
+      return bNum - aNum; // desktop first
+    })
+    .reverse()
+    .filter((rule) =>
+      Boolean(Object.keys(rule?.attributes?.style || {}).length)
+    );
+  console.log("new rules : ", newRules);
+
+  css.getAll().reset(newRules);
 }
 
 /**
@@ -3240,8 +3273,6 @@ export async function reloadEditor(editor) {
         });
         // editor.Css.addRules(styles)
         // Get the CSS Composer
-
-
       }
 
       updatePrevirePage({
@@ -3307,4 +3338,45 @@ export function ifIntervale({
       clearInterval(interval);
     },
   };
+}
+
+/**
+ *
+ * @param {import('grapesjs').Editor} editor
+ */
+export function arrangeDevicesPeriority(editor) {
+  const deviceManager = editor.Devices;
+  const devices = deviceManager.getAll().toArray();
+  devices.sort((a, b) => {
+    const wa = parseFloat(a.getWidthMedia()) || Infinity; // Desktop last
+    const wb = parseFloat(b.getWidthMedia()) || Infinity;
+    return wa - wb;
+  });
+  const newDevices = cloneDeep(
+    devices.reverse().map((dev, i) => {
+      dev.set({ priority: i + 1 });
+      return dev.attributes;
+    })
+  );
+
+  console.log("new media devices : ", newDevices);
+
+  deviceManager
+    .getAll()
+    .toArray()
+    .map((dev) => dev.id || dev.getName())
+    .concat([
+      "desktop",
+      "Desktop",
+      "tablet",
+      "Tablet",
+      "mobile",
+      "Mobile",
+      "mobileLandscape",
+    ])
+    .forEach((id) => deviceManager.remove(id));
+
+  newDevices.forEach((dev) => {
+    deviceManager.add(dev);
+  });
 }

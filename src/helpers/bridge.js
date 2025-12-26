@@ -1859,24 +1859,34 @@ export const buildPageData = async (page = "", projectData, projectSetting) => {
     inserts: [
       {
         index: (() => {
-          // Base scripts order:
+          // Real base scripts before GSAP:
           // 0 - infinitely.js
-          // 1+ - gsap.min.js (if enabled)
-          // 2+ - scrollTrigger.js (if enabled)
-          // 3+ - splitText.js (if enabled)
-          // 4+ - pVue (if enabled)
-          // So we want to insert after all GSAP-related scripts, before petite-vue.
+          // 1 - dev.js
+          // 2+ - swiper.js (optional)
+          // 3+ - swiper-element.js (optional)
+          // then GSAP group
+          // then petite-vue group
 
-          let index = 1; // after infinitely.js by default
+          let index = 2; // infinitely.js + dev.js
 
+          // swiper adds TWO scripts
+          if (projectSetting.enable_swiperjs) {
+            index += 2;
+          }
+
+          // GSAP core
           if (!projectSetting.disable_gsap_core) index++;
+
+          // ScrollTrigger
           if (!projectSetting.disable_gsap_scrollTrigger) index++;
+
+          // SplitText
           if (!projectSetting.disable_gsap_splitText) index++;
 
-          // if petite-vue is disabled, insert remains after gsap group
+          // insert AFTER GSAP group, BEFORE petite-vue
           return index;
         })(),
-        // useLastIndex: true,
+
         item: {
           name: `${page.name}.js`,
           content: buildGsapMotionsScript(

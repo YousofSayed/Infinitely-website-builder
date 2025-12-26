@@ -18,11 +18,18 @@ export const addDevices = (editor) => {
   }
   let timeout;
   // Remove all predefined devices
-  ["desktop", "Desktop", "tablet", "Tablet", "mobile", "Mobile"].forEach(
-    (device) => deviceManager.remove(device)
-  );
-
-  
+  [
+    "desktop",
+    "Desktop",
+    "tablet",
+    "Tablet",
+    "mobile",
+    "Mobile",
+    "mobilePortrait",
+    "Mobile portrait",
+    "mobileLandscape",
+    "Mobile landscape",
+  ].forEach((device) => deviceManager.remove(device));
 
   // Add device presets
   // window.outerWidth
@@ -31,15 +38,23 @@ export const addDevices = (editor) => {
     name: "desktop",
     width: "",
     widthMedia: window.outerWidth + "px",
-    priority:1
+    priority: 1,
+    // priority: window.outerWidth,
   });
+
+  // deviceManager.add({
+  //   id: "desktop",
+  //   widthMedia: "9999px",
+  //   priority: 1,
+  // });
 
   deviceManager.add({
     id: "tablet",
     name: "tablet",
     width: "900px",
     widthMedia: "900px",
-    priority:2,
+    // priority: 900,
+    priority: 2,
   });
 
   deviceManager.add({
@@ -47,9 +62,9 @@ export const addDevices = (editor) => {
     name: "mobile",
     width: "480px",
     widthMedia: "480px",
-    priority:3
+    // priority: 480,
+    priority: 3,
   });
-
 
   const lastDevice = localStorage.getItem("last-device");
   const lastDeviceJson = localStorage.getItem("last-device-json");
@@ -57,6 +72,10 @@ export const addDevices = (editor) => {
   if (lastDeviceJson) {
     editor.Devices.add(JSON.parse(lastDeviceJson));
   }
+  editor.onReady(() => {
+    editor.trigger(InfinitelyEvents.devices.update);
+  });
+
   let firstTime = 0;
 
   const zoomToFit = () => {
@@ -76,8 +95,8 @@ export const addDevices = (editor) => {
       const canvasWrapper = editor.getContainer();
       if (!iframe || !canvasWrapper) return;
       // iframe.style.display = "none";
-      console.log('from zoom fit');
-      
+      console.log("from zoom fit");
+
       const device = editor.getDevice();
       const deviceDef = deviceManager.get(device)?.attributes;
 
@@ -127,6 +146,7 @@ export const addDevices = (editor) => {
   resizerObserver = new ResizeObserver(() => {
     zoomToFit();
   });
+
   mutationsObserver = new MutationObserver((entries) => {
     const rightPanel = document.querySelector(`#right-panel`);
     const leftPanel = document.querySelector(`#left-panel`);
@@ -150,10 +170,10 @@ export const addDevices = (editor) => {
       "last-device-json",
       JSON.stringify(editor.Devices.get(editor.getDevice()).toJSON())
     );
-    console.log(
-      "Device is : ",
-      editor.Devices.get(editor.getDevice()).toJSON()
-    );
+    // console.log(
+    //   "Device is : ",
+    //   editor.Devices.get(editor.getDevice()).toJSON()
+    // );
     editor.refresh({ tools: true });
 
     zoomToFit();

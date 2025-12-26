@@ -226,6 +226,7 @@ export const AssetsManager = () => {
        * @type {File[]}
        */
       const files = [...ev.target.files];
+      
       // const inputFiles = files.map((file) => ({
       //   file: file,
       //   id: uniqueID(),
@@ -274,6 +275,7 @@ export const AssetsManager = () => {
       toast.error(<ToastMsgInfo msg={`Files upload failed`} />);
     } finally {
       // setShowLoader(false);
+      ev.target.value = '';
     }
   };
 

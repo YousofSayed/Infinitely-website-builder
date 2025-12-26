@@ -91,31 +91,39 @@ export const TraitsAside = () => {
   useEffect(() => {
     if (!editor || !editor.getSelected()) return;
     const selectedEl = editor.getSelected();
-    // console.log('traits : ' ,editor.getSelected().getTraits());
+    const handler = () => {
+      // console.log('traits : ' ,editor.getSelected().getTraits());
 
-    setCmpTextContent(editor.getSelected().getInnerHTML());
-    const buildFileName = selectedEl.getAttributes()[inf_build_url];
-    const contentLangType =
-      selectedEl.getAttributes()["content-lang"] || "html";
-    setFileName(buildFileName);
-    setSelectedCmp(selectedEl);
+      setCmpTextContent(editor.getSelected().getInnerHTML());
+      const buildFileName = selectedEl.getAttributes()[inf_build_url];
+      const contentLangType =
+        selectedEl.getAttributes()["content-lang"] || "html";
+      setFileName(buildFileName);
+      setSelectedCmp(selectedEl);
 
-    const innerHtml = selectedEl.props().editable
-      ? selectedEl.getInnerHTML()
-      : "";
-    // setSelectedValue(selectedEl.getInnerHTML());
-    setCodeSettings({
-      ...codeSettings,
-      defaultLanguage: contentLangType,
-      htmlValueState: contentLangType == "html" ? innerHtml : "",
-      templateEngineValueState:
-        contentLangType == "javascript" ? innerHtml : "",
-      enableTemplateEngine: contentLangType == "javascript",
-    });
-    setSelectedCmp(editor?.getSelected?.());
-    getAndSetTraits();
-    setCmdsContext();
-  }, [selectedEl]);
+      const innerHtml = selectedEl.props().editable
+        ? selectedEl.getInnerHTML()
+        : "";
+      // setSelectedValue(selectedEl.getInnerHTML());
+      setCodeSettings({
+        ...codeSettings,
+        defaultLanguage: contentLangType,
+        htmlValueState: contentLangType == "html" ? innerHtml : "",
+        templateEngineValueState:
+          contentLangType == "javascript" ? innerHtml : "",
+        enableTemplateEngine: contentLangType == "javascript",
+      });
+      setSelectedCmp(editor?.getSelected?.());
+      getAndSetTraits();
+      setCmdsContext();
+    };
+    handler();
+    editor.on(InfinitelyEvents.component.update_content, handler);
+
+    return () => {
+      editor.off(InfinitelyEvents.component.update_content, handler);
+    };
+  }, [selectedEl, editor]);
 
   useEffect(() => {
     if (!editor) return;
@@ -455,11 +463,11 @@ export const TraitsAside = () => {
                         const selectedCmp = editor.getSelected();
 
                         selectedCmp.set(prop, value);
-                        console.log(
-                          "switch after set: ",
-                          selectedCmp.get(prop),
-                          selectedCmp.props()
-                        );
+                        // console.log(
+                        //   "switch after set: ",
+                        //   selectedCmp.get(prop),
+                        //   selectedCmp.props()
+                        // );
                         selectedCmp.view.render();
                         editor.trigger("component:update", selectedCmp);
 
@@ -469,6 +477,7 @@ export const TraitsAside = () => {
                         // selectedCmp.replaceWith(newCmp);
                         // preventSelectNavigation(editor, newCmp);
                         editor.trigger(InfinitelyEvents.layers.update);
+                        editor.trigger(InfinitelyEvents.component.update_content);
                       }}
                     />
                   </li>

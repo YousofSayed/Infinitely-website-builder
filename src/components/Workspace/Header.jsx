@@ -309,25 +309,7 @@ export const Header = () => {
         </section>
 
         <section className="flex items-center gap-3">
-          {/* <SmallButton
-            onClick={async (ev) => {
-              if (!checkDropBoxSignInState()) {
-                toast.warn(
-                  <ToastMsgInfo msg={`You should sign in to dropbox`} />
-                );
-                return;
-              }
-              const filesMeta = await listDropboxFiles("", true);
-              console.log('files meta : ' , filesMeta);
-              
-              setDropBoxFiles(filesMeta);
-            }}
-            tooltipTitle="View dropbox projects"
-            style={{
-              backgroundColor: "transparent",
-            }}
-          > */}
-          {/* {Icons.dropbox({ fill: "white" })} */}
+         
           <OptionsButton
             onClick={async (ev) => {
               if (!checkDropBoxSignInState()) {

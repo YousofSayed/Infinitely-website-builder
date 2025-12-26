@@ -1,9 +1,17 @@
 * {
   box-sizing: border-box;
 }
-body{
-  background-color: white;
+
+@layer base {
+  html,
+  body {
+    overflow-x: hidden;
+  }
+  body {
+    background-color: white;
+  }
 }
+
 img,
 video {
   max-width: 100%;
@@ -66,7 +74,7 @@ video {
   padding: 10px;
 }
 
-.text-nowrap{
+.text-nowrap {
   text-wrap: nowrap;
 }
 
@@ -163,12 +171,12 @@ spline-wrapper {
   min-height: 70px;
 }
 
-infinitely-svg svg{
+infinitely-svg svg {
   width: 100%;
   height: 100%;
 }
 
-looper-next-prev-button{
+looper-next-prev-button {
   display: flex;
   justify-content: center;
   align-items: center;

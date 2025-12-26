@@ -335,9 +335,13 @@ export async function loadDropBoxProject(path, data = {}) {
   const tId = toast.loading(
     <ToastMsgInfo msg={`Fetching project from dropbox...`} />
   );
-  const file = await getDropboxFileBlobWithToastProgress(path);
-  await loadProject(file, data);
-  toast.done(tId);
+  try {
+    const file = await getDropboxFileBlobWithToastProgress(path);
+    await loadProject(file, data);
+    toast.done(tId);
+  } catch (error) {
+    toast.dismiss(tId);
+  }
 }
 
 export async function uploadDropboxFile(path, blob, rev = null) {

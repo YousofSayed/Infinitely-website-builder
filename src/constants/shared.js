@@ -149,7 +149,7 @@ export const pVueScripts = [
 ];
 
 export const MAX_UPLOAD_SIZE = 250;
-export const MAX_FILE_SIZE = isChrome() ? 10 : 5;
+export const MAX_FILE_SIZE = isChrome() ? 50 : 5;
 export const MAX_FILES_COUNT = 500;
 
 export const loading_project_msg = `Loading project please wait...`;

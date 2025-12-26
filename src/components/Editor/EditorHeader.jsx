@@ -33,6 +33,7 @@ import {
   getProjectData,
   getProjectSettings,
   preventSelectNavigation,
+  reorderCss,
   shareProject,
 } from "../../helpers/functions";
 import { Select } from "./Protos/Select";
@@ -67,7 +68,7 @@ export const HomeHeader = () => {
   const [widthMedia, setWidthMedia] = useState();
   const { selectedId, setSeletedId } = useUlContext();
   const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
-  const [mediaCond , setMediaCond] = useRecoilState(mediaConditionState);
+  const [mediaCond, setMediaCond] = useRecoilState(mediaConditionState);
   const [asideControllersNotifires, setAsideControllersNotifires] =
     useRecoilState(asideControllersNotifiresState);
   // const [isAnimationsChanged, setAnimationsChanged] = useRecoilState(
@@ -91,23 +92,83 @@ export const HomeHeader = () => {
     prop == "width" && (widthRef.current = value);
     prop == "height" && (heightRef.current = value);
     // console.log(prop, value, !value);
-
     const uid = uniqueID();
 
-    editor.DeviceManager.remove(customDevice.current);
     if (!value) {
       editor.DeviceManager.select("desktop");
       return;
     }
-    customDevice.current = editor.DeviceManager.add({
+    const newDevice = {
       name: uid,
       id: uid,
-      // width: widthRef.current + (widthRef.current && "px") || "100%",
+      width: widthRef.current + "px",
       height: heightRef.current + (heightRef.current && "px") || undefined,
       widthMedia: widthRef.current ? widthRef.current + "px" : undefined,
+      // priority: +widthRef.current,
+    };
+    const deviceManager = editor.Devices;
+    const devices = deviceManager
+      .getAll()
+      .toArray()
+      .map((dev) => dev.attributes);
+
+    // console.log(
+    //   "new media devices :",
+    //   editor.DeviceManager.getAll()
+    //     .toArray()
+    //     .map((dev) => dev.attributes),
+    //   devices.some((dev) => +dev.priority === +newDevice.priority)
+    // );
+
+    editor.DeviceManager.remove(customDevice.current);
+    const existDevice = devices.find(
+      (dev) =>
+        parseFloat(dev.widthMedia || "0") === parseFloat(newDevice.widthMedia)
+    );
+    if (existDevice) {
+      console.log("new existDevice", existDevice);
+      editor.setDevice(existDevice?.id || existDevice?.name || 'desktop');
+      editor.trigger("inf:rules:update");
+
+      return;
+    }
+    const concatedArray = devices.concat(newDevice);
+    concatedArray.sort((a, b) => {
+      const wa = parseFloat(a.widthMedia) || Infinity; // Desktop last
+      const wb = parseFloat(b.widthMedia) || Infinity;
+      return wa - wb;
     });
 
-    editor.DeviceManager.select(customDevice.current);
+    console.log("new devices : ", devices);
+
+    const newDevices = cloneDeep(
+      concatedArray.reverse().map((dev, i) => {
+        dev = {
+          ...dev,
+          priority: i + 1,
+        };
+        // .set({ priority: i + 1 });
+        return dev;
+      })
+    );
+
+    const newDeviceWithNewPiriority = newDevices.find(
+      (dev) => dev.name === uid
+    );
+    console.log(`new deivce : `, newDeviceWithNewPiriority);
+
+    customDevice.current = editor.DeviceManager.add(newDeviceWithNewPiriority);
+    // customDevice.current = editor.DeviceManager.add(newDevice);
+    console.log(
+      "new media devices :",
+      editor.DeviceManager.getAll()
+        .toArray()
+        .map((dev) => dev.attributes),
+      editor.getCss()
+    );
+
+    editor.setDevice(uid);
+    editor.trigger("inf:rules:update");
   };
 
   const zoomCallback = (ev) => {
@@ -122,6 +183,7 @@ export const HomeHeader = () => {
     // console.log('html editor : ' , editor.getWrapper().getInnerHTML({withProps:true , withScripts: true}));
     // getHtml({withProps:true , asDocument:false , })
     setZoomValue((editor.getContainer().style.zoom * 100).toFixed(2));
+
     const changeDeviceCallback = () => {
       const currentDeviceName = editor.getDevice();
       const currentDevice = editor.Devices.get(currentDeviceName);
@@ -130,12 +192,15 @@ export const HomeHeader = () => {
         width: parseFloat(currentDevice.attributes.widthMedia) || "",
       });
       setMediaValue(editor.config.mediaCondition);
+      reorderCss(editor);
     };
     editor.on("change:device", changeDeviceCallback);
+    editor.on(InfinitelyEvents.devices.update, changeDeviceCallback);
     setMediaValue(editor.config.mediaCondition);
 
     return () => {
       editor.off("change:device", changeDeviceCallback);
+      editor.off(InfinitelyEvents.devices.update, changeDeviceCallback);
     };
   }, [editor]);
 
@@ -319,7 +384,7 @@ export const HomeHeader = () => {
                     ev.preventDefault();
                     ev.stopPropagation();
                   }}
-                  className=" relative"
+                  className=" relative flex flex-col gap-2"
                 >
                   {detectedMedia.others.map((rule, i) => {
                     console.log(
@@ -339,26 +404,27 @@ export const HomeHeader = () => {
                               ? "var(--main-bg)"
                               : "",
                         }}
-                        className="p-2 w-[200px!important] flex justify-center items-center bg-slate-800 rounded-md transition-all hover:bg-blue-600"
+                        className="p-2 bg-slate-700 w-[200px!important] flex justify-center items-center  rounded-md  transition-all hover:bg-blue-600"
                         onClick={(ev) => {
                           ev.preventDefault();
                           ev.stopPropagation();
                           addClickClass(ev.currentTarget, "click");
                           const widthValue = rule.match(/\d+/gi);
                           const mediaCondition = rule.split(":")[0];
-                          console.log(widthValue, mediaCondition);
+                          // console.log("widthValue" , widthValue, mediaCondition);
                           setMediaValue(mediaCondition);
                           setMediaCond(mediaCondition);
+
                           editor.getConfig().mediaCondition = mediaCondition;
                           localStorage.setItem(
                             "media-condition",
                             mediaCondition
                           );
                           const sle = editor.getSelected();
-                          setCustomDevice("width", widthValue);
+                          setCustomDevice("width", +widthValue[0]);
                           setDimaonsion({
                             ...dimansions,
-                            width: widthValue,
+                            width: +widthValue[0],
                           });
 
                           editor.trigger("device:change");

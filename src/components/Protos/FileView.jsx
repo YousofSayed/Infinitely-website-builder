@@ -126,11 +126,14 @@ export const FileView = ({
           <section>
             <video
               className="w-full  h-[140px] max-h-full max-w-full "
-              onClick={(ev) => {
+              onPointerEnter={(ev) => {
                 ev.stopPropagation();
                 ev.preventDefault();
                 ev.currentTarget.play();
                 console.log("play");
+              }}
+              onPointerLeave={(ev)=>{
+                ev.currentTarget.pause();
               }}
               onDoubleClick={(ev) => {
                 ev.preventDefault();
@@ -138,7 +141,8 @@ export const FileView = ({
                 console.log("dbplay");
                 onItemClicked(ev, asset);
               }}
-              autoPlay={true}
+              // autoPlay={true}
+              preload="none"
               muted={true}
               poster=""
               src={`/assets/${asset.name}`}

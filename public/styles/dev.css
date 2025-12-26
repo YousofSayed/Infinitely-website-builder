@@ -19,7 +19,11 @@ video {
 /* video:not([controls]) {
 all: unset ;
 } */
-
+@layer base {
+  [data-gjs-type="wrapper"] {
+    background-color: white;
+  }
+}
 .preventWhenScroll  {
   transition: none !important;
   animation-play-state: paused !important;

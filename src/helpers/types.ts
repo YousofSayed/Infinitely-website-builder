@@ -158,7 +158,7 @@ export type InfinitelyTrait = {
   textareaLanguage: string;
   allowCmdsContext: boolean;
   callback: TraitCallback;
-  deleteCallback:TraitCallback;
+  deleteCallback: TraitCallback;
   hint: TraitCallback | string;
   init: ({
     editor,
@@ -175,8 +175,8 @@ export type InfinitelyTrait = {
   buttonEvents: (
     handlers: TraitCallProps
   ) => import("react").HTMLAttributes<HTMLButtonElement>;
-  showCallback: (trait: InfinitelyTrait) => boolean;
-  hideCallback: (trait: InfinitelyTrait) => boolean;
+  showCallback: (trait: TraitCallProps) => boolean;
+  hideCallback: (trait: TraitCallProps) => boolean;
   nestedKeys: string[];
   isChild: boolean;
   role: "attribute" | "handler";
@@ -342,7 +342,7 @@ export interface RestAPIModel {
   headers: HeadersInit;
   body: BodyInit;
   response: string;
-  id:string;
+  id: string;
 }
 
 export interface DynamicTemplatesType {
@@ -557,6 +557,7 @@ export interface Project {
     jsFooterLibs: boolean;
     cssLibs: boolean;
   };
+  devices: import("grapesjs").DeviceProperties[];
   lastScreenshot: Date | string;
 }
 

@@ -1,206 +1,28 @@
-.header-link:hover {
-  background-color: rgb(37, 99, 235);
+.infcls-NTE3Mw5191-7335-354 {
+  background-color: #ab05c3;
 }
-
-.inf-NTE4OA5312 {
-  overflow-x: hidden;
-  overflow-y: hidden;
-}
-
-.inf-NTMzOQ17466 {
-  overflow-x: hidden;
-  overflow-y: hidden;
-}
-
-.inf-NTIzNg12323 {
-  backdrop-filter: blur(10px);
-  background-color: transparent;
-}
-
-.inf-NTQxNQ1697 {
-  margin-left: auto;
-  margin-right: auto;
-  padding-top: 5px;
-  padding-right: 5px;
-  padding-bottom: 5px;
-  padding-left: 5px;
-}
-
-.inf-NTE1OQ893 {
-  padding-top: 0px;
-  padding-right: 0px;
-  padding-bottom: 0px;
-  padding-left: 0px;
-}
-
-.inf-NTMwNA5432 {
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-  width: 70%;
-}
-
-.header-link {
-  text-transform: capitalize;
-  font-weight: 600;
-  cursor: pointer;
-  transition-behavior: normal;
-  transition-duration: 0.2s;
-  transition-timing-function: ease;
-  transition-delay: 0s;
-  transition-property: all;
-}
-
-.inf-NTQzNg8294 {
-  display: flex;
-  align-items: center;
-  column-gap: 0.8rem;
-  border-right-width: 1.2px;
-  border-right-color: rgb(221, 221, 221);
-  border-right-style: solid;
-  padding-top: 0px;
-  padding-right: 0px;
-  padding-bottom: 0px;
-  padding-left: 0px;
-}
-
-.inf-NTE1OA60 {
-  font-family: Poppins-500;
-}
-
-.inf-NTM2Mg7335 {
-  width: 40px;
-  height: 40px;
-}
-
-.inf-NTM0OA9374 {
-  height: calc(-60px + 100vh);
-  position: relative;
-  overflow-x: hidden;
-  overflow-y: hidden;
-  backdrop-filter: blur(5px);
-  padding-top: 0px;
-  padding-right: 0px;
-  padding-bottom: 0px;
-  padding-left: 0px;
-}
-
-.inf-NTM0OA9374::after {
-  content: "";
-  height: 400px;
-  position: absolute;
-  transform: rotate(30deg);
-  border-top-left-radius: 30px;
-  border-top-right-radius: 30px;
-  border-bottom-right-radius: 30px;
-  border-bottom-left-radius: 30px;
-  width: 400px;
-  background-color: rgb(222, 82, 82);
-  left: -10%;
-  top: -5%;
-}
-
-.inf-NTM0OA9374::before {
-  content: "";
-  height: 400px;
-  position: absolute;
-  transform: rotate(30deg);
-  border-top-left-radius: 30px;
-  border-top-right-radius: 30px;
-  border-bottom-right-radius: 30px;
-  border-bottom-left-radius: 30px;
-  width: 500px;
-  background-color: rgb(115, 36, 153);
-  bottom: -20%;
-  right: -7%;
-}
-
-.inf-NTMyOQ12200 {
-  height: 100%;
-  width: 100%;
-  position: absolute;
-  top: 0px;
-  right: 0px;
-  bottom: 0px;
-  left: 0px;
-  z-index: 3;
-  backdrop-filter: blur(100px);
-  background-image: url("../assets/Vector2.png");
-}
-
-.inf-NTI4MA3317 {
-  font-family: Poppins-400, sans-serif;
-}
-
-.inf-NTE3Mw11495 {
-  font-family: Poppins-300, sans-serif;
-  font-weight: 600;
-  letter-spacing: 1px;
-  line-height: 1.8;
-}
-
-.inf-NTQ4Ng10178 {
-  font-size: 55px;
-  font-family: Poppins-600, sans-serif;
-}
-
-.inf-NTQ0MQ19317 {
-  display: inline-block;
-  text-transform: uppercase;
-}
-
-@keyframes roteta {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes fadin-left {
-  0% {
-    transform: translateX(-100%);
-    opacity: 0;
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateX(0px);
-  }
-}
-
-@keyframes fadin-right {
-  0% {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateX(0px);
-  }
-}
-
-@keyframes scale-in {
-  0% {
-    transform: scale(0);
-  }
-
-  100% {
-    transform: scale(1);
-  }
-}
-
 @media (max-width: 900px) {
-  .inf-NTMwNA5432 {
-    display: none;
+  .infcls-NTE3Mw5191-7335-354 {
+    background-color: rgb(255, 204, 0);
   }
 }
-
-@media (max-width: 360px) {
-  .inf-NTE1OA60 {
-    font-size: 21px;
+@media (max-width: 480px) {
+  .infcls-NTE3Mw5191-7335-354 {
+    background-color: rgb(28, 235, 214);
+  }
+}
+@media (max-width: 375px) {
+  .infcls-NTE3Mw5191-7335-354 {
+    background-color: rgb(54, 224, 0);
+  }
+}
+@media (max-width: 275px) {
+  .infcls-NTE3Mw5191-7335-354 {
+    background-color: rgb(39, 0, 255);
+  }
+}
+@media (max-width: 175px) {
+  .infcls-NTE3Mw5191-7335-354 {
+    background-color: rgb(255, 0, 39);
   }
 }

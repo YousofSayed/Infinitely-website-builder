@@ -11,16 +11,25 @@ import {
 import { useEditorMaybe } from "@grapesjs/react";
 import { useRemoveCssProp } from "./useRemoveCssProp";
 import {
+  arrangeDevicesPeriority,
   getComponentRules,
   getCurrentMediaDevice,
   getCurrentSelector,
   getInfinitelySymbolInfo,
+  getProjectData,
+  getProjectSettings,
+  store,
 } from "../helpers/functions";
-import { current_symbol_id, inf_class_name } from "../constants/shared";
+import {
+  current_project_id,
+  current_symbol_id,
+  inf_class_name,
+} from "../constants/shared";
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
 import { random, uniqueId } from "lodash";
 import { keyframeStylesInstance } from "../constants/InfinitelyInstances";
 import { uniqueID } from "../helpers/cocktail";
+import { db } from "../helpers/db";
 let setStyleTimeout = null;
 
 /**
@@ -33,10 +42,12 @@ export function useSetClassForCurrentEl() {
   const [selector, setSelector] = useRecoilState(selectorState);
   const removeProp = useRemoveCssProp();
   const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
-  const [frameStyles , setFrameStyles] = useRecoilState(framesStylesState);
+  const [frameStyles, setFrameStyles] = useRecoilState(framesStylesState);
 
   const showAnimationsBuilder = useRecoilValue(showAnimationsBuilderState);
-    const [showStylesBuilder , setShowStylesBuilder] = useRecoilState(showStylesBuilderForMotionBuilderState);
+  const [showStylesBuilder, setShowStylesBuilder] = useRecoilState(
+    showStylesBuilderForMotionBuilderState
+  );
 
   // const setAnimeStyles = useSetRecoilState(animeStylesState);
 
@@ -115,12 +126,16 @@ export function useSetClassForCurrentEl() {
       } else if (currentSelector && !isCurrentSelectorAdded) {
         sle.addClass(currentSelector);
       }
-      console.log("current selector from updater : ", currentSelector , newCssProps);
+      console.log(
+        "current selector from updater : ",
+        currentSelector,
+        newCssProps
+      );
 
       const symbolInfo = getInfinitelySymbolInfo(sle);
-      if(symbolInfo.isSymbol){
+      if (symbolInfo.isSymbol) {
         sessionStorage.setItem(current_symbol_id, symbolInfo.mainId);
-      }else{
+      } else {
         sessionStorage.removeItem(current_symbol_id);
       }
       // console.log(
@@ -139,13 +154,100 @@ export function useSetClassForCurrentEl() {
       //   // }
       // );
 
+      // arrangeDevicesPeriority(editor);
+
+      // (async () => {
+      //   const projectData = await getProjectData();
+      //   const projectId = +localStorage.getItem(current_project_id);
+      //   const { projectSettings } = getProjectSettings();
+      //   const devices =
+      //     projectData?.devices ||
+      //     editor.Devices.getAll()
+      //       .toArray()
+      //       .map((dev) => dev.attributes);
+
+      //   const currentDeviceName = editor.getDevice();
+      //   const currentDevice = editor.Devices.get(currentDeviceName)?.attributes;
+      //   const newDevices = [
+      //     ...new Set(
+      //       devices.concat(currentDevice).map((dev) => JSON.stringify(dev))
+      //     ),
+      //   ].map((dev) => JSON.parse(dev));
+
+      //   if (projectSettings.enable_auto_save) {
+      //     editor.Storage.setAutosave(false);
+      //     editor.CssComposer.setRule(
+      //       `${currentSelector}${rule.ruleString}`,
+      //       newCssProps || { [cssProp]: "" },
+      //       {
+      //         ...Media,
+      //         addStyles: true,
+      //         validate: false,
+      //         // inline:true,
+      //         // addStyle: true,
+      //       }
+      //     );
+
+      //     setCmpRules(
+      //       getComponentRules({
+      //         editor,
+      //         cmp: editor.getSelected(),
+      //       }).rules || []
+      //     );
+
+      //     store(
+      //       {
+      //         data: {
+      //           devices: newDevices,
+      //         },
+      //       },
+      //       editor
+      //     );
+      //   } else {
+      //     editor.CssComposer.setRule(
+      //       `${currentSelector}${rule.ruleString}`,
+      //       newCssProps || { [cssProp]: "" },
+      //       {
+      //         ...Media,
+      //         addStyles: true,
+      //         validate: false,
+      //         // inline:true,
+      //         // addStyle: true,
+      //       }
+      //     );
+
+      //     setCmpRules(
+      //       getComponentRules({
+      //         editor,
+      //         cmp: editor.getSelected(),
+      //       }).rules || []
+      //     );
+
+      //     await db.projects.update(projectId, {
+      //       devices: newDevices,
+      //     });
+      //   }
+        // editor.trigger("inf:rules:update", {
+        //   rules: newCssProps,
+        // });
+     
+
+      // console.log("new media devices :",editor.DeviceManager.getAll().toArray().map(dev=>dev.attributes));
+      // })();
+      console.log(
+        "new media devices :",
+        editor.DeviceManager.getAll()
+          .toArray()
+          .map((dev) => dev.attributes)
+      );
       editor.CssComposer.setRule(
         `${currentSelector}${rule.ruleString}`,
         newCssProps || { [cssProp]: "" },
         {
           ...Media,
+
           addStyles: true,
-          validate: false,
+          // validate: false,
           // inline:true,
           // addStyle: true,
         }
@@ -158,12 +260,10 @@ export function useSetClassForCurrentEl() {
         }).rules || []
       );
 
-     
-
       editor.trigger("inf:rules:update", {
-        rules: newCssProps,
-      });
-
+          rules: newCssProps,
+        });
+      // reorderCss(editor);
       // editor.getSelected().addStyle(newCssProps)
 
       // console.log(cssProp, rule.ruleString, "%$%%$#$", editor.getCss());
