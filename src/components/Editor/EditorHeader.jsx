@@ -91,7 +91,7 @@ export const HomeHeader = () => {
   const setCustomDevice = (prop, value) => {
     prop == "width" && (widthRef.current = value);
     prop == "height" && (heightRef.current = value);
-    // console.log(prop, value, !value);
+    console.log("new value" , value , prop);
     const uid = uniqueID();
 
     if (!value) {
@@ -121,17 +121,17 @@ export const HomeHeader = () => {
     // );
 
     editor.DeviceManager.remove(customDevice.current);
-    const existDevice = devices.find(
-      (dev) =>
-        parseFloat(dev.widthMedia || "0") === parseFloat(newDevice.widthMedia)
-    );
-    if (existDevice) {
-      console.log("new existDevice", existDevice);
-      editor.setDevice(existDevice?.id || existDevice?.name || 'desktop');
-      editor.trigger("inf:rules:update");
+    // const existDevice = devices.find(
+    //   (dev) =>
+    //     parseFloat(dev.widthMedia || "0") === parseFloat(newDevice.widthMedia)
+    // );
+    // if (existDevice) {
+    //   console.log("new existDevice", existDevice);
+    //   editor.setDevice(existDevice?.id || existDevice?.name || 'desktop');
+    //   editor.trigger("inf:rules:update");
 
-      return;
-    }
+    //   return;
+    // }
     const concatedArray = devices.concat(newDevice);
     concatedArray.sort((a, b) => {
       const wa = parseFloat(a.widthMedia) || Infinity; // Desktop last
@@ -186,7 +186,9 @@ export const HomeHeader = () => {
 
     const changeDeviceCallback = () => {
       const currentDeviceName = editor.getDevice();
+      
       const currentDevice = editor.Devices.get(currentDeviceName);
+      console.log('currentDeviceName' , currentDevice);
       setDimaonsion({
         height: parseFloat(currentDevice.attributes.height) || "",
         width: parseFloat(currentDevice.attributes.widthMedia) || "",
@@ -421,14 +423,14 @@ export const HomeHeader = () => {
                             mediaCondition
                           );
                           const sle = editor.getSelected();
-                          setCustomDevice("width", +widthValue[0]);
                           setDimaonsion({
                             ...dimansions,
                             width: +widthValue[0],
                           });
+                          setCustomDevice("width", +widthValue[0]);
 
                           editor.trigger("device:change");
-                          preventSelectNavigation(editor, sle);
+                          // preventSelectNavigation(editor, sle);
                         }}
                       >
                         {rule}

@@ -66,12 +66,12 @@ export const addDevices = (editor) => {
     priority: 3,
   });
 
-  const lastDevice = localStorage.getItem("last-device");
-  const lastDeviceJson = localStorage.getItem("last-device-json");
-  if (lastDevice) editor.setDevice(lastDevice);
-  if (lastDeviceJson) {
-    editor.Devices.add(JSON.parse(lastDeviceJson));
-  }
+  // const lastDevice = localStorage.getItem("last-device");
+  // const lastDeviceJson = localStorage.getItem("last-device-json");
+  // if (lastDevice) editor.setDevice(lastDevice);
+  // if (lastDeviceJson) {
+  //   editor.Devices.add(JSON.parse(lastDeviceJson));
+  // }
   editor.onReady(() => {
     editor.trigger(InfinitelyEvents.devices.update);
   });
@@ -165,11 +165,11 @@ export const addDevices = (editor) => {
 
   editor.on("change:device", () => {
     // editor.getContainer().style.zoom = 1;
-    localStorage.setItem("last-device", editor.getDevice());
-    localStorage.setItem(
-      "last-device-json",
-      JSON.stringify(editor.Devices.get(editor.getDevice()).toJSON())
-    );
+    // localStorage.setItem("last-device", editor.getDevice());
+    // localStorage.setItem(
+    //   "last-device-json",
+    //   JSON.stringify(editor.Devices.get(editor.getDevice()).toJSON())
+    // );
     // console.log(
     //   "Device is : ",
     //   editor.Devices.get(editor.getDevice()).toJSON()
