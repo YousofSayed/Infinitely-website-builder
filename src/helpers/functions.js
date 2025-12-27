@@ -72,6 +72,7 @@ import {
 } from "./bridge";
 import { loadElements } from "../plugins/IDB";
 import { editorStorageInstance } from "../constants/InfinitelyInstances";
+import { minify } from "csso";
 export {
   replaceBlobs,
   base64ToBlob,
@@ -719,40 +720,51 @@ export function getCurrentMediaDevice(editor) {
  */
 export function reorderCss(editor) {
   const css = editor.CssComposer;
-  const rules = css.getAll().toArray();
-  const media = [];
-  const othersRules = [];
+  const cssCode = minify(
+    `
+        ${editor.getCss({
+          avoidProtected: true,
+          keepUnusedStyles: true,
+        })}
+          `,
+    { restructure: false }
+  ).css;
+  const rules = editor.Parser.parserCss.parse(cssCode);
+  // const rules = css.getAll().toArray();
+  // const media = [];
+  // const othersRules = [];
 
-  rules
-    .sort((a, b) => {
-      const aAt = a.getAtRule?.() || "";
-      const bAt = b.getAtRule?.() || "";
-      console.log("aAt", aAt, "bAt", bAt);
+  // rules
+  //   .sort((a, b) => {
+  //     const aAt = a.getAtRule?.() || "";
+  //     const bAt = b.getAtRule?.() || "";
+  //     console.log("aAt", aAt, "bAt", bAt);
 
-      const aNum = parseFloat(aAt.match(/\d+/)?.[0]) ?? Infinity;
-      const bNum = parseFloat(bAt.match(/\d+/)?.[0]) ?? Infinity;
-      // return bNum - aNum; // desktop first
-      return aNum - bNum; // desktop first
-    })
-    .filter((rule) =>
-      Boolean(Object.keys(rule?.attributes?.style || {}).length)
-    )
-    .forEach((rule) => {
-      if (
-        rule?.attributes?.atRuleType &&
-        rule?.attributes?.atRuleType == "media"
-      ) {
-        media.push(rule);
-      } else {
-        othersRules.push(rule);
-      }
-    });
+  //     const aNum = parseFloat(aAt.match(/\d+/)?.[0]) ?? Infinity;
+  //     const bNum = parseFloat(bAt.match(/\d+/)?.[0]) ?? Infinity;
+  //     // return bNum - aNum; // desktop first
+  //     return aNum - bNum; // desktop first
+  //   })
+  //   .filter((rule) =>
+  //     Boolean(Object.keys(rule?.attributes?.style || {}).length)
+  //   )
+  //   .forEach((rule) => {
+  //     if (
+  //       rule?.attributes?.atRuleType &&
+  //       rule?.attributes?.atRuleType == "media"
+  //     ) {
+  //       media.push(rule);
+  //     } else {
+  //       othersRules.push(rule);
+  //     }
+  //   });
 
-  // .reverse()
-  const newRules = [...othersRules, ...media.reverse()];
-  console.log("new rules : ", newRules);
+  // // .reverse()
+  // const newRules = [...othersRules, ...media.reverse()];
+  // console.log("new rules : ", newRules);
 
-  css.getAll().reset(newRules);
+  // css.getAll().reset(newRules);
+  css.getAll().reset(rules);
 }
 
 /**

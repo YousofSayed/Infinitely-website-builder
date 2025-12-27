@@ -136,7 +136,7 @@ async function getAllSymbolsStyles() {
  */
 export const loadElements = async (
   editor,
-  { justSendToWorker = false, onSend = (response = [] , styles) => {} }
+  { justSendToWorker = false, onSend = (response = [], styles) => {} }
 ) => {
   editor.Components.clear({});
   editor.DomComponents.clear({});
@@ -180,11 +180,10 @@ export const loadElements = async (
       ${cssStyles}
       ${allSymbolsStyle}
         `,
-      { restructure: false ,  }
+      { restructure: false }
     ).css;
     // editor.setStyle(cssCode);
     // console.log('style : ',editor.getCss());
-    
 
     allSymbolsStyle = null; //For garpage collection
     cssStyles = null;
@@ -240,10 +239,10 @@ export const loadElements = async (
             editor.clearDirtyCount();
             console.log("props : ", props);
             res(props);
-            onSend([
-              renderCssStyles(editor, cssCode),
-              ...props.response,
-            ] , cssCode);
+            onSend(
+              [renderCssStyles(editor, cssCode), ...props.response],
+              cssCode
+            );
             editor.on("component:remove:before", editor.removerBeforeHandler);
           }
         );
@@ -263,7 +262,7 @@ export const loadElements = async (
       // editor.on("canvas:frame:load", () => {
       //   attrsCallback(editor, projectData);
       // });
-      
+
       editor.clearDirtyCount();
       editor.on("component:remove:before", editor.removerBeforeHandler);
       // editor.Css.addRules(cssCode);
@@ -395,12 +394,12 @@ export const IDB = (editor) => {
       clearTimeouts();
 
       reloadEditor(editor);
-editor.on('style:change', () => {
-  console.log('style changed');
-  
-  const css = editor.getCss({ avoidProtected: true });
-  editor.setStyle(css); // Forces reordering
-});
+      editor.on("style:change", () => {
+        console.log("style changed");
+
+        const css = editor.getCss({ avoidProtected: true });
+        editor.setStyle(css); // Forces reordering
+      });
       // console.log("should load");
       // loadTimeout = setTimeout(async () => {
       //   editor.loadProjectData(await loadElements());
@@ -570,6 +569,14 @@ editor.on('style:change', () => {
 
               console.log("props will store : ", props);
 
+              const beforeunload = (e) => {
+                e.preventDefault();
+                e.returnValue = "";
+              };
+              if (projectSettings.enable_auto_save) {
+                window.addEventListener("beforeunload", beforeunload);
+              }
+
               const onWorkerMessage = (ev) => {
                 const { command, props: resProps } = ev.data;
                 const isMatch = resProps?.projectId === projectID;
@@ -601,6 +608,9 @@ editor.on('style:change', () => {
                       props: { id: opfs.id },
                     });
                   });
+                  if (projectSettings.enable_auto_save) {
+                    window.removeEventListener("beforeunload", beforeunload);
+                  }
                   if (!projectSettings.enable_auto_save) {
                     toast.done(tId);
                     toast.success(

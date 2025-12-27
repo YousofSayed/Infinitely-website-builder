@@ -46,9 +46,11 @@ import {
   cloneDeep,
   isArray,
   isBoolean,
+  isNull,
   isObject,
   isPlainObject,
   isString,
+  isUndefined,
   random,
   uniqueId,
 } from "lodash";
@@ -332,7 +334,9 @@ const ObjectComponent = ({
     const secondEditableValue = isArray(secondDestination)
       ? getNestedValue(secondEditeable, secondDestination.concat(prop))
       : null;
-    if (!editableValue && !isBoolean(editableValue)) {
+    if (!editableValue && !isBoolean(editableValue)
+       && (isUndefined(editableValue) || isNull(editableValue) || isNaN(editableValue))
+      ) {
       removeNestedKey(editeable, destination.concat(prop));
     }
 
@@ -349,6 +353,8 @@ const ObjectComponent = ({
       isArray(secondDestination) &&
       !secondEditableValue &&
       !isBoolean(secondEditableValue)
+       
+     && (isUndefined(secondEditableValue) || isNull(secondEditableValue) || isNaN(secondEditableValue))
     ) {
       removeNestedKey(secondEditeable, secondDestination.concat(prop));
     }

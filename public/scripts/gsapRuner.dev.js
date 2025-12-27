@@ -191,14 +191,14 @@ function createSplitText(motion, splitTextVars) {
  *
  * @param {import('../../src/helpers/types').MotionType} motion
  */
-function killAndRevert(motion) {
+function killAndRevert(motion, isSingle = true) {
   if (!(motion && motion.id)) throw new Error(`No motion id founded`);
   const killer = (obj) => {
     if (Array.isArray(gsapTween[motion.id])) {
       obj[motion.id].forEach((tween) => {
         tween.kill && tween.kill(true);
         tween.revert && tween.revert();
-        ScrollTrigger.refresh();
+        isSingle && ScrollTrigger.refresh();
       });
     } else if (obj[motion.id] && motion.isTimeLine) {
       obj[motion.id].getChildren().forEach((child) => {
@@ -210,11 +210,11 @@ function killAndRevert(motion) {
       obj[motion.id]?.revert && obj[motion.id].revert(); // Kill the timeline
       obj[motion.id]?.kill && obj[motion.id].kill(true); // Kill the timeline
       console.log(obj, obj[motion.id]);
-      ScrollTrigger.refresh();
+      isSingle && ScrollTrigger.refresh();
     } else if (obj[motion.id] && !motion.isTimeLine) {
       obj[motion.id]?.kill && obj[motion.id].kill(true);
       obj[motion.id]?.revert && obj[motion.id].revert();
-      ScrollTrigger.refresh();
+      isSingle && ScrollTrigger.refresh();
     }
     delete obj[motion.id];
     console.log("From gsap runner ", motion.id, "killed");
@@ -261,7 +261,9 @@ function CreateGsap(motion, paused = false) {
       const { selector, fromValue, toValue, positionParameter } = item;
       if (!document.querySelectorAll(selector).length) {
         // console.warn('A7a mafesh elements hena');
-        console.warn(`Infinitely : No element with this selector : ${selector} founded`);
+        console.warn(
+          `Infinitely : No element with this selector : ${selector} founded`
+        );
 
         // return;
       }
@@ -275,7 +277,9 @@ function CreateGsap(motion, paused = false) {
       const { selector, fromValue, toValue } = item;
       if (!document.querySelectorAll(selector).length) {
         // console.warn('A7a mafesh elements hena');
-        console.warn(`Infinitely : No element with this selector : ${selector} founded`);
+        console.warn(
+          `Infinitely : No element with this selector : ${selector} founded`
+        );
 
         // return;
       }
@@ -424,7 +428,11 @@ function gsapRunAll(ev) {
    */
   const { motions, methods, props } = ev.detail;
 
-  Object.values(motions).forEach((motion) => {
+  let index = 0;
+  const values = Object.values(motions);
+  const handler = () => {
+    if (index >= values.length) return;
+    const motion = values[index];
     window.parent.dispatchEvent(
       new CustomEvent("gsap:run", {
         detail: {
@@ -446,7 +454,38 @@ function gsapRunAll(ev) {
         detail: { motions: instanceMotions, methods, props },
       })
     );
-  });
+
+    index++;
+    setTimeout(() => {
+      handler();
+    }, 10);
+  };
+
+  handler();
+
+  // Object.values(motions).forEach((motion) => {
+  //   window.parent.dispatchEvent(
+  //     new CustomEvent("gsap:run", {
+  //       detail: {
+  //         motion,
+  //         methods,
+  //         props,
+  //       },
+  //     })
+  //   );
+
+  //   const instanceMotions = {};
+
+  //   Object.entries(motion.instances || {}).forEach(([id, instance]) => {
+  //     instanceMotions[id] = { ...motion, id, isInstance: true, instances: {} };
+  //   });
+
+  //   window.parent.dispatchEvent(
+  //     new CustomEvent("gsap:all:run", {
+  //       detail: { motions: instanceMotions, methods, props },
+  //     })
+  //   );
+  // });
 }
 
 function gsapKillAll(ev) {
@@ -454,12 +493,20 @@ function gsapKillAll(ev) {
    * @type {{motions:{[key:string]:import('../../src/helpers/types').MotionType}}}
    */
   const { motions } = ev.detail;
-  Object.values(motions).forEach((motion) => {
-    console.log('motion killing - 1 : ', motion.id , motion);
+  const values = Object.values(motions);
+
+  let index = 0;
+  const handler = () => {
+    if (index >= values.length) {
+      ScrollTrigger.refresh(true);
+      return;
+    }
+    let motion = values[index];
+    console.log("motion killing - 1 : ", motion.id, motion);
     // if (!gsapTween[motion.id]) return;
-    console.log('motion killing - 2 : ', motion.id , motion);
-    
-  gsapTween[motion.id]&&  killAndRevert(motion);
+    console.log("motion killing - 2 : ", motion.id, motion);
+
+    gsapTween[motion.id] && killAndRevert(motion, false);
     // if (Array.isArray(gsapTween[motion.id])) {
     //   gsapTween[motion.id].forEach((tween) => {
     //     tween.revert();
@@ -492,7 +539,52 @@ function gsapKillAll(ev) {
     window.parent.dispatchEvent(
       new CustomEvent("gsap:all:kill", { detail: { motions: instanceMotions } })
     );
-  });
+
+    index++;
+    setTimeout(() => {
+      handler();
+    }, 10);
+  };
+  handler();
+  // Object.values(motions).forEach((motion) => {
+  //   console.log("motion killing - 1 : ", motion.id, motion);
+  //   // if (!gsapTween[motion.id]) return;
+  //   console.log("motion killing - 2 : ", motion.id, motion);
+
+  //   gsapTween[motion.id] && killAndRevert(motion);
+  //   // if (Array.isArray(gsapTween[motion.id])) {
+  //   //   gsapTween[motion.id].forEach((tween) => {
+  //   //     tween.revert();
+  //   //     tween.kill(true);
+  //   //     ScrollTrigger.refresh();
+  //   //   });
+  //   // } else if (gsapTween[motion.id] && motion.isTimeLine) {
+  //   //   gsapTween[motion.id].getChildren().forEach((child) => {
+  //   //     if (child.scrollTrigger) {
+  //   //       child.scrollTrigger.revert(); // Kill inner scrollTrigger
+  //   //       //child.scrollTrigger.kill(true); // Kill inner scrollTrigger
+  //   //     }
+  //   //   });
+  //   //   gsapTween[motion.id].revert(); // Kill the timeline
+  //   //   gsapTween[motion.id].kill(true); // Kill the timeline
+  //   //   console.log(gsapTween, gsapTween[motion.id]);
+  //   //   ScrollTrigger.refresh();
+  //   // } else if (gsapTween[motion.id] && !motion.isTimeLine) {
+  //   //   gsapTween[motion.id].kill(true);
+  //   //   gsapTween[motion.id].revert();
+  //   //   ScrollTrigger.refresh();
+  //   // }
+  //   // delete gsapTween[motion.id];
+  //   const instanceMotions = {};
+
+  //   Object.entries(motion.instances || {}).forEach(([id, instace]) => {
+  //     instanceMotions[id] = { ...motion, id, isInstance: true, instances: {} };
+  //   });
+
+  //   window.parent.dispatchEvent(
+  //     new CustomEvent("gsap:all:kill", { detail: { motions: instanceMotions } })
+  //   );
+  // });
 }
 
 window.parent.addEventListener("gsap:run", gsapRun);

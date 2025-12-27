@@ -207,7 +207,7 @@ export const Li = ({
 
       {notify && (
         <div
-          className={`absolute w-[10px] h-[10px] ${notifyBg} rounded-full right-0 top-0`}
+          className={`absolute w-[10px] pointer-events-none h-[10px] ${notifyBg} rounded-full right-0 top-0`}
         ></div>
       )}
       {showTooltip && title && (

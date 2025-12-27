@@ -6,8 +6,8 @@ hmrBroadcastChannel.addEventListener("message", async (ev) => {
   const { url } = props;
   if (!url) return;
   const parsedURL = new URL(url, window.origin);
-  if (currentUrl.toLowerCase() == parsedURL.href?.toLowerCase?.()) {
-    console.log("yes i equal me from broadcast", url, currentUrl);
+  if (location.pathname.toLowerCase() == parsedURL.pathname.toLowerCase()) {
+    console.log("yes i equal me from broadcast", url);
     location.reload();
     // window = window
     // const response = await (await fetch(parsedURL.href)).text();
