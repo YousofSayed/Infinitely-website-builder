@@ -1,31 +1,26 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { pageHelmetType } from "../../../helpers/jsDocs";
 import { useLiveQuery } from "dexie-react-hooks";
-import { getProjectData } from "../../../helpers/functions";
+import { getProjectData, store } from "../../../helpers/functions";
 import {
   current_page_helmet,
   current_page_id,
   current_project_id,
 } from "../../../constants/shared";
-import { NormalTitle } from "../../Protos/NormalTitle";
 import { Input } from "../Protos/Input";
 import blankImg from "../../../assets/images/blank.jpg";
 import { Button } from "../../Protos/Button";
 import { Icons } from "../../Icons/Icons";
-import { Editor } from "@monaco-editor/react";
-import { db } from "../../../helpers/db";
-import { MiniTitle } from "../Protos/MiniTitle";
 import { useEditorMaybe } from "@grapesjs/react";
 import { open_pages_manager_modal } from "../../../constants/InfinitelyCommands";
-import { CodeEditor } from "../Protos/CodeEditor";
 import { Select } from "../Protos/Select";
 import { FitTitle } from "../Protos/FitTitle";
 import { SmallButton } from "../Protos/SmallButton";
-import { infinitelyWorker } from "../../../helpers/infinitelyWorker";
-import { projectData } from "../../../helpers/atoms";
 import { opfs } from "../../../helpers/initOpfs";
 import { defineRoot } from "../../../helpers/bridge";
 import { random } from "lodash";
+import { toast } from "react-toastify";
+import { ToastMsgInfo } from "../Protos/ToastMsgInfo";
 
 //million-ignore
 export const PageHelmetModal = () => {
@@ -39,21 +34,52 @@ export const PageHelmetModal = () => {
   const inputFileRef = useRef();
   const editor = useEditorMaybe();
   const inputTimeoutRef = useRef(null);
+  const [isHelmetDataChanged, setIsHelmetDataChanged] = useState(false);
   // const original = useRef(URL.createObjectURL);
   const logosURLs = useRef([]);
   const firstLoad = useRef(0);
-  // URL.createObjectURL = (blob) => {
-  //   if (!blob || !(blob instanceof Blob)) {
-  //     console.warn("createObjectURL called with non-Blob object:", blob);
-  //     return "";
-  //   }
-  //   const url = original.current(blob);
-  //   logosURLs.current.push(url);
-  //   return url;
-  // };
+
+  useLiveQuery(async () => {
+    const projectData = await getProjectData();
+    const projectId = projectData.id;
+    const currentPageName = localStorage.getItem(current_page_id);
+    const helmetFromDB = projectData.pages[`${currentPageHelmetName}`].helmet;
+
+    if (!siteLogo) {
+      const projectLogo = await opfs.getFile(defineRoot(projectData.logo));
+      const isReal =
+        projectLogo &&
+        projectLogo.exists() &&
+        Boolean(await projectLogo.getSize());
+      const iconUrl =
+        helmetFromDB.icon && helmetFromDB.icon instanceof Blob
+          ? URL.createObjectURL(helmetFromDB.icon)
+          : projectData.logo
+          ? projectData.logo
+          : "";
+      logosURLs.current.push(iconUrl);
+      setSiteLogo(isReal ? iconUrl : "");
+    }
+
+    setHelmet({
+      ...helmet,
+      ...helmetFromDB,
+      icon:
+        helmetFromDB.icon && helmetFromDB.icon instanceof Blob
+          ? helmetFromDB
+          : undefined,
+      customMetaTags:
+        helmetFromDB.customMetaTags instanceof Blob
+          ? await helmetFromDB.customMetaTags.text()
+          : helmetFromDB.customMetaTags
+          ? helmetFromDB.customMetaTags
+          : "",
+    });
+    console.log("custom meta tags : ", helmetFromDB.customMetaTags);
+  }, []);
 
   useEffect(() => {
-    getAndSetHelmetData();
+    // getAndSetHelmetData();
     return () => {
       // Clean up URLs created by createObjectURL
       logosURLs.current.forEach((url) => URL.revokeObjectURL(url));
@@ -65,8 +91,10 @@ export const PageHelmetModal = () => {
     };
   }, []);
 
-  useEffect(() => {
-    const setHelmetToDB = async () => {
+  const setHelmetToDB = useCallback(async () => {
+    console.log("setting helmet", helmet.customMetaTags);
+    const tId = toast.loading(<ToastMsgInfo msg={`Saving helmet...`} />);
+    try {
       const projectData = await getProjectData();
       helmet.logo && (projectData.logo = helmet.logo);
       const currentPageId = localStorage.getItem(current_page_id);
@@ -79,7 +107,11 @@ export const PageHelmetModal = () => {
                 type: "text/html",
               }),
             }
-          : { customMetaTags: "" }),
+          : {
+              customMetaTags: helmet.customMetaTags
+                ? helmet.customMetaTags
+                : "",
+            }),
       };
 
       const props = {
@@ -94,57 +126,76 @@ export const PageHelmetModal = () => {
         editorData: {
           canvasCss: editor.config.canvasCss,
         },
+        afterSave() {
+          setIsHelmetDataChanged(false);
+          toast.done(tId)
+          toast.success(<ToastMsgInfo msg={`Helmet saved successfully💙`} />);
+        },
       };
 
       console.log("First load  : ", firstLoad.current);
 
-      firstLoad.current > 1 &&
-        infinitelyWorker.postMessage({
-          command: "updateDB",
-          props,
-        });
-    };
+      // firstLoad.current > 1 &&
+      //   infinitelyWorker.postMessage({
+      //     command: "updateDB",
+      //     props,
+      //   });
 
-    setHelmetToDB();
+      await store(props, editor);
+    } catch (error) {
+      setIsHelmetDataChanged(false);
+      toast.dismiss(tId);
+      toast.error(<ToastMsgInfo msg={`Faild to save helmet😩`} />);
+    }
   }, [helmet]);
 
-  const getAndSetHelmetData = async () => {
-    const projectData = await getProjectData();
-    const helmetFromDB = projectData.pages[`${currentPageHelmetName}`].helmet;
-    console.log("Helmet Data: ", helmetFromDB);
-    const projectLogo = await opfs.getFile(defineRoot(projectData.logo));
-    const isReal =
-      projectLogo &&
-      projectLogo.exists() &&
-      Boolean(await projectLogo.getSize());
-    const iconUrl =
-      helmetFromDB.icon && helmetFromDB.icon instanceof Blob
-        ? URL.createObjectURL(helmetFromDB.icon)
-        : projectData.logo
-        ? projectData.logo
-        : "";
-    setSiteLogo(isReal ? iconUrl : "");
-    // logosURLs.current.push(iconUrl);
+  // useEffect(() => {
+  //   if (!isHelmetDataChanged) return;
+  //   setHelmetToDB();
+  // }, [helmet]);
 
-    console.log(
-      helmet,
-      helmetFromDB,
-      currentPageHelmetName,
-      projectData.pages[`${currentPageHelmetName}`]
-    );
-    firstLoad.current++;
-    setHelmet({
-      ...helmet,
-      ...helmetFromDB,
-      icon:
-        helmetFromDB.icon && helmetFromDB.icon instanceof Blob
-          ? helmetFromDB
-          : undefined,
-      customMetaTags: helmet.customMetaTags
-        ? await helmet.customMetaTags.text()
-        : undefined,
-    });
-  };
+  // const getAndSetHelmetData = async () => {
+  //   const projectData = await getProjectData();
+  //   const helmetFromDB = projectData.pages[`${currentPageHelmetName}`].helmet;
+  //   console.log("Helmet Data: ", helmetFromDB);
+  //   const projectLogo = await opfs.getFile(defineRoot(projectData.logo));
+  //   const isReal =
+  //     projectLogo &&
+  //     projectLogo.exists() &&
+  //     Boolean(await projectLogo.getSize());
+  //   const iconUrl =
+  //     helmetFromDB.icon && helmetFromDB.icon instanceof Blob
+  //       ? URL.createObjectURL(helmetFromDB.icon)
+  //       : projectData.logo
+  //       ? projectData.logo
+  //       : "";
+  //   setSiteLogo(isReal ? iconUrl : "");
+  //   // logosURLs.current.push(iconUrl);
+
+  //   console.log(
+  //     helmet,
+  //     helmetFromDB,
+  //     currentPageHelmetName,
+  //     projectData.pages[`${currentPageHelmetName}`]
+  //   );
+  //   firstLoad.current++;
+  //   setHelmet({
+  //     ...helmet,
+  //     ...helmetFromDB,
+  //     icon:
+  //       helmetFromDB.icon && helmetFromDB.icon instanceof Blob
+  //         ? helmetFromDB
+  //         : undefined,
+  //     customMetaTags:
+  //       helmet.customMetaTags instanceof Blob
+  //         ? await helmet.customMetaTags.text()
+  //         : helmet.customMetaTags
+  //         ? helmet.customMetaTags
+  //         : "",
+  //   });
+
+  //   console.log("custom meta tags : ", helmetFromDB.customMetaTags);
+  // };
 
   /**
    *
@@ -171,6 +222,8 @@ export const PageHelmetModal = () => {
         [key]: isBlob ? new Blob([value], { type: mimeType }) : value,
         // ...projectData.pages[currentPageHelmetName].helmet,
       });
+
+      setIsHelmetDataChanged(true);
 
       // isLogo ? value : null
     },
@@ -282,7 +335,7 @@ export const PageHelmetModal = () => {
         <FitTitle className="capitalize">description</FitTitle>
         <textarea
           placeholder="Description"
-          className="bg-slate-900 px-2 py-3 rounded-lg text-white font-semibold outline-none border-2 border-transparent focus:border-blue-600"
+          className="bg-slate-900  px-2 py-3 rounded-lg text-white font-semibold outline-none border-2 border-transparent focus:border-blue-600"
           value={helmet.description || ""}
           onInput={(ev) => {
             console.log(ev.target.value);
@@ -315,6 +368,7 @@ export const PageHelmetModal = () => {
           isCode
           placeholder="Custom meta tags"
           value={helmet.customMetaTags}
+          zIndex={1000000}
           codeProps={{
             // value: helmet.customMetaTags,
             // height:`100%`,
@@ -369,6 +423,18 @@ export const PageHelmetModal = () => {
             });
           }}
         /> */}
+      </section>
+
+      <section className="w-full sticky bottom-0">
+        <Button
+          className="w-full font-bold flex justify-center items-center"
+          disabled={!isHelmetDataChanged}
+          onClick={async () => {
+            await setHelmetToDB();
+          }}
+        >
+          Save Helmet
+        </Button>
       </section>
     </section>
   );

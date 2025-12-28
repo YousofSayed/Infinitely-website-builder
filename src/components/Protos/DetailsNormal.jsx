@@ -86,7 +86,7 @@ export const DetailsNormal = memo(
       if(isOpen && parentRef.current){
         console.log('isOpen : ' , isOpen);
         
-        parentRef.current.scrollIntoView({behavior:'smooth' , block:'center' , inline:'center'})
+        parentRef.current.scrollIntoView({behavior:'smooth' , block:'start' , inline:'start'})
       }
     },[isOpen])
 

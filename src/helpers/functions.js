@@ -2941,6 +2941,8 @@ export function store(props, editor) {
         ...(defualtProps?.editorData || {}),
         ...(props?.editorData || {}),
       },
+
+      ...(isFunction(props?.afterSave) ? { afterSave: props?.afterSave } : {}),
     };
   });
 }

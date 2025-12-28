@@ -347,7 +347,7 @@ export const IframeControllers = () => {
             pageName
           );
           console.log("motions : ", motions);
-          killAllGsapMotions(motions);
+          // killAllGsapMotions(motions);
           runAllGsapMotions(motions);
           editor.gsapRunning = true;
         }}

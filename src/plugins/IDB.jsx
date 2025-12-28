@@ -573,8 +573,16 @@ export const IDB = (editor) => {
                 e.preventDefault();
                 e.returnValue = "";
               };
+
               if (projectSettings.enable_auto_save) {
                 window.addEventListener("beforeunload", beforeunload);
+              }
+
+              let afterSave;
+
+              if (isFunction(props.afterSave)) {
+                afterSave = props.afterSave;
+                props.afterSave = null;
               }
 
               const onWorkerMessage = (ev) => {
@@ -601,6 +609,7 @@ export const IDB = (editor) => {
                   editor.clearDirtyCount();
                   console.log("Store complete:", { pageId: currentPageId });
                   console.timeEnd("storing end");
+                  isFunction(afterSave) && afterSave();
                   editor.trigger(InfinitelyEvents.storage.storeEnd);
                   infinitelyWorker.reInit((worker) => {
                     worker.postMessage({

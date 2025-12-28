@@ -166,6 +166,7 @@ export const runAllGsapMotions = (motions) => {
       detail: {
         motions,
         methods: [],
+        killAllFirst:true,
         props: {},
       },
     })
