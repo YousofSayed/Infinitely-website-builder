@@ -83,6 +83,11 @@ export const DetailsNormal = memo(
 
     useEffect(()=>{
       onSwitch(isOpen);
+      if(isOpen && parentRef.current){
+        console.log('isOpen : ' , isOpen);
+        
+        parentRef.current.scrollIntoView({behavior:'smooth' , block:'center' , inline:'center'})
+      }
     },[isOpen])
 
 

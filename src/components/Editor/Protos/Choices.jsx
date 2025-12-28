@@ -180,7 +180,7 @@ export const Choices = ({
         className ? className : "bg-slate-800"
       }`}
     >
-      {keywords.map((keyword, i) => {
+      {Boolean(keywords.length) && keywords.map((keyword, i) => {
         return (
           keyword && (
             <p
@@ -238,6 +238,8 @@ export const Choices = ({
           )
         );
       })}
+
+      {!Boolean(keywords.length) && <h1 className="text-slate-200 animate-pulse w-full flex justify-center items-center">No thing here </h1>}
     </section>
   );
 };

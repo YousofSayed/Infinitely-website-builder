@@ -16,6 +16,10 @@ import { version } from "../../constants/Version.js";
 import { For } from "million/react";
 import { uniqueID } from "../../helpers/cocktail.js";
 import { cloneDeep, random } from "lodash";
+import {
+  destroyProjectsImagesObserver,
+  reInitProjectsImagesObserver,
+} from "../../observers/projectsImagesObserver.js";
 
 //million-ignore
 export const Projects = () => {
@@ -31,6 +35,14 @@ export const Projects = () => {
     setDbProjects(cloneDeep(res));
     // return res;
   });
+
+  useEffect(() => {
+    reInitProjectsImagesObserver();
+
+    return () => {
+      destroyProjectsImagesObserver();
+    };
+  }, []);
 
   return (
     // <section className="relative w-full h-full flex flex-col">
@@ -55,9 +67,7 @@ export const Projects = () => {
         <section className="h-full grid gap-2 p-1 overflow-auto grid-cols-[repeat(auto-fill,minmax(250px,1fr))]">
           <For each={dbProjects}>
             {(project, i) => {
-              return (
-                <Project key={project.id} project={project} />
-              );
+              return <Project key={project.id} project={project} />;
             }}
           </For>
 

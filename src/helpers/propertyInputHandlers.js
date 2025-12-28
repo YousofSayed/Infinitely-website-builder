@@ -16,9 +16,9 @@ export const onInput = ({
   cssProp,
 }) => {
   // special && (ev.target.type = 'number');
-  if (isCurrentELChange.current) {
-    return;
-  }
+  // if (isCurrentELChange.current) {
+  //   return;
+  // }
   console.log("inputttttttttttttttt", ev.target.value, cssProp);
 
   setClass({

@@ -21,6 +21,8 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { uniqueID } from "../../helpers/cocktail";
 import { ToastMsgInfo } from "../Editor/Protos/ToastMsgInfo";
 import { checkDropBoxSignInState } from "../../helpers/dropboxHandlers";
+import { refType } from "../../helpers/jsDocs";
+import { projectsImagesObserver } from "../../observers/projectsImagesObserver";
 
 // million-ignore
 /**
@@ -31,6 +33,7 @@ import { checkDropBoxSignInState } from "../../helpers/dropboxHandlers";
 export const Project = ({ project }) => {
   const navigate = useNavigate();
   const [swAssset, setSwAsset] = useRecoilState(dbAssetsSwState);
+  const thumbnailRef = useRef(refType);
   const [img, setImg] = useState("");
   const [autoAminRef] = useAutoAnimate();
   const [isProjectInited, setIsProjectInited] =
@@ -53,15 +56,21 @@ export const Project = ({ project }) => {
       }
 
       const url = URL.createObjectURL(file);
-      console.log('image url : ' , url , file);
-      
+      console.log("image url : ", url, file);
+
       setImg(url);
+      if (thumbnailRef.current) {
+        projectsImagesObserver.observe(thumbnailRef.current);
+      }
       urlsRef.current.push(url);
     })();
 
     return () => {
       canceled = true;
       urlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      if (thumbnailRef.current) {
+        projectsImagesObserver.unobserve(thumbnailRef.current);
+      }
       urlsRef.current = [];
     };
   }, [project]);
@@ -74,7 +83,9 @@ export const Project = ({ project }) => {
       <figure className="flex flex-col gap-2 h-[70%]  items-center ">
         <img
           key={project.inited}
-          src={img || "/images/blank.jpg"}
+          ref={thumbnailRef}
+          src={"/images/blank.jpg"}
+          project-image-src={img || "/images/blank.jpg"}
           className={`max-w-full max-h-full select-none ${
             project.imgSrc ? "h-full " : "h-full  object-cover"
           }  w-full   max-h-[190px!important] rounded`}
@@ -108,10 +119,15 @@ export const Project = ({ project }) => {
         <Li
           onClick={async () => {
             if (!project.inited) return;
-            if(project.apps == 'Dropbox' && !(await checkDropBoxSignInState())){
-              toast.error(<ToastMsgInfo msg={"Please sign in to Dropbox to continue."} />);
+            if (
+              project.apps == "Dropbox" &&
+              !(await checkDropBoxSignInState())
+            ) {
+              toast.error(
+                <ToastMsgInfo msg={"Please sign in to Dropbox to continue."} />
+              );
               return;
-            };
+            }
             opfs.id = project.id;
             localStorage.setItem(current_project_id, project.id);
             localStorage.setItem(current_page_id, "index");
@@ -133,9 +149,13 @@ export const Project = ({ project }) => {
         <Li
           onClick={async () => {
             if (!project.inited) return;
-            const cnfrm= confirm(`Are you sure to delete ${project.name} project ?`);
-            if(!cnfrm)return;
-            const tId = toast.loading(<ToastMsgInfo msg={"Deleting project"}/>);
+            const cnfrm = confirm(
+              `Are you sure to delete ${project.name} project ?`
+            );
+            if (!cnfrm) return;
+            const tId = toast.loading(
+              <ToastMsgInfo msg={"Deleting project"} />
+            );
             await opfs.remove({
               dirOrFile: await opfs.getFolder(`projects/project-${project.id}`),
             });

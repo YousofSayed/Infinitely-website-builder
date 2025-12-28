@@ -19,7 +19,8 @@ import {
   getCurrentMediaDevice,
   getCurrentSelector,
 } from "../../../helpers/functions";
-import { cloneDeep } from "lodash";
+import { cloneDeep, isArray, isNumber } from "lodash";
+import { styleRgx } from "../../../constants/rgxs";
 
 // console.log({0:[],1:[]});
 
@@ -37,6 +38,9 @@ export const SelectState = ({ placeholder }) => {
   useEffect(() => {
     if (!selectedEl.currentEl) return;
     extractRules();
+    updateCurrentIndex();
+    console.log("extract rules");
+
     // updateCurrentIndex();
   }, [selectedEl, selector]);
 
@@ -46,12 +50,12 @@ export const SelectState = ({ placeholder }) => {
   // },[editor,states])
 
   useEffect(() => {
-    if(!editor)return;
+    if (!editor) return;
     const callback = () => {
       const rules = extractRules(false);
       rules.length && states.length && setStates(rules);
     };
-    updateCurrentIndex();
+    // updateCurrentIndex();
 
     editor.on("inf:rules:update", callback);
     editor.on("device:change", updateCurrentIndex);
@@ -60,7 +64,7 @@ export const SelectState = ({ placeholder }) => {
       editor.off("inf:rules:update", callback);
       editor.off("device:change", updateCurrentIndex);
     };
-  },[editor]);
+  }, [editor]);
 
   const updateCurrentIndex = () => {
     const rules = extractRules(false);
@@ -75,10 +79,12 @@ export const SelectState = ({ placeholder }) => {
       // console.log( handleValue(ruleF?.atRuleParams) == handleValue(media?.atRuleParams));
       // console.log( handleValue(ruleF?.atRuleType) == handleValue(media?.atRuleType));
       // console.log( handleValue(ruleF?.atRuleType) == handleValue(media?.atRuleType));
+      console.log("ruleF : ", ruleF.states == rule.ruleString);
 
       return (
         handleValue(ruleF?.atRuleParams) == handleValue(media?.atRuleParams) &&
-        handleValue(ruleF?.atRuleType) == handleValue(media?.atRuleType)
+        handleValue(ruleF?.atRuleType) == handleValue(media?.atRuleType) &&
+        ruleF.states == rule.ruleString
       );
     });
 
@@ -149,16 +155,24 @@ export const SelectState = ({ placeholder }) => {
 
   function addState(state = "") {
     let clone = structuredClone(states);
-    let index = currentStateIndex || clone.length;
+    let index = isNumber(currentStateIndex) ? currentStateIndex : clone.length;
     const media = getCurrentMediaDevice(editor);
     console.log(
       "condition : ",
       !clone.length || !clone[index],
       index,
-      clone.length
+      clone.length,
+      currentStateIndex,
+      states.some((state) => state?.states && state?.states === state)
     );
 
+    if (states.some((state) => state?.states && state?.states === state)) {
+      alert("noooooooooo");
+      return;
+    }
+
     if (!clone.length || !clone[index]) {
+      //this explain why i did that ( clone.length) not that ( clone.length-1)
       console.log("is really true");
       clone = [
         ...clone,
@@ -174,11 +188,60 @@ export const SelectState = ({ placeholder }) => {
       ];
     }
 
+    const currentSelector = getCurrentSelector(selector, editor.getSelected());
+    const ruleString = `${currentSelector}${clone[index].states}`;
+    let oldRuleStyle = {};
+    const rulesWillRemoved = editor.Css.getAll().models.filter((r) => {
+      const device = r.getDevice();
+
+      // console.log(r.selectorsToString({}), device?.getWidthMedia?.() , r.attributes.mediaText);
+      const response = Boolean(device)
+        ? r.config.atRuleType != "keyframes" &&
+          (
+            `(${
+              r.config?.mediaText?.match?.(/max-width|min-width/gi)?.[0]
+            }: ${device.getWidthMedia()})` || ""
+          ).replaceAll(" ", "") ==
+            (clone[index].atRuleParams || "").replaceAll(" ", "") &&
+          r.selectorsToString({}) == ruleString
+        : r.config.atRuleType != "keyframes" &&
+          (r.config.atRuleType || "") == (clone[index].atRuleType || "") &&
+          (r.config.mediaText || "") == (clone[index].atRuleParams || "") &&
+          r.selectorsToString({}) == ruleString;
+
+      return response;
+    });
+
+    console.log("oldRuleStyle before: ", oldRuleStyle, rulesWillRemoved);
     clone[index].statesAsArray = [
       ...new Set([...clone[index].statesAsArray, state]),
     ];
     clone[index].states = clone[index].statesAsArray.join("");
 
+    if (clone[index].statesAsArray.length > 1) {
+      for (const cssRule of rulesWillRemoved) {
+        oldRuleStyle = {
+          ...oldRuleStyle,
+          ...cssRule.getStyle(),
+        };
+        editor.Css.remove(cssRule);
+      }
+      console.log("oldRuleStyle : ", oldRuleStyle);
+    }
+
+    editor.Css.setRule(
+      `${currentSelector}${clone[index].states}`,
+      clone[index].statesAsArray.length > 1
+        ? oldRuleStyle
+        : {
+            "--_init": "0",
+          },
+      {
+        addStyles: true,
+        atRuleParams: clone[index].atRuleParams,
+        atRuleType: clone[index].atRuleType,
+      }
+    );
     setStates(clone);
     // const currentSelector = getCurrentSelector(selector , editor.getSelected());
 
@@ -194,28 +257,27 @@ export const SelectState = ({ placeholder }) => {
       ruleString: `${clone[index].states}`,
       ...media,
     });
+
+    console.log("states added well : ", state);
   }
 
   function removeState(keyword, keywordsIndex) {
     const clone = cloneDeep(states);
     const currentSelector = getCurrentSelector(selector, editor.getSelected());
     const ruleString = `${currentSelector}${clone[keywordsIndex].states}`;
-
-    // const rule = editor.Css.getRule(ruleString, {
-    //   atRuleParams: clone[keywordsIndex].atRuleParams,
-    //   atRuleType: clone[keywordsIndex].atRuleType,
-    // });
-    // const oldRuleStyle = rule.toJSON().style;
     let oldRuleStyle = {};
     const rulesWillRemoved = editor.Css.getAll().models.filter((r) => {
       const device = r.getDevice();
+
       // console.log(r.selectorsToString({}), device?.getWidthMedia?.() , r.attributes.mediaText);
-      const response = device
+      const response = Boolean(device)
         ? r.config.atRuleType != "keyframes" &&
-          (`(max-width: ${device.getWidthMedia()})` || "").replaceAll(
-            " ",
-            ""
-          ) == (clone[keywordsIndex].atRuleParams || "").replaceAll(" ", "") &&
+          (
+            `(${
+              r.config?.mediaText?.match?.(/max-width|min-width/gi)?.[0]
+            }: ${device.getWidthMedia()})` || ""
+          ).replaceAll(" ", "") ==
+            (clone[keywordsIndex].atRuleParams || "").replaceAll(" ", "") &&
           r.selectorsToString({}) == ruleString
         : r.config.atRuleType != "keyframes" &&
           (r.config.atRuleType || "") ==
@@ -223,6 +285,7 @@ export const SelectState = ({ placeholder }) => {
           (r.config.mediaText || "") ==
             (clone[keywordsIndex].atRuleParams || "") &&
           r.selectorsToString({}) == ruleString;
+
       return response;
     });
 
@@ -234,8 +297,6 @@ export const SelectState = ({ placeholder }) => {
       editor.Css.remove(cssRule);
     }
     console.log("oldRuleStyle : ", oldRuleStyle);
-    // return;
-    // editor.Css.remove(rule);
 
     clone[keywordsIndex].statesAsArray = clone[
       keywordsIndex
@@ -344,7 +405,7 @@ export const SelectState = ({ placeholder }) => {
 
   return (
     <section className="mt-3 flex flex-col gap-2  p-1 bg-slate-900 rounded-lg">
-      <section className="flex gap-2   rounded-lg items-center justify-between overflow-hidden">
+      <section className="flex  gap-2   rounded-lg  justify-between overflow-hidden">
         <Select
           placeholder="state"
           respectParenthesis={true}
@@ -371,7 +432,7 @@ export const SelectState = ({ placeholder }) => {
         />
 
         <SmallButton
-          className="flex-shrink-0 bg-slate-800 w-[30px!important] h-[30px]"
+          className="flex-shrink-0 bg-slate-800  "
           tooltipTitle="Add state"
           onClick={(ev) => {
             addState(state);
@@ -381,7 +442,7 @@ export const SelectState = ({ placeholder }) => {
         </SmallButton>
 
         <SmallButton
-          className=" flex-shrink-0 bg-slate-800 w-[30px!important] h-[30px]"
+          className=" flex-shrink-0 bg-slate-800  "
           tooltipTitle="Add new line"
           onClick={(ev) => {
             addNewStateContainer();
@@ -393,28 +454,31 @@ export const SelectState = ({ placeholder }) => {
 
       {/* {getLastIndex(states) >= 0  && states[getLastIndex(states)][0] ? ( */}
       {!!states.length && (
-        <section ref={chicesRefEl} className="flex flex-col gap-2 ">
+        <section ref={chicesRefEl} className="flex flex-col gap-2 relative">
           {states.map(
             ({ rule, states, statesAsArray, atRuleParams, atRuleType }, i) => {
+              console.log("ruuule : ",rule, rule.match(styleRgx));
+
               return (
-                <ChoicesForStates
-                  key={i}
-                  keywordsIndex={i}
-                  atRuleParams={atRuleParams}
-                  atRuleType={atRuleType}
-                  currentStateIndex={currentStateIndex}
-                  keywords={statesAsArray}
-                  onDelete={(ev, index) => {
-                    removeStateContainer(index);
-                  }}
-                  onSelect={(ev, keywordsIndex) => {
-                    selectContainer(keywordsIndex);
-                  }}
-                  onCloseClick={(ev, keyword, index, keywordsIndex) => {
-                    setCurrentStateIndex(keywordsIndex);
-                    removeState(keyword, keywordsIndex);
-                  }}
-                />
+                  <ChoicesForStates
+                    key={i}
+                    keywordsIndex={i}
+                    atRuleParams={atRuleParams}
+                    atRuleType={atRuleType}
+                    currentStateIndex={currentStateIndex}
+                    keywords={statesAsArray}
+                    stateRule={rule}
+                    onDelete={(ev, index) => {
+                      removeStateContainer(index);
+                    }}
+                    onSelect={(ev, keywordsIndex) => {
+                      selectContainer(keywordsIndex);
+                    }}
+                    onCloseClick={(ev, keyword, index, keywordsIndex) => {
+                      setCurrentStateIndex(keywordsIndex);
+                      removeState(keyword, keywordsIndex);
+                    }}
+                  />
               );
             }
           )}
