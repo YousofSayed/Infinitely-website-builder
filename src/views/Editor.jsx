@@ -77,7 +77,7 @@ export function Editor({ params }) {
     showStylesBuilderForMotionBuilderState
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     /**
      *
      * @param {CustomEvent} ev

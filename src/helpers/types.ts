@@ -757,3 +757,29 @@ export type StorageDetails = {
   isStorageFull: boolean;
   filesLength: number;
 };
+
+export interface BrandConfig {
+  brandKey: string;
+  brandName: string;
+
+  logo: string;
+
+  colors: {
+    "brand-primary": string;
+
+    "surface-main": string;
+    "surface-secondary": string;
+    "surface-tertiary": string;
+
+    "text-primary": string;
+
+    "border-default": string;
+  };
+
+  cursor: string;
+
+  meta: {
+    title: string;
+    description: string;
+  };
+}

@@ -1,0 +1,31 @@
+{
+  "brandKey": "Infinitely",
+  "brandName": "Infinitely Studio",
+
+  "logo": "/brand/infinitely/logo.svg",
+
+  "colors": {
+    "brand-primary": "#2563eb",
+
+    "surface-main": "#020617",
+    "surface-secondary": "#0f172a",
+    "surface-tertiary": "#1e293b",
+
+    "text-primary": "white",
+    "text-secondary": "#e5e7eb",
+
+    "border-default": "#475569"
+  },
+
+
+  "cursor": {
+    "default": "url('/brand/infinitely/mainCursor.png'), auto",
+    "pointer": "url('/assets/images/pointerCursor.png'), pointer"
+  },
+
+
+  "meta": {
+    "title": "Infinitely Studio — Website Builder",
+    "description": "Infinitely Studio Editor – Build and edit websites in real-time with speed, privacy, and complete creative control."
+  }
+}

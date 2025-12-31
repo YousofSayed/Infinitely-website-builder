@@ -13,8 +13,11 @@ import { setProjectSettings } from "./helpers/functions.js";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./components/Editor/Protos/ToastMsgInfo.jsx";
 import { isDevMode } from "./helpers/bridge.js";
+import { applyBrandConfig, config, configs } from "./brand.js";
 
 // Save the initial state of window
+
+applyBrandConfig(config);
 
 // import worker from './helpers/worker.js';
 // import './helpers/backbonePacher.js'
@@ -54,6 +57,7 @@ console.table(appStatus);
 //     // // originalLog(...data);
 //   };
 // }
+console.log("configs : ", configs);
 
 setProjectSettings();
 RecoilEnv.RECOIL_DUPLICATE_ATOM_KEY_CHECKING_ENABLED = false;
@@ -163,4 +167,3 @@ window.addEventListener("unmout", () => {
 });
 
 window.__initialWindowKeys = new Set(Object.getOwnPropertyNames(window));
-
