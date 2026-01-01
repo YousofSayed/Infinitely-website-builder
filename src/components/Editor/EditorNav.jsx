@@ -43,6 +43,7 @@ import { InfinitelyEvents } from "../../constants/infinitelyEvents";
 import { opfs } from "../../helpers/initOpfs";
 import { infinitelyWorker } from "../../helpers/infinitelyWorker";
 import { FitTitle } from "./Protos/FitTitle";
+import { config } from "../../brand";
 
 export const HomeNav = () => {
   const editor = useEditorMaybe();
@@ -107,11 +108,12 @@ export const HomeNav = () => {
   // });
 
   return (
-    <nav className="h-full  w-[55px]  p-2 flex flex-col justify-between items-center bg-slate-900 ">
-      {/* <iframe ref={testRef} className="z-[15000] bg-white fixed top-0 left-0 w-full h-full border-2 border-slate-600" ></iframe> */}
+    <nav className="h-full  w-[55px]  p-2 flex flex-col justify-between items-center bg-surface-secondary ">
+      {/* <iframe ref={testRef} className="z-[15000] bg-white fixed top-0 left-0 w-full h-full border-2 border-border-default" ></iframe> */}
       <div className="flex flex-col items-center gap-5">
         <figure className="pb-[20px] pt-1 border-b-[1px] border-slate-400 ">
-          {Icons.logo({})}
+          {/* {Icons.logo({})} */}
+          <img src={config.logo} alt="logo"  />
         </figure>
         <ul className="flex flex-col gap-5 items-center">
           {/* <Li>{Icons.plus()}</Li> */}
@@ -174,7 +176,7 @@ export const HomeNav = () => {
           />
 
           {Boolean(checkDropBoxSignInState()) && (
-            <li className="group relative li-btn h-[30px] w-[30px]     rounded-lg cursor-pointer grid place-items-center transition-all hover:bg-blue-600   [&_#dbx-svg]:hover:fill-white [&_#dbx-svg_g]:hover:fill-white ">
+            <li className="group relative li-btn h-[30px] w-[30px]     rounded-lg cursor-pointer grid place-items-center transition-all hover:bg-brand-primary   [&_#dbx-svg]:hover:fill-white [&_#dbx-svg_g]:hover:fill-white ">
               <OptionsButton icon={Icons.dropbox({})}>
                 <menu className="flex flex-col gap-2 min-w-[100px]">
                   {projectData?.dropboxFileMeta?.path_lower && (

@@ -215,13 +215,13 @@ export const DynamicTemplatesManager = () => {
 
   return (
     <main className="flex flex-col gap-2 ">
-      <header className="w-full p-2 rounded-lg bg-slate-800 flex gap-2 items-center">
+      <header className="w-full p-2 rounded-lg bg-surface-tertiary flex gap-2 items-center">
         <Input
           placeholder="Search..."
           onInput={(ev) => {
             search(ev.target.value);
           }}
-          className="bg-slate-900 w-full"
+          className="bg-surface-secondary w-full"
         />
 
         <Button
@@ -278,10 +278,10 @@ export const DynamicTemplatesManager = () => {
               return (
                 <section
                   key={i}
-                  className="p-2 bg-slate-800 rounded-lg h-fit flex  justify-between gap-4 "
+                  className="p-2 bg-surface-tertiary rounded-lg h-fit flex  justify-between gap-4 "
                 >
                   <section className="flex gap-2 items-center w-full">
-                    <figure className="w-full bg-slate-900 p-2 flex items-center gap-3 justify-start rounded-lg">
+                    <figure className="w-full bg-surface-secondary p-2 flex items-center gap-3 justify-start rounded-lg">
                       <i
                         dangerouslySetInnerHTML={{
                           __html: dynamicsTemplates[dm].imgSrc,
@@ -291,14 +291,14 @@ export const DynamicTemplatesManager = () => {
                   className="max-w-[100%] max-h-[100%]"
                   src={dynamicsTemplates[dm].imgSrc}
                 /> */}
-                      <p className="text-slate-200 font-semibold capitalize overflow-hidden text-ellipsis text-nowrap first-letter:text-blue-400 first-letter:font-bold">
+                      <p className="text-text-primary font-semibold capitalize overflow-hidden text-ellipsis text-nowrap first-letter:text-blue-400 first-letter:font-bold">
                         {dm}
                       </p>
                     </figure>
                   </section>
                   <ul className="w-full flex gap-2 items-end justify-end self-stretch">
                     <Li
-                      className="bg-slate-900"
+                      className="bg-surface-secondary"
                       title="Edite Dynamic Template"
                       onClick={() => {
                         navigateAndEditeTemplate(dm);
@@ -307,7 +307,7 @@ export const DynamicTemplatesManager = () => {
                       {Icons.edite({ width: 25, fill: "#e2e8f0" })}
                     </Li>
                     <Li
-                      className="bg-slate-900"
+                      className="bg-surface-secondary"
                       title="Delete Dynamic Template"
                       onClick={() => {
                         deleteDynamicTemplate(dm);
@@ -316,7 +316,7 @@ export const DynamicTemplatesManager = () => {
                       {Icons.trash("#e2e8f0")}
                     </Li>
                     <Li
-                      className="bg-slate-900"
+                      className="bg-surface-secondary"
                       onClick={() => {
                         exportDTemplate(dm);
                       }}
@@ -336,7 +336,7 @@ export const DynamicTemplatesManager = () => {
             className="max-w-[250px]"
             alt="no dynamic templates created yet"
           />
-          <figcaption className="text-slate-200 font-semibold capitalize">
+          <figcaption className="text-text-primary font-semibold capitalize">
             no dynamic templates created yet
           </figcaption>
         </figure>

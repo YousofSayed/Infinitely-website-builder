@@ -2,7 +2,7 @@
   "brandKey": "Infinitely",
   "brandName": "Infinitely Studio",
 
-  "logo": "/brand/infinitely/logo.svg",
+  "logo": "/brands/infinitely/logo.svg",
 
   "colors": {
     "brand-primary": "#2563eb",
@@ -18,10 +18,7 @@
   },
 
 
-  "cursor": {
-    "default": "url('/brand/infinitely/mainCursor.png'), auto",
-    "pointer": "url('/assets/images/pointerCursor.png'), pointer"
-  },
+  "cursor":  "url('/brands/infinitely/mainCursor.png'), auto",
 
 
   "meta": {

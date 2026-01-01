@@ -47,7 +47,7 @@ export const Background = memo(() => {
   // }, [editor]);
 
   return (
-    <section className=" bg-slate-900 rounded-lg flex flex-col gap-3 p-1">
+    <section className=" bg-surface-secondary rounded-lg flex flex-col gap-3 p-1">
       <MiniTitle>Color</MiniTitle>
       <Color cssProp="background-color" />
 

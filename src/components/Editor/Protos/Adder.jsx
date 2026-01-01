@@ -46,16 +46,16 @@ export const Adder = memo((
         id={id}
         ref={itemRef}
         className={`flex w-full flex-col gap-2 p-2 rounded-lg  ${
-          className ? className : "bg-slate-900"
+          className ? className : "bg-surface-secondary"
         } relative`}
       >
         {children ? <section className="">{children}</section> : null}
         {/* {children} */}
-        <section className="flex items-center  text-slate-200 font-semibold   justify-end  w-full  gap-2   bottom-[-40px] right-[0]  ">
+        <section className="flex items-center  text-text-primary font-semibold   justify-end  w-full  gap-2   bottom-[-40px] right-[0]  ">
           {showInput && (
             <input
               className={`p-2 rounded-lg w-[calc(100%-80px)] outline-none border-2 border-transparent focus:border-blue-600 ${
-                inputClassName ? inputClassName : "bg-slate-900"
+                inputClassName ? inputClassName : "bg-surface-secondary"
               }`}
               placeholder={placeholder || "Add Value"}
               onInput={(ev) => {

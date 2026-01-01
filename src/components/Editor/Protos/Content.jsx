@@ -40,7 +40,7 @@ export const Content = () => {
   };
 
   return (
-    <section className="w--full mt-3  flex flex-col gap-2 p-2 rounded-lg bg-slate-900">
+    <section className="w--full mt-3  flex flex-col gap-2 p-2 rounded-lg bg-surface-secondary">
       {warnning.length && (
         <p className="font-semibold text-[18px] text-yellow-300 ">{warnning}</p>
       )}
@@ -48,7 +48,7 @@ export const Content = () => {
         <textarea
         value={val}
           onInput={onInput}
-          className="h-[300px] max-h-[300px] w-full bg-slate-900 rounded-lg p-2 outline-none text-white"
+          className="h-[300px] max-h-[300px] w-full bg-surface-secondary rounded-lg p-2 outline-none text-white"
         ></textarea>
       )}
     </section>

@@ -5,7 +5,7 @@ import { cursorValues, isolationValues, mixBlendModeValues, touchActionValues } 
 
 export const Others = memo(() => {
   return (
-    <section className=" flex flex-col gap-2 w-full p-1 bg-slate-900 rounded-lg">
+    <section className=" flex flex-col gap-2 w-full p-1 bg-surface-secondary rounded-lg">
       <Property label="user-select" cssProp="user-select" />
       <Property label="transition" cssProp="transition" />
       <Property label="tab-size" cssProp="tab-size" />

@@ -168,7 +168,7 @@ export const UploadBlocks = () => {
       ) : (
         <section className="h-full flex flex-col gap-2">
           <header className="flex gap-2 rounded-md">
-            <Input type="search" placeholder="Search..." className="w-full bg-slate-800" onInput={(ev)=>search(ev.target.value)}/>
+            <Input type="search" placeholder="Search..." className="w-full bg-surface-tertiary" onInput={(ev)=>search(ev.target.value)}/>
             <SmallButton
               title={"save blocks"}
               onClick={() => {
@@ -188,7 +188,7 @@ export const UploadBlocks = () => {
               {(symbol, i) => (
                 <section
                   key={i}
-                  className="p-2 pl-[2px!important] bg-slate-800 h-[50px] rounded-lg flex justify-between items-center  gap-2"
+                  className="p-2 pl-[2px!important] bg-surface-tertiary h-[50px] rounded-lg flex justify-between items-center  gap-2"
                 >
                   <FitTitle className="flex items-center gap-2 w-full justify-center ">
                     <figure
@@ -197,7 +197,7 @@ export const UploadBlocks = () => {
                     ></figure>
                     <span
                       style={{ textWrap: "wrap" }}
-                      className="font-semibold custom-font-size  capitalize text-slate-200 text-[14px]"
+                      className="font-semibold custom-font-size  capitalize text-text-primary text-[14px]"
                     >
                       {symbol.name}
                     </span>
@@ -206,7 +206,7 @@ export const UploadBlocks = () => {
                   <section className="flex h-full gap-2">
                     <SmallButton
                       title={"delete"}
-                      className="p-2 bg-slate-900  hover:bg-[crimson!important] transition-all"
+                      className="p-2 bg-surface-secondary  hover:bg-[crimson!important] transition-all"
                       onClick={() => {
                         deleteUploadedBlock(symbol.id);
                       }}

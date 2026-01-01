@@ -56,6 +56,7 @@ import { FileView } from "../Protos/FileView";
 import { opfs } from "../../helpers/initOpfs";
 import { assetsWorker } from "../../helpers/defineWorkers";
 import { For } from "million/react";
+import { config } from "../../brand";
 
 /**
  *
@@ -226,7 +227,7 @@ export const AssetsManager = () => {
        * @type {File[]}
        */
       const files = [...ev.target.files];
-      
+
       // const inputFiles = files.map((file) => ({
       //   file: file,
       //   id: uniqueID(),
@@ -275,7 +276,7 @@ export const AssetsManager = () => {
       toast.error(<ToastMsgInfo msg={`Files upload failed`} />);
     } finally {
       // setShowLoader(false);
-      ev.target.value = '';
+      ev.target.value = "";
     }
   };
 
@@ -311,8 +312,11 @@ export const AssetsManager = () => {
   return (
     <main className="w-full h-full">
       <section className=" w-full h-full m-auto  rounded-lg overflow-hidden flex flex-col gap-2">
-        <header className="h-[50px!important] flex justify-between items-center gap-2 p-2  rounded-tl-full rounded-tr-2xl rounded-br-2xl rounded-bl-full bg-slate-800 ">
-          <figure>{Icons.logo({ width: 38 })}</figure>
+        <header className="h-[50px!important] flex justify-between items-center gap-2 p-2  rounded-tl-full rounded-tr-2xl rounded-br-2xl rounded-bl-full bg-surface-tertiary ">
+          <figure>
+            {/* {Icons.logo({ width: 38 })} */}
+            <img src={config.logo} alt="logo" />
+          </figure>
           {warn && (
             <p className="font-semibold text-xl bg-red-700 p-2 rounded-lg">
               {warn}
@@ -320,7 +324,7 @@ export const AssetsManager = () => {
           )}
           <Input
             placeholder="Search..."
-            className="w-full h-full bg-slate-900"
+            className="w-full h-full bg-surface-secondary"
             onInput={(ev) => {
               search(ev.target.value);
             }}
@@ -328,7 +332,7 @@ export const AssetsManager = () => {
 
           <SmallButton
             title="Delete All"
-            className="h-full flex-shrink-0 bg-slate-900 hover:bg-[crimson!important]"
+            className="h-full flex-shrink-0 bg-surface-secondary hover:bg-[crimson!important]"
             onClick={() => {
               deleteAll();
             }}
@@ -337,7 +341,7 @@ export const AssetsManager = () => {
           </SmallButton>
 
           <SmallButton
-            className="h-full flex-shrink-0 bg-slate-900"
+            className="h-full flex-shrink-0 bg-surface-secondary"
             title={"Upload"}
             onClick={openUploader}
             // className="py-[7.5px] px-[30px]  font-bold text-lg"
@@ -347,17 +351,17 @@ export const AssetsManager = () => {
         </header>
 
         {!!files.length && (
-          <section className=" flex items-center justify-between p-2 rounded-lg bg-slate-800">
-            <article className="font-semibold text-[14px] text-slate-200 flex items-center gap-2">
+          <section className=" flex items-center justify-between p-2 rounded-lg bg-surface-tertiary">
+            <article className="font-semibold text-[14px] text-text-primary flex items-center gap-2">
               <FitTitle className="custom-font-size">Files count</FitTitle>
-              <p className="h-full py-1 px-2 bg-slate-900 rounded-lg custom-font-size">
+              <p className="h-full py-1 px-2 bg-surface-secondary rounded-lg custom-font-size">
                 {files.length}
               </p>
             </article>
             <Hr />
-            <article className="font-semibold text-[14px] text-slate-200 flex items-center gap-2">
+            <article className="font-semibold text-[14px] text-text-primary flex items-center gap-2">
               <FitTitle className="custom-font-size">Available Space</FitTitle>{" "}
-              <p className="h-full py-1 px-2 bg-slate-900 rounded-lg custom-font-size">
+              <p className="h-full py-1 px-2 bg-surface-secondary rounded-lg custom-font-size">
                 {storageDetails.availableSpaceInMB}
                 MB
               </p>{" "}
@@ -373,18 +377,18 @@ export const AssetsManager = () => {
                     ).toFixed(2) */}
             <Hr />
 
-            <article className="font-semibold text-[14px] text-slate-200 flex items-center gap-2">
+            <article className="font-semibold text-[14px] text-text-primary flex items-center gap-2">
               <FitTitle className="custom-font-size">Used Space</FitTitle>{" "}
-              <p className="h-full py-1 px-2 bg-slate-900 rounded-lg custom-font-size">
+              <p className="h-full py-1 px-2 bg-surface-secondary rounded-lg custom-font-size">
                 {storageDetails.usedSpace}MB
               </p>{" "}
             </article>
 
             <Hr />
 
-            <article className="font-semibold text-[14px] text-slate-200 flex items-center gap-2">
+            <article className="font-semibold text-[14px] text-text-primary flex items-center gap-2">
               <FitTitle className="custom-font-size">Total Space</FitTitle>{" "}
-              <p className="h-full py-1 px-2 bg-slate-900 rounded-lg custom-font-size">
+              <p className="h-full py-1 px-2 bg-surface-secondary rounded-lg custom-font-size">
                 {storageDetails.projectSpace}
                 MB
               </p>{" "}
@@ -407,25 +411,25 @@ export const AssetsManager = () => {
         </section> */}
         {showLoader && <Loader />}
         {!!files.length && (
-            <VirtuosoGrid
-              totalCount={files.length}
-              components={GridComponents}
-              style={{
-                height: "100%",
-              }}
-              // className="h-full"
-              className="p-[unset] h-full"
-              // itemClassName="p-[unset]"
-              listClassName=" pr-2"
-              itemContent={(index) => {
-                const i = index,
-                  asset = files[index];
-                console.log("files from virtuso : ", asset);
+          <VirtuosoGrid
+            totalCount={files.length}
+            components={GridComponents}
+            style={{
+              height: "100%",
+            }}
+            // className="h-full"
+            className="p-[unset] h-full"
+            // itemClassName="p-[unset]"
+            listClassName=" pr-2"
+            itemContent={(index) => {
+              const i = index,
+                asset = files[index];
+              console.log("files from virtuso : ", asset);
 
-                return <FileView asset={asset} />;
-              }}
-            />
-          )}
+              return <FileView asset={asset} />;
+            }}
+          />
+        )}
 
         {!files.length && !showLoader && (
           <section className="w-full h-full flex flex-col gap-2 justify-center items-center">

@@ -111,11 +111,11 @@ export const DynamicTemplatesCreator = () => {
 
   return (
     <main className="flex flex-col gap-2 h-[400px]">
-      <header className="flex p-2 bg-slate-800 gap-2 rounded-lg w-full">
+      <header className="flex p-2 bg-surface-tertiary gap-2 rounded-lg w-full">
         <Input
           autoFocus
           value={templateName}
-          className="bg-slate-900 w-full"
+          className="bg-surface-secondary w-full"
           placeholder="Template Name..."
           onInput={(ev) => {
             setTemplateName(ev.target.value);
@@ -125,7 +125,7 @@ export const DynamicTemplatesCreator = () => {
       </header>
 
       {!!tempSrc && (
-        <section className=" h-[calc(100%-70px)] rounded-lg p-2 bg-slate-800 flex items-center justify-center">
+        <section className=" h-[calc(100%-70px)] rounded-lg p-2 bg-surface-tertiary flex items-center justify-center">
           <img
             src={tempSrc}
             className="w-full border-2 max-w-[100%] max-h-[100%] border-slate-400"

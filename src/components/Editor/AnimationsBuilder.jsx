@@ -52,9 +52,9 @@ import { UndoRedoContainer } from "../Protos/UndoRedoContainer";
 //           >
 //             <Adder
 //               key={i}
-//               className={`p-2 bg-slate-950`}
-//               addClassName="bg-slate-900"
-//               delClassName="bg-slate-900"
+//               className={`p-2 bg-surface-main`}
+//               addClassName="bg-surface-secondary"
+//               delClassName="bg-surface-secondary"
 //               onAddClick={(ev) => {
 //                 addPercentage(i);
 //               }}
@@ -63,7 +63,7 @@ import { UndoRedoContainer } from "../Protos/UndoRedoContainer";
 //               }}
 //             >
 //               <main className="w-full flex flex-col gap-3">
-//                 <p className="text-white w-full font-semibold bg-blue-600 py-2 text-center rounded-lg">
+//                 <p className="text-white w-full font-semibold bg-brand-primary py-2 text-center rounded-lg">
 //                   {animation.name}
 //                 </p>
 
@@ -73,7 +73,7 @@ import { UndoRedoContainer } from "../Protos/UndoRedoContainer";
 //                     // const uId = uniqueId()
 //                     const id = `keyframe-${animation.name}-${i}-${x}-${type}`;
 //                     return (
-//                       // <section key={x} className="flex flex-col bg-slate-900 px-1 py-2 gap-[100px] ">
+//                       // <section key={x} className="flex flex-col bg-surface-secondary px-1 py-2 gap-[100px] ">
 
 //                       <section
 //                         key={x}
@@ -84,10 +84,10 @@ import { UndoRedoContainer } from "../Protos/UndoRedoContainer";
 //                         } `}
 //                       >
 //                         <section className="flex gap-2 ">
-//                           <section className="w-full flex items-center  bg-slate-800 px-1 rounded-lg">
+//                           <section className="w-full flex items-center  bg-surface-tertiary px-1 rounded-lg">
 //                             {" "}
 //                             <Input
-//                               className="bg-slate-800 w-full"
+//                               className="bg-surface-tertiary w-full"
 //                               value={keyframe?.values?.join?.(",") || ""}
 //                               onInput={(ev) => {
 //                                 console.log("keyframe.values", keyframe.values);
@@ -100,14 +100,14 @@ import { UndoRedoContainer } from "../Protos/UndoRedoContainer";
 //                                 });
 //                               }}
 //                             />
-//                             {/* <p className="font-semibold select-none text-slate-200 px-2">
+//                             {/* <p className="font-semibold select-none text-text-primary px-2">
 //                                   %
 //                                 </p> */}
 //                           </section>
 
 //                           <SmallButton
 //                             title="delete frame"
-//                             className="flex-shrink-0 bg-slate-800"
+//                             className="flex-shrink-0 bg-surface-tertiary"
 //                             onClick={() => {
 //                               deleteFrame(i, x);
 //                             }}
@@ -117,7 +117,7 @@ import { UndoRedoContainer } from "../Protos/UndoRedoContainer";
 
 //                           <SmallButton
 //                             title="select frame"
-//                             className="flex-shrink-0 bg-slate-800"
+//                             className="flex-shrink-0 bg-surface-tertiary"
 //                             onClick={(ev) => {
 //                               // setCurrentEditingIndex(i);
 //                               setCurrentEditingIndex(
@@ -147,7 +147,7 @@ import { UndoRedoContainer } from "../Protos/UndoRedoContainer";
 //                         </section>
 
 //                         {keyframe.declarations.length ? (
-//                           <ul className="flex flex-col gap-2  bg-slate-900 p-2 rounded-lg">
+//                           <ul className="flex flex-col gap-2  bg-surface-secondary p-2 rounded-lg">
 //                             {keyframe.declarations
 //                               .filter((dclr) => dclr.type == "declaration")
 //                               .map(({ property, value }, z) => {
@@ -157,13 +157,13 @@ import { UndoRedoContainer } from "../Protos/UndoRedoContainer";
 //                                     className="w-full flex justify-between items-center gap-2 text-center "
 //                                   >
 //                                     <article className="w-full flex justify-between  gap-2 text-center">
-//                                       <p className="w-[45%] whitespace-break-spaces break-inside-avoid-column text-slate-200 text-sm  flex items-center justify-center bg-blue-600 p-2 font-semibold rounded-lg flex-shrink-0 flex-grow">
+//                                       <p className="w-[45%] whitespace-break-spaces break-inside-avoid-column text-text-primary text-sm  flex items-center justify-center bg-brand-primary p-2 font-semibold rounded-lg flex-shrink-0 flex-grow">
 //                                         {property}
 //                                       </p>
 //                                       <p className="text-white font-bold self-center">
 //                                         :
 //                                       </p>
-//                                       <p className="w-[45%] whitespace-break-spaces break-all flex items-center justify-center  text-slate-200 text-sm bg-blue-600 p-2 font-semibold rounded-lg flex-grow">
+//                                       <p className="w-[45%] whitespace-break-spaces break-all flex items-center justify-center  text-text-primary text-sm bg-brand-primary p-2 font-semibold rounded-lg flex-grow">
 //                                         {property.includes("color")
 //                                           ? rgbStringToHex(value)
 //                                           : value}{" "}
@@ -475,12 +475,12 @@ export const AnimationsBuilder = () => {
             <Input
               type="search"
               placeholder="Search..."
-              className="bg-slate-800"
+              className="bg-surface-tertiary"
               onInput={search}
             />
             <section className="flex gap-2">
               <Input
-                className="bg-slate-800 w-full"
+                className="bg-surface-tertiary w-full"
                 autoFocus={false}
                 value={animation}
                 placeholder="Enter Name"
@@ -519,9 +519,9 @@ export const AnimationsBuilder = () => {
                   >
                     <Memo>
                       <Adder
-                        className={`p-2 bg-slate-950`}
-                        addClassName="bg-slate-900"
-                        delClassName="bg-slate-900"
+                        className={`p-2 bg-surface-main`}
+                        addClassName="bg-surface-secondary"
+                        delClassName="bg-surface-secondary"
                         onAddClick={(ev) => {
                           addKeyframe(i);
                         }}
@@ -530,7 +530,7 @@ export const AnimationsBuilder = () => {
                         }}
                       >
                         <main className="w-full flex flex-col gap-2">
-                          <p className="text-white w-full font-semibold bg-blue-600 py-2 text-center rounded-lg">
+                          <p className="text-white w-full font-semibold bg-brand-primary py-2 text-center rounded-lg">
                             {animation.name}
                           </p>
 
@@ -546,7 +546,7 @@ export const AnimationsBuilder = () => {
                                   : "libs"
                               }`;
                               return (
-                                // <section key={x} className="flex flex-col bg-slate-900 px-1 py-2 gap-[100px] ">
+                                // <section key={x} className="flex flex-col bg-surface-secondary px-1 py-2 gap-[100px] ">
 
                                 <section
                                   key={x}
@@ -556,14 +556,14 @@ export const AnimationsBuilder = () => {
                                     indexes.animationIndex == i &&
                                     indexes.keyframeIndex == x
                                       ? "border-blue-600"
-                                      : "border-slate-600"
+                                      : "border-border-default"
                                   } `}
                                 >
                                   <section className="flex gap-2 ">
-                                    <section className="w-full flex items-center  bg-slate-800 px-1 rounded-lg">
+                                    <section className="w-full flex items-center  bg-surface-tertiary px-1 rounded-lg">
                                       {" "}
                                       <Input
-                                        className="bg-slate-800 w-full"
+                                        className="bg-surface-tertiary w-full"
                                         value={
                                           keyframe?.values?.join?.(",") || ""
                                         }
@@ -585,14 +585,14 @@ export const AnimationsBuilder = () => {
                                           // });
                                         }}
                                       />
-                                      {/* <p className="font-semibold select-none text-slate-200 px-2">
+                                      {/* <p className="font-semibold select-none text-text-primary px-2">
                             %
                           </p> */}
                                     </section>
 
                                     <SmallButton
                                       title="delete frame"
-                                      className="flex-shrink-0 bg-slate-800"
+                                      className="flex-shrink-0 bg-surface-tertiary"
                                       onClick={() => {
                                         removeKeyframe(i, x);
                                       }}
@@ -602,7 +602,7 @@ export const AnimationsBuilder = () => {
 
                                     <SmallButton
                                       title="select frame"
-                                      className="flex-shrink-0 bg-slate-800"
+                                      className="flex-shrink-0 bg-surface-tertiary"
                                       onClick={(ev) => {
                                         // setCurrentEditingIndex(i);
                                         // setCurrentEditing(id);
@@ -666,7 +666,7 @@ export const AnimationsBuilder = () => {
                                   </section>
 
                                   {keyframe.declarations.length ? (
-                                    <ul className="flex flex-col gap-2  bg-slate-900 p-2 rounded-lg">
+                                    <ul className="flex flex-col gap-2  bg-surface-secondary p-2 rounded-lg">
                                       {keyframe.declarations
                                         .filter(
                                           (dclr) => dclr.type == "declaration"
@@ -678,13 +678,13 @@ export const AnimationsBuilder = () => {
                                               className="w-full flex justify-between items-center gap-2 text-center "
                                             >
                                               <article className="w-full flex justify-between  gap-2 text-center">
-                                                <p className="w-[45%] whitespace-break-spaces break-inside-avoid-column text-slate-200 text-sm  flex items-center justify-center bg-blue-600 p-2 font-semibold rounded-lg flex-shrink-0 flex-grow">
+                                                <p className="w-[45%] whitespace-break-spaces break-inside-avoid-column text-text-primary text-sm  flex items-center justify-center bg-brand-primary p-2 font-semibold rounded-lg flex-shrink-0 flex-grow">
                                                   {property}
                                                 </p>
                                                 <p className="text-white font-bold self-center">
                                                   :
                                                 </p>
-                                                <p className="w-[45%] whitespace-break-spaces break-all flex items-center justify-center  text-slate-200 text-sm bg-blue-600 p-2 font-semibold rounded-lg flex-grow">
+                                                <p className="w-[45%] whitespace-break-spaces break-all flex items-center justify-center  text-text-primary text-sm bg-brand-primary p-2 font-semibold rounded-lg flex-grow">
                                                   {property.includes("color")
                                                     ? rgbStringToHex(value)
                                                     : value}{" "}
@@ -725,9 +725,9 @@ export const AnimationsBuilder = () => {
                 <AccordionItem title={animation.name}>
                   <Adder
                     key={i}
-                    className={`p-[unset] bg-slate-800`}
-                    addClassName="bg-slate-900"
-                    delClassName="bg-slate-900"
+                    className={`p-[unset] bg-surface-tertiary`}
+                    addClassName="bg-surface-secondary"
+                    delClassName="bg-surface-secondary"
                     onAddClick={(ev) => {
                       addPercentage(i);
                     }}
@@ -736,13 +736,13 @@ export const AnimationsBuilder = () => {
                     }}
                   >
                     <main className="w-full flex flex-col gap-3">
-                      <p className="text-white w-full font-semibold bg-blue-600 py-2 text-center rounded-lg">
+                      <p className="text-white w-full font-semibold bg-brand-primary py-2 text-center rounded-lg">
                         {animation.name}
                       </p>
 
                       {animation.values.map(({ percentage, styles }, x) => {
                         return (
-                          // <section key={x} className="flex flex-col bg-slate-900 px-1 py-2 gap-[100px] ">
+                          // <section key={x} className="flex flex-col bg-surface-secondary px-1 py-2 gap-[100px] ">
 
                           <section
                             key={x}
@@ -754,10 +754,10 @@ export const AnimationsBuilder = () => {
                             } `}
                           >
                             <section className="flex gap-2 ">
-                              <section className="w-full flex items-center  bg-slate-800 px-1 rounded-lg">
+                              <section className="w-full flex items-center  bg-surface-tertiary px-1 rounded-lg">
                                 {" "}
                                 <Input
-                                  className="bg-slate-800 w-full"
+                                  className="bg-surface-tertiary w-full"
                                   value={`${percentage}`}
                                   onInput={(ev) => {
                                     console.log("perc", percentage);
@@ -770,14 +770,14 @@ export const AnimationsBuilder = () => {
                                     });
                                   }}
                                 />
-                                <p className="font-semibold select-none text-slate-200 px-2">
+                                <p className="font-semibold select-none text-text-primary px-2">
                                   %
                                 </p>
                               </section>
 
                               <SmallButton
                                 title="delete frame"
-                                className="flex-shrink-0 bg-slate-800"
+                                className="flex-shrink-0 bg-surface-tertiary"
                                 onClick={() => {
                                   deleteFrame(i, x);
                                 }}
@@ -787,7 +787,7 @@ export const AnimationsBuilder = () => {
 
                               <SmallButton
                                 title="select frame"
-                                className="flex-shrink-0 bg-slate-800"
+                                className="flex-shrink-0 bg-surface-tertiary"
                                 onClick={(ev) => {
                                   setCurrentEditingIndex(i);
 
@@ -805,7 +805,7 @@ export const AnimationsBuilder = () => {
                             </section>
 
                             {Object.keys(styles).length ? (
-                              <ul className="flex flex-col gap-2  bg-slate-900 p-2 rounded-lg">
+                              <ul className="flex flex-col gap-2  bg-surface-secondary p-2 rounded-lg">
                                 {Object.keys(styles).map((key, z) => {
                                   return (
                                     <li
@@ -813,13 +813,13 @@ export const AnimationsBuilder = () => {
                                       className="w-full flex justify-between items-center gap-2 text-center "
                                     >
                                       <article className="w-full flex justify-between  gap-2 text-center">
-                                        <p className="w-[45%] whitespace-break-spaces break-inside-avoid-column text-slate-200 text-sm  flex items-center justify-center bg-blue-600 p-2 font-semibold rounded-lg flex-shrink-0 flex-grow">
+                                        <p className="w-[45%] whitespace-break-spaces break-inside-avoid-column text-text-primary text-sm  flex items-center justify-center bg-brand-primary p-2 font-semibold rounded-lg flex-shrink-0 flex-grow">
                                           {key}
                                         </p>
                                         <p className="text-white font-bold self-center">
                                           :
                                         </p>
-                                        <p className="w-[45%] whitespace-break-spaces break-all flex items-center justify-center  text-slate-200 text-sm bg-blue-600 p-2 font-semibold rounded-lg flex-grow">
+                                        <p className="w-[45%] whitespace-break-spaces break-all flex items-center justify-center  text-text-primary text-sm bg-brand-primary p-2 font-semibold rounded-lg flex-grow">
                                           {key.includes("color")
                                             ? rgbStringToHex(styles[key])
                                             : styles[key]}{" "}

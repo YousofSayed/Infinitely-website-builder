@@ -80,8 +80,8 @@ export const PagesSelector = (() => {
   return (
     <Select
       icon={Icons.stNote()}
-      className=" bg-slate-800  w-full h-full p-1 "
-      containerClassName="bg-slate-900 w-[120px!important]"
+      className=" bg-surface-tertiary  w-full h-full p-1 "
+      containerClassName="bg-surface-secondary w-[120px!important]"
       preventInput={true}
       keywords={pages.map((page) => page)}
       value={pageName}

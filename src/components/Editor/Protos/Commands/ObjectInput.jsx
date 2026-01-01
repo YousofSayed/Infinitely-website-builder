@@ -34,7 +34,7 @@ export const ObjectInput = ({
         <section className="w-full flex gap-2 text-white font-bold justify-between ">
           <Input
             value={key}
-            className="w-full bg-slate-900"
+            className="w-full bg-surface-secondary"
             type="text"
             placeholder="Key"
             onInput={(ev) => {
@@ -56,7 +56,7 @@ export const ObjectInput = ({
             }}
             setValue={setValue}
             isRelative={isRelative}
-            className="w-full  bg-slate-900 "
+            className="w-full  bg-surface-secondary "
             // inputClassName=""
             type="text"
             placeholder="Value"
@@ -76,7 +76,7 @@ export const ObjectInput = ({
           />
         </section>
         <SmallButton
-          className="flex-shrink-0 bg-slate-900"
+          className="flex-shrink-0 bg-surface-secondary"
           onClick={(ev) => {
             onAddClick(ev, key, value);
             setKey("");
@@ -95,7 +95,7 @@ export const ObjectInput = ({
                 key={i}
                 className="flex gap-2 text-white px-1 font-bold relative"
               >
-                <p className="w-full flex items-center overflow-auto text-nowrap bg-slate-900 p-2 rounded-lg text-slate-300">
+                <p className="w-full flex items-center overflow-auto text-nowrap bg-surface-secondary p-2 rounded-lg text-slate-300">
                   {propKey}
                 </p>
                 <span className="self-center">:</span>
@@ -112,7 +112,7 @@ export const ObjectInput = ({
                   keywords={[...hsZoo, ...vars]}
                   inputClassName=""
                   value={obj[propKey]}
-                  className="p-[2px] px-[2px] bg-slate-900"
+                  className="p-[2px] px-[2px] bg-surface-secondary"
                 >
                   {obj[propKey]}
                 </Select>
@@ -120,7 +120,7 @@ export const ObjectInput = ({
                   onClick={(ev) => {
                     onDelete(ev, propKey, obj[propKey]);
                   }}
-                  className="flex-shrink-0 bg-slate-900 shadow-[unset] "
+                  className="flex-shrink-0 bg-surface-secondary shadow-[unset] "
                 >
                   {Icons.delete("white")}
                 </SmallButton>

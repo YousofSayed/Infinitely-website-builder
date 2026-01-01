@@ -207,7 +207,7 @@ const AddNestedProps = ({
   return (
     <section className="flex flex-col  " ref={parentAnimatedRef}>
       <section
-        className={`${className} flex  gap-2  sticky top-0 bg-slate-950 ${
+        className={`${className} flex  gap-2  sticky top-0 bg-surface-main ${
           Object.keys(getNestedValue(animation, destination) || {})?.length
             ? "rounded-tl-lg rounded-tr-lg"
             : "rounded-lg"
@@ -215,8 +215,8 @@ const AddNestedProps = ({
       >
         <Select
           className="p-[unset]"
-          inputClassName="bg-slate-800"
-          containerClassName="bg-slate-800"
+          inputClassName="bg-surface-tertiary"
+          containerClassName="bg-surface-tertiary"
           placeholder={placeholder || "Select Prop"}
           keywords={keys}
           value={value}
@@ -229,7 +229,7 @@ const AddNestedProps = ({
           }}
         />
         <SmallButton
-          className="w-[40px!important] bg-slate-800"
+          className="w-[40px!important] bg-surface-tertiary"
           onClick={() => {
             addProp(value);
           }}
@@ -242,7 +242,7 @@ const AddNestedProps = ({
         .length && (
         <section
           ref={animatedRef}
-          className=" flex flex-col gap-2 p-1 bg-slate-950 rounded-bl-md rounded-br-md"
+          className=" flex flex-col gap-2 p-1 bg-surface-main rounded-bl-md rounded-br-md"
         >
           {Object.entries(getNestedValue(animation, destination) || {}).map(
             ([key, value], index) => {
@@ -251,7 +251,7 @@ const AddNestedProps = ({
                   key={index}
                   className="relative flex flex-col gap-2  mt-3"
                 >
-                  {/* <h1 className="px-2 text-slate-200 py-1  bg-blue-600 rounded-lg w-fit">
+                  {/* <h1 className="px-2 text-text-primary py-1  bg-brand-primary rounded-lg w-fit">
                     {key}
                   </h1> */}
 
@@ -260,7 +260,7 @@ const AddNestedProps = ({
                   <section className="flex  gap-2">
                     <Input
                       placeholder={key}
-                      className="bg-slate-800 w-full"
+                      className="bg-surface-tertiary w-full"
                       value={value}
                       onInput={(ev) => {
                         editeProp(key, ev.target.value);
@@ -401,14 +401,14 @@ const ObjectComponent = ({
   // }));
 
   return (
-    <section className="flex flex-col gap-2 p-1 bg-slate-950 rounded-lg">
+    <section className="flex flex-col gap-2 p-1 bg-surface-main rounded-lg">
       {Object.entries(objectProps).map(([key, value], index) => {
         // console.log(Boolean(Object.values(value)?.length),Object.values(isPlainObject(value)?value : {}) , 'deeeeeeeeeeepooo');
 
         return (
           <section key={index} className="relative flex flex-col gap-2  ">
             <FitTitle
-              className={`capitalize font-semibold text-slate-200 text-ellipsis overflow-hidden max-w-full`}
+              className={`capitalize font-semibold text-text-primary text-ellipsis overflow-hidden max-w-full`}
             >
               {key}
             </FitTitle>
@@ -417,8 +417,8 @@ const ObjectComponent = ({
               // variant="shadow"
               // itemClasses={{
               //   trigger: "flex items-center justify-between ",
-              //   base: "bg-slate-800 p-3  rounded-lg text-slate-200 font-semibold relative",
-              //   content: `bg-slate-900 p-[unset!important] mt-2 rounded-md`,
+              //   base: "bg-surface-tertiary p-3  rounded-lg text-text-primary font-semibold relative",
+              //   content: `bg-surface-secondary p-[unset!important] mt-2 rounded-md`,
               //   title: `capitalize custom-font-size`,
               //   indicator: `text-[18px] transition-all`,
               // }}
@@ -546,7 +546,7 @@ const ObjectComponent = ({
                         key,
                       ])
                 }
-                className="bg-slate-900 w-full border-[4px]  border-[#1e293b!important]"
+                className="bg-surface-secondary w-full border-[4px]  border-[#1e293b!important]"
                 onInput={(ev) => {
                   addValue(ev.target.value, key);
                 }}
@@ -567,8 +567,8 @@ const SwitcherSection = ({
   onSwitch = () => {},
 }) => {
   return (
-    <section className="flex justify-between gap-2 items-center p-2 bg-slate-800 rounded-lg">
-      <h1 className="text-slate-200 custom-font-size font-semibold">{title}</h1>
+    <section className="flex justify-between gap-2 items-center p-2 bg-surface-tertiary rounded-lg">
+      <h1 className="text-text-primary custom-font-size font-semibold">{title}</h1>
       <SwitchButton
         defaultValue={defaultValue}
         onActive={onActive}
@@ -712,12 +712,12 @@ const ScrollTriggerOptions = ({
                   key={index}
                   className="relative flex flex-col gap-2  mt-3"
                 >
-                  <h1 className="px-2 py-1  bg-blue-600 rounded-lg w-fit">
+                  <h1 className="px-2 py-1  bg-brand-primary rounded-lg w-fit">
                     {item}
                   </h1>
                   <Input
                     placeholder={item}
-                    className="bg-slate-800 w-full"
+                    className="bg-surface-tertiary w-full"
                     value={
                       isTimeLine
                         ? motion.timelineScrollTriggerOptions?.singleOptions?.[
@@ -757,7 +757,7 @@ const ScrollTriggerOptions = ({
                     key={index}
                     className="relative flex flex-col gap-2  mt-3"
                   >
-                    <h1 className="px-2 py-1  bg-blue-600 rounded-lg w-fit">
+                    <h1 className="px-2 py-1  bg-brand-primary rounded-lg w-fit">
                       {key}
                     </h1>
                     <Select
@@ -855,7 +855,7 @@ const FromTo = ({
         </FitTitle>
         <Input
           placeholder="Selector"
-          className="bg-slate-800"
+          className="bg-surface-tertiary"
           value={animation?.selector}
           onInput={(ev) => {
             setSelector(ev.target.value);
@@ -870,7 +870,7 @@ const FromTo = ({
           </FitTitle>
           <Input
             placeholder="Name"
-            className="bg-slate-800"
+            className="bg-surface-tertiary"
             value={animation?.name}
             onInput={(ev) => {
               setMotion({
@@ -921,7 +921,7 @@ const FromTo = ({
             onSwitch(value, animation.from);
           }}
         >
-          <section className="w-full p-1 bg-slate-950 rounded-lg">
+          <section className="w-full p-1 bg-surface-main rounded-lg">
             <AddNestedProps
               motion={motion}
               setMotion={setMotion}
@@ -974,7 +974,7 @@ const FromTo = ({
             onSwitch(value, animation.to);
           }}
         >
-          <section className="w-full p-1 bg-slate-950 rounded-lg">
+          <section className="w-full p-1 bg-surface-main rounded-lg">
             <AddNestedProps
               motion={motion}
               setMotion={setMotion}
@@ -1026,7 +1026,7 @@ const FromTo = ({
           </MiniTitle>
           <Input
             placeholder="Position Parameter"
-            className="bg-slate-800"
+            className="bg-surface-tertiary"
             value={animation.positionParameter}
             onInput={(ev) => {
               setMotion({
@@ -1060,7 +1060,7 @@ const Timeline = ({
             setMotion({ ...motion, timeLineName: ev.target.value });
           }}
           placeholder="name"
-          className="bg-slate-900 border-[#1e293b!important] w-full"
+          className="bg-surface-secondary border-[#1e293b!important] w-full"
         />
       </section>
       <Accordion>
@@ -1097,7 +1097,7 @@ const SplitText = ({
             setMotion({ ...motion, splitTextName: ev.target.value });
           }}
           placeholder="name"
-          className="bg-slate-900 border-[#1e293b!important] w-full"
+          className="bg-surface-secondary border-[#1e293b!important] w-full"
         />
       </section>
       <Accordion>
@@ -1701,14 +1701,14 @@ export const Motion = () => {
           />
           {isInstance && !editeAsMain && (
             <section className="absolute left-0 top-[0] w-full h-full min-h-full backdrop-blur-md z-[1050] rounded-lg p-2">
-              <section className="sticky top-0 flex flex-col gap-3 items-center p-2 py-3 bg-slate-900 rounded-lg">
+              <section className="sticky top-0 flex flex-col gap-3 items-center p-2 py-3 bg-surface-secondary rounded-lg">
                 {Icons.info({
                   fill: "yellow",
                   strokeColor: "yellow",
                   width: 30,
                   height: 30,
                 })}
-                <p className="text-center text-slate-200 font-semibold">
+                <p className="text-center text-text-primary font-semibold">
                   You can’t edite instance , If you wanna to edite so you should
                   edite as main
                 </p>
@@ -1725,7 +1725,7 @@ export const Motion = () => {
           {!!motion?.animations?.length ? (
             <>
               <ScrollableToolbar
-                className="p-2  flex  justify-between rounded-lg bg-slate-800 sticky top-0 z-[40]"
+                className="p-2  flex  justify-between rounded-lg bg-surface-tertiary sticky top-0 z-[40]"
                 space={2}
               >
                 {controllerIcons
@@ -1758,7 +1758,7 @@ export const Motion = () => {
                             // id:instance
                           });
                         }}
-                        className="relative cursor-pointer  p-2 rounded-md bg-slate-900 transition-all hover:bg-blue-600 "
+                        className="relative cursor-pointer  p-2 rounded-md bg-surface-secondary transition-all hover:bg-brand-primary "
                       >
                         {icon}
                         <Tooltip
@@ -1767,7 +1767,7 @@ export const Motion = () => {
                           // position={{x: 0, y: 0}}
 
                           positionStrategy="fixed"
-                          className=" text-slate-200 font-semibold "
+                          className=" text-text-primary font-semibold "
                         >
                           {tooltipTitle}
                         </Tooltip>
@@ -1775,9 +1775,9 @@ export const Motion = () => {
                     );
                   })}
               </ScrollableToolbar>
-              <section className="relative flex gap-2 p-3 justify-between bg-slate-800 w-full rounded-md">
+              <section className="relative flex gap-2 p-3 justify-between bg-surface-tertiary w-full rounded-md">
                 {/* <FitTitle className="absolute top-[-50%]  left-0">{isInstance ? 'Instance' : 'Main'}</FitTitle> */}
-                <FitTitle className="custom-font-size flex items-center  text-slate-200 ">
+                <FitTitle className="custom-font-size flex items-center  text-text-primary ">
                   {isInstance ? "Main ID :" : ""} {motion.id}
                 </FitTitle>
                 <OptionsButton>
@@ -1864,9 +1864,9 @@ export const Motion = () => {
               </section>
 
               {isInstance && (
-                <section className="relative  flex gap-2 p-3 justify-between bg-slate-800 w-full rounded-lg">
+                <section className="relative  flex gap-2 p-3 justify-between bg-surface-tertiary w-full rounded-lg">
                   {/* <FitTitle className="absolute top-[-50%]  left-0">{isInstance ? 'Instance' : 'Main'}</FitTitle> */}
-                  <FitTitle className="custom-font-size flex items-center  text-slate-200 flex-shrink ">
+                  <FitTitle className="custom-font-size flex items-center  text-text-primary flex-shrink ">
                     Instance ID : {instanceId}
                   </FitTitle>
                   <OptionsButton>
@@ -1949,7 +1949,7 @@ export const Motion = () => {
                   <Input
                     value={motion.splitTextSelector || ""}
                     placeholder="SplitText selector"
-                    className="bg-slate-900 border-[#1e293b!important] w-full"
+                    className="bg-surface-secondary border-[#1e293b!important] w-full"
                     onInput={(ev) => {
                       setMotion({
                         ...motion,
@@ -1995,11 +1995,11 @@ export const Motion = () => {
                 return (
                   <Adder
                     key={index}
-                    className={`flex flex-col gap-3 p-2 bg-slate-950 rounded-lg minion ${
+                    className={`flex flex-col gap-3 p-2 bg-surface-main rounded-lg minion ${
                       motion.animations.length > 1 && "mb-[30px]"
                     }`}
-                    addClassName="bg-slate-800"
-                    delClassName="bg-slate-800"
+                    addClassName="bg-surface-tertiary"
+                    delClassName="bg-surface-tertiary"
                     onAddClick={() => {
                       addAnimation();
                     }}
@@ -2018,14 +2018,14 @@ export const Motion = () => {
               })}
             </>
           ) : (
-            <section className=" flex flex-col gap-2 items-center justify-center p-2 bg-slate-800 rounded-lg minion">
-              <section className="container bg-slate-900 flex flex-col justify-center p-2 items-center rounded-md gap-2 font-semibold">
+            <section className=" flex flex-col gap-2 items-center justify-center p-2 bg-surface-tertiary rounded-lg minion">
+              <section className="container bg-surface-secondary flex flex-col justify-center p-2 items-center rounded-md gap-2 font-semibold">
                 <FitTitle
                   style={{
                     willChange: "transform, opacity",
                     transform: "translateZ(0)",
                   }}
-                  className="animate-bounce text-slate-200 font-semibold text-center capitalize"
+                  className="animate-bounce text-text-primary font-semibold text-center capitalize"
                 >
                   No animations yet
                 </FitTitle>
@@ -2051,9 +2051,9 @@ export const Motion = () => {
                 </p>
                 <section className="flex justify-between gap-2   rounded-md">
                   <Select
-                    className="p-[unset] bg-[#1e293b!important]"
-                    containerClassName="bg-slate-800"
-                    inputClassName="bg-slate-800"
+                    className="p-[unset] bg-[var(--color-surface-tertiary)!important]"
+                    containerClassName="bg-surface-tertiary"
+                    inputClassName="bg-surface-tertiary"
                     placeholder="Select Animation"
                     keywords={motionKeys}
                     value={selectedElMotionId}
@@ -2062,7 +2062,7 @@ export const Motion = () => {
                       setSelectedElMotionId(value);
                     }}
                   />
-                  {/* <SmallButton id="mt-options-btn" className="bg-slate-900">
+                  {/* <SmallButton id="mt-options-btn" className="bg-surface-secondary">
               {Icons.options({ fill: "white", width: 20, height: 16.5 })}
             </SmallButton>
             <Tooltip

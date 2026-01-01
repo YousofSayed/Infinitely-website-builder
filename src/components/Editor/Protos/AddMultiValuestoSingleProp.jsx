@@ -52,7 +52,7 @@ export const AddMultiValuestoSingleProp = ({
   }, [updatedValue]);
 
   return (
-    <section className=" flex flex-col gap-3 p-1 bg-slate-800 rounded-lg">
+    <section className=" flex flex-col gap-3 p-1 bg-surface-tertiary rounded-lg">
       {label ? <FitTitle className="custom-font-size">{label}</FitTitle> : null}
       <section className="flex justify-between gap-2">
         <Select
@@ -72,7 +72,7 @@ export const AddMultiValuestoSingleProp = ({
           }}
         />
         <SmallButton
-          className="bg-slate-900"
+          className="bg-surface-secondary"
           onClick={(ev) => {
             addValue();
           }}
@@ -83,7 +83,7 @@ export const AddMultiValuestoSingleProp = ({
 
       {values[0] ? (
         <Choices
-          className="bg-slate-900 flex-wrap"
+          className="bg-surface-secondary flex-wrap"
           keywords={values}
           onCloseClick={(ev, keyword) => {
             const newValues = values.filter((value) => value != keyword);

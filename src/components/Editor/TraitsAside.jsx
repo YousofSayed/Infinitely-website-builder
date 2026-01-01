@@ -290,13 +290,13 @@ export const TraitsAside = () => {
       <Accordion>
         {/* <AsideControllers /> */}
         <AccordionItem title={"Type Content"}>
-          <section className="flex flex-col gap-2 p-1 bg-slate-900 rounded-lg">
+          <section className="flex flex-col gap-2 p-1 bg-surface-secondary rounded-lg">
             <section className="flex items-center gap-2 justify-between">
               <FitTitle className="custom-font-size">Type Content</FitTitle>
-              <nav className="flex items-center  gap-3 p-1 px-2 bg-slate-800 w-fit  rounded-lg self-end text-slate-200">
+              <nav className="flex items-center  gap-3 p-1 px-2 bg-surface-tertiary w-fit  rounded-lg self-end text-text-primary">
                 <button
                   className={`w-[22.5px] h-[22.5px] cursor-pointer flex items-center justify-center rounded-md transition-colors ${
-                    codeSettings.defaultLanguage == "html" && "bg-blue-600"
+                    codeSettings.defaultLanguage == "html" && "bg-brand-primary"
                   }`}
                   onClick={(ev) => {
                     addClickClass(ev.currentTarget, "click");
@@ -315,7 +315,7 @@ export const TraitsAside = () => {
                 <button
                   className={`w-[22.5px] h-[22.5px] cursor-pointer flex items-center justify-center rounded-md transition-colors ${
                     codeSettings.defaultLanguage == "javascript" &&
-                    "bg-blue-600"
+                    "bg-brand-primary"
                   }`}
                   onClick={(ev) => {
                     addClickClass(ev.currentTarget, "click");
@@ -334,8 +334,8 @@ export const TraitsAside = () => {
             <Select
               isCode
               className="px-[unset] py-[unset] "
-              inputClassName="bg-slate-800"
-              containerClassName="bg-slate-800"
+              inputClassName="bg-surface-tertiary"
+              containerClassName="bg-surface-tertiary"
               placeholder="Type Content"
               allowCmdsContext
               allowRestAPIModelsContext
@@ -442,7 +442,7 @@ export const TraitsAside = () => {
         </AccordionItem>
 
         <AccordionItem title={"Props (Advanced)"}>
-          <ul className="flex flex-col gap-2 p-1 bg-slate-900 rounded-lg">
+          <ul className="flex flex-col gap-2 p-1 bg-surface-secondary rounded-lg">
             {editorComponentProps
               .map((prop) =>
                 selectedCmp ? [prop, selectedCmp?.props()[prop]] : null
@@ -452,7 +452,7 @@ export const TraitsAside = () => {
                 return (
                   <li
                     key={i}
-                    className="p-1 bg-slate-800 rounded-lg flex items-center justify-between gap-2"
+                    className="p-1 bg-surface-tertiary rounded-lg flex items-center justify-between gap-2"
                   >
                     <FitTitle className="custom-font-size">{prop}</FitTitle>
                     <SwitchButton
@@ -490,7 +490,7 @@ export const TraitsAside = () => {
           <AccordionItem title={"Traits"} notify={notify.traits}>
             <ul
               ref={traitsAnimate}
-              className="p-1 flex flex-col gap-2 bg-slate-900 rounded-lg"
+              className="p-1 flex flex-col gap-2 bg-surface-secondary rounded-lg"
             >
               <MiniTitle className={`py-3 w-full`}>Traits</MiniTitle>
 
@@ -540,7 +540,7 @@ export const TraitsAside = () => {
                     }}
                     className={`relative flex  ${
                       !["switch"].includes(trait.type) ? "flex-col" : ""
-                    } justify-between items-center gap-2 bg-slate-950 p-2 rounded-lg `}
+                    } justify-between items-center gap-2 bg-surface-main p-2 rounded-lg `}
                   >
                     {/* <h1 className="text-[14px!important] px-2 text-white capitalize font-semibold">
                     {trait.name}
@@ -564,7 +564,7 @@ export const TraitsAside = () => {
                           type={trait.type || "text"}
                           value={trait.value || trait.default || ""}
                           placeholder={trait.placeholder || trait.label}
-                          className="py-2 w-full bg-slate-800"
+                          className="py-2 w-full bg-surface-tertiary"
                           onInput={(ev) => {
                             updateTraitValue({
                               name: trait.name,
@@ -661,7 +661,7 @@ export const TraitsAside = () => {
                         <section className="flex justify-between gap-2 w-full">
                           <Select
                             placeholder={trait.placeholder || trait.label}
-                            className="w-full bg-slate-800"
+                            className="w-full bg-surface-tertiary"
                             value={trait.stateProp}
                             keywords={
                               isFunction(trait.keywords)
@@ -769,7 +769,7 @@ export const TraitsAside = () => {
                                       !trait.addPropsInputType) && (
                                       <Input
                                         placeholder={key}
-                                        className="w-full bg-slate-800"
+                                        className="w-full bg-surface-tertiary"
                                         value={value || ""}
                                         onInput={(ev) => {
                                           const newVal = stringify({
@@ -801,7 +801,7 @@ export const TraitsAside = () => {
                                     {trait.addPropsInputType == "code" && (
                                       <Select
                                         placeholder={key}
-                                        // className="w-full bg-slate-800"
+                                        // className="w-full bg-surface-tertiary"
                                         value={value || ""}
                                         isCode
                                         allowCmdsContext
@@ -868,7 +868,7 @@ export const TraitsAside = () => {
                                         // trait.command &&
                                         //   editor.runCommand(trait.command);
                                       }}
-                                      className="[&_path]:stroke-white bg-slate-800 hover:bg-[crimson!important]"
+                                      className="[&_path]:stroke-white bg-surface-tertiary hover:bg-[crimson!important]"
                                     >
                                       {Icons.trash()}
                                     </SmallButton>
@@ -974,7 +974,7 @@ export const TraitsAside = () => {
         )}
 
         <AccordionItem title={"Attributes"} notify={notify.elementAttributes}>
-          <section className="p-1 flex flex-col gap-2 bg-slate-900 rounded-lg">
+          <section className="p-1 flex flex-col gap-2 bg-surface-secondary rounded-lg">
             <MiniTitle className={`py-3 w-full`}>Attributes</MiniTitle>
             {!!Object.keys(attributes).length &&
               Object.keys(attributes).map((key, i) => {
@@ -984,7 +984,7 @@ export const TraitsAside = () => {
                     <section className="flex gap-2">
                       <Input
                         placeholder={key}
-                        className="bg-slate-800 w-full"
+                        className="bg-surface-tertiary w-full"
                         value={attributes[key]}
                         onInput={(ev) => {
                           addAttribute({ key, value: ev.target.value });
@@ -1005,7 +1005,7 @@ export const TraitsAside = () => {
             <section className="flex flex-col gap-2 items-center">
               <Input
                 value={newAttributeName}
-                className="w-full text-center bg-slate-800"
+                className="w-full text-center bg-surface-tertiary"
                 placeholder="Add Attribute"
                 onInput={(ev) => {
                   setNewAttributeName(ev.target.value);

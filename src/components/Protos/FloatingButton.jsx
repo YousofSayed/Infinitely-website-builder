@@ -72,7 +72,7 @@ export const FloatingButton = ({ props }) => {
         top: position.y,
         left: position.x,
       }}
-      className="w-[60px] h-[60px] rounded-full z-50 flex justify-center items-center  fixed  bg-blue-600  shadow-lg  shadow-slate-900"
+      className="w-[60px] h-[60px] rounded-full z-50 flex justify-center items-center  fixed  bg-brand-primary  shadow-lg  shadow-slate-900"
     >
       {Icons.visible({ fill: "white", strokeColor: "white" })}
     </button>

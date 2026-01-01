@@ -57,12 +57,12 @@ export const AsideControllers = () => {
   // }, [sle , cmpRules , editor]);
 
   return (
-    <ul className="w-full flex items-center  bg-slate-800 p-1 rounded-lg gap-2 [&_svg]:w-[22px]">
+    <ul className="w-full flex items-center  bg-surface-tertiary p-1 rounded-lg gap-2 [&_svg]:w-[22px]">
       {/* {cmp && !isDynamicComponent(cmp) && (
         <Li
           title="commands"
           to={"/edite/commands"}
-          className={`w-[50%] h-[40px] hover:bg-blue-600 `}
+          className={`w-[50%] h-[40px] hover:bg-brand-primary `}
         >
           {Icons.command("white")}
         </Li>
@@ -71,7 +71,7 @@ export const AsideControllers = () => {
       <Li
         title="commands"
         to={"/edite/commands"}
-        className={`w-[50%] h-[40.5px!important] hover:bg-blue-600 `}
+        className={`w-[50%] h-[40.5px!important] hover:bg-brand-primary `}
         notify={notify.commands}
       >
         {Icons.command("white")}
@@ -80,7 +80,7 @@ export const AsideControllers = () => {
       <Li
         title="traits"
         to={"/edite/traits"}
-        className={`w-[50%] h-[40.5px!important] hover:bg-blue-600 `}
+        className={`w-[50%] h-[40.5px!important] hover:bg-brand-primary `}
         notify={notify.traits}
       >
         {Icons.setting("white")}
@@ -89,7 +89,7 @@ export const AsideControllers = () => {
       <Li
         title="interactions"
         to={"/edite/interactions"}
-        className={`w-[50%] h-[40.5px!important] hover:bg-blue-600 `}
+        className={`w-[50%] h-[40.5px!important] hover:bg-brand-primary `}
         notify={notify.interactions}
       >
         {Icons.interaction({ fill: "white" })}
@@ -98,7 +98,7 @@ export const AsideControllers = () => {
       <Li
         title="motion"
         to={"/edite/motion"}
-        className={`w-[50%] h-[40.5px!important] hover:bg-blue-600 `}
+        className={`w-[50%] h-[40.5px!important] hover:bg-brand-primary `}
         isObjectParamsIcon
         fillObjIcon={undefined}
         icon={Icons.motion}
@@ -109,7 +109,7 @@ export const AsideControllers = () => {
         <Li
           title="choose-and-write-model"
           to={"/edite/choose-and-write-model"}
-          className={`w-[50%] h-[30px] hover:bg-blue-600 `}
+          className={`w-[50%] h-[30px] hover:bg-brand-primary `}
         >
           {Icons.model({ strokeColor: "white", fill: "white", strokWidth: 3 })}
         </Li>
@@ -118,7 +118,7 @@ export const AsideControllers = () => {
       {/* <Li
         title="choose-and-write-model"
         to={"/edite/choose-and-write-model"}
-        className={`w-[50%] h-[40px] hover:bg-blue-600 `}
+        className={`w-[50%] h-[40px] hover:bg-brand-primary `}
       >
         {Icons.model({ strokeColor: "white", fill: "white", strokWidth: 3 })}
       </Li> */}
@@ -126,7 +126,7 @@ export const AsideControllers = () => {
       <Li
         title="styling"
         to={"/edite/styling"}
-        className={`w-[50%] h-[40.5px!important] hover:bg-blue-600 `}
+        className={`w-[50%] h-[40.5px!important] hover:bg-brand-primary `}
         isObjectParamsIcon
         fillObjIcon={undefined}
         icon={Icons.prush}

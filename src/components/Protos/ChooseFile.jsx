@@ -44,7 +44,7 @@ export const ChooseFile = ({
     <section ref={mediaRef} className="flex gap-2 w-full">
       <Input
         placeholder={placeholder}
-        className="w-full bg-slate-900 "
+        className="w-full bg-surface-secondary "
         value={value}
         onInput={(ev) => {
           const value = ev.target.value;

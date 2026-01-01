@@ -288,15 +288,15 @@ export const Header = () => {
   // console.log(document.querySelectorAll('meta'));
 
   return (
-    <header className="w-full   flex  text-slate-200 font-semibold">
-      <section className="container m-auto p-2 flex items-center justify-between gap-2 bg-slate-950  rounded-lg">
+    <header className="w-full   flex  text-text-primary font-semibold">
+      <section className="container m-auto p-2 flex items-center justify-between gap-2 bg-surface-main  rounded-lg">
         <figure className="flex items-center gap-2 pr-2 border-r-2 border-r-slate-600">
           {Icons.logo({})}
           <figcaption className="font-bold">Workspace</figcaption>
         </figure>
 
         <section className="flex rounded-lg overflow-hidden w-[50%] ">
-          <figure className="flex items-center  px-3 bg-slate-900">
+          <figure className="flex items-center  px-3 bg-surface-secondary">
             {Icons.search({})}
           </figure>
           <Input
@@ -304,7 +304,7 @@ export const Header = () => {
               search(ev.target.value);
             }}
             placeholder="Search..."
-            className="bg-slate-900 focus:border-none rounded-tl-none rounded-bl-none w-full"
+            className="bg-surface-secondary focus:border-none rounded-tl-none rounded-bl-none w-full"
           />
         </section>
 
@@ -330,16 +330,16 @@ export const Header = () => {
                 <For each={dropboxFiles}>
                   {(fileMeta, i) => (
                     <li key={i} className=" h-[135px]">
-                      <figure className="p-2 h-full rounded-lg bg-slate-900 flex flex-col items-center gap-3 w-full">
+                      <figure className="p-2 h-full rounded-lg bg-surface-secondary flex flex-col items-center gap-3 w-full">
                         <i>
                           {Icons.file({ fill: "white", width: 30, height: 30 })}
                         </i>
-                        <figcaption className="p-2 max-w-full bg-slate-800 rounded-md custom-font-size text-nowrap  overflow-hidden text-ellipsis">
+                        <figcaption className="p-2 max-w-full bg-surface-tertiary rounded-md custom-font-size text-nowrap  overflow-hidden text-ellipsis">
                           {fileMeta.name}
                         </figcaption>
                         <SmallButton
                           tooltipTitle={`Export : ${fileMeta.name}`}
-                          className="h-[35px] bg-slate-800"
+                          className="h-[35px] bg-surface-tertiary"
                           onClick={async (ev) => {
                             addClickClass(ev.currentTarget , 'click')
                             await loadDropBoxProject(fileMeta.path_lower, {

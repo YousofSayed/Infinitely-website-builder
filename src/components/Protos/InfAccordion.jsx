@@ -12,8 +12,8 @@ export const InfAccordion = ({attributes = {} , children }) => {
         {...attributes}
       itemClasses={{
         trigger: "flex items-center justify-[between!important] text-[start!important] [&_div]:text-start p-[unset!important]",
-        base: "bg-slate-800 p-3  rounded-lg text-slate-200 font-semibold relative ",
-        content: `bg-slate-900 p-[unset!important] mt-2 rounded-md will-change-[height,width]`,
+        base: "bg-surface-tertiary p-3  rounded-lg text-text-primary font-semibold relative ",
+        content: `bg-surface-secondary p-[unset!important] mt-2 rounded-md will-change-[height,width]`,
         title: `capitalize custom-font-size`,
         indicator: `text-[18px] transition-all`,
       }}

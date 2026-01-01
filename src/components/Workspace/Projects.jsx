@@ -50,7 +50,7 @@ export const Projects = () => {
       ref={animtedRef}
       className={`${
         dbProjects?.length ? "" : "p-2"
-      } container m-auto gap-3 overflow-hidden h-full bg-slate-950 w-full rounded-lg ${
+      } container m-auto gap-3 overflow-hidden h-full bg-surface-main w-full rounded-lg ${
         !dbProjects?.length && "flex items-center justify-center"
       }`}
     >
@@ -88,7 +88,7 @@ export const Projects = () => {
             alt="no data is here"
             // loading="lazy"
           />
-          <figcaption className="text-slate-200 font-semibold text-2xl ">
+          <figcaption className="text-text-primary font-semibold text-2xl ">
             No Projects Yet
           </figcaption>
           <Button

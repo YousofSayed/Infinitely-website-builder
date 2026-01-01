@@ -59,12 +59,12 @@ export const Symbols = () => {
         return (
           <section
             key={i}
-            className="p-2 bg-slate-800 max-h-[200px] rounded-lg flex flex-col gap-3"
+            className="p-2 bg-surface-tertiary max-h-[200px] rounded-lg flex flex-col gap-3"
           >
-            <h1 className="font-semibold capitalize text-slate-200 text-lg custom-font-size first-letter:text-blue-400">
+            <h1 className="font-semibold capitalize text-text-primary text-lg custom-font-size first-letter:text-blue-400">
               {symbol.name}
             </h1>
-            <figure className="w-full p-1 bg-slate-900 max-h-[50%] h-[50%] grid place-content-center rounded-lg">
+            <figure className="w-full p-1 bg-surface-secondary max-h-[50%] h-[50%] grid place-content-center rounded-lg">
               <img src={URL.createObjectURL(symbol.media)} alt="" />
             </figure>
 
@@ -73,7 +73,7 @@ export const Symbols = () => {
             <section className="flex gap-2">
               <Button
                 title={"delete"}
-                className="p-2 bg-slate-900 hover:bg-blue-600 transition-all"
+                className="p-2 bg-surface-secondary hover:bg-brand-primary transition-all"
                 onClick={() => {
                   deleteSymbol(symbol.id , symbol.name);
                 }}
@@ -82,7 +82,7 @@ export const Symbols = () => {
               </Button>
               <Button
                 title={"export as json"}
-                className="p-2 bg-slate-900 hover:bg-blue-600 transition-all"
+                className="p-2 bg-surface-secondary hover:bg-brand-primary transition-all"
               >
                 {Icons.export("white")}
               </Button>

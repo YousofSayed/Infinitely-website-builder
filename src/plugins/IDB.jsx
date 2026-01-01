@@ -515,12 +515,29 @@ export const IDB = (editor) => {
                 tailwindcssStyle = tailwindStyle?.innerHTML || "";
               }
 
+              const wrapperEl = editor.getWrapper().getEl();
+
               const data = {
                 pages: {
                   ...projectData.pages,
                   [currentPageId]: {
                     ...projectData.pages[currentPageId],
-                    bodyAttributes: editor.getWrapper().getAttributes() || {},
+                    bodyAttributes:
+                      editor.getWrapper().getAttributes() || wrapperEl
+                        ? Object.fromEntries(
+                            wrapperEl
+                              .getAttributeNames()
+                              .map((attrName) => [
+                                attrName,
+                                wrapperEl.getAttribute(attrName),
+                              ])
+                          )
+                        : (() => {
+                            alert(
+                              `There is problem when save wrapper attributes😩`
+                            );
+                            return {};
+                          })(),
                     symbols: (
                       editor
                         .getWrapper()
@@ -874,6 +891,16 @@ export const loadScripts = async (editor, projectData) => {
     });
   };
 
+  appendToHeader({
+    type: "styles",
+    attributes: {
+      href: "/styles/optimize-outlines.css",
+      rel: "stylesheet",
+      name: "optimize-outlines",
+    },
+    condition: projectSettings.optimize_outlines,
+  });
+
   loadFooterScriptsCallback = async (ev) => {
     // console.log("evoooooooooooo : ", ev.window.document.body);
     /**
@@ -998,6 +1025,16 @@ export const loadScripts = async (editor, projectData) => {
       (await appendScript(["/scripts/willChange.js"], 0, (script, lib) => {
         script.src = lib;
       }));
+
+    projectSettings.optimize_outlines &&
+      (await appendScript(
+        ["/scripts/optimizeOutlines.js"],
+        0,
+        (script, lib) => {
+          script.src = lib;
+          script.setAttribute("name", "optimize-outlines");
+        }
+      ));
 
     // projectSettings.enable_tailwind &&
     //   (await appendScript(

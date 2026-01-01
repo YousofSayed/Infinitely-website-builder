@@ -36,12 +36,12 @@ export const ChoicesForStates = ({
       className={`flex flex-col gap-1 transition-all border-2 p-1 rounded-lg w-full relative ${
         currentStateIndex == keywordsIndex && rule.is
           ? " border-blue-500 "
-          : "border-slate-600"
+          : "border-border-default"
       }`}
     >
       {atRuleType && atRuleParams && (
         <section
-          className="absolute p-2 z-[30] top-[3px]  translate-y-[-50%] left-[-7px] shadow-md flex justify-center items-center  overflow-hidden w-[10px] hover:w-fit h-[10px] hover:h-[40px] text-transparent hover:text-slate-200  transition-all rounded-lg  text-sm font-bold capitalize"
+          className="absolute p-2 z-[30] top-[3px]  translate-y-[-50%] left-[-7px] shadow-md flex justify-center items-center  overflow-hidden w-[10px] hover:w-fit h-[10px] hover:h-[40px] text-transparent hover:text-text-primary  transition-all rounded-lg  text-sm font-bold capitalize"
           style={{ background: generateBeautifulHexColor() }}
         >
           {atRuleType} : {atRuleParams.match?.(/\d+/gi)?.[0] || ""}px
@@ -49,11 +49,11 @@ export const ChoicesForStates = ({
       )}
 
       {isArray(stateRule.match(styleRgx)) && (
-        <div className={`w-[12px] h-[12px] absolute right-[-6px] top-[-6px] rounded-full bg-blue-600 ${currentStateIndex == keywordsIndex && rule.is ? "animate-bounce" : ""}`}></div>
+        <div className={`w-[12px] h-[12px] absolute right-[-6px] top-[-6px] rounded-full bg-brand-primary ${currentStateIndex == keywordsIndex && rule.is ? "animate-bounce" : ""}`}></div>
       )}
 
       <Choices
-        className="flex-wrap bg-slate-800"
+        className="flex-wrap bg-surface-tertiary"
         keywords={keywords}
         onCloseClick={(ev, keyword, index) => {
           onCloseClick(ev, keyword, index, keywordsIndex);
@@ -62,7 +62,7 @@ export const ChoicesForStates = ({
 
       <section className="flex w-full justify-center gap-2 p-1">
         <SmallButton 
-          className=" bg-slate-800 w-[50%] h-[35px]"
+          className=" bg-surface-tertiary w-[50%] h-[35px]"
           onClick={(ev) => {
             onSelect(ev, keywordsIndex);
           }}
@@ -71,7 +71,7 @@ export const ChoicesForStates = ({
         </SmallButton>
 
         <SmallButton
-          className={`  bg-slate-800 w-[50%] hover:bg-[crimson!important]`}
+          className={`  bg-surface-tertiary w-[50%] hover:bg-[crimson!important]`}
           onClick={(ev) => {
             const cnfrm = confirm(`Are you sure to delete states ?`);
             if(!cnfrm)return
@@ -83,7 +83,7 @@ export const ChoicesForStates = ({
       </section>
 
       {/* <SmallButton
-        className=" bg-slate-800"
+        className=" bg-surface-tertiary"
         onClick={(ev) => {
           onSelect(ev, keywordsIndex);
         }}
@@ -92,7 +92,7 @@ export const ChoicesForStates = ({
       </SmallButton>
 
       <SmallButton
-        className={`  bg-slate-800`}
+        className={`  bg-surface-tertiary`}
         onClick={(ev) => {
           onDelete(ev, keywordsIndex);
         }}

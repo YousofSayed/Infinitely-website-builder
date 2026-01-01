@@ -53,7 +53,7 @@ import { parse } from "../../helpers/cocktail";
 import { InfinitelyEvents } from "../../constants/infinitelyEvents";
 
 const SelectElementToStyle = () => (
-  <h1 className="text-slate-400 custom-font-size text-center animate-pulse capitalize font-semibold bg-slate-900 rounded-lg p-2">
+  <h1 className="text-slate-400 custom-font-size text-center animate-pulse capitalize font-semibold bg-surface-secondary rounded-lg p-2">
     Select element to style
   </h1>
 );
@@ -170,7 +170,7 @@ const StyleAccordion = () => {
         {([key, styles], i) =>
           <AccordionItem key={i} title={key} notify={notifires[key]}>
               <ErrorBoundary fallbackRender={SelectElementToStyle}>
-                <section className="flex flex-col gap-1 w-full  bg-slate-900 rounded-lg">
+                <section className="flex flex-col gap-1 w-full  bg-surface-secondary rounded-lg">
                   <For each={styles}>
                     {(
                       {
@@ -192,7 +192,7 @@ const StyleAccordion = () => {
                       <section
                         title={cssProp}
                         key={i}
-                        className="flex flex-col gap-1 w-full p-1 bg-slate-900 rounded-lg"
+                        className="flex flex-col gap-1 w-full p-1 bg-surface-secondary rounded-lg"
                       >
                         {type == "title" && <MiniTitle>{title}</MiniTitle>}
                         {type == "property" && (
@@ -496,7 +496,7 @@ export const StyleAside = memo(({ className }) => {
           >
             {mediaCondTitle || "There is no rule yet"}
           </FitTitle>
-          <OptionsButton className="w-[35p] h-full bg-slate-800">
+          <OptionsButton className="w-[35p] h-full bg-surface-tertiary">
             <section className="flex flex-col items-center gap-3">
               <SmallButton
                 className="h-[35px]"
@@ -521,7 +521,7 @@ export const StyleAside = memo(({ className }) => {
             </section>
           </OptionsButton>
           <SmallButton
-            className="hover:bg-[crimson!important] bg-slate-800"
+            className="hover:bg-[crimson!important] bg-surface-tertiary"
             showTooltip
             tooltipTitle="Delete Current Rule"
             onClick={() => {
@@ -534,11 +534,11 @@ export const StyleAside = memo(({ className }) => {
       )}
       {/* {!showAnimeBuilder && (
         <>
-          <DetailsNormal className="bg-slate-950 " label={"Classes"}>
+          <DetailsNormal className="bg-surface-main " label={"Classes"}>
             <SelectClass />
           </DetailsNormal>
 
-          <DetailsNormal label={"States"} className="bg-slate-950">
+          <DetailsNormal label={"States"} className="bg-surface-main">
             <SelectState />
           </DetailsNormal>
         </>

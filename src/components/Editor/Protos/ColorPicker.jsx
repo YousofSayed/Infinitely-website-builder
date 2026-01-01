@@ -100,7 +100,7 @@ export const ColorPicker = memo(
     return (
       <section ref={colorPickerContainerRef} className="relative ">
         <button
-          className={`w-[30px] h-[30px] shadow-md shadow-gray-950 rounded-lg border-[2.3px] border-slate-600  bg-slate-900 cursor-pointer`}
+          className={`w-[30px] h-[30px] shadow-md shadow-gray-950 rounded-lg border-[2.3px] border-border-default  bg-surface-secondary cursor-pointer`}
           onClick={(ev) => {
             ev.stopPropagation();
             colorPickerContainerRef.current.click();
@@ -132,7 +132,7 @@ export const ColorPicker = memo(
                   // padding: "10px",
                 }
               }
-              className="relative bg-slate-800 "
+              className="relative bg-surface-tertiary "
               onClick={(ev) => {
                 ev.stopPropagation();
               }}
@@ -153,9 +153,9 @@ export const ColorPicker = memo(
               style={{
                 height: Boolean(savedColors.length) ? "250px" : "",
               }}
-              className="transition-all absolute flex flex-col gap-2 top-[195px] rounded-bl-lg rounded-br-lg p-2 pt-[13px] bg-slate-800 shadow-md shadow-slate-950  w-full z-[70] "
+              className="transition-all absolute flex flex-col gap-2 top-[195px] rounded-bl-lg rounded-br-lg p-2 pt-[13px] bg-surface-tertiary shadow-md shadow-slate-950  w-full z-[70] "
             >
-              <header className="flex justify-between gap-2 bg-slate-900 p-2 rounded-lg">
+              <header className="flex justify-between gap-2 bg-surface-secondary p-2 rounded-lg">
                 <FitTitle className="w-full flex justify-center items-center">
                   Save
                 </FitTitle>
@@ -164,7 +164,7 @@ export const ColorPicker = memo(
                   style={{ backgroundColor: color }}
                 ></div>
                 <SmallButton
-                  className="w-[30px!important] h-[30px]  bg-slate-800 "
+                  className="w-[30px!important] h-[30px]  bg-surface-tertiary "
                   tooltipTitle="Save Color"
                   onClick={async (ev) => {
                     ev.stopPropagation();
@@ -186,12 +186,12 @@ export const ColorPicker = memo(
               </header>
 
               {Boolean(savedColors.length) && (
-                <main className=" p-2 h-full overflow-auto bg-slate-900 rounded-lg  ">
+                <main className=" p-2 h-full overflow-auto bg-surface-secondary rounded-lg  ">
                   <div className="w-full grid grid-cols-[repeat(auto-fill,minmax(30px,1fr))] gap-2 h-fit">
                     {savedColors.map((savedColor, i) => (
                       <button
                         key={i}
-                        className="relative h-[30px] rounded-lg border-[2.2px] border-slate-600 hover:border-blue-500  transition-all "
+                        className="relative h-[30px] rounded-lg border-[2.2px] border-border-default hover:border-blue-500  transition-all "
                         style={{
                           backgroundColor: savedColor,
                           borderColor: savedColor == color ? "#3b82f6" : null,

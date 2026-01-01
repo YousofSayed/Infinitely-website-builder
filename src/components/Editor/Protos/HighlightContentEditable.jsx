@@ -35,7 +35,7 @@ const HighlightContentEditable = ({
   }, [innerStt]);
 
   return (
-    <article className="relative w-full min-h-[300px] bg-slate-900 rounded-lg  overflow-hidden">
+    <article className="relative w-full min-h-[300px] bg-surface-secondary rounded-lg  overflow-hidden">
       <p
         ref={editableRef}
         spellCheck="false"

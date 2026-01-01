@@ -85,11 +85,11 @@ export const MultiChoice = ({
   //             }` );
   
   return (
-    // <ul  className="flex ll justify-between flex-nowrap items-center  w-full p-2 bg-slate-800 rounded-lg transition-all">
+    // <ul  className="flex ll justify-between flex-nowrap items-center  w-full p-2 bg-surface-tertiary rounded-lg transition-all">
     <section className="flex flex-col gap-2">
       {label && <FitTitle className="custom-font-size">{label}</FitTitle>}
       <ScrollableToolbar
-        className="w-full h-full items-center justify-between  bg-slate-800 rounded-lg transition-all"
+        className="w-full h-full items-center justify-between  bg-surface-tertiary rounded-lg transition-all"
         space={3}
       >
         {choices.map(({ choice, Icon }, i) => (
@@ -109,7 +109,7 @@ export const MultiChoice = ({
             
             transition-all cursor-pointer flex flex-shrink-0 justify-center items-center w-[37.5px] h-[37.5px] rounded-lg ${
               i == currentChoice
-                ? " bg-blue-600 shadow-md shadow-slate-900 "
+                ? " bg-brand-primary shadow-md shadow-slate-900 "
                 : ""
             }  transition-[background]`}
             onClick={(ev) => {

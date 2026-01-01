@@ -160,10 +160,10 @@ const GradientHandler = ({
   };
 
   return (
-    <section className="flex flex-col gap-2 bg-slate-950 p-2 rounded-lg">
+    <section className="flex flex-col gap-2 bg-surface-main p-2 rounded-lg">
       {/* <h1 className="pl-2 border-l-[3px] border-l-blue-600 rounded-l-md text-slate-300 font-semibold">{values[index].type}:</h1> */}
       <Input
-        className={`bg-slate-800  border-l-[3px] border-l-blue-600`}
+        className={`bg-surface-tertiary  border-l-[3px] border-l-blue-600`}
         value={values[index].type}
         placeholder={values[index].type}
         onInput={(ev) => {
@@ -176,7 +176,7 @@ const GradientHandler = ({
       />
       <section className="flex  gap-2 w-full">
         <Input
-          className="bg-slate-800 w-full"
+          className="bg-surface-tertiary w-full"
           placeholder="Direction"
           value={values[index].direction}
           onInput={(ev) => {
@@ -185,7 +185,7 @@ const GradientHandler = ({
         />
 
         <SmallButton
-          className="bg-slate-800"
+          className="bg-surface-tertiary"
           onClick={(ev) => {
             deleteAllContainer(index);
           }}
@@ -194,7 +194,7 @@ const GradientHandler = ({
         </SmallButton>
 
         <SmallButton
-          className="bg-slate-800"
+          className="bg-surface-tertiary"
           onClick={(ev) => {
             addColorContainer();
           }}
@@ -207,9 +207,9 @@ const GradientHandler = ({
         return (
           <Adder
             key={i}
-            className=" p-1 bg-slate-900"
-            addClassName="bg-slate-800"
-            delClassName="bg-slate-800"
+            className=" p-1 bg-surface-secondary"
+            addClassName="bg-surface-tertiary"
+            delClassName="bg-surface-tertiary"
             onAddClick={(ev) => {
               addColorContainer();
             }}
@@ -217,7 +217,7 @@ const GradientHandler = ({
               deleteColor(i);
             }}
           >
-            <section className="flex items-center  gap-2 bg-slate-900 p-1 rounded-lg">
+            <section className="flex items-center  gap-2 bg-surface-secondary p-1 rounded-lg">
               <ColorPicker
                 color={values[index].colors[i].color}
                 setColor={(color) => {
@@ -229,7 +229,7 @@ const GradientHandler = ({
               />
 
               <Input
-                className={`bg-slate-800 w-[70%] text-center text-[${values[index].colors[i].color}]`}
+                className={`bg-surface-tertiary w-[70%] text-center text-[${values[index].colors[i].color}]`}
                 value={values[index].colors[i].color}
                 placeholder="Color"
                 onInput={(ev) => {
@@ -238,7 +238,7 @@ const GradientHandler = ({
               />
 
               <Input
-                className="bg-slate-800 w-[30%]"
+                className="bg-surface-tertiary w-[30%]"
                 value={values[index].colors[i].opacity}
                 placeholder="Opacity"
                 onInput={(ev) => {
@@ -312,7 +312,7 @@ export const Gradient = () => {
   });
 
   return (
-    <section className="flex flex-col gap-2 bg-slate-800 p-1 rounded-lg">
+    <section className="flex flex-col gap-2 bg-surface-tertiary p-1 rounded-lg">
       <section className="flex gap-2  rounded-lg">
         <Select
           className="p-[unset] px-[unset]"
@@ -331,7 +331,7 @@ export const Gradient = () => {
         />
 
         <SmallButton
-          className="bg-slate-900"
+          className="bg-surface-secondary"
           onClick={(ev) => {
             addGradientContainer();
           }}
@@ -347,8 +347,8 @@ export const Gradient = () => {
             return (
               <Adder
                 key={i}
-                addClassName="bg-slate-900"
-                delClassName="bg-slate-900"
+                addClassName="bg-surface-secondary"
+                delClassName="bg-surface-secondary"
                 className="p-[unset]"
                 onAddClick={(ev) => {
                   addGradientContainer(true, i);

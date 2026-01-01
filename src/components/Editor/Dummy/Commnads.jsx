@@ -434,7 +434,7 @@ export const Commands = () => {
         />
 
         <SmallButton
-          className="flex-shrink-0 bg-slate-800"
+          className="flex-shrink-0 bg-surface-tertiary"
           onClick={(ev) => {
             addCmd(command);
           }}
@@ -450,10 +450,10 @@ export const Commands = () => {
               key={i}
               id={cmd.id}
               itemRef={adderRef}
-              className="bg-slate-800 relative minion "
-              inputClassName="bg-slate-900"
-              addClassName="bg-slate-900 h-[52px] w-[50px]"
-              delClassName="bg-slate-900 h-[52px] w-[50px]"
+              className="bg-surface-tertiary relative minion "
+              inputClassName="bg-surface-secondary"
+              addClassName="bg-surface-secondary h-[52px] w-[50px]"
+              delClassName="bg-surface-secondary h-[52px] w-[50px]"
               placeholder="Type command"
               showSelectMenu={true}
               value={command}
@@ -480,7 +480,7 @@ export const Commands = () => {
                   <Select
                     value={cmd.optionValue}
                     placeholder="Select Option"
-                    className="bg-slate-900"
+                    className="bg-surface-secondary"
                     keywords={[...Object.values(cmd.options)]}
                     onAll={(value) => {
                       setOptionValue(value, i);
@@ -499,7 +499,7 @@ export const Commands = () => {
                       }`}
                     >
                       <p
-                        className={`min-w-[30%] bg-blue-500  select-none border-l-[3px] p-2 text-nowrap text-[calc(4.5vh/2)] capitalize overflow-auto hideScrollBar   flex   items-center justify-center flex-shrink-0 w-fit rounded-lg  border-blue-600   text-slate-200 font-bold `}
+                        className={`min-w-[30%] bg-blue-500  select-none border-l-[3px] p-2 text-nowrap text-[calc(4.5vh/2)] capitalize overflow-auto hideScrollBar   flex   items-center justify-center flex-shrink-0 w-fit rounded-lg  border-blue-600   text-text-primary font-bold `}
                       >
                         {param.name} :{" "}
                       </p>
@@ -508,7 +508,7 @@ export const Commands = () => {
 
                       {(param.type == "text" || param.type == "number") && (
                         <Input
-                          className="bg-slate-900 w-full py-3"
+                          className="bg-surface-secondary w-full py-3"
                           placeholder={param.name}
                           value={param.value || ""}
                           onInput={(ev) => {
@@ -559,7 +559,7 @@ export const Commands = () => {
                             ),
                             ...conditionalArray(restModelsVars , param.accessRestVars)
                           ]}
-                          className="w-full  bg-slate-900"
+                          className="w-full  bg-surface-secondary"
                           placeholder={param.name}
                           ignoreCurlyBrackets={true}
                           value={
@@ -581,7 +581,7 @@ export const Commands = () => {
 
                       {param.type == "object" && (
                         <ObjectInput
-                          className="bg-slate-800"
+                          className="bg-surface-tertiary"
                           keywords={[...vars, ...hsZoo]}
                           obj={
                             // typeof param.value == "object" &&
@@ -611,7 +611,7 @@ export const Commands = () => {
 
                       {param.type == "array" && (
                         <ArrayInput
-                          className="bg-slate-800"
+                          className="bg-surface-tertiary"
                           array={param.value || []}
                           placeholder={param.name}
                           onAddClick={(ev, value) => {
@@ -654,7 +654,7 @@ export const Commands = () => {
                         //   />
                         // </section>
                         <Select
-                          className="w-full  bg-slate-900"
+                          className="w-full  bg-surface-secondary"
                           isCode={true}
                           value={param.value || ``}
                           codeProps={{

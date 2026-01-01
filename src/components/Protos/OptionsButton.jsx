@@ -17,7 +17,7 @@ export const OptionsButton = ({
   onClick,
   notify,
   icon,
-  notifyBg = "bg-blue-600",
+  notifyBg = "bg-brand-primary",
   ...props
 }) => {
   const [showTooltip, setShowTooltip] = useState(false);
@@ -65,7 +65,7 @@ export const OptionsButton = ({
       {Boolean(children) && (
         <Tooltip
           id={`tooltip-${id.current}`}
-          className="w-fit p-[unset] z-[100] shadow-lg bg-slate-800 shadow-slate-950"
+          className="w-fit p-[unset] z-[100] shadow-lg bg-surface-tertiary shadow-slate-950"
           style={{
             boxShadow: "0px 0px 10px 1px #020617",
             padding: "5px",

@@ -35,7 +35,7 @@ export const BackgroundImage = () => {
   }, [bgImage]);
 
   return (
-    <section className="bg-slate-800 rounded-lg flex flex-col gap-2 p-1">
+    <section className="bg-surface-tertiary rounded-lg flex flex-col gap-2 p-1">
       <ChooseFile
         mediaType="image"
         placeholder="Choose image"

@@ -72,9 +72,9 @@ export const InstalledLibraryDetails = memo(
     };
 
     return (
-      <article className="p-2 bg-slate-900 rounded-lg flex flex-col gap-2 mt-2">
+      <article className="p-2 bg-surface-secondary rounded-lg flex flex-col gap-2 mt-2">
         <section className="flex items-center justify-between">
-          <h1 className="text-3xl p-2 bg-slate-950 rounded-lg w-fit text-blue-300 font-bold capitalize">
+          <h1 className="text-3xl p-2 bg-surface-main rounded-lg w-fit text-blue-300 font-bold capitalize">
             {library.name}
           </h1>
 
@@ -167,7 +167,7 @@ export const InstalledLibraryDetails = memo(
           }
         </section>
 
-        <section className="items-end justify-end flex bg-slate-950 p-2 rounded-lg w-fit self-end">
+        <section className="items-end justify-end flex bg-surface-main p-2 rounded-lg w-fit self-end">
           <Button
             onClick={(ev) => {
               onDelete(ev);

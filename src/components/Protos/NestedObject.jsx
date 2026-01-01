@@ -59,7 +59,7 @@ export const AddNestedProps = ({
   return (
     <section className="flex flex-col  " ref={parentAnimatedRef}>
       <section
-        className={`${className} flex  gap-2  sticky top-0 bg-slate-950 ${
+        className={`${className} flex  gap-2  sticky top-0 bg-surface-main ${
           Object.keys(getNestedValue(object, destination) || {})?.length
             ? "rounded-tl-lg rounded-tr-lg"
             : "rounded-lg"
@@ -67,8 +67,8 @@ export const AddNestedProps = ({
       >
         <Select
           className="p-[unset]"
-          inputClassName="bg-slate-800"
-          containerClassName="bg-slate-800"
+          inputClassName="bg-surface-tertiary"
+          containerClassName="bg-surface-tertiary"
           placeholder={placeholder || "Select Prop"}
           keywords={keywords}
           value={value}
@@ -81,7 +81,7 @@ export const AddNestedProps = ({
           }}
         />
         <SmallButton
-          className="w-[40px!important] bg-slate-800"
+          className="w-[40px!important] bg-surface-tertiary"
           onClick={() => {
             addProp(value);
           }}
@@ -93,7 +93,7 @@ export const AddNestedProps = ({
       {!!Object.entries(getNestedValue(object, destination) || {}).length && (
         <section
           ref={animatedRef}
-          className=" flex flex-col gap-2 p-1 bg-slate-950 rounded-bl-md rounded-br-md"
+          className=" flex flex-col gap-2 p-1 bg-surface-main rounded-bl-md rounded-br-md"
         >
           {Object.entries(getNestedValue(object, destination) || {}).map(
             ([key, value], index) => {
@@ -107,7 +107,7 @@ export const AddNestedProps = ({
                   <section className="flex  gap-2">
                     <Input
                       placeholder={key}
-                      className="bg-slate-800 w-full"
+                      className="bg-surface-tertiary w-full"
                       value={value}
                       onInput={(ev) => {
                         editeProp(key, ev.target.value);
@@ -185,12 +185,12 @@ export const NestedObject = ({
   };
 
   return (
-    <section className="flex flex-col gap-2 p-1 bg-slate-950 rounded-lg">
+    <section className="flex flex-col gap-2 p-1 bg-surface-main rounded-lg">
       {Object.entries(object).map(([key, value], index) => {
         return (
           <section key={index} className="relative flex flex-col gap-2  ">
             <FitTitle
-              className={`capitalize font-semibold text-slate-200 text-ellipsis overflow-hidden max-w-full`}
+              className={`capitalize font-semibold text-text-primary text-ellipsis overflow-hidden max-w-full`}
             >
               {key}
             </FitTitle>
@@ -199,8 +199,8 @@ export const NestedObject = ({
               // variant="shadow"
               // itemClasses={{
               //   trigger: "flex items-center justify-between ",
-              //   base: "bg-slate-800 p-3  rounded-lg text-slate-200 font-semibold relative",
-              //   content: `bg-slate-900 p-[unset!important] mt-2 rounded-md`,
+              //   base: "bg-surface-tertiary p-3  rounded-lg text-text-primary font-semibold relative",
+              //   content: `bg-surface-secondary p-[unset!important] mt-2 rounded-md`,
               //   title: `capitalize custom-font-size`,
               //   indicator: `text-[18px] transition-all`,
               // }}
@@ -282,7 +282,7 @@ export const NestedObject = ({
                     ? ""
                     : getNestedValue(animation, [...destination, key])
                 }
-                className="bg-slate-900 w-full border-[4px]  border-[#1e293b!important]"
+                className="bg-surface-secondary w-full border-[4px]  border-[#1e293b!important]"
                 onInput={(ev) => {
                   addValue(ev.target.value, key);
                 }}

@@ -141,8 +141,8 @@ export const InstalledLibraries = () => {
                 key={i}
                 title={libraries[key].desc}
                 allowPopupLength
-                // className="bg-[#1e293b!important] relative"
-                // classNames={{ content: "bg-slate-800 p-[unset]" }}
+                // className="bg-[var(--color-surface-tertiary)!important] relative"
+                // classNames={{ content: "bg-surface-tertiary p-[unset]" }}
                 length={libraries[key]?.libs.length}
                 slotProps={{
                   transition: {
@@ -175,7 +175,7 @@ export const InstalledLibraries = () => {
 //             >
 //               {/* <h1 className="absolute right-0 top-0">hello</h1> */}
 //               {!!libraries[key].libs.length && (
-//                 <p className="w-[20px] h-[20px] bg-blue-600 text-slate-200 flex justify-center items-center font-semibold rounded-md absolute right-[30px]  top-[50%] translate-y-[-50%] ">
+//                 <p className="w-[20px] h-[20px] bg-brand-primary text-text-primary flex justify-center items-center font-semibold rounded-md absolute right-[30px]  top-[50%] translate-y-[-50%] ">
 //                   {libraries[key].libs.length}
 //                 </p>
 //               )}{" "}

@@ -276,10 +276,10 @@ export const Commands = () => {
               title={"for"}
               notify={Boolean(selectedAttributes["v-for"])}
             >
-              <section className="mt-2 flex flex-col  gap-2 p-1 text-[14px] bg-slate-900 rounded-lg">
+              <section className="mt-2 flex flex-col  gap-2 p-1 text-[14px] bg-surface-secondary rounded-lg">
                 <FitTitle>Var </FitTitle>
                 <Input
-                  className="bg-slate-800 w-full"
+                  className="bg-surface-tertiary w-full"
                   placeholder="var"
                   value={customDirevtives["v-for"]?.varName || ""}
                   onInput={(ev) => {
@@ -294,7 +294,7 @@ export const Commands = () => {
                 />
                 <FitTitle>Index </FitTitle>
                 <Input
-                  className="bg-slate-800 w-full"
+                  className="bg-surface-tertiary w-full"
                   placeholder="index"
                   value={customDirevtives["v-for"]?.index || ""}
                   onInput={(ev) => {
@@ -397,7 +397,7 @@ export const Commands = () => {
             <section className="mt-2">
               <Input
                 placeholder="Selector"
-                className="w-full bg-slate-800"
+                className="w-full bg-surface-tertiary"
                 value={selectedAttributes["x-teleport"]}
                 onInput={(ev) => {
                   // editor.getSelected().addAttributes({
@@ -592,7 +592,7 @@ export const Commands = () => {
                 )}
 
                 {cmd.type == "check" && (
-                  <section className="flex items-center justify-between gap-2 p-1 bg-slate-900 rounded-lg">
+                  <section className="flex items-center justify-between gap-2 p-1 bg-surface-secondary rounded-lg">
                     <FitTitle>{cmd.name}</FitTitle>
                     <SwitchButton
                       defaultValue={parse(
@@ -618,7 +618,7 @@ export const Commands = () => {
                 )}
 
                 {cmd.type == "multi" && (
-                  <section className="flex flex-col gap-2  p-1 bg-slate-900 rounded-lg">
+                  <section className="flex flex-col gap-2  p-1 bg-surface-secondary rounded-lg">
                     <FitTitle>Suffix</FitTitle>
                     <Select
                       // label="Suffix"
@@ -672,7 +672,7 @@ export const Commands = () => {
                           "Add Value",
                           cmd.isValueRequired
                         )}
-                        className="bg-slate-800 py-3"
+                        className="bg-surface-tertiary py-3"
                         value={cmd.value}
                         onInput={(ev) => {
                           addValue(ev.target.value, i);
@@ -707,7 +707,7 @@ export const Commands = () => {
                       />
                     )}
 
-                    {/* <h1 className="text-slate-200 font-semibold capitalize">Value:</h1> */}
+                    {/* <h1 className="text-text-primary font-semibold capitalize">Value:</h1> */}
                     {cmd.valueInputType == "select" && (
                       <Select
                         value={cmd.value}
@@ -787,7 +787,7 @@ export const Commands = () => {
 
                       return (
                         <section
-                          className="flex flex-col  gap-2 p-2 bg-slate-800 rounded-lg"
+                          className="flex flex-col  gap-2 p-2 bg-surface-tertiary rounded-lg"
                           key={x}
                         >
                           <FitTitle
@@ -926,7 +926,7 @@ export const Commands = () => {
                             )}
 
                             <SmallButton
-                              className="bg-blue-600"
+                              className="bg-brand-primary"
                               onClick={(ev) => {
                                 removeAttribute(key);
                               }}
@@ -937,7 +937,7 @@ export const Commands = () => {
                         </section>
                       );
                     })}
-                    {/* <div className="w-full p-2 bg-slate-800 rounded-lg min-h-[40px]"></div> */}
+                    {/* <div className="w-full p-2 bg-surface-tertiary rounded-lg min-h-[40px]"></div> */}
                   </section>
                 )}
               </AccordionItem>

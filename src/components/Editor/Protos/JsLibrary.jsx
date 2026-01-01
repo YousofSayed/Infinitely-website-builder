@@ -185,10 +185,10 @@ export const JsLibrary = ({
   return (
     <>
       <section className="w-full mb-2">
-        <article className="w-full p-2 rounded-lg bg-slate-950 border border-slate-800 shadow-md  hover:shadow-lg">
-          <section className="w-full flex justify-between  items-center bg-slate-900 p-2 rounded-lg">
+        <article className="w-full p-2 rounded-lg bg-surface-main border border-slate-800 shadow-md  hover:shadow-lg">
+          <section className="w-full flex justify-between  items-center bg-surface-secondary p-2 rounded-lg">
             <div className="w-full flex items-start flex-col gap-2 ">
-              <h1 className="text-3xl font-bold text-blue-400 capitalize p-2 bg-slate-950 rounded-lg">
+              <h1 className="text-3xl font-bold text-blue-400 capitalize p-2 bg-surface-main rounded-lg">
                 {library.name}
               </h1>
               <p className="text-sm text-slate-400 font-medium ">
@@ -217,7 +217,7 @@ export const JsLibrary = ({
 
               <hr className="h-[2px] w-[80px] bg-red-300 border-2 border-blue-600" />
 
-              <div className="w-full flex items-center justify-between flex-wrap gap-2 bg-slate-900 p-2 rounded-lg">
+              <div className="w-full flex items-center justify-between flex-wrap gap-2 bg-surface-secondary p-2 rounded-lg">
                 {(library?.fileType == "js" ||
                   library?.latest?.endsWith("js")) && (
                   <>
@@ -225,7 +225,7 @@ export const JsLibrary = ({
                       <legend className="text-lg font-semibold mb-2">
                         Load in:
                       </legend>
-                      <div className="flex items-center space-x-6 bg-slate-950 p-2 rounded-lg">
+                      <div className="flex items-center space-x-6 bg-surface-main p-2 rounded-lg">
                         <label
                           className="flex items-center space-x-3"
                           htmlFor={`${library.name}-header`}
@@ -243,7 +243,7 @@ export const JsLibrary = ({
                                 footer: "",
                               });
                             }}
-                            className="w-4 h-4 text-blue-600 bg-slate-900 border-slate-700 rounded-full cursor-pointer"
+                            className="w-4 h-4 text-blue-600 bg-surface-secondary border-slate-700 rounded-full cursor-pointer"
                           />
                           <span className="text-slate-300">Header</span>
                         </label>
@@ -267,7 +267,7 @@ export const JsLibrary = ({
                                 header: "",
                               });
                             }}
-                            className="w-4 h-4 text-blue-600 bg-slate-900 border-slate-700 rounded-full cursor-pointer"
+                            className="w-4 h-4 text-blue-600 bg-surface-secondary border-slate-700 rounded-full cursor-pointer"
                           />
                           <span className="text-slate-300">Footer</span>
                         </label>
@@ -278,7 +278,7 @@ export const JsLibrary = ({
                       <legend className="text-lg font-semibold mb-2">
                         Attributes:
                       </legend>
-                      <div className="flex items-center space-x-6 bg-slate-950 p-2 rounded-lg">
+                      <div className="flex items-center space-x-6 bg-surface-main p-2 rounded-lg">
                         <label className="flex items-center space-x-3">
                           <Input
                             type="checkbox"
@@ -289,7 +289,7 @@ export const JsLibrary = ({
                                 defer: ev.target.checked,
                               });
                             }}
-                            className="w-5 h-5 text-blue-600 bg-slate-900 border-slate-700  cursor-pointer rounded-lg"
+                            className="w-5 h-5 text-blue-600 bg-surface-secondary border-slate-700  cursor-pointer rounded-lg"
                           />
                           <span className="text-slate-300">Defer</span>
                         </label>
@@ -303,7 +303,7 @@ export const JsLibrary = ({
                                 async: ev.target.checked,
                               });
                             }}
-                            className="w-5 h-5 text-blue-600 bg-slate-900 border-slate-700  cursor-pointer rounded-lg"
+                            className="w-5 h-5 text-blue-600 bg-surface-secondary border-slate-700  cursor-pointer rounded-lg"
                           />
                           <span className="text-slate-300">Async</span>
                         </label>
@@ -342,7 +342,7 @@ export const JsLibrary = ({
                     <fieldset className="flex flex-col gap-2">
                       <h1>Type</h1>
                       <Input
-                        className="bg-slate-950"
+                        className="bg-surface-main"
                         placeholder="JS Type"
                         onInput={(ev) => {
                           setInstallData({
@@ -355,11 +355,11 @@ export const JsLibrary = ({
                   </>
                 )}
               </div>
-              <div className="flex items-start justify-end bg-slate-950 w-full h-full gap-2 p-2 rounded-lg mt-3 ">
+              <div className="flex items-start justify-end bg-surface-main w-full h-full gap-2 p-2 rounded-lg mt-3 ">
                 <>
                   {" "}
                   <Button
-                    className="bg-blue-600 text-slate-200 px-5 py-2 rounded-lg hover:bg-blue-700 transition flex-shrink-0 flex-grow-0"
+                    className="bg-brand-primary text-text-primary px-5 py-2 rounded-lg hover:bg-blue-700 transition flex-shrink-0 flex-grow-0"
                     onClick={() => {
                       install({
                         fileUrl: library.latest,

@@ -69,7 +69,7 @@ export const Color = ({
       {label && <FitTitle className="custom-font-size">{label}</FitTitle>}
 
       <section
-        className={`relative flex justify-between items-center bg-slate-800 w-full ${
+        className={`relative flex justify-between items-center bg-surface-tertiary w-full ${
           hideOpacityField ? "p-1 gap-2" : "p-2"
         } rounded-lg`}
       >
@@ -102,7 +102,7 @@ export const Color = ({
             onColorChange(color);
             setColor(ev.target.value);
           }}
-          className={`bg-slate-900 shadow-inner shadow-gray-950 p-2 outline-none text-center text-slate-200 font-semibold ${
+          className={`bg-surface-secondary shadow-inner shadow-gray-950 p-2 outline-none text-center text-text-primary font-semibold ${
             hideOpacityField ? "w-[calc(100%-30px)]" : "w-[50%]"
           } rounded-lg`}
           type="text"
@@ -111,7 +111,7 @@ export const Color = ({
 
         {!hideOpacityField && (
           <p
-            className={`w-[20%] p-2 text-slate-200 text-[14px] font-bold flex justify-center items-center rounded-lg  bg-slate-900`}
+            className={`w-[20%] p-2 text-text-primary text-[14px] font-bold flex justify-center items-center rounded-lg  bg-surface-secondary`}
           >
             {hexToRgbA(color || "").opacity}
           </p>

@@ -77,7 +77,7 @@ export const Display = () => {
 
   return (
     <>
-      <section className=" flex flex-col gap-2  rounded-lg bg-slate-900">
+      <section className=" flex flex-col gap-2  rounded-lg bg-surface-secondary">
         <MiniTitle>display</MiniTitle>
         <Select
           label="display"
@@ -104,7 +104,7 @@ export const Display = () => {
       </section>
 
       {option && (option.includes("flex") || option.includes("grid")) && (
-        <section className=" flex flex-col gap-2  rounded-lg bg-slate-900">
+        <section className=" flex flex-col gap-2  rounded-lg bg-surface-secondary">
           {option.includes("flex") && <FlexLayout />}
           {option.includes("grid") && <GridLayout />}
         </section>

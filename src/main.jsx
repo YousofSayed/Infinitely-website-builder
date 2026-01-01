@@ -93,21 +93,21 @@ const Main = () => {
           key={uniqueKey}
           fallbackRender={({ error, resetErrorBoundary }) => (
             <div
-              className="flex items-center justify-center min-h-screen h-full bg-slate-950 text-slate-200 relative overflow-hidden"
+              className="flex items-center justify-center min-h-screen h-full bg-surface-main text-text-primary relative overflow-hidden"
               role="alert"
             >
               {/* Blurry Background */}
-              <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl"></div>
+              <div className="absolute inset-0 bg-surface-secondary/60 backdrop-blur-xl"></div>
 
               {/* Error Card */}
-              <div className="relative z-10 max-w-md p-8 bg-slate-900 rounded-xl shadow-xl border border-slate-800">
+              <div className="relative z-10 max-w-md p-8 bg-surface-secondary rounded-xl shadow-xl border border-slate-800">
                 <h1 className="text-2xl font-semibold text-red-500 mb-4">
                   Something went wrong!
                 </h1>
                 <p className="text-slate-300 mb-4">
                   We encountered an error while processing your request.
                 </p>
-                <pre className="bg-slate-950 text-slate-200 p-4 rounded-lg border border-slate-800 overflow-auto max-h-40 mb-6">
+                <pre className="bg-surface-main text-text-primary p-4 rounded-lg border border-slate-800 overflow-auto max-h-40 mb-6">
                   {error.message}
                 </pre>
                 <button

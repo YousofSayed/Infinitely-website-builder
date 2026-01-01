@@ -13,7 +13,7 @@ export const SelectedBorder = ({
         addClickClass(ev.currentTarget, "click");
         setOption(option == borderDir ? "" : borderDir);
       }}
-      className="group rounded-lg cursor-pointer p-2 flex justify-center items-center bg-slate-900 hover:bg-blue-600 transition-all "
+      className="group rounded-lg cursor-pointer p-2 flex justify-center items-center bg-surface-secondary hover:bg-brand-primary transition-all "
     >
       <div
         className={`w-[20px] h-[20px] ${borderName} ${

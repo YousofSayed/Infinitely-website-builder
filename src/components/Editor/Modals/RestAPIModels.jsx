@@ -228,38 +228,38 @@ export const RestAPIModels = memo(() => {
       ref={animatRef}
     >
       {!currentViewModel.show && (
-        <header className="flex flex-col gap-3  w-full bg-slate-800 p-2  rounded-lg ">
+        <header className="flex flex-col gap-3  w-full bg-surface-tertiary p-2  rounded-lg ">
           <section className="flex flex-col gap-2 w-full">
             <section className="flex gap-2">
-              <section className="flex items-center gap-2 w-full bg-slate-900 border-[2px] border-slate-600 rounded-lg">
+              <section className="flex items-center gap-2 w-full bg-surface-secondary border-[2px] border-border-default rounded-lg">
                 <figure className="h-full border-r-2 border-r-slate-600 flex justify-center items-center px-2">
                   {Icons.model({ strokWidth: 4 })}
                 </figure>
                 <Input
                   value={modleData.name}
                   placeholder="Model Name"
-                  className="bg-slate-900 border-[2px] w-full border-slate-600 focus:border-[transparent!important]"
+                  className="bg-surface-secondary border-[2px] w-full border-border-default focus:border-[transparent!important]"
                   onInput={(ev) => {
                     setModelData({ ...modleData, name: ev.target.value });
                   }}
                 />
               </section>
 
-              <section className="flex items-center gap-2 w-full  bg-slate-900 border-[2px] border-slate-600 rounded-lg ">
+              <section className="flex items-center gap-2 w-full  bg-surface-secondary border-[2px] border-border-default rounded-lg ">
                 <figure className="h-full border-r-2 border-r-slate-600 flex justify-center items-center px-2">
                   {Icons.link({ strokWidth: 2 })}
                 </figure>
                 <Input
                   value={modleData.url}
                   placeholder="URL"
-                  className="bg-slate-900 w-full focus:border-[transparent!important]"
+                  className="bg-surface-secondary w-full focus:border-[transparent!important]"
                   onInput={(ev) => {
                     setModelData({ ...modleData, url: ev.target.value });
                   }}
                 />
               </section>
 
-              <section className="flex items-center gap-2 w-full   bg-slate-900 border-[2px] border-slate-600 rounded-lg ">
+              <section className="flex items-center gap-2 w-full   bg-surface-secondary border-[2px] border-border-default rounded-lg ">
                 <figure className="h-full border-r-2 border-r-slate-600 flex justify-center items-center px-2">
                   {Icons.command("#CBD5E1", 2)}
                 </figure>
@@ -268,7 +268,7 @@ export const RestAPIModels = memo(() => {
                   keywords={[...vars]}
                   placeholder="Variable name"
                   // containerClassName="w-full"
-                  className="bg-slate-900 focus:border-[transparent!important] w-full px-[unset]"
+                  className="bg-surface-secondary focus:border-[transparent!important] w-full px-[unset]"
                   onInput={(ev) => {
                     setModelData({ ...modleData, varName: ev.target.value });
                     setRestModelsVars((old) => ({
@@ -284,7 +284,7 @@ export const RestAPIModels = memo(() => {
               <Select
                 zIndex={2000}
                 value={modleData.method}
-                className="bg-slate-900 border-2  border-slate-600 px-[unset] py-[unset]"
+                className="bg-surface-secondary border-2  border-border-default px-[unset] py-[unset]"
                 placeholder="Method"
                 keywords={[...httpGetterMethods, ...httpSetterMethods]}
                 onAll={(value) => {
@@ -321,7 +321,7 @@ export const RestAPIModels = memo(() => {
             (value) => value.toLowerCase() == modleData.method.toLowerCase()
           ) != -1 ? (
             <>
-              <section className=" rounded-lg flex flex-col gap-2 bg-slate-800 p-2 ">
+              <section className=" rounded-lg flex flex-col gap-2 bg-surface-tertiary p-2 ">
                 <MiniTitle>Headers</MiniTitle>
                 <ObjectInput
                   obj={modleData.headers}
@@ -340,7 +340,7 @@ export const RestAPIModels = memo(() => {
                 />
               </section>
 
-              <section className=" rounded-lg flex flex-col gap-2 bg-slate-800 p-2">
+              <section className=" rounded-lg flex flex-col gap-2 bg-surface-tertiary p-2">
                 <MiniTitle>Body</MiniTitle>
                 <ObjectInput
                   obj={modleData.body}
@@ -380,7 +380,7 @@ export const RestAPIModels = memo(() => {
                     addClickClass(ev.currentTarget, "click");
                     setCurrentViewModel({ show: true, model, index: i });
                   }}
-                  className="cursor-pointer p-2 [&:hover_path]:stroke-white bg-slate-800 rounded-lg text-slate-200 font-semibold capitalize flex items-center justify-between"
+                  className="cursor-pointer p-2 [&:hover_path]:stroke-white bg-surface-tertiary rounded-lg text-text-primary font-semibold capitalize flex items-center justify-between"
                 >
                   <span>{model.name}</span>
                   <span className="rotate-[-90deg] [&_path]:hover:stroke-white ">
@@ -393,9 +393,9 @@ export const RestAPIModels = memo(() => {
         )}
 
         {currentViewModel.show && currentViewModel.model && (
-          <section className="flex flex-col gap-2 bg-slate-900 rounded-lg w-full h-full overflow-hidden will-change-[height,width]">
+          <section className="flex flex-col gap-2 bg-surface-secondary rounded-lg w-full h-full overflow-hidden will-change-[height,width]">
             <header className="flex justify-between gap-3 py-1">
-              <section className=" flex items-center gap-2 bg-slate-800 rounded-lg">
+              <section className=" flex items-center gap-2 bg-surface-tertiary rounded-lg">
                 <span
                   onClick={(ev) => {
                     addClickClass(ev.currentTarget, "click");
@@ -412,7 +412,7 @@ export const RestAPIModels = memo(() => {
 
               <MiniTitle>Rest Model Details</MiniTitle>
 
-              <section className="flex gap-3 items-center bg-slate-800 rounded-lg">
+              <section className="flex gap-3 items-center bg-surface-tertiary rounded-lg">
                 <SmallButton
                   onClick={() => {
                     deleteModel(currentViewModel.index);
@@ -449,14 +449,14 @@ export const RestAPIModels = memo(() => {
                 </SmallButton>
               </section>
             </header>
-            <section className="flex gap-2 items-center text-slate-200 font-semibold bg-slate-800 p-2 rounded-lg">
+            <section className="flex gap-2 items-center text-text-primary font-semibold bg-surface-tertiary p-2 rounded-lg">
               <FitTitle>Method</FitTitle> {currentViewModel.model.method}
             </section>
-            <section className="flex gap-2 items-center text-slate-200 font-semibold  bg-slate-800 p-2 rounded-lg">
+            <section className="flex gap-2 items-center text-text-primary font-semibold  bg-surface-tertiary p-2 rounded-lg">
               <FitTitle>Variable Name</FitTitle>{" "}
               {currentViewModel.model.varName}
             </section>
-            <section className="flex gap-2 items-center text-slate-200 font-semibold  bg-slate-800 p-2 rounded-lg">
+            <section className="flex gap-2 items-center text-text-primary font-semibold  bg-surface-tertiary p-2 rounded-lg">
               <FitTitle>URL</FitTitle>{" "}
               <a
                 className="hover:underline hover:cursor-pointer"

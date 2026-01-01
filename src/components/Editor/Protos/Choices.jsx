@@ -177,7 +177,7 @@ export const Choices = ({
   return (
     <section
       className={`w-full    gap-2 flex items-center p-1 rounded-lg  ${
-        className ? className : "bg-slate-800"
+        className ? className : "bg-surface-tertiary"
       }`}
     >
       {Boolean(keywords.length) && keywords.map((keyword, i) => {
@@ -212,10 +212,10 @@ export const Choices = ({
               key={i}
               className={`text-nowrap break-all relative custom-font-size group px-[20px] w-fit cursor-pointer select-none  flex-shrink-0 py-2 text-white ${
                 active && currentIndex.current == i
-                  ? "bg-blue-600"
+                  ? "bg-brand-primary"
                   : enableSelecting
-                  ? "bg-slate-900"
-                  : "bg-blue-600"
+                  ? "bg-surface-secondary"
+                  : "bg-brand-primary"
               }  transition-all rounded-lg font-semibold`}
             >
               {keyword}
@@ -226,20 +226,20 @@ export const Choices = ({
 
                   onCloseClick(ev, keyword, i);
                 }}
-                className="absolute bg-blue-600 shadow-sm shadow-blue-950 w-[23px]  h-[23px] flex items-center justify-center rounded-full transition-all cursor-pointer opacity-0 group-hover:opacity-[1]  right-[-5px] top-[-5px] z-50"
+                className="absolute bg-brand-primary shadow-sm shadow-blue-950 w-[23px]  h-[23px] flex items-center justify-center rounded-full transition-all cursor-pointer opacity-0 group-hover:opacity-[1]  right-[-5px] top-[-5px] z-50"
               >
                 {Icons.close("white", "", "white")}
               </i>
 
               {notifiers[keyword] && (
-                <span className="absolute w-[10px] h-[10px] rounded-full bg-blue-600 shadow-lg shadow-slate-950 left-[-5px] top-[-5px]"></span>
+                <span className="absolute w-[10px] h-[10px] rounded-full bg-brand-primary shadow-lg shadow-slate-950 left-[-5px] top-[-5px]"></span>
               )}
             </p>
           )
         );
       })}
 
-      {!Boolean(keywords.length) && <h1 className="text-slate-200 animate-pulse w-full flex justify-center items-center">No thing here </h1>}
+      {!Boolean(keywords.length) && <h1 className="text-text-primary animate-pulse w-full flex justify-center items-center">No thing here </h1>}
     </section>
   );
 };

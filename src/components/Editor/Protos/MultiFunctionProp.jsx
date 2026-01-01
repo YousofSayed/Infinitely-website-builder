@@ -104,7 +104,7 @@ export const MultiFunctionProp = (
     });
 
     return (
-      <section className=" flex flex-col  bg-slate-900 rounded-lg">
+      <section className=" flex flex-col  bg-surface-secondary rounded-lg">
         <section className="flex gap-2">
           <Select
             placeholder={placeholder}
@@ -127,7 +127,7 @@ export const MultiFunctionProp = (
             }}
           />
           <SmallButton
-            className="flex-shrink-0 bg-slate-800"
+            className="flex-shrink-0 bg-surface-tertiary"
             title={placeholder}
             onClick={(ev) => {
               setFilter("");
@@ -144,10 +144,10 @@ export const MultiFunctionProp = (
               return (
                 <Adder
                   key={i}
-                  className=" bg-slate-800 relative minion"
-                  addClassName="bg-slate-900 h-[42px] w-[50px] flex-shrink-0"
-                  delClassName="bg-slate-900 h-[42px] w-[50px] flex-shrink-0"
-                  inputClassName="p-[unset] px-[unset]  py-1 bg-slate-900"
+                  className=" bg-surface-tertiary relative minion"
+                  addClassName="bg-surface-secondary h-[42px] w-[50px] flex-shrink-0"
+                  delClassName="bg-surface-secondary h-[42px] w-[50px] flex-shrink-0"
+                  inputClassName="p-[unset] px-[unset]  py-1 bg-surface-secondary"
                   placeholder="New Prop"
                   showSelectMenu={true}
                   keywords={keywords}
@@ -168,14 +168,14 @@ export const MultiFunctionProp = (
                     <FitTitle className="capitalize">
                       {filterProp.name}
                     </FitTitle>
-                    {/* <p className="font-semibold capitalize border-l-[3px] border-blue-600 bg-slate-900 py-2 px-3 rounded-lg text-slate-200 flex-grow flex-shrink-0">
+                    {/* <p className="font-semibold capitalize border-l-[3px] border-blue-600 bg-surface-secondary py-2 px-3 rounded-lg text-text-primary flex-grow flex-shrink-0">
                       {filterProp.name} :
                     </p> */}
                     <section className="flex  h-[40px] w-full">
                       {filterProp.name &&
                       filterProp.name.toLowerCase() == "url" ? (
                         <Textarea
-                          className={`bg-slate-900 w-full  ${
+                          className={`bg-surface-secondary w-full  ${
                             !filterUnits[filterProp.name]
                               ? "rounded-lg"
                               : "rounded-tr-none  rounded-br-none"
@@ -188,7 +188,7 @@ export const MultiFunctionProp = (
                         />
                       ) : (
                         <Input
-                          className={`bg-slate-900 w-full  focus:border-none ${
+                          className={`bg-surface-secondary w-full  focus:border-none ${
                             !filterUnits[filterProp.name]
                               ? "rounded-lg"
                               : "rounded-tr-none  rounded-br-none"
@@ -205,7 +205,7 @@ export const MultiFunctionProp = (
                         Object.keys(units).length &&
                         filterUnits[filterProp.name]
                       ) && (
-                        <p className="w-[40px] font-bold  flex flex-shrink-0 rounded-tl-none rounded-bl-none items-center justify-center text-slate-200 bg-slate-900 h-[100%] rounded-lg">
+                        <p className="w-[40px] font-bold  flex flex-shrink-0 rounded-tl-none rounded-bl-none items-center justify-center text-text-primary bg-surface-secondary h-[100%] rounded-lg">
                           {filterUnits[filterProp.name]}
                         </p>
                       )}

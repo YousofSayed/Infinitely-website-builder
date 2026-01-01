@@ -24,7 +24,7 @@ export const ArrayInput = ({
     <main className="flex flex-col gap-2">
       <header className="flex gap-2">
         <Select
-          className="bg-slate-900"
+          className="bg-surface-secondary"
           placeholder={placeholder}
           value={val}
           isTextarea
@@ -48,7 +48,7 @@ export const ArrayInput = ({
           }}
         />
         <SmallButton
-          className="shadow-[unset] bg-slate-900"
+          className="shadow-[unset] bg-surface-secondary"
           onClick={(ev) => {
             setVal("");
             onAddClick(ev, val);
@@ -61,7 +61,7 @@ export const ArrayInput = ({
         <section>
           <Choices
             className={`flex-wrap   ${
-              array.length ? "bg-slate-900 px-2" : "px-[unset]"
+              array.length ? "bg-surface-secondary px-2" : "px-[unset]"
             }`}
             onCloseClick={onCloseClick}
             keywords={array}

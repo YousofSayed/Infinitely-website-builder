@@ -294,13 +294,13 @@ export const Layer = ({
         }}
         style={{ ...style, background: selected ? "#2563eb " : "" }}
         className={`group layer relative flex items-center justify-between w-full  p-3 rounded-md
-          transition-all hover:bg-slate-800 
+          transition-all hover:bg-surface-tertiary 
           
           ${
             isOpentNested && getLayerLength(layer)
-              ? "bg-slate-800"
-              : "bg-slate-950"
-          } ${className ? className : "bg-slate-800"} `}
+              ? "bg-surface-tertiary"
+              : "bg-surface-main"
+          } ${className ? className : "bg-surface-tertiary"} `}
       >
         <div
           id="top"
@@ -432,13 +432,13 @@ export const Layer = ({
                   ev.preventDefault();
                   ev.stopPropagation();
                 }}
-                className={` select-none custom-font-size   text-slate-200  font-semibold capitalize`}
+                className={` select-none custom-font-size   text-text-primary  font-semibold capitalize`}
               >
                 {layer.getName()}
               </p>
             ) : (
               <Input
-                className="w-[calc(100%-30px)] bg-slate-900"
+                className="w-[calc(100%-30px)] bg-surface-secondary"
                 onDoubleClick={(ev) => {
                   ev.stopPropagation();
                   ev.preventDefault();
@@ -525,7 +525,7 @@ export const Layer = ({
               opacity={1}
               clickable
               anchorSelect={`#${layer.getId()}-tb`}
-              className="bg-[#020617!important]  flex flex-col  shadow-lg shadow-slate-900 border-[2px] rounded-[.5rem!important]   border-slate-600  z-[5000]"
+              className="bg-[var(--color-surface-main)!important]  flex flex-col  shadow-lg shadow-slate-900 border-[2px] rounded-[.5rem!important]   border-border-default  z-[5000]"
               // float={true}
               // openEvents={{click:true}}
               // role="article"

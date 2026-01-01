@@ -286,7 +286,7 @@ export const SymbolsAndTemplatesHandler = ({
           <Input
           type="search"
             placeholder="Search..."
-            className="bg-slate-800 w-full"
+            className="bg-surface-tertiary w-full"
             onInput={(ev) => {
               search(ev.target.value);
             }}
@@ -306,7 +306,7 @@ export const SymbolsAndTemplatesHandler = ({
               deleteAll();
             }}
             title="Delete All"
-            className="flex-shrink-0  h-full hover:bg-[crimson!important] bg-slate-800"
+            className="flex-shrink-0  h-full hover:bg-[crimson!important] bg-surface-tertiary"
           >
             {Icons.trash("white")}
           </SmallButton>
@@ -316,7 +316,7 @@ export const SymbolsAndTemplatesHandler = ({
               exportAll();
             }}
             title="Export All"
-            className="flex-shrink-0 h-full bg-slate-800"
+            className="flex-shrink-0 h-full bg-surface-tertiary"
           >
             {Icons.export("white")}
           </SmallButton>
@@ -337,23 +337,23 @@ export const SymbolsAndTemplatesHandler = ({
             {(symbol, i) => (
               <section
                 key={i}
-                className="p-1 bg-slate-800 h-[50px] rounded-lg flex justify-between items-center  gap-3"
+                className="p-1 bg-surface-tertiary h-[50px] rounded-lg flex justify-between items-center  gap-3"
               >
-                {/* <section className="bg-slate-900 flex gap-2 items-center  px-2 w-full rounded-md h-full">
+                {/* <section className="bg-surface-secondary flex gap-2 items-center  px-2 w-full rounded-md h-full">
                   {" "}
                  
                 </section> */}
 
                 <FitTitle className="flex gap-2 items-center h-full  w-[calc(100%-115px)] overflow-hidden">
                   <figure
-                    className=" h-full py-1 w-[35px]  bg-slate-900 flex justify-center items-center rounded-lg"
+                    className=" h-full py-1 w-[35px]  bg-surface-secondary flex justify-center items-center rounded-lg"
                     dangerouslySetInnerHTML={{ __html: symbol.media }}
                   >
                     {/* <img src={URL.createObjectURL(symbol.media)} alt="" /> */}
                   </figure>
                   <span
                     title={symbol.name}
-                    className="font-semibold custom-font-size capitalize text-ellipsis overflow-hidden  text-slate-200 text-[14px] "
+                    className="font-semibold custom-font-size capitalize text-ellipsis overflow-hidden  text-text-primary text-[14px] "
                   >
                     {symbol.name}
                   </span>
@@ -365,7 +365,7 @@ export const SymbolsAndTemplatesHandler = ({
                   {showDeleteBtn && (
                     <SmallButton
                       title={"delete"}
-                      className="p-1 bg-slate-900 hover:bg-blue-600 transition-all"
+                      className="p-1 bg-surface-secondary hover:bg-brand-primary transition-all"
                       onClick={() => {
                         deleteSymbol(symbol.id, symbol.name);
                       }}
@@ -377,7 +377,7 @@ export const SymbolsAndTemplatesHandler = ({
                   {showDownloadBtn && (
                     <SmallButton
                       title={"export as json"}
-                      className="p-1 bg-slate-900 hover:bg-blue-600 transition-all"
+                      className="p-1 bg-surface-secondary hover:bg-brand-primary transition-all"
                       onClick={() => {
                         exportSymbol(symbol);
                       }}
@@ -403,7 +403,7 @@ export const SymbolsAndTemplatesHandler = ({
                   <img src={noData} className="max-w-[300px] max-h-[300px]" />
                 </figure>
                 {/* <FitTitle>No Data Here</FitTitle> */}
-                <h1 className="text-slate-200 font-semibold">
+                <h1 className="text-text-primary font-semibold">
                   No Data Founded...
                 </h1>
               </>

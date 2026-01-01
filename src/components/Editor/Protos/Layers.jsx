@@ -133,7 +133,7 @@ export const Layers = memo(() => {
             // <section
             //   key={layer.cid}
             //   id={layer.id}
-            //   className="p-2 select-none rounded-lg flex items-center justify-between bg-slate-800 text-slate-200 mb-2"
+            //   className="p-2 select-none rounded-lg flex items-center justify-between bg-surface-tertiary text-text-primary mb-2"
             // >
             //   {layer.components().models.length || ""}
             //   <span>{layer.getName().toUpperCase()}</span>

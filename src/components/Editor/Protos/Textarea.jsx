@@ -25,7 +25,7 @@ export const Textarea = ({
         setVal(ev.target.value);
         onInput(ev);
       }} 
-      className={`p-2 resize-y rounded-lg h-full min-h-[100%] z-[5] hideScrollBar text-slate-200 border-2 outline-none  focus:border-blue-600 border-transparent ${className}`}
+      className={`p-2 resize-y rounded-lg h-full min-h-[100%] z-[5] hideScrollBar text-text-primary border-2 outline-none  focus:border-blue-600 border-transparent ${className}`}
     ></textarea>
   );
 };

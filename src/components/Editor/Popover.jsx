@@ -328,7 +328,7 @@ export const Popover = ({
               isResize && `[&_*]:select-none`
             }  fixed zoom-80  resize ${
               !isCode && `overflow-hidden`
-            } bg-slate-900 border border-slate-600 shadow-md shadow-slate-950 rounded-lg  ${zIndex && `z-[${zIndex}]`} ${
+            } bg-surface-secondary border border-border-default shadow-md shadow-slate-950 rounded-lg  ${zIndex && `z-[${zIndex}]`} ${
               popoverData.isOpen ? "block" : "hidden"
             } ${popoverData.className}`}
             style={{
@@ -350,7 +350,7 @@ export const Popover = ({
             {isCode && (
               <div
                 style={{ cursor: "none" }}
-                className="z-20 absolute left-[-30px] top-0 bg-slate-800 rounded-tl-md rounded-bl-md overflow-hidden flex flex-col justify-center"
+                className="z-20 absolute left-[-30px] top-0 bg-surface-tertiary rounded-tl-md rounded-bl-md overflow-hidden flex flex-col justify-center"
               >
                 {/* <button
                 style={{ cursor: "pointer!important" }}

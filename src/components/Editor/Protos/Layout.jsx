@@ -25,7 +25,7 @@ export const Layout = memo(({}) => {
   
 
   return (
-    <section className=" p-1 flex flex-col gap-2 bg-slate-900 rounded-lg">
+    <section className=" p-1 flex flex-col gap-2 bg-surface-secondary rounded-lg">
       <Size />
 
       <Paddaing />
@@ -35,7 +35,7 @@ export const Layout = memo(({}) => {
       <Positioning />
       
       <Display/>
-      {/* <section className=" flex flex-col gap-2  rounded-lg bg-slate-900">
+      {/* <section className=" flex flex-col gap-2  rounded-lg bg-surface-secondary">
         <MiniTitle>display</MiniTitle>
         <SelectStyle
           label="display"
@@ -46,7 +46,7 @@ export const Layout = memo(({}) => {
       </section>
 
       {( option && (option.includes("flex") || option.includes("grid"))) && (
-        <section className=" flex flex-col gap-2  rounded-lg bg-slate-900">
+        <section className=" flex flex-col gap-2  rounded-lg bg-surface-secondary">
           {option.includes("flex") && <FlexLayout />}
           {option.includes("grid") && <GridLayout />}
         </section>

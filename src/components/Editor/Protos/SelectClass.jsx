@@ -22,7 +22,7 @@ export const SelectClass = () => {
   const [classesKeywrods, setClassesKeywords] = useState([]);
   const [allStyleSheetClasses, setAllStyleSheetClasses] = useState([]);
   const [selectedClassName, setSelectedClassName] = useState({
-    className: "bg-slate-900",
+    className: "bg-surface-secondary",
     index: null,
   });
 
@@ -230,7 +230,7 @@ export const SelectClass = () => {
   // const getSh
 
   return (
-    <section className="mt-3 flex flex-col gap-3 p-1 bg-slate-900 rounded-lg">
+    <section className="mt-3 flex flex-col gap-3 p-1 bg-surface-secondary rounded-lg">
       <section className="flex gap-2">
         <Select
           value={value}
@@ -263,7 +263,7 @@ export const SelectClass = () => {
         />
 
         <SmallButton
-          className="flex-shrink-0 bg-slate-800"
+          className="flex-shrink-0 bg-surface-tertiary"
           onClick={(ev) => {
             addClass(value);
           }}
@@ -276,7 +276,7 @@ export const SelectClass = () => {
         <section>
           <Choices
             keywords={classesKeywrods}
-            className="flex-wrap flex-center bg-slate-800"
+            className="flex-wrap flex-center bg-surface-tertiary"
             onCloseClick={(ev, keyword) => {
               removeClass(keyword);
               editor.trigger(InfinitelyEvents.ruleTitle.update , keyword)

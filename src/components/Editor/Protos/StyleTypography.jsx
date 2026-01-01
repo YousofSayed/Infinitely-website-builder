@@ -36,7 +36,7 @@ export const StyleTypography = memo(() => {
   // });
 
   return (
-    <section className=" flex flex-col gap-2 p-1 rounded-lg bg-slate-900">
+    <section className=" flex flex-col gap-2 p-1 rounded-lg bg-surface-secondary">
       {/* <SelectStyle
         label="Font"
         cssProp="font-family"

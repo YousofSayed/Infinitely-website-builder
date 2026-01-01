@@ -57,7 +57,7 @@ export const SidesInput = ({
       }}
 
       type="text"
-      className="p-2 text-center bg-slate-900 rounded-lg w-[35%] text-slate-200 outline-none font-semibold"
+      className="p-2 text-center bg-surface-secondary rounded-lg w-[35%] text-text-primary outline-none font-semibold"
     />
   );
 };

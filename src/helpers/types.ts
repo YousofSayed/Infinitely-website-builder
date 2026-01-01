@@ -595,6 +595,7 @@ export type ProjectSetting = {
   remove_gsap_markers_on_build: boolean;
   stop_all_animation_on_page: boolean;
   // include_canvas_styles_in_build_file: boolean;
+  optimize_outlines: boolean;
   purge_css: boolean;
   include_symbols_in_export: boolean;
   include_templates_in_export: boolean;

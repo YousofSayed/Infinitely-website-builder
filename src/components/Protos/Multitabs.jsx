@@ -20,7 +20,7 @@ export const MultiTab = ({
     <section
       ref={animatRef}
       style={style}
-      className=" flex overflow-hidden  flex-col bg-slate-900 rounded-lg h-full  text-slate-200 border-[1.5px] border-slate-600 "
+      className=" flex overflow-hidden  flex-col bg-surface-secondary rounded-lg h-full  text-text-primary border-[1.5px] border-border-default "
     >
       <nav
         style={
@@ -37,9 +37,9 @@ export const MultiTab = ({
               onTabClick(ev, index);
               setActiveTab(index);
             }}
-            className={`w-1/4 py-3 text-center backdrop-blur-md  border-r-2 capitalize border-r-slate-600 font-semibold text-slate-200 hover:bg-blue-700  hover:text-slate-200  transition duration-300 ${
+            className={`w-1/4 py-3 text-center backdrop-blur-md  border-r-2 capitalize border-r-slate-600 font-semibold text-text-primary hover:bg-blue-700  hover:text-text-primary  transition duration-300 ${
               activeTab === index
-                ? "  bg-blue-600 font-bold "
+                ? "  bg-brand-primary font-bold "
                 : "text-slate-400"
             }`}
           >

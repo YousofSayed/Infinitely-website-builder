@@ -14,7 +14,7 @@ export const SwitchButton = ({
   return (
     <button
       className={`relative overflow-hidden w-[40px] flex p-[2px] flex-shrink-0  items-center h-[20px] rounded-full ${
-        active ? "bg-blue-600" : "bg-white"
+        active ? "bg-brand-primary" : "bg-white"
       } transition-all`}
       onClick={(ev) => {
         const currentValue = !active;
@@ -25,7 +25,7 @@ export const SwitchButton = ({
     >
       <div
         className={`h-[18px] w-[18px] flex-shrink-0   rounded-full ${
-          active ? "translate-x-[20px] bg-white" : "bg-blue-600"
+          active ? "translate-x-[20px] bg-white" : "bg-brand-primary"
         } transition-all`}
       ></div>
     </button>

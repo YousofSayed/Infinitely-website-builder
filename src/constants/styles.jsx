@@ -336,7 +336,7 @@ export const styles = {
         "border-left-color",
       ],
       Component: () => (
-        <section className="  flex flex-col gap-2 rounded-lg bg-slate-900">
+        <section className="  flex flex-col gap-2 rounded-lg bg-surface-secondary">
           <BorderColor />
         </section>
       ),
@@ -352,7 +352,7 @@ export const styles = {
         "border-left-style",
       ],
       Component: () => (
-        <section className="  flex flex-col gap-2 rounded-lg bg-slate-900">
+        <section className="  flex flex-col gap-2 rounded-lg bg-surface-secondary">
           <BorderStyle />
         </section>
       ),
@@ -368,7 +368,7 @@ export const styles = {
         "border-bottom-left-radius",
       ],
       Component: () => (
-        <section className="  flex flex-col gap-2  rounded-lg bg-slate-900">
+        <section className="  flex flex-col gap-2  rounded-lg bg-surface-secondary">
           <BorderRadius />
         </section>
       ),

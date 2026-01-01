@@ -185,7 +185,7 @@ export const CreateProjectModal = ({
           onClick={(ev) => {
             setShowCrtModal(false);
           }}
-          className="fixed inset-0 bg-slate-950 bg-opacity-80 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-surface-main bg-opacity-80 flex items-center justify-center z-50"
           id="createProjectModal"
         >
           <section
@@ -193,7 +193,7 @@ export const CreateProjectModal = ({
               ev.stopPropagation();
               ev.preventDefault();
             }}
-            className="bg-slate-900 text-slate-200 rounded-lg shadow-lg max-w-lg w-full p-6"
+            className="bg-surface-secondary text-text-primary rounded-lg shadow-lg max-w-lg w-full p-6"
           >
             <div className="flex justify-between items-center border-b border-slate-800 pb-3">
               <h2 className="text-lg font-semibold">Create New Project</h2>
@@ -204,7 +204,7 @@ export const CreateProjectModal = ({
                   onCloseClick();
                   setShowCrtModal(false);
                 }}
-                className="text-slate-200 hover:text-blue-500 transition duration-150"
+                className="text-text-primary hover:text-blue-500 transition duration-150"
                 id="closeModalButton"
               >
                 ✕
@@ -229,7 +229,7 @@ export const CreateProjectModal = ({
                     id="projectName"
                     name="projectName"
                     placeholder="Enter project name"
-                    className="w-full bg-slate-800 text-slate-200 border border-slate-700 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    className="w-full bg-surface-tertiary text-text-primary border border-slate-700 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
                   />
                 </div>
                 <div className="mb-4">
@@ -248,7 +248,7 @@ export const CreateProjectModal = ({
                     name="projectDescription"
                     placeholder="Enter project description"
                     rows="3"
-                    className="w-full bg-slate-800 text-slate-200 border border-slate-700 rounded px-3 py-2 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    className="w-full bg-surface-tertiary text-text-primary border border-slate-700 rounded px-3 py-2 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-blue-600"
                   ></textarea>
                 </div>
                 <div className="mt-6">
@@ -262,7 +262,7 @@ export const CreateProjectModal = ({
                       setData({ name: "", description: "" });
                     }}
                     type="submit"
-                    className="w-full bg-blue-600 text-slate-200 hover:bg-slate-600 py-2 rounded-md transition duration-150"
+                    className="w-full bg-brand-primary text-text-primary hover:bg-slate-600 py-2 rounded-md transition duration-150"
                   >
                     Create Project
                   </button>

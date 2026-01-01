@@ -112,7 +112,7 @@ export const ScrollableToolbar = ({
               addClickClass(ev.currentTarget, "click");
               scrollToLeft();
             }}
-            className={`btn-arrow backdrop-blur-lg w-[30px] h-[30px] flex items-center justify-center z-30 rounded-lg  hover:bg-blue-600  [&:hover_path]:stroke-white transition-colors  `}
+            className={`btn-arrow backdrop-blur-lg w-[30px] h-[30px] flex items-center justify-center z-30 rounded-lg  hover:bg-brand-primary  [&:hover_path]:stroke-white transition-colors  `}
           >
             <span className="rotate-90 ">
               {Icons.arrow(!isStart ? "white" : undefined)}
@@ -144,7 +144,7 @@ export const ScrollableToolbar = ({
               addClickClass(ev.currentTarget, "click");
               scrollToRight();
             }}
-            className={`btn-arrow backdrop-blur-lg w-[30px] h-[30px] flex items-center justify-center z-30 rounded-lg  hover:bg-blue-600  [&:hover_path]:stroke-white transition-colors `}
+            className={`btn-arrow backdrop-blur-lg w-[30px] h-[30px] flex items-center justify-center z-30 rounded-lg  hover:bg-brand-primary  [&:hover_path]:stroke-white transition-colors `}
           >
             <span className="rotate-[-90deg]">
               {Icons.arrow(!isEnd ? "white" : undefined)}

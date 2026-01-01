@@ -17,7 +17,7 @@ import { AnimationName } from "./AnimationName";
 export const Animation = (() => {
 
   return (
-    <section className="mt-3 flex flex-col gap-2 p-1 bg-slate-900 rounded-lg">
+    <section className="mt-3 flex flex-col gap-2 p-1 bg-surface-secondary rounded-lg">
       <AnimationName/>
       <Property
         cssProp="animation-duration"

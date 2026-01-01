@@ -68,9 +68,9 @@ export const CustomModals = () => {
           console.log("main is me");
           // document.body.click();
         }}
-        className="z-[55] rounded-lg flex flex-col justify-between bg-slate-900 shadow-md shadow-[#020617]"
+        className="z-[55] rounded-lg flex flex-col justify-between bg-surface-secondary shadow-md shadow-[#020617]"
       >
-        <header className="w-full flex items-center rounded-lg rounded-br-none  h-[60px]  border-b-2 bg-slate-900 border-b-slate-600">
+        <header className="w-full flex items-center rounded-lg rounded-br-none  h-[60px]  border-b-2 bg-surface-secondary border-b-slate-600">
           <section className="w-full flex justify-between  items-center p-2">
             {/* <p className="text-slate-300 text-lg capitalize select-none font-semibold flex items-center gap-2">
               {modalData.title}
@@ -97,7 +97,7 @@ export const CustomModals = () => {
                   addClickClass(ev.currentTarget, "click");
                   editor.Commands.run("close:custom:modal");
                 }}
-                className="cursor-pointer z-50 flex items-center  justify-center w-[27px] h-[27px] bg-blue-600 rounded-full"
+                className="cursor-pointer z-50 flex items-center  justify-center w-[27px] h-[27px] bg-brand-primary rounded-full"
               >
                 {Icons.close("white", 2, "blue")}
               </button>
@@ -110,7 +110,7 @@ export const CustomModals = () => {
             // transform: "translateZ(0)",
             // willChange: "transform",
           }}
-          className=" p-2 h-full max-h-full overflow-auto rounded-bl-lg rounded-br-lg bg-slate-900"
+          className=" p-2 h-full max-h-full overflow-auto rounded-bl-lg rounded-br-lg bg-surface-secondary"
         >
           {modalData.JSXModal}
           {/* <RestAPIModels/> */}

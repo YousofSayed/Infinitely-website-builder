@@ -35,14 +35,14 @@ export const AppInstalling = () => {
   }, [index]);
 
   return (
-    <section className="fixed h-full w-full bg-slate-900 flex justify-center items-center">
+    <section className="fixed h-full w-full bg-surface-secondary flex justify-center items-center">
       <dialog
         ref={animatedRef}
-        className="p-2 overflow-hidden rounded-lg bg-slate-800 flex justify-center items-center gap-3 w-[300px] sm:w-[450px]"
+        className="p-2 overflow-hidden rounded-lg bg-surface-tertiary flex justify-center items-center gap-3 w-[300px] sm:w-[450px]"
       >
         <h1
           key={state}
-          className="text-slate-200 font-bold text-4xl flex-shrink-0  animate-pulse capitalize"
+          className="text-text-primary font-bold text-4xl flex-shrink-0  animate-pulse capitalize"
         >
           {state}
         </h1>

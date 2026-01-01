@@ -290,7 +290,7 @@ export const HomeHeader = () => {
   useNotifiers();
 
   return (
-    <header className="w-full h-[60px]  zoom-80 px-2 bg-slate-900  border-b-[1.5px]  border-slate-400    flex items-center justify-between gap-5">
+    <header className="w-full h-[60px]  zoom-80 px-2 bg-surface-secondary  border-b-[1.5px]  border-slate-400    flex items-center justify-between gap-5">
       <ScrollableToolbar
         className="w-[37.5%] h-full items-center flex-shrink-0 max-w-[700px]"
         space={3}
@@ -299,7 +299,7 @@ export const HomeHeader = () => {
         {/* <UlContextProvider> */}
         <ul
           ref={sizeAutoAnimate}
-          className="flex items-center gap-2 justify-between flex-shrink-0 flex-grow bg-slate-800 shadow-2xl shadow-slate-950 rounded-lg w-[150px] p-1"
+          className="flex items-center gap-2 justify-between flex-shrink-0 flex-grow bg-surface-tertiary shadow-2xl shadow-slate-950 rounded-lg w-[150px] p-1"
         >
           <Li
             title="Default size"
@@ -377,7 +377,7 @@ export const HomeHeader = () => {
             // >
             // <div className="flex-shrink flex-grow-0  w-[35px] flex justify-center items-center">
             <OptionsButton
-              className="hover:bg-blue-600 w-[30px!important] h-[30px]"
+              className="hover:bg-brand-primary w-[30px!important] h-[30px]"
               notify={Boolean(detectedMedia.others.length)}
             >
               {
@@ -406,7 +406,7 @@ export const HomeHeader = () => {
                               ? "var(--main-bg)"
                               : "",
                         }}
-                        className="p-2 bg-slate-700 w-[200px!important] flex justify-center items-center  rounded-md  transition-all hover:bg-blue-600"
+                        className="p-2 bg-slate-700 w-[200px!important] flex justify-center items-center  rounded-md  transition-all hover:bg-brand-primary"
                         onClick={(ev) => {
                           ev.preventDefault();
                           ev.stopPropagation();
@@ -467,7 +467,7 @@ export const HomeHeader = () => {
           <Input
             type="number"
             placeholder="Width"
-            className="bg-slate-800 p-1 w-[70px] text-center  h-full font-bold text-sm max-lg:flex-shrink-0"
+            className="bg-surface-tertiary p-1 w-[70px] text-center  h-full font-bold text-sm max-lg:flex-shrink-0"
             value={dimansions.width}
             onInput={(ev) => {
               // transformToNumInput(ev.target);
@@ -481,7 +481,7 @@ export const HomeHeader = () => {
             type="number"
             value={dimansions.height}
             placeholder="Height"
-            className="bg-slate-800 w-[70px] p-1  text-center  h-full font-bold text-sm max-lg:flex-shrink-0 "
+            className="bg-surface-tertiary w-[70px] p-1  text-center  h-full font-bold text-sm max-lg:flex-shrink-0 "
             onInput={(ev) => {
               // transformToNumInput(ev.target);
               setCustomDevice("height", ev.target.value);
@@ -493,7 +493,7 @@ export const HomeHeader = () => {
           <Input
             value={zoomValue}
             placeholder="Zoom"
-            className="bg-slate-800 w-[70px] p-1  text-center  h-full font-bold text-sm max-lg:flex-shrink-0 "
+            className="bg-surface-tertiary w-[70px] p-1  text-center  h-full font-bold text-sm max-lg:flex-shrink-0 "
             type="number"
             onInput={(ev) => {
               // transformToNumInput(ev.target);
@@ -508,8 +508,8 @@ export const HomeHeader = () => {
 
       {/* <Hr/> */}
       {/* <Select
-        className="p-[unset] bg-slate-800 max-w-[30%] h-[calc(100%-15px)] "
-        containerClassName="bg-slate-800"
+        className="p-[unset] bg-surface-tertiary max-w-[30%] h-[calc(100%-15px)] "
+        containerClassName="bg-surface-tertiary"
         preventInput={true}
         keywords={pages}
       /> */}
@@ -607,7 +607,7 @@ export const HomeHeader = () => {
                         <ToastMsgInfo
                           msg={`Share URL is copied , so you can share now💙`}
                         />,
-                        { progressClassName: "bg-blue-600" }
+                        { progressClassName: "bg-brand-primary" }
                       );
                     }
                     fetcherWorker.removeEventListener("message", callback);
@@ -617,7 +617,7 @@ export const HomeHeader = () => {
               }}
             />
 
-            {/* <p className="absolute top-[100%] left-[-150px] w-[300px] p-2 bg-slate-800 rounded-lg z-[500]">dadsadadl dlas,dlsadlklsakdlaksldksalkdlsalkd</p> */}
+            {/* <p className="absolute top-[100%] left-[-150px] w-[300px] p-2 bg-surface-tertiary rounded-lg z-[500]">dadsadadl dlas,dlsadlklsakdlaksldksalkdlsalkd</p> */}
           </section>
 
           <Li

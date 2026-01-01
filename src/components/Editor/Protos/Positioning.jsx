@@ -8,7 +8,7 @@ import { MiniTitle } from "./MiniTitle";
 
 export const Positioning = () => {
   return (
-    <section className="flex flex-col gap-3 rounded-lg bg-slate-900">
+    <section className="flex flex-col gap-3 rounded-lg bg-surface-secondary">
       <MiniTitle>Positioning</MiniTitle>
 
       <SelectStyle

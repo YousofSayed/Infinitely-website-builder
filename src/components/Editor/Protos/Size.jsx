@@ -10,7 +10,7 @@ import { MiniTitle } from "./MiniTitle";
 
 export const Size = () => {
   return (
-    <section className="flex flex-col gap-2  rounded-lg bg-slate-900">
+    <section className="flex flex-col gap-2  rounded-lg bg-surface-secondary">
             <MiniTitle>size</MiniTitle>
 
       {/* <ul className="flex flex-col gap-2 pb-3 border-b-2 border-b-slate-600"> */}
@@ -30,7 +30,7 @@ export const Size = () => {
         {/* </li> */}
         <Property label="Aspect ratio" cssProp="aspect-ratio" special={true}  />
       {/* </ul> */}
-      {/* <section className="flex bg-slate-800 flex-col  rounded-lg  py-1">
+      {/* <section className="flex bg-surface-tertiary flex-col  rounded-lg  py-1">
         <p className="font-bold text-[14px] pl-2 text-slate-300">Overflow: </p>
         <MultiChoice label="overflow" cssProp="overflow" choices={overflowValues} icons={[
             getIconForMultiChoice('auto'),

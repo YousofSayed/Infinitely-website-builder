@@ -27,9 +27,9 @@ export const Modal = ({
               ev.stopPropagation();
               document.body.click();
             }}
-            className="w-[65%] z-[55] rounded-lg flex flex-col justify-between bg-slate-900"
+            className="w-[65%] z-[55] rounded-lg flex flex-col justify-between bg-surface-secondary"
           >
-            <header className="w-full flex items-center rounded-lg rounded-br-none  h-[60px] border-l-[5px] border-l-blue-600 border-b-2 bg-slate-900 border-b-slate-600">
+            <header className="w-full flex items-center rounded-lg rounded-br-none  h-[60px] border-l-[5px] border-l-blue-600 border-b-2 bg-surface-secondary border-b-slate-600">
               <section className="w-full flex justify-between  items-center p-2">
                 <section className="text-slate-300 capitalize select-none font-semibold">
                   {title}
@@ -39,14 +39,14 @@ export const Modal = ({
                     addClickClass(ev.currentTarget, "click");
                     onCloseClick(ev , setShowModalController);
                   }}
-                  className="cursor-pointer z-50 flex items-center  justify-center w-[27px] h-[27px] bg-blue-600 rounded-full"
+                  className="cursor-pointer z-50 flex items-center  justify-center w-[27px] h-[27px] bg-brand-primary rounded-full"
                 >
                   {Icons.close("white", 2, "blue")}
                 </button>
               </section>
             </header>
     
-            <section className="h-[calc(100%-70px)] p-2 rounded-bl-lg rounded-br-lg bg-slate-900">
+            <section className="h-[calc(100%-70px)] p-2 rounded-bl-lg rounded-br-lg bg-surface-secondary">
               {children}
               {/* <RestAPIModels/> */}
             </section>

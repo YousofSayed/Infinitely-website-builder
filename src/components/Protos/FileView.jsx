@@ -101,7 +101,7 @@ export const FileView = ({
   return (
     <section
       
-      className={`group   relative rounded-lg p-3 bg-slate-800  flex flex-col justify-center items-center gap-2`}
+      className={`group   relative rounded-lg p-3 bg-surface-tertiary  flex flex-col justify-center items-center gap-2`}
     >
       <FitTitle className="absolute left-0 top-0 z-[100] ">
         {toMB(asset.size, 3)}MB
@@ -110,7 +110,7 @@ export const FileView = ({
         onClick={(ev) => {
           deleteAsset(asset);
         }}
-        className="absolute group-hover:flex z-[200] right-0 top-0 bg-blue-600 fill-white cursor-pointer hidden justify-center items-center rounded-full w-[23px] h-[23px]"
+        className="absolute group-hover:flex z-[200] right-0 top-0 bg-brand-primary fill-white cursor-pointer hidden justify-center items-center rounded-full w-[23px] h-[23px]"
       >
         {/* <Icons.close /> */}
         {Icons.close("white", 1.5)}
@@ -120,7 +120,7 @@ export const FileView = ({
           ev.stopPropagation();
           onItemClicked(ev, asset);
         }}
-        className=" p-2 h-[150px]  cursor-pointer rounded-lg  bg-slate-800"
+        className=" p-2 h-[150px]  cursor-pointer rounded-lg  bg-surface-tertiary"
       >
         {(asset.type.includes("video") && (
           <section>
@@ -150,7 +150,7 @@ export const FileView = ({
           </section>
         )) ||
           (asset.type.includes("audio") && (
-            <section className="h-full flex justify-between gap-2 items-center flex-col bg-slate-900 rounded-lg overflow-hidden pt-2">
+            <section className="h-full flex justify-between gap-2 items-center flex-col bg-surface-secondary rounded-lg overflow-hidden pt-2">
               {Icons.headphone("white", undefined, 75, 75)}
               <audio
                 onClick={(ev) => onItemClicked(ev, asset)}
@@ -183,7 +183,7 @@ export const FileView = ({
         tooltib-id={asset.name}
         ref={fileNameRef}
         title={asset.name}
-        className="text-slate-200 p-2 bg-slate-900 rounded-md text-ellipsis  max-w-full   text-nowrap overflow-hidden "
+        className="text-text-primary p-2 bg-surface-secondary rounded-md text-ellipsis  max-w-full   text-nowrap overflow-hidden "
       >
         {asset.name}
       </p>

@@ -27,7 +27,7 @@ export const Li = ({
   linkClassName = "",
   target,
   notify,
-  notifyBg = "bg-blue-600",
+  notifyBg = "bg-brand-primary",
   mode,
   id ,
   enableSelecting = false,
@@ -79,10 +79,10 @@ export const Li = ({
       }}
       className={`group relative li-btn h-[30px] w-[30px]     rounded-lg cursor-pointer grid place-items-center transition-all ${
         to && path.pathname?.match(to)?.filter((link) => link)?.length
-          ? "bg-blue-600"
+          ? "bg-brand-primary"
           : ""
       }  ${className}  ${
-        hover ? "hover:bg-blue-600" : ""
+        hover ? "hover:bg-brand-primary" : ""
       }`}
     >
       {to ? (

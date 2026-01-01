@@ -299,7 +299,7 @@ export const Select = ({
       ref={selectRef}
       className={`w-full p-1  h-fit rounded-lg flex  ${
         wrap && "flex-wrap gap-3 py-1 pl-2"
-      }  gap-2  ${className ? className : "bg-slate-800"} h-full flex ${
+      }  gap-2  ${className ? className : "bg-surface-tertiary"} h-full flex ${
         label ? `p-1 flex-col` : `items-center p-1 `
       }`}
     >
@@ -314,7 +314,7 @@ export const Select = ({
         className={`h-full w-full ${
           isRelative ? "relative" : ""
         }  flex items-center flex-nowrap justify-center    rounded-lg ${
-          containerClassName ? containerClassName : "bg-slate-900"
+          containerClassName ? containerClassName : "bg-surface-secondary"
         }`}
         onClick={(ev) => {
           console.log("clcickckckc");
@@ -337,7 +337,7 @@ export const Select = ({
           ref={inputRef}
           className={`w-full h-full  font-semibold   focus:border-blue-600  rounded-lg   px-2 py-2   outline-none text-white ${
             preventInput ? "pointer-events-none" : ""
-          } ${inputClassName ? inputClassName : "bg-slate-900"} `}
+          } ${inputClassName ? inputClassName : "bg-surface-secondary"} `}
           type="text"
           placeholder={placeholder || label}
           onClick={(ev) => {
@@ -446,7 +446,7 @@ export const Select = ({
                 choosenKeyword={choosenKeyword}
                 currentChoose={currentChoose}
                 innerStt={value}
-                dynamicInputClassName="bg-slate-800"
+                dynamicInputClassName="bg-surface-tertiary"
                 placeholder="Type Dynamic Content"
                 onInputClick={(ev) => {
                   ev.stopPropagation();
@@ -516,7 +516,7 @@ export const Select = ({
           </Popover>
         )}
 
-        {/* <section className="w-[300px] h-[300px] bg-slate-800 fixed left-0 top-0 z-[500]  "></section> */}
+        {/* <section className="w-[300px] h-[300px] bg-surface-tertiary fixed left-0 top-0 z-[500]  "></section> */}
       </div>
     </section>
   );

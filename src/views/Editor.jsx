@@ -185,7 +185,7 @@ export function Editor({ params }) {
           limit={10}
           pauseOnHover={true}
           position="top-left"
-          toastClassName={`bg-slate-900`}
+          toastClassName={`bg-surface-secondary`}
           className={`z-[1000000]    `}
           // containerId={`main-toast-container`}
 
@@ -194,7 +194,7 @@ export function Editor({ params }) {
         <GJEditor key={reloader}>
           {/* <WithEditor> */}
           <main
-            className="relative w-full h-full bg-slate-950 flex justify-between"
+            className="relative w-full h-full bg-surface-main flex justify-between"
             ref={mainAnimate}
           >
             {/* {!showPreview && <HomeNav />} */}
@@ -245,7 +245,7 @@ export function Editor({ params }) {
                         </section>
                       </Panel>
                       <PanelResizeHandle
-                        className={`w-[5px] bg-blue-600  opacity-0 hover:opacity-[1] transition-all`}
+                        className={`w-[5px] bg-brand-primary  opacity-0 hover:opacity-[1] transition-all`}
                       />
                     </>
                   )}
@@ -256,7 +256,7 @@ export function Editor({ params }) {
 
                 {/* {!showPreview && (
                   <>
-                    <PanelResizeHandle className="w-[5px] bg-blue-600 opacity-0 hover:opacity-[1] transition-all" />
+                    <PanelResizeHandle className="w-[5px] bg-brand-primary opacity-0 hover:opacity-[1] transition-all" />
                     <Panel defaultSize={300} order={3} id="right-panel">
                       <Aside>
                         {pathname.pathname != "/add-blocks" && (
@@ -268,7 +268,7 @@ export function Editor({ params }) {
                   </>
                 )} */}
 
-                <PanelResizeHandle className="w-[5px] bg-blue-600 opacity-0 hover:opacity-[1] transition-all" />
+                <PanelResizeHandle className="w-[5px] bg-brand-primary opacity-0 hover:opacity-[1] transition-all" />
                 <Panel defaultSize={300} order={3} id="right-panel">
                   <Aside>
                     {pathname.pathname != "/add-blocks" && <AsideControllers />}
@@ -287,7 +287,7 @@ export function Editor({ params }) {
         </GJEditor>
       </section>
     ) : (
-      <section className="h-full w-full bg-slate-950">
+      <section className="h-full w-full bg-surface-main">
         <Loader />
       </section>
     )

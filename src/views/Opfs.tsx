@@ -68,10 +68,10 @@ const OpfsChild = ({
   return (
     <main className=" h-full">
       {/* <details> */}
-      <details className="ml-3 text-slate-200">
+      <details className="ml-3 text-text-primary">
         {children}
 
-        <summary className="p-2 bg-slate-800 w-[38%] rounded-lg">
+        <summary className="p-2 bg-surface-tertiary w-[38%] rounded-lg">
           <div
             style={{
               display: "inline-block",
@@ -119,7 +119,7 @@ const OpfsChild = ({
             <section key={index} className="">
               {handle?.kind == "file" && (
                 <div
-                  className="bg-slate-800 rounded-lg p-2 flex items-center ml-3 mb-2 w-[30%] justify-between"
+                  className="bg-surface-tertiary rounded-lg p-2 flex items-center ml-3 mb-2 w-[30%] justify-between"
                   onClick={async (ev) => {
                     ev.stopPropagation();
                     ev.preventDefault();
@@ -187,7 +187,7 @@ const OpfsChild = ({
           ))}
       </details>
       {/* </details> */}
-      {/* {opfsData && opfsData.map((handle: FileSystemDirectoryHandle | FileSystemFileHandle)=><INf className='text-slate-200 capitalize'>
+      {/* {opfsData && opfsData.map((handle: FileSystemDirectoryHandle | FileSystemFileHandle)=><INf className='text-text-primary capitalize'>
         <summary>{handle.name}</summary>
         {handle.kind == 'directory' && <Opfs root={(handle as any)}/>}
       </INf>)} */}
@@ -197,7 +197,7 @@ const OpfsChild = ({
 
 export const Opfs = () => {
   return (
-    <section className="bg-slate-900 h-full w-full p-2 overflow-auto">
+    <section className="bg-surface-secondary h-full w-full p-2 overflow-auto">
       <OpfsChild root={`/projects`} />
     </section>
   );

@@ -146,6 +146,12 @@ export const SettingsModal = () => {
           });
         });
       }, 100);
+
+      isCurrentChange("optimize_outlines", () => {
+        reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {
+          state: true,
+        });
+      });
     },
     [currentChange]
   );
@@ -191,13 +197,13 @@ export const SettingsModal = () => {
 
   return (
     <section className="h-full w-full overflow-auto flex flex-col gap-2 pr-1">
-      <section className="flex flex-col gap-4 text-slate-200 font-semibold">
+      <section className="flex flex-col gap-4 text-text-primary font-semibold">
         {/* <h1 className="py-2 px-[30px] border-b-2 border-b-slate-600 w-fit">
           Global Settings
         </h1> */}
         {/* <MiniTitle>Global Settings</MiniTitle> */}
         <Input
-          className="w-full bg-slate-800"
+          className="w-full bg-surface-tertiary"
           placeholder="Search..."
           value={searchValue}
           onInput={(ev) => {
@@ -215,7 +221,7 @@ export const SettingsModal = () => {
               <article
                 key={i}
                 title={key}
-                className="flex justify-between  gap-2 items-center px-2 py-3 rounded-lg bg-slate-800"
+                className="flex justify-between  gap-2 items-center px-2 py-3 rounded-lg bg-surface-tertiary"
               >
                 <h1 className="custom-font-size overflow-hidden text-ellipsis  flex-shrink capitalize">
                   {key.replaceAll("_", " ")}
@@ -244,7 +250,7 @@ export const SettingsModal = () => {
           </For>
         </section>
       </section>
-      <hr className="border-slate-600" />
+      <hr className="border-border-default" />
       <footer className="flex gap-2">
         <Button
           onClick={async (ev) => {

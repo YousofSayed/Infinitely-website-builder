@@ -51,7 +51,7 @@ export const FitTitle = ({ children, id, className, isShowTooltib = false, ...pr
       {...props}
       id={id || ""}
       tooltib-id={tbId.current}
-      className={`${className} font-semibold px-2 py-1  bg-blue-600 rounded-lg w-fit text-slate-200`}
+      className={`${className} font-semibold px-2 py-1  bg-brand-primary rounded-lg w-fit text-text-primary`}
     >
       {children}
     </h1>

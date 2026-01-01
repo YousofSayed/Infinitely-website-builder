@@ -318,7 +318,7 @@ export const Iframe = () => {
     <section className="relative bg-[#aaa]    h-full" ref={autoAnimate}>
       {showAnimBuilder && (
         <section className="grid place-items-center p-2 absolute top-0 left-0 z-20 bg-black/40 w-full h-full">
-          <section className="flex flex-col items-center justify-center self-center p-3 bg-slate-900 shadow-2xl shadow-slate-950 rounded-lg gap-5">
+          <section className="flex flex-col items-center justify-center self-center p-3 bg-surface-secondary shadow-2xl shadow-slate-950 rounded-lg gap-5">
             <figure className="relative  w-fit ">
               {Icons.animation(undefined, undefined, "#2563eb", 60, 60)}
             </figure>
@@ -425,7 +425,7 @@ export const Iframe = () => {
       {/* {showPreview && ( */}
 
       {showLoader && (
-        <section className="absolute top-0 left-0 w-full h-full z-[1000000] bg-slate-900 flex justify-center items-center">
+        <section className="absolute top-0 left-0 w-full h-full z-[1000000] bg-surface-secondary flex justify-center items-center">
           <Loader zIndex={1000} />
         </section>
       )}
@@ -448,12 +448,12 @@ export const Iframe = () => {
                 ref={iframeContainer}
               >
                 {/* resizing elements */}
-                <div className="absolute top-0 left-[calc(50%-40px)] w-[80px] h-[5px] bg-blue-600"></div>
+                <div className="absolute top-0 left-[calc(50%-40px)] w-[80px] h-[5px] bg-brand-primary"></div>
                 <div></div>
                 <div></div>
                 {/* resizing elements */}
                 {/* {showPreview && ( */}
-                <header className="w-full h-[60px] flex items-center justify-between p-2 rounded-tl-lg rounded-tr-lg  bg-slate-900">
+                <header className="w-full h-[60px] flex items-center justify-between p-2 rounded-tl-lg rounded-tr-lg  bg-surface-secondary">
                   <section className="flex items-center  gap-5 w-[50%]">
                     <FitTitle className=" w-[30%!important] h-full rounded-lg font-semibold capitalize text-xl text-center">
                       {localStorage.getItem(current_page_id)}

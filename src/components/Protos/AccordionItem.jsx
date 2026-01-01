@@ -12,7 +12,7 @@ export const AccordionItem = memo(
     length,
     children,
     notify,
-    notifyBg = "bg-blue-600",
+    notifyBg = "bg-brand-primary",
     onSwitch = (state) => {},
   }) => {
     return (

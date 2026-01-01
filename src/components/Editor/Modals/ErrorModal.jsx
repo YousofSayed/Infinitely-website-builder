@@ -13,7 +13,7 @@ export const ErrorModal = ({children}) => {
 
   return (
     <section className="flex flex-col gap-4">
-      <article className="flex flex-col gap-4 bg-gray-950 p-2 text-slate-200 font-semibold rounded-lg">
+      <article className="flex flex-col gap-4 bg-gray-950 p-2 text-text-primary font-semibold rounded-lg">
         {children}
       </article>
 

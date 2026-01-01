@@ -147,16 +147,16 @@ export const DynamicAttributes = () => {
 
   return (
     <main className="flex flex-col gap-2">
-      <section className="p-2 bg-slate-800 rounded-lg ">
+      <section className="p-2 bg-surface-tertiary rounded-lg ">
         <article className="flex flex-col gap-1">
-          <p className="w-fit p-1 bg-slate-800 rounded-lg custom-font-size text-slate-200 font-semibold">
+          <p className="w-fit p-1 bg-surface-tertiary rounded-lg custom-font-size text-text-primary font-semibold">
             Choose Attribute :{" "}
           </p>{" "}
           <section className="flex gap-2">
             <Select
               value={attributeName}
               placeholder="Select Attribute"
-              className="bg-slate-900"
+              className="bg-surface-secondary"
               keywords={defaultAttributeNames}
               onInput={(value) => {
                 setAttributeName(value);
@@ -170,7 +170,7 @@ export const DynamicAttributes = () => {
             />
 
             <SmallButton
-              className="bg-slate-900"
+              className="bg-surface-secondary"
               onClick={() => {
                 addAttribute({ attrName: attributeName });
               }}
@@ -188,18 +188,18 @@ export const DynamicAttributes = () => {
         return (
           <section
             key={i}
-            className={`p-2 bg-slate-800 rounded-lg flex flex-col gap-2 ${
+            className={`p-2 bg-surface-tertiary rounded-lg flex flex-col gap-2 ${
               attributes[attrName].show ? "border-2 border-blue-500" : ""
             }`}
           >
             <section className=" flex flex-col gap-2  rounded-lg">
               <article className="flex gap-2 w-full justify-between items-center">
-                <MiniTitle className="text-xl w-full text-slate-200 font-semibold">
+                <MiniTitle className="text-xl w-full text-text-primary font-semibold">
                   {attrName}
                 </MiniTitle>
 
                 <SmallButton
-                  className="flex-shrink-0 py-2 bg-slate-900"
+                  className="flex-shrink-0 py-2 bg-surface-secondary"
                   onClick={(ev) => {
                     deleteAttribute({ attrName });
                   }}
@@ -208,7 +208,7 @@ export const DynamicAttributes = () => {
                 </SmallButton>
 
                 <SmallButton
-                  className="flex-shrink-0 py-2 bg-slate-900"
+                  className="flex-shrink-0 py-2 bg-surface-secondary"
                   onClick={(ev) => {
                     closeAllTabs({ attrName });
                   }}
@@ -221,7 +221,7 @@ export const DynamicAttributes = () => {
                 <>
                   {/* <section className="flex gap-2 ">
                     <Select
-                      className="bg-slate-900"
+                      className="bg-surface-secondary"
                       keywords={dynmaicValuesKeywords}
                       placeholder="Choose Dynamic Value"
                       // isTextarea
@@ -244,7 +244,7 @@ export const DynamicAttributes = () => {
                       }}
                     />
                     <SmallButton
-                      className="bg-slate-900"
+                      className="bg-surface-secondary"
                       onClick={(ev) => {
                         addDynmaicValue({
                           value: attributes[attrName].lastDynamicValue,
@@ -263,8 +263,8 @@ export const DynamicAttributes = () => {
                     allowCmdsContext
                     allowRestAPIModelsContext
                     placeholder="Type dynamic content..."
-                    className="bg-slate-900 "
-                    inputClassName="py-3 bg-slate-900"
+                    className="bg-surface-secondary "
+                    inputClassName="py-3 bg-surface-secondary"
                     replaceLastWorld
                     codeProps={{
                       language: "javascript",
@@ -315,7 +315,7 @@ export const DynamicAttributes = () => {
 
                       setAttributeContent({ attrName, value: ev.target.value });
                     }}
-                    className="bg-slate-900"
+                    className="bg-surface-secondary"
                     placeholder="Type dynamic content"
                   /> */}
                 </>
@@ -329,7 +329,7 @@ export const DynamicAttributes = () => {
         <Select
           value={attributeName}
           placeholder="Attribute Name"
-          className="w-full bg-slate-800 py-1 px-1"
+          className="w-full bg-surface-tertiary py-1 px-1"
           keywords={defaultAttributeNames}
           onInput={(value) => {
             setAttributeName(value);

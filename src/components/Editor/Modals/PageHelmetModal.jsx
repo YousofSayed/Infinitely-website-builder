@@ -232,8 +232,8 @@ export const PageHelmetModal = () => {
 
   return (
     <section className="flex flex-col gap-3 ">
-      <header className="flex h-[45px] gap-3 justify-between p-1 rounded-lg bg-slate-800">
-        <section className="group p-1 bg-slate-900 text-[14px] font-semibold rounded-lg flex items-center gap-2 text-slate-200">
+      <header className="flex h-[45px] gap-3 justify-between p-1 rounded-lg bg-surface-tertiary">
+        <section className="group p-1 bg-surface-secondary text-[14px] font-semibold rounded-lg flex items-center gap-2 text-text-primary">
           <button
             className="flex items-center gap-2 p-1"
             onClick={(ev) => {
@@ -251,7 +251,7 @@ export const PageHelmetModal = () => {
         </FitTitle>
       </header>
 
-      <section className="flex   gap-2 bg-slate-800 p-2 rounded-lg">
+      <section className="flex   gap-2 bg-surface-tertiary p-2 rounded-lg">
         <FitTitle className="flex  w-[20%!important] items-center justify-center flex-shrink-0 ">
           Site Icon
         </FitTitle>
@@ -270,7 +270,7 @@ export const PageHelmetModal = () => {
 
           <SmallButton
             title="Upload Site Icon"
-            className="text-lg h-full bg-slate-900 font-semibold capitalize"
+            className="text-lg h-full bg-surface-secondary font-semibold capitalize"
             onClick={(ev) => {
               inputFileRef.current.click();
             }}
@@ -280,7 +280,7 @@ export const PageHelmetModal = () => {
 
           <input
             type="file"
-            className="hidden bg-slate-900"
+            className="hidden bg-surface-secondary"
             accept="image/*"
             ref={inputFileRef}
             onChange={(ev) => {
@@ -297,13 +297,13 @@ export const PageHelmetModal = () => {
         </section>
       </section>
 
-      <section className="flex  gap-2 bg-slate-800 p-2  rounded-lg">
+      <section className="flex  gap-2 bg-surface-tertiary p-2  rounded-lg">
         <FitTitle className="flex items-center justify-center flex-shrink-0 w-[20%!important]">
           Page Title{" "}
         </FitTitle>
         <Input
           placeholder="Page Title"
-          className="bg-slate-900 py-1 w-full"
+          className="bg-surface-secondary py-1 w-full"
           value={helmet.title || ""}
           onInput={(ev) => {
             updatePageHelmet({
@@ -314,13 +314,13 @@ export const PageHelmetModal = () => {
         />
       </section>
 
-      <section className="flex  gap-2 bg-slate-800 p-2 rounded-lg">
+      <section className="flex  gap-2 bg-surface-tertiary p-2 rounded-lg">
         <FitTitle className="capitalize w-[20%!important] flex justify-center items-center flex-shrink-0">
           author
         </FitTitle>
         <Input
           placeholder="Author"
-          className="bg-slate-900 py-1 w-full rounded-lg"
+          className="bg-surface-secondary py-1 w-full rounded-lg"
           value={helmet.author || ""}
           onInput={(ev) => {
             updatePageHelmet({
@@ -331,11 +331,11 @@ export const PageHelmetModal = () => {
         />
       </section>
 
-      <section className="flex flex-col gap-2 bg-slate-800 p-2 rounded-lg">
+      <section className="flex flex-col gap-2 bg-surface-tertiary p-2 rounded-lg">
         <FitTitle className="capitalize">description</FitTitle>
         <textarea
           placeholder="Description"
-          className="bg-slate-900  px-2 py-3 rounded-lg text-white font-semibold outline-none border-2 border-transparent focus:border-blue-600"
+          className="bg-surface-secondary  px-2 py-3 rounded-lg text-white font-semibold outline-none border-2 border-transparent focus:border-blue-600"
           value={helmet.description || ""}
           onInput={(ev) => {
             console.log(ev.target.value);
@@ -347,11 +347,11 @@ export const PageHelmetModal = () => {
         />
       </section>
 
-      <section className="flex flex-col gap-2 bg-slate-800 p-2 rounded-lg">
+      <section className="flex flex-col gap-2 bg-surface-tertiary p-2 rounded-lg">
         <FitTitle className="capitalize">keywords</FitTitle>
         <textarea
           placeholder="keywords Ex : keywords , keyword1 , keyword2"
-          className="bg-slate-900 px-2 py-3 rounded-lg text-white font-semibold outline-none border-2 border-transparent focus:border-blue-600"
+          className="bg-surface-secondary px-2 py-3 rounded-lg text-white font-semibold outline-none border-2 border-transparent focus:border-blue-600"
           value={helmet.keywords || ""}
           onInput={(ev) => {
             updatePageHelmet({
@@ -362,7 +362,7 @@ export const PageHelmetModal = () => {
         />
       </section>
 
-      <section className=" flex flex-col gap-2 bg-slate-800 p-2 rounded-lg">
+      <section className=" flex flex-col gap-2 bg-surface-tertiary p-2 rounded-lg">
         <FitTitle>Custom Meta Tags</FitTitle>
         <Select
           isCode

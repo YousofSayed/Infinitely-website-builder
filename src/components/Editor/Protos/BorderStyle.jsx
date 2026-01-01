@@ -50,7 +50,7 @@ export const BorderStyle = () => {
   return (
     <section className={`flex flex-col gap-3`}>
       <FitTitle className="capitalize">border style</FitTitle>
-      <ScrollableToolbar className="flex justify-between gap-1 p-2 bg-slate-800 rounded-lg" space="3">
+      <ScrollableToolbar className="flex justify-between gap-1 p-2 bg-surface-tertiary rounded-lg" space="3">
         <SelectedBorder
           borderName={"border-t-2"}
           borderDir="top"

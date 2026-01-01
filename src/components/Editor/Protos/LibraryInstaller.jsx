@@ -67,7 +67,7 @@ export const LibraryInstaller = () => {
             id="search"
             type="text"
             placeholder="Search by library name..."
-            className="w-full  p-4 rounded-lg bg-slate-950 border border-slate-800 focus:ring-2 focus:ring-blue-600 focus:outline-none  font-semibold placeholder-slate-500"
+            className="w-full  p-4 rounded-lg bg-surface-main border border-slate-800 focus:ring-2 focus:ring-blue-600 focus:outline-none  font-semibold placeholder-slate-500"
             onInput={(ev) => {
               onInput(ev.target.value);
             }}

@@ -4,7 +4,7 @@ import { MiniTitle } from "./MiniTitle";
 
 export const Margin = () => {
   return (
-    <section className=" bg-slate-900 flex flex-col gap-2 rounded-lg">
+    <section className=" bg-surface-secondary flex flex-col gap-2 rounded-lg">
       <MiniTitle>Margin</MiniTitle>
       <DirectionsModel
         tProp="margin-top"

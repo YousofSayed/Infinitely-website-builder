@@ -164,14 +164,14 @@
 //   };
 
 //   return (
-//     <main className="flex flex-col gap-2 p-2 bg-slate-800 rounded-lg">
-//       {/* <p className="w-fit p-1 bg-slate-800 rounded-lg custom-font-size text-slate-200 font-semibold">
+//     <main className="flex flex-col gap-2 p-2 bg-surface-tertiary rounded-lg">
+//       {/* <p className="w-fit p-1 bg-surface-tertiary rounded-lg custom-font-size text-text-primary font-semibold">
 //         Choose Model :{" "}
 //       </p>
 //       <Select
-//         className="bg-slate-900 "
-//         inputClassName="py-3 bg-slate-900"
-//         // containerClassName="p-1 bg-slate-800"
+//         className="bg-surface-secondary "
+//         inputClassName="py-3 bg-surface-secondary"
+//         // containerClassName="p-1 bg-surface-tertiary"
 //         value={choosedModel}
 //         placeholder="Choose Model"
 //         keywords={modelsNames}
@@ -182,15 +182,15 @@
 
 //       {/* {!!Object.keys(modelKeywords).length && ( */}
 //       <>
-//         <p className="w-fit p-2 bg-slate-800 rounded-lg custom-font-size text-slate-200 font-semibold">
+//         <p className="w-fit p-2 bg-surface-tertiary rounded-lg custom-font-size text-text-primary font-semibold">
 //           Enter Value :{" "}
 //         </p>
 //         {/* <section className="w-full flex  gap-2">
 //           <Select
 //             value={val}
 //             keywords={modelKeywords}
-//             className="bg-slate-900 "
-//             inputClassName="py-3 bg-slate-900"
+//             className="bg-surface-secondary "
+//             inputClassName="py-3 bg-surface-secondary"
 //             placeholder="Choose Value"
 //             onInput={(value) => {
 //               setVal(value);
@@ -213,7 +213,7 @@
 //           />
 
 //           <SmallButton
-//             className="bg-slate-900 shadow-[unset!important] flex-shrink-0"
+//             className="bg-surface-secondary shadow-[unset!important] flex-shrink-0"
 //             onClick={() => {
 //               addContent(`\${${val}}`);
 //             }}
@@ -235,8 +235,8 @@
 //           // isTextarea
 //           keywords={modelKeywords}
 //           replaceLastWorld={true}
-//           className="bg-slate-900 "
-//           inputClassName="py-3 bg-slate-900"
+//           className="bg-surface-secondary "
+//           inputClassName="py-3 bg-surface-secondary"
 //           placeholder="Enter Dynamic Content"
 //           isCode
 //           isTemplateEngine
@@ -268,7 +268,7 @@
 
 //         {/* {!!choosesModelsVals.length && (
 //             <Choices
-//               className="bg-slate-900 flex-wrap"
+//               className="bg-surface-secondary flex-wrap"
 //               keywords={choosesModelsVals}
 //               onCloseClick={(ev, keyword, index) => {
 //                 removeContent(index);

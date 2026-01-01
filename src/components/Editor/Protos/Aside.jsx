@@ -13,7 +13,7 @@ export const Aside = ({ children, className = "", dir = "left" , style }) => {
 
     style={style}
       ref={parent}
-      className={`${className}  relative backdrop-blur-lg  h-full  bg-slate-900 p-2 flex flex-col   overflow-y-auto hideScrollBar`}
+      className={`${className}  relative backdrop-blur-lg  h-full  bg-surface-secondary p-2 flex flex-col   overflow-y-auto hideScrollBar`}
     >
       {/* <section id="" className="h-full w-full  flex flex-col gap-3  overflow-y-auto hideScrollBar">
         {children}
@@ -25,7 +25,7 @@ export const Aside = ({ children, className = "", dir = "left" , style }) => {
         <PanelResizeHandle
           className={`flex  items-center justify-center opacity-0  hover:opacity-[1] select-none transition-all absolute w-[5px] h-full  top-0 ${
             dir == "left" ? "left-0" : "right-0"
-          } bg-blue-600 cursor-col-resize`}
+          } bg-brand-primary cursor-col-resize`}
         />
       )} */}
     </aside>

@@ -224,6 +224,7 @@ export let projectSettingsType = {
   enable_auto_save: true,
   stop_all_animation_on_page: false,
   remove_gsap_markers_on_build: true,
+  optimize_outlines:false,
   // purge_css: false,
   include_symbols_in_export: true,
   include_templates_in_export: true,

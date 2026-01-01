@@ -52,17 +52,17 @@ export const LibraryUploader = () => {
 
   return (
     <section className="p-1 rounded-lg min-h-full h-full flex flex-col">
-      <header className="flex items-center justify-between gap-2 p-2 mb-2 bg-slate-800 rounded-lg">
+      <header className="flex items-center justify-between gap-2 p-2 mb-2 bg-surface-tertiary rounded-lg">
         <Input
           placeholder="Add Library Url"
-          className="w-full bg-slate-900"
+          className="w-full bg-surface-secondary"
           onInput={(ev) => {
             onInput("latest", ev.target.value);
           }}
         />
         <Input
           placeholder="Add Library Name"
-          className="w-full bg-slate-900"
+          className="w-full bg-surface-secondary"
           onInput={(ev) => {
             onInput("name", ev.target.value);
           }}

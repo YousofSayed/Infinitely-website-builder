@@ -201,11 +201,11 @@ export const CustomFontsInstaller = () => {
                 return (
                   <section
                     key={i}
-                    className="flex items-center justify-between  gap-2 p-2 bg-slate-800 rounded-lg"
+                    className="flex items-center justify-between  gap-2 p-2 bg-surface-tertiary rounded-lg"
                   >
                     <Input
                       placeholder="Font File Name"
-                      className="w-full bg-slate-900"
+                      className="w-full bg-surface-secondary"
                       value={file.name}
                       onInput={(ev) => {
                         changeFileName(ev.target.value, i);

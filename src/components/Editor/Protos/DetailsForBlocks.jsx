@@ -40,7 +40,7 @@ export const DetailsForBlocks = (({ label, HTMLChildren }) => {
     <section
       id={label}
       ref={blocksContainerRef}
-      className=" grid custom-grid-col p-2 bg-slate-900 rounded-lg"
+      className=" grid custom-grid-col p-2 bg-surface-secondary rounded-lg"
     ></section>
     // </AccordionItem>
   );

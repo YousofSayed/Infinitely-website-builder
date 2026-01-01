@@ -216,8 +216,8 @@ export const ReusableSympol = () => {
   }, []);
 
   return (
-    <section className="w-full z-50 p-2 flex flex-col gap-2 overflow-auto bg-slate-800 rounded-lg ">
-      <header className="p-2 z-50 rounded-lg flex gap-4 justify-between bg-slate-900">
+    <section className="w-full z-50 p-2 flex flex-col gap-2 overflow-auto bg-surface-tertiary rounded-lg ">
+      <header className="p-2 z-50 rounded-lg flex gap-4 justify-between bg-surface-secondary">
         <Input
           value={props.name}
           autoFocus={true}
@@ -225,7 +225,7 @@ export const ReusableSympol = () => {
           onInput={(ev) => {
             onInput(ev.target.value, "name");
           }}
-          className="bg-slate-800 w-[40%]"
+          className="bg-surface-tertiary w-[40%]"
         />
         <Select
           keywords={keywordsCtg}
@@ -235,12 +235,12 @@ export const ReusableSympol = () => {
           }}
           onEnterPress={(value) => onInput(value, "category")}
           value={props.category}
-          className="bg-slate-800 w-[40%]"
+          className="bg-surface-tertiary w-[40%]"
           onItemClicked={(value) => onInput(value, "category")}
         />
         <Button onClick={onSave}>Save</Button>
       </header>
-      {/* <main className="bg-slate-900 overflow-auto grid place-items-center rounded-lg p-2 h-[100%]">
+      {/* <main className="bg-surface-secondary overflow-auto grid place-items-center rounded-lg p-2 h-[100%]">
         {!!imgSrc && (
           <img src={imgSrc} className="w-full border-2 border-slate-400"></img>
         )}

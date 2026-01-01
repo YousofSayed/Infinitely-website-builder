@@ -134,7 +134,7 @@ textarea,
 }
 
 button.clicked {
-  @apply bg-blue-600 rounded-lg flex items-center justify-center;
+  @apply bg-brand-primary rounded-lg flex items-center justify-center;
 }
 
 /* button.clicked svg{
@@ -228,7 +228,7 @@ button.clicked svg path {
   left: 50%;
   transform: translateX(-50%);
   background: #2563eb;
-  @apply bg-blue-600 rounded-md;
+  @apply bg-brand-primary rounded-md;
   transition: 0.2s;
 }
 
@@ -320,11 +320,11 @@ details[open] summary {
 }
 
 .gjs-one-bg {
-  @apply bg-slate-900 rounded-lg text-white custom-font-size;
+  @apply bg-surface-secondary rounded-lg text-white custom-font-size;
 }
 
 .gjs-two-color {
-  @apply text-slate-200;
+  @apply text-text-primary;
 }
 
 /* Tertiary color for the background */
@@ -335,7 +335,7 @@ details[open] summary {
 
 .gjs-block {
   align-self: stretch !important;
-  @apply w-full h-full bg-slate-800 border-none p-2 m-0 shadow-none rounded-lg hover:text-slate-200 text-slate-300  font-bold flex justify-evenly items-center self-stretch;
+  @apply w-full h-full bg-surface-tertiary border-none p-2 m-0 shadow-none rounded-lg hover:text-text-primary text-slate-300  font-bold flex justify-evenly items-center self-stretch;
 }
 
 .gjs-blocks-c {
@@ -367,7 +367,7 @@ details[open] summary {
   align-items: center !important;
   background-color: unset !important ;
   padding: unset !important;
-  /* @apply text-slate-200 font-bold text-[12px] rounded-lg  bg-blue-500  gap-3 items-center  p-[unset!important]; */
+  /* @apply text-text-primary font-bold text-[12px] rounded-lg  bg-blue-500  gap-3 items-center  p-[unset!important]; */
 }
 
 .gjs-badge svg {
@@ -402,7 +402,7 @@ details[open] summary {
 }
 
 .gjs-toolbar-items {
-  @apply items-center gap-3 py-[5px] px-2 flex bg-blue-600;
+  @apply items-center gap-3 py-[5px] px-2 flex bg-brand-primary;
 }
 
 .gjs-toolbar svg {
@@ -416,7 +416,7 @@ details[open] summary {
 }
 
 .gjs-btn-prim {
-  @apply py-[7.5px] px-[30px]  font-bold bg-blue-600 rounded-lg  text-white flex custom-font-size justify-center items-center;
+  @apply py-[7.5px] px-[30px]  font-bold bg-brand-primary rounded-lg  text-white flex custom-font-size justify-center items-center;
 }
 
 .gjs-am-add-asset {
@@ -430,7 +430,7 @@ details[open] summary {
 .gjs-title,
 .gjs-sm-sector-title {
   direction: rtl;
-  @apply w-full bg-slate-800  p-[10px] flex justify-between items-center  rounded-lg text-slate-300 break-all capitalize custom-font-size  font-bold h-full mr-2 !important;
+  @apply w-full bg-surface-tertiary  p-[10px] flex justify-between items-center  rounded-lg text-slate-300 break-all capitalize custom-font-size  font-bold h-full mr-2 !important;
 }
 
 .gjs-blocks-cs.gjs-one-bg.gjs-two-color {
@@ -438,11 +438,11 @@ details[open] summary {
 }
 
 .gjs-sm-properties {
-  @apply py-3 px-2 bg-slate-800;
+  @apply py-3 px-2 bg-surface-tertiary;
 }
 
 .gjs-sm-property {
-  @apply w-full text-slate-300 custom-font-size font-bold bg-slate-900 py-1 rounded-lg flex justify-between items-center;
+  @apply w-full text-slate-300 custom-font-size font-bold bg-surface-secondary py-1 rounded-lg flex justify-between items-center;
 }
 
 .gjs-block-category .gjs-title {
@@ -458,12 +458,12 @@ details[open] summary {
 }
 
 .gjs-layer-item {
-  @apply p-3 bg-slate-800 transition-all mt-2;
+  @apply p-3 bg-surface-tertiary transition-all mt-2;
 }
 
 .gjs-layer-item:hover {
   /* all: unset !important; */
-  @apply bg-slate-800 !important;
+  @apply bg-surface-tertiary !important;
 }
 
 .gjs-layer-caret {
@@ -492,5 +492,5 @@ details[open] summary {
 }
 
 .gjs-selected [data-toggle-select=""] {
-  @apply bg-blue-600 !important;
+  @apply bg-brand-primary !important;
 }

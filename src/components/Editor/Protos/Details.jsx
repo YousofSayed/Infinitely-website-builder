@@ -14,7 +14,7 @@ export const Details = ({ children, label, ref, id , setIsShow = (_)=>{} , class
   return (
     <section
       ref={ref}
-      className={`bg-slate-950 w-full   transition-[padding] rounded-lg select-none ${className}`}
+      className={`bg-surface-main w-full   transition-[padding] rounded-lg select-none ${className}`}
       onContextMenu={(ev)=>{ev.preventDefault()}}
     >  
       <div
@@ -29,7 +29,7 @@ export const Details = ({ children, label, ref, id , setIsShow = (_)=>{} , class
           
         }}
         className={`flex cursor-pointer items-center border-l-[5px] border-l-blue-600  justify-between p-2 rounded-lg text-slate-300 text-lg font-bold ${
-          uuid.current == accorddingId ? "bg-slate-800 " : "bg-slate-800"
+          uuid.current == accorddingId ? "bg-surface-tertiary " : "bg-surface-tertiary"
         }`}
       >
         <p className="capitalize text-[15px]">{label} </p>

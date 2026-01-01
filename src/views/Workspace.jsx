@@ -39,9 +39,9 @@ export const Workspace = memo(() => {
   });
   useWorkerToast();
   return (
-    <main className=" h-full bg-slate-900 flex flex-col gap-2 pb-2 overflow-hidden">
+    <main className=" h-full bg-surface-secondary flex flex-col gap-2 pb-2 overflow-hidden">
       <ToastContainer
-        toastClassName={`bg-slate-900`}
+        toastClassName={`bg-surface-secondary`}
         className={`z-[1000000000000]    `}
         autoClose={3000}
         draggable={true}
@@ -49,7 +49,7 @@ export const Workspace = memo(() => {
         // limit={5}
         pauseOnHover={true}
         position="bottom-right"
-        // progressClassName={`bg-blue-600`}
+        // progressClassName={`bg-brand-primary`}
         // stacked={true}
       />
       <Header />

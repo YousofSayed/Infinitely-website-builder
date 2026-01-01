@@ -17,7 +17,7 @@ export const BrowserWindow = () => {
           <li className="w-[15px] h-[15px] bg-yellow-600 rounded-full"></li>
         </ul>
 
-        <h1 className="text-slate-200 text-md p-2 bg-slate-800 rounded-lg font-semibold">
+        <h1 className="text-text-primary text-md p-2 bg-surface-tertiary rounded-lg font-semibold">
           {(editor && editor.Pages.getSelected().getName()) ||
             "No Named Page..."}
         </h1>

@@ -164,7 +164,7 @@ export const Menu = ({
   return isDynamic ? (
     <section
     ref={animatRef}
-      className={`w-full shadow-lg flex gap-2  shadow-gray-950 border-[1px] max-h-[300px] border-slate-600 rounded-lg   bg-slate-900 overflow-hidden   ${
+      className={`w-full shadow-lg flex gap-2  shadow-gray-950 border-[1px] max-h-[300px] border-border-default rounded-lg   bg-surface-secondary overflow-hidden   ${
         className ? className : "w-full"
       }`}
     >
@@ -184,13 +184,13 @@ export const Menu = ({
                 }}
                 className={`${
                   currentChoose == index
-                    ? "bg-blue-600 hover:bg-blue-600"
+                    ? "bg-brand-primary hover:bg-brand-primary"
                     : "bg-transparent hover:bg-gray-700"
                 } ${
                   item.toLowerCase() == "No Items Founded...".toLowerCase()
                     ? "pointer-events-none bg-transparent"
                     : ""
-                }  py-[12px] px-2 text-nowrap w-full  overflow-x-auto   transition-all cursor-pointer [&:not(:last-child)]:border-b-[1px] border-slate-600  text-slate-200  text-[16px] font-semibold `}
+                }  py-[12px] px-2 text-nowrap w-full  overflow-x-auto   transition-all cursor-pointer [&:not(:last-child)]:border-b-[1px] border-border-default  text-text-primary  text-[16px] font-semibold `}
               >
                 {item}
               </li>
@@ -215,13 +215,13 @@ export const Menu = ({
               }}
               className={`${
                 currentChoose == index
-                  ? "bg-blue-600 hover:bg-blue-600"
+                  ? "bg-brand-primary hover:bg-brand-primary"
                   : "bg-transparent hover:bg-gray-700"
               } ${
                 item.toLowerCase() == "No Items Founded...".toLowerCase()
                   ? "pointer-events-none bg-transparent"
                   : ""
-              }  py-[12px] px-2 text-nowrap w-full  overflow-x-auto   transition-all cursor-pointer [&:not(:last-child)]:border-b-[1px] border-slate-600  text-slate-200  text-[16px] font-semibold `}
+              }  py-[12px] px-2 text-nowrap w-full  overflow-x-auto   transition-all cursor-pointer [&:not(:last-child)]:border-b-[1px] border-border-default  text-text-primary  text-[16px] font-semibold `}
             >
               {item}
             </li>
@@ -270,9 +270,9 @@ export const Menu = ({
               }
               className={`flex items-center ${
                 currentChoose == index
-                  ? "bg-blue-600 hover:bg-blue-600"
+                  ? "bg-brand-primary hover:bg-brand-primary"
                   : "bg-transparent hover:bg-slate-600"
-              }  p-2 text-nowrap w-full  overflow-x-auto  transition-all cursor-pointer border-b-2 border-[#475569!important]  text-slate-200  text-[16px] font-semibold `}
+              }  p-2 text-nowrap w-full  overflow-x-auto  transition-all cursor-pointer border-b-2 border-[var(--color-border-default)!important]  text-text-primary  text-[16px] font-semibold `}
             >
               <FitTitle
               // style={{
@@ -280,8 +280,8 @@ export const Menu = ({
               // }}
                 className={`${
                   currentChoose == index
-                    ? "bg-slate-900 hover:bg-gray-700"
-                    : "bg-blue-600 hover:bg-blue-600"
+                    ? "bg-surface-secondary hover:bg-gray-700"
+                    : "bg-brand-primary hover:bg-brand-primary"
                 }`}
               >
                 {" "}
@@ -309,13 +309,13 @@ export const Menu = ({
           }}
           className={`${
             currentChoose == index
-              ? "bg-blue-600 hover:bg-blue-600"
+              ? "bg-brand-primary hover:bg-brand-primary"
               : "bg-transparent hover:bg-gray-700"
           } ${
             item.toLowerCase() == "No Items Founded...".toLowerCase()
               ? "pointer-events-none bg-transparent"
               : ""
-          }  py-[12px] px-2 text-nowrap w-full  overflow-x-auto   transition-all cursor-pointer [&:not(:last-child)]:border-b-[1px] border-slate-600  text-slate-200  text-[16px] font-semibold `}
+          }  py-[12px] px-2 text-nowrap w-full  overflow-x-auto   transition-all cursor-pointer [&:not(:last-child)]:border-b-[1px] border-border-default  text-text-primary  text-[16px] font-semibold `}
         >
           {item}
         </li>

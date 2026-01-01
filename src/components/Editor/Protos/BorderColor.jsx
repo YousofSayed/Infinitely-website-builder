@@ -51,7 +51,7 @@ export const BorderColor = () => {
       {/* <P> </P> */}
       <FitTitle className="capitalize">border color</FitTitle>
       <ScrollableToolbar
-        className="flex justify-between gap-1 bg-slate-800 p-2 rounded-lg"
+        className="flex justify-between gap-1 bg-surface-tertiary p-2 rounded-lg"
         space="3"
       >
         <SelectedBorder

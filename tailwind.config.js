@@ -22,7 +22,7 @@ export default {
         },
 
         border: {
-          DEFAULT: 'var(--color-border-default)',
+          default: 'var(--color-border-default)',
         },
       },
     },

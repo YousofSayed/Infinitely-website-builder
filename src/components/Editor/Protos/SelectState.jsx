@@ -404,7 +404,7 @@ export const SelectState = ({ placeholder }) => {
   }
 
   return (
-    <section className="mt-3 flex flex-col gap-2  p-1 bg-slate-900 rounded-lg">
+    <section className="mt-3 flex flex-col gap-2  p-1 bg-surface-secondary rounded-lg">
       <section className="flex  gap-2   rounded-lg  justify-between overflow-hidden">
         <Select
           placeholder="state"
@@ -432,7 +432,7 @@ export const SelectState = ({ placeholder }) => {
         />
 
         <SmallButton
-          className="flex-shrink-0 bg-slate-800  "
+          className="flex-shrink-0 bg-surface-tertiary  "
           tooltipTitle="Add state"
           onClick={(ev) => {
             addState(state);
@@ -442,7 +442,7 @@ export const SelectState = ({ placeholder }) => {
         </SmallButton>
 
         <SmallButton
-          className=" flex-shrink-0 bg-slate-800  "
+          className=" flex-shrink-0 bg-surface-tertiary  "
           tooltipTitle="Add new line"
           onClick={(ev) => {
             addNewStateContainer();

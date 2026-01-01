@@ -25,12 +25,12 @@ export const DetailsNormal = memo(
     children,
     label,
     className = "",
-    labelClass = "bg-slate-800",
+    labelClass = "bg-surface-tertiary",
     allowPopupLength = false,
     length,
     mode = "independent",
     notify,
-    notifyBg = "bg-blue-600",
+    notifyBg = "bg-brand-primary",
     onSwitch = (state)=>{},
     id,
   }) => {
@@ -102,14 +102,14 @@ export const DetailsNormal = memo(
           // overflow : !isOpen ? 'hidden' : ''
         }}
         className={`relative rounded-lg  will-change-contents ${
-          className ? className : "p-1 bg-slate-800 w-full select-none"
+          className ? className : "p-1 bg-surface-tertiary w-full select-none"
         }`}
       >
         <div
-          className={`cursor-pointer flex justify-between items-center text-slate-200 capitalize rounded-lg font-semibold text-[16px] p-1 ${labelClass}`}
+          className={`cursor-pointer flex justify-between items-center text-text-primary capitalize rounded-lg font-semibold text-[16px] p-1 ${labelClass}`}
           onClick={toggle}
         >
-          <h1 className="custom-font-size text-slate-200 font-semibold flex gap-2 items-center  justify-between">
+          <h1 className="custom-font-size text-text-primary font-semibold flex gap-2 items-center  justify-between">
             <span className="custom-font-size">{label}</span>
             {notify && (
               <span

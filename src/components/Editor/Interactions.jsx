@@ -331,13 +331,13 @@ export const Interaction = ({
   return (
     <section
       ref={autoAnimateRef}
-      className="flex flex-col gap-2 p-1 bg-slate-950 rounded-lg"
+      className="flex flex-col gap-2 p-1 bg-surface-main rounded-lg"
     >
       <header className="flex flex-col gap-2">
         {/* <section className="flex gap-2 justify-between ">
-          <FitTitle className="flex-shrink-0 w-full flex gap-2 items-center justify-between bg-slate-800">
+          <FitTitle className="flex-shrink-0 w-full flex gap-2 items-center justify-between bg-surface-tertiary">
             <div className="flex-shrink-0 ">Interaction ID </div>
-            <div className="text-slate-200 custom-font-size font-bold flex items-center p-2 justify-end w-full bg-slate-800 rounded-lg max-w-[50%]">
+            <div className="text-text-primary custom-font-size font-bold flex items-center p-2 justify-end w-full bg-surface-tertiary rounded-lg max-w-[50%]">
               {interaction.id}
             </div>
           </FitTitle>
@@ -362,7 +362,7 @@ export const Interaction = ({
             onClick={() => {
               deleteInteraction();
             }}
-            className="bg-slate-800 hover:bg-[crimson!important] [&:hover_path]:stroke-white"
+            className="bg-surface-tertiary hover:bg-[crimson!important] [&:hover_path]:stroke-white"
             tooltipTitle="Delete Interaction"
           >
             {Icons.trash("white")}
@@ -407,7 +407,7 @@ export const Interaction = ({
       {interaction.actions.map((action, i) => {
         return (
           <section
-            className="flex flex-col gap-2 p-1 bg-slate-800 rounded-lg"
+            className="flex flex-col gap-2 p-1 bg-surface-tertiary rounded-lg"
             key={i}
           >
             <ScrollableToolbar>
@@ -417,7 +417,7 @@ export const Interaction = ({
                 </MiniTitle>
                 <section className="rounded-lg flex gap-2">
                   <SmallButton
-                    className="bg-slate-900"
+                    className="bg-surface-secondary"
                     tooltipTitle="Copy Action"
                     onClick={async () => {
                       await navigator.clipboard.writeText(
@@ -434,7 +434,7 @@ export const Interaction = ({
                     onClick={() => {
                       deleteAction(i);
                     }}
-                    className="h-full bg-slate-900 hover:bg-[crimson!important] [&:hover_path]:stroke-white"
+                    className="h-full bg-surface-secondary hover:bg-[crimson!important] [&:hover_path]:stroke-white"
                     tooltipTitle="Delete Action"
                   >
                     {Icons.trash("white")}
@@ -460,7 +460,7 @@ export const Interaction = ({
                         }}
                       />
                     ) : value.type == "switch" ? (
-                      <div className="flex justify-between  gap-2 p-2 bg-slate-900 rounded-lg items-center">
+                      <div className="flex justify-between  gap-2 p-2 bg-surface-secondary rounded-lg items-center">
                         <p className="text-slate-400 capitalize">{key}</p>
                         <SwitchButton
                           className="p-[unset]"
@@ -482,7 +482,7 @@ export const Interaction = ({
                       required
                       value={value}
                       placeholder={key}
-                      className="bg-slate-900"
+                      className="bg-surface-secondary"
                       onInput={(ev) => {
                         addValueToActionParam(key, ev.target.value, i);
                       }}
@@ -993,7 +993,7 @@ export const Interactions = () => {
             {!interactionsId && (
               <section className="flex flex-col gap-2 ">
                 <FitTitle>Select Interaction Id</FitTitle>
-                <section className="flex justify-between gap-2   bg-slate-800 p-1 rounded-lg">
+                <section className="flex justify-between gap-2   bg-surface-tertiary p-1 rounded-lg">
                   <Select
                     className="p-[unset]"
                     placeholder="Select Interaction"
@@ -1078,8 +1078,8 @@ export const Interactions = () => {
             {
               <>
                 {mainId && isInstance && (
-                  <section className="flex justify-between gap-2 p-1 bg-slate-800 rounded-lg items-center">
-                    <FitTitle className="custom-font-size  text-slate-200 rounded-md">
+                  <section className="flex justify-between gap-2 p-1 bg-surface-tertiary rounded-lg items-center">
+                    <FitTitle className="custom-font-size  text-text-primary rounded-md">
                       Instance ID : {instanceId}
                     </FitTitle>
 
@@ -1106,9 +1106,9 @@ export const Interactions = () => {
                 )}
 
                 {mainId && (
-                  <section className="relative flex gap-2 p-1 py-2 justify-between bg-slate-800 w-full rounded-lg">
+                  <section className="relative flex gap-2 p-1 py-2 justify-between bg-surface-tertiary w-full rounded-lg">
                     {/* <FitTitle className="absolute top-[-50%]  left-0">{isInstance ? 'Instance' : 'Main'}</FitTitle> */}
-                    <FitTitle className="custom-font-size  text-slate-200 rounded-md">
+                    <FitTitle className="custom-font-size  text-text-primary rounded-md">
                       Main ID : {mainId}
                     </FitTitle>
                     <OptionsButton>
@@ -1277,14 +1277,14 @@ export const Interactions = () => {
 
           {isInstance && !editeAsMain && (
             <section className="absolute left-0 top-[0] w-full h-full min-h-full backdrop-blur-md z-[1001] rounded-lg p-2">
-              <section className="sticky top-0 flex flex-col gap-3 items-center p-2 py-3 bg-slate-900 rounded-lg">
+              <section className="sticky top-0 flex flex-col gap-3 items-center p-2 py-3 bg-surface-secondary rounded-lg">
                 {Icons.info({
                   fill: "yellow",
                   strokeColor: "yellow",
                   width: 30,
                   height: 30,
                 })}
-                <p className="text-center text-slate-200 font-semibold">
+                <p className="text-center text-text-primary font-semibold">
                   You can’t edite instance , If you wanna to edite so you should
                   edite as main
                 </p>

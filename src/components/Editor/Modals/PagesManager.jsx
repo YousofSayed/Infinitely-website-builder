@@ -281,9 +281,9 @@ export const PagesManager = () => {
 
   return (
     <section className="flex flex-col gap-3">
-      <header className="w-full p-2 bg-slate-800 rounded-lg flex flex-col  gap-2 ">
+      <header className="w-full p-2 bg-surface-tertiary rounded-lg flex flex-col  gap-2 ">
         <Input
-          className="w-full bg-slate-900"
+          className="w-full bg-surface-secondary"
           placeholder="Search"
           value={searchValue}
           onInput={(ev) => {
@@ -295,7 +295,7 @@ export const PagesManager = () => {
         />
         <section className="flex  justify-between gap-2 ">
           <Input
-            className="bg-slate-900 h-full w-full"
+            className="bg-surface-secondary h-full w-full"
             placeholder="Page Name"
             value={pageName}
             onInput={(ev) => {
@@ -308,7 +308,7 @@ export const PagesManager = () => {
 
           <SmallButton
             tooltipTitle="Create page"
-            className="bg-blue-600"
+            className="bg-brand-primary"
             onClick={(ev) => {
               createPage(pageName);
             }}
@@ -317,7 +317,7 @@ export const PagesManager = () => {
           </SmallButton>
           <SmallButton
             tooltipTitle="Upload pages"
-            className="bg-blue-600"
+            className="bg-brand-primary"
             onClick={(ev) => {
               pagesInputUploader.current.click();
             }}
@@ -347,18 +347,18 @@ export const PagesManager = () => {
             return (
               <article
                 key={i}
-                className={`flex items-center justify-between p-1 bg-slate-800 rounded-lg  `}
+                className={`flex items-center justify-between p-1 bg-surface-tertiary rounded-lg  `}
               >
                 <FitTitle className="flex items-center gap-2 min-w-[20%!important] p-1 py-2 flex-shrink-0 overflow-hidden text-ellipsis">
                   <div className="flex-shrink-0">
                     {Icons.stNote("white", undefined, 18, 18)}
                   </div>
-                  <p className="capitalize font-bold text-slate-200">
+                  <p className="capitalize font-bold text-text-primary">
                     {page.name}
                   </p>
                 </FitTitle>
 
-                <section className="flex  gap-2  bg-slate-900 rounded-lg">
+                <section className="flex  gap-2  bg-surface-secondary rounded-lg">
                   <SmallButton
                     title={
                       (page.name.toLowerCase() == "index" &&
@@ -380,7 +380,7 @@ export const PagesManager = () => {
                   <Hr />
 
                   <SmallButton
-                    className={`group h-full w-fit bg-transparent p-2  hover:bg-blue-600 `}
+                    className={`group h-full w-fit bg-transparent p-2  hover:bg-brand-primary `}
                     onClick={() => {
                       sessionStorage.setItem(current_page_helmet, page.name);
                       editor.runCommand(open_page_helmet_modal, {});

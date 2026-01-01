@@ -105,8 +105,8 @@ export const InstalledFonts = () => {
 
   return (
     <section className="flex flex-col h-full gap-2 p-1">
-      <header className="sticky top-0 flex justify-between gap-4 mb-2 bg-slate-900">
-        {/* <h1 className="text-slate-200 font-bold px-[60px] py-2   border-b-2 border-b-slate-600 w-fit flex-shrink-0 ">
+      <header className="sticky top-0 flex justify-between gap-4 mb-2 bg-surface-secondary">
+        {/* <h1 className="text-text-primary font-bold px-[60px] py-2   border-b-2 border-b-slate-600 w-fit flex-shrink-0 ">
           Fonts : {Object.keys(fonts || {}).length || undefined}
         </h1> */}
 
@@ -116,7 +116,7 @@ export const InstalledFonts = () => {
 
         <section className="w-full">
           <Input
-            className="w-full bg-slate-800 p-1"
+            className="w-full bg-surface-tertiary p-1"
             placeholder="Search..."
             onInput={(ev) => {
               filterFonts(ev.target.value);
@@ -124,7 +124,7 @@ export const InstalledFonts = () => {
           />
         </section>
 
-        <section className="w-fit bg-slate-800 rounded-lg px-[20px]  flex items-center gap-2 flex-shrink-0">
+        <section className="w-fit bg-surface-tertiary rounded-lg px-[20px]  flex items-center gap-2 flex-shrink-0">
           <section className="px-2 border-r-2 border-r-slate-600">
             <input
               id="select-all"
@@ -147,7 +147,7 @@ export const InstalledFonts = () => {
             return (
               <section
                 key={i}
-                className="bg-slate-800 px-2 py-3 rounded-md flex justify-between items-center"
+                className="bg-surface-tertiary px-2 py-3 rounded-md flex justify-between items-center"
               >
                 <section className="flex gap-2">
                   <section className="border-r-2 border-r-slate-600 px-2 ">

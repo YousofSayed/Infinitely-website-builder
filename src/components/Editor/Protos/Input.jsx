@@ -59,7 +59,7 @@ export const Input = ({
       value={val}
       placeholder={placeholder}
       className={`p-2 outline-none text-white border-2 border-transparent focus:border-blue-600  rounded-lg  ${
-        className ? className : "bg-slate-950"
+        className ? className : "bg-surface-main"
       }`}
       onInput={(ev) => {
         setVal(ev.target.value);

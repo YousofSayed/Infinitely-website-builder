@@ -105,7 +105,6 @@ export const GJEditor = ({ children }) => {
     });
 
 
-
     ev.on("component:selected", () => {
       const selectedEl = ev.getSelected();
       const symbolInfo = getInfinitelySymbolInfo(selectedEl);
@@ -150,7 +149,7 @@ export const GJEditor = ({ children }) => {
       });
 
       setCmpRules(rules.rules || []);
-    })
+    });
 
     ev.on("component:cmds:update", () => {
       console.log("updateeeeeeeeeeeeeeeeeeeeeee 89");
@@ -296,7 +295,7 @@ export const GJEditor = ({ children }) => {
                   id="inf-badge"
                   class="flex gap-2 items-center p-1 w-full ${symbolInfo.isSymbol
                     ? "bg-[var(--symbol-color-hover)]"
-                    : "bg-blue-600"}  "
+                    : "bg-brand-primary"}  "
                 >
                   ${cmp.getIcon()}
                   <figcaption class="text-white font-semibold ">

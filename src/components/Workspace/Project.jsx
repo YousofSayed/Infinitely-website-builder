@@ -78,7 +78,7 @@ export const Project = ({ project }) => {
   return (
     <article
       ref={autoAminRef}
-      className="relative px-2 py-1 bg-slate-900  rounded-lg flex flex-col h-[320px] justify-evenly  gap-2"
+      className="relative px-2 py-1 bg-surface-secondary  rounded-lg flex flex-col h-[320px] justify-evenly  gap-2"
     >
       <figure className="flex flex-col gap-2 h-[70%]  items-center ">
         <img
@@ -93,7 +93,7 @@ export const Project = ({ project }) => {
           loading="lazy"
         />
         <figcaption
-          className=" w-full rounded-lg p-1 text-center capitalize text-slate-200 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600 "
+          className=" w-full rounded-lg p-1 text-center capitalize text-text-primary text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600 "
           onBlur={(ev) => {
             ev.target.setAttribute("contenteditable", "false");
             db.projects.update(project.id, { name: ev.target.textContent });
@@ -115,7 +115,7 @@ export const Project = ({ project }) => {
           {project.apps == "Dropbox" && Icons.dropbox({ fill: "white" })}
         </div>
       )}
-      <ul className="flex gap-2 items-center justify-center p-1 bg-slate-950 rounded-lg">
+      <ul className="flex gap-2 items-center justify-center p-1 bg-surface-main rounded-lg">
         <Li
           onClick={async () => {
             if (!project.inited) return;

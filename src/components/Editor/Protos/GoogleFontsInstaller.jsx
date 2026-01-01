@@ -253,12 +253,12 @@ export const GoogleFontsInstaller = () => {
       >
         {!Object.keys(fontFiles).length && (
           <section className="flex max-h-[60px] p-1">
-            <figure className="w-[50px] h-full flex-shrink-0 overflow-auto  bg-slate-800 grid place-items-center rounded-tl-lg rounded-bl-lg">
+            <figure className="w-[50px] h-full flex-shrink-0 overflow-auto  bg-surface-tertiary grid place-items-center rounded-tl-lg rounded-bl-lg">
               {Icons.search({})}
             </figure>
             <Input
               placeholder="Search..."
-              className="w-full bg-slate-800 py-3 rounded-tl-none rounded-bl-none border-none"
+              className="w-full bg-surface-tertiary py-3 rounded-tl-none rounded-bl-none border-none"
               onInput={(ev) => {
                 search(ev.target.value);
               }}
@@ -283,7 +283,7 @@ export const GoogleFontsInstaller = () => {
                       onClick={(ev) => {
                         onNavigateToFiles(font);
                       }}
-                      className="p-2  text-slate-200 font-semibold bg-slate-800 rounded-md flex items-center justify-between [&:hover_path]:stroke-white cursor-pointer"
+                      className="p-2  text-text-primary font-semibold bg-surface-tertiary rounded-md flex items-center justify-between [&:hover_path]:stroke-white cursor-pointer"
                     >
                       {/* <p className="cursor-pointer">{font.family}</p> */}
                       <FitTitle>{font.family}</FitTitle>
@@ -305,7 +305,7 @@ export const GoogleFontsInstaller = () => {
         {!!Object.keys(fontFiles).length && (
           <section className="flex items-center justify-between">
             <button
-              className="group cursor-pointer flex justify-between items-center gap-2  mb-2 bg-slate-800 rounded-lg w-fit p-1"
+              className="group cursor-pointer flex justify-between items-center gap-2  mb-2 bg-surface-tertiary rounded-lg w-fit p-1"
               onClick={(ev) => {
                 checkedinputsRef.current = [];
                 fontFilesWillInstalled.current = [];
@@ -316,7 +316,7 @@ export const GoogleFontsInstaller = () => {
               <FitTitle className="h-full">{currentFileName.current}</FitTitle>
             </button>
 
-            <button className="group cursor-pointer flex justify-between items-center py-2 px-3 mb-2 bg-slate-800 rounded-lg w-fit">
+            <button className="group cursor-pointer flex justify-between items-center py-2 px-3 mb-2 bg-surface-tertiary rounded-lg w-fit">
               <span className="h-full block px-2 border-r-2 border-r-slate-600">
                 <input
                   id="select-all"
@@ -339,7 +339,7 @@ export const GoogleFontsInstaller = () => {
             return (
               <article
                 key={i}
-                className="px-2 py-3 gap-2 text-slate-200 font-semibold bg-slate-800 rounded-md flex items-center "
+                className="px-2 py-3 gap-2 text-text-primary font-semibold bg-surface-tertiary rounded-md flex items-center "
               >
                 <section className="h-full px-2 border-r-2 border-r-slate-600">
                   <input
