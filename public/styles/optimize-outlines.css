@@ -1,10 +1,10 @@
-.gjs-dashed *[data-gjs-highlightable] {
+/* .gjs-dashed *[data-gjs-highlightable] {
   outline: unset !important;
   outline-offset: -2px;
   animation-play-state: paused !important;
 }
 
-.gjs-dashed *.optimize-outlines {
+.gjs-dashed *[optimize-outlines] {
   outline: 1px dashed rgba(170, 170, 170, 0.7) !important;
   animation-play-state: running !important; 
-}
+} */
