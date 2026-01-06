@@ -24,7 +24,7 @@ all: unset ;
     background-color: white;
   }
 }
-.preventWhenScroll  {
+.preventWhenScroll  , .preventWhenScroll * {
   transition: none !important;
   animation-play-state: paused !important;
   animation: none !important;

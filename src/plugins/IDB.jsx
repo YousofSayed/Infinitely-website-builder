@@ -455,6 +455,15 @@ export const IDB = (editor) => {
               const files = {};
               let tailwindcssStyle;
 
+              const beforeunload = (e) => {
+                e.preventDefault();
+                e.returnValue = "";
+              };
+
+              if (projectSettings.enable_auto_save) {
+                window.addEventListener("beforeunload", beforeunload);
+              }
+
               // Handle global symbol
               const handleGlobalSymbol = async () => {
                 if (!currentSymbolId) return false;
@@ -585,15 +594,6 @@ export const IDB = (editor) => {
               };
 
               console.log("props will store : ", props);
-
-              const beforeunload = (e) => {
-                e.preventDefault();
-                e.returnValue = "";
-              };
-
-              if (projectSettings.enable_auto_save) {
-                window.addEventListener("beforeunload", beforeunload);
-              }
 
               let afterSave;
 

@@ -4,8 +4,7 @@
   const pending = new Map();
   let rafId = null;
 
-  const isOutlineEnabled = () =>
-    document.body.classList.contains("gjs-dashed");
+  const isOutlineEnabled = () => document.body.classList.contains("gjs-dashed");
 
   const flush = () => {
     rafId = null;
@@ -39,9 +38,9 @@
         if (!(node instanceof Element)) return;
 
         intersectionObserver.observe(node);
-        node.querySelectorAll("*").forEach((el) =>
-          intersectionObserver.observe(el)
-        );
+        node
+          .querySelectorAll("*")
+          .forEach((el) => intersectionObserver.observe(el));
       });
     }
   });
@@ -63,24 +62,61 @@
     attributeFilter: ["class"],
   });
 
-  const wrapper = document.querySelector(
-    `body [data-gjs-type="wrapper"]`
-  );
+  const wrapper = document.querySelector(`body [data-gjs-type="wrapper"]`);
 
   if (!wrapper) return;
 
-  wrapper.querySelectorAll("*").forEach((el) =>
-    intersectionObserver.observe(el)
-  );
+  wrapper
+    .querySelectorAll("*")
+    .forEach((el) => intersectionObserver.observe(el));
 
   mutationObserver.observe(wrapper, {
     childList: true,
     subtree: true,
   });
 
+  document.addEventListener("pointerenter", () => {
+    document.body.classList.remove("preventWhenScroll");
+  });
+
+  document.addEventListener("pointerleave", () => {
+    document.body.classList.add("preventWhenScroll");
+  });
+
+  let scrolling = false;
+  let timeout;
+
+  document.addEventListener("scroll", () => {
+    if (!scrolling) {
+      scrolling = true;
+      // alert("START SCROLL");
+      document.body.classList.add("preventWhenScroll");
+    }
+
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      scrolling = false;
+      document.body.classList.remove("preventWhenScroll");
+      // alert("END SCROLL");
+    }, 150);
+  });
+
+  document.addEventListener("dragover", (ev) => {
+    // alert('over')
+    document.body.classList.remove("preventWhenScroll");
+    document.body.classList.add("inf-stop-all-animations");
+  });
+
+  document.addEventListener("drop", (ev) => {
+    // alert('dropped')
+    // document.body.classList.remove("preventWhenScroll");
+    document.body.classList.remove("inf-stop-all-animations");
+  });
+
+  
+
   console.log("⚡ Outlines Optimized (WeakMap-safe)");
 })();
-
 
 // (() => {
 //   const storedVisibility = new WeakMap();
@@ -174,10 +210,7 @@
 
 //   mo.observe(wrapper, { childList: true });
 
-  
-
 //   console.log(
 //     "🚀 Outlines Optimized (Wrapper + Image/Animated safe + Scroll)"
 //   );
 // })();
-

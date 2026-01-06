@@ -250,18 +250,19 @@ export const TraitsAside = () => {
   const addAttribute = ({ key, value }) => {
     const sle = editor.getSelected();
     const type = sle.get("type").toLowerCase();
-    if (isValidAttribute(key, value)) {
-      sle.addAttributes({ [key]: value || "" }, { partial: true });
+    if (isValidAttribute(key, value||'')) {
+      sle.addAttributes({ [key]: value || "" } );
       setAttributes(getFilterdAttributes());
       if (type == "video" || type == "iframe" || type == "source") {
-        const newSle = sle.replaceWith(sle.clone())[0];
-        getProjectSettings().set({
-          navigate_to_style_when_Select: false,
-        });
-        editor.select(newSle);
-        getProjectSettings().set({
-          navigate_to_style_when_Select: true,
-        });
+        const newSle = sle.replaceWith(sle.clone())[0]; 
+        preventSelectNavigation(editor , newSle)
+        // getProjectSettings().set({
+        //   navigate_to_style_when_Select: false,
+        // });
+        // editor.select(newSle);
+        // getProjectSettings().set({
+        //   navigate_to_style_when_Select: true,
+        // });
       }
     } else {
       toast.error(<ToastMsgInfo msg={`Attribute has invalid character`} />);
@@ -981,7 +982,7 @@ export const TraitsAside = () => {
                 return (
                   <li key={i} className="flex flex-col gap-2">
                     <FitTitle>{key}</FitTitle>
-                    <section className="flex gap-2">
+                    <section className="flex gap-2  h-fit">
                       <Input
                         placeholder={key}
                         className="bg-surface-tertiary w-full"
@@ -991,6 +992,7 @@ export const TraitsAside = () => {
                         }}
                       />
                       <Button
+                      className="h-[38px] flex-shrink-0 flex-grow"
                         onClick={(ev) => {
                           removeAttribute(key);
                         }}

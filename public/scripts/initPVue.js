@@ -48,7 +48,9 @@ function reSetAttributes() {
 }
 
 // reDefineDirectives();
-
+const vScope = document.body.getAttribute('v-scope');
+const isVScope = Boolean(vScope);
+!isVScope && document.body.setAttribute('v-scope','{}');
 app.mount(document.body);
 
 // Watch for new DOM nodes and re-compile automatically

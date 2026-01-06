@@ -143,83 +143,96 @@ export const addDevices = (editor) => {
     // Boolean(firstTime ) ? 80 : 0
   };
 
-  resizerObserver = new ResizeObserver(() => {
+  const ro = new ResizeObserver((entries) => {
+    const { width, height } = entries[0].contentRect;
+    // alert("Document resized:", width, height);
     zoomToFit();
   });
 
-  mutationsObserver = new MutationObserver((entries) => {
-    const rightPanel = document.querySelector(`#right-panel`);
-    const leftPanel = document.querySelector(`#left-panel`);
-    // entries.forEach((entry) => {
-    //   entry.removedNodes.forEach((node) => {
-    //     resizerObserver.unobserve(node);
-    //   });
-    // });
-    if (rightPanel) {
-      resizerObserver.observe(rightPanel);
-    }
-    if (leftPanel) {
-      resizerObserver.observe(leftPanel);
-    }
-  });
+  editor.on("canvas:frame:load:body", () => {
+    const documentFrame = editor.Canvas.getDocument();
 
-  editor.on("change:device", () => {
-    // editor.getContainer().style.zoom = 1;
-    // localStorage.setItem("last-device", editor.getDevice());
-    // localStorage.setItem(
-    //   "last-device-json",
-    //   JSON.stringify(editor.Devices.get(editor.getDevice()).toJSON())
-    // );
-    // console.log(
-    //   "Device is : ",
-    //   editor.Devices.get(editor.getDevice()).toJSON()
-    // );
-    editor.refresh({ tools: true });
-
-    zoomToFit();
+    // ro.observe(documentFrame.documentElement);
   });
+  ro.observe(editor.getContainer());
+
+  // resizerObserver = new ResizeObserver(() => {
+  //   zoomToFit();
+  // });
+
+  // mutationsObserver = new MutationObserver((entries) => {
+  //   const rightPanel = document.querySelector(`#right-panel`);
+  //   const leftPanel = document.querySelector(`#left-panel`);
+  //   // entries.forEach((entry) => {
+  //   //   entry.removedNodes.forEach((node) => {
+  //   //     resizerObserver.unobserve(node);
+  //   //   });
+  //   // });
+  //   if (rightPanel) {
+  //     resizerObserver.observe(rightPanel);
+  //   }
+  //   if (leftPanel) {
+  //     resizerObserver.observe(leftPanel);
+  //   }
+  // });
+
+  // editor.on("change:device", () => {
+  //   // editor.getContainer().style.zoom = 1;
+  //   // localStorage.setItem("last-device", editor.getDevice());
+  //   // localStorage.setItem(
+  //   //   "last-device-json",
+  //   //   JSON.stringify(editor.Devices.get(editor.getDevice()).toJSON())
+  //   // );
+  //   // console.log(
+  //   //   "Device is : ",
+  //   //   editor.Devices.get(editor.getDevice()).toJSON()
+  //   // );
+  //   editor.refresh({ tools: true });
+
+  //   zoomToFit();
+  // });
   // editor.on("canvas:frame:load:body", () => {
   //   // editor.getContainer().style.zoom = 1;
   //   zoomToFit();
   // });
 
-  editor.on(
-    "canvas:frame:load:body",
-    /**
-     *
-     * @param {{window:Window}} param0
-     */
-    ({ window }) => {
-      // console.log('from load ;' , document.querySelector(`#right-panel`));
-      //document.querySelector(`#panel-group`)
+  // editor.on(
+  //   "canvas:frame:load:body",
+  //   /**
+  //    *
+  //    * @param {{window:Window}} param0
+  //    */
+  //   ({ window }) => {
+  //     // console.log('from load ;' , document.querySelector(`#right-panel`));
+  //     //document.querySelector(`#panel-group`)
 
-      firstTime++;
-      if (mutationsObserver && mutationsObserver instanceof MutationObserver) {
-        mutationsObserver.disconnect();
-        mutationsObserver = null;
-        mutationsObserver = new MutationObserver((entries) => {
-          const rightPanel = document.querySelector(`#right-panel`);
-          const leftPanel = document.querySelector(`#left-panel`);
-          if (rightPanel) {
-            resizerObserver.observe(rightPanel);
-          }
-          if (leftPanel) {
-            resizerObserver.observe(leftPanel);
-          }
-        });
-      }
+  //     firstTime++;
+  //     if (mutationsObserver && mutationsObserver instanceof MutationObserver) {
+  //       mutationsObserver.disconnect();
+  //       mutationsObserver = null;
+  //       mutationsObserver = new MutationObserver((entries) => {
+  //         const rightPanel = document.querySelector(`#right-panel`);
+  //         const leftPanel = document.querySelector(`#left-panel`);
+  //         if (rightPanel) {
+  //           resizerObserver.observe(rightPanel);
+  //         }
+  //         if (leftPanel) {
+  //           resizerObserver.observe(leftPanel);
+  //         }
+  //       });
+  //     }
 
-      mutationsObserver.observe(document.querySelector(`#panels-group`), {
-        childList: true,
-        subtree: true,
-      });
+  //     mutationsObserver.observe(document.querySelector(`#panels-group`), {
+  //       childList: true,
+  //       subtree: true,
+  //     });
 
-      zoomToFit();
+  //     zoomToFit();
 
-      // resizerObserver.observe(document.querySelector(`#right-panel`));
-      // resizerObserver.observe(document.querySelector(`#left-panel`));
-    }
-  );
+  //     // resizerObserver.observe(document.querySelector(`#right-panel`));
+  //     // resizerObserver.observe(document.querySelector(`#left-panel`));
+  //   }
+  // );
 
-  window.addEventListener("resize", () => zoomToFit());
+  // window.addEventListener("resize", () => zoomToFit());
 };
