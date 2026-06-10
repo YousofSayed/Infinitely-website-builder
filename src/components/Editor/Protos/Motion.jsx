@@ -11,11 +11,17 @@ import { SwitchButton } from "../../Protos/SwitchButton";
 // import { Accordion, AccordionItem } from "@heroui/accordion";
 import { Select } from "./Select";
 import {
+  doInNormal,
+  doInNormalAsync,
+  doInWordpress,
+  doInWordpressAsync,
   downloadFile,
   getGsapCssProperties,
   getProjectData,
   getProjectSettings,
+  getWpPageConfig,
   initToolbar,
+  isWordpress,
   preventSelectNavigation,
   setAttributesInAllPages,
   store,
@@ -80,6 +86,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { runGsapMethod } from "../../../helpers/customEvents";
 import { FitTitle } from "./FitTitle";
 import {
+  buildGsapMotionsScript,
   deepValues,
   editNestedObject,
   getNestedValue,
@@ -95,6 +102,11 @@ import { Accordion } from "../../Protos/Accordion";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Memo } from "../../Protos/Memo";
 import { UndoRedoContainer } from "../../Protos/UndoRedoContainer";
+import {
+  wp_create_single,
+  wp_get,
+  wp_get_single,
+} from "../../../Apps/wordpress/functions";
 const parseValue = (value) => {
   try {
     return (
@@ -125,7 +137,7 @@ const AddNestedProps = ({
   secondDestination = [],
   className,
   motion = motionType,
-  setMotion = (motion = motionType) => {},
+  setMotion = (motion = motionType) => { },
   animation = motionAnimationType,
   animationIndex = 0,
   keys = [],
@@ -161,10 +173,10 @@ const AddNestedProps = ({
     const editeable = editNestedObject(clone, destination.concat(prop), value);
     const secondEditeable = isArray(secondDestination)
       ? editNestedObject(
-          clone,
-          secondDestination.concat(prop),
-          parseAndReturnInputIfNot(value)
-        )
+        clone,
+        secondDestination.concat(prop),
+        parseAndReturnInputIfNot(value),
+      )
       : {};
 
     setMotion({
@@ -207,11 +219,10 @@ const AddNestedProps = ({
   return (
     <section className="flex flex-col  " ref={parentAnimatedRef}>
       <section
-        className={`${className} flex  gap-2  sticky top-0 bg-surface-main ${
-          Object.keys(getNestedValue(animation, destination) || {})?.length
-            ? "rounded-tl-lg rounded-tr-lg"
-            : "rounded-lg"
-        }`}
+        className={`${className} flex  gap-2  sticky top-0 bg-surface-main ${Object.keys(getNestedValue(animation, destination) || {})?.length
+          ? "rounded-tl-lg rounded-tr-lg"
+          : "rounded-lg"
+          }`}
       >
         <Select
           className="p-[unset]"
@@ -240,46 +251,46 @@ const AddNestedProps = ({
 
       {!!Object.entries(getNestedValue(animation, destination) || {})
         .length && (
-        <section
-          ref={animatedRef}
-          className=" flex flex-col gap-2 p-1 bg-surface-main rounded-bl-md rounded-br-md"
-        >
-          {Object.entries(getNestedValue(animation, destination) || {}).map(
-            ([key, value], index) => {
-              return (
-                <section
-                  key={index}
-                  className="relative flex flex-col gap-2  mt-3"
-                >
-                  {/* <h1 className="px-2 text-text-primary py-1  bg-brand-primary rounded-lg w-fit">
+          <section
+            ref={animatedRef}
+            className=" flex flex-col gap-2 p-1 bg-surface-main rounded-bl-md rounded-br-md"
+          >
+            {Object.entries(getNestedValue(animation, destination) || {}).map(
+              ([key, value], index) => {
+                return (
+                  <section
+                    key={index}
+                    className="relative flex flex-col gap-2  mt-3"
+                  >
+                    {/* <h1 className="px-2 text-text-primary py-1  bg-brand-primary rounded-lg w-fit">
                     {key}
                   </h1> */}
 
-                  <FitTitle className="capitalize">{key}</FitTitle>
+                    <FitTitle className="capitalize">{key}</FitTitle>
 
-                  <section className="flex  gap-2">
-                    <Input
-                      placeholder={key}
-                      className="bg-surface-tertiary w-full"
-                      value={value}
-                      onInput={(ev) => {
-                        editeProp(key, ev.target.value);
-                      }}
-                    />
-                    <SmallButton
-                      onClick={(ev) => {
-                        removeProp(key);
-                      }}
-                    >
-                      {Icons.trash("white")}
-                    </SmallButton>
+                    <section className="flex  gap-2">
+                      <Input
+                        placeholder={key}
+                        className="bg-surface-tertiary w-full"
+                        value={value}
+                        onInput={(ev) => {
+                          editeProp(key, ev.target.value);
+                        }}
+                      />
+                      <SmallButton
+                        onClick={(ev) => {
+                          removeProp(key);
+                        }}
+                      >
+                        {Icons.trash("white")}
+                      </SmallButton>
+                    </section>
                   </section>
-                </section>
-              );
-            }
-          )}
-        </section>
-      )}
+                );
+              },
+            )}
+          </section>
+        )}
     </section>
   );
 };
@@ -293,7 +304,7 @@ const ObjectComponent = ({
   animationIndex = 0,
   isTimeLine = false,
   isSplitText = false,
-  setMotion = (motion = motionType) => {},
+  setMotion = (motion = motionType) => { },
 }) => {
   const addValue = (value, prop) => {
     if (isTimeLine || isSplitText) {
@@ -301,7 +312,7 @@ const ObjectComponent = ({
       const editeable = editNestedObject(
         clone,
         destination.concat(prop),
-        parseValue(value)
+        parseValue(value),
       );
       console.log("cloone timeline : ", clone);
 
@@ -313,30 +324,34 @@ const ObjectComponent = ({
     console.log(
       "from destoooo one and second: ",
       destination.concat(prop),
-      secondDestination?.concat?.(prop)
+      secondDestination?.concat?.(prop),
     );
 
     const clone = cloneDeep(animation);
     const editeable = editNestedObject(
       clone,
       destination.concat(prop),
-      parseValue(value)
+      parseValue(value),
     );
     const secondEditeable = isArray(secondDestination)
       ? editNestedObject(
-          clone,
-          secondDestination.concat(prop),
-          parseValue(value)
-        )
+        clone,
+        secondDestination.concat(prop),
+        parseValue(value),
+      )
       : {};
 
     const editableValue = getNestedValue(editeable, destination.concat(prop));
     const secondEditableValue = isArray(secondDestination)
       ? getNestedValue(secondEditeable, secondDestination.concat(prop))
       : null;
-    if (!editableValue && !isBoolean(editableValue)
-       && (isUndefined(editableValue) || isNull(editableValue) || isNaN(editableValue))
-      ) {
+    if (
+      !editableValue &&
+      !isBoolean(editableValue) &&
+      (isUndefined(editableValue) ||
+        isNull(editableValue) ||
+        isNaN(editableValue))
+    ) {
       removeNestedKey(editeable, destination.concat(prop));
     }
 
@@ -352,9 +367,10 @@ const ObjectComponent = ({
     if (
       isArray(secondDestination) &&
       !secondEditableValue &&
-      !isBoolean(secondEditableValue)
-       
-     && (isUndefined(secondEditableValue) || isNull(secondEditableValue) || isNaN(secondEditableValue))
+      !isBoolean(secondEditableValue) &&
+      (isUndefined(secondEditableValue) ||
+        isNull(secondEditableValue) ||
+        isNaN(secondEditableValue))
     ) {
       removeNestedKey(secondEditeable, secondDestination.concat(prop));
     }
@@ -369,7 +385,7 @@ const ObjectComponent = ({
     console.log(
       "from after set first and second nested : ",
       editeable,
-      secondEditeable
+      secondEditeable,
     );
 
     setMotion({
@@ -427,8 +443,8 @@ const ObjectComponent = ({
                   title={key}
                   notify={Boolean(
                     Object.values(
-                      getNestedValue(motion, [...destination, key]) || {}
-                    )?.length
+                      getNestedValue(motion, [...destination, key]) || {},
+                    )?.length,
                   )}
                 >
                   <ObjectComponent
@@ -476,13 +492,13 @@ const ObjectComponent = ({
                     getNestedValue(isTimeLine ? motion : animation, [
                       ...destination,
                       key,
-                    ])
+                    ]),
                   )
                     ? ""
                     : getNestedValue(isTimeLine ? motion : animation, [
-                        ...destination,
-                        key,
-                      ])
+                      ...destination,
+                      key,
+                    ])
                 }
                 keywords={value}
                 onAll={(value) => {
@@ -492,7 +508,7 @@ const ObjectComponent = ({
                     getNestedValue(isTimeLine ? motion : animation, [
                       ...destination,
                       key,
-                    ])
+                    ]),
                   );
 
                   addValue(value, key);
@@ -513,18 +529,18 @@ const ObjectComponent = ({
                     getNestedValue(isTimeLine ? motion : animation, [
                       ...destination,
                       key,
-                    ])
+                    ]),
                   )
                     ? stringify(
-                        getNestedValue(isTimeLine ? motion : animation, [
-                          ...destination,
-                          key,
-                        ])
-                      )
-                    : getNestedValue(isTimeLine ? motion : animation, [
+                      getNestedValue(isTimeLine ? motion : animation, [
                         ...destination,
                         key,
                       ]),
+                    )
+                    : getNestedValue(isTimeLine ? motion : animation, [
+                      ...destination,
+                      key,
+                    ]),
                   onChange: (value) => {
                     addValue(value, key);
                   },
@@ -538,13 +554,13 @@ const ObjectComponent = ({
                     getNestedValue(isTimeLine ? motion : animation, [
                       ...destination,
                       key,
-                    ])
+                    ]),
                   )
                     ? ""
                     : getNestedValue(isTimeLine ? motion : animation, [
-                        ...destination,
-                        key,
-                      ])
+                      ...destination,
+                      key,
+                    ])
                 }
                 className="bg-surface-secondary w-full border-[4px]  border-[#1e293b!important]"
                 onInput={(ev) => {
@@ -562,13 +578,15 @@ const ObjectComponent = ({
 const SwitcherSection = ({
   defaultValue,
   title = "",
-  onActive = () => {},
-  onUnActive = () => {},
-  onSwitch = () => {},
+  onActive = () => { },
+  onUnActive = () => { },
+  onSwitch = () => { },
 }) => {
   return (
     <section className="flex justify-between gap-2 items-center p-2 bg-surface-tertiary rounded-lg">
-      <h1 className="text-text-primary custom-font-size font-semibold">{title}</h1>
+      <h1 className="text-text-primary custom-font-size font-semibold">
+        {title}
+      </h1>
       <SwitchButton
         defaultValue={defaultValue}
         onActive={onActive}
@@ -581,7 +599,7 @@ const SwitcherSection = ({
 
 const ScrollTriggerOptions = ({
   motion = motionType,
-  setMotion = (motion = motionType) => {},
+  setMotion = (motion = motionType) => { },
   animation = motionAnimationType,
   singleTitle = "",
   multiTitle = "",
@@ -622,7 +640,7 @@ const ScrollTriggerOptions = ({
     main = "",
     secondMain = "",
     key,
-    value
+    value,
   ) => {
     setMotion({
       ...motion,
@@ -664,7 +682,7 @@ const ScrollTriggerOptions = ({
     main = "",
     secondMain = "",
     key,
-    value
+    value,
   ) => {
     setMotion({
       ...motion,
@@ -721,23 +739,23 @@ const ScrollTriggerOptions = ({
                     value={
                       isTimeLine
                         ? motion.timelineScrollTriggerOptions?.singleOptions?.[
-                            item
-                          ]
+                        item
+                        ]
                         : animation?.[main]?.scrollTriggerOptions
-                            ?.singleOptions?.[item]
+                          ?.singleOptions?.[item]
                     }
                     onInput={(ev) => {
                       if (isTimeLine) {
                         setSingleTimelineScrollTriggerOptions(
                           item,
-                          ev.target.value
+                          ev.target.value,
                         );
                       } else {
                         setSingleScrollTriggerOptions(
                           main,
                           secondMain,
                           item,
-                          ev.target.value
+                          ev.target.value,
                         );
                       }
                     }}
@@ -764,9 +782,9 @@ const ScrollTriggerOptions = ({
                       value={
                         isTimeLine
                           ? motion?.timelineScrollTriggerOptions
-                              ?.multiOptions?.[key]
+                            ?.multiOptions?.[key]
                           : animation?.[main]?.scrollTriggerOptions
-                              ?.multiOptions?.[key]
+                            ?.multiOptions?.[key]
                       }
                       placeholder={key}
                       keywords={value}
@@ -778,14 +796,14 @@ const ScrollTriggerOptions = ({
                             main,
                             secondMain,
                             key,
-                            value
+                            value,
                           );
                         }
                       }}
                     />
                   </section>
                 );
-              }
+              },
             )}
           </section>
         </AccordionItem>
@@ -796,12 +814,12 @@ const ScrollTriggerOptions = ({
 
 const FromTo = ({
   motion = motionType,
-  setMotion = (motion = motionType) => {},
+  setMotion = (motion = motionType) => { },
   animation = motionAnimationType,
   animationIndex = 0,
 }) => {
   const [showStylesBuilder, setShowStylesBuilder] = useRecoilState(
-    showStylesBuilderForMotionBuilderState
+    showStylesBuilderForMotionBuilderState,
   );
   const [framesStyles, setFramesStyles] = useRecoilState(framesStylesState);
 
@@ -1048,7 +1066,7 @@ const FromTo = ({
 
 const Timeline = ({
   motion = motionType,
-  setMotion = (motion = motionType) => {},
+  setMotion = (motion = motionType) => { },
 }) => {
   return (
     <section className="flex flex-col gap-3">
@@ -1085,7 +1103,7 @@ const Timeline = ({
 
 const SplitText = ({
   motion = motionType,
-  setMotion = (motion = motionType) => {},
+  setMotion = (motion = motionType) => { },
 }) => {
   return (
     <section className="flex flex-col gap-3">
@@ -1130,10 +1148,10 @@ export const Motion = () => {
   const mType = null;
   const [motion, setMotion] = useState(mType);
   const [globalUndoAndRedo, setGlobalUndoAndRedo] = useRecoilState(
-    globalUndoAndRedoStates
+    globalUndoAndRedoStates,
   );
   const [showStylesBuilder, setShowStylesBuilder] = useRecoilState(
-    showStylesBuilderForMotionBuilderState
+    showStylesBuilderForMotionBuilderState,
   );
   const [framesStyles, setFramesStyles] = useRecoilState(framesStylesState);
 
@@ -1149,6 +1167,7 @@ export const Motion = () => {
   const [autoAnimateRef] = useAutoAnimate();
   const isStoring = useRef(false);
   const oldMotionIdRef = useRef();
+  const projectId = +localStorage.getItem(current_project_id);
   const rId = useRef(null);
   const iconStyle = {
     fill: "white",
@@ -1231,46 +1250,84 @@ export const Motion = () => {
       return;
     // console.log("bonbone");
     (async () => {
-      if (
-        motion.id &&
-        oldMotionIdRef.current &&
-        oldMotionIdRef.current !== motion.id
-      ) {
+
+
+
+      const updateAttributes = async (forceUpdateOlds = false) => {
+        let gsap_script_loop = { 'v-gsap': '' };
+        if (motion?.isLoop) {
+          gsap_script_loop["v-gsap"] = buildGsapMotionsScript({ [motion.id]: motion }, false, true);
+        }
+
         editor
           .getWrapper()
           .find(`[${motionId}="${oldMotionIdRef.current}"]`)
           .forEach((cmp) => {
             cmp.addAttributes({
-              [motionId]: motion.id,
+              ...(forceUpdateOlds ? { [motionId]: motion.id } : {}),
+              // ...(motion?.isLoop ? gsap_script_loop : {})
+              ...gsap_script_loop
             });
           });
+
         editor
           .getWrapper()
           .find(`[${mainMotionId}="${oldMotionIdRef.current}"]`)
           .forEach((cmp) => {
             cmp.addAttributes({
-              [mainMotionId]: motion.id,
+              ...(forceUpdateOlds ? { [mainMotionId]: motion.id } : {}),
+              // ...(motion?.isLoop ? gsap_script_loop : {})
+              ...gsap_script_loop
             });
           });
-        const res = await setAttributesInAllPages({
-          selectors: {
-            [`[${motionId}="${oldMotionIdRef.current}"]`]: {
-              [motionId]: motion.id,
+
+        console.log(`update motion: before done is loop`);
+
+        await doInNormalAsync(async () => {
+          const res = await setAttributesInAllPages({
+            selectors: {
+              ...(forceUpdateOlds ? {
+                [`[${motionId}="${oldMotionIdRef.current}"]`]: {
+                  [motionId]: motion.id,
+                },
+                [`[${mainMotionId}="${oldMotionIdRef.current}"]`]: {
+                  [mainMotionId]: motion.id,
+                }
+              } : {}),
+              // ...(motion?.isLoop ? gsap_script_loop : {})
+              ...gsap_script_loop
             },
-            [`[${mainMotionId}="${oldMotionIdRef.current}"]`]: {
-              [mainMotionId]: motion.id,
-            },
-          },
-        });
+          });
+        })
+
+        console.log(`update motion: after done is loop`);
+
+      };
+
+      console.log('update motion: is loop : ', motion.isLoop);
+      await updateAttributes();
+
+      if (
+        motion.id &&
+        oldMotionIdRef.current &&
+        oldMotionIdRef.current !== motion.id
+      ) {
+
+        await updateAttributes(true);
+
 
         console.log("old mId ref : ", oldMotionIdRef.current, res, motion);
         // store({} , editor)
       }
+
+
+
+
       oldMotionIdRef.current = motion.id || "";
+      motion.id && await updateDB(motion);
+      console.log("motion", motion);
     })();
 
-    motion.id && updateDB(motion);
-    console.log("motion", motion);
   }, [motion, editor]);
 
   useEffect(() => {
@@ -1315,21 +1372,51 @@ export const Motion = () => {
    * @param {import('../../../helpers/types').MotionType} newMotion
    * @returns
    */
-  const updateDB = async (newMotion, callback = () => {}) => {
+  const updateDB = async (newMotion, callback = () => { }) => {
     if (!newMotion?.id) return;
     const projectData = await getProjectData();
     const { projectSettings } = getProjectSettings();
-    const clone = cloneDeep(newMotion);
+    let clone = cloneDeep(newMotion);
     clone.pages = [
       ...new Set([...newMotion.pages, localStorage.getItem(current_page_id)]),
     ];
+
+    doInWordpress(() => { ///do not forget to complete is loop in wordpress///
+      const wp_post = getWpPageConfig();
+      const cloneFromClone = cloneDeep(clone);
+      const instancesClone = cloneDeep(cloneFromClone.instances || {});
+      cloneFromClone.instances = {};
+      cloneFromClone.script_for_wp = buildGsapMotionsScript(
+        { [cloneFromClone.id]: cloneFromClone },
+        false,
+        true,
+        // wp_post.slug,
+      );
+      for (const instanceId in instancesClone) {
+        const instance = instancesClone[instanceId];
+        const newInstanceMotion = cloneDeep(cloneFromClone);
+        newInstanceMotion.id = instanceId;
+        newInstanceMotion.instances = {};
+        newInstanceMotion.isInstance = true;
+        delete newInstanceMotion["excludes"];
+        instance.script_for_wp = buildGsapMotionsScript(
+          { [instanceId]: newInstanceMotion },
+          false,
+          true,
+        );
+      }
+      cloneFromClone.instances = instancesClone;
+      clone = cloneFromClone;
+      console.log("clone from wp: ", clone);
+    });
+
     const newMotions = {
       ...projectData.motions,
       [clone.id]: clone,
     };
     console.log(
       "project settings  ::: ",
-      projectSettings.remove_gsap_markers_on_build
+      projectSettings.remove_gsap_markers_on_build,
     );
     // editor.UndoManager.s
 
@@ -1339,17 +1426,35 @@ export const Motion = () => {
     rId.current && clearTimeout(rId.current);
     rId.current = setTimeout(() => {
       console.log("update from insdie ", newMotion);
-      workerCallbackMaker(infinitelyWorker, "updateDB", callback);
-      infinitelyWorker.postMessage({
-        command: "updateDB",
-        props: {
-          projectId: +localStorage.getItem(current_project_id),
-          data: { motions: newMotions },
-          updatePreviewPages: projectSettings.enable_auto_save,
-          pageName: localStorage.getItem(current_page_id),
-          projectSetting: projectSettings,
-          // pageUrl: `pages/${localStorage.getItem(current_page_id)}.html`,
-        },
+      doInNormal(() => {
+        workerCallbackMaker(infinitelyWorker, "updateDB", callback);
+        infinitelyWorker.postMessage({
+          command: "updateDB",
+          props: {
+            projectId: +localStorage.getItem(current_project_id),
+            data: { motions: newMotions },
+            updatePreviewPages: projectSettings.enable_auto_save,
+            pageName: localStorage.getItem(current_page_id),
+            projectSetting: projectSettings,
+            // pageUrl: `pages/${localStorage.getItem(current_page_id)}.html`,
+          },
+        });
+      });
+
+      doInWordpress(() => {
+        workerCallbackMaker(infinitelyWorker, "updateDB", callback);
+        infinitelyWorker.postMessage({
+          command: "updateDB",
+          props: {
+            projectId: +localStorage.getItem(current_project_id),
+            data: { motions: newMotions },
+            updatePreviewPages: projectSettings.enable_auto_save,
+            pageName: localStorage.getItem(current_page_id),
+            projectSetting: projectSettings,
+            isWordpress: isWordpress(),
+            // pageUrl: `pages/${localStorage.getItem(current_page_id)}.html`,
+          },
+        });
       });
     }, 10);
     // projectData.motions = {
@@ -1380,13 +1485,59 @@ export const Motion = () => {
     console.log("current motion : ", currentMotion, projectData.motions, id);
 
     setMotion(currentMotion ? { ...currentMotion, id } : { ...motionType, id });
+    // await doInNormalAsync(async () => {
+    //   if (!id) {
+    //     console.log("no id");
+
+    //     setMotion({ ...cloneDeep(motionType) });
+    //     return;
+    //   }
+    //   const projectData = await getProjectData();
+    //   const currentMotion = projectData?.motions?.[id];
+    //   console.log("current motion : ", currentMotion, projectData.motions, id);
+
+    //   setMotion(
+    //     currentMotion ? { ...currentMotion, id } : { ...motionType, id },
+    //   );
+    // });
+
+    // await doInWordpressAsync(async () => {
+    //   if (!id) {
+    //     console.log("no wp id");
+    //     const res = await wp_create_single({
+    //       endpoint: "inf_motions",
+    //       projectId,
+    //       body: {
+    //         meta: {
+
+    //           inf_meta: {
+    //             json: cloneDeep(motionType),
+    //             script: "",
+    //           },
+    //         },
+    //       },
+    //     });
+    //     console.log("res motion created from wp :", res);
+
+    //     setMotion({ ...cloneDeep(motionType) });
+    //     return;
+    //   }
+    //   const motionPost = await wp_get({
+    //     endpoint: "inf_motions",
+    //     projectId,
+    //     params: {
+    //       slug: id,
+    //     },
+    //   });
+    //   console.log("res motion done it from wp :", motionPost);
+    // });
   };
 
   const deleteMotion = async (id) => {
     const sle = editor.getSelected();
     if (!id || !sle) return;
     const cnfrm = confirm(
-      `Are you sure you want to delete those motions? All instances will be removed from all pages, and you won’t be able to undo them on other pages (but you can undo them on the current page; symbols are exceptions)`
+      `Are you sure you want to delete those motions? All instances will be removed from all pages, and you won’t be able to undo them on other pages (but you can undo them on the current page; symbols are exceptions)`,
     );
     if (!cnfrm) return;
     const { projectSettings } = getProjectSettings();
@@ -1490,7 +1641,7 @@ export const Motion = () => {
       const cnfrm = confirm(
         Object.keys(motion.instances || {}).length
           ? `You will remove all instance too , Are you sure ?`
-          : `Are you sure to remove motion ?`
+          : `Are you sure to remove motion ?`,
       );
       if (!cnfrm) return;
       deleteMotion(motion.id);
@@ -1556,7 +1707,7 @@ export const Motion = () => {
     for (const animation of clone.animations) {
       animation.name = uniqueId(`varName_${uniqueID()}${random(99, 999)}`);
     }
-    (clone.instances = {}), (clone.isInstance = false);
+    ((clone.instances = {}), (clone.isInstance = false));
     sle.addAttributes({ [motionId]: newId });
     initToolbar(editor, sle);
     await updateDB(clone);
@@ -1640,11 +1791,11 @@ export const Motion = () => {
     const projectData = await getProjectData();
     if (projectData.motions[motionUploaded.id]) {
       const cnfrm = confirm(
-        `Motion with the same id (${motionUploaded.id}) already exists , Do you want to overwrite it (Id will overwrite too) ?`
+        `Motion with the same id (${motionUploaded.id}) already exists , Do you want to overwrite it (Id will overwrite too) ?`,
       );
       if (!cnfrm) {
         const newCnfrm = confirm(
-          `Do you want to import as a new motion with a new id ?`
+          `Do you want to import as a new motion with a new id ?`,
         );
         if (!newCnfrm) {
           ev.target.value = "";
@@ -1656,11 +1807,11 @@ export const Motion = () => {
       console.log("elsooooooooooo");
 
       const newCnfrm = confirm(
-        `Do you want to overwrite current motion (Id will overwrite too) ?`
+        `Do you want to overwrite current motion (Id will overwrite too) ?`,
       );
       if (!newCnfrm) {
         const createNewWithNewId = confirm(
-          `Do you want to import as a new motion with a new id ?`
+          `Do you want to import as a new motion with a new id ?`,
         );
         if (createNewWithNewId) {
           motionUploaded.id = uniqueId(`mt${uniqueID()}`);
@@ -1678,6 +1829,14 @@ export const Motion = () => {
     ev.target.value = "";
     // reSelect();
     // preventSelectNavigation(editor , sle)
+  };
+
+  const onLoop = () => {
+    setMotion({ ...motion, isLoop: true })
+  };
+
+  const onUnLoop = () => {
+    setMotion({ ...motion, isLoop: false })
   };
 
   return (
@@ -1738,7 +1897,7 @@ export const Motion = () => {
                         onClick={async (ev) => {
                           addClickClass(
                             ev.currentTarget || ev.target.parentNode,
-                            "click"
+                            "click",
                           );
                           // console.log('motcheeeeeeeeeee : ' , {
                           //   ...motion,
@@ -1751,9 +1910,9 @@ export const Motion = () => {
                             ...motion,
                             ...(isInstance
                               ? {
-                                  isInstance: isInstance,
-                                  id: instanceId,
-                                }
+                                isInstance: isInstance,
+                                id: instanceId,
+                              }
                               : {}),
                             // id:instance
                           });
@@ -1788,7 +1947,9 @@ export const Motion = () => {
                         addClickClass(ev.currentTarget, "click");
                         await navigator.clipboard.writeText(motion.id);
                         toast.success(
-                          <ToastMsgInfo msg={`Motion Id Copied Successfully`} />
+                          <ToastMsgInfo
+                            msg={`Motion Id Copied Successfully`}
+                          />,
                         );
                       }}
                     >
@@ -1920,7 +2081,7 @@ export const Motion = () => {
                 defaultValue={motion.isSplitText}
                 onActive={() =>
                   setTransition(() =>
-                    setMotion({ ...motion, isSplitText: true })
+                    setMotion({ ...motion, isSplitText: true }),
                   )
                 }
                 onUnActive={() => {
@@ -1928,9 +2089,9 @@ export const Motion = () => {
                     ...motion,
                     ...(isInstance
                       ? {
-                          isInstance: isInstance,
-                          id: instanceId,
-                        }
+                        isInstance: isInstance,
+                        id: instanceId,
+                      }
                       : {}),
                     // id:instance
                   });
@@ -1939,10 +2100,11 @@ export const Motion = () => {
                       ...motion,
                       isSplitText: false,
                       splitText: null,
-                    })
+                    }),
                   );
                 }}
               />
+              <SwitcherSection title="Loop" defaultValue={Boolean(motion?.isLoop)} onActive={onLoop} onUnActive={onUnLoop} />
               {motion.isSplitText && (
                 <>
                   <FitTitle>SplitText selector</FitTitle>
@@ -1966,7 +2128,7 @@ export const Motion = () => {
                 defaultValue={motion.isTimeLine}
                 onActive={() =>
                   setTransition(() =>
-                    setMotion({ ...motion, isTimeLine: true })
+                    setMotion({ ...motion, isTimeLine: true }),
                   )
                 }
                 onUnActive={() => {
@@ -1974,14 +2136,14 @@ export const Motion = () => {
                     ...motion,
                     ...(isInstance
                       ? {
-                          isInstance: isInstance,
-                          id: instanceId,
-                        }
+                        isInstance: isInstance,
+                        id: instanceId,
+                      }
                       : {}),
                     // id:instance
                   });
                   setTransition(() =>
-                    setMotion({ ...motion, isTimeLine: false, timeline: null })
+                    setMotion({ ...motion, isTimeLine: false, timeline: null }),
                   );
                 }}
               />
@@ -1995,9 +2157,8 @@ export const Motion = () => {
                 return (
                   <Adder
                     key={index}
-                    className={`flex flex-col gap-3 p-2 bg-surface-main rounded-lg minion ${
-                      motion.animations.length > 1 && "mb-[30px]"
-                    }`}
+                    className={`flex flex-col gap-3 p-2 bg-surface-main rounded-lg minion ${motion.animations.length > 1 && "mb-[30px]"
+                      }`}
                     addClassName="bg-surface-tertiary"
                     delClassName="bg-surface-tertiary"
                     onAddClick={() => {
@@ -2162,7 +2323,7 @@ export const Motion = () => {
                             addClickClass(ev.currentTarget, "click");
                             console.log(
                               "motionUploader",
-                              motionUploader.current
+                              motionUploader.current,
                             );
 
                             motionUploader.current.click();

@@ -2,13 +2,13 @@
 import Dexie, { type EntityTable } from "dexie";
 import { db_name } from "../constants/dbName";
 import { ProjectData } from "grapesjs";
-import { InfinitelyAsset, Project } from "./types";
+import { InfinitelyAsset, Project, WpProject } from "./types";
 
 
 
 const db = new Dexie(db_name) as Dexie & {
   projects: EntityTable< 
-    Project,
+    Project & WpProject,
     "id" // primary key "id" (for the typings only)
   >;
   // assets:EntityTable< 
@@ -25,6 +25,6 @@ db.version(1).stores({
 
 
 
-export type { Project };
+export type { Project , WpProject };
 export { db };
 // (await db.assets.get('1'))

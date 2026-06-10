@@ -8,10 +8,13 @@ import { Icons } from "../../Icons/Icons";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./ToastMsgInfo";
 import { Virtuoso } from "react-virtuoso";
+import { Select } from "./Select";
 
 export const LibraryUploader = () => {
   const inputFileRef = useRef();
   const [files, setFiles] = useState(JSLibrariesType);
+  const [addManauly, setAddManualy] = useState('');
+  const [addManualyLibType, setManualyLibType] = useState('');
   const [remoteLibraryDetail, setRemoteLibraryDetail] = useState({
     latest: "",
     name: "",
@@ -32,15 +35,20 @@ export const LibraryUploader = () => {
    * @param {HTMLInputElement} input
    */
   const loadFiles = async (input) => {
-    const files = [...input.files];
-    const newFiles = files.map((file, i) => {
-      file.fileType = filesTypes[file.type];
-      console.log("type : ", file.fileType, file.type);
+
+    const inputFiles = [...input.files];
+    const mime = await (await import('mime')).default
+    files.forEach(file => URL.revokeObjectURL(file.latest));
+    const newFiles = inputFiles.map((file, i) => {
+
+      file.fileType = mime.getExtension(file.type);
+      console.log("type : ", mime.getExtension(file.type), file.fileType, file.type);
 
       file.latest = URL.createObjectURL(file);
       return file;
     });
     setFiles(newFiles);
+    input.value = '';
   };
 
   const onInput = (key, value) => {
@@ -68,49 +76,63 @@ export const LibraryUploader = () => {
           }}
         />
         <Button
-          className="flex-shrink-0 px-3 py-2"
+          className="flex-shrink-0 px-3 py-2  h-full font-semibold "
           onClick={async (ev) => {
             if (!remoteLibraryDetail.latest || !remoteLibraryDetail.name) {
               toast.error(<ToastMsgInfo msg={`Fill All Fields`} />);
               return;
             }
-            const res = await fetch(remoteLibraryDetail.latest);
-            if (res.ok && res.status == 200) {
-              const blob = await res.blob();
-              const isJs = blob.type.includes("javascript"),
-                isCss = blob.type.includes("css");
+            try {
+              const res = await fetch(remoteLibraryDetail.latest);
+              if (res.ok && res.status == 200) {
+                const blob = await res.blob();
+                const isJs = blob.type.includes("javascript"),
+                  isCss = blob.type.includes("css");
+                  const fileType = isJs ? "js" : isCss ? "css" : "".trim();
+                  console.log("ftype: ", fileType , blob.type);
+                // console.log('');
+                
+                if (isJs || isCss) {
+                  // const splited = remoteLibraryDetail.latest.match(/\.\w+/gi);
 
-              if (isJs || isCss) {
-                // const splited = remoteLibraryDetail.latest.match(/\.\w+/gi);
-                const fileType = isJs ? "js" : isCss ? "css" : "".trim();
-                console.log("ftype: ", fileType);
+                  setFiles((files) => [
+                    ...files,
+                    {
+                      ...remoteLibraryDetail,
 
-                setFiles((files) => [
-                  ...files,
-                  {
-                    ...remoteLibraryDetail,
-
-                    fileType,
-                    file: new File(
-                      [blob],
-                      `${remoteLibraryDetail.name.replaceAll(".js", "")}.js`,
-                      { type: "application/javascript" }
-                    ),
-                  },
-                ]);
+                      fileType,
+                      file: new File(
+                        [blob],
+                        `${remoteLibraryDetail.name.replaceAll(".js", "")}.js`,
+                        { type: "application/javascript" }
+                      ),
+                    },
+                  ]);
+                } else {
+                  // setAddManualy(remoteLibraryDetail.latest);
+                  setAddManualy(remoteLibraryDetail.latest);
+                  
+                  console.log(`remoteLibraryDetail.latest : `, remoteLibraryDetail.latest);
+                  toast.error(<ToastMsgInfo msg={`It is not css or js lib!`} />);
+                }
               } else {
-                toast.error(<ToastMsgInfo msg={`It is not css or js lib!`} />);
+                setAddManualy(remoteLibraryDetail.latest);
+                console.log(`remoteLibraryDetail.latest : `, remoteLibraryDetail.latest);
+
+                toast.error(<ToastMsgInfo msg={`Faild To Fetch`} />);
               }
-            } else {
-              toast.error(<ToastMsgInfo msg={`Faild To Fetch`} />);
+            } catch (error) {
+              setAddManualy(remoteLibraryDetail.latest);
+              console.log(`remoteLibraryDetail.latest : `, remoteLibraryDetail.latest);
+              throw new Error(error);
             }
           }}
         >
-          Add
           {Icons.plus("white")}
+          Add
         </Button>
         <Button
-          className="flex-shrink-0  px-3 py-2"
+          className="flex-shrink-0  px-3 py-2  h-full font-semibold "
           onClick={(ev) => {
             inputFileRef.current.click();
           }}
@@ -127,9 +149,57 @@ export const LibraryUploader = () => {
           onChange={(ev) => {
             loadFiles(ev.target);
           }}
-          // multiple
+        // multiple
         />
       </header>
+
+      {Boolean(addManauly) && <section className="z-0 p-2 mb-2 bg-slate-800 rounded-lg flex gap-2">
+        <Input value={remoteLibraryDetail.latest}
+          onInput={(ev) => {
+            setAddManualy(ev.target.value);
+            setRemoteLibraryDetail({
+              ...remoteLibraryDetail,
+              latest: ev.target.value
+            })
+          }}
+          placeholder="Library url" className="bg-slate-900" />
+        <Input value={remoteLibraryDetail.name} onInput={(ev) => {
+          setRemoteLibraryDetail({
+            ...remoteLibraryDetail,
+            name: ev.target.value
+          })
+        }} placeholder="Library name" className="bg-slate-900" />
+
+        <Select
+          keywords={['js', 'css']}
+          value={addManualyLibType}
+          containerClassName="bg-slate-900"
+          className="bg-slate-900"
+          zIndex={2000}
+          placeholder="Choose library type" onAll={(value) => {
+            setManualyLibType(value)
+          }} />
+
+        <Button onClick={() => {
+          if(!addManualyLibType){
+            toast.warn(<ToastMsgInfo msg={`Please select library type 😀`} />)
+            return;
+          }
+          setFiles((files) => ([
+            ...files,
+            {
+              ...remoteLibraryDetail,
+              fileType: addManualyLibType,
+              manually : true,
+              
+            }
+          ]));
+          setAddManualy('');
+        }}>
+          {Icons.plus("white")}
+          Add Manually
+        </Button>
+      </section>}
 
       <main className="h-full w-full overflow-auto">
         <Virtuoso
@@ -140,6 +210,7 @@ export const LibraryUploader = () => {
               <JsLibrary
                 key={i}
                 library={file}
+
                 // fileuploader
                 afterInstall={({ key, lib }) => {
                   const newLibs = files.filter((file) => file.name != lib.name);

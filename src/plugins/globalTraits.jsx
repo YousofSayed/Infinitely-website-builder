@@ -168,6 +168,7 @@ export const setPropToLoopCmp = ([key, value], oldValue, sle, props = {}) => {
 export const globalTraits = (editor) => {
   editor.on("component:selected", () => {
     const sle = editor.getSelected();
+    const isWrapper = sle.getType().toLowerCase() === 'wrapper';
     // const sleType = sle.get("type");
     // const getLoopComponent = (cmp) =>
     //   (editor.getSelected() || cmp)
@@ -252,6 +253,20 @@ export const globalTraits = (editor) => {
         }) in ${source}`,
       });
     };
+
+    
+    !isWrapper && sle.addTrait(defineTraits([
+      {
+        name:'hide',
+        label:'hide',
+        type:'switch',
+        role:'attribute',
+        hint:`hide or show element`,
+        onSwitch(value){
+          editor.trigger("trait:value");
+        }
+      }
+    ]))
 
     isLoop &&
       sle.setTraits(

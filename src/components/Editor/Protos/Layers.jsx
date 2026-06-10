@@ -9,6 +9,7 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { LazyList } from "../../Protos/LazyList";
 import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 import { For } from "million/react";
+import { Icons } from "../../Icons/Icons";
 
 export const Layers = memo(() => {
   const editor = useEditorMaybe();

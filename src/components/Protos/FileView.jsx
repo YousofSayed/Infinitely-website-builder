@@ -23,13 +23,13 @@ import { opfs } from "../../helpers/initOpfs";
 
 export const FileView = ({
   asset = assetType,
-  callback = (asset = assetType, url = "") => {},
+  callback = (asset = assetType, url = "") => { },
   isCssProp = false,
 }) => {
   const editor = useEditorMaybe();
+  const projectId = +localStorage.getItem(current_project_id);
   const fileNameRef = useRef(refType);
   const [showFilNameTooltib, setShowFileNameTooltib] = useState(false);
-  const projectId = +localStorage.getItem(current_project_id);
   useLayoutEffect(() => {
     if (!fileNameRef || !fileNameRef.current) return;
     const handler = (el) => {
@@ -60,22 +60,10 @@ export const FileView = ({
       toast.warn(<ToastMsgInfo msg={`Please select element`} />);
       return;
     }
-    // const symbolInfo = getInfinitelySymbolInfo(selectedEl);
-    // console.log(cssPropForAM);
 
-    // if (cssPropForAM) {
-    //   setClass({
-    //     cssProp: cssPropForAM,
-    //     value: `url("../assets/${file.name}")`, //`url("${URL.createObjectURL(file)}") , url("../assets/${file.name}") /* buildUrl: url("https://example.com/style.css"); prop: background-image */`,
-    //   });
-    // } else {
     const el = editor.getSelected().getEl();
     const tagName = el.tagName.toLowerCase();
-    console.log(
-      tagName,
-      editor.getSelected().getEl(),
-      editor.getSelected().getEl() instanceof HTMLDivElement
-    );
+
     const pageName = localStorage.getItem(current_page_id);
     const isIndex = pageName.toLowerCase() == "index";
     const src = isCssProp
@@ -86,21 +74,15 @@ export const FileView = ({
   };
 
   const deleteAsset = async () => {
-    // const newAssets = await (
-    //   await getProjectData()
-    // ).assets.filter((asset) => asset.id != id);
-    // await db.projects.update(projectId, {
-    //   assets: newAssets,
-    // });
 
     await opfs.removeFiles([defineRoot(`assets/${asset.name}`)]);
     toast.success(<ToastMsgInfo msg={file_deleted_success_msg} />);
   };
-  console.log("size : ", toMB(asset.size, 2), asset.size);
+
 
   return (
     <section
-      
+
       className={`group   relative rounded-lg p-3 bg-surface-tertiary  flex flex-col justify-center items-center gap-2`}
     >
       <FitTitle className="absolute left-0 top-0 z-[100] ">
@@ -132,7 +114,7 @@ export const FileView = ({
                 ev.currentTarget.play();
                 console.log("play");
               }}
-              onPointerLeave={(ev)=>{
+              onPointerLeave={(ev) => {
                 ev.currentTarget.pause();
               }}
               onDoubleClick={(ev) => {

@@ -5,7 +5,8 @@ let app = PetiteVue.createApp({
 });
 
 app.directive("view", vIntersection);
-app.directive("ref", vRef);
+app.directive("ref", vRef); 
+app.directive("gsap", vGsap); 
 
 let mountBroadCastChannel = new BroadcastChannel("pv:mount");
 mountBroadCastChannel.addEventListener("message", (ev) => {
@@ -82,6 +83,7 @@ function pvMount(
   });
   app.directive("view", vIntersection);
   app.directive("ref", vRef);
+  app.directive("gsap", vGsap);
   console.log("mounting : ", ev.detail.el);
   app.mount(ev.detail.el);
 

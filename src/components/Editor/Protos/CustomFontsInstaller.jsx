@@ -5,6 +5,8 @@ import { refType, uploadFontsType } from "../../../helpers/jsDocs";
 import { uniqueID } from "../../../helpers/cocktail";
 import { Input } from "./Input";
 import {
+  doInNormalAsync,
+  doInWordpressAsync,
   getProjectData,
 } from "../../../helpers/functions";
 import { current_project_id } from "../../../constants/shared";
@@ -17,9 +19,11 @@ import { dbAssetsSwState } from "../../../helpers/atoms";
 import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
 import { opfs } from "../../../helpers/initOpfs";
 import { useEditorMaybe } from "@grapesjs/react";
-import { defineRoot, getFileSize, getFonts } from "../../../helpers/bridge";
+import { defineRoot, fileNameToMediaSlug, getFileSize, getFonts } from "../../../helpers/bridge";
 import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
 import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
+import { wp_update_option, wp_upload_multiple_files } from "../../../Apps/wordpress/functions";
+import { isPlainObject } from "lodash";
 
 const CustomScroller = React.forwardRef(({ style, ...props }, ref) => (
   <div
@@ -75,7 +79,8 @@ export const CustomFontsInstaller = () => {
   const saveFontFilesInDB = async () => {
     const projectData = await getProjectData();
     const projectId = +localStorage.getItem(current_project_id);
-    const newFontsUploaded = {};
+    const tid = toast.loading(<ToastMsgInfo msg="Uploading fonts..." />);
+    // const newFontsUploaded = {};
     // fontFiles.forEach((file) => {
     //   newFontsUploaded[file.name] = {
     //     path: `fonts/${font.name}`,
@@ -83,38 +88,151 @@ export const CustomFontsInstaller = () => {
     //     name: file.name,
     //   };
     // });
-
-    for (const fileData of fontFiles) {
-      newFontsUploaded[fileData.name] = {
+    let fullFontFils = fontFiles.map((fileData) => {
+      return {
+        ...fileData,
         path: `fonts/${fileData.name}`,
-        isCDN: fileData.isCDN,
+        isCDN: false,
         name: fileData.name,
         size: getFileSize(fileData.file).MB,
       };
+    });
 
-      // const fontsFolder = await opfs.getFolder(await opfs.root , `projects/project-${opfs.id}/fonts`);
+    await doInNormalAsync(async () => {
+
+      await opfs.writeFiles([
+        ...fullFontFils.map((fileData) => {
+          return {
+            path: defineRoot(fileData.path),
+            content: fileData.file,
+          };
+        }),
+
+      ]);
+
+      const dataToUpdate = {
+        fonts: {
+          ...projectData.fonts,
+          // ...newFontsUploaded,
+          ...fullFontFils.reduce((acc, fileData) => {
+            delete fileData.file;
+            acc[fileData.name] = {
+              // path: fileData.path,
+              // isCDN: false,
+              // name: fileData.name,
+              // size: fileData.size,
+              ...fileData,
+            };
+            return acc;
+          }, {}),
+        },
+      };
+
       await opfs.writeFiles([
         {
-          path: defineRoot(newFontsUploaded[fileData.name].path),
-          content: fileData.file,
+          path: defineRoot(`css/fonts.css`),
+          content: getFonts(dataToUpdate),
         },
       ]);
-    }
+      await db.projects.update(projectId, dataToUpdate);
+    });
 
-    const dataToUpdate = {
-      fonts: {
-        ...projectData.fonts,
-        ...newFontsUploaded,
-      },
-    };
+    await doInWordpressAsync(async () => {
+      const files = fullFontFils.map(fileData => fileData.file);
+      console.log(files, fullFontFils);
+      if (files.some(file => !(file instanceof File))) {
+        throw new Error("All files must be instance of File");
+      }
 
-    await opfs.writeFiles([
-      {
-        path: defineRoot(`css/fonts.css`),
-        content: getFonts(dataToUpdate),
-      },
-    ]);
-    await db.projects.update(projectId, dataToUpdate);
+      const wp_upload_res = await wp_upload_multiple_files({
+        files,
+        projectId
+      });
+
+      if (!wp_upload_res.success) {
+        throw new Error(wp_upload_res.message || "Failed to upload files");
+      }
+
+      const filesFromResponse = wp_upload_res.files;
+      if (!isPlainObject(filesFromResponse)) {
+        throw new Error("Failed to upload files");
+      }
+
+
+      fullFontFils = fullFontFils.map(fileData => {
+        return {
+          ...fileData,
+          ...filesFromResponse[fileNameToMediaSlug(fileData.file.name)]
+        }
+      });
+
+      //update db
+      const dataToUpdate = {
+        fonts: {
+          ...projectData.fonts,
+          // ...newFontsUploaded,
+          ...fullFontFils.reduce((acc, fileData) => {
+            delete fileData.file;
+            acc[fileData.slug] = {
+              // path: fileData.path,
+              // name: fileData.name,
+              // size: getFileSize(fileData.file).MB,
+              ...fileData,
+              isCDN: false,
+            };
+            return acc;
+          }, {}),
+        },
+      };
+
+
+      await db.projects.update(projectId, dataToUpdate);
+      const newProjectData = await getProjectData();
+      const wp_update_option_res = await wp_update_option({
+        optionName: 'inf_config',
+        value: newProjectData,
+        projectId,
+        merge: true,
+      });
+
+      if (!wp_update_option_res.success) {
+        throw new Error(wp_update_option_res.message || "Failed to update option");
+      }
+    })
+
+    toast.dismiss(tid);
+
+    // for (const fileData of fontFiles) {
+    //   newFontsUploaded[fileData.name] = {
+    //     path: `fonts/${fileData.name}`,
+    //     isCDN: fileData.isCDN,
+    //     name: fileData.name,
+    //     size: getFileSize(fileData.file).MB,
+    //   };
+
+    //   // const fontsFolder = await opfs.getFolder(await opfs.root , `projects/project-${opfs.id}/fonts`);
+    //   await opfs.writeFiles([
+    //     {
+    //       path: defineRoot(newFontsUploaded[fileData.name].path),
+    //       content: fileData.file,
+    //     },
+    //   ]);
+    // }
+
+    // const dataToUpdate = {
+    //   fonts: {
+    //     ...projectData.fonts,
+    //     ...newFontsUploaded,
+    //   },
+    // };
+
+    // await opfs.writeFiles([
+    //   {
+    //     path: defineRoot(`css/fonts.css`),
+    //     content: getFonts(dataToUpdate),
+    //   },
+    // ]);
+    // await db.projects.update(projectId, dataToUpdate);
 
     // swDBAssets.postMessage({
     //   command: "setVar",
@@ -134,7 +252,7 @@ export const CustomFontsInstaller = () => {
     // });
 
     // editor.load();
-    reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {state:true});
+    reloadRequiredInstance.emit(InfinitelyEvents.editor.require, { state: true });
     toast.success(
       <ToastMsgInfo
         msg={`${fontFiles.length} Font File Installed Successfully`}

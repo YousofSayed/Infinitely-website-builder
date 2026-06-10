@@ -25,7 +25,7 @@ export const MultiFunctionProp = (
     const stringifyFilter = (filtersVals = []) => {
       const value = filtersVals
         .map(
-          ({ name, value }) => value ? `${name}(${value}${units?.[name] ?  units[name] : ''})` : ''
+          ({ name, value }) => value ? `${name}(${value}${units?.[name] ? units[name] : ''})` : ''
         )
         .join(" ");
 
@@ -33,7 +33,7 @@ export const MultiFunctionProp = (
     };
 
     const parseFilters = (stringValue = "") => {
-      if(!stringValue) return [];
+      if (!stringValue) return [];
       // console.log(stringValue, "dsadasdsa");
       // console.log(
       //   editor.Parser.parserCss.parse(stringValue),
@@ -41,7 +41,7 @@ export const MultiFunctionProp = (
       // );
       // console.log(stringValue
       //   .match(/(\w+\([^()]*\))/g));
-      
+
       const value = (stringValue
         ?.match(/(\w+\((?:[^()]+|\([^()]*\))*\))/g) || [])
         .filter(Boolean)
@@ -59,12 +59,17 @@ export const MultiFunctionProp = (
       const newArr = [...filters];
       newArr[index].value = propValue;
       console.log(stringifyFilter(newArr));
-      console.log(propValue , newArr , cssProp);
-      
-      setClass({
+      console.log('propValue', propValue, newArr, cssProp, stringifyFilter(newArr), {
         cssProp,
-        value: stringifyFilter(newArr),
-      });
+        value: stringifyFilter(newArr) + 'px',
+      }, CSS.supports(cssProp, 'translateZ(1)'));
+      if (CSS.supports(cssProp, stringifyFilter(newArr))) {
+        setClass({
+          cssProp,
+          value: stringifyFilter(newArr),
+        });
+        
+      }
       setFilters(newArr);
     };
 
@@ -173,13 +178,12 @@ export const MultiFunctionProp = (
                     </p> */}
                     <section className="flex  h-[40px] w-full">
                       {filterProp.name &&
-                      filterProp.name.toLowerCase() == "url" ? (
+                        filterProp.name.toLowerCase() == "url" ? (
                         <Textarea
-                          className={`bg-surface-secondary w-full  ${
-                            !filterUnits[filterProp.name]
+                          className={`bg-surface-secondary w-full  ${!filterUnits[filterProp.name]
                               ? "rounded-lg"
                               : "rounded-tr-none  rounded-br-none"
-                          }`}
+                            }`}
                           placeholder={filterProp.name}
                           value={filterProp.value}
                           onInput={(ev) => {
@@ -188,11 +192,10 @@ export const MultiFunctionProp = (
                         />
                       ) : (
                         <Input
-                          className={`bg-surface-secondary w-full  focus:border-none ${
-                            !filterUnits[filterProp.name]
+                          className={`bg-surface-secondary w-full  focus:border-none ${!filterUnits[filterProp.name]
                               ? "rounded-lg"
                               : "rounded-tr-none  rounded-br-none"
-                          }`}
+                            }`}
                           placeholder={filterProp.name}
                           value={filterProp.value}
                           onInput={(ev) => {
@@ -205,10 +208,10 @@ export const MultiFunctionProp = (
                         Object.keys(units).length &&
                         filterUnits[filterProp.name]
                       ) && (
-                        <p className="w-[40px] font-bold  flex flex-shrink-0 rounded-tl-none rounded-bl-none items-center justify-center text-text-primary bg-surface-secondary h-[100%] rounded-lg">
-                          {filterUnits[filterProp.name]}
-                        </p>
-                      )}
+                          <p className="w-[40px] font-bold  flex flex-shrink-0 rounded-tl-none rounded-bl-none items-center justify-center text-text-primary bg-surface-secondary h-[100%] rounded-lg">
+                            {filterUnits[filterProp.name]}
+                          </p>
+                        )}
                     </section>
                   </section>
                 </Adder>

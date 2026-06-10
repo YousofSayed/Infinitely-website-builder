@@ -11,8 +11,11 @@ import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
  */
 export const Input = ({ editor }) => {
   editor.Components.addType("input", {
+    isComponent:(el)=>el.tagName === 'INPUT',
     model: {
+      
       defaults: {
+        
         icon: reactToStringMarkup(Icons.input({ fill: "white", width: 25 })),
         droppable: false,
         editable: false,

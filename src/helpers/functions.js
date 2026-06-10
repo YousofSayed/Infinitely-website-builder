@@ -17,6 +17,7 @@ import {
   restModelType,
 } from "./jsDocs";
 import {
+  app_type,
   current_page_id,
   current_project_id,
   current_symbol_rule,
@@ -33,6 +34,9 @@ import {
   motionId,
   motionInstanceId,
   project_settings,
+  wp_edite_mode,
+  wp_page_config,
+  wp_rest_base_edite,
 } from "../constants/shared";
 import { InfinitelyEvents } from "../constants/infinitelyEvents";
 import { db } from "./db";
@@ -71,8 +75,12 @@ import {
   filterMotionsByPage,
 } from "./bridge";
 import { loadElements } from "../plugins/IDB";
-import { editorStorageInstance } from "../constants/InfinitelyInstances";
+import {
+  editorStorageInstance,
+  reloadRequiredInstance,
+} from "../constants/InfinitelyInstances";
 import { minify } from "csso";
+import { symbolCodeEditor } from "../plugins/tools/symbolCodeEditor";
 export {
   replaceBlobs,
   base64ToBlob,
@@ -143,7 +151,7 @@ export function getAllValsFromMultiProp(el, prop) {
     prop
       .match(/\(.+\)/gi)
       .join("")
-      .replace(/\(|\)/gi, "")
+      .replace(/\(|\)/gi, ""),
   );
   const namesAndVals = {};
   for (let i = 0; i < names.length; i++) {
@@ -380,14 +388,14 @@ export function renderToolbar(editor) {
   const noTouchClass = `gjs-no-touch-actions`;
   const rect = sle.getEl().getBoundingClientRect();
   const realRight = Math.round(
-    editor.Canvas.getWindow().innerWidth - rect.right
+    editor.Canvas.getWindow().innerWidth - rect.right,
   );
   console.log(
     realRight,
     rect.right,
     window.innerWidth,
     editor.Canvas.getWindow().innerWidth,
-    "real right"
+    "real right",
   );
 
   if (realRight <= 10) {
@@ -501,6 +509,8 @@ export function initToolbar(editor, cmp) {
   sle.set({
     toolbar: newTools,
   });
+
+  symbolCodeEditor(editor);
 
   mountAppTool(editor);
   unMountAppTool(editor);
@@ -627,7 +637,7 @@ export function advancedSearchSuggestions(
   array,
   query = "",
   ignoreLastSpace,
-  targetKeys = null
+  targetKeys = null,
 ) {
   if (!query) return array; // Return full array if no query
   if (ignoreLastSpace && query.endsWith(" ")) return []; // Bail if ignoring trailing space
@@ -718,19 +728,35 @@ export function getCurrentMediaDevice(editor) {
  * @param {import('grapesjs').Editor} editor
  * @returns
  */
-export function reorderCss(editor) {
+export function reorderCss(editor, _css = "", restructure = false) {
   const css = editor.CssComposer;
   const cssCode = minify(
     `
-        ${editor.getCss({
-          avoidProtected: true,
-          keepUnusedStyles: true,
-        })}
+        ${
+          _css ||
+          editor.getCss({
+            avoidProtected: true,
+            keepUnusedStyles: true,
+          })
+        }
           `,
-    { restructure: false }
+    { restructure },
   ).css;
+
   const rules = editor.Parser.parserCss.parse(cssCode);
-  // const rules = css.getAll().toArray();
+  const seen = new Set();
+  const unique = [];
+  // const rulesCp = css.getAll().toArray();
+
+  console.log(rules, "rulesCp");
+  for (const item of rules) {
+    const key = JSON.stringify(item); // unique signature
+
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(item);
+    }
+  }
   // const media = [];
   // const othersRules = [];
 
@@ -764,7 +790,7 @@ export function reorderCss(editor) {
   // console.log("new rules : ", newRules);
 
   // css.getAll().reset(newRules);
-  css.getAll().reset(rules);
+  css.getAll().reset(unique);
 }
 
 /**
@@ -782,7 +808,7 @@ export function getMediaBreakpoint(editor) {
 export const replaceLastWord = (
   string = "",
   newValue = "",
-  ignoreCurlyBrackets = false
+  ignoreCurlyBrackets = false,
 ) => {
   const arrOfString = string.split(" ");
   const lastIndex = arrOfString.length - 1;
@@ -840,7 +866,7 @@ export function extractRulesByIdWithDetails(cssText, selector) {
   const selectorRegex = new RegExp(
     `(${escapedSelector}|\\[${escapedSelector}\\s*=\\s*"[^"]*"\\])` +
       `(:{1,2}[a-zA-Z-]+)*\\s*{[^{}]*}`,
-    "g"
+    "g",
   );
 
   const atRuleRegex =
@@ -857,8 +883,8 @@ export function extractRulesByIdWithDetails(cssText, selector) {
     const stateMatches = rule.match(
       new RegExp(
         `(${escapedSelector}|\\[${escapedSelector}\\s*=\\s*"[^"]*"\\])` +
-          `((:{1,2}[a-zA-Z-]+)+)`
-      )
+          `((:{1,2}[a-zA-Z-]+)+)`,
+      ),
     );
     const states = stateMatches ? stateMatches[2] : null;
 
@@ -1088,7 +1114,7 @@ export const getArrayProps = () => {
   const arrayFunctions = Object.getOwnPropertyNames(Array.prototype).filter(
     (key) => {
       return typeof Array.prototype[key] === "function";
-    }
+    },
   );
 
   return arrayFunctions;
@@ -1132,7 +1158,7 @@ export function getAllCssProperties() {
     const prop = computedStyles[i];
     // Convert from kebab-case to camelCase
     const camelCaseProp = prop.replace(/-([a-z])/g, (match, letter) =>
-      letter.toUpperCase()
+      letter.toUpperCase(),
     );
     cssProperties.push(camelCaseProp);
   }
@@ -1145,7 +1171,7 @@ export function getAllCssProperties() {
 
 function transformJSONObjToHSObject(
   object = "{}",
-  removeCurlyBrackets = false
+  removeCurlyBrackets = false,
 ) {
   let hsObject = ``;
   const buildParams = JSON.parse(object || "{}");
@@ -1203,7 +1229,7 @@ export function buildScriptFromCmds(cmds) {
 
       clone[i].cmd = clone[i].cmd.replaceAll(
         `{${param.name}}`,
-        param.value || ""
+        param.value || "",
       );
     });
 
@@ -1245,14 +1271,14 @@ export function parseCmds(cmds) {
       item
         .split(/\w+(\s+)?\(|\)/gi)
         .join("")
-        .split(",")
+        .split(","),
     );
 
   const objectskeys = {};
 
   (script || "")
     .match(
-      /set(\s+)?(\$|\:)\w+(\s+)?to(\s+)?\{(?:[^{}]|{(?:[^{}]|{[^{}]*})*})*}|/g
+      /set(\s+)?(\$|\:)\w+(\s+)?to(\s+)?\{(?:[^{}]|{(?:[^{}]|{[^{}]*})*})*}|/g,
     )
     .map((val) => val.replaceAll(/set/gi, ""))
     .filter((item) => item)
@@ -1285,7 +1311,7 @@ export function parseCmds(cmds) {
     "for indexes",
     forIndexes,
     script,
-    script?.match(/index\s+\w+(\s+)?/gi)
+    script?.match(/index\s+\w+(\s+)?/gi),
   );
 
   // script?.match?.(/index\s+\w+(\s+)?/ig)?.map(item=>item.replace('index'))
@@ -1320,7 +1346,7 @@ export function viewDynamicContent(restModels = [], valueToView = "") {
 
     if (!restModelsContext) return "";
     const view = new Function(
-      `${restModelsContext}\n\n return ${valueToView}`
+      `${restModelsContext}\n\n return ${valueToView}`,
     )();
     return view;
   } catch (error) {
@@ -1429,7 +1455,7 @@ export const getModelResAndKeys = (models = restModelType) => {
 
     const modelRes = flatResponse(
       JSON.parse(model?.response || "{}"),
-      model.varName
+      model.varName,
     );
     keys = keys.concat(Object.keys(modelRes));
     res = { ...res, ...modelRes };
@@ -1445,7 +1471,7 @@ export const getModelResAndKeys = (models = restModelType) => {
  */
 export function storeProjectData(
   editor,
-  projectData = (previousProjectData) => {}
+  projectData = (previousProjectData) => {},
 ) {
   editor.Storage.store({
     ...editor.getProjectData(),
@@ -1477,12 +1503,12 @@ export function transformToJSX(htmlString) {
     htmlString
       .replace(
         /<(\w+)/g,
-        (_, tagName) => `<${tagName[0].toUpperCase()}${tagName.slice(1)}`
+        (_, tagName) => `<${tagName[0].toUpperCase()}${tagName.slice(1)}`,
       ) // Capitalize the tag name
       // .replace(/="([^"]*)"/g, (_, attrValue) => `=${attrValue}`) // Remove quotes around attribute values
       .replace(
         /<\/(\w+)/g,
-        (_, tagName) => `</${tagName[0].toUpperCase()}${tagName.slice(1)}`
+        (_, tagName) => `</${tagName[0].toUpperCase()}${tagName.slice(1)}`,
       )
   ); // Close the tag with capitalized name
 }
@@ -1532,7 +1558,9 @@ export let initSymbolTimout;
 export function initSymbol(id, editor) {
   /**
    *
-   * @param {import('grapesjs').Component} sle
+   * @param {string} id
+   * @param {import('grapesjs').Component} cmp
+   * @param {string} newContent
    */
   const handler = (id = "", cmp, newContent = "") => {
     initSymbolTimout && clearTimeout(initSymbolTimout);
@@ -1544,6 +1572,7 @@ export function initSymbol(id, editor) {
       const selectedCmp = editor.getSelected() || cmp;
       // selectedCmp.off("change:attributes", handler);
       const selectedSymbol = getInfinitelySymbolInfo(selectedCmp);
+      const selectedProps = selectedCmp.props();
 
       if (!selectedSymbol.isSymbol) {
         console.log("not symbol : ");
@@ -1558,7 +1587,7 @@ export function initSymbol(id, editor) {
           })
         ) {
           console.log(
-            "hhhhhaaaanddddlerrrr"
+            "hhhhhaaaanddddlerrrr",
             // symbols,
             // symbol == selectedCmp.symbol,
             // symbol.getEl(),
@@ -1566,9 +1595,34 @@ export function initSymbol(id, editor) {
           );
           // return;
         } else {
-          // console.error(`replaaaaaaaaaaaaaaaaaaaaaaaaaace here`);
+          console.error(`replaaaaaaaaaaaaaaaaaaaaaaaaaace here`);
+          const parsedNewContent = JSON.parse(newContent);
 
-          symbol.replaceWith(JSON.parse(newContent), {});
+          const newSymbol = symbol.replaceWith(parsedNewContent, {})[0];
+          newSymbol.set({...selectedProps});
+          editor
+            .getWrapper()
+            .find(`[${inf_symbol_Id_attribute}="${id}"]`)
+            .forEach((cmp) => {
+              cmp.set({ ...selectedProps });
+            });
+
+          wpWorkerCallbackMaker(
+            offlineInstallerWorker,
+            "writeFilesToOPFS",
+            {
+              files: {
+                path: defineRoot(`temp/symbols/${id}/html.json`),
+                content: JSON.stringify(parsedNewContent),
+              },
+            },
+            (props) => {
+              console.log(
+                "file writing response from functions.js symbols replacer (initSymbol) callback",
+                props,
+              );
+            },
+          );
           console.log("Replaced");
           // symbol.replaceWith(regenerateSymbol(JSON.parse(newContent)));
           // symbol.set('content', regenerateSymbol(JSON.parse(newContent)));
@@ -1582,7 +1636,13 @@ export function initSymbol(id, editor) {
     }, 10);
   };
 
-  editor.on(`${InfinitelyEvents.symbols.update}:${id}`, handler);
+  window._symbol_handler &&
+    editor.off(
+      `${InfinitelyEvents.symbols.update}:${id}`,
+      window._symbol_handler,
+    );
+  window._symbol_handler = handler;
+  editor.on(`${InfinitelyEvents.symbols.update}:${id}`, window._symbol_handler);
 }
 
 /**
@@ -1740,7 +1800,7 @@ export function getGlobalSettings() {
       JSON.stringify({
         autoSave: true,
         saveDelay: 1000,
-      })
+      }),
   );
 
   return {
@@ -1755,7 +1815,7 @@ export function getGlobalSettings() {
         JSON.stringify({
           ...globalSettings,
           ...newData,
-        })
+        }),
       );
     },
   };
@@ -1798,7 +1858,7 @@ export function getProjectSettings() {
     localStorage.getItem(project_settings) ||
       JSON.stringify({
         ...projectSettingsType,
-      })
+      }),
   );
 
   // console.log("project sttings , :", projectSettings);
@@ -1815,7 +1875,7 @@ export function getProjectSettings() {
         JSON.stringify({
           ...projectSettings,
           ...newData,
-        })
+        }),
       );
     },
   };
@@ -1830,7 +1890,7 @@ export function getProjectSettings() {
 export function isProjectSettingPropTrue(
   prop,
   resolve = () => {},
-  reject = () => {}
+  reject = () => {},
 ) {
   const projectSettings = getProjectSettings();
   if (projectSettings.projectSettings[prop]) {
@@ -1855,7 +1915,7 @@ export function getGlobalSymbolRuleInfo() {
    * @type {import('./types').GlobalSymbolRule}
    */
   const globalSymbolRuleInfo = JSON.parse(
-    sessionStorage.getItem(current_symbol_rule) || "{}"
+    sessionStorage.getItem(current_symbol_rule) || "{}",
   );
 
   return globalSymbolRuleInfo;
@@ -1897,7 +1957,7 @@ export function jsonToHtml(components) {
  * @param {import('./types').TraitCallback} callback
  */
 export function traitCallback(
-  callback = ({ editor, newValue, oldValue, trait }) => {}
+  callback = ({ editor, newValue, oldValue, trait }) => {},
 ) {
   return callback;
 }
@@ -1934,7 +1994,7 @@ export async function parseInfinitelyURL(url = "", specificFolder) {
   console.log(
     url,
     isValidUrl,
-    url.trim().toLowerCase().startsWith("infinitely/")
+    url.trim().toLowerCase().startsWith("infinitely/"),
   );
 
   if (!isValidUrl) return outPut;
@@ -2007,7 +2067,7 @@ export function executeAndExtractFunctions(jsCode) {
 
   // Match function declarations (function xyz() {})
   const functionMatches = jsCode.match(
-    /function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/g
+    /function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/g,
   );
   if (functionMatches) {
     functionMatches.forEach((match) => {
@@ -2018,7 +2078,7 @@ export function executeAndExtractFunctions(jsCode) {
 
   // Match function expressions (const xyz = function() {} or xyz = () => {})
   const variableMatches = jsCode.match(
-    /([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*(function|\(\s*\)\s*=>)/g
+    /([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*(function|\(\s*\)\s*=>)/g,
   );
   if (variableMatches) {
     variableMatches.forEach((match) => {
@@ -2065,7 +2125,7 @@ export async function getImgAsBlob(el, mimeType = "image/webp", options = {}) {
         (blob) => {
           res(blob);
         },
-        mimeType
+        mimeType,
         // 0.5
       );
     }, 10);
@@ -2115,13 +2175,13 @@ export function getMatchedCSS(html, css) {
       m
         .replace(/class="/, "")
         .replace(/"/g, "")
-        .split(" ")
-    )
+        .split(" "),
+    ),
   );
   const idsInHTML = new Set(
     html
       .match(/id="([^"]*)"/g)
-      .map((m) => m.replace(/id="/, "").replace(/"/g, ""))
+      .map((m) => m.replace(/id="/, "").replace(/"/g, "")),
   );
 
   const matchedCSS = css
@@ -2257,14 +2317,14 @@ export async function restartGSAPMotions(editor) {
   console.log(
     "parsed anim state : ",
     currentGsapStateAnimation,
-    editor.gsapRunning
+    editor.gsapRunning,
   );
 
   if (!currentGsapStateAnimation) return;
   const projectData = await getProjectData();
   const motions = filterMotionsByPage(
     await cleanMotions(projectData.motions, projectData.pages),
-    localStorage.getItem(current_page_id)
+    localStorage.getItem(current_page_id),
   );
   killAllGsapMotions(motions);
   runAllGsapMotions(motions);
@@ -2563,7 +2623,7 @@ export const unMount = ({ editor, all, specificCmp, selectAfterUnMout }) => {
             components,
           });
         },
-        starter >= 101 ? 15 : 0
+        starter >= 101 ? 15 : 0,
       );
       // }
     };
@@ -2777,7 +2837,7 @@ export async function shareProject() {
 export function doActionAndPreventSaving(
   editor,
   callback = () => {},
-  handlers = { clearDirtyCount: false, decreaseSteps: false }
+  handlers = { clearDirtyCount: false, decreaseSteps: false },
 ) {
   const originalSave = editor.Storage.config.autosave;
   editor.Storage.setAutosave(false);
@@ -2992,10 +3052,10 @@ export async function handleCloneComponent(model, editor) {
     mainId && interactionsId
       ? `This element contains interactions and motions attributes , are you wanna clone them?`
       : mainId
-      ? `This element contains motions attribute , are you wanna clone it?`
-      : interactionsId
-      ? `This element contains interactions attribute , are you wanna clone it?`
-      : "";
+        ? `This element contains motions attribute , are you wanna clone it?`
+        : interactionsId
+          ? `This element contains interactions attribute , are you wanna clone it?`
+          : "";
   console.log("ids : ", mainId, instanceId, interactionId);
 
   const cnfrm = msg ? (confirmedCmp ? true : confirm(msg)) : false;
@@ -3024,7 +3084,7 @@ export async function handleCloneComponent(model, editor) {
         ...buildInteractionsAttributes(
           projectData.interactions[interactionsId],
           uuid,
-          true
+          true,
         ),
         [interactionInstanceId]: uuid,
         [mainInteractionId]: interactionsId,
@@ -3046,7 +3106,7 @@ export async function handleCloneComponent(model, editor) {
       confirmedCmp.set(newProps);
       await db.projects.update(
         +localStorage.getItem(current_project_id),
-        newProps
+        newProps,
       );
     } else {
       const props = model.props();
@@ -3063,14 +3123,14 @@ export async function handleCloneComponent(model, editor) {
       model.set(newProps);
       await db.projects.update(
         +localStorage.getItem(current_project_id),
-        newProps
+        newProps,
       );
     }
 
     console.log(
       "project Data : ",
       projectData,
-      +localStorage.getItem(current_project_id)
+      +localStorage.getItem(current_project_id),
     );
     // await db.projects.update()
 
@@ -3108,12 +3168,13 @@ export function workerCallbackMaker(
   worker,
   commandCallback,
   callback = (props) => {},
-  { timeout = 5000 } = {}
+  { timeout = 5000 } = {},
 ) {
   const callbackWorker = async (ev) => {
     const data = ev?.data ?? {};
     const { command, msg, props } = data;
     const identifier = command ?? msg;
+    // const uuid = uniqueId(`_send_worker_id-${uniqueID()}-`);
 
     console.log("worker message received:", {
       command,
@@ -3141,10 +3202,100 @@ export function workerCallbackMaker(
   // }, timeout);
 }
 
+/**
+ *
+ * @param {Worker} worker
+ * @param {import('./types').WpCommands} commandCallback
+ * @param {(props : {})=>void} callback
+ */
+export function wpWorkerCallbackMaker(
+  worker,
+  commandCallback,
+  props,
+  resCallback = (props) => {},
+  { timeout = 5000 } = {},
+) {
+  const uuid = uniqueId(`_send_worker_id-${uniqueID()}-`);
+  worker.postMessage({
+    _send_worker_id: uuid,
+    command: commandCallback,
+    props,
+  });
+  console.log("worker should send", commandCallback, uuid);
+
+  const callbackWorker = async (ev) => {
+    const data = ev?.data ?? {};
+    const { command, msg, props } = data;
+    const identifier = command ?? msg;
+
+    console.log("worker message received:", {
+      command,
+      msg,
+      expected: commandCallback,
+      identifier,
+    });
+
+    if (identifier === commandCallback && data._send_worker_id === uuid) {
+      console.log("matched, props:", props);
+      // clearTimeout(timeoutId);
+      try {
+        await resCallback(props);
+      } finally {
+        worker.removeEventListener("message", callbackWorker);
+      }
+    }
+  };
+
+  worker.addEventListener("message", callbackWorker);
+}
+
+/**
+ *
+ * @param {Worker} worker
+ * @param {import('./types').WpCommands} commandCallback
+ * @param {(props : {})=>void} callback
+ */
+export function wpWorkerCallbackListener(
+  worker,
+  commandCallback,
+  resCallback = (props) => {},
+  timeout = 5000,
+) {
+  // worker.postMessage({
+  //   command: commandCallback,
+  //   props,
+  // });
+
+  const callbackWorker = async (ev) => {
+    const data = ev?.data ?? {};
+    const { command, msg, props } = data;
+    const identifier = command ?? msg;
+
+    console.log("worker message received:", {
+      command,
+      msg,
+      expected: commandCallback,
+      identifier,
+    });
+
+    if (identifier === commandCallback) {
+      console.log("matched, props:", props);
+      // clearTimeout(timeoutId);
+      try {
+        await resCallback(props);
+      } finally {
+        worker.removeEventListener("message", callbackWorker);
+      }
+    }
+  };
+
+  worker.addEventListener("message", callbackWorker);
+}
+
 export function deleteAttributesInAllPages(
   attributes = {},
   onDone = () => {},
-  selector
+  selector,
 ) {
   if (!Object.keys(attributes).length) return;
   infinitelyWorker.postMessage({
@@ -3243,6 +3394,7 @@ export let reloaderTimeout;
  * @param {import('grapesjs').Editor} editor
  */
 export async function reloadEditor(editor) {
+  if (!localStorage.getItem(current_page_id)) return;
   const { projectSettings } = getProjectSettings();
   editor.off("component:remove:before");
   editor.Storage.setAutosave(false);
@@ -3287,7 +3439,7 @@ export async function reloadEditor(editor) {
           () => {
             render(newIndex);
           },
-          index == 0 ? 0 : 100
+          index == 0 ? 0 : 100,
         );
       };
       // editor.setComponents(elements.join('') , { avoidStore:true});
@@ -3324,6 +3476,7 @@ export async function reloadEditor(editor) {
       console.log("reloadin end here");
 
       editorStorageInstance.emit(InfinitelyEvents.storage.loadEnd);
+      // editor.emit(InfinitelyEvents.storage.loadEnd);
     },
   });
   // workerCallbackMaker(infinitelyWorker , 'project-loaded' , (props)=>{
@@ -3386,7 +3539,7 @@ export function arrangeDevicesPeriority(editor) {
     devices.reverse().map((dev, i) => {
       dev.set({ priority: i + 1 });
       return dev.attributes;
-    })
+    }),
   );
 
   console.log("new media devices : ", newDevices);
@@ -3409,4 +3562,148 @@ export function arrangeDevicesPeriority(editor) {
   newDevices.forEach((dev) => {
     deviceManager.add(dev);
   });
+}
+
+export function getCurrentStorageType() {
+  const app_type_name = localStorage.getItem("app_type");
+
+  switch (app_type_name) {
+    case "wordpress":
+      return "wp_remote_storage";
+
+    default:
+      return "infinitely";
+  }
+}
+
+/**
+ *
+ * @returns {import('./types').WpPage}
+ */
+export function getWpPageConfig() {
+  return JSON.parse(localStorage.getItem(wp_page_config) || "{}");
+}
+
+/**
+ *
+ * @returns {'post'|'wp_template'|null}
+ */
+export function getWpEditeMode() {
+  return localStorage.getItem(wp_edite_mode);
+}
+
+export function isWordpress() {
+  const app = localStorage.getItem(app_type);
+  return app === "wordpress";
+}
+
+export function isNormal() {
+  const app = localStorage.getItem(app_type);
+  return app !== "wordpress";
+}
+
+export function doInWordpress(callback = () => {}) {
+  if (isWordpress()) {
+    return callback();
+  }
+}
+
+export async function doInWordpressAsync(callback = () => {}) {
+  if (isWordpress()) {
+    return await callback();
+  }
+}
+
+export function doInNormal(callback = () => {}) {
+  if (isNormal()) {
+    return callback();
+  }
+}
+export async function doInNormalAsync(callback = () => {}) {
+  if (isNormal()) {
+    return await callback();
+  }
+}
+
+export function isTemplate() {
+  return getWpPageConfig().type === "wp_template";
+}
+
+export function getWpRestBase() {
+  return localStorage.getItem(wp_rest_base_edite);
+}
+
+// /**
+//  *
+//  * @param {import("grapesjs").Component} wrapper
+//  * @param {boolean} keepWrapper
+//  */
+// export function gjsComponentsToJSON(wrapper , keepWrapper = false) {
+//   const newArr = [];
+//   const components = keepWrapper ? [wrapper] : wrapper.components().models;
+//   for (const cmp of components) {
+//     const jsonCmp = JSON.parse(JSON.stringify(cmp));
+//     if (cmp.get("type") != "textnode") {
+//       jsonCmp["tagName"] = cmp.tagName;
+//     }
+
+//     newArr.push(jsonCmp);
+
+//     if (cmp.components().models.length) {
+//       jsonCmp.components = gjsComponentsToJSON(cmp);
+//     }
+//   }
+
+//   return newArr;
+// }
+
+/**
+ *
+ * @param {import("grapesjs").Component} wrapper
+ * @param {boolean} keepWrapper
+ */
+export function gjsComponentsToJSON(wrapper, keepWrapper = false) {
+  const components = keepWrapper ? [wrapper] : wrapper.components().models;
+
+  const result = components.map((cmp) => {
+    const jsonCmp = JSON.parse(JSON.stringify(cmp));
+
+    if (cmp.get("type") !== "textnode") {
+      jsonCmp.tagName = cmp.tagName;
+    }
+
+    if (cmp.components().models.length) {
+      jsonCmp.components = gjsComponentsToJSON(cmp);
+    }
+
+    return jsonCmp;
+  });
+
+  return result;
+  // 🔥 KEY FIX: unwrap if single
+  // return result.length === 1 ? result[0] : result;
+}
+
+export function reloadInfinitely() {
+  location.replace(location.href);
+}
+
+export const emitChange = () => {
+  reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {
+    state: true,
+  });
+};
+
+export function getAppType() {
+  const app_type_name = localStorage.getItem(app_type);
+
+  return app_type_name;
+}
+
+export function getLogoAppNavLink() {
+  if (isNormal()) {
+    return "/";
+  } else if (isWordpress()) {
+    return "/wordpress/select";
+  }
 }

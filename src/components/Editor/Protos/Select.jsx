@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   useTransition,
@@ -19,10 +20,11 @@ import { Popover } from "../Popover";
 import { CodeEditor } from "./CodeEditor";
 import { FitTitle } from "./FitTitle";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { Loader } from "../../Loader";
 
 /**
  *
- * @param {{label:string , keywords:string[], zIndex : number , ignoreCurlyBrackets:boolean , allowCmdsContext:boolean, allowRestAPIModelsContext:boolean, setValue : (value:string)=>void , onValue:(value:string)=>void , isTextarea:false ,className:string , inputClassName:string ,containerClassName:string, placeholder:string, isCode:boolean , isTemplateEngine:boolean, codeProps:import('@monaco-editor/react').EditorProps, language:string,  replaceLastWorld:boolean, preventInput:boolean, icon:import('react').ReactNode, value:string , setValue:Function , isRelative : boolean, onKeywordsSeted : (keywords:string[])=>void, onItemClicked:(keyword ,index : number)=>void , onAll : (value:string)=>void, onMenuOpen : ({menu , setKeywords , keywords } : {menu:HTMLElement , setKeywords : Function , keywords: string[]})=>void , onMenuClose:({menu , setKeywords , keywords } : {menu:HTMLElement , setKeywords : Function , keywords: string[]})=>void, onEnterPress: (keyword:string )=>void,  onInput:(value:string)=>void, wrap:boolean, setKeyword:(keyword:string )=>void , respectParenthesis : boolean,splitHyphen:boolean}} param0
+ * @param {{label:string , keywords:string[],   onScrollEnd?: () => void, useLoader:boolean, zIndex : number , ignoreCurlyBrackets:boolean , allowCmdsContext:boolean, allowRestAPIModelsContext:boolean, setValue : (value:string)=>void , onValue:(value:string)=>void , isTextarea:false ,className:string , inputClassName:string ,containerClassName:string, placeholder:string, isCode:boolean , isTemplateEngine:boolean, codeProps:import('@monaco-editor/react').EditorProps, language:string,  replaceLastWorld:boolean, preventInput:boolean, icon:import('react').ReactNode, value:string , setValue:Function , isRelative : boolean, onKeywordsSeted : (keywords:string[] , setNewKeywords:(keywords:string[])=>{})=>void, onItemClicked:(keyword ,index : number)=>void , onAll : (value:string)=>void, onMenuOpen : ({menu , setKeywords , keywords } : {menu:HTMLElement , setKeywords : Function , keywords: string[]})=>void , onMenuClose:({menu , setKeywords , keywords } : {menu:HTMLElement , setKeywords : Function , keywords: string[]})=>void, onEnterPress: (keyword:string )=>void,  onInput:(value:string)=>void, wrap:boolean, setKeyword:(keyword:string )=>void , respectParenthesis : boolean,splitHyphen:boolean}} param0
  * @returns
  */
 export const Select = ({
@@ -32,14 +34,14 @@ export const Select = ({
   inputClassName = "",
   containerClassName = "",
   zIndex = 1000,
-  setKeyword = (_, _2) => {},
-  onItemClicked = (_) => {},
-  onInput = (_) => {},
-  onEnterPress = (_, _2) => {},
-  onAll = (value) => {},
-  onMenuOpen = (_) => {},
-  onMenuClose = (_) => {},
-  onKeywordsSeted = (_) => {},
+  setKeyword = (_, _2) => { },
+  onItemClicked = (_) => { },
+  onInput = (_) => { },
+  onEnterPress = (_, _2) => { },
+  onAll = (value) => { },
+  onMenuOpen = (_) => { },
+  onMenuClose = (_) => { },
+  onKeywordsSeted = (_) => { },
   placeholder = "",
   wrap = false,
   respectParenthesis = false,
@@ -55,15 +57,17 @@ export const Select = ({
   codeProps = {},
   value = "",
   replaceLastWorld = false,
-  setValue = (value = "") => {},
-  onValue = (value = "") => {},
+  setValue = (value = "") => { },
+  onValue = (value = "") => { },
   singlevalueInInput = true,
+  useLoader = false,
   ignoreCurlyBrackets = false,
+  onScrollEnd = () => { },
   splitHyphen = false,
 }) => {
-  keywords = keywords.map((keyword) => new String(keyword).toString());
+  // keywords = keywords.map((keyword) => new String(keyword).toString());
   const [showMenu, setMenu] = useState(false);
-  const [newKeywords, setNewKeywords] = useState([...keywords]);
+  const [newKeywords, setNewKeywords] = useState(Array.from(keywords).filter(Boolean).map((keyword) => new String(keyword).toString()));
   const [isPending, setTransition] = useTransition();
   const [currentChoose, setCurrentChoose] = useState(0);
   const setPopoverData = useSetRecoilState(popoverState);
@@ -88,33 +92,39 @@ export const Select = ({
     if (
       respectParenthesis &&
       inputRef.current.value.lastIndexOf(")") ==
-        inputRef.current.value.length - 1
+      inputRef.current.value.length - 1
     ) {
       respectParenthesisHandler();
     }
+  }, [value, respectParenthesis]);
+
+  useEffect(() => {
     onValue(value);
   }, [value]);
 
   useEffect(() => {
-    onKeywordsSeted(newKeywords);
-    // console.log('keys for select : ' , keywords);
+    onKeywordsSeted(keywords, setNewKeywords);
 
-    // filterKeywords(isTextarea ? value.endsWith(' ') ? '' :  : value);
-    // console.log('keyws updated ...');
+    // Defensive check: only update if keywords content actually changed
+    // Comparing length first for performance, then content
+    if (keywords.length !== newKeywords.length || !keywords.every((kw, i) => kw === newKeywords[i])) {
+      console.log('keys for select updated: ', keywords);
+      setNewKeywords(keywords.filter(Boolean).map((keyword) => String(keyword)));
+    }
   }, [keywords]);
 
   useEffect(() => {
     showMenu
       ? onMenuOpen({
-          menu: menuRef.current,
-          setKeywords: setNewKeywords,
-          keywords: newKeywords,
-        })
+        menu: menuRef.current,
+        setKeywords: setNewKeywords,
+        keywords: newKeywords,
+      })
       : onMenuClose({
-          menu: menuRef.current,
-          setKeywords: setNewKeywords,
-          keywords: newKeywords,
-        });
+        menu: menuRef.current,
+        setKeywords: setNewKeywords,
+        keywords: newKeywords,
+      });
     if (showMenu) {
       console.log("ref : ", editorRef.current, inputRef?.current);
       if (!editorRef?.current || !inputRef?.current) return;
@@ -156,7 +166,7 @@ export const Select = ({
   function findIndex(keywords = [], serachvalue) {
     const index = keywords.findIndex(
       (value, i) =>
-        value.toLowerCase().trim() == (serachvalue.toLowerCase() || "").trim()
+        (new String(value)).toLowerCase().trim() == (serachvalue.toLowerCase() || "").trim()
     );
 
     return index;
@@ -182,7 +192,7 @@ export const Select = ({
     }
 
     allowSetKeywords && setNewKeywords(newKeyW);
-    !allowSetKeywords && setNewKeywords(keywords)
+    !allowSetKeywords && setNewKeywords(keywords);
     const index = findIndex(allowSetKeywords ? newKeyW : keywords, value);
 
     if (index == -1 && newKeyW.length) {
@@ -192,7 +202,7 @@ export const Select = ({
       choosenKeyword.current = value; //no items founded
     } else {
       setCurrentChoose(index);
-      
+
       choosenKeyword.current = newKeyW[index];
     }
     // console.log('elslslslssle : ' , index ,newKeyW  , value , newKeywords);
@@ -234,25 +244,25 @@ export const Select = ({
       // setValue(choosenKeyword.current)
     }
     //Ctrl & Sapce
-     if ((ev.ctrlKey || ev.metaKey) && ev.key === " ") {
-              ev.stopPropagation();
-              selectRef.current.click();
-              // setNewKeywords(keywords);
-              // const index = keywords.findIndex(
-              //   (keyword) =>
-              //     keyword.toLowerCase() === ev.target.value.trim().toLowerCase()
-              //   //    ||
-              //   // keyword
-              //   //   .toLowerCase()
-              //   //   .includes(ev.target.value.trim().toLowerCase())
-              // );
-              // const choose = index <= -1 ? 0 : index;
-              // setCurrentChoose(choose);
-              // setKeyword(keywords[choose]);
-              // choosenKeyword.current = keywords[choose];
-              filterKeywords(ev.target.value.trim() , false)
-              setMenu(true);
-            }
+    if ((ev.ctrlKey || ev.metaKey) && ev.key === " ") {
+      ev.stopPropagation();
+      selectRef.current.click();
+      // setNewKeywords(keywords);
+      // const index = keywords.findIndex(
+      //   (keyword) =>
+      //     keyword.toLowerCase() === ev.target.value.trim().toLowerCase()
+      //   //    ||
+      //   // keyword
+      //   //   .toLowerCase()
+      //   //   .includes(ev.target.value.trim().toLowerCase())
+      // );
+      // const choose = index <= -1 ? 0 : index;
+      // setCurrentChoose(choose);
+      // setKeyword(keywords[choose]);
+      // choosenKeyword.current = keywords[choose];
+      filterKeywords(ev.target.value.trim(), false);
+      setMenu(true);
+    }
     //ArrowUp
     else if (ev.key == "ArrowUp") {
       // if (isTextarea && !ev.ctrlKey) return;
@@ -297,11 +307,9 @@ export const Select = ({
   return (
     <section
       ref={selectRef}
-      className={`w-full p-1  h-fit rounded-lg flex  ${
-        wrap && "flex-wrap gap-3 py-1 pl-2"
-      }  gap-2  ${className ? className : "bg-surface-tertiary"} h-full flex ${
-        label ? `p-1 flex-col` : `items-center p-1 `
-      }`}
+      className={`w-full p-1  h-fit rounded-lg flex  ${wrap && "flex-wrap gap-3 py-1 pl-2"
+        }  gap-2  ${className ? className : "bg-surface-tertiary"} h-full flex ${label ? `p-1 flex-col` : `items-center p-1 `
+        }`}
     >
       {icon}
       {label ? (
@@ -311,11 +319,9 @@ export const Select = ({
       ) : null}
       <div
         ref={containerRef}
-        className={`h-full w-full ${
-          isRelative ? "relative" : ""
-        }  flex items-center flex-nowrap justify-center    rounded-lg ${
-          containerClassName ? containerClassName : "bg-surface-secondary"
-        }`}
+        className={`h-full w-full ${isRelative ? "relative" : ""
+          }  flex items-center flex-nowrap justify-center    rounded-lg ${containerClassName ? containerClassName : "bg-surface-secondary"
+          }`}
         onClick={(ev) => {
           console.log("clcickckckc");
           selectRef.current.click();
@@ -335,9 +341,8 @@ export const Select = ({
         <input
           value={value}
           ref={inputRef}
-          className={`w-full h-full  font-semibold   focus:border-blue-600  rounded-lg   px-2 py-2   outline-none text-white ${
-            preventInput ? "pointer-events-none" : ""
-          } ${inputClassName ? inputClassName : "bg-surface-secondary"} `}
+          className={`w-full h-full  font-semibold   focus:border-blue-600  rounded-lg   px-2 py-2   outline-none text-white ${preventInput ? "pointer-events-none" : ""
+            } ${inputClassName ? inputClassName : "bg-surface-secondary"} `}
           type="text"
           placeholder={placeholder || label}
           onClick={(ev) => {
@@ -356,10 +361,10 @@ export const Select = ({
             // !isTextarea && !keywords.length
             //   ? setMenu(false)
             //   : setMenu(!showMenu);
-            filterKeywords(ev.target.value , false);
-            setMenu(!showMenu)
-            console.log('cslskslss');
-            
+            filterKeywords(ev.target.value, false);
+            setMenu(!showMenu);
+            console.log("cslskslss");
+
             isTextarea && editorRef?.current?.focus();
 
             // showPopover({ element: selectRef, isTextarea });
@@ -375,15 +380,15 @@ export const Select = ({
           }}
           onKeyDown={(ev) => {
             handleChooses(ev);
-           
+
             // showPopover(true);
           }}
-          // onFocus={(ev)=>{
-          //   if(!isCode)return
-          //   btnRef.current.click()
-          //   // ev.stopPropagation()
-          //   // setMenu(true)
-          // }}
+        // onFocus={(ev)=>{
+        //   if(!isCode)return
+        //   btnRef.current.click()
+        //   // ev.stopPropagation()
+        //   // setMenu(true)
+        // }}
         />
 
         <button
@@ -391,6 +396,7 @@ export const Select = ({
           ref={btnRef}
           onClick={(ev) => {
             ev.stopPropagation();
+            ev.preventDefault();
             selectRef.current.click();
             console.log("dsad:", keywords, choosenKeyword.current, value);
             const index = findIndex(keywords, value);
@@ -405,9 +411,8 @@ export const Select = ({
             showMenuCallback();
             // setShowPopover();
           }}
-          className={`group   ${
-            showMenu ? "rotate-180" : "rotate-0"
-          } transition-all cursor-pointer flex-grow-0`}
+          className={`group   ${showMenu ? "rotate-180" : "rotate-0"
+            } transition-all cursor-pointer flex-grow-0`}
         >
           {!isTextarea && !isCode && Icons.arrow()}
           {isCode && Icons.code({ width: 25, strokWidth: 3 })}
@@ -425,84 +430,94 @@ export const Select = ({
               isCode
                 ? 600
                 : isTextarea
-                ? 600
-                : selectRef.current.clientWidth <= 300
-                ? 300
-                : selectRef.current.clientWidth
+                  ? 600
+                  : selectRef.current.clientWidth <= 300
+                    ? 300
+                    : selectRef.current.clientWidth
             }
             height={isCode ? Math.trunc(window.innerHeight * (45 / 100)) : 0}
             isOpen={showMenu}
             setIsOpen={setMenu}
           >
-            {!isCode && (
-              <Menu
-                isDynamic={isTextarea}
-                keywords={
-                  newKeywords.length ? newKeywords : ["No Items Founded..."]
-                }
-                menuRef={menuRef}
-                editorRef={editorRef}
-                isOpen={showMenu}
-                choosenKeyword={choosenKeyword}
-                currentChoose={currentChoose}
-                innerStt={value}
-                dynamicInputClassName="bg-surface-tertiary"
-                placeholder="Type Dynamic Content"
-                onInputClick={(ev) => {
-                  ev.stopPropagation();
-                  selectRef.current.click();
-                  setNewKeywords(keywords);
-                  console.log("clcickckckc", keywords);
-                  const index = keywords.findIndex(
-                    (keyword) =>
-                      keyword.toLowerCase() ===
-                      ev.target.value.trim().toLowerCase()
-                  );
-                  const choose = index <= -1 ? 0 : index;
-                  setCurrentChoose(choose);
-                  setKeyword(keywords[choose]);
-                  choosenKeyword.current = keywords[choose];
-                  setMenu(true);
-                }}
-                onInput={(ev) => {
-                  setValue(ev.target.value);
-                  onInput(ev.target.value);
-                  onAll(ev.target.value);
-                  if (ev.target.value.endsWith(" ")) {
-                    // setNewKeywords(keywords);
-                    if (ev.target.value.endsWith(" ")) {
-                      console.log("ends with noo");
-
-                      // return''
-                    }
-                    filterKeywords("");
-                    setCurrentChoose(0);
-                  } else {
-                    console.log("else");
-                    const values = ev.target.value.split(" ");
-                    console.log("value : ", values, values[values.length - 1]);
-
-                    filterKeywords(values[values.length - 1]);
+            {/* {console.log('new keywords222' , newKeywords , !Boolean(newKeywords.length) , useLoader)} */}
+            {!isCode &&
+              (useLoader ? (
+                <Loader />
+              ) : (
+                <Menu
+                  // key={keywords.length}
+                  onScrollEnd={onScrollEnd}
+                  isDynamic={isTextarea}
+                  keywords={
+                    newKeywords
                   }
-                }}
-                onKeyDown={(ev) => {
-                  handleChooses(ev);
-                }}
-                onItemClicked={(ev, keyword, i) => {
-                  ev.stopPropagation();
-                  const nkeyw = splitHyphen ? keyword.split("-")[0] : keyword;
-                  const finalvalue = isTextarea
-                    ? replaceLastWord(value, nkeyw, ignoreCurlyBrackets)
-                    : nkeyw;
-                  setValue(finalvalue);
-                  onAll(finalvalue);
-                  onItemClicked(!replaceLastWorld ? nkeyw : finalvalue, i);
-                  setKeyword(finalvalue);
-                  isTextarea ? undefined : setMenu(false);
-                  inputRef.current.focus();
-                }}
-              />
-            )}
+                  menuRef={menuRef}
+                  editorRef={editorRef}
+                  isOpen={showMenu}
+                  choosenKeyword={choosenKeyword}
+                  currentChoose={currentChoose}
+                  innerStt={value}
+                  dynamicInputClassName="bg-surface-tertiary"
+                  placeholder="Type Dynamic Content"
+                  onInputClick={(ev) => {
+                    ev.stopPropagation();
+                    selectRef.current.click();
+                    setNewKeywords(keywords);
+                    console.log("clcickckckc", keywords);
+                    const index = keywords.findIndex(
+                      (keyword) =>
+                        keyword.toLowerCase() ===
+                        ev.target.value.trim().toLowerCase()
+                    );
+                    const choose = index <= -1 ? 0 : index;
+                    setCurrentChoose(choose);
+                    setKeyword(keywords[choose]);
+                    choosenKeyword.current = keywords[choose];
+                    setMenu(true);
+                  }}
+                  onInput={(ev) => {
+                    setValue(ev.target.value);
+                    onInput(ev.target.value);
+                    onAll(ev.target.value);
+                    if (ev.target.value.endsWith(" ")) {
+                      // setNewKeywords(keywords);
+                      if (ev.target.value.endsWith(" ")) {
+                        console.log("ends with noo");
+
+                        // return''
+                      }
+                      filterKeywords("");
+                      setCurrentChoose(0);
+                    } else {
+                      console.log("else");
+                      const values = ev.target.value.split(" ");
+                      console.log(
+                        "value : ",
+                        values,
+                        values[values.length - 1]
+                      );
+
+                      filterKeywords(values[values.length - 1]);
+                    }
+                  }}
+                  onKeyDown={(ev) => {
+                    handleChooses(ev);
+                  }}
+                  onItemClicked={(ev, keyword, i) => {
+                    ev.stopPropagation();
+                    const nkeyw = splitHyphen ? keyword.split("-")[0] : keyword;
+                    const finalvalue = isTextarea
+                      ? replaceLastWord(value, nkeyw, ignoreCurlyBrackets)
+                      : nkeyw;
+                    setValue(finalvalue);
+                    onAll(finalvalue);
+                    onItemClicked(!replaceLastWorld ? nkeyw : finalvalue, i);
+                    setKeyword(finalvalue);
+                    isTextarea ? undefined : setMenu(false);
+                    inputRef.current.focus();
+                  }}
+                />
+              ))}
 
             {isCode && (
               <CodeEditor

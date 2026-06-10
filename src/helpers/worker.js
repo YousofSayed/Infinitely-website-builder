@@ -21,8 +21,10 @@ import {
   updateSymbolsStylesFiles,
   removeAttributesInAllPages,
   setAttributesInAllPages,
+  createWpProject,
 } from "./workerCommands";
 import { doWorkerPattern } from "./workersPattern";
+import { wpCommands } from "./wp_commands_worker";
 // import { getProjectData } from "./functions";
 
 const commands = {
@@ -38,6 +40,7 @@ const commands = {
   varsToServiceWorker,
   sendPreviewPagesToServiceWorker,
   createProject,
+  createWpProject,
   initOPFS,
   clearTimeouts,
   writeFilesToOPFS,
@@ -46,6 +49,7 @@ const commands = {
   deleteAttributesInAllPages,
   parseHTMLAndRaplceSymbols,
   removeAttributesInAllPages,
+  ...wpCommands,
   // getElementRulesWithAst,
   updateSymbolsStylesFiles,
   setAttributesInAllPages,

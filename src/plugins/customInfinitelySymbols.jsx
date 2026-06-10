@@ -5,9 +5,11 @@ import {
   inf_class_name,
   inf_symbol_Id_attribute,
 } from "../constants/shared";
+import { defineRoot } from "../helpers/bridge";
 import { uniqueID } from "../helpers/cocktail";
 import { db } from "../helpers/db";
-import { getInfinitelySymbolInfo, initSymbol } from "../helpers/functions";
+import { getInfinitelySymbolInfo, initSymbol, reorderCss } from "../helpers/functions";
+import { opfs } from "../helpers/initOpfs";
 
 /**
  *
@@ -18,16 +20,38 @@ export const customInfinitelySymbols = (editor) => {
   let firstLoad = true;
 
   editor.on("canvas:frame:load:body", async () => {
-    const projectId = +localStorage.getItem(current_project_id);
+    // const projectId = +localStorage.getItem(current_project_id);
 
-    await db.projects.get(projectId).then((project) => {
-      Object.keys(project.symbols).forEach((symbolId) => {
-        initSymbol(symbolId, editor);
-      });
-      // console.log("cmps form load: ", project.data.symbols);
-      firstLoad = false;
-    });
+    // await db.projects.get(projectId).then((project) => {
+    //   Object.keys(project.symbols).forEach((symbolId) => {
+    //     initSymbol(symbolId, editor);
+    //   });
+    //   // console.log("cmps form load: ", project.data.symbols);
+    //   firstLoad = false;
+    // });
+
+    editor.getWrapper().find(`[${inf_symbol_Id_attribute}]`).map(cmp => cmp.getAttributes()[inf_symbol_Id_attribute]).forEach(id => initSymbol(id, editor));
   });
+
+  editor.on('component:add',
+    /**
+   *
+   * @param {import('grapesjs').Component} cmp
+   * @returns
+   */
+    async(cmp) => {
+      console.log('component:add : ', cmp);
+      if (!cmp)return;
+      const symbolInf = getInfinitelySymbolInfo(cmp);
+      if(symbolInf.isSymbol && symbolInf.isMain){
+        initSymbol(symbolInf.mainId , editor);
+        const style_file = await opfs.getFile(defineRoot(`temp/symbols/${symbolInf.mainId}/style.css`));
+        if(!style_file)return;
+        const style_file_content = await style_file.text();
+        reorderCss(editor , `${style_file_content} ${editor.getCss()} ` , true);
+        // editor.addComponents(`<style>${style_file_content}</style>`);
+      } 
+    })
 
   //update symbol
   /**
@@ -44,40 +68,40 @@ export const customInfinitelySymbols = (editor) => {
 
     if (!symbol.isSymbol) return;
     // console.log('componets addded : ' , cmp , cmp.getEl() , symbol.symbol?.getEl());
-    console.log('from update symbol' , addedComponent);
+    console.log('from update symbol', addedComponent);
     const symbolId = symbol.symbol.getAttributes()[inf_symbol_Id_attribute];
 
     // console.log("what is problem?", cmp);
     const projectId = +localStorage.getItem(current_project_id);
-    
+
     const updateSymbolInDb = () => {
       symbolTimeout && clearTimeout(symbolTimeout);
       setTimeout(async () => {
         // console.log("Component updated: ", cmp, symbol.symbol.getEl());
 
         const addedCmpSymbolInfo = getInfinitelySymbolInfo(addedComponent);
-        if(addedComponent && addedComponent.get('type') != "textnode"){
+        if (addedComponent && addedComponent.get('type') != "textnode") {
           if (addedComponent.getAttributes()[inf_symbol_Id_attribute]) {
-          editor.UndoManager.stop();
-          addedComponent.removeAttributes(inf_symbol_Id_attribute, {
-            avoidStore: true,
-          });
-          editor.UndoManager.start();
-          // toast.warn(<ToastMsgInfo msg={`Symbols in symbols not allowed`}/>)
-          // return;
-        }
+            editor.UndoManager.stop();
+            addedComponent.removeAttributes(inf_symbol_Id_attribute, {
+              avoidStore: true,
+            });
+            editor.UndoManager.start();
+            // toast.warn(<ToastMsgInfo msg={`Symbols in symbols not allowed`}/>)
+            // return;
+          }
 
-        addedComponent
-          ? addedComponent.addAttributes(
+          addedComponent
+            ? addedComponent.addAttributes(
               {
                 [inf_class_name]: `inf-${uniqueID()}`,
               },
               { avoidStore: true }
             )
-          : null;
+            : null;
 
         }
-        
+
         sessionStorage.setItem(current_symbol_id, symbolId);
 
         editor.trigger(

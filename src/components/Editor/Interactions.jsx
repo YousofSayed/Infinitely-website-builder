@@ -12,6 +12,8 @@ import { Icons } from "../Icons/Icons";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
   deleteAttributesInAllPages,
+  doInNormal,
+  doInWordpress,
   downloadFile,
   getProjectData,
   getProjectSettings,
@@ -182,7 +184,7 @@ export const Interaction = ({
     //   return;
     // }
     const actionTarget = actions.find(
-      (action) => action.label.toLowerCase() == actionName.toLowerCase()
+      (action) => action.label.toLowerCase() == actionName.toLowerCase(),
     );
     if (actionTarget) {
       const clone = cloneDeep(interactions);
@@ -222,7 +224,7 @@ export const Interaction = ({
       clone[index].actions[actionIndex].params[key],
       clone[index].actions[actionIndex].params,
       key,
-      value
+      value,
     );
 
     if (isPlainObject(clone[index].actions[actionIndex].params[key])) {
@@ -261,7 +263,7 @@ export const Interaction = ({
       .forEach((cmp) => {
         cmp.removeAttributes([`v-on:${interaction.event}`]);
         const viewAttrs = Object.keys(cmp.getAttributes()).filter((key) =>
-          viewEvents.includes(key.replace(/v-on:|@/gi, ""))
+          viewEvents.includes(key.replace(/v-on:|@/gi, "")),
         );
         console.log("attttttttrs : ", viewAttrs);
 
@@ -276,7 +278,7 @@ export const Interaction = ({
       console.log(
         "id is : ",
         id,
-        editor.getWrapper().find(`[${interactionId}="${id}"]`)
+        editor.getWrapper().find(`[${interactionId}="${id}"]`),
       );
 
       editor
@@ -308,7 +310,7 @@ export const Interaction = ({
                 ? value.replaceAll(`self`, `[${interactionId}="${id}"]`)
                 : value;
             })
-            .join(",")})`
+            .join(",")})`,
       )
       .join(";");
 
@@ -352,7 +354,7 @@ export const Interaction = ({
             onClick={async (ev) => {
               await navigator.clipboard.writeText(JSON.stringify(interaction));
               toast.success(
-                <ToastMsgInfo msg={`Interaction copied successfully👍`} />
+                <ToastMsgInfo msg={`Interaction copied successfully👍`} />,
               );
             }}
           >
@@ -387,7 +389,7 @@ export const Interaction = ({
             onClick={async () => {
               pasteAction(await navigator.clipboard.readText());
               toast.success(
-                <ToastMsgInfo msg={`Action pasted successfully👍`} />
+                <ToastMsgInfo msg={`Action pasted successfully👍`} />,
               );
             }}
           >
@@ -421,10 +423,10 @@ export const Interaction = ({
                     tooltipTitle="Copy Action"
                     onClick={async () => {
                       await navigator.clipboard.writeText(
-                        JSON.stringify(action)
+                        JSON.stringify(action),
                       );
                       toast.success(
-                        <ToastMsgInfo msg={`Action copied successfully👍`} />
+                        <ToastMsgInfo msg={`Action copied successfully👍`} />,
                       );
                     }}
                   >
@@ -530,8 +532,7 @@ export const Interactions = () => {
     if (!editor) return;
     if (!editor.getSelected()) return;
     // getAndSetIdHandle();
-  
-    
+
     const sle = editor.getSelected();
     const handler = async () => {
       const sle = editor.getSelected();
@@ -548,7 +549,11 @@ export const Interactions = () => {
         setInteractionsId(intersectionIdAttr);
       } else {
         const projectData = await getProjectData();
-        console.log("elseeee", projectData.interactions[intersectionIdAttr],projectData.interactions[intersectionIdAttr]|| []);
+        console.log(
+          "elseeee",
+          projectData.interactions[intersectionIdAttr],
+          projectData.interactions[intersectionIdAttr] || [],
+        );
         setInteractions(projectData.interactions[intersectionIdAttr] || []);
         setInteractionsId(intersectionIdAttr);
         setMainId(intersectionIdAttr);
@@ -574,7 +579,7 @@ export const Interactions = () => {
   }, [selectedEl, editor]);
 
   useEffect(() => {
-      console.log("interactionsState : " ,interactionsState);
+    console.log("interactionsState : ", interactionsState);
     if (!editor) return;
     if (mainId && Array.isArray(interactionsState)) {
       (async () => {
@@ -591,7 +596,7 @@ export const Interactions = () => {
         const allSameInteractionsCmps = editor
           .getWrapper()
           .find(
-            `[${interactionId}="${mainId}"] , [${mainInteractionId}="${mainId}"]`
+            `[${interactionId}="${mainId}"] , [${mainInteractionId}="${mainId}"]`,
           );
         for (const cmp of allSameInteractionsCmps) {
           // if (editor.getSelected() == cmp) continue;
@@ -601,7 +606,7 @@ export const Interactions = () => {
           const newInteractionsAttributes = buildInteractionsAttributes(
             interactionsState,
             isInstance ? instanceId : mainId,
-            isInstance
+            isInstance,
           );
           cmp.addAttributes(newInteractionsAttributes);
           // for (const interaction of interactionsState) {
@@ -615,40 +620,97 @@ export const Interactions = () => {
           //   });
           // }
         }
-
-        workerCallbackMaker(infinitelyWorker, "updateDB", () => {
-          setInteractionsAttributes(interactionsId, async () => {
-            console.log("doneeeeeeeeeeeeeeeeeee", originalAutosave);
-            // alert("kokokokoo");
-            // projectSettings.enable_auto_save && store({}, editor);
-            if (projectSettings.enable_auto_save) {
-              updatePrevirePage({
-                data: await getProjectData(),
-                pageName: localStorage.getItem(current_page_id),
-                projectId: +localStorage.getItem(current_project_id),
-                projectSetting: projectSettings,
-                editorData: {},
-              });
-              editor.clearDirtyCount();
-              editor.Storage.setAutosave(originalAutosave);
-            }
+        doInNormal(() => {
+          workerCallbackMaker(infinitelyWorker, "updateDB", () => {
+            setInteractionsAttributes(interactionsId, async () => {
+              console.log("doneeeeeeeeeeeeeeeeeee", originalAutosave);
+              // alert("kokokokoo");
+              // projectSettings.enable_auto_save && store({}, editor);
+              if (projectSettings.enable_auto_save) {
+                updatePrevirePage({
+                  data: await getProjectData(),
+                  pageName: localStorage.getItem(current_page_id),
+                  projectId: +localStorage.getItem(current_project_id),
+                  projectSetting: projectSettings,
+                  editorData: {},
+                });
+                editor.clearDirtyCount();
+                editor.Storage.setAutosave(originalAutosave);
+              }
+            });
           });
-        });
 
-        timeout.current && clearTimeout(timeout.current);
-        timeout.current = setTimeout(() => {
-          infinitelyWorker.postMessage({
-            command: "updateDB",
-            props: {
-              data: {
-                interactions: {
-                  ...(projectData?.interactions || {}),
-                  [mainId]: interactionsState,
+          timeout.current && clearTimeout(timeout.current);
+          timeout.current = setTimeout(() => {
+            infinitelyWorker.postMessage({
+              command: "updateDB",
+              props: {
+                data: {
+                  interactions: {
+                    ...(projectData?.interactions || {}),
+                    [mainId]: interactionsState,
+                  },
                 },
               },
-            },
-          });
-        }, 10);
+            });
+          }, 10);
+        });
+
+        doInWordpress(() => {
+          console.log(
+            "introooooooooooooo",
+            interactionsState.map((interaction) => {
+              !interaction?.instances && (interaction.instances = {});
+              for (const [id, instance] of Object.entries(
+                interaction.instances,
+              )) {
+                if (!id) continue;
+                instance.attr_for_wp = buildInteractionsAttributes(
+                  [interaction],
+                  id,
+                  true,
+                );
+                instance.id = id;
+              }
+              if (
+                isInstance &&
+                !isPlainObject(interaction.instances[instanceId])
+              ) {
+                interaction.instances[instanceId] = {
+                  id: instanceId,
+                  attr_for_wp: buildInteractionsAttributes(
+                    [interaction],
+                    instanceId,
+                    true,
+                  ),
+                };
+              }
+
+              interaction.attr_for_wp = buildInteractionsAttributes(
+                [interaction],
+                mainId,
+                false,
+              );
+
+              return interaction;
+            }),
+          );
+
+          timeout.current && clearTimeout(timeout.current);
+          timeout.current = setTimeout(() => {
+            infinitelyWorker.postMessage({
+              command: "updateDB",
+              props: {
+                data: {
+                  interactions: {
+                    ...(projectData?.interactions || {}),
+                    [mainId]: interactionsState,
+                  },
+                },
+              },
+            });
+          }, 10);
+        });
 
         console.log("interactions from all effetc : ", interactionsState);
       })();
@@ -682,7 +744,7 @@ export const Interactions = () => {
     console.log(
       "inter id : ",
       interactionIdAttr,
-      projectData?.interactions?.[interactionIdAttr]
+      projectData?.interactions?.[interactionIdAttr],
     );
 
     // return;
@@ -730,7 +792,7 @@ export const Interactions = () => {
     if (
       interactionsState.some(
         (interaction) =>
-          interaction.event.toLowerCase() == eventName.toLowerCase()
+          interaction.event.toLowerCase() == eventName.toLowerCase(),
       )
     ) {
       toast.warn(<ToastMsgInfo msg={`You already use this interaction...!`} />);
@@ -781,7 +843,7 @@ export const Interactions = () => {
       interactionsState.some(
         (interaction) =>
           interaction.event.toLowerCase() ==
-          parsedInteraction.event.toLowerCase()
+          parsedInteraction.event.toLowerCase(),
       )
     ) {
       toast.warn(<ToastMsgInfo msg={`You already use this interaction...!`} />);
@@ -800,28 +862,28 @@ export const Interactions = () => {
     const sle = editor.getSelected();
     if (!sle) return;
     const cnfrm = confirm(
-      `Are you sure you want to delete those interactions? All instances will be removed from all pages, and you won’t be able to undo them on other pages (but you can undo them on the current page; symbols are exceptions)`
+      `Are you sure you want to delete those interactions? All instances will be removed from all pages, and you won’t be able to undo them on other pages (but you can undo them on the current page; symbols are exceptions)`,
     );
     if (!cnfrm) return;
     editor.Storage.setAutosave(false);
     const allSameInteractionsCmps = editor
       .getWrapper()
       .find(
-        `[${mainInteractionId}="${mainId}"][${interactionInstanceId}] , [${interactionId}="${mainId}"]`
+        `[${mainInteractionId}="${mainId}"][${interactionInstanceId}] , [${interactionId}="${mainId}"]`,
       );
 
     for (const cmp of allSameInteractionsCmps) {
       console.log(
         Object.fromEntries(
           Object.keys(
-            buildInteractionsAttributes(interactionsState, mainId) || {}
-          ).map((key) => [key, null])
-        )
+            buildInteractionsAttributes(interactionsState, mainId) || {},
+          ).map((key) => [key, null]),
+        ),
       );
 
       cmp.removeAttributes([
         ...Object.keys(
-          buildInteractionsAttributes(interactionsState, mainId) || {}
+          buildInteractionsAttributes(interactionsState, mainId) || {},
         ),
         mainInteractionId,
         interactionId,
@@ -841,7 +903,7 @@ export const Interactions = () => {
         preventSelectNavigation(editor, sle);
         // projectSettings.enable_auto_save && store({}, editor);
       },
-      `[${mainInteractionId}="${mainId}"][${interactionInstanceId}] , [${interactionId}="${mainId}"] `
+      `[${mainInteractionId}="${mainId}"][${interactionInstanceId}] , [${interactionId}="${mainId}"] `,
     );
   };
 
@@ -880,7 +942,7 @@ export const Interactions = () => {
     const newUUID = createINNUUID();
     sle.addAttributes({ [interactionId]: newUUID });
     const oldInteractions = cloneDeep(
-      projectData.interactions[selectedInteractionId]
+      projectData.interactions[selectedInteractionId],
     );
     projectData.interactions[newUUID] = oldInteractions;
     await db.projects.update(+localStorage.getItem(current_project_id), {
@@ -913,7 +975,7 @@ export const Interactions = () => {
       const attrbiutesV = buildInteractionsAttributes(
         interactionsState,
         mainId,
-        isInstance
+        isInstance,
       );
 
       console.log("v attrs  : ", attrbiutesV);
@@ -921,7 +983,7 @@ export const Interactions = () => {
       editor
         .getWrapper()
         .find(
-          `[${interactionId}="${mainId}"] , [${mainInteractionId}="${mainId}"]`
+          `[${interactionId}="${mainId}"] , [${mainInteractionId}="${mainId}"]`,
         )
         .forEach((cmp) => {
           cmp.removeAttributes(Object.keys(attrbiutesV));
@@ -942,7 +1004,7 @@ export const Interactions = () => {
     });
     preventSelectNavigation(editor, sle);
     toast.success(
-      <ToastMsgInfo msg={`Interactions uploaded successfully👍`} />
+      <ToastMsgInfo msg={`Interactions uploaded successfully👍`} />,
     );
     ev.target.value = "";
   };
@@ -955,7 +1017,7 @@ export const Interactions = () => {
     });
 
     toast.success(
-      <ToastMsgInfo msg={`Interactions downloaded successfully👍`} />
+      <ToastMsgInfo msg={`Interactions downloaded successfully👍`} />,
     );
   };
 
@@ -968,7 +1030,7 @@ export const Interactions = () => {
   return (
     <Memo className="h-full">
       <UndoRedoContainer
-      defaultValue={interactionsType}
+        defaultValue={interactionsType}
         className="h-full"
         state={[interactionsState, setInteractions]}
         showProp="interactionsBuilder"
@@ -1121,7 +1183,7 @@ export const Interactions = () => {
                             toast.success(
                               <ToastMsgInfo
                                 msg={`Interactions Id Copied Successfully`}
-                              />
+                              />,
                             );
                           }}
                         >
@@ -1236,18 +1298,19 @@ export const Interactions = () => {
           )}
 
           <Accordion>
-            {Array.isArray(interactionsState) && interactionsState.map((interaction, i) => (
-              <AccordionItem key={i} title={interaction.event}>
-                <Interaction
-                  id={interactionsId}
-                  index={i}
-                  interactions={interactionsState}
-                  setInteractions={setInteractions}
-                  setInteractionsId={setInteractionsId}
-                  interaction={interaction}
-                />
-              </AccordionItem>
-            ))}
+            {Array.isArray(interactionsState) &&
+              interactionsState.map((interaction, i) => (
+                <AccordionItem key={i} title={interaction.event}>
+                  <Interaction
+                    id={interactionsId}
+                    index={i}
+                    interactions={interactionsState}
+                    setInteractions={setInteractions}
+                    setInteractionsId={setInteractionsId}
+                    interaction={interaction}
+                  />
+                </AccordionItem>
+              ))}
           </Accordion>
 
           {interactionsState.length > 2 && (

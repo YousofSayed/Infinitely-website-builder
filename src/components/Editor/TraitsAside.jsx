@@ -243,19 +243,19 @@ export const TraitsAside = () => {
     }
     // isString(value) ? value : JSON.stringify(trait.get("value"))
     // sle.addAttributes({ [name]: isString(value) ? value : stringify(value) });
-    editor.trigger("trait:value");
+    editor.trigger(InfinitelyEvents.layers.update);
     console.log("update should be done");
   };
 
   const addAttribute = ({ key, value }) => {
     const sle = editor.getSelected();
     const type = sle.get("type").toLowerCase();
-    if (isValidAttribute(key, value||'')) {
-      sle.addAttributes({ [key]: value || "" } );
+    if (isValidAttribute(key, value || '')) {
+      sle.addAttributes({ [key]: value || "" });
       setAttributes(getFilterdAttributes());
       if (type == "video" || type == "iframe" || type == "source") {
-        const newSle = sle.replaceWith(sle.clone())[0]; 
-        preventSelectNavigation(editor , newSle)
+        const newSle = sle.replaceWith(sle.clone())[0];
+        preventSelectNavigation(editor, newSle)
         // getProjectSettings().set({
         //   navigate_to_style_when_Select: false,
         // });
@@ -274,16 +274,7 @@ export const TraitsAside = () => {
     const type = sle.get("type").toLowerCase();
     sle.removeAttributes([key]);
     setAttributes(getFilterdAttributes());
-    // if (type == "video" || type == "iframe" || type == "source") {
-    //   const newSle = sle.replaceWith(sle.clone())[0];
-    //   getProjectSettings().set({
-    //     navigate_to_style_when_Select: false,
-    //   });
-    //   editor.select(newSle);
-    //   getProjectSettings().set({
-    //     navigate_to_style_when_Select: true,
-    //   });
-    // }
+
   };
 
   return (
@@ -296,9 +287,8 @@ export const TraitsAside = () => {
               <FitTitle className="custom-font-size">Type Content</FitTitle>
               <nav className="flex items-center  gap-3 p-1 px-2 bg-surface-tertiary w-fit  rounded-lg self-end text-text-primary">
                 <button
-                  className={`w-[22.5px] h-[22.5px] cursor-pointer flex items-center justify-center rounded-md transition-colors ${
-                    codeSettings.defaultLanguage == "html" && "bg-brand-primary"
-                  }`}
+                  className={`w-[22.5px] h-[22.5px] cursor-pointer flex items-center justify-center rounded-md transition-colors ${codeSettings.defaultLanguage == "html" && "bg-brand-primary"
+                    }`}
                   onClick={(ev) => {
                     addClickClass(ev.currentTarget, "click");
                     editor.getSelected().addAttributes({
@@ -314,10 +304,9 @@ export const TraitsAside = () => {
                   {Icons.html({ width: 16, height: 16 })}
                 </button>
                 <button
-                  className={`w-[22.5px] h-[22.5px] cursor-pointer flex items-center justify-center rounded-md transition-colors ${
-                    codeSettings.defaultLanguage == "javascript" &&
+                  className={`w-[22.5px] h-[22.5px] cursor-pointer flex items-center justify-center rounded-md transition-colors ${codeSettings.defaultLanguage == "javascript" &&
                     "bg-brand-primary"
-                  }`}
+                    }`}
                   onClick={(ev) => {
                     addClickClass(ev.currentTarget, "click");
                     editor.getSelected().addAttributes({
@@ -359,13 +348,13 @@ export const TraitsAside = () => {
                 // },
                 value:
                   codeSettings.defaultLanguage == "html" &&
-                  !codeSettings.enableTemplateEngine
+                    !codeSettings.enableTemplateEngine
                     ? codeSettings.htmlValueState ||
-                      codeSettings.templateEngineValueState
+                    codeSettings.templateEngineValueState
                     : codeSettings.defaultLanguage == "javascript" &&
                       codeSettings.enableTemplateEngine
-                    ? `\`${codeSettings.templateEngineValueState}\``
-                    : "",
+                      ? `\`${codeSettings.templateEngineValueState}\``
+                      : "",
                 // value: codeSettings.htmlValueState || codeSettings.templateEngineValueState,
                 // onMount(ed, mon) {
                 //   // console.log("mouted", ed, mon);
@@ -534,14 +523,12 @@ export const TraitsAside = () => {
                     style={{
                       marginLeft:
                         trait.isChild && trait?.nestedKeys?.length
-                          ? `${
-                              trait.isChild && trait?.nestedKeys?.length * 0.5
-                            }rem`
+                          ? `${trait.isChild && trait?.nestedKeys?.length * 0.5
+                          }rem`
                           : "",
                     }}
-                    className={`relative flex  ${
-                      !["switch"].includes(trait.type) ? "flex-col" : ""
-                    } justify-between items-center gap-2 bg-surface-main p-2 rounded-lg `}
+                    className={`relative flex  ${!["switch"].includes(trait.type) ? "flex-col" : ""
+                      } justify-between items-center gap-2 bg-surface-main p-2 rounded-lg `}
                   >
                     {/* <h1 className="text-[14px!important] px-2 text-white capitalize font-semibold">
                     {trait.name}
@@ -755,130 +742,130 @@ export const TraitsAside = () => {
                             parse(trait.value || trait.default) || {}
                           ).length
                         ) && (
-                          <section className="flex flex-col gap-2 w-full">
-                            {Object.entries(
-                              parse(trait.value || trait.default) || {}
-                            ).map(([key, value], i) => {
-                              return (
-                                <section
-                                  key={i}
-                                  className="flex flex-col gap-2"
-                                >
-                                  <FitTitle>{key}</FitTitle>
-                                  <section className="flex gap-2">
-                                    {(trait.addPropsInputType == "text" ||
-                                      !trait.addPropsInputType) && (
-                                      <Input
-                                        placeholder={key}
-                                        className="w-full bg-surface-tertiary"
-                                        value={value || ""}
-                                        onInput={(ev) => {
-                                          const newVal = stringify({
-                                            ...parse(trait.value || {}),
-                                            [key]: ev.target.value,
-                                          });
-
-                                          updateTraitValue({
-                                            name: trait.name,
-                                            key: "value",
-                                            value: newVal,
-                                          });
-
-                                          trait.callback &&
-                                            trait.callback({
-                                              // editor,
-                                              // trait,
-                                              ...mainCallbackProps,
-                                              // oldValue: trait.value,
-                                              newValue: newVal,
-                                            });
-
-                                          trait.command &&
-                                            editor.runCommand(trait.command);
-                                        }}
-                                      />
-                                    )}
-
-                                    {trait.addPropsInputType == "code" && (
-                                      <Select
-                                        placeholder={key}
-                                        // className="w-full bg-surface-tertiary"
-                                        value={value || ""}
-                                        isCode
-                                        allowCmdsContext
-                                        allowRestAPIModelsContext
-                                        codeProps={{
-                                          language:
-                                            trait.addPropsCodeLanguage ||
-                                            "text",
-                                          value: value || "",
-                                          onChange: (value) => {
-                                            const newVal = stringify({
-                                              ...parse(trait.value || {}),
-                                              [key]: value,
-                                            });
-
-                                            updateTraitValue({
-                                              name: trait.name,
-                                              key: "value",
-                                              value: newVal,
-                                            });
-
-                                            trait.callback &&
-                                              trait.callback({
-                                                editor,
-                                                // oldValue: trait.value,
-                                                newValue: newVal,
-                                                trait,
+                            <section className="flex flex-col gap-2 w-full">
+                              {Object.entries(
+                                parse(trait.value || trait.default) || {}
+                              ).map(([key, value], i) => {
+                                return (
+                                  <section
+                                    key={i}
+                                    className="flex flex-col gap-2"
+                                  >
+                                    <FitTitle>{key}</FitTitle>
+                                    <section className="flex gap-2">
+                                      {(trait.addPropsInputType == "text" ||
+                                        !trait.addPropsInputType) && (
+                                          <Input
+                                            placeholder={key}
+                                            className="w-full bg-surface-tertiary"
+                                            value={value || ""}
+                                            onInput={(ev) => {
+                                              const newVal = stringify({
+                                                ...parse(trait.value || {}),
+                                                [key]: ev.target.value,
                                               });
 
-                                            trait.command &&
-                                              editor.runCommand(trait.command);
-                                          },
+                                              updateTraitValue({
+                                                name: trait.name,
+                                                key: "value",
+                                                value: newVal,
+                                              });
+
+                                              trait.callback &&
+                                                trait.callback({
+                                                  // editor,
+                                                  // trait,
+                                                  ...mainCallbackProps,
+                                                  // oldValue: trait.value,
+                                                  newValue: newVal,
+                                                });
+
+                                              trait.command &&
+                                                editor.runCommand(trait.command);
+                                            }}
+                                          />
+                                        )}
+
+                                      {trait.addPropsInputType == "code" && (
+                                        <Select
+                                          placeholder={key}
+                                          // className="w-full bg-surface-tertiary"
+                                          value={value || ""}
+                                          isCode
+                                          allowCmdsContext
+                                          allowRestAPIModelsContext
+                                          codeProps={{
+                                            language:
+                                              trait.addPropsCodeLanguage ||
+                                              "text",
+                                            value: value || "",
+                                            onChange: (value) => {
+                                              const newVal = stringify({
+                                                ...parse(trait.value || {}),
+                                                [key]: value,
+                                              });
+
+                                              updateTraitValue({
+                                                name: trait.name,
+                                                key: "value",
+                                                value: newVal,
+                                              });
+
+                                              trait.callback &&
+                                                trait.callback({
+                                                  editor,
+                                                  // oldValue: trait.value,
+                                                  newValue: newVal,
+                                                  trait,
+                                                });
+
+                                              trait.command &&
+                                                editor.runCommand(trait.command);
+                                            },
+                                          }}
+                                        />
+                                      )}
+
+                                      <SmallButton
+                                        onClick={() => {
+                                          isFunction(trait.deleteCallback) &&
+                                            trait.deleteCallback({
+                                              ...mainCallbackProps,
+                                              newValue: key,
+                                            });
+                                          // const parsedVal = parse(
+                                          //   trait.value || {}
+                                          // );
+                                          // delete parsedVal[key];
+                                          // const newVal = stringify({
+                                          //   ...parsedVal,
+                                          // });
+
+                                          // updateTraitValue({
+                                          //   name: trait.name,
+                                          //   key: "value",
+                                          //   value: newVal,
+                                          // });
+
+                                          // trait.callback &&
+                                          //   trait.callback({
+                                          //     editor,
+                                          //     // oldValue: trait.value,
+                                          //     newValue: newVal,
+                                          //   });
+                                          // trait.command &&
+                                          //   editor.runCommand(trait.command);
                                         }}
-                                      />
-                                    )}
-
-                                    <SmallButton
-                                      onClick={() => {
-                                        isFunction(trait.deleteCallback) &&
-                                          trait.deleteCallback({
-                                            ...mainCallbackProps,
-                                            newValue: key,
-                                          });
-                                        // const parsedVal = parse(
-                                        //   trait.value || {}
-                                        // );
-                                        // delete parsedVal[key];
-                                        // const newVal = stringify({
-                                        //   ...parsedVal,
-                                        // });
-
-                                        // updateTraitValue({
-                                        //   name: trait.name,
-                                        //   key: "value",
-                                        //   value: newVal,
-                                        // });
-
-                                        // trait.callback &&
-                                        //   trait.callback({
-                                        //     editor,
-                                        //     // oldValue: trait.value,
-                                        //     newValue: newVal,
-                                        //   });
-                                        // trait.command &&
-                                        //   editor.runCommand(trait.command);
-                                      }}
-                                      className="[&_path]:stroke-white bg-surface-tertiary hover:bg-[crimson!important]"
-                                    >
-                                      {Icons.trash()}
-                                    </SmallButton>
+                                        className="[&_path]:stroke-white bg-surface-tertiary hover:bg-[crimson!important]"
+                                      >
+                                        {Icons.trash()}
+                                      </SmallButton>
+                                    </section>
                                   </section>
-                                </section>
-                              );
-                            })}
-                          </section>
-                        )}
+                                );
+                              })}
+                            </section>
+                          )}
                       </section>
                     )}
 
@@ -905,24 +892,24 @@ export const TraitsAside = () => {
                           trait.command && editor.runCommand(trait.command);
                           console.log("switch :", value);
                         }}
-                        // onActive={() => {
-                        //   trait?.onSwitch?.(true);
-                        //   trait.command && editor.runCommand(trait.command);
-                        //   updateTraitValue({
-                        //     name: trait.name,
-                        //     key: "value",
-                        //     value: true,
-                        //   });
-                        // }}
-                        // onUnActive={() => {
-                        //   trait?.onSwitch?.(false);
-                        //   trait.command && editor.runCommand(trait.command);
-                        //   updateTraitValue({
-                        //     name: trait.name,
-                        //     key: "value",
-                        //     value: false,
-                        //   });
-                        // }}
+                      // onActive={() => {
+                      //   trait?.onSwitch?.(true);
+                      //   trait.command && editor.runCommand(trait.command);
+                      //   updateTraitValue({
+                      //     name: trait.name,
+                      //     key: "value",
+                      //     value: true,
+                      //   });
+                      // }}
+                      // onUnActive={() => {
+                      //   trait?.onSwitch?.(false);
+                      //   trait.command && editor.runCommand(trait.command);
+                      //   updateTraitValue({
+                      //     name: trait.name,
+                      //     key: "value",
+                      //     value: false,
+                      //   });
+                      // }}
                       >
                         {trait.label}
                       </SwitchButton>
@@ -992,7 +979,7 @@ export const TraitsAside = () => {
                         }}
                       />
                       <Button
-                      className="h-[38px] flex-shrink-0 flex-grow"
+                        className="h-[38px] flex-shrink-0 flex-grow"
                         onClick={(ev) => {
                           removeAttribute(key);
                         }}

@@ -7,11 +7,14 @@ import html2canvas from "html2canvas-pro";
 import { Select } from "../Protos/Select";
 import { uniqueID } from "../../../helpers/cocktail";
 import {
+  doInNormalAsync,
+  doInWordpressAsync,
   getComponentRules,
   getImgAsBlob,
   getInfinitelySymbolInfo,
   getProjectData,
   getProjectSettings,
+  gjsComponentsToJSON,
   handleCloneComponent,
   initSymbol,
   initToolbar,
@@ -32,6 +35,7 @@ import { minify } from "csso";
 import { editorIcons } from "../../Icons/editorIcons";
 import { opfs } from "../../../helpers/initOpfs";
 import { defineRoot, getOPFSProjectDir } from "../../../helpers/bridge";
+import { wp_insert_post } from "../../../Apps/wordpress/functions";
 
 /**
  *
@@ -107,8 +111,7 @@ export const ReusableSympol = () => {
       selectedEl.set({
         draggable: true,
       });
-      // sessionStorage.removeItem("clone-disabled");
-      // const projectDataHandled = await handleCloneComponent(selectedEl, editor);
+
 
       const prevBlocks = projectData?.blocks ? projectData.blocks : {};
 
@@ -121,62 +124,113 @@ export const ReusableSympol = () => {
       // const jsonRules = JSON.stringify(rules.rules);
       const stringRules = rules.stringRules;
       console.log("rules  : ", JSON.stringify(rules));
-      const contentPath = `editor/symbols/${uuid}/${uuid}.html`;
-      const stylePath = `editor/symbols/${uuid}/${uuid}.css`;
-      const pathes = {
-        content: contentPath,
-        style: stylePath,
-      };
-      editor.clearDirtyCount();
-      store(
-        {
-          data: {
-            // motions: projectDataHandled.motions,
-            symbols: {
-              ...projectData.symbols,
-              [uuid]: {
-                id: uuid,
-                label: props.name,
-                category: props.category || "symbols",
-                pathes,
-              },
-            },
-            blocks: {
-              ...prevBlocks,
-              [uuid]: {
-                name: props.name,
-                label: props.name,
-                category: props.category || "symbols",
-                id: uuid,
-                media:
-                  selectedEl.getIcon() ||
-                  editorIcons.components({
-                    strokeColor: "white",
-                    strokeWidth: 2,
-                  }), //blobImg,
-                type: "symbol",
-                pathes,
-              },
-            },
-          },
 
-          files: {
-            [defineRoot(contentPath)]: isSplitter
-              ? splitterContent
-              : selectedEl.toHTML({
+
+      await doInNormalAsync(async () => {
+        const contentPath = `editor/symbols/${uuid}/${uuid}.html`;
+        const stylePath = `editor/symbols/${uuid}/${uuid}.css`;
+        const pathes = {
+          content: contentPath,
+          style: stylePath,
+        };
+        editor.clearDirtyCount();
+        store(
+          {
+            data: {
+              // motions: projectDataHandled.motions,
+              symbols: {
+                ...projectData.symbols,
+                [uuid]: {
+                  id: uuid,
+                  label: props.name,
+                  category: props.category || "symbols",
+                  pathes,
+                },
+              },
+              blocks: {
+                ...prevBlocks,
+                [uuid]: {
+                  name: props.name,
+                  label: props.name,
+                  category: props.category || "symbols",
+                  id: uuid,
+                  media:
+                    selectedEl.getIcon() ||
+                    editorIcons.components({
+                      strokeColor: "white",
+                      strokeWidth: 2,
+                    }), //blobImg,
+                  type: "symbol",
+                  pathes,
+                },
+              },
+            },
+
+            files: {
+              [defineRoot(contentPath)]: isSplitter
+                ? splitterContent
+                : selectedEl.toHTML({
                   keepInlineStyle: true,
                   withProps: true,
                 }),
 
-            [defineRoot(stylePath)]: minify(stringRules).css,
+              [defineRoot(stylePath)]: minify(stringRules).css,
+            },
+
+            updatePreviewPages: true,
+            pageName: localStorage.getItem(current_page_id),
+          },
+          editor
+        );
+      });
+
+      await doInWordpressAsync(async () => {
+        ///code...
+        console.log('blob image file : ', blobImg);
+        const dataToSave = {
+          html: gjsComponentsToJSON(selectedEl, true),
+          //  selectedEl.toHTML({
+          //   keepInlineStyle: true,
+          //   withProps: true,
+          // }),
+          css: minify(stringRules).css,
+          category: props.category,
+          media: selectedEl.getIcon() ||
+            editorIcons.components({
+              strokeColor: "white",
+              strokeWidth: 2,
+            })
+        };
+
+        const res = await wp_insert_post({
+          projectId,
+          featured_image: new File([blobImg], `${props.name}-${uuid}`, { type: 'image/png' }) || new File([selectedEl.getIcon() ||
+            editorIcons.components({
+              strokeColor: "white",
+              strokeWidth: 2,
+            })], `${props.name}-${uuid}`, { type: 'image/png' }),
+
+          post_data: {
+            post_type: 'inf_symbols',
+            post_name: props.name,
+            post_status: "publish",
+            /////....
           },
 
-          updatePreviewPages: true,
-          pageName: localStorage.getItem(current_page_id),
-        },
-        editor
-      );
-      
+          meta_data: {
+            'inf-symbol-id': uuid,
+            inf_meta: {
+              before_save: dataToSave,
+              saved: dataToSave
+            }
+          }
+        });
+        editor.Storage.setAutosave(projectSettings.enable_auto_save);
+        // projectSettings.enable_auto_save && await editor.Storage.store();
+        console.log('wp_insert_post', res);
+
+      });
+
       initToolbar(editor, selectedElMain);
       if (!isSplitter) {
         initSymbol(uuid, editor);
@@ -207,7 +261,9 @@ export const ReusableSympol = () => {
     // ).toBlob((blob) => {
     //   setBlobImg(blob);
     // }, "image/png");
-    setImgSrc(URL.createObjectURL(await getImgAsBlob(selectedEl)));
+    const blobImg = await getImgAsBlob(selectedEl);
+    setImgSrc(URL.createObjectURL(blobImg));
+    setBlobImg(blobImg);
     // contentRef.current.src = canvas.toDataURL();
   };
 
@@ -230,6 +286,7 @@ export const ReusableSympol = () => {
         <Select
           keywords={keywordsCtg}
           placeholder="Category"
+          zIndex={2000}
           onInput={(value) => {
             onInput(value, "category");
           }}

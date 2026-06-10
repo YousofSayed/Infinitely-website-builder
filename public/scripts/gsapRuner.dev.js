@@ -1,3 +1,5 @@
+console.log(`GSAP IS ON ✨`);
+
 /**
  * @type {import('gsap')}
  */
@@ -26,7 +28,7 @@ window.gsapRunner = true;
 
 const isFunction = (value) => {
   try {
-    const isFunction = typeof new Function(`return (${value})`) == "function";
+    const isFunction = typeof new Function(`return (${value})`)() == "function";
     return isFunction;
   } catch (error) {
     return false;
@@ -63,9 +65,8 @@ function CompileMotion(
     timeline: {},
     fromTo: [],
   };
-  const attribute = `[${
-    motion?.isInstance ? `motion-instance-id` : `motion-id`
-  }=${motion.id}]`;
+  const attribute = `[${motion?.isInstance ? `motion-instance-id` : `motion-id`
+    }=${motion.id}]`;
 
   const parseObjValue = (obj = {}) => {
     return Object.fromEntries(
@@ -175,9 +176,8 @@ function CompileMotion(
  * @param {SplitText.Vars} tweens
  */
 function createSplitText(motion, splitTextVars) {
-  const attribute = `[${
-    motion?.isInstance ? `motion-instance-id` : `motion-id`
-  }=${motion.id}]`;
+  const attribute = `[${motion?.isInstance ? `motion-instance-id` : `motion-id`
+    }=${motion.id}]`;
 
   const split = new SplitText(
     motion.splitTextSelector.replaceAll("self", attribute),
@@ -388,7 +388,7 @@ async function gsapRunAll(ev) {
   //   await gsapKillAll(ev);
   // }
   console.log('after killing');
-  
+
   let index = 0;
   const values = Object.values(motions);
   const handler = () => {
@@ -491,7 +491,7 @@ async function gsapKillAll(ev) {
     index++;
 
     return new Promise((res, rej) => {
-      setTimeout(async() => {
+      setTimeout(async () => {
         try {
           res(await handler());
         } catch (error) {

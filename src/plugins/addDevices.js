@@ -4,6 +4,11 @@ import { killAllGsapMotions } from "../helpers/customEvents";
 import { getProjectData, restartGSAPMotions } from "../helpers/functions";
 
 /**
+ * @type {ResizeObserver}
+ */
+export let editorObserver ;
+
+/**
  * @param {import('grapesjs').Editor} editor
  */
 export const addDevices = (editor) => {
@@ -94,6 +99,7 @@ export const addDevices = (editor) => {
       const iframe = editor.Canvas.getFrameEl();
       const canvasWrapper = editor.getContainer();
       if (!iframe || !canvasWrapper) return;
+     
       // iframe.style.display = "none";
       console.log("from zoom fit");
 
@@ -139,22 +145,28 @@ export const addDevices = (editor) => {
       // });
       emitEditorContainerZoom();
       restartGSAPMotions(editor);
+     
     }, 80);
     // Boolean(firstTime ) ? 80 : 0
   };
 
-  const ro = new ResizeObserver((entries) => {
-    const { width, height } = entries[0].contentRect;
+  editorObserver = new ResizeObserver((entries) => {
+    // const { width, height } = entries[0].contentRect;
     // alert("Document resized:", width, height);
+   const el = entries[0].target;
+   if(el.hasAttribute('zooming')){
+    el.removeAttribute('zooming');
+    return;
+   }
     zoomToFit();
   });
 
-  editor.on("canvas:frame:load:body", () => {
-    const documentFrame = editor.Canvas.getDocument();
+  // editor.on("canvas:frame:load:body", () => {
+  //   const documentFrame = editor.Canvas.getDocument();
 
-    // ro.observe(documentFrame.documentElement);
-  });
-  ro.observe(editor.getContainer());
+  //   // ro.observe(documentFrame.documentElement);
+  // });
+  editorObserver.observe(editor.getContainer());
 
   // resizerObserver = new ResizeObserver(() => {
   //   zoomToFit();
@@ -176,21 +188,23 @@ export const addDevices = (editor) => {
   //   }
   // });
 
-  // editor.on("change:device", () => {
-  //   // editor.getContainer().style.zoom = 1;
-  //   // localStorage.setItem("last-device", editor.getDevice());
-  //   // localStorage.setItem(
-  //   //   "last-device-json",
-  //   //   JSON.stringify(editor.Devices.get(editor.getDevice()).toJSON())
-  //   // );
-  //   // console.log(
-  //   //   "Device is : ",
-  //   //   editor.Devices.get(editor.getDevice()).toJSON()
-  //   // );
-  //   editor.refresh({ tools: true });
+  editor.on("change:device", () => {
+    // editor.getContainer().style.zoom = 1;
+    // localStorage.setItem("last-device", editor.getDevice());
+    // localStorage.setItem(
+    //   "last-device-json",
+    //   JSON.stringify(editor.Devices.get(editor.getDevice()).toJSON())
+    // );
+    // console.log(
+    //   "Device is : ",
+    //   editor.Devices.get(editor.getDevice()).toJSON()
+    // );
+    // editor.refresh();
+    // editor.Canvas.refresh();
+    // alert('must refresh!')
 
-  //   zoomToFit();
-  // });
+    zoomToFit();
+  });
   // editor.on("canvas:frame:load:body", () => {
   //   // editor.getContainer().style.zoom = 1;
   //   zoomToFit();

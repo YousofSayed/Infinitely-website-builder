@@ -20,7 +20,7 @@ export const SelectClass = () => {
   const selectedEl = useRecoilValue(currentElState);
   const [value, setvalue] = useState("");
   const [classesKeywrods, setClassesKeywords] = useState([]);
-  const [allStyleSheetClasses, setAllStyleSheetClasses] = useState([]);
+  const [allStyleSheetClasses, setAllStyleSheetClasses] = useState(['__inf_loading__']);
   const [selectedClassName, setSelectedClassName] = useState({
     className: "bg-surface-secondary",
     index: null,
@@ -115,12 +115,13 @@ export const SelectClass = () => {
     };
   }, [editor]);
 
-  const addClass = (classNameKeyword) => {
+  const addClass = (classNameKeyword='') => {
     const newArr = [...classesKeywrods, classNameKeyword];
     setClassesKeywords(Array.from(new Set(newArr)));
     editor.getSelected().addClass(newArr);
     setvalue(new String(""));
     editor.getSelected().view.render();
+    // console..lgo('mohammed')
   };
 
   const removeClass = (classNameKeyword = "") => {
@@ -251,15 +252,15 @@ export const SelectClass = () => {
           }}
           placeholder="Calss name"
           keywords={allStyleSheetClasses}
-          // onMenuOpen={({ menu, setKeywords, keywords }) => {
-          //   setKeywords(
-          //     editor.getCss().match(/\.\w+/gi) || []
-          //   );
-          // }}
+        // onMenuOpen={({ menu, setKeywords, keywords }) => {
+        //   setKeywords(
+        //     editor.getCss().match(/\.\w+/gi) || []
+        //   );
+        // }}
 
-          // onMenuOpen={async ({ setKeywords }) => {
-          //   setKeywords(await getAllStyleSheetClasses());
-          // }}
+        // onMenuOpen={async ({ setKeywords }) => {
+        //   setKeywords(await getAllStyleSheetClasses());
+        // }}
         />
 
         <SmallButton
@@ -279,7 +280,7 @@ export const SelectClass = () => {
             className="flex-wrap flex-center bg-surface-tertiary"
             onCloseClick={(ev, keyword) => {
               removeClass(keyword);
-              editor.trigger(InfinitelyEvents.ruleTitle.update , keyword)
+              editor.trigger(InfinitelyEvents.ruleTitle.update, keyword)
             }}
             onActive={({ keyword, index }) => {
               console.log("keeeeyword : ", keyword, "active");

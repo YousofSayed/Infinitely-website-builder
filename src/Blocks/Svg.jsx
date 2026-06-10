@@ -1,7 +1,11 @@
+import { wp_get_blob_media_by_slug } from "../Apps/wordpress/functions";
 import { Icons } from "../components/Icons/Icons";
+import { current_project_id } from "../constants/shared";
 import {
   defineTraits,
   doActionAndPreventSaving,
+  doInNormalAsync,
+  doInWordpressAsync,
   getParentNode,
 } from "../helpers/functions";
 import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
@@ -20,8 +24,8 @@ function elToJSON(source, parseType) {
 
   const attributes = el.attributes
     ? Object.fromEntries(
-        [...el.getAttributeNames()].map((attr) => [attr, el.getAttribute(attr)])
-      )
+      [...el.getAttributeNames()].map((attr) => [attr, el.getAttribute(attr)])
+    )
     : {};
   const tagName = el.tagName.toLowerCase();
   const childs = [...el.children].map((child) => elToJSON(child, parseType));
@@ -385,13 +389,27 @@ export const Svg = (editor) => {
             role: "handler",
             type: "media",
             mediaType: "svg",
-            async callback({ editor, newValue, asset , }) {
+            async callback({ editor, newValue, asset, }) {
               const sle = editor.getSelected();
+              const projectId = +localStorage.getItem(current_project_id);
               // const type = sle?.props().type;
-              if (!sle || !asset) return;
+              if (!(sle && asset)) return;
 
               // Read the SVG file content
-              const textCmp = await asset.text();
+              let textCmp;
+              await doInNormalAsync(async () => {
+
+                textCmp = await asset.text();
+              });
+
+              await doInWordpressAsync(async () => {
+                // const res = await wp_get_blob_media_by_slug({
+                //   media: asset,
+                //   projectId
+                // })
+                textCmp = asset.svg_content
+              });
+
               // const children = sle.components().models;
               sle.components(fixSVGSmart(textCmp));
               const svg = sle.components().models[0];

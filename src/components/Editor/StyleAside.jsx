@@ -327,25 +327,26 @@ export const StyleAside = memo(({ className }) => {
         .widthMedia;
       // const mediaCond = editor.getConfig().mediaCondition;
       const selectorWithRule = `${currentSelector}${globalRule.ruleString}`;
-      console.log(
-        "cmprs",
-        cmpRules,
-        selectorWithRule,
-        !cmpRules.some((rule) => {
-          const mainCond = rule?.rule?.trim?.() === selectorWithRule;
-          const isBoolCond =
-            isBoolean(rule.atRuleType) && isBoolean(currentMedia.atRuleType)
-              ? Boolean(rule.atRuleType) == Boolean(currentMedia.atRuleType)
-              : false;
-          const isMediaStringCond =
-            isString(rule.atRuleType) && isString(currentMedia.atRuleType)
-              ? rule.atRuleType == currentMedia.atRuleType
-              : false;
+      // console.log(
+      //   "cmprs",
+      //   cmpRules,
+      //   selectorWithRule,
+      //   !cmpRules.some((rule) => {
+      //     const mainCond = rule?.rule?.trim?.() === selectorWithRule;
+      //     const isBoolCond =
+      //       isBoolean(rule.atRuleType) && isBoolean(currentMedia.atRuleType)
+      //         ? Boolean(rule.atRuleType) == Boolean(currentMedia.atRuleType)
+      //         : false;
+      //     const isMediaStringCond =
+      //       isString(rule.atRuleType) && isString(currentMedia.atRuleType)
+      //         ? rule.atRuleType == currentMedia.atRuleType
+      //         : false;
 
-          return mainCond && (isBoolCond || isMediaStringCond);
-        })
-      );
-      const title = `${mediaCond} ${
+      //     return mainCond && (isBoolCond || isMediaStringCond);
+      //   })
+      // );
+
+      const title = `${editor.getConfig().mediaCondition || mediaCond} ${
         mediaPx && mediaCond ? `(${mediaPx})` : ""
       } ${editor.config.mediaCondition ? ":" : ""} 
     ${selectorWithRule}`;

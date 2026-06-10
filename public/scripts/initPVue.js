@@ -13,6 +13,7 @@ function getAllVueEls(root = document) {
 }
 app.directive("view", vIntersection);
 app.directive("ref", vRef);
+app.directive("gsap", vGsap);
 // let scopesEls = [...(document.querySelectorAll("[v-scope]") || [])];
 // // const scopes = scopesEls.map(el=>el.getAttribute("v-scope"));
 // let scopes = Object.fromEntries(

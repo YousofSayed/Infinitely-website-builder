@@ -18,6 +18,7 @@ import {
   getInfinitelySymbolInfo,
   getProjectData,
   getProjectSettings,
+  reorderCss,
   store,
 } from "../helpers/functions";
 import {
@@ -30,6 +31,9 @@ import { random, uniqueId } from "lodash";
 import { keyframeStylesInstance } from "../constants/InfinitelyInstances";
 import { uniqueID } from "../helpers/cocktail";
 import { db } from "../helpers/db";
+import { toast } from "react-toastify";
+import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
+import { offlineInstallerWorker } from "../helpers/defineWorkers";
 let setStyleTimeout = null;
 
 /**
@@ -46,7 +50,7 @@ export function useSetClassForCurrentEl() {
 
   const showAnimationsBuilder = useRecoilValue(showAnimationsBuilderState);
   const [showStylesBuilder, setShowStylesBuilder] = useRecoilState(
-    showStylesBuilderForMotionBuilderState
+    showStylesBuilderForMotionBuilderState,
   );
 
   // const setAnimeStyles = useSetRecoilState(animeStylesState);
@@ -54,30 +58,36 @@ export function useSetClassForCurrentEl() {
   return ({ cssProp, value }) => {
     const setter = () => {
       let newCssProps = {};
-
+      const selectedCmp = editor.getSelected();
+      if (!selectedCmp && !showAnimationsBuilder) {
+        toast.warn(
+          <ToastMsgInfo msg={` please select component to apply style `} />,
+        );
+        return;
+      }
       if (Array.isArray(cssProp) && Array.isArray(value)) {
         cssProp.forEach((prop, i) => {
-          if (!CSS.supports(prop, value[i]) && value[i]) {
-            removeProp({ cssProp: prop });
-            return;
-          }
+          // if (!CSS.supports(prop, value[i]) && value[i]) {
+          //   removeProp({ cssProp: prop });
+          //   return;
+          // }
 
           newCssProps = { ...newCssProps, [prop]: value[i] };
         });
       } else if (Array.isArray(cssProp) && !Array.isArray(value)) {
         cssProp.forEach((prop, i) => {
-          if (!CSS.supports(prop, value) && value) {
-            removeProp({ cssProp: prop });
-            return;
-          }
+          // if (!CSS.supports(prop, value) && value) {
+          //   removeProp({ cssProp: prop });
+          //   return;
+          // }
 
           newCssProps = { ...newCssProps, [prop]: value };
         });
       } else {
-        newCssProps =
-          CSS.supports(cssProp, value) && value
-            ? { ...newCssProps, [cssProp]: value }
-            : { ...newCssProps };
+        newCssProps = { ...newCssProps, [cssProp]: value };
+        // CSS.supports(cssProp, value) && value
+        //   ? { ...newCssProps, [cssProp]: value }
+        //   : { ...newCssProps };
         // !value && removeProp({ cssProp })
         !value && (newCssProps[cssProp] = "");
         // console.log("elssssssssssssooooooooooo", newCssProps, !value);
@@ -87,7 +97,7 @@ export function useSetClassForCurrentEl() {
         newCssProps = newCssProps ? newCssProps : { [cssProp]: "" };
         // setAnimeStyles((old) => ({ ...old, ...newCssProps }));
         // setAnimeStyles({ ...newCssProps });
-        console.log(newCssProps, "from animations");
+        console.log(newCssProps, "from animations up");
         setFrameStyles(newCssProps);
         keyframeStylesInstance.emit(InfinitelyEvents.keyframe.set, newCssProps);
         return;
@@ -107,12 +117,12 @@ export function useSetClassForCurrentEl() {
       console.log("from set style current selector is : ", currentSelector);
       const classes = [...sle.getClasses()];
       const isCurrentSelectorAdded = classes.some(
-        (cls) => cls === currentSelector
+        (cls) => cls === currentSelector,
       );
 
       if (!currentSelector) {
         const newClassName = uniqueId(
-          `infcls-${uniqueID()}-${random(100, 9999)}-`
+          `infcls-${uniqueID()}-${random(100, 9999)}-`,
         );
         sle.addClass(newClassName);
         sle.addAttributes({ [inf_class_name]: newClassName });
@@ -129,7 +139,7 @@ export function useSetClassForCurrentEl() {
       console.log(
         "current selector from updater : ",
         currentSelector,
-        newCssProps
+        newCssProps,
       );
 
       const symbolInfo = getInfinitelySymbolInfo(sle);
@@ -227,10 +237,9 @@ export function useSetClassForCurrentEl() {
       //       devices: newDevices,
       //     });
       //   }
-        // editor.trigger("inf:rules:update", {
-        //   rules: newCssProps,
-        // });
-     
+      // editor.trigger("inf:rules:update", {
+      //   rules: newCssProps,
+      // });
 
       // console.log("new media devices :",editor.DeviceManager.getAll().toArray().map(dev=>dev.attributes));
       // })();
@@ -238,31 +247,49 @@ export function useSetClassForCurrentEl() {
         "new media devices :",
         editor.DeviceManager.getAll()
           .toArray()
-          .map((dev) => dev.attributes)
+          .map((dev) => dev.attributes),
       );
+
       editor.CssComposer.setRule(
         `${currentSelector}${rule.ruleString}`,
         newCssProps || { [cssProp]: "" },
         {
           ...Media,
-
+          // addStyle: false,
           addStyles: true,
-          // validate: false,
+          // validate: true,
           // inline:true,
           // addStyle: true,
-        }
+        },
       );
 
-      setCmpRules(
-        getComponentRules({
-          editor,
-          cmp: editor.getSelected(),
-        }).rules || []
-      );
+      // reorderCss(editor);
+      const rulesParsed = getComponentRules({
+        editor,
+        cmp: editor.getSelected(),
+      });
 
+      setCmpRules(rulesParsed.rules || []);
+
+      if (symbolInfo.isSymbol) {
+        wpWorkerCallbackMaker(
+          offlineInstallerWorker,
+          "writeFilesToOPFS",
+          {
+            files: {
+              path: defineRoot(`temp/symbols/${symbolInfo.mainId}/style.css`),
+              content: rulesParsed.stringRules,
+            },
+          },
+          (props) => {
+            console.log("file writing response", props);
+          },
+        );
+      }
+      
       editor.trigger("inf:rules:update", {
-          rules: newCssProps,
-        });
+        rules: newCssProps,
+      });
       // reorderCss(editor);
       // editor.getSelected().addStyle(newCssProps)
 

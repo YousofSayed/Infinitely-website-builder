@@ -46,7 +46,7 @@ let currentPageName = localStorage.getItem(current_page_id);
  * @param {import('grapesjs').Editor} editor
  * @param {import('../helpers/types').Project} projectData
  */
-const attrsCallback = (editor, projectData) => {
+const attrsCallback = (editor, projectData) => { 
   const { projectSettings } = getProjectSettings();
   editor.Storage.setAutosave(false);
 
@@ -300,8 +300,7 @@ export const IDB = (editor) => {
     willRevokedURLs.set(url);
     return url;
   };
-  let isLoadEnd = false,
-    timesLoaded = 0;
+
   let tId;
   editor.infDirty = 0;
 
@@ -343,17 +342,6 @@ export const IDB = (editor) => {
     }
   });
 
-  // editor.on("storage:end:load", async () => {
-  //   // editor.trigger(InfinitelyEvents.storage.loadEnd);
-  //   editorStorageInstance.emit(InfinitelyEvents.storage.loadEnd);
-  //   // editor.setComponents(await(await loadElements()).components , {merge:true });
-  //   console.log("load end");
-  // });
-
-  // editor.on("storage:start:load", () => {
-  //   editorStorageInstance.emit(InfinitelyEvents.storage.loadStart);
-  //   console.log("start load");
-  // });
 
   editor.Storage.add("infinitely", {
     async load(options = {}) {
@@ -394,23 +382,13 @@ export const IDB = (editor) => {
       clearTimeouts();
 
       reloadEditor(editor);
-      editor.on("style:change", () => {
-        console.log("style changed");
+      // editor.on("style:change", () => {
+      //   console.log("style changed");
 
-        const css = editor.getCss({ avoidProtected: true });
-        editor.setStyle(css); // Forces reordering
-      });
-      // console.log("should load");
-      // loadTimeout = setTimeout(async () => {
-      //   editor.loadProjectData(await loadElements());
-      //   editorStorageInstance.emit(InfinitelyEvents.storage.loadEnd);
-      // }, 100);
-      // return {
-      //   components:['<h1>Hello world!!</h1>']
-      // }
-      // editor.Canvas.getCanvasView().initialize({el:document.body  ,tagName:'h1'});
-      // return await loadElements(editor , {});
-      // return {components:[]};
+      //   const css = editor.getCss({ avoidProtected: true });
+      //   editor.setStyle(css); // Forces reordering
+      // });
+      
       return;
     },
 
@@ -427,11 +405,11 @@ export const IDB = (editor) => {
       storeTimeout = setTimeout(
         () => {
           const runStore = async () => {
-            console.log(
-              "prrrrrrrrrrrrops from store : ",
-              storeProps,
-              editor.infLoading
-            );
+            // console.log(
+            //   "prrrrrrrrrrrrops from store : ",
+            //   storeProps,
+            //   editor.infLoading
+            // );
             const projectSettings = getProjectSettings().projectSettings;
             editor.trigger(InfinitelyEvents.storage.storeStart);
             console.log("Before storing:", {
@@ -1014,6 +992,16 @@ export const loadScripts = async (editor, projectData) => {
         [
           "https://cdn.jsdelivr.net/npm/swiper@latest/swiper-bundle.min.js",
           "https://cdn.jsdelivr.net/npm/swiper@latest/swiper-element-bundle.min.js",
+        ],
+        0,
+        (script, lib) => {
+          script.src = lib;
+        }
+      ));
+
+      (await appendScript(
+        [
+          `${currentPageName === 'index' ? `./js/` : `../js/` }${currentPageName}.js`,
         ],
         0,
         (script, lib) => {

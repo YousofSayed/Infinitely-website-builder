@@ -5,24 +5,36 @@ import { Icons } from "../Icons/Icons";
 import { db } from "../../helpers/db";
 import { useNavigate } from "react-router-dom";
 import {
+  app_type,
   current_dynamic_template_id,
   current_page_id,
   current_project_id,
+  wp_meta,
 } from "../../constants/shared";
 import { infinitelyWorker } from "../../helpers/infinitelyWorker";
 import { getProjectSettings } from "../../helpers/functions";
 import { useRecoilState } from "recoil";
-import { dbAssetsSwState, isProjectInitedState } from "../../helpers/atoms";
+import {
+  currentWpPageNameState,
+  dbAssetsSwState,
+  isProjectInitedState,
+} from "../../helpers/atoms";
 import { opfs } from "../../helpers/initOpfs";
 import { toast } from "react-toastify";
 import { getProjectRoot } from "../../helpers/bridge";
-import { random } from "lodash";
+import { random, uniqueId } from "lodash";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { uniqueID } from "../../helpers/cocktail";
 import { ToastMsgInfo } from "../Editor/Protos/ToastMsgInfo";
 import { checkDropBoxSignInState } from "../../helpers/dropboxHandlers";
 import { refType } from "../../helpers/jsDocs";
 import { projectsImagesObserver } from "../../observers/projectsImagesObserver";
+import {
+  wp_delete_option,
+  wp_get_option,
+  wp_update_option,
+} from "../../Apps/wordpress/functions";
+import { wp_toast_handler } from "../../Apps/wordpress/functions_ui";
 
 // million-ignore
 /**
@@ -38,6 +50,9 @@ export const Project = ({ project }) => {
   const [autoAminRef] = useAutoAnimate();
   const [isProjectInited, setIsProjectInited] =
     useRecoilState(isProjectInitedState);
+  const [currentWpPageName, setCurrentWpPageName] = useRecoilState(
+    currentWpPageNameState
+  );
   const urlsRef = useRef([]);
   // console.log(project.imgSrc);
   useEffect(() => {
@@ -73,7 +88,7 @@ export const Project = ({ project }) => {
       }
       urlsRef.current = [];
     };
-  }, [project]);
+  }, [project, project.id]);
 
   return (
     <article
@@ -82,15 +97,14 @@ export const Project = ({ project }) => {
     >
       <figure className="flex flex-col gap-2 h-[70%]  items-center ">
         <img
-          key={project.inited}
+          key={project.id}
           ref={thumbnailRef}
           src={"/images/blank.jpg"}
           project-image-src={img || "/images/blank.jpg"}
-          className={`max-w-full max-h-full select-none ${
-            project.imgSrc ? "h-full " : "h-full  object-cover"
-          }  w-full   max-h-[190px!important] rounded`}
+          className={`max-w-full max-h-full select-none ${project.imgSrc ? "h-full " : "h-full  object-cover"
+            }  w-full   max-h-[190px!important] rounded`}
           alt="project image"
-          loading="lazy"
+        // loading="lazy"
         />
         <figcaption
           className=" w-full rounded-lg p-1 text-center capitalize text-text-primary text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600 "
@@ -128,19 +142,37 @@ export const Project = ({ project }) => {
               );
               return;
             }
+
             opfs.id = project.id;
             localStorage.setItem(current_project_id, project.id);
-            localStorage.setItem(current_page_id, "index");
-            // swAssset.postMessage({
-            //   command: "setVar",
-            //   props: {
-            //     obj: {
-            //       projectId: project.id,
-            //       projectData: project,
-            //     },
-            //   },
-            // });
-            navigate("/add-blocks");
+            if (project.app_type == "wordpress") {
+              localStorage.setItem(wp_meta, JSON.stringify(project.wp_meta));
+              localStorage.setItem(app_type, project.app_type);
+              wp_toast_handler({
+                returnCallback: async () =>
+                  await wp_get_option({
+                    optionName: "inf_config",
+                    wp_meta_data: project.wp_meta,
+                  }),
+                async onSuccess(res) {
+                  res?.value?.id && delete res.value.id;
+                  await db.projects.update(project.id, {
+                    ...(res.value || {}),
+                  });
+                  setCurrentWpPageName("");
+                  navigate("/wordpress/select");
+                },
+                toast_loading_msg: "Checking config...",
+                toast_success_msg: "Config checked successfully 💙",
+                toast_error_msg: "Config file not founded 😩",
+              });
+            } else {
+              localStorage.removeItem(wp_meta);
+              localStorage.setItem(app_type, project.app_type);
+              localStorage.setItem(current_page_id, "index");
+              setCurrentWpPageName("index");
+              navigate("/add-blocks");
+            }
           }}
         >
           {Icons.edite({ fill: "white", width: "20" })}
@@ -148,14 +180,42 @@ export const Project = ({ project }) => {
 
         <Li
           onClick={async () => {
-            if (!project.inited) return;
+            //  await wp_update_option({
+            //     optionName:'inf_config',
+            //     projectId:project.id,
+            //     value:{
+            //       ...project
+            //     }
+
+            //   })
+            // await  wp_get_option({
+            //     wp_meta_data:project.wp_meta,
+            //     optionName:'inf_config'
+            //   })
+            //   return;
+            // if (!project.inited) return;
             const cnfrm = confirm(
               `Are you sure to delete ${project.name} project ?`
             );
+
+            let wpCnfrm;
+            if (project.app_type === "wordpress") {
+              wpCnfrm = confirm(
+                `Are you sure to delete ${project.name} wordpress config ?`
+              );
+            }
+
             if (!cnfrm) return;
             const tId = toast.loading(
               <ToastMsgInfo msg={"Deleting project"} />
             );
+
+            wpCnfrm &&
+              (await wp_delete_option({
+                optionName: "inf_config",
+                projectId: project.id,
+              }));
+
             await opfs.remove({
               dirOrFile: await opfs.getFolder(`projects/project-${project.id}`),
             });
@@ -164,6 +224,8 @@ export const Project = ({ project }) => {
             sessionStorage.removeItem(current_dynamic_template_id);
             localStorage.removeItem(current_page_id);
             localStorage.removeItem(current_project_id);
+            localStorage.removeItem(app_type);
+            setCurrentWpPageName("");
             toast.done(tId);
           }}
         >

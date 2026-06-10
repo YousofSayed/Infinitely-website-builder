@@ -53,4 +53,7 @@ export const InfinitelyEvents = {
     loadStart: "infinitely:storage:load:start",
     loadEnd: "infinitely:storage:load:end",
   },
+  navigator:{
+    navigate:'infinitely:navigator:navigate'
+  }
 };

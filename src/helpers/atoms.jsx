@@ -404,3 +404,8 @@ export const isProjectInitedState = atom({
   key: "isProjectInitedState",
   default: true,
 });
+
+export const currentWpPageNameState = atom({
+  key: "currentWpPageNameState",
+  default: "",
+});

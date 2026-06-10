@@ -18,6 +18,8 @@ import {
 import { useEditorMaybe } from "@grapesjs/react";
 import {
   advancedSearchSuggestions,
+  getProjectData,
+  isWordpress,
   rgbStringToHex,
 } from "../../helpers/functions";
 import { cloneDeep, isNumber } from "lodash";
@@ -32,167 +34,10 @@ import { InfinitelyEvents } from "../../constants/infinitelyEvents";
 import { For } from "million/react";
 import { useInfinitelyUndoRedo } from "../../hooks/useInfinitelyUndoRedo";
 import { UndoRedoContainer } from "../Protos/UndoRedoContainer";
-// const KeyframesList = ({
-//   type,
-//   animations = keyframesType,
-//   setAnimations = () => {},
-// }) => {
-//   return (
-//     <Virtuoso
-//       totalCount={Object.keys(animations.editorKeyframes).length}
-//       className="hideScrollBar px-[unset!important] gap-2"
-//       style={{ padding: "unset!important" }}
-//       itemContent={(i) => {
-//         const animation = Object.values(animations.editorKeyframes)[i];
-//         return (
-//           <DetailsNormal
-//             label={animation.name}
-//             labelClass="p-[3px!important]"
-//             className=""
-//           >
-//             <Adder
-//               key={i}
-//               className={`p-2 bg-surface-main`}
-//               addClassName="bg-surface-secondary"
-//               delClassName="bg-surface-secondary"
-//               onAddClick={(ev) => {
-//                 addPercentage(i);
-//               }}
-//               onDeleteClick={(ev) => {
-//                 deleteAnimation(i);
-//               }}
-//             >
-//               <main className="w-full flex flex-col gap-3">
-//                 <p className="text-white w-full font-semibold bg-brand-primary py-2 text-center rounded-lg">
-//                   {animation.name}
-//                 </p>
+import { Loader } from "../Loader";
+import { useLiveQuery } from "dexie-react-hooks";
+import { Select } from "./Protos/Select";
 
-//                 {animation.keyframes
-//                   .filter((kf) => kf.type == "keyframe")
-//                   .map((keyframe, x) => {
-//                     // const uId = uniqueId()
-//                     const id = `keyframe-${animation.name}-${i}-${x}-${type}`;
-//                     return (
-//                       // <section key={x} className="flex flex-col bg-surface-secondary px-1 py-2 gap-[100px] ">
-
-//                       <section
-//                         key={x}
-//                         keyframe-id={id}
-//                         className={`flex  flex-col  gap-2 bg-gray-950 p-2 border-[2.5px]  w-full rounded-lg ${
-//                           // currentEditingIndexStyles == x &&
-//                           currentEditing == id
-//                         } `}
-//                       >
-//                         <section className="flex gap-2 ">
-//                           <section className="w-full flex items-center  bg-surface-tertiary px-1 rounded-lg">
-//                             {" "}
-//                             <Input
-//                               className="bg-surface-tertiary w-full"
-//                               value={keyframe?.values?.join?.(",") || ""}
-//                               onInput={(ev) => {
-//                                 console.log("keyframe.values", keyframe.values);
-
-//                                 if (!ev.target.value) return;
-//                                 updatePercentageValue({
-//                                   index: i,
-//                                   propsIndex: x,
-//                                   newValue: ev.target.value,
-//                                 });
-//                               }}
-//                             />
-//                             {/* <p className="font-semibold select-none text-text-primary px-2">
-//                                   %
-//                                 </p> */}
-//                           </section>
-
-//                           <SmallButton
-//                             title="delete frame"
-//                             className="flex-shrink-0 bg-surface-tertiary"
-//                             onClick={() => {
-//                               deleteFrame(i, x);
-//                             }}
-//                           >
-//                             {Icons.trash("white")}
-//                           </SmallButton>
-
-//                           <SmallButton
-//                             title="select frame"
-//                             className="flex-shrink-0 bg-surface-tertiary"
-//                             onClick={(ev) => {
-//                               // setCurrentEditingIndex(i);
-//                               setCurrentEditingIndex(
-//                                 `keyframe-${animation.name}-${i}-${x}-editor`
-//                               );
-
-//                               // setCurrentEditingIndexStyles(
-//                               //   currentEditingIndexStyles == x &&
-//                               //     currentEditingIndex == i
-//                               //     ? undefined
-//                               //     : x
-//                               // );
-
-//                               setFramesStyles(
-//                                 Object.fromEntries(
-//                                   keyframe?.declarations
-//                                     .filter(
-//                                       (dclr) => dclr.type == "declaration"
-//                                     )
-//                                     .map((dclr) => [dclr.property, dclr.value])
-//                                 )
-//                               );
-//                             }}
-//                           >
-//                             {Icons.select("white")}
-//                           </SmallButton>
-//                         </section>
-
-//                         {keyframe.declarations.length ? (
-//                           <ul className="flex flex-col gap-2  bg-surface-secondary p-2 rounded-lg">
-//                             {keyframe.declarations
-//                               .filter((dclr) => dclr.type == "declaration")
-//                               .map(({ property, value }, z) => {
-//                                 return (
-//                                   <li
-//                                     key={z}
-//                                     className="w-full flex justify-between items-center gap-2 text-center "
-//                                   >
-//                                     <article className="w-full flex justify-between  gap-2 text-center">
-//                                       <p className="w-[45%] whitespace-break-spaces break-inside-avoid-column text-text-primary text-sm  flex items-center justify-center bg-brand-primary p-2 font-semibold rounded-lg flex-shrink-0 flex-grow">
-//                                         {property}
-//                                       </p>
-//                                       <p className="text-white font-bold self-center">
-//                                         :
-//                                       </p>
-//                                       <p className="w-[45%] whitespace-break-spaces break-all flex items-center justify-center  text-text-primary text-sm bg-brand-primary p-2 font-semibold rounded-lg flex-grow">
-//                                         {property.includes("color")
-//                                           ? rgbStringToHex(value)
-//                                           : value}{" "}
-//                                       </p>
-//                                     </article>
-//                                   </li>
-//                                 );
-//                               })}
-//                           </ul>
-//                         ) : (
-//                           <p className="bg-yellow-500 text-sm text-white font-bold w-full p-1 rounded-xl text-center">
-//                             Append Styles from style Manager
-//                           </p>
-//                         )}
-//                       </section>
-//                       // </section>
-//                     );
-//                   })}
-//               </main>
-//             </Adder>
-//           </DetailsNormal>
-//         );
-//       }}
-//       components={{
-//         Item: (props) => <div className="mb-2" {...props}></div>,
-//       }}
-//     />
-//   );
-// };
 // million-ignore
 export const AnimationsBuilder = () => {
   const editor = useEditorMaybe();
@@ -216,6 +61,14 @@ export const AnimationsBuilder = () => {
   const showAnimeBuilder = useRecoilValue(showAnimationsBuilderState);
   const [frameStyles, setFramesStyles] = useRecoilState(framesStylesState);
   const pageName = localStorage.getItem(current_page_id);
+  const [globalSlug, setGlobalSlug] = useState('');
+  const [path, setPath] = useState(isWordpress() ? 'css/main.js' : `css/${pageName}.css`);
+  const [chooseGlobal, setChooseGlobal] = useState('');
+
+  useLiveQuery(async () => {
+    const projectData = await getProjectData();
+    setGlobalSlug(projectData.globalCss.slug);
+  }, [])
 
   // useInfinitelyUndoRedo([animations, setAnimations]);
 
@@ -232,8 +85,13 @@ export const AnimationsBuilder = () => {
 
       // console.log(props);
       console.log("frames : ", props);
+      if (props.done) {
 
-      setAnimations(props);
+        setAnimations(props.res);
+      } else {
+
+        setAnimations([]);
+      }
       searchedAnimations.current = props;
     }
   };
@@ -261,14 +119,14 @@ export const AnimationsBuilder = () => {
     keyframesGetterWorker.addEventListener(
       "message",
       sendToKeyframesGetterWorker,
-      { once: true }
+      // { once: true }
     );
 
     return () => {
       keyframesGetterWorker.removeEventListener(
         "message",
         sendToKeyframesGetterWorker,
-        { once: true }
+        // { once: true }
       );
     };
 
@@ -283,7 +141,7 @@ export const AnimationsBuilder = () => {
       {
         type: "keyframes",
         name: animationName,
-        path: `css/${localStorage.getItem(current_page_id)}.css`,
+        path,
         keyframes: [
           {
             type: "keyframe",
@@ -385,8 +243,9 @@ export const AnimationsBuilder = () => {
       const clone = structuredClone(animations);
       const keyframe =
         clone[indexes.animationIndex || 0].keyframes[
-          indexes.keyframeIndex || 0
+        indexes.keyframeIndex || 0
         ];
+      // keyframe.changed = true;
       console.log("key frame event : ", ev, keyframe);
       // const noDeclerations = [];
       if (keyframe.type == "keyframe") {
@@ -416,19 +275,20 @@ export const AnimationsBuilder = () => {
         //   indexes.keyframeIndex || 0
         // ].declarations.concat(noDeclerations);
 
-        console.log(
-          "clone  : ",
-          clone,
-          // noDeclerations,
-          frameStyles,
-          Array.from(notFoundedKeys)
-        );
+
 
         if (!clone[indexes.animationIndex].changed) {
           clone[indexes.animationIndex].changed = true;
           setAnimations(clone);
         }
-
+        console.log(
+          "clone  : ",
+          clone,
+          clone[indexes.animationIndex],
+          // noDeclerations,
+          frameStyles,
+          Array.from(notFoundedKeys)
+        );
         setAnimations(clone);
 
         // setIsChangedAnimations(
@@ -463,7 +323,8 @@ export const AnimationsBuilder = () => {
 
   return (
     <Memo className="h-full">
-      <UndoRedoContainer
+      {load && <Loader />}
+      {!load && <UndoRedoContainer
         defaultValue={animationsType}
         className="h-full"
         showProp="animationBuilder"
@@ -477,6 +338,17 @@ export const AnimationsBuilder = () => {
               placeholder="Search..."
               className="bg-surface-tertiary"
               onInput={search}
+            />
+            <Select
+              placeholder="Select Global or Local"
+              keywords={['global', 'local']}
+              preventInput
+              value={chooseGlobal}
+              onAll={(value) => {
+                const newPath = value.trim().toLowerCase() == 'global' ? isWordpress() ? globalSlug : `global/global.css` : path;
+                setPath(newPath);
+                setChooseGlobal(value);
+              }}
             />
             <section className="flex gap-2">
               <Input
@@ -514,8 +386,8 @@ export const AnimationsBuilder = () => {
                   <AccordionItem
                     title={animation.name}
                     key={i}
-                    // labelClass="p-[3px!important]"
-                    // className=""
+                  // labelClass="p-[3px!important]"
+                  // className=""
                   >
                     <Memo>
                       <Adder
@@ -538,13 +410,11 @@ export const AnimationsBuilder = () => {
                             .filter((kf) => kf.type == "keyframe")
                             .map((keyframe, x) => {
                               // const uId = uniqueId()
-                              const id = `keyframe-${
-                                animation.name
-                              }-${i}-${x}-${
-                                animation.path.startsWith(`css/${pageName}.css`)
+                              const id = `keyframe-${animation.name
+                                }-${i}-${x}-${animation.path.startsWith(`css/${pageName}.css`)
                                   ? "editor"
                                   : "libs"
-                              }`;
+                                }`;
                               return (
                                 // <section key={x} className="flex flex-col bg-surface-secondary px-1 py-2 gap-[100px] ">
 
@@ -554,10 +424,10 @@ export const AnimationsBuilder = () => {
                                   className={`flex  flex-col  gap-2 bg-gray-950 p-2 border-[2.5px]  w-full rounded-lg ${
                                     // currentEditingIndexStyles == x &&
                                     indexes.animationIndex == i &&
-                                    indexes.keyframeIndex == x
+                                      indexes.keyframeIndex == x
                                       ? "border-blue-600"
                                       : "border-border-default"
-                                  } `}
+                                    } `}
                                 >
                                   <section className="flex gap-2 ">
                                     <section className="w-full flex items-center  bg-surface-tertiary px-1 rounded-lg">
@@ -714,7 +584,7 @@ export const AnimationsBuilder = () => {
             {/* </section> */}
           </Accordion>
         </section>
-      </UndoRedoContainer>
+      </UndoRedoContainer>}
     </Memo>
   );
 };

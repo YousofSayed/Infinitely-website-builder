@@ -139,49 +139,49 @@ export const CodeManagerModal = () => {
               content = isHtml
                 ? html_beautify(await handle.text())
                 : isCss
-                ? css_beautify(await handle.text())
-                : isJS
-                ? js_beautify(await handle.text())
-                : await handle.text();
+                  ? css_beautify(await handle.text())
+                  : isJS
+                    ? js_beautify(await handle.text())
+                    : await handle.text();
             }
 
             if (!isHtmlEditorContent) {
               content = isHtml
                 ? html_beautify(await handle.text())
                 : isCss
-                ? css_beautify(await handle.text())
-                : isJS
-                ? js_beautify(await handle.text())
-                : await handle.text();
+                  ? css_beautify(await handle.text())
+                  : isJS
+                    ? js_beautify(await handle.text())
+                    : await handle.text();
             }
 
             console.log(`css editor : `, editor.getCss({
-                      avoidProtected: true,
-                      keepUnusedStyles: true,
-                      clearStyles: false,
-                      onlyMatched: false,
-                    }));
+              avoidProtected: true,
+              keepUnusedStyles: true,
+              clearStyles: false,
+              onlyMatched: false,
+            }));
 
             return isCssEditorStyles
               ? [
-                  handle.path,
-                  css_beautify(
-                    editor.getCss({
-                      avoidProtected: true,
-                      keepUnusedStyles: true,
-                      clearStyles: false,
-                      onlyMatched: false,
-                    })
-                  ),
-                ]
+                handle.path,
+                css_beautify(
+                  editor.getCss({
+                    avoidProtected: true,
+                    keepUnusedStyles: true,
+                    clearStyles: false,
+                    onlyMatched: false,
+                  })
+                ),
+              ]
               : isHtmlEditorContent
-              ? [
+                ? [
                   handle.path,
                   html_beautify(
                     editor.getWrapper().getInnerHTML({ withProps: true })
                   ),
                 ]
-              : [handle.path, content];
+                : [handle.path, content];
           })
         )
       );
@@ -431,7 +431,7 @@ export const CodeManagerModal = () => {
       // editor.on(InfinitelyEvents.storage.storeEnd, cb);
     } else {
       console.log('Reload required:');
-      
+
       reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {
         state: true,
       });
@@ -549,9 +549,9 @@ export const CodeManagerModal = () => {
           },
         ]}
       />
-      <footer className="h-[8%] flex items-center py-2 mt-2">
+      <footer className="min-h-[8%] flex items-center py-2 mt-2">
         <Button
-          className="flex-grow-0 flex-shrink"
+          className="flex-grow-0 flex-shrink bg-surface-tertiary hover:bg-brand-primary transition-colors"
           onClick={async () => {
             // await updateDB();
             await save();

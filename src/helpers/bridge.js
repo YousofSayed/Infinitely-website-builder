@@ -4,6 +4,7 @@ import {
   cloneDeep,
   flatMapDeep,
   isArray,
+  isBoolean,
   isObject,
   isPlainObject,
   random,
@@ -12,6 +13,8 @@ import {
 import serializeJavascript from "serialize-javascript";
 import {
   buildScripts,
+  buildWpHeaderScripts,
+  buildWpScripts,
   interactionId,
   interactionInstanceId,
   mainMotionId,
@@ -26,6 +29,15 @@ import { db } from "./db";
 import { opfs } from "./initOpfs";
 import { buildProject } from "./exportProject";
 import { tmp } from "../constants/RestAPIEndpoints";
+import {
+  wp_get,
+  wp_get_posts_with_inf_meta,
+  wp_update_media,
+  wp_update_media_files,
+  wp_update_media_files_by_slugs,
+  wp_upload_file,
+  wp_upload_multiple_files,
+} from "../Apps/wordpress/functions";
 
 export const html = String.raw;
 export const css = String.raw;
@@ -140,7 +152,7 @@ export function getAlpineContext(editor, cmp) {
 export function getDirectiveContext(
   attributes,
   directive,
-  getTheSameOne = false
+  getTheSameOne = false,
 ) {
   if (!attributes) return {};
   // const attributes = cmp.getAttributes();
@@ -163,7 +175,7 @@ export function getDirectiveContext(
             ?.map?.((modifire) => modifire.replace(".", "")),
         };
         return [key, newValue];
-      })
+      }),
   );
   return context;
 }
@@ -172,9 +184,8 @@ export function doStringObject(object = {}) {
   let stringObj = `{ `;
   const entries = Object.entries(JSON.parse(JSON.stringify(object)));
   entries.forEach(([key, value], i) => {
-    stringObj += `${key} : ${value} ${i != entries.length - 1 ? "," : ""} ${
-      i == entries.length - 1 ? "}" : ""
-    }`;
+    stringObj += `${key} : ${value} ${i != entries.length - 1 ? "," : ""} ${i == entries.length - 1 ? "}" : ""
+      }`;
   });
   console.log(JSON.stringify(object));
   console.log(JSON.parse(JSON.stringify(object)));
@@ -196,7 +207,7 @@ export function objectToString(obj, indentLevel = 0) {
     const lines = funcStr.split("\n");
     const indentedLines = lines
       .map(
-        (line, i) => (i === 0 ? line : `${indent}  ${line.trim()}`) // Indent body lines
+        (line, i) => (i === 0 ? line : `${indent}  ${line.trim()}`), // Indent body lines
       )
       .join("\n");
     return indentedLines;
@@ -232,35 +243,36 @@ export function parseForDirective(xForDirective = "") {
   if (!xForDirective || typeof xForDirective !== "string") return null;
 
   // Normalize whitespace
-  const clean = xForDirective.trim().replace(/\s+/g, " ");
+  const clean = xForDirective
+  // .trim().replace(/\s+/g, " ");
 
   // --- CASE 1: (item, index) in source ---
-  let match = clean.match(/^\(\s*(\w+)\s*,\s*(\w+)\s*\)\s+in\s+(.+)$/);
+  let match = clean.match(/^\(\s*(\w+)\s*,\s*(\w+)\s*\)\s+in\s+(.+)?$/);
   if (match) {
     return {
       varName: match[1],
       index: match[2],
-      array: match[3].trim(),
+      array: (match[3]||'').trim(),
     };
   }
 
   // --- CASE 2: (item) in source ---
-  match = clean.match(/^\(\s*(\w+)\s*\)\s+in\s+(.+)$/);
+  match = clean.match(/^\(\s*(\w+)\s*\)\s+in\s+(.+)?$/);
   if (match) {
     return {
       varName: match[1],
       index: null,
-      array: match[2].trim(),
+      array: (match[2]||'').trim(),
     };
   }
 
   // --- CASE 3: item in source ---
-  match = clean.match(/^(\w+)\s+in\s+(.+)$/);
+  match = clean.match(/^(\w+)\s+in\s+(.+)?$/);
   if (match) {
     return {
       varName: match[1],
       index: null,
-      array: match[2].trim(),
+      array: (match[2]||'').trim(),
     };
   }
 
@@ -354,7 +366,7 @@ export function parseStringObjToKV(strObj = "") {
   return parseMaped;
 }
 
-export async function replaceCssURLS(css = "", callback = (url = "") => {}) {
+export async function replaceCssURLS(css = "", callback = (url = "") => { }) {
   const blobRegex = /url\(['"]?(blob:[^'")]+)['"]?\)/g;
   const infinitelyRgx = /url\((\"|\'|\`)?infinitely(.+)(\"|\'|\`)?\)/g;
   const stylesheet = parseCss(
@@ -363,7 +375,7 @@ export async function replaceCssURLS(css = "", callback = (url = "") => {}) {
       .replace(/}/g, "\n}\n")
       .replace(/;/g, ";\n  ")
       .replace(/(@media[^{]*){/, "$1 {\n")
-      .replace(/\n\s*\n/g, "\n")
+      .replace(/\n\s*\n/g, "\n"),
   );
   await Promise.all(
     stylesheet.stylesheet.rules.map(async (rule) => {
@@ -379,7 +391,7 @@ export async function replaceCssURLS(css = "", callback = (url = "") => {}) {
             if (value?.match?.(jsRgx)?.length) {
               let splitted = [...new Set(value.split(","))];
               const blobUrlIndex = splitted.findIndex((url) =>
-                blobRegex.test(url)
+                blobRegex.test(url),
               );
               const infUrl = splitted
                 ?.find((url) => url?.match?.(jsRgx)?.length)
@@ -391,15 +403,13 @@ export async function replaceCssURLS(css = "", callback = (url = "") => {}) {
               if (infUrl) {
                 // console.log((await parseInfinitelyURL(infUrl)).blobUrl);
                 if (blobUrlIndex != -1) {
-                  splitted[blobUrlIndex] = `url("${
-                    await callback(infUrl)
+                  splitted[blobUrlIndex] = `url("${await callback(infUrl)
                     // (await parseInfinitelyURL(infUrl)).blobUrl
-                  }")`;
+                    }")`;
                 } else {
                   splitted = [
-                    `url("${
-                      await callback(infUrl)
-                      // (await parseInfinitelyURL(infUrl)).blobUrl
+                    `url("${await callback(infUrl)
+                    // (await parseInfinitelyURL(infUrl)).blobUrl
                     }")`,
                     ...splitted,
                   ];
@@ -413,12 +423,12 @@ export async function replaceCssURLS(css = "", callback = (url = "") => {}) {
               }
             }
             return dec;
-          })
+          }),
         );
       }
 
       return rule;
-    })
+    }),
   );
 
   const str = stringifyCss(stylesheet);
@@ -490,7 +500,7 @@ export async function replaceBlobs(input) {
       Object.entries(input).map(async ([key, value]) => [
         key,
         await replaceBlobs(value),
-      ])
+      ]),
     );
     return Object.fromEntries(entries);
   }
@@ -515,7 +525,7 @@ export function restoreBlobs(input) {
       return input.map(restoreBlobs); // Process arrays recursively
     } else {
       return Object.fromEntries(
-        Object.entries(input).map(([key, value]) => [key, restoreBlobs(value)])
+        Object.entries(input).map(([key, value]) => [key, restoreBlobs(value)]),
       );
     }
   }
@@ -550,8 +560,8 @@ export async function minifyBlobJSAndCssStream(blob, type = "") {
     type == "js"
       ? await import("terser")
       : type == "css"
-      ? await import("csso")
-      : ""; // Assuming Terser is loaded
+        ? await import("csso")
+        : ""; // Assuming Terser is loaded
 
   // Get a ReadableStream from the Blob
   const stream = blob.stream();
@@ -570,7 +580,7 @@ export async function minifyBlobJSAndCssStream(blob, type = "") {
   console.log(
     "code : ",
     code,
-    type == "css" && (await import("csso")).minify(code).css
+    type == "css" && (await import("csso")).minify(code).css,
   );
 
   const minified =
@@ -604,7 +614,7 @@ export async function getFileFromHandle(path) {
   return await (await opfs.getFile(await getOPFSProjectDir(), path)).getFile();
 }
 
-export function isDevMode(resolve = (result) => {}, reject = (result) => {}) {
+export function isDevMode(resolve = (result) => { }, reject = (result) => { }) {
   const isDev = import.meta.env.MODE === "development";
   if (isDev) {
     resolve(isDev);
@@ -669,7 +679,7 @@ export function getFilesSize(files, fixed = 2) {
     (prev, current, currentIndex, arr) => {
       return prev + current.size;
     },
-    0
+    0,
   );
   // const totalSizeInMB = totalSizeInBytes / bytesPerMB;
   // const totalSizeInGB = (totalSizeInBytes / bytesPerGB).toFixed(2);
@@ -680,7 +690,7 @@ export function getFilesSize(files, fixed = 2) {
   };
 }
 
-export function isChrome(callback = (bool = false) => {}) {
+export function isChrome(callback = (bool = false) => { }) {
   const cond = navigator.userAgent.toLowerCase().includes("chrome");
   if (cond) {
     callback(cond);
@@ -763,12 +773,41 @@ export function removeNestedKey(obj, keys) {
 
 const isFunction = (value) => {
   try {
-    const isFunction = typeof new Function(`return (${value})`) == "function";
+    const isFunction = typeof new Function(`return (${value})`)() == "function";
     return isFunction;
   } catch (error) {
     return false;
   }
 };
+
+// export function infinitelyObjectSerializer(obj = {} , excludes = []) {
+//   const clone = cloneDeep(obj);
+  
+//   serializeJavascript
+// }
+
+const handleMotionSelectorValue = (value = '', attribute, motion , isSelector = false) => {
+  let finalValue = value;
+
+  if (typeof value !== 'string') {
+    console.warn('Value is not string');
+    return value;
+  }
+
+  let splitedValue = value.trim().split(' ');
+
+  if (motion?.isLoop) {
+
+    finalValue = splitedValue[0] === 'self' ? splitedValue.length > 1 ? `thrower(el.querySelectorAll("${splitedValue.slice(1, splitedValue.length).join(' ')}"))` : `thrower(el)` : finalValue
+  }
+  else {
+    finalValue = value.replaceAll?.("self", attribute);
+  }
+  console.log('splitedValue : ', splitedValue, splitedValue[0] === 'self', finalValue);
+
+
+  return finalValue;
+}
 
 /**
  *
@@ -781,7 +820,7 @@ function CompileMotion(
   motion,
   paused = false,
   isInstance = false,
-  removeMarkers = true // this is just in bridge.js for final build (production)
+  removeMarkers = true, // this is just in bridge.js for final build (production)
 ) {
   /**
    * @type {{
@@ -801,9 +840,23 @@ function CompileMotion(
     timeline: {},
     fromTo: [],
   };
-  const attribute = `[${
-    motion?.isInstance ? `motion-instance-id` : `motion-id`
-  }=${motion.id}]`;
+  // const attribute = 'el';
+  const attribute =
+    `[${motion?.isInstance ? `motion-instance-id` : `motion-id`
+    }=${motion.id}]`;
+
+  // const handleSelector = (value = '') => {
+  //   if (value.includes('self')) {
+  //     if (Boolean(value.replace('self', ''))) {
+  //       return value.replace('self', `${attribute} ${value.replace('self', '')}`)
+  //     }
+  //   }
+
+  // }
+
+  const handleValue = (value) => {
+    return handleMotionSelectorValue(value, attribute, motion);
+  };
 
   const parseObjValue = (obj = {}) => {
     return Object.fromEntries(
@@ -825,26 +878,31 @@ function CompileMotion(
             !key.toLocaleLowerCase().endsWith("params")
           ) {
             const isFn = isFunction(value);
-            value =
+            value = //handleValue(value);
               typeof value === "string"
-                ? value.replaceAll?.("self", attribute)
+                ? value.replaceAll?.("self", motion?.isLoop ? '$el' : attribute)
                 : value;
 
             return [
               key,
+              // new Function(`return (${value}) `)()
               isFn
                 ? new Function(`return (${value}) `)()
                 : new Function(`return (()=>{${value}})`)(),
             ];
           }
+          // if (key === 'trigger') {
+          //   return [key, new Function(`return (() => document.querySelectorAll("${value.replaceAll?.("self", attribute)}"))`)()]
+          // }
           return [
             key,
-            typeof value === "string"
-              ? value.replaceAll?.("self", attribute)
-              : value,
+            handleValue(value)
+            // typeof value === "string"
+            //   ? value.replaceAll?.("self", attribute)
+            //   : value,
           ];
         })
-        .filter(Boolean)
+        .filter(Boolean),
     );
   };
 
@@ -869,7 +927,7 @@ function CompileMotion(
     output.splitText = parseObjValue(motion.splitText);
     output.splitTextSelector = motion.splitTextSelector.replaceAll(
       "self",
-      attribute
+      attribute,
     );
   }
 
@@ -899,11 +957,12 @@ function CompileMotion(
       };
     }
     output.fromTo.push({
-      selector: selector.replaceAll("self", attribute),
+      selector,
+      // handleValue(selector , attribute , motion),
+      // selector.replaceAll("self", attribute),
       fromValue,
       toValue,
       positionParameter,
-
       name,
       //   options,
     });
@@ -932,33 +991,36 @@ export function buildGsapMotionsScript(
   motions,
   isInstance = false,
   removeMarkers = true,
-  pageName
+  pageName,
 ) {
   const built = Object.values(motions).map((motion) => {
     const compiledMotion = CompileMotion(
       motion,
       false,
       isInstance,
-      removeMarkers
+      removeMarkers,
     );
+
     let splitTextName =
       motion.splitTextName || `${uniqueId("spltTxt_")}${random(1, 9999)}`;
     let tween = `
-    ${
-      motion.isSplitText
+    ${motion.isSplitText
         ? `let ${splitTextName} = new SplitText(
     \`${compiledMotion.splitTextSelector}\`,
     new Function(\`return (${serializeJavascript(compiledMotion.splitText, {
-      space: 2,
-    }).replaceAll("\\", "\\\\")})\`)()
+          space: 2,
+        }).replaceAll("\\", "\\\\")})\`)()
   )`
         : ``
-    }
+      }
 
     let ${motion.id} = {}; \n\n
     `;
 
     const splitKeys = ["chars", "lines", "words"];
+    const attribute =
+      `[${motion?.isInstance ? `motion-instance-id` : `motion-id`
+      }=${motion.id}]`;
 
     const setSelector = (selector = "") => {
       let splitTarget;
@@ -971,80 +1033,109 @@ export function buildGsapMotionsScript(
           return cond;
         });
       // console.log("splitTarget", splitTarget, split);
-      return cond ? `${splitTextName}.${splitTarget}` : `\`${selector}\``;
+      return cond ? `${splitTextName}.${splitTarget}` : motion?.isLoop ? handleMotionSelectorValue(selector, attribute, motion) : `\`${selector}\``;
 
       // return cond ? `new Function( console.log(${splitTextName}[\\\`${splitTarget}\\\`]) ;return ${splitTextName}[\\\`${splitTarget}\\\`])()` : selector;
     };
 
     const doMotion = () => {
       if (motion.isTimeLine) {
-        tween += `${motion.id}.${
-          motion.timeLineName || `${uniqueId("timeline_")}${random(1, 9999)}`
-        } = gsap.timeline( new Function(\`return (${serializeJavascript(
-          compiledMotion.timeline,
-          { space: 2 }
-        ).replaceAll("\\", "\\\\")})\`)())`;
+        tween += `${motion.id}.${motion.timeLineName || `${uniqueId("timeline_")}${random(1, 9999)}`
+          } = gsap.timeline(
+          
+          
+          ()=>(${serializeJavascript(
+            compiledMotion.timeline,
+            { space: 2 ,   },
+          ).replaceAll("\\", "\\\\")})\`))
+          `;
       }
+
+      //  new Function( ${motion?.isLoop ? `'$el',` : ''} \`return (${serializeJavascript(
+      //       compiledMotion.timeline,
+      //       { space: 2 },
+      //     ).replaceAll("\\", "\\\\")})\`)(${motion?.isLoop ? `$el` : ''}))
+
       if (compiledMotion.fromTo.length) {
         for (const [i, item] of compiledMotion.fromTo.entries()) {
-          const toObject = `new Function(\`return (${serializeJavascript(
+          const toObject = `
+         
+          
+          ()=>(${serializeJavascript(
             item.toValue,
-            { space: 2 }
-          ).replaceAll("\\", "\\\\")})\`)()`;
-          const fromObject = `new Function(\`return (${serializeJavascript(
+            { space: 2 },
+          ).replaceAll("\\", "\\\\")})
+          `;
+
+          //  new Function( ${motion?.isLoop ? `'$el',` : ''} \`return (${serializeJavascript(
+          //   item.toValue,
+          //   { space: 2 },
+          // ).replaceAll("\\", "\\\\")})\`)(${motion?.isLoop ? `$el` : ''})
+
+          const fromObject = `
+          
+         
+          ()=>(${serializeJavascript(
             item.fromValue,
-            { space: 2 }
-          ).replaceAll("\\", "\\\\")})\`)()`;
+            { space: 2 },
+          ).replaceAll("\\", "\\\\")})
+          `;
+
+          // new Function(${ motion?.isLoop? `'$el',` : ''} \`return (${serializeJavascript(
+          //   item.fromValue,
+          //   { space: 2 },
+          // ).replaceAll("\\", "\\\\")})\`)(${motion?.isLoop ? `$el` : ''})
+          
 
           tween += `${
-            motion.isTimeLine ? "" : `${motion.id}.${item.name} = gsap`
-          }.fromTo(${setSelector(
-            item.selector
-          )}, {...${fromObject}}, {...${toObject}} , \`${
-            item.positionParameter || ""
-          }\`)${
-            motion.isTimeLine
-              ? i == compiledMotion.fromTo.length - 1
-                ? ";\n\n"
-                : ""
-              : ";\n\n"
-          }`;
-
+          motion.isTimeLine ? "" : `${motion.id}.${item.name} = gsap`
+        }.fromTo(${
+          setSelector(
+            item.selector,
+            )
+      }, (${ fromObject.trim() })() , (${ toObject.trim() })() , \`${item.positionParameter || ""
+        }\`)${motion.isTimeLine
+          ? i == compiledMotion.fromTo.length - 1
+            ? ";\n\n"
+            : ""
+          : ";\n\n"
+        }`;
+// {...${ fromObject }}, {...${ toObject } }
           // console.log(new Function(`return ${serializeJavascript(item.toValue , {space:2, })}`)());
         }
       }
     };
 
-    console.log(
-      "motions from script builder",
-      motion,
-      !motion?.excludes?.includes?.(pageName)
-    );
+console.log(
+  "motions from script builder",
+  motion,
+  !motion?.excludes?.includes?.(pageName),
+);
 
-    if (!motion?.excludes?.includes?.(pageName)) {
-      doMotion();
-    }
+if (!motion?.excludes?.includes?.(pageName)) {
+  doMotion();
+}
 
-    if (Object.keys(motion.instances).length) {
-      console.log(
-        "instances length : ",
-        motion.instances,
-        Object.keys(motion.instances)
-      );
+if (Object.keys(motion.instances).length) {
+  console.log(
+    "instances length : ",
+    motion.instances,
+    Object.keys(motion.instances),
+  );
 
-      for (const id in motion.instances) {
-        const clone = cloneDeep(motion);
-        clone.id = id;
-        (clone.isInstance = true), (clone.instances = {});
-        delete clone["excludes"];
-        tween += buildGsapMotionsScript({ [id]: clone }, true, removeMarkers);
-      }
-    }
+  for (const id in motion.instances) {
+    const clone = cloneDeep(motion);
+    clone.id = id;
+    ((clone.isInstance = true), (clone.instances = {}));
+    delete clone["excludes"];
+    tween += buildGsapMotionsScript({ [id]: clone }, true, removeMarkers);
+  }
+}
 
-    return tween;
+return tween;
   });
 
-  return built.join(`\n\n\n`);
+return built.join(`\n\n\n`);
 }
 
 /**
@@ -1059,8 +1150,9 @@ export function filterMotionsByPage(motions, pageName) {
   return Object.fromEntries(
     Object.entries(motions).filter(([key, motion]) => {
       if (!motion.pages || !motion.pages.length) return false;
+      if (motion?.isLoop) return false;
       return motion.pages.includes(pageName);
-    })
+    }),
   );
 }
 
@@ -1091,7 +1183,7 @@ export async function cleanMotions(motions, pages, currentPages = {}) {
       const { document } = parseHTML(doDocument(pageContent));
       const mainIdEls = document.querySelectorAll(`[${motionId}="${key}"]`);
       const instancesEls = document.querySelectorAll(
-        `[${mainMotionId}="${key}"]`
+        `[${mainMotionId}="${key}"]`,
       );
       // console.log(mainIdEls, instancesEls, pageContent, "a3aaaaaaa");
       if (!mainIdEls.length && instancesEls.length) {
@@ -1118,7 +1210,7 @@ export async function cleanMotions(motions, pages, currentPages = {}) {
       } else {
         // isChange = false;
         motion.pages = (motion.pages || []).filter(
-          (page) => page.toLowerCase() != name.toLowerCase()
+          (page) => page.toLowerCase() != name.toLowerCase(),
         );
         // console.log("motions pages : ", motion.pages, motion.id, name);
       }
@@ -1127,7 +1219,7 @@ export async function cleanMotions(motions, pages, currentPages = {}) {
       for (const instanceKey in cloneDeep(motion.instances)) {
         if (allowedInstances[instanceKey]) continue;
         const el = document.querySelectorAll(
-          `[${motionInstanceId}="${instanceKey}"]`
+          `[${motionInstanceId}="${instanceKey}"]`,
         );
         if (el.length) allowedInstances[instanceKey] = true;
         if (!el.length) allowedInstances[instanceKey] = false;
@@ -1231,7 +1323,7 @@ export async function cleanInteractions(interactions, pages) {
         isUsed,
         key,
         "\n\n\n",
-        content
+        content,
       );
       if (isUsed) {
         newInteractions[id] = interactions[id];
@@ -1272,14 +1364,13 @@ export const buildFunctionsFromActions = (actions, id, isInstance = false) => {
             console.log("value", value);
             return typeof value == "string"
               ? value.replaceAll(
-                  `self`,
-                  `[${
-                    isInstance ? interactionInstanceId : interactionId
-                  }="${id}"]`
-                )
+                `self`,
+                `[${isInstance ? interactionInstanceId : interactionId
+                }="${id}"]`,
+              )
               : value;
           })
-          .join(",")})`
+          .join(",")})`,
     )
     .join(";");
 
@@ -1297,7 +1388,7 @@ export const buildFunctionsFromActions = (actions, id, isInstance = false) => {
 export function buildInteractionsAttributes(
   interactions,
   interactionsId,
-  isInstance = false
+  isInstance = false,
 ) {
   return Object.fromEntries(
     interactions.map((interaction) => [
@@ -1305,9 +1396,9 @@ export function buildInteractionsAttributes(
       buildFunctionsFromActions(
         interaction.actions,
         interactionsId,
-        isInstance
+        isInstance,
       ),
-    ])
+    ]),
   );
 }
 
@@ -1419,7 +1510,7 @@ export async function installRestModelsAPI(rModels) {
                 ? model.body
                 : undefined,
             },
-            "blob"
+            "blob",
           );
           const dataBlob = await response.response;
           console.log("data type : ", dataBlob);
@@ -1453,7 +1544,7 @@ export async function installRestModelsAPI(rModels) {
         model.response = null;
         model.waitToInstall = true;
       }
-    })
+    }),
   );
 }
 
@@ -1545,9 +1636,9 @@ export async function getScripts(libs, urlException = "") {
                 name="${lib.name}"
               ></script>
             `;
-      }
+      },
       // ${await lib.file.text()};
-    )
+    ),
   );
 
   return (await scripts).join("\n");
@@ -1576,7 +1667,7 @@ export async function getStyles(libs, urlException = "") {
               rel="stylesheet"
             />
           `;
-    })
+    }),
     // ${await lib.file.text()};
   );
 
@@ -1630,7 +1721,7 @@ export function setTryCatchInDirectives(document) {
           throw new Error(error);
         }
       })()
-        `
+        `,
         );
       }
     });
@@ -1858,45 +1949,45 @@ export const buildPageData = async (page = "", projectData, projectSetting) => {
     projectSetting,
     inserts: [
       {
-        index: (() => {
-          // Real base scripts before GSAP:
-          // 0 - infinitely.js
-          // 1 - dev.js
-          // 2+ - swiper.js (optional)
-          // 3+ - swiper-element.js (optional)
-          // then GSAP group
-          // then petite-vue group
+        // index: (() => {
+        //   // Real base scripts before GSAP:
+        //   // 0 - infinitely.js
+        //   // 1 - dev.js
+        //   // 2+ - swiper.js (optional)
+        //   // 3+ - swiper-element.js (optional)
+        //   // then GSAP group
+        //   // then petite-vue group
 
-          let index = 2; // infinitely.js + dev.js
+        //   let index = 2; // infinitely.js + dev.js
 
-          // swiper adds TWO scripts
-          if (projectSetting.enable_swiperjs) {
-            index += 2;
-          }
+        //   // swiper adds TWO scripts
+        //   if (projectSetting.enable_swiperjs) {
+        //     index += 2;
+        //   }
 
-          // GSAP core
-          if (!projectSetting.disable_gsap_core) index++;
+        //   // GSAP core
+        //   if (!projectSetting.disable_gsap_core) index++;
 
-          // ScrollTrigger
-          if (!projectSetting.disable_gsap_scrollTrigger) index++;
+        //   // ScrollTrigger
+        //   if (!projectSetting.disable_gsap_scrollTrigger) index++;
 
-          // SplitText
-          if (!projectSetting.disable_gsap_splitText) index++;
+        //   // SplitText
+        //   if (!projectSetting.disable_gsap_splitText) index++;
 
-          // insert AFTER GSAP group, BEFORE petite-vue
-          return index;
-        })(),
-
+        //   // insert AFTER GSAP group, BEFORE petite-vue
+        //   return index;
+        // })(),
+        useLastIndex: true,
         item: {
           name: `${page.name}.js`,
           content: buildGsapMotionsScript(
             filterMotionsByPage(
               await cleanMotions(projectData.motions, projectData.pages),
-              currentPageId
+              currentPageId,
             ),
             false,
             projectSetting.remove_gsap_markers_on_build,
-            currentPageId
+            currentPageId,
           ),
         },
       },
@@ -1907,13 +1998,12 @@ export const buildPageData = async (page = "", projectData, projectSetting) => {
     ])
     .map(
       (url) =>
-        `<script ${url.localUrl ? `src="${url.localUrl || ""}"` : ""} ${
-          url.attributes && isPlainObject(url.attributes)
-            ? Object.entries(url.attributes).map(
-                ([key, value]) => `${key}="${value}"`
-              )
-            : ""
-        }>${url.content || ""}</script>`
+        `<script ${url.localUrl ? `src="${url.localUrl || ""}"` : ""} ${url.attributes && isPlainObject(url.attributes)
+          ? Object.entries(url.attributes).map(
+            ([key, value]) => `${key}="${value}"`,
+          )
+          : ""
+        }>${url.content || ""}</script>`,
     )
     .join("\n");
 
@@ -1942,11 +2032,11 @@ export const buildPageData = async (page = "", projectData, projectSetting) => {
   `;
 
   data.helmet += html`
+    <link rel="icon" type="image/png"  href="${urlException}/${projectData.logo}" />
     <meta name="author" content="${helmet.author || ""}" />
     <meta name="description" content="${helmet.description || ""}" />
     <meta name="keywords" content="${helmet.keywords || ""}" />
     <title>${helmet.title || ""}</title>
-    <link rel="icon" href="${urlException}/${projectData.logo}" />
     ${(await helmet?.customMetaTags?.text?.()) || ""}
   `;
 
@@ -1961,14 +2051,14 @@ export const buildPageData = async (page = "", projectData, projectSetting) => {
   data.symbolsStyles = currentPage.symbols
     .map(
       (id) =>
-        `<link href="${urlException}/editor/symbols/${id}/${id}.css" rel="stylesheet"/>`
+        `<link href="${urlException}/editor/symbols/${id}/${id}.css" rel="stylesheet"/>`,
     )
     .join("\n");
   data.templatesStyles = Object.values(projectData.blocks)
     .filter((block) => block.type == "template")
     .map(
       (block) =>
-        `<link href="${urlException}/${block.pathes.style}" rel="stylesheet"/>`
+        `<link href="${urlException}/${block.pathes.style}" rel="stylesheet"/>`,
     )
     .join("\n");
   // data.fonts = getFonts(projectData, urlException) || "";
@@ -2014,12 +2104,12 @@ export async function buildPageContentFromData({
         <link href="/styles/style.css" rel="stylesheet" />
 
         ${isTailwindEnabled
-          ? ` <link
+      ? ` <link
             href="${urlException}/css/tailwind/${page}.css"
             id="tailwind-style"
             rel="stylesheet"
           />`
-          : `
+      : `
           <link
             href="/styles/global-rules.css"
             id="global-rules"
@@ -2028,8 +2118,8 @@ export async function buildPageContentFromData({
           `}
         <!-- There is {pageData.symbolsStyles} {pageData.templatesStyles} -->
         ${Object.values(projectData.fonts).length
-          ? `<link href="${urlException}/css/fonts.css" rel="stylesheet"/>`
-          : ""}
+      ? `<link href="${urlException}/css/fonts.css" rel="stylesheet"/>`
+      : ""}
         ${pageData.helmet} ${pageData.cssLibs}
         <link
           href="${urlException}/css/${page}.css"
@@ -2038,15 +2128,15 @@ export async function buildPageContentFromData({
         />
         ${pageData.headerScripts}
         ${projectSetting.enable_spline_viewer
-          ? `<script src="https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js" type="module"></script>`
-          : ""}
+      ? `<script src="https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js" type="module"></script>`
+      : ""}
       </head>
 
       <body
         ${Object.keys(pageData.bodyAttributes || {})
-          .filter((key) => Boolean(pageData.bodyAttributes[key]))
-          .map((key) => `${key}="${pageData.bodyAttributes[key]}"`)
-          .join(" ")}
+      .filter((key) => Boolean(pageData.bodyAttributes[key]))
+      .map((key) => `${key}="${pageData.bodyAttributes[key]}"`)
+      .join(" ")}
       >
         ${pageData.content} ${pageData.footerScripts} ${pageData.globalScript}
         ${pageData.localScript} ${pageData.mainScripts}
@@ -2077,7 +2167,7 @@ export async function buildPagesAsBlobForSecrviceWorker({
   for (const key in pages) {
     const pageKey = new URL(
       `/pages/${key}.html`,
-      self?.origin || window?.origin
+      self?.origin || window?.origin,
     ).pathname
       .split("/")
       .pop();
@@ -2091,7 +2181,7 @@ export async function buildPagesAsBlobForSecrviceWorker({
           projectSetting,
         }),
       ],
-      { type: "text/html" }
+      { type: "text/html" },
     );
   }
   return pagesAsBlob;
@@ -2116,7 +2206,7 @@ export async function buildPageAsBlobForSecrviceWorker({
 }) {
   if (!pageName) {
     console.error(
-      `From pages builder worker buildPageAsBlobForSecrviceWorker : no page name founded`
+      `From pages builder worker buildPageAsBlobForSecrviceWorker : no page name founded`,
     );
   }
   // const page = projectData.pages[pageName];
@@ -2199,7 +2289,7 @@ export async function sendDataToServiceWorker(data) {
   });
 }
 
-export function inlineWorker(callback = () => {}, scope = {}) {
+export function inlineWorker(callback = () => { }, scope = {}) {
   let strScope = ``;
   for (const key in scope) {
     strScope += `const  ${key} = ${serializeJavascript(scope[key])};\n`;
@@ -2210,7 +2300,7 @@ export function inlineWorker(callback = () => {}, scope = {}) {
   const urlCode = URL.createObjectURL(
     new Blob([code], {
       type: "application/javascript",
-    })
+    }),
   );
 
   const worker = new Worker(urlCode, { credentials: "omit" });
@@ -2252,36 +2342,36 @@ export async function buildPage({ pageName, file, css, js }) {
     "is instance from : ",
     file.async && file.async instanceof Function,
     file instanceof Blob,
-    file instanceof File
+    file instanceof File,
   );
   const content = isJSZipObject
     ? await file.async("text")
     : isBlobOrFile
-    ? await file.text()
-    : file; // Assuming file is a string if not a Blob or JSZipObject
+      ? await file.text()
+      : file; // Assuming file is a string if not a Blob or JSZipObject
   if (!content) {
     throw new Error(`File is empty`);
   }
   const pageCss = css
     ? new Blob([await css[`css/${pageName}.css`].async("blob")], {
-        type: "text/css",
-      })
+      type: "text/css",
+    })
     : new Blob([""], { type: "text/css" });
 
   const pageJs = js
     ? new Blob([await js[`js/${pageName}.js`].async("blob")], {
-        type: "application/js",
-      })
+      type: "application/js",
+    })
     : new Blob([""], { type: "application/js" });
 
   const { document } = parseHTML(content);
   const pageTitle = document.title;
   const bodyAttributes = document.body.getAttributeNames().length
     ? Object.fromEntries(
-        document.body
-          .getAttributeNames()
-          .map((attr) => [attr, document.body.getAttribute(attr)])
-      )
+      document.body
+        .getAttributeNames()
+        .map((attr) => [attr, document.body.getAttribute(attr)]),
+    )
     : {};
 
   const descMetaEl = document.querySelector('meta[name="description"]');
@@ -2378,7 +2468,7 @@ export async function buildPage({ pageName, file, css, js }) {
         .map((el) => el.outerHTML)
         .join("\n"),
     ],
-    { type: "text/html" }
+    { type: "text/html" },
   );
 
   /**
@@ -2572,7 +2662,7 @@ export function needsWrapping(code) {
 
   // Wrap only if it has real exports (ESM or TS)
   return /\bexport\s+(default|const|class|function|interface|type|enum|namespace)\b/.test(
-    clean
+    clean,
   );
 }
 
@@ -2587,7 +2677,7 @@ export function hasExportDefault(code = "") {
 export function styleToString(styleObj = {}) {
   return Object.entries(styleObj)
     .map(
-      ([k, v]) => `${k.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase())}:${v}`
+      ([k, v]) => `${k.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase())}:${v}`,
     )
     .join(";");
 }
@@ -2778,7 +2868,7 @@ export async function extractElementStyles({ elementsHTML, cssCode }) {
     // attributes
     [...el.attributes].forEach((attr) => {
       selectorsToMatch.add(
-        `[${attr.name}${attr.value ? `="${attr.value}"` : ""}]`
+        `[${attr.name}${attr.value ? `="${attr.value}"` : ""}]`,
       );
     });
   });
@@ -2795,7 +2885,7 @@ export async function extractElementStyles({ elementsHTML, cssCode }) {
       if (rule.type === "rule" && rule.selectors) {
         // لو أي selector موجود ضمن العنصر أو ولاده
         const match = rule.selectors.some((sel) =>
-          [...selectorsToMatch].some((target) => sel.includes(target))
+          [...selectorsToMatch].some((target) => sel.includes(target)),
         );
 
         if (match) {
@@ -2834,7 +2924,7 @@ export async function extractElementStyles({ elementsHTML, cssCode }) {
   };
 }
 
-export function infinitelyCallback(callback = () => {}, timeout = 0) {
+export function infinitelyCallback(callback = () => { }, timeout = 0) {
   if (window.requestIdleCallback) {
     return requestIdleCallback(callback, { timeout });
   } else {
@@ -2853,4 +2943,311 @@ export function svgToDataURL(svg) {
 
 export function deepValues(obj = {}) {
   return flatMapDeep(obj, (val) => (isObject(val) ? deepValues(val) : val));
+}
+
+export function toQueryParams(obj) {
+  return Object.entries(obj)
+    .map(
+      ([key, value]) =>
+        encodeURIComponent(key) + "=" + encodeURIComponent(value),
+    )
+    .join("&");
+}
+
+/**
+ *
+ * @param {{data : {
+ * name:string,
+ * description:string,
+ * projectSetting:import('./types').ProjectSetting
+ * id:number;
+ * projectData:import('./types').WpProject
+ * app_type:string,
+ * wp_meta:{
+ * website_url: string,
+ * username: string,
+ * password: string,
+ *  app_password: string,
+ * }
+ * }}} param0
+ */
+export async function initMainAndGlobalFilesForWp({ data }) {
+  const id = data.id;
+  const attributes = {}
+  // Build main (header) scripts
+  const mainHeaderScripts = await Promise.all(
+    buildWpHeaderScripts({
+      projectSetting: data.projectSetting,
+    }).map(async (item) => {
+      const blob = await (await fetch(item.localUrl)).blob();
+      if (isBoolean(item.condition)) {
+        if (item.attributes) {
+          attributes[fileNameToMediaSlug(item.name)] = item.attributes;
+        }
+        if (item.condition) {
+          return new File([blob], item.name, { type: blob.type });
+        } else {
+          return new File([" "], item.name, { type: blob.type });
+        }
+      }
+      return new File([blob], item.name, { type: blob.type });
+    }),
+  );
+
+  // Build main (footer) scripts
+  const mainScripts = await Promise.all(
+    buildWpScripts({
+      projectSetting: data.projectSetting,
+    }).map(async (item) => {
+      const blob = await (await fetch(item.localUrl)).blob();
+      if (isBoolean(item.condition)) {
+        if (item.attributes) {
+          attributes[fileNameToMediaSlug(item.name)] = item.attributes;
+        }
+        if (item.condition) {
+          return new File([blob], item.name, { type: blob.type });
+        } else {
+          return new File([" "], item.name, { type: blob.type });
+        }
+      }
+      return new File([blob], item.name, { type: blob.type });
+    }),
+  );
+
+  // Build style files
+  const fontsCss = new File([getFonts(data.projectData) || " "], "fonts.css", {
+    type: "text/css",
+  });
+
+  const infinitelyStyles = new File(
+    [
+      data.projectSetting.include_canvas_styles_in_build_file
+        ? await (await fetch("/styles/style.css")).blob()
+        : " ",
+    ],
+    "infinitely.css",
+    { type: "text/css" },
+  );
+
+  const globalRules = new File(
+    [
+      !data.projectSetting.enable_tailwind
+        ? await (await fetch(`/styles/global-rules.css`)).blob()
+        : " ",
+    ],
+    "global-rules.css",
+    { type: "text/css" },
+  );
+
+  // Build global files
+  const gCss = new File([" html{ --_init: 0} "], "global.css", {
+    type: "text/css",
+  });
+  const gJs = new File(["console.log('global.js')"], "global.js", {
+    type: "application/javascript",
+  });
+
+  const globals = [!isPlainObject(data.projectData.globalCss) ? gCss : null, !isPlainObject(data.projectData.globalJs) ? gJs : null].filter(Boolean);
+
+  // Collect all files to upload
+  const allFiles = [...mainHeaderScripts, ...mainScripts, fontsCss, infinitelyStyles, globalRules, ...globals];
+
+  // Upload all files in one API call
+  const uploadRes = await wp_upload_multiple_files({
+    projectId: id,
+    files: allFiles,
+  });
+
+  if (!uploadRes.success) {
+    throw new Error(`Failed to upload media files: ${JSON.stringify(uploadRes)}`);
+  }
+
+  /**
+   * @type {{[slug: string]: import('./types').InfinitelyWpMedia}}
+   */
+  const files = uploadRes.files;
+
+  const headerCDN = [
+    ...(data.projectSetting.enable_spline_viewer ? [{
+      source_url: 'https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js',
+      date: new Date(),
+      id: null,
+      link: 'https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js',
+      slug: 'spline-js',
+      modified: new Date(),
+      title: 'spline.js',
+      caption: 'spline js for 3d',
+      attributes: {
+        type: 'module',
+      }
+    }] : [])
+  ]
+
+
+  /**
+   * @type {import('./types').WpProject}
+   */
+  const newUpdatedConfig = {
+    mainEditorScripts: {
+      footer: [],
+      header: [
+        ...headerCDN,
+      ],
+    },
+    mainEditorStyles: [],
+  };
+
+  // Map main scripts to footer
+  for (const script of mainScripts) {
+    const slug = fileNameToMediaSlug(script.name);
+    if (files[slug]) {
+      newUpdatedConfig.mainEditorScripts.footer.push({ ...files[slug], attributes: attributes[slug] });
+    }
+  }
+
+  // Map main header scripts to header
+  for (const script of mainHeaderScripts) {
+    const slug = fileNameToMediaSlug(script.name);
+    if (files[slug]) {
+      newUpdatedConfig.mainEditorScripts.header.push({ ...files[slug], attributes: attributes[slug] });
+    }
+  }
+
+  // Map style files
+  const styleFiles = [fontsCss, infinitelyStyles, globalRules];
+  for (const file of styleFiles) {
+    const slug = fileNameToMediaSlug(file.name);
+    if (files[slug]) {
+      newUpdatedConfig.mainEditorStyles.push({ ...files[slug] });
+    }
+  }
+
+  // Map global files
+  const gCssSlug = fileNameToMediaSlug(gCss.name);
+  const gJsSlug = fileNameToMediaSlug(gJs.name);
+
+  if (files[gCssSlug]) {
+    newUpdatedConfig.globalCss = { ...files[gCssSlug] };
+  }
+
+  if (files[gJsSlug]) {
+    newUpdatedConfig.globalJs = { ...files[gJsSlug] };
+  }
+  console.log('script config update : ', newUpdatedConfig, files);
+
+  return {
+    success: true,
+    files,
+    config: newUpdatedConfig,
+  };
+}
+
+
+
+
+export function objToAttributes(objAttrs = {}) {
+  return Object.entries(objAttrs)
+    .map(([key, value]) => `${key} = "${value}"`)
+    .join(" ");
+}
+
+export function functionToString(callback = () => { }) {
+  return callback.toString();
+}
+
+export function functionFromString(callback = "()=>{}", ...params) {
+  return new Function(`return ${callback} `)()(...params);
+}
+
+
+export function createRestartableAsync(fn) {
+  let running = false;
+  let rerun = false;
+  let lastArgs = null;
+
+  async function runner(...args) {
+    lastArgs = args;
+
+    if (running) {
+      rerun = true;
+      return;
+    }
+
+    running = true;
+    rerun = false;
+
+    try {
+      await fn(...lastArgs);
+    } finally {
+      running = false;
+
+      if (rerun) {
+        rerun = false;
+        runner(...lastArgs);
+      }
+    }
+  }
+
+  return runner;
+}
+
+
+export function mediaSlugToFileName(slug = '') {
+  return slug.replaceAll('-', '.');
+}
+
+export function fileNameToMediaSlug(slug = '') {
+  return slug.replaceAll('.', '-');
+}
+
+
+export function normalizeComponent(node) {
+  if (!node || typeof node !== 'object') return node;
+
+  if (node.components) {
+    if (!Array.isArray(node.components)) {
+      node.components = [node.components];
+    }
+
+    node.components = node.components.map(normalizeComponent);
+  }
+
+  return node;
+}
+
+export function normalizeComponentsTree(components) {
+  if (!Array.isArray(components)) return [];
+  return components.map(normalizeComponent);
+}
+
+/**
+ * 
+ * @param {number} projectId 
+ * @param {(project : import('./types').WpProject)=>any} callack 
+ */
+export async function doInWordpressAsyncInWorker(projectId, callack = async () => { }) {
+  if (!projectId) {
+    throw new Error(`Project id not founded in doInWordpressAsyncInWorker`);
+  }
+
+  const app = await db.projects.get(projectId);
+  if (app.app_type === 'wordpress') {
+    await callack(app);
+  }
+}
+
+/**
+ * 
+ * @param {number} projectId 
+ * @param {(project : import('./types').Project)=>any} callack 
+ */
+export async function doInNormalAsyncInWorker(projectId, callack = async () => { }) {
+  if (!projectId) {
+    throw new Error(`Project id not founded in doInNormalAsyncInWorker`);
+  }
+
+  const app = await db.projects.get(projectId);
+  if (!app.app_type || app.app_type === 'normal') {
+    await callack(app);
+  }
 }

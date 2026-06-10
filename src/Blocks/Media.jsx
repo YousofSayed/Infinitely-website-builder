@@ -164,7 +164,7 @@ export const Media = ({ editor }) => {
             // value:'',
             bindToAttribute: true,
             keywords: media_types,
-            callback({ editor, newValue }) {
+            callback({ editor, newValue, model }) {
               const sle = editor.getSelected();
               if (!sle) return;
               sle.removeClass(["h-300", "minh-60", "h-60"]);
@@ -185,11 +185,16 @@ export const Media = ({ editor }) => {
                   // style: `width:100%; height:100%; pointer-events:none; display:block;`,
                 },
               });
+              const srcTrait = model.getTrait('src');
+              srcTrait.attributes.mediaType = newValue;
+              // model.updateTrait('src', {
+              //   mediaType: newValue
+              // })
               // sle.components().models[0].setTraits(traits({mediaType:newValue}));
               // preventSelectNavigation(editor, sle.components().models[0]);
-              sle.updateTrait("src", {
-                mediaType: newValue,
-              });
+              // sle.updateTrait("src", {
+              //   mediaType: newValue,
+              // });
             },
           },
 
@@ -330,62 +335,62 @@ export const Media = ({ editor }) => {
       handleAttrChange(model, attributes) {
         timeout && clearTimeout(timeout);
         // timeout = setTimeout(() => {
-          const child = this.components().models[0];
-          if (!child) return;
-          const childEl = child.getEl();
-          if (!childEl || child?.get('type')?.toLowerCase?.() === 'textnode') return;
-          const originalAttributes = Object.fromEntries(
-            [...this.getEl().attributes].map((attr) => [attr.name, attr.value])
-          );;
+        const child = this.components().models[0];
+        if (!child) return;
+        const childEl = child.getEl();
+        if (!childEl || child?.get('type')?.toLowerCase?.() === 'textnode') return;
+        const originalAttributes = Object.fromEntries(
+          [...this.getEl().attributes].map((attr) => [attr.name, attr.value])
+        );;
 
-          const allChildAttrsWillRemoved =childEl?.attributes ? Object.fromEntries(
-            [...childEl.attributes].map((attr) => [attr.name, attr.value])
-          ) : {};
-          
-          const childAttributes = { ...attributes };
-          delete childAttributes["id"];
-          const allAttributes = { ...childAttributes };
-          const currentSrc = allChildAttrsWillRemoved["src"];
+        const allChildAttrsWillRemoved = childEl?.attributes ? Object.fromEntries(
+          [...childEl.attributes].map((attr) => [attr.name, attr.value])
+        ) : {};
 
+        const childAttributes = { ...attributes };
+        delete childAttributes["id"];
+        const allAttributes = { ...childAttributes };
+        const currentSrc = allChildAttrsWillRemoved["src"];
+
+        console.log(
+          "originalAttributes, childAttributes",
+          originalAttributes,
+          childAttributes,
+          currentSrc,
+          allAttributes.src
+        );
+
+        if (
+          allAttributes.src &&
+          currentSrc &&
+          currentSrc == allAttributes.src
+        ) {
           console.log(
-            "originalAttributes, childAttributes",
-            originalAttributes,
-            childAttributes,
-            currentSrc,
-            allAttributes.src
+            "srcccccccccccccccccccccccccccc updated",
+            childAttributes
           );
 
-          if (
-            allAttributes.src &&
-            currentSrc &&
-            currentSrc == allAttributes.src
-          ) {
-            console.log(
-              "srcccccccccccccccccccccccccccc updated",
-              childAttributes
-            );
+          delete allAttributes["src"];
+          delete allChildAttrsWillRemoved["src"];
+          // delete allAttributes["controls"];
+          // delete allAttributes["poster"];
+        }
 
-            delete allAttributes["src"];
-            delete allChildAttrsWillRemoved["src"];
-            // delete allAttributes["controls"];
-            // delete allAttributes["poster"];
-          }
+        for (const attrKey of Object.keys(allChildAttrsWillRemoved)) {
+          // if (childEl.hasAttribute(attrKey)) continue;
+          childEl.removeAttribute(attrKey);
+        }
 
-          for (const attrKey of Object.keys(allChildAttrsWillRemoved)) {
-            // if (childEl.hasAttribute(attrKey)) continue;
-            childEl.removeAttribute(attrKey);
-          }
+        Object.entries(allAttributes).forEach(([key, value]) => {
+          childEl.setAttribute(key, value);
+        });
 
-          Object.entries(allAttributes).forEach(([key, value]) => {
-            childEl.setAttribute(key, value);
-          });
-
-          // child.addAttributes(childAttributes, {
-          //   avoidStore: true,
-          //   // addStyle: true,
-          //   // skipWatcherUpdates: true,
-          //   partial: true,
-          // });
+        // child.addAttributes(childAttributes, {
+        //   avoidStore: true,
+        //   // addStyle: true,
+        //   // skipWatcherUpdates: true,
+        //   partial: true,
+        // });
         // }, 100);
         // const isAccessed = Boolean(parse(childAttributes["access-media"]));
         // isAccessed

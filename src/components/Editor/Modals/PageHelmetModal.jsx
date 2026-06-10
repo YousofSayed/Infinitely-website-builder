@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { pageHelmetType } from "../../../helpers/jsDocs";
+import { pageHelmetType, refType } from "../../../helpers/jsDocs";
 import { useLiveQuery } from "dexie-react-hooks";
 import { getProjectData, store } from "../../../helpers/functions";
 import {
@@ -18,9 +18,10 @@ import { FitTitle } from "../Protos/FitTitle";
 import { SmallButton } from "../Protos/SmallButton";
 import { opfs } from "../../../helpers/initOpfs";
 import { defineRoot } from "../../../helpers/bridge";
-import { random } from "lodash";
+import { random, uniqueId } from "lodash";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "../Protos/ToastMsgInfo";
+import { html, uniqueID } from "../../../helpers/cocktail";
 
 //million-ignore
 export const PageHelmetModal = () => {
@@ -29,6 +30,8 @@ export const PageHelmetModal = () => {
     ...pageHelmetType,
   });
   const [siteLogo, setSiteLogo] = useState(null);
+  const [siteLogoFile, setSiteLogoFile] = useState();
+  const [logoKeyRefresher, setLogoKeyRefresher] = useState('');
   const currentPageHelmetName = sessionStorage.getItem(current_page_helmet);
   const projectId = +localStorage.getItem(current_project_id);
   const inputFileRef = useRef();
@@ -38,6 +41,7 @@ export const PageHelmetModal = () => {
   // const original = useRef(URL.createObjectURL);
   const logosURLs = useRef([]);
   const firstLoad = useRef(0);
+  const logoRef = useRef(refType);
 
   useLiveQuery(async () => {
     const projectData = await getProjectData();
@@ -55,8 +59,8 @@ export const PageHelmetModal = () => {
         helmetFromDB.icon && helmetFromDB.icon instanceof Blob
           ? URL.createObjectURL(helmetFromDB.icon)
           : projectData.logo
-          ? projectData.logo
-          : "";
+            ? projectData.logo
+            : "";
       logosURLs.current.push(iconUrl);
       setSiteLogo(isReal ? iconUrl : "");
     }
@@ -72,8 +76,8 @@ export const PageHelmetModal = () => {
         helmetFromDB.customMetaTags instanceof Blob
           ? await helmetFromDB.customMetaTags.text()
           : helmetFromDB.customMetaTags
-          ? helmetFromDB.customMetaTags
-          : "",
+            ? helmetFromDB.customMetaTags
+            : "",
     });
     console.log("custom meta tags : ", helmetFromDB.customMetaTags);
   }, []);
@@ -96,6 +100,13 @@ export const PageHelmetModal = () => {
     const tId = toast.loading(<ToastMsgInfo msg={`Saving helmet...`} />);
     try {
       const projectData = await getProjectData();
+      siteLogoFile && await opfs.writeFiles([
+        {
+          path: defineRoot(`logo.png`),
+          content: siteLogoFile,
+        },
+      ]);
+      
       helmet.logo && (projectData.logo = helmet.logo);
       const currentPageId = localStorage.getItem(current_page_id);
       projectData.pages[`${currentPageHelmetName}`].helmet = {
@@ -103,15 +114,15 @@ export const PageHelmetModal = () => {
         ...helmet,
         ...(helmet.customMetaTags && typeof helmet.customMetaTags == "string"
           ? {
-              customMetaTags: new Blob([helmet.customMetaTags], {
-                type: "text/html",
-              }),
-            }
-          : {
-              customMetaTags: helmet.customMetaTags
-                ? helmet.customMetaTags
-                : "",
+            customMetaTags: new Blob([helmet.customMetaTags], {
+              type: "text/html",
             }),
+          }
+          : {
+            customMetaTags: helmet.customMetaTags
+              ? helmet.customMetaTags
+              : "",
+          }),
       };
 
       const props = {
@@ -197,6 +208,12 @@ export const PageHelmetModal = () => {
   //   console.log("custom meta tags : ", helmetFromDB.customMetaTags);
   // };
 
+  useEffect(() => {
+    return () => {
+      URL.revokeObjectURL(siteLogo);
+    }
+  }, [siteLogo])
+
   /**
    *
    * @param {{key:keyof import('../../../helpers/types').PageHelmet , value:string , isBlob:boolean , mimeType:string , isLogo:boolean}} param0
@@ -205,15 +222,24 @@ export const PageHelmetModal = () => {
     async ({ key, value, isBlob = false, mimeType, isLogo = false }) => {
       firstLoad.current++;
       if (isLogo) {
-        await opfs.writeFiles([
-          {
-            path: defineRoot(`logo.png`),
-            content: value,
-          },
-        ]);
-        // const url = URL.createObjectURL(value);
+        // await opfs.writeFiles([
+        //   {
+        //     path: defineRoot(`logo.png`),
+        //     content: new File([value], 'logo.png', { type: 'image/png' }),
+        //   },
+        // ]);
+        setSiteLogoFile(new File([value], 'logo.png', { type: 'image/png' }));
+        URL.revokeObjectURL(siteLogo);
+        const url = URL.createObjectURL(value);
         // logosURLs.current.push(url);
-        setSiteLogo(String(`logo.png`));
+        // logoRef.current.src = '';
+        // logoRef.current.src = `/logo.png`;
+        // logoRef.current.innerHTML = html`
+        // <img src="/logo.png" ref-key="${uniqueId(`-${uniqueID()}`)}-${random(10, 99999999)}" />
+        // `;
+
+        setSiteLogo(url);
+        setLogoKeyRefresher(`${uniqueId(`-${uniqueID()}`)}-${random(10, 99999999)}`);
       }
 
       setHelmet({
@@ -259,11 +285,13 @@ export const PageHelmetModal = () => {
         <section className="flex w-full justify-between items-center   rounded-lg">
           <figure className="rounded-full w-[39px] h-[39px] overflow-hidden">
             <img
+              // ref={logoRef}
               onClick={() => {
                 inputFileRef.current.click();
               }}
-              key={siteLogo + random(999, 1000)}
+              // key={logoKeyRefresher}
               src={siteLogo ? siteLogo : blankImg}
+              // src={blankImg}
               className="w-full h-full max-h-full"
             />
           </figure>
@@ -284,7 +312,6 @@ export const PageHelmetModal = () => {
             accept="image/*"
             ref={inputFileRef}
             onChange={(ev) => {
-              ev.target.value = "";
 
               const file = ev.target.files[0];
               updatePageHelmet({
@@ -292,6 +319,7 @@ export const PageHelmetModal = () => {
                 value: file,
                 isLogo: true,
               });
+              ev.target.value = "";
             }}
           />
         </section>

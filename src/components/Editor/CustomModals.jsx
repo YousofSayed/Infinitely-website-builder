@@ -10,6 +10,7 @@ import { LibraryInstaller } from "./Protos/LibraryInstaller";
 import { LibraryInstallerModal } from "./Modals/LibraryInstallerModal";
 import { FitTitle } from "./Protos/FitTitle";
 import { Button } from "../Protos/Button";
+import { BusyProvider } from "../Protos/BusyProvider";
 
 export const CustomModals = () => {
   const editor = useEditorMaybe();
@@ -49,7 +50,7 @@ export const CustomModals = () => {
         }
         // editor.Commands.run("close:custom:modal");
       }}
-      className={`fixed   transition-all z-[2000]  bg-black/40 right-0 left-0  w-full h-full flex justify-center items-center`}
+      className={`fixed   transition-all z-[2000]  bg-blue-950/40 backdrop-blur-sm right-0 left-0  w-full h-full flex justify-center items-center`}
     >
       <main
         style={{
@@ -112,7 +113,9 @@ export const CustomModals = () => {
           }}
           className=" p-2 h-full max-h-full overflow-auto rounded-bl-lg rounded-br-lg bg-surface-secondary"
         >
-          {modalData.JSXModal}
+          <BusyProvider>
+            {modalData.JSXModal}
+          </BusyProvider>
           {/* <RestAPIModels/> */}
           {/* <LibraryInstaller/> */}
           {/* <LibraryInstallerModal/>   */}

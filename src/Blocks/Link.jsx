@@ -1,6 +1,11 @@
 import { Icons } from "../components/Icons/Icons";
 import { current_page_id } from "../constants/shared";
-import { defineTraits, getProjectData } from "../helpers/functions";
+import {
+  defineTraits,
+  doInNormal,
+  getProjectData,
+  isNormal,
+} from "../helpers/functions";
 import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
 
 /**
@@ -25,7 +30,7 @@ export const Link = async ({ editor }) => {
             fill: "white",
             width: 20,
             height: 20,
-          })
+          }),
         ),
         droppable: false,
         draggable: true,
@@ -39,28 +44,33 @@ export const Link = async ({ editor }) => {
             role: "attribute",
             type: "select",
             keywords: ({ projectData }) => {
-              console.log("project Data : ", projectData);
+              return isNormal()
+                ? doInNormal(() => {
+                    console.log("project Data : ", projectData);
 
-              if (!projectData || !Object.keys(projectData).length) return [];
-              //   const pages = await (await getProjectData()).pages;
-              const pagesLinks = Object.keys(projectData.pages)
-                .map((key) => {
-                  const currentPage = localStorage
-                    .getItem(current_page_id)
-                    .toLowerCase();
-                  if (currentPage == "index") {
-                    return key.toLowerCase() == "index"
-                      ? null
-                      : `./pages/${key.toLowerCase()}.html`;
-                  } else {
-                    return key.toLowerCase() == "index"
-                      ? "../index.html"
-                      : `../pages/${key.toLowerCase()}.html`;
-                  }
-                })
-                .filter(Boolean);
+                    if (!projectData || !Object.keys(projectData).length)
+                      return [];
+                    //   const pages = await (await getProjectData()).pages;
+                    const pagesLinks = Object.keys(projectData.pages)
+                      .map((key) => {
+                        const currentPage = localStorage
+                          .getItem(current_page_id)
+                          .toLowerCase();
+                        if (currentPage == "index") {
+                          return key.toLowerCase() == "index"
+                            ? null
+                            : `./pages/${key.toLowerCase()}.html`;
+                        } else {
+                          return key.toLowerCase() == "index"
+                            ? "../index.html"
+                            : `../pages/${key.toLowerCase()}.html`;
+                        }
+                      })
+                      .filter(Boolean);
 
-              return pagesLinks;
+                    return pagesLinks;
+                  })
+                : [];
             },
           },
           {

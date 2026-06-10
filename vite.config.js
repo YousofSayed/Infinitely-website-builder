@@ -9,15 +9,16 @@ import { chunkSplitPlugin } from "vite-plugin-chunk-split";
 // import MillionLint from "@million/lint";
 // import tailwindcss from '@tailwindcss/vite'
 import million from 'million/compiler'
+import mkcert from 'vite-plugin-mkcert';
 import path from 'path';
 
 export default defineConfig({
-  base:'/',
+  base: '/',
   define: {
     global: "globalThis",
     // 'process.env': {}, // Shim process.env
   },
-  
+
   //  server: {
   //   watch: {
   //     ignored: ['**/node_modules/**', '**/.git/**']
@@ -43,7 +44,8 @@ export default defineConfig({
     },
   },
   plugins: [
-    million.vite({auto:true }),
+    mkcert(),
+    million.vite({ auto: true }),
     react(),
     // MillionLint.vite({}),
     // tailwindcss(),
@@ -78,79 +80,79 @@ export default defineConfig({
 
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,tff,webp}"],
-        maximumFileSizeToCacheInBytes:10485760,
+        maximumFileSizeToCacheInBytes: 10485760,
         runtimeCaching: [
-    //       {
-    //         handler({event , request , url , params}){
-    //           (async () => {
-    //   const url = new URL(event.request.url);
-    //   const splittedUrl = url.pathname.split("/");
-    //   const fileName = splittedUrl.pop();
-    //   let folderPath = splittedUrl.join("/");
-    //   folderPath = folderPath.startsWith("/") ? folderPath.replace("/", "") : folderPath;
-    //   const projectId = vars["projectId"];
+          //       {
+          //         handler({event , request , url , params}){
+          //           (async () => {
+          //   const url = new URL(event.request.url);
+          //   const splittedUrl = url.pathname.split("/");
+          //   const fileName = splittedUrl.pop();
+          //   let folderPath = splittedUrl.join("/");
+          //   folderPath = folderPath.startsWith("/") ? folderPath.replace("/", "") : folderPath;
+          //   const projectId = vars["projectId"];
 
-    //   if (!projectId) {
-    //     return new Response(new Blob(["Project ID not found"], { type: "text/plain" }), {
-    //       status: 400,
-    //     });
-    //   }
+          //   if (!projectId) {
+          //     return new Response(new Blob(["Project ID not found"], { type: "text/plain" }), {
+          //       status: 400,
+          //     });
+          //   }
 
-    //   console.log(`From sw project id is: ${projectId}`);
+          //   console.log(`From sw project id is: ${projectId}`);
 
-    //   opfsBroadcastChannel.postMessage({
-    //     type: "getFile",
-    //     from: "sw",
-    //     folderPath,
-    //     fileName,
-    //     projectId,
-    //   });
+          //   opfsBroadcastChannel.postMessage({
+          //     type: "getFile",
+          //     from: "sw",
+          //     folderPath,
+          //     fileName,
+          //     projectId,
+          //   });
 
-    //   /**
-    //    * @type {File|undefined}
-    //    */
-    //   const responseFile = await new Promise((resolve, reject) => {
-    //     /**
-    //      * @param {MessageEvent} ev
-    //      */
-    //     const callback = (ev) => {
-    //       console.log("from service worker sendFile broadcast", folderPath, fileName);
-    //       const { type, file, isExisit } = ev.data;
+          //   /**
+          //    * @type {File|undefined}
+          //    */
+          //   const responseFile = await new Promise((resolve, reject) => {
+          //     /**
+          //      * @param {MessageEvent} ev
+          //      */
+          //     const callback = (ev) => {
+          //       console.log("from service worker sendFile broadcast", folderPath, fileName);
+          //       const { type, file, isExisit } = ev.data;
 
-    //       if (type !== "sendFile") {
-    //         reject(`No file found: ${file}, ${isExisit}`);
-    //         opfsBroadcastChannel.removeEventListener("message", callback);
-    //         return;
-    //       }
+          //       if (type !== "sendFile") {
+          //         reject(`No file found: ${file}, ${isExisit}`);
+          //         opfsBroadcastChannel.removeEventListener("message", callback);
+          //         return;
+          //       }
 
-    //       if (isExisit && file) {
-    //         resolve(file);
-    //       } else {
-    //         reject(`No file found: ${file}, ${isExisit}`);
-    //       }
-    //       opfsBroadcastChannel.removeEventListener("message", callback);
-    //     };
+          //       if (isExisit && file) {
+          //         resolve(file);
+          //       } else {
+          //         reject(`No file found: ${file}, ${isExisit}`);
+          //       }
+          //       opfsBroadcastChannel.removeEventListener("message", callback);
+          //     };
 
-    //     opfsBroadcastChannel.addEventListener("message", callback);
-    //   });
+          //     opfsBroadcastChannel.addEventListener("message", callback);
+          //   });
 
-    //   if (responseFile) {
-    //     return new Response(responseFile, {
-    //       status: 200,
-    //       headers: {
-    //         "Content-Type": responseFile.type || "application/octet-stream",
-    //         "Access-Control-Allow-Origin": "*", // For cross-origin iframes
-    //       },
-    //     });
-    //   }
+          //   if (responseFile) {
+          //     return new Response(responseFile, {
+          //       status: 200,
+          //       headers: {
+          //         "Content-Type": responseFile.type || "application/octet-stream",
+          //         "Access-Control-Allow-Origin": "*", // For cross-origin iframes
+          //       },
+          //     });
+          //   }
 
-    //   return fetch(event.request)
-    //   // return new Response(new Blob(["404 not found!"], { type: "text/plain" }), {
-    //   //   status: 404,
-    //   // });
-    // })()
-    //         }
-    //       },
+          //   return fetch(event.request)
+          //   // return new Response(new Blob(["404 not found!"], { type: "text/plain" }), {
+          //   //   status: 404,
+          //   // });
+          // })()
+          //         }
+          //       },
           {
             urlPattern: /\.(?:png|jpg|jpeg|svg|webp)$/, // Cache images at runtime
             handler: "CacheFirst",
@@ -220,18 +222,22 @@ export default defineConfig({
   },
 
   build: {
-    rollupOptions:{
+    rollupOptions: {
       // treeshake:false,
       input: {
         main: './index.html',
         app: './app.html',
       },
     },
-    sourcemap:true,
-    minify:'esbuild',
+    target: 'es2022',
+    sourcemap: true,
+    minify: 'esbuild',
     chunkSizeWarningLimit: "5000",
     assetsDir: "static",
-    outDir:'dist',
+    outDir: 'dist',
+    server: {
+      https: true
+    }
   },
 });
 

@@ -141,7 +141,7 @@ export const DetailsNormal = memo(
         </div>
         
         {allowPopupLength && !!length && (
-          <p className="w-[20px] h-[20px] bg-blue-500  text-white flex justify-center items-center font-semibold rounded-full absolute right-[-5px] top-[-7px]">
+          <p className="w-[20px] h-[20px] bg-blue-500  text-white flex justify-center items-center font-semibold rounded-full absolute right-[-3px] top-[-7px]">
             {length}
           </p>
         )}

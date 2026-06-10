@@ -981,4 +981,8 @@ function dontObserverMeAgain(selector) {
   }
 }
 
+function thrower (arg){
+  return arg;
+}
+
 // ... 60 more interactions will follow in the same format ...

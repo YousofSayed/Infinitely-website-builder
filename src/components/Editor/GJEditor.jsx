@@ -27,6 +27,7 @@ import { customInfinitelySymbols } from "../../plugins/customInfinitelySymbols";
 import { current_symbol_id } from "../../constants/shared.js";
 import {
   getComponentRules,
+  getCurrentStorageType,
   getInfinitelySymbolInfo,
   getProjectSettings,
 } from "../../helpers/functions.js";
@@ -36,6 +37,8 @@ import { globalTraits } from "../../plugins/globalTraits.jsx";
 import { initTraitsOnRender } from "../../plugins/initTraitsOnRender.jsx";
 import { editorKeymaps } from "../../plugins/editorKeymaps.jsx";
 import { InfinitelyEvents } from "../../constants/infinitelyEvents.js";
+import { wp_remote_storage } from "../../plugins/wp_remote_storage.jsx";
+import { infProps } from "../../plugins/infProps.jsx";
 
 export const GJEditor = ({ children }) => {
   const setSelectedEl = useSetRecoilState(currentElState);
@@ -45,7 +48,7 @@ export const GJEditor = ({ children }) => {
   const navigate = useNavigate();
   const [reloader, setReloader] = useRecoilState(reloaderState);
   const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
-    const [mediaCond , setMediaCond] = useRecoilState(mediaConditionState);
+  const [mediaCond, setMediaCond] = useRecoilState(mediaConditionState);
 
   // const currentDynamicTemplateId = useRecoilValue(
   //   currentDynamicTemplateIdState
@@ -53,6 +56,7 @@ export const GJEditor = ({ children }) => {
   // const dynamicTemplates = useRecoilValue(dynamicTemplatesState);
   // const setStyle = useSetClassForCurrentEl();
   const [plugins, setPlugins] = useState([
+    infProps,
     customCmps,
     addDevices,
     customModal,
@@ -65,6 +69,7 @@ export const GJEditor = ({ children }) => {
     initTraitsOnRender,
     editorKeymaps,
     IDB,
+    wp_remote_storage,
     // customColors,
     // updateDynamicTemplates,
     // motionsRemoverHandler,
@@ -88,7 +93,10 @@ export const GJEditor = ({ children }) => {
          * @type {HTMLIFrameElement}
          */
         const iframe = el;
-        iframe.contentDocument.head.insertAdjacentHTML(`afterbegin` , `<meta name="viewport" content="width=device-width, initial-scale=1.0">`)
+        iframe.contentDocument.head.insertAdjacentHTML(
+          `afterbegin`,
+          `<meta name="viewport" content="width=device-width, initial-scale=1.0">`
+        );
 
         if (iframe.hasAttribute("src")) return;
 
@@ -103,7 +111,6 @@ export const GJEditor = ({ children }) => {
       setSelectedEl({ currentEl: undefined });
       setCmpRules([]);
     });
-
 
     ev.on("component:selected", () => {
       const selectedEl = ev.getSelected();
@@ -136,9 +143,9 @@ export const GJEditor = ({ children }) => {
       }
     });
 
-    editor.on(InfinitelyEvents.ruleTitle.update,()=>{
-       const selectedEl = ev.getSelected();
-       const rules = getComponentRules({
+    editor.on(InfinitelyEvents.ruleTitle.update, () => {
+      const selectedEl = ev.getSelected();
+      const rules = getComponentRules({
         editor,
         // nested:true
         cmp: selectedEl,
@@ -223,7 +230,7 @@ export const GJEditor = ({ children }) => {
           toolbar: [],
         },
         // baseCss:'body:{background:unset;}',
-        
+
         // optsHtml: {
         //   withProps: true,
 
@@ -256,7 +263,7 @@ export const GJEditor = ({ children }) => {
         storageManager: {
           autoload: true,
           autosave: getProjectSettings().projectSettings.enable_auto_save,
-          type: "infinitely",
+          type: getCurrentStorageType(),
         },
         panels: { defaults: [] },
         blockManager: {

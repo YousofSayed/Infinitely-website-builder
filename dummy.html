@@ -1,189 +1,3216 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GrapesJS Load Test — 500+ Elements</title>
-  <link href="https://unpkg.com/grapesjs/dist/css/grapes.min.css" rel="stylesheet" />
-  <style>
-    body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:0;height:100vh;display:flex;flex-direction:column}
-    header{padding:12px;border-bottom:1px solid #eee;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    #gjs{flex:1;}
-    .controls button{padding:8px 12px;border-radius:6px;border:1px solid #ccc;background:#fff;cursor:pointer}
-    .controls input{width:80px;padding:6px}
-    .status{margin-left:12px;color:#444}
-  </style>
-</head>
-<body>
-  <header>
-    <div class="controls">
-      <button id="loadBtn">Load 500 elements</button>
-      <button id="load1000Btn">Load 1000 elements</button>
-      <button id="appendBtn">Append 100 elements</button>
-      <button id="clearBtn">Clear</button>
-      <button id="destroyBtn">Destroy Editor</button>
-      <label>Delay(ms): <input id="delayInput" type="number" value="0" /></label>
-    </div>
-    <div class="status" id="status">Ready</div>
-  </header>
-
-  <div id="gjs"></div>
-
-  <script src="https://unpkg.com/grapesjs/dist/grapes.min.js"></script>
-  <script>
-    let editor;
-
-    function initEditor(){
-      editor = grapesjs.init({
-        container: '#gjs',
-        fromElement: false,
-        height: '100%',
-        storageManager: { autoload: 0 },
-        panels: { defaults: [] },
-      });
-
-      editor.addStyle(`.test-item{background:#fafafa;border-radius:4px}`);
-      editor.setComponents('<div style="padding:12px">Click "Load 500 elements" to start the test.</div>');
-      window.testEditor = editor;
-    }
-
-    initEditor();
-
-    const statusEl = document.getElementById('status');
-    const delayInput = document.getElementById('delayInput');
-
-    function logStatus(txt){ statusEl.textContent = txt; }
-
-    function makeComp(i){
-      return {
-        tagName: 'div',
-        attributes: { class: 'test-item' },
-        components: [ { type: 'text', content: `Item ${i}` } ],
-        style: {
-          padding: '8px 10px',
-          margin: '4px',
-          border: '1px solid #ddd',
-          display: 'inline-block',
-        }
-      };
-    }
-
-    async function appendMany(count, chunk = 100){
-      const delay = Number(delayInput.value) || 0;
-      const wrapper = editor.DomComponents.getWrapper();
-      logStatus(`Appending ${count} components...`);
-      for(let start = 0; start < count; start += chunk){
-        const batch = [];
-        const end = Math.min(start + chunk, count);
-        for(let i = start+1; i <= end; i++) batch.push(makeComp(i + (Date.now()%1000)));
-        wrapper.append([...batch , `<infinitely-svg><svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#0055ff" inf-class-name="inf-NTEzMQ742" id="ica64f" class="inf-NTEzMQ742" data-gjs-type="svg" >
-        <g id="SVGRepo_bgCarrier" stroke-width="0" class="drop" data-gjs-tagName="g" data-gjs-type="svg-in"  data-gjs-tagname="g"></g>
-        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" class="drop" data-gjs-tagName="g" data-gjs-type="svg-in"  data-gjs-tagname="g"></g>
-        <g id="SVGRepo_iconCarrier" data-gjs-tagName="g" data-gjs-type="svg-in"  data-gjs-tagname="g">
-          <path d="M4 6H20M4 12H20M4 18H20" stroke="#0055ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="drop" data-gjs-tagName="path" data-gjs-type="svg-in"  data-gjs-tagname="path"/>
-        </g>
-      </svg></infinitely-svg>`] );
-        if(delay > 0) await new Promise(r => setTimeout(r, delay));
-        else await new Promise(r => requestAnimationFrame(r));
-        logStatus(`Appended ${end} / ${count}`);
-      }
-      logStatus(`Done: ${count} components appended`);
-    }
-
-    document.getElementById('loadBtn').addEventListener('click', async () => {
-      editor.setComponents('');
-      await appendMany(500, 100);
-    });
-
-    document.getElementById('load1000Btn').addEventListener('click', async () => {
-      editor.setComponents('');
-      await appendMany(1000, 100);
-    });
-
-    document.getElementById('appendBtn').addEventListener('click', async () => {
-      await appendMany(100, 50);
-    });
-
-    document.getElementById('clearBtn').addEventListener('click', () => {
-      editor.setComponents('');
-      logStatus('Cleared');
-      setTimeout(()=>console.log('Cleared components and returned control to event loop.'), 0);
-    });
-
-    document.getElementById('destroyBtn').addEventListener('click', () => {
-      if(editor){
-        editor.destroy();
-        // editor = null;
-        console.log('editor : ' , editor)
-        // document.getElementById('gjs').innerHTML = '';
-        logStatus('Editor destroyed');
-      }
-    });
-
-    logStatus('Editor ready — use the buttons to load elements.');
-  </script>
-</body>
-</html>
-
-//////////////////////////////
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Infinitely Studio Editor – Build and edit websites in real-time with speed, privacy, and complete creative control."
-    />
-    <meta
-      name="keywords"
-      content="real-time website editor, fast visual editor, offline web design tool, drag and drop builder, responsive preview, live CSS animation editor, reusable components editor, web page builder interface, no-code development tool, Infinitely Studio editor, custom layout builder, motion design editor, interactive UI builder, design tool for developers, advanced website editor"
-    />
-    <link rel="stylesheet" href="./index.css" />
-    <title>Infinitely Studio</title>
-  </head>
-  <body>
-    <!-- Host container for iframe -->
-    <div id="host" style="width: 100%; height: 100%"></div>
 
-    <!-- Host script -->
-    <script type="module" src="/host.jsx"></script>
-  </body>
+<head>
+  `
+  <meta name='robots' content='max-image-preview:large' />\n
+  <link rel='dns-prefetch' href='//stats.wp.com' />\n
+  <link rel="alternate" type="application/rss+xml" title="infinitely &raquo; Feed"
+    href="https://infinitely.test/feed/" />\n
+  <link rel="alternate" type="application/rss+xml" title="infinitely &raquo; Comments Feed"
+    href="https://infinitely.test/comments/feed/" />\n
+  <link rel="alternate" title="oEmbed (JSON)" type="application/json+oembed"
+    href="https://infinitely.test/wp-json/oembed/1.0/embed?url=https%3A%2F%2Finfinitely.test%2Fhome%2F" />\n
+  <link rel="alternate" title="oEmbed (XML)" type="text/xml+oembed"
+    href="https://infinitely.test/wp-json/oembed/1.0/embed?url=https%3A%2F%2Finfinitely.test%2Fhome%2F&#038;format=xml" />
+  \n<style id='wp-img-auto-sizes-contain-inline-css'>
+    \nimg:is([sizes=auto i], [sizes^="auto," i]) {
+      contain-intrinsic-size: 3000px 1500px
+    }
+
+    \n
+    /*# sourceURL=wp-img-auto-sizes-contain-inline-css */
+    \n
+  </style>\n<style id='wp-emoji-styles-inline-css'>
+    \n\n\timg.wp-smiley,
+    img.emoji {
+      \n\t\tdisplay: inline !important;
+      \n\t\tborder: none !important;
+      \n\t\tbox-shadow: none !important;
+      \n\t\theight: 1em !important;
+      \n\t\twidth: 1em !important;
+      \n\t\tmargin: 0 0.07em !important;
+      \n\t\tvertical-align: -0.1em !important;
+      \n\t\tbackground: none !important;
+      \n\t\tpadding: 0 !important;
+      \n\t
+    }
+
+    \n
+    /*# sourceURL=wp-emoji-styles-inline-css */
+    \n
+  </style>\n
+  <link rel='stylesheet' id='wp-block-library-css'
+    href='https://infinitely.test/wp-includes/css/dist/block-library/common.min.css?ver=6.9' media='all' />\n<style
+    id='classic-theme-styles-inline-css'>
+    \n
+
+    /*! This file is auto-generated */
+    \n.wp-block-button__link {
+      color: #fff;
+      background-color: #32373c;
+      border-radius: 9999px;
+      box-shadow: none;
+      text-decoration: none;
+      padding: calc(.667em + 2px) calc(1.333em + 2px);
+      font-size: 1.125em
+    }
+
+    .wp-block-file__button {
+      background: #32373c;
+      color: #fff;
+      text-decoration: none
+    }
+
+    \n
+    /*# sourceURL=/wp-includes/css/classic-themes.min.css */
+    \n
+  </style>\n<style id='wp-block-accordion-inline-css'>
+    \n.wp-block-accordion {
+      box-sizing: border-box
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/accordion/style.min.css */
+    \n
+  </style>\n<style id='wp-block-accordion-item-inline-css'>
+    \n.wp-block-accordion-item.is-open>.wp-block-accordion-heading .wp-block-accordion-heading__toggle-icon {
+      transform: rotate(45deg)
+    }
+
+    @media (prefers-reduced-motion:no-preference) {
+      .wp-block-accordion-item {
+        transition: grid-template-rows .3s ease-out
+      }
+
+      .wp-block-accordion-item>.wp-block-accordion-heading .wp-block-accordion-heading__toggle-icon {
+        transition: transform .2s ease-in-out
+      }
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/accordion-item/style.min.css */
+    \n
+  </style>\n<style id='wp-block-archives-inline-css'>
+    \n.wp-block-archives {
+      box-sizing: border-box
+    }
+
+    .wp-block-archives-dropdown label {
+      display: block
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/archives/style.min.css */
+    \n
+  </style>\n<style id='wp-block-avatar-inline-css'>
+    \n.wp-block-avatar {
+      line-height: 0
+    }
+
+    .wp-block-avatar,
+    .wp-block-avatar img {
+      box-sizing: border-box
+    }
+
+    .wp-block-avatar.aligncenter {
+      text-align: center
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/avatar/style.min.css */
+    \n
+  </style>\n
+  <link rel='stylesheet' id='wp-block-button-css'
+    href='https://infinitely.test/wp-includes/blocks/button/style.min.css?ver=6.9' media='all' />\n<style
+    id='wp-block-calendar-inline-css'>
+    \n.wp-block-calendar {
+      text-align: center
+    }
+
+    .wp-block-calendar td,
+    .wp-block-calendar th {
+      border: 1px solid;
+      padding: .25em
+    }
+
+    .wp-block-calendar th {
+      font-weight: 400
+    }
+
+    .wp-block-calendar caption {
+      background-color: inherit
+    }
+
+    .wp-block-calendar table {
+      border-collapse: collapse;
+      width: 100%
+    }
+
+    .wp-block-calendar table.has-background th {
+      background-color: inherit
+    }
+
+    .wp-block-calendar table.has-text-color th {
+      color: inherit
+    }
+
+    .wp-block-calendar :where(table:not(.has-text-color)) {
+      color: #40464d
+    }
+
+    .wp-block-calendar :where(table:not(.has-text-color)) td,
+    .wp-block-calendar :where(table:not(.has-text-color)) th {
+      border-color: #ddd
+    }
+
+    :where(.wp-block-calendar table:not(.has-background) th) {
+      background: #ddd
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/calendar/style.min.css */
+    \n
+  </style>\n<style id='wp-block-categories-inline-css'>
+    \n.wp-block-categories {
+      box-sizing: border-box
+    }
+
+    .wp-block-categories.alignleft {
+      margin-right: 2em
+    }
+
+    .wp-block-categories.alignright {
+      margin-left: 2em
+    }
+
+    .wp-block-categories.wp-block-categories-dropdown.aligncenter {
+      text-align: center
+    }
+
+    .wp-block-categories .wp-block-categories__label {
+      display: block;
+      width: 100%
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/categories/style.min.css */
+    \n
+  </style>\n<style id='wp-block-comment-author-name-inline-css'>
+    \n.wp-block-comment-author-name {
+      box-sizing: border-box
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/comment-author-name/style.min.css */
+    \n
+  </style>\n<style id='wp-block-comment-content-inline-css'>
+    \n.comment-awaiting-moderation {
+      display: block;
+      font-size: .875em;
+      line-height: 1.5
+    }
+
+    .wp-block-comment-content {
+      box-sizing: border-box
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/comment-content/style.min.css */
+    \n
+  </style>\n<style id='wp-block-comment-date-inline-css'>
+    \n.wp-block-comment-date {
+      box-sizing: border-box
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/comment-date/style.min.css */
+    \n
+  </style>\n<style id='wp-block-comment-edit-link-inline-css'>
+    \n.wp-block-comment-edit-link {
+      box-sizing: border-box
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/comment-edit-link/style.min.css */
+    \n
+  </style>\n<style id='wp-block-comment-reply-link-inline-css'>
+    \n.wp-block-comment-reply-link {
+      box-sizing: border-box
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/comment-reply-link/style.min.css */
+    \n
+  </style>\n<style id='wp-block-comment-template-inline-css'>
+    \n.wp-block-comment-template {
+      box-sizing: border-box;
+      list-style: none;
+      margin-bottom: 0;
+      max-width: 100%;
+      padding: 0
+    }
+
+    .wp-block-comment-template li {
+      clear: both
+    }
+
+    .wp-block-comment-template ol {
+      list-style: none;
+      margin-bottom: 0;
+      max-width: 100%;
+      padding-left: 2rem
+    }
+
+    .wp-block-comment-template.alignleft {
+      float: left
+    }
+
+    .wp-block-comment-template.aligncenter {
+      margin-left: auto;
+      margin-right: auto;
+      width: fit-content
+    }
+
+    .wp-block-comment-template.alignright {
+      float: right
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/comment-template/style.min.css */
+    \n
+  </style>\n
+  <link rel='stylesheet' id='wp-block-comments-css'
+    href='https://infinitely.test/wp-includes/blocks/comments/style.min.css?ver=6.9' media='all' />\n<style
+    id='wp-block-comments-pagination-inline-css'>
+    \n.wp-block-comments-pagination>.wp-block-comments-pagination-next,
+    .wp-block-comments-pagination>.wp-block-comments-pagination-numbers,
+    .wp-block-comments-pagination>.wp-block-comments-pagination-previous {
+      font-size: inherit
+    }
+
+    .wp-block-comments-pagination .wp-block-comments-pagination-previous-arrow {
+      display: inline-block;
+      margin-right: 1ch
+    }
+
+    .wp-block-comments-pagination .wp-block-comments-pagination-previous-arrow:not(.is-arrow-chevron) {
+      transform: scaleX(1)
+    }
+
+    .wp-block-comments-pagination .wp-block-comments-pagination-next-arrow {
+      display: inline-block;
+      margin-left: 1ch
+    }
+
+    .wp-block-comments-pagination .wp-block-comments-pagination-next-arrow:not(.is-arrow-chevron) {
+      transform: scaleX(1)
+    }
+
+    .wp-block-comments-pagination.aligncenter {
+      justify-content: center
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/comments-pagination/style.min.css */
+    \n
+  </style>\n
+  <link rel='stylesheet' id='wp-block-cover-css'
+    href='https://infinitely.test/wp-includes/blocks/cover/style.min.css?ver=6.9' media='all' />\n<style
+    id='wp-block-file-inline-css'>
+    \n.wp-block-file {
+      box-sizing: border-box
+    }
+
+    .wp-block-file:not(.wp-element-button) {
+      font-size: .8em
+    }
+
+    .wp-block-file.aligncenter {
+      text-align: center
+    }
+
+    .wp-block-file.alignright {
+      text-align: right
+    }
+
+    .wp-block-file *+.wp-block-file__button {
+      margin-left: .75em
+    }
+
+    :where(.wp-block-file) {
+      margin-bottom: 1.5em
+    }
+
+    .wp-block-file__embed {
+      margin-bottom: 1em
+    }
+
+    :where(.wp-block-file__button) {
+      border-radius: 2em;
+      display: inline-block;
+      padding: .5em 1em
+    }
+
+    :where(.wp-block-file__button):where(a):active,
+    :where(.wp-block-file__button):where(a):focus,
+    :where(.wp-block-file__button):where(a):hover,
+    :where(.wp-block-file__button):where(a):visited {
+      box-shadow: none;
+      color: #fff;
+      opacity: .85;
+      text-decoration: none
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/file/style.min.css */
+    \n
+  </style>\n<style id='wp-block-footnotes-inline-css'>
+    \n.editor-styles-wrapper,
+    .entry-content {
+      counter-reset: footnotes
+    }
+
+    a[data-fn].fn {
+      counter-increment: footnotes;
+      display: inline-flex;
+      font-size: smaller;
+      text-decoration: none;
+      text-indent: -9999999px;
+      vertical-align: super
+    }
+
+    a[data-fn].fn:after {
+      content: "[" counter(footnotes) "]";
+      float: left;
+      text-indent: 0
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/footnotes/style.min.css */
+    \n
+  </style>\n
+  <link rel='stylesheet' id='wp-block-gallery-css'
+    href='https://infinitely.test/wp-includes/blocks/gallery/style.min.css?ver=6.9' media='all' />\n<style
+    id='wp-block-heading-inline-css'>
+    \nh1:where(.wp-block-heading).has-background,
+    h2:where(.wp-block-heading).has-background,
+    h3:where(.wp-block-heading).has-background,
+    h4:where(.wp-block-heading).has-background,
+    h5:where(.wp-block-heading).has-background,
+    h6:where(.wp-block-heading).has-background {
+      padding: 1.25em 2.375em
+    }
+
+    h1.has-text-align-left[style*=writing-mode]:where([style*=vertical-lr]),
+    h1.has-text-align-right[style*=writing-mode]:where([style*=vertical-rl]),
+    h2.has-text-align-left[style*=writing-mode]:where([style*=vertical-lr]),
+    h2.has-text-align-right[style*=writing-mode]:where([style*=vertical-rl]),
+    h3.has-text-align-left[style*=writing-mode]:where([style*=vertical-lr]),
+    h3.has-text-align-right[style*=writing-mode]:where([style*=vertical-rl]),
+    h4.has-text-align-left[style*=writing-mode]:where([style*=vertical-lr]),
+    h4.has-text-align-right[style*=writing-mode]:where([style*=vertical-rl]),
+    h5.has-text-align-left[style*=writing-mode]:where([style*=vertical-lr]),
+    h5.has-text-align-right[style*=writing-mode]:where([style*=vertical-rl]),
+    h6.has-text-align-left[style*=writing-mode]:where([style*=vertical-lr]),
+    h6.has-text-align-right[style*=writing-mode]:where([style*=vertical-rl]) {
+      rotate: 180deg
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/heading/style.min.css */
+    \n
+  </style>\n
+  <link rel='stylesheet' id='wp-block-image-css'
+    href='https://infinitely.test/wp-includes/blocks/image/style.min.css?ver=6.9' media='all' />\n<style
+    id='wp-block-latest-comments-inline-css'>
+    \nol.wp-block-latest-comments {
+      box-sizing: border-box;
+      margin-left: 0
+    }
+
+    :where(.wp-block-latest-comments:not([style*=line-height] .wp-block-latest-comments__comment)) {
+      line-height: 1.1
+    }
+
+    :where(.wp-block-latest-comments:not([style*=line-height] .wp-block-latest-comments__comment-excerpt p)) {
+      line-height: 1.8
+    }
+
+    .has-dates :where(.wp-block-latest-comments:not([style*=line-height])),
+    .has-excerpts :where(.wp-block-latest-comments:not([style*=line-height])) {
+      line-height: 1.5
+    }
+
+    .wp-block-latest-comments .wp-block-latest-comments {
+      padding-left: 0
+    }
+
+    .wp-block-latest-comments__comment {
+      list-style: none;
+      margin-bottom: 1em
+    }
+
+    .has-avatars .wp-block-latest-comments__comment {
+      list-style: none;
+      min-height: 2.25em
+    }
+
+    .has-avatars .wp-block-latest-comments__comment .wp-block-latest-comments__comment-excerpt,
+    .has-avatars .wp-block-latest-comments__comment .wp-block-latest-comments__comment-meta {
+      margin-left: 3.25em
+    }
+
+    .wp-block-latest-comments__comment-excerpt p {
+      font-size: .875em;
+      margin: .36em 0 1.4em
+    }
+
+    .wp-block-latest-comments__comment-date {
+      display: block;
+      font-size: .75em
+    }
+
+    .wp-block-latest-comments .avatar,
+    .wp-block-latest-comments__comment-avatar {
+      border-radius: 1.5em;
+      display: block;
+      float: left;
+      height: 2.5em;
+      margin-right: .75em;
+      width: 2.5em
+    }
+
+    .wp-block-latest-comments[class*=-font-size] a,
+    .wp-block-latest-comments[style*=font-size] a {
+      font-size: inherit
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/latest-comments/style.min.css */
+    \n
+  </style>\n<style id='wp-block-latest-posts-inline-css'>
+    \n.wp-block-latest-posts {
+      box-sizing: border-box
+    }
+
+    .wp-block-latest-posts.alignleft {
+      margin-right: 2em
+    }
+
+    .wp-block-latest-posts.alignright {
+      margin-left: 2em
+    }
+
+    .wp-block-latest-posts.wp-block-latest-posts__list {
+      list-style: none
+    }
+
+    .wp-block-latest-posts.wp-block-latest-posts__list li {
+      clear: both;
+      overflow-wrap: break-word
+    }
+
+    .wp-block-latest-posts.is-grid {
+      display: flex;
+      flex-wrap: wrap
+    }
+
+    .wp-block-latest-posts.is-grid li {
+      margin: 0 1.25em 1.25em 0;
+      width: 100%
+    }
+
+    @media (min-width:600px) {
+      .wp-block-latest-posts.columns-2 li {
+        width: calc(50% - .625em)
+      }
+
+      .wp-block-latest-posts.columns-2 li:nth-child(2n) {
+        margin-right: 0
+      }
+
+      .wp-block-latest-posts.columns-3 li {
+        width: calc(33.33333% - .83333em)
+      }
+
+      .wp-block-latest-posts.columns-3 li:nth-child(3n) {
+        margin-right: 0
+      }
+
+      .wp-block-latest-posts.columns-4 li {
+        width: calc(25% - .9375em)
+      }
+
+      .wp-block-latest-posts.columns-4 li:nth-child(4n) {
+        margin-right: 0
+      }
+
+      .wp-block-latest-posts.columns-5 li {
+        width: calc(20% - 1em)
+      }
+
+      .wp-block-latest-posts.columns-5 li:nth-child(5n) {
+        margin-right: 0
+      }
+
+      .wp-block-latest-posts.columns-6 li {
+        width: calc(16.66667% - 1.04167em)
+      }
+
+      .wp-block-latest-posts.columns-6 li:nth-child(6n) {
+        margin-right: 0
+      }
+    }
+
+    :root :where(.wp-block-latest-posts.is-grid) {
+      padding: 0
+    }
+
+    :root :where(.wp-block-latest-posts.wp-block-latest-posts__list) {
+      padding-left: 0
+    }
+
+    .wp-block-latest-posts__post-author,
+    .wp-block-latest-posts__post-date {
+      display: block;
+      font-size: .8125em
+    }
+
+    .wp-block-latest-posts__post-excerpt,
+    .wp-block-latest-posts__post-full-content {
+      margin-bottom: 1em;
+      margin-top: .5em
+    }
+
+    .wp-block-latest-posts__featured-image a {
+      display: inline-block
+    }
+
+    .wp-block-latest-posts__featured-image img {
+      height: auto;
+      max-width: 100%;
+      width: auto
+    }
+
+    .wp-block-latest-posts__featured-image.alignleft {
+      float: left;
+      margin-right: 1em
+    }
+
+    .wp-block-latest-posts__featured-image.alignright {
+      float: right;
+      margin-left: 1em
+    }
+
+    .wp-block-latest-posts__featured-image.aligncenter {
+      margin-bottom: 1em;
+      text-align: center
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/latest-posts/style.min.css */
+    \n
+  </style>\n<style id='wp-block-list-inline-css'>
+    \nol,
+    ul {
+      box-sizing: border-box
+    }
+
+    :root :where(.wp-block-list.has-background) {
+      padding: 1.25em 2.375em
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/list/style.min.css */
+    \n
+  </style>\n<style id='wp-block-loginout-inline-css'>
+    \n.wp-block-loginout {
+      box-sizing: border-box
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/loginout/style.min.css */
+    \n
+  </style>\n
+  <link rel='stylesheet' id='wp-block-media-text-css'
+    href='https://infinitely.test/wp-includes/blocks/media-text/style.min.css?ver=6.9' media='all' />\n
+  <link rel='stylesheet' id='wp-block-navigation-css'
+    href='https://infinitely.test/wp-includes/blocks/navigation/style.min.css?ver=6.9' media='all' />\n<style
+    id='wp-block-navigation-link-inline-css'>
+    \n.wp-block-navigation .wp-block-navigation-item__label {
+      overflow-wrap: break-word
+    }
+
+    .wp-block-navigation .wp-block-navigation-item__description {
+      display: none
+    }
+
+    .link-ui-tools {
+      outline: 1px solid #f0f0f0;
+      padding: 8px
+    }
+
+    .link-ui-block-inserter {
+      padding-top: 8px
+    }
+
+    .link-ui-block-inserter__back {
+      margin-left: 8px;
+      text-transform: uppercase
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/navigation-link/style.min.css */
+    \n
+  </style>\n<style id='wp-block-page-list-inline-css'>
+    \n.wp-block-navigation .wp-block-page-list {
+      align-items: var(--navigation-layout-align, initial);
+      background-color: inherit;
+      display: flex;
+      flex-direction: var(--navigation-layout-direction, initial);
+      flex-wrap: var(--navigation-layout-wrap, wrap);
+      justify-content: var(--navigation-layout-justify, initial)
+    }
+
+    .wp-block-navigation .wp-block-navigation-item {
+      background-color: inherit
+    }
+
+    .wp-block-page-list {
+      box-sizing: border-box
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/page-list/style.min.css */
+    \n
+  </style>\n<style id='wp-block-post-author-inline-css'>
+    \n.wp-block-post-author {
+      box-sizing: border-box;
+      display: flex;
+      flex-wrap: wrap
+    }
+
+    .wp-block-post-author__byline {
+      font-size: .5em;
+      margin-bottom: 0;
+      margin-top: 0;
+      width: 100%
+    }
+
+    .wp-block-post-author__avatar {
+      margin-right: 1em
+    }
+
+    .wp-block-post-author__bio {
+      font-size: .7em;
+      margin-bottom: .7em
+    }
+
+    .wp-block-post-author__content {
+      flex-basis: 0;
+      flex-grow: 1
+    }
+
+    .wp-block-post-author__name {
+      margin: 0
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/post-author/style.min.css */
+    \n
+  </style>\n<style id='wp-block-post-author-biography-inline-css'>
+    \n.wp-block-post-author-biography {
+      box-sizing: border-box
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/post-author-biography/style.min.css */
+    \n
+  </style>\n<style id='wp-block-post-author-name-inline-css'>
+    \n.wp-block-post-author-name {
+      box-sizing: border-box
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/post-author-name/style.min.css */
+    \n
+  </style>\n<style id='wp-block-post-comments-count-inline-css'>
+    \n.wp-block-post-comments-count {
+      box-sizing: border-box
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/post-comments-count/style.min.css */
+    \n
+  </style>\n<style id='wp-block-post-comments-form-inline-css'>
+    \n:where(.wp-block-post-comments-form input:not([type=submit])),
+    :where(.wp-block-post-comments-form textarea) {
+      border: 1px solid #949494;
+      font-family: inherit;
+      font-size: 1em
+    }
+
+    :where(.wp-block-post-comments-form input:where(:not([type=submit]):not([type=checkbox]))),
+    :where(.wp-block-post-comments-form textarea) {
+      padding: calc(.667em + 2px)
+    }
+
+    .wp-block-post-comments-form {
+      box-sizing: border-box
+    }
+
+    .wp-block-post-comments-form[style*=font-weight] :where(.comment-reply-title) {
+      font-weight: inherit
+    }
+
+    .wp-block-post-comments-form[style*=font-family] :where(.comment-reply-title) {
+      font-family: inherit
+    }
+
+    .wp-block-post-comments-form[class*=-font-size] :where(.comment-reply-title),
+    .wp-block-post-comments-form[style*=font-size] :where(.comment-reply-title) {
+      font-size: inherit
+    }
+
+    .wp-block-post-comments-form[style*=line-height] :where(.comment-reply-title) {
+      line-height: inherit
+    }
+
+    .wp-block-post-comments-form[style*=font-style] :where(.comment-reply-title) {
+      font-style: inherit
+    }
+
+    .wp-block-post-comments-form[style*=letter-spacing] :where(.comment-reply-title) {
+      letter-spacing: inherit
+    }
+
+    .wp-block-post-comments-form :where(input[type=submit]) {
+      box-shadow: none;
+      cursor: pointer;
+      display: inline-block;
+      overflow-wrap: break-word;
+      text-align: center
+    }
+
+    .wp-block-post-comments-form .comment-form input:not([type=submit]):not([type=checkbox]):not([type=hidden]),
+    .wp-block-post-comments-form .comment-form textarea {
+      box-sizing: border-box;
+      display: block;
+      width: 100%
+    }
+
+    .wp-block-post-comments-form .comment-form-author label,
+    .wp-block-post-comments-form .comment-form-email label,
+    .wp-block-post-comments-form .comment-form-url label {
+      display: block;
+      margin-bottom: .25em
+    }
+
+    .wp-block-post-comments-form .comment-form-cookies-consent {
+      display: flex;
+      gap: .25em
+    }
+
+    .wp-block-post-comments-form .comment-form-cookies-consent #wp-comment-cookies-consent {
+      margin-top: .35em
+    }
+
+    .wp-block-post-comments-form .comment-reply-title {
+      margin-bottom: 0
+    }
+
+    .wp-block-post-comments-form .comment-reply-title :where(small) {
+      font-size: var(--wp--preset--font-size--medium, smaller);
+      margin-left: .5em
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/post-comments-form/style.min.css */
+    \n
+  </style>\n<style id='wp-block-buttons-inline-css'>
+    \n.wp-block-buttons {
+      box-sizing: border-box
+    }
+
+    .wp-block-buttons.is-vertical {
+      flex-direction: column
+    }
+
+    .wp-block-buttons.is-vertical>.wp-block-button:last-child {
+      margin-bottom: 0
+    }
+
+    .wp-block-buttons>.wp-block-button {
+      display: inline-block;
+      margin: 0
+    }
+
+    .wp-block-buttons.is-content-justification-left {
+      justify-content: flex-start
+    }
+
+    .wp-block-buttons.is-content-justification-left.is-vertical {
+      align-items: flex-start
+    }
+
+    .wp-block-buttons.is-content-justification-center {
+      justify-content: center
+    }
+
+    .wp-block-buttons.is-content-justification-center.is-vertical {
+      align-items: center
+    }
+
+    .wp-block-buttons.is-content-justification-right {
+      justify-content: flex-end
+    }
+
+    .wp-block-buttons.is-content-justification-right.is-vertical {
+      align-items: flex-end
+    }
+
+    .wp-block-buttons.is-content-justification-space-between {
+      justify-content: space-between
+    }
+
+    .wp-block-buttons.aligncenter {
+      text-align: center
+    }
+
+    .wp-block-buttons:not(.is-content-justification-space-between, .is-content-justification-right, .is-content-justification-left, .is-content-justification-center) .wp-block-button.aligncenter {
+      margin-left: auto;
+      margin-right: auto;
+      width: 100%
+    }
+
+    .wp-block-buttons[style*=text-decoration] .wp-block-button,
+    .wp-block-buttons[style*=text-decoration] .wp-block-button__link {
+      text-decoration: inherit
+    }
+
+    .wp-block-buttons.has-custom-font-size .wp-block-button__link {
+      font-size: inherit
+    }
+
+    .wp-block-buttons .wp-block-button__link {
+      width: 100%
+    }
+
+    .wp-block-button.aligncenter {
+      text-align: center
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/buttons/style.min.css */
+    \n
+  </style>\n<style id='wp-block-post-comments-link-inline-css'>
+    \n.wp-block-post-comments-link {
+      box-sizing: border-box
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/post-comments-link/style.min.css */
+    \n
+  </style>\n<style id='wp-block-post-content-inline-css'>
+    \n.wp-block-post-content {
+      display: flow-root
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/post-content/style.min.css */
+    \n
+  </style>\n<style id='wp-block-post-date-inline-css'>
+    \n.wp-block-post-date {
+      box-sizing: border-box
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/post-date/style.min.css */
+    \n
+  </style>\n<style id='wp-block-post-excerpt-inline-css'>
+    \n:where(.wp-block-post-excerpt) {
+      box-sizing: border-box;
+      margin-bottom: var(--wp--style--block-gap);
+      margin-top: var(--wp--style--block-gap)
+    }
+
+    .wp-block-post-excerpt__excerpt {
+      margin-bottom: 0;
+      margin-top: 0
+    }
+
+    .wp-block-post-excerpt__more-text {
+      margin-bottom: 0;
+      margin-top: var(--wp--style--block-gap)
+    }
+
+    .wp-block-post-excerpt__more-link {
+      display: inline-block
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/post-excerpt/style.min.css */
+    \n
+  </style>\n<style id='wp-block-post-featured-image-inline-css'>
+    \n.wp-block-post-featured-image {
+      margin-left: 0;
+      margin-right: 0
+    }
+
+    .wp-block-post-featured-image a {
+      display: block;
+      height: 100%
+    }
+
+    .wp-block-post-featured-image :where(img) {
+      box-sizing: border-box;
+      height: auto;
+      max-width: 100%;
+      vertical-align: bottom;
+      width: 100%
+    }
+
+    .wp-block-post-featured-image.alignfull img,
+    .wp-block-post-featured-image.alignwide img {
+      width: 100%
+    }
+
+    .wp-block-post-featured-image .wp-block-post-featured-image__overlay.has-background-dim {
+      background-color: #000;
+      inset: 0;
+      position: absolute
+    }
+
+    .wp-block-post-featured-image {
+      position: relative
+    }
+
+    .wp-block-post-featured-image .wp-block-post-featured-image__overlay.has-background-gradient {
+      background-color: initial
+    }
+
+    .wp-block-post-featured-image .wp-block-post-featured-image__overlay.has-background-dim-0 {
+      opacity: 0
+    }
+
+    .wp-block-post-featured-image .wp-block-post-featured-image__overlay.has-background-dim-10 {
+      opacity: .1
+    }
+
+    .wp-block-post-featured-image .wp-block-post-featured-image__overlay.has-background-dim-20 {
+      opacity: .2
+    }
+
+    .wp-block-post-featured-image .wp-block-post-featured-image__overlay.has-background-dim-30 {
+      opacity: .3
+    }
+
+    .wp-block-post-featured-image .wp-block-post-featured-image__overlay.has-background-dim-40 {
+      opacity: .4
+    }
+
+    .wp-block-post-featured-image .wp-block-post-featured-image__overlay.has-background-dim-50 {
+      opacity: .5
+    }
+
+    .wp-block-post-featured-image .wp-block-post-featured-image__overlay.has-background-dim-60 {
+      opacity: .6
+    }
+
+    .wp-block-post-featured-image .wp-block-post-featured-image__overlay.has-background-dim-70 {
+      opacity: .7
+    }
+
+    .wp-block-post-featured-image .wp-block-post-featured-image__overlay.has-background-dim-80 {
+      opacity: .8
+    }
+
+    .wp-block-post-featured-image .wp-block-post-featured-image__overlay.has-background-dim-90 {
+      opacity: .9
+    }
+
+    .wp-block-post-featured-image .wp-block-post-featured-image__overlay.has-background-dim-100 {
+      opacity: 1
+    }
+
+    .wp-block-post-featured-image:where(.alignleft, .alignright) {
+      width: 100%
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/post-featured-image/style.min.css */
+    \n
+  </style>\n<style id='wp-block-post-navigation-link-inline-css'>
+    \n.wp-block-post-navigation-link .wp-block-post-navigation-link__arrow-previous {
+      display: inline-block;
+      margin-right: 1ch
+    }
+
+    .wp-block-post-navigation-link .wp-block-post-navigation-link__arrow-previous:not(.is-arrow-chevron) {
+      transform: scaleX(1)
+    }
+
+    .wp-block-post-navigation-link .wp-block-post-navigation-link__arrow-next {
+      display: inline-block;
+      margin-left: 1ch
+    }
+
+    .wp-block-post-navigation-link .wp-block-post-navigation-link__arrow-next:not(.is-arrow-chevron) {
+      transform: scaleX(1)
+    }
+
+    .wp-block-post-navigation-link.has-text-align-left[style*="writing-mode: vertical-lr"],
+    .wp-block-post-navigation-link.has-text-align-right[style*="writing-mode: vertical-rl"] {
+      rotate: 180deg
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/post-navigation-link/style.min.css */
+    \n
+  </style>\n<style id='wp-block-post-template-inline-css'>
+    \n.wp-block-post-template {
+      box-sizing: border-box;
+      list-style: none;
+      margin-bottom: 0;
+      margin-top: 0;
+      max-width: 100%;
+      padding: 0
+    }
+
+    .wp-block-post-template.is-flex-container {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 1.25em
+    }
+
+    .wp-block-post-template.is-flex-container>li {
+      margin: 0;
+      width: 100%
+    }
+
+    @media (min-width:600px) {
+      .wp-block-post-template.is-flex-container.is-flex-container.columns-2>li {
+        width: calc(50% - .625em)
+      }
+
+      .wp-block-post-template.is-flex-container.is-flex-container.columns-3>li {
+        width: calc(33.33333% - .83333em)
+      }
+
+      .wp-block-post-template.is-flex-container.is-flex-container.columns-4>li {
+        width: calc(25% - .9375em)
+      }
+
+      .wp-block-post-template.is-flex-container.is-flex-container.columns-5>li {
+        width: calc(20% - 1em)
+      }
+
+      .wp-block-post-template.is-flex-container.is-flex-container.columns-6>li {
+        width: calc(16.66667% - 1.04167em)
+      }
+    }
+
+    @media (max-width:600px) {
+      .wp-block-post-template-is-layout-grid.wp-block-post-template-is-layout-grid.wp-block-post-template-is-layout-grid.wp-block-post-template-is-layout-grid {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .wp-block-post-template-is-layout-constrained>li>.alignright,
+    .wp-block-post-template-is-layout-flow>li>.alignright {
+      float: right;
+      margin-inline-end: 0;
+      margin-inline-start: 2em
+    }
+
+    .wp-block-post-template-is-layout-constrained>li>.alignleft,
+    .wp-block-post-template-is-layout-flow>li>.alignleft {
+      float: left;
+      margin-inline-end: 2em;
+      margin-inline-start: 0
+    }
+
+    .wp-block-post-template-is-layout-constrained>li>.aligncenter,
+    .wp-block-post-template-is-layout-flow>li>.aligncenter {
+      margin-inline-end: auto;
+      margin-inline-start: auto
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/post-template/style.min.css */
+    \n
+  </style>\n<style id='wp-block-post-terms-inline-css'>
+    \n.wp-block-post-terms {
+      box-sizing: border-box
+    }
+
+    .wp-block-post-terms .wp-block-post-terms__separator {
+      white-space: pre-wrap
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/post-terms/style.min.css */
+    \n
+  </style>\n<style id='wp-block-post-time-to-read-inline-css'>
+    \n.wp-block-post-time-to-read {
+      box-sizing: border-box
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/post-time-to-read/style.min.css */
+    \n
+  </style>\n<style id='wp-block-post-title-inline-css'>
+    \n.wp-block-post-title {
+      box-sizing: border-box;
+      word-break: break-word
+    }
+
+    .wp-block-post-title :where(a) {
+      display: inline-block;
+      font-family: inherit;
+      font-size: inherit;
+      font-style: inherit;
+      font-weight: inherit;
+      letter-spacing: inherit;
+      line-height: inherit;
+      text-decoration: inherit
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/post-title/style.min.css */
+    \n
+  </style>\n<style id='wp-block-query-pagination-inline-css'>
+    \n.wp-block-query-pagination.is-content-justification-space-between>.wp-block-query-pagination-next:last-of-type {
+      margin-inline-start: auto
+    }
+
+    .wp-block-query-pagination.is-content-justification-space-between>.wp-block-query-pagination-previous:first-child {
+      margin-inline-end: auto
+    }
+
+    .wp-block-query-pagination .wp-block-query-pagination-previous-arrow {
+      display: inline-block;
+      margin-right: 1ch
+    }
+
+    .wp-block-query-pagination .wp-block-query-pagination-previous-arrow:not(.is-arrow-chevron) {
+      transform: scaleX(1)
+    }
+
+    .wp-block-query-pagination .wp-block-query-pagination-next-arrow {
+      display: inline-block;
+      margin-left: 1ch
+    }
+
+    .wp-block-query-pagination .wp-block-query-pagination-next-arrow:not(.is-arrow-chevron) {
+      transform: scaleX(1)
+    }
+
+    .wp-block-query-pagination.aligncenter {
+      justify-content: center
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/query-pagination/style.min.css */
+    \n
+  </style>\n<style id='wp-block-query-title-inline-css'>
+    \n.wp-block-query-title {
+      box-sizing: border-box
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/query-title/style.min.css */
+    \n
+  </style>\n<style id='wp-block-query-total-inline-css'>
+    \n.wp-block-query-total {
+      box-sizing: border-box
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/query-total/style.min.css */
+    \n
+  </style>\n<style id='wp-block-read-more-inline-css'>
+    \n.wp-block-read-more {
+      display: block;
+      width: fit-content
+    }
+
+    .wp-block-read-more:where(:not([style*=text-decoration])) {
+      text-decoration: none
+    }
+
+    .wp-block-read-more:where(:not([style*=text-decoration])):active,
+    .wp-block-read-more:where(:not([style*=text-decoration])):focus {
+      text-decoration: none
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/read-more/style.min.css */
+    \n
+  </style>\n<style id='wp-block-rss-inline-css'>
+    \nul.wp-block-rss.alignleft {
+      margin-right: 2em
+    }
+
+    ul.wp-block-rss.alignright {
+      margin-left: 2em
+    }
+
+    ul.wp-block-rss.is-grid {
+      display: flex;
+      flex-wrap: wrap;
+      padding: 0
+    }
+
+    ul.wp-block-rss.is-grid li {
+      margin: 0 1em 1em 0;
+      width: 100%
+    }
+
+    @media (min-width:600px) {
+      ul.wp-block-rss.columns-2 li {
+        width: calc(50% - 1em)
+      }
+
+      ul.wp-block-rss.columns-3 li {
+        width: calc(33.33333% - 1em)
+      }
+
+      ul.wp-block-rss.columns-4 li {
+        width: calc(25% - 1em)
+      }
+
+      ul.wp-block-rss.columns-5 li {
+        width: calc(20% - 1em)
+      }
+
+      ul.wp-block-rss.columns-6 li {
+        width: calc(16.66667% - 1em)
+      }
+    }
+
+    .wp-block-rss__item-author,
+    .wp-block-rss__item-publish-date {
+      display: block;
+      font-size: .8125em
+    }
+
+    .wp-block-rss {
+      box-sizing: border-box;
+      list-style: none;
+      padding: 0
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/rss/style.min.css */
+    \n
+  </style>\n
+  <link rel='stylesheet' id='wp-block-search-css'
+    href='https://infinitely.test/wp-includes/blocks/search/style.min.css?ver=6.9' media='all' />\n<style
+    id='wp-block-site-logo-inline-css'>
+    \n.wp-block-site-logo {
+      box-sizing: border-box;
+      line-height: 0
+    }
+
+    .wp-block-site-logo a {
+      display: inline-block;
+      line-height: 0
+    }
+
+    .wp-block-site-logo.is-default-size img {
+      height: auto;
+      width: 120px
+    }
+
+    .wp-block-site-logo img {
+      height: auto;
+      max-width: 100%
+    }
+
+    .wp-block-site-logo a,
+    .wp-block-site-logo img {
+      border-radius: inherit
+    }
+
+    .wp-block-site-logo.aligncenter {
+      margin-left: auto;
+      margin-right: auto;
+      text-align: center
+    }
+
+    :root :where(.wp-block-site-logo.is-style-rounded) {
+      border-radius: 9999px
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/site-logo/style.min.css */
+    \n
+  </style>\n<style id='wp-block-site-tagline-inline-css'>
+    \n.wp-block-site-tagline {
+      box-sizing: border-box
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/site-tagline/style.min.css */
+    \n
+  </style>\n<style id='wp-block-site-title-inline-css'>
+    \n.wp-block-site-title {
+      box-sizing: border-box
+    }
+
+    .wp-block-site-title :where(a) {
+      color: inherit;
+      font-family: inherit;
+      font-size: inherit;
+      font-style: inherit;
+      font-weight: inherit;
+      letter-spacing: inherit;
+      line-height: inherit;
+      text-decoration: inherit
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/site-title/style.min.css */
+    \n
+  </style>\n<style id='wp-block-tag-cloud-inline-css'>
+    \n.wp-block-tag-cloud {
+      box-sizing: border-box
+    }
+
+    .wp-block-tag-cloud.aligncenter {
+      justify-content: center;
+      text-align: center
+    }
+
+    .wp-block-tag-cloud a {
+      display: inline-block;
+      margin-right: 5px
+    }
+
+    .wp-block-tag-cloud span {
+      display: inline-block;
+      margin-left: 5px;
+      text-decoration: none
+    }
+
+    :root :where(.wp-block-tag-cloud.is-style-outline) {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1ch
+    }
+
+    :root :where(.wp-block-tag-cloud.is-style-outline a) {
+      border: 1px solid;
+      font-size: unset !important;
+      margin-right: 0;
+      padding: 1ch 2ch;
+      text-decoration: none !important
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/tag-cloud/style.min.css */
+    \n
+  </style>\n<style id='wp-block-term-count-inline-css'>
+    \n.wp-block-term-count {
+      box-sizing: border-box
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/term-count/style.min.css */
+    \n
+  </style>\n<style id='wp-block-term-description-inline-css'>
+    \n:where(.wp-block-term-description) {
+      box-sizing: border-box;
+      margin-bottom: var(--wp--style--block-gap);
+      margin-top: var(--wp--style--block-gap)
+    }
+
+    .wp-block-term-description p {
+      margin-bottom: 0;
+      margin-top: 0
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/term-description/style.min.css */
+    \n
+  </style>\n<style id='wp-block-term-name-inline-css'>
+    \n.wp-block-term-name {
+      box-sizing: border-box
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/term-name/style.min.css */
+    \n
+  </style>\n<style id='wp-block-term-template-inline-css'>
+    \n.wp-block-term-template {
+      box-sizing: border-box;
+      list-style: none;
+      margin-bottom: 0;
+      margin-top: 0;
+      max-width: 100%;
+      padding: 0
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/term-template/style.min.css */
+    \n
+  </style>\n<style id='wp-block-video-inline-css'>
+    \n.wp-block-video {
+      box-sizing: border-box
+    }
+
+    .wp-block-video video {
+      height: auto;
+      vertical-align: middle;
+      width: 100%
+    }
+
+    @supports (position:sticky) {
+      .wp-block-video [poster] {
+        object-fit: cover
+      }
+    }
+
+    .wp-block-video.aligncenter {
+      text-align: center
+    }
+
+    .wp-block-video :where(figcaption) {
+      margin-bottom: 1em;
+      margin-top: .5em
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/video/style.min.css */
+    \n
+  </style>\n<style id='wp-block-accordion-heading-inline-css'>
+    \n.wp-block-accordion-heading {
+      margin: 0
+    }
+
+    .wp-block-accordion-heading__toggle {
+      align-items: center;
+      background-color: inherit !important;
+      border: none;
+      color: inherit !important;
+      cursor: pointer;
+      display: flex;
+      font-family: inherit;
+      font-size: inherit;
+      font-style: inherit;
+      font-weight: inherit;
+      letter-spacing: inherit;
+      line-height: inherit;
+      overflow: hidden;
+      padding: var(--wp--preset--spacing--20, 1em) 0;
+      text-align: inherit;
+      text-decoration: inherit;
+      text-transform: inherit;
+      width: 100%;
+      word-spacing: inherit
+    }
+
+    .wp-block-accordion-heading__toggle:not(:focus-visible) {
+      outline: none
+    }
+
+    .wp-block-accordion-heading__toggle:focus,
+    .wp-block-accordion-heading__toggle:hover {
+      background-color: inherit !important;
+      border: none;
+      box-shadow: none;
+      color: inherit;
+      padding: var(--wp--preset--spacing--20, 1em) 0;
+      text-decoration: none
+    }
+
+    .wp-block-accordion-heading__toggle:focus-visible {
+      outline: auto;
+      outline-offset: 0
+    }
+
+    .wp-block-accordion-heading__toggle:hover .wp-block-accordion-heading__toggle-title {
+      text-decoration: underline
+    }
+
+    .wp-block-accordion-heading__toggle-title {
+      flex: 1
+    }
+
+    .wp-block-accordion-heading__toggle-icon {
+      align-items: center;
+      display: flex;
+      height: 1.2em;
+      justify-content: center;
+      width: 1.2em
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/accordion-heading/style.min.css */
+    \n
+  </style>\n<style id='wp-block-accordion-panel-inline-css'>
+    \n.wp-block-accordion-panel[aria-hidden=true],
+    .wp-block-accordion-panel[inert] {
+      display: none;
+      margin-block-start: 0
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/accordion-panel/style.min.css */
+    \n
+  </style>\n<style id='wp-block-audio-inline-css'>
+    \n.wp-block-audio {
+      box-sizing: border-box
+    }
+
+    .wp-block-audio :where(figcaption) {
+      margin-bottom: 1em;
+      margin-top: .5em
+    }
+
+    .wp-block-audio audio {
+      min-width: 300px;
+      width: 100%
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/audio/style.min.css */
+    \n
+  </style>\n<style id='wp-block-code-inline-css'>
+    \n.wp-block-code {
+      box-sizing: border-box
+    }
+
+    .wp-block-code code {
+      \n
+      /*!rtl:begin:ignore*/
+      direction: ltr;
+      display: block;
+      font-family: inherit;
+      overflow-wrap: break-word;
+      text-align: initial;
+      white-space: pre-wrap\n
+        /*!rtl:end:ignore*/
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/code/style.min.css */
+    \n
+  </style>\n<style id='wp-block-columns-inline-css'>
+    \n.wp-block-columns {
+      box-sizing: border-box;
+      display: flex;
+      flex-wrap: wrap !important
+    }
+
+    @media (min-width:782px) {
+      .wp-block-columns {
+        flex-wrap: nowrap !important
+      }
+    }
+
+    .wp-block-columns {
+      align-items: normal !important
+    }
+
+    .wp-block-columns.are-vertically-aligned-top {
+      align-items: flex-start
+    }
+
+    .wp-block-columns.are-vertically-aligned-center {
+      align-items: center
+    }
+
+    .wp-block-columns.are-vertically-aligned-bottom {
+      align-items: flex-end
+    }
+
+    @media (max-width:781px) {
+      .wp-block-columns:not(.is-not-stacked-on-mobile)>.wp-block-column {
+        flex-basis: 100% !important
+      }
+    }
+
+    @media (min-width:782px) {
+      .wp-block-columns:not(.is-not-stacked-on-mobile)>.wp-block-column {
+        flex-basis: 0;
+        flex-grow: 1
+      }
+
+      .wp-block-columns:not(.is-not-stacked-on-mobile)>.wp-block-column[style*=flex-basis] {
+        flex-grow: 0
+      }
+    }
+
+    .wp-block-columns.is-not-stacked-on-mobile {
+      flex-wrap: nowrap !important
+    }
+
+    .wp-block-columns.is-not-stacked-on-mobile>.wp-block-column {
+      flex-basis: 0;
+      flex-grow: 1
+    }
+
+    .wp-block-columns.is-not-stacked-on-mobile>.wp-block-column[style*=flex-basis] {
+      flex-grow: 0
+    }
+
+    :where(.wp-block-columns) {
+      margin-bottom: 1.75em
+    }
+
+    :where(.wp-block-columns.has-background) {
+      padding: 1.25em 2.375em
+    }
+
+    .wp-block-column {
+      flex-grow: 1;
+      min-width: 0;
+      overflow-wrap: break-word;
+      word-break: break-word
+    }
+
+    .wp-block-column.is-vertically-aligned-top {
+      align-self: flex-start
+    }
+
+    .wp-block-column.is-vertically-aligned-center {
+      align-self: center
+    }
+
+    .wp-block-column.is-vertically-aligned-bottom {
+      align-self: flex-end
+    }
+
+    .wp-block-column.is-vertically-aligned-stretch {
+      align-self: stretch
+    }
+
+    .wp-block-column.is-vertically-aligned-bottom,
+    .wp-block-column.is-vertically-aligned-center,
+    .wp-block-column.is-vertically-aligned-top {
+      width: 100%
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/columns/style.min.css */
+    \n
+  </style>\n<style id='wp-block-details-inline-css'>
+    \n.wp-block-details {
+      box-sizing: border-box
+    }
+
+    .wp-block-details summary {
+      cursor: pointer
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/details/style.min.css */
+    \n
+  </style>\n<style id='wp-block-embed-inline-css'>
+    \n.wp-block-embed.alignleft,
+    .wp-block-embed.alignright,
+    .wp-block[data-align=left]>[data-type="core/embed"],
+    .wp-block[data-align=right]>[data-type="core/embed"] {
+      max-width: 360px;
+      width: 100%
+    }
+
+    .wp-block-embed.alignleft .wp-block-embed__wrapper,
+    .wp-block-embed.alignright .wp-block-embed__wrapper,
+    .wp-block[data-align=left]>[data-type="core/embed"] .wp-block-embed__wrapper,
+    .wp-block[data-align=right]>[data-type="core/embed"] .wp-block-embed__wrapper {
+      min-width: 280px
+    }
+
+    .wp-block-cover .wp-block-embed {
+      min-height: 240px;
+      min-width: 320px
+    }
+
+    .wp-block-embed {
+      overflow-wrap: break-word
+    }
+
+    .wp-block-embed :where(figcaption) {
+      margin-bottom: 1em;
+      margin-top: .5em
+    }
+
+    .wp-block-embed iframe {
+      max-width: 100%
+    }
+
+    .wp-block-embed__wrapper {
+      position: relative
+    }
+
+    .wp-embed-responsive .wp-has-aspect-ratio .wp-block-embed__wrapper:before {
+      content: "";
+      display: block;
+      padding-top: 50%
+    }
+
+    .wp-embed-responsive .wp-has-aspect-ratio iframe {
+      bottom: 0;
+      height: 100%;
+      left: 0;
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 100%
+    }
+
+    .wp-embed-responsive .wp-embed-aspect-21-9 .wp-block-embed__wrapper:before {
+      padding-top: 42.85%
+    }
+
+    .wp-embed-responsive .wp-embed-aspect-18-9 .wp-block-embed__wrapper:before {
+      padding-top: 50%
+    }
+
+    .wp-embed-responsive .wp-embed-aspect-16-9 .wp-block-embed__wrapper:before {
+      padding-top: 56.25%
+    }
+
+    .wp-embed-responsive .wp-embed-aspect-4-3 .wp-block-embed__wrapper:before {
+      padding-top: 75%
+    }
+
+    .wp-embed-responsive .wp-embed-aspect-1-1 .wp-block-embed__wrapper:before {
+      padding-top: 100%
+    }
+
+    .wp-embed-responsive .wp-embed-aspect-9-16 .wp-block-embed__wrapper:before {
+      padding-top: 177.77%
+    }
+
+    .wp-embed-responsive .wp-embed-aspect-1-2 .wp-block-embed__wrapper:before {
+      padding-top: 200%
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/embed/style.min.css */
+    \n
+  </style>\n<style id='wp-block-group-inline-css'>
+    \n.wp-block-group {
+      box-sizing: border-box
+    }
+
+    :where(.wp-block-group.wp-block-group-is-layout-constrained) {
+      position: relative
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/group/style.min.css */
+    \n
+  </style>\n<style id='wp-block-math-inline-css'>
+    \n.wp-block-math {
+      overflow-x: auto;
+      overflow-y: hidden
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/math/style.min.css */
+    \n
+  </style>\n<style id='wp-block-paragraph-inline-css'>
+    \n.is-small-text {
+      font-size: .875em
+    }
+
+    .is-regular-text {
+      font-size: 1em
+    }
+
+    .is-large-text {
+      font-size: 2.25em
+    }
+
+    .is-larger-text {
+      font-size: 3em
+    }
+
+    .has-drop-cap:not(:focus):first-letter {
+      float: left;
+      font-size: 8.4em;
+      font-style: normal;
+      font-weight: 100;
+      line-height: .68;
+      margin: .05em .1em 0 0;
+      text-transform: uppercase
+    }
+
+    body.rtl .has-drop-cap:not(:focus):first-letter {
+      float: none;
+      margin-left: .1em
+    }
+
+    p.has-drop-cap.has-background {
+      overflow: hidden
+    }
+
+    :root :where(p.has-background) {
+      padding: 1.25em 2.375em
+    }
+
+    :where(p.has-text-color:not(.has-link-color)) a {
+      color: inherit
+    }
+
+    p.has-text-align-left[style*="writing-mode:vertical-lr"],
+    p.has-text-align-right[style*="writing-mode:vertical-rl"] {
+      rotate: 180deg
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/paragraph/style.min.css */
+    \n
+  </style>\n<style id='wp-block-preformatted-inline-css'>
+    \n.wp-block-preformatted {
+      box-sizing: border-box;
+      white-space: pre-wrap
+    }
+
+    :where(.wp-block-preformatted.has-background) {
+      padding: 1.25em 2.375em
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/preformatted/style.min.css */
+    \n
+  </style>\n<style id='wp-block-pullquote-inline-css'>
+    \n.wp-block-pullquote {
+      box-sizing: border-box;
+      margin: 0 0 1em;
+      overflow-wrap: break-word;
+      padding: 4em 0;
+      text-align: center
+    }
+
+    .wp-block-pullquote blockquote,
+    .wp-block-pullquote p {
+      color: inherit
+    }
+
+    .wp-block-pullquote blockquote {
+      margin: 0
+    }
+
+    .wp-block-pullquote p {
+      margin-top: 0
+    }
+
+    .wp-block-pullquote p:last-child {
+      margin-bottom: 0
+    }
+
+    .wp-block-pullquote.alignleft,
+    .wp-block-pullquote.alignright {
+      max-width: 420px
+    }
+
+    .wp-block-pullquote cite,
+    .wp-block-pullquote footer {
+      position: relative
+    }
+
+    .wp-block-pullquote .has-text-color a {
+      color: inherit
+    }
+
+    .wp-block-pullquote.has-text-align-left blockquote {
+      text-align: left
+    }
+
+    .wp-block-pullquote.has-text-align-right blockquote {
+      text-align: right
+    }
+
+    .wp-block-pullquote.has-text-align-center blockquote {
+      text-align: center
+    }
+
+    .wp-block-pullquote.is-style-solid-color {
+      border: none
+    }
+
+    .wp-block-pullquote.is-style-solid-color blockquote {
+      margin-left: auto;
+      margin-right: auto;
+      max-width: 60%
+    }
+
+    .wp-block-pullquote.is-style-solid-color blockquote p {
+      font-size: 2em;
+      margin-bottom: 0;
+      margin-top: 0
+    }
+
+    .wp-block-pullquote.is-style-solid-color blockquote cite {
+      font-style: normal;
+      text-transform: none
+    }
+
+    .wp-block-pullquote :where(cite) {
+      color: inherit;
+      display: block
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/pullquote/style.min.css */
+    \n
+  </style>\n<style id='wp-block-quote-inline-css'>
+    \n.wp-block-quote {
+      box-sizing: border-box;
+      overflow-wrap: break-word
+    }
+
+    .wp-block-quote.is-large:where(:not(.is-style-plain)),
+    .wp-block-quote.is-style-large:where(:not(.is-style-plain)) {
+      margin-bottom: 1em;
+      padding: 0 1em
+    }
+
+    .wp-block-quote.is-large:where(:not(.is-style-plain)) p,
+    .wp-block-quote.is-style-large:where(:not(.is-style-plain)) p {
+      font-size: 1.5em;
+      font-style: italic;
+      line-height: 1.6
+    }
+
+    .wp-block-quote.is-large:where(:not(.is-style-plain)) cite,
+    .wp-block-quote.is-large:where(:not(.is-style-plain)) footer,
+    .wp-block-quote.is-style-large:where(:not(.is-style-plain)) cite,
+    .wp-block-quote.is-style-large:where(:not(.is-style-plain)) footer {
+      font-size: 1.125em;
+      text-align: right
+    }
+
+    .wp-block-quote>cite {
+      display: block
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/quote/style.min.css */
+    \n
+  </style>\n<style id='wp-block-separator-inline-css'>
+    \n@charset "UTF-8";
+
+    .wp-block-separator {
+      border: none;
+      border-top: 2px solid
+    }
+
+    :root :where(.wp-block-separator.is-style-dots) {
+      height: auto;
+      line-height: 1;
+      text-align: center
+    }
+
+    :root :where(.wp-block-separator.is-style-dots):before {
+      color: currentColor;
+      content: "···";
+      font-family: serif;
+      font-size: 1.5em;
+      letter-spacing: 2em;
+      padding-left: 2em
+    }
+
+    .wp-block-separator.is-style-dots {
+      background: none !important;
+      border: none !important
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/separator/style.min.css */
+    \n
+  </style>\n
+  <link rel='stylesheet' id='wp-block-social-links-css'
+    href='https://infinitely.test/wp-includes/blocks/social-links/style.min.css?ver=6.9' media='all' />\n<style
+    id='wp-block-spacer-inline-css'>
+    \n.wp-block-spacer {
+      clear: both
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/spacer/style.min.css */
+    \n
+  </style>\n
+  <link rel='stylesheet' id='wp-block-table-css'
+    href='https://infinitely.test/wp-includes/blocks/table/style.min.css?ver=6.9' media='all' />\n<style
+    id='wp-block-text-columns-inline-css'>
+    \n.wp-block-text-columns,
+    .wp-block-text-columns.aligncenter {
+      display: flex
+    }
+
+    .wp-block-text-columns .wp-block-column {
+      margin: 0 1em;
+      padding: 0
+    }
+
+    .wp-block-text-columns .wp-block-column:first-child {
+      margin-left: 0
+    }
+
+    .wp-block-text-columns .wp-block-column:last-child {
+      margin-right: 0
+    }
+
+    .wp-block-text-columns.columns-2 .wp-block-column {
+      width: 50%
+    }
+
+    .wp-block-text-columns.columns-3 .wp-block-column {
+      width: 33.3333333333%
+    }
+
+    .wp-block-text-columns.columns-4 .wp-block-column {
+      width: 25%
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/text-columns/style.min.css */
+    \n
+  </style>\n<style id='wp-block-verse-inline-css'>
+    \npre.wp-block-verse {
+      overflow: auto;
+      white-space: pre-wrap
+    }
+
+    :where(pre.wp-block-verse) {
+      font-family: inherit
+    }
+
+    \n
+    /*# sourceURL=https://infinitely.test/wp-includes/blocks/verse/style.min.css */
+    \n
+  </style>\n
+  <link rel='stylesheet' id='wc-blocks-style-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/wc-blocks.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-active-filters-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/active-filters.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='woocommerce-add-to-cart-form-style-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/woocommerce/add-to-cart-form-style.css?ver=6.9'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-all-products-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/all-products.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-all-reviews-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/all-reviews.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-attribute-filter-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/attribute-filter.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-packages-style-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/packages-style.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-breadcrumbs-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/breadcrumbs.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-cart-link-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/cart-link.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-catalog-sorting-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/catalog-sorting.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-legacy-template-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/legacy-template.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-coming-soon-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/coming-soon.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-customer-account-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/customer-account.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-featured-category-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/featured-category.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-featured-product-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/featured-product.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-mini-cart-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/mini-cart.css?ver=wc-10.4.3'
+    media='all' />\n<style id='woocommerce-product-gallery-large-image-next-previous-style-inline-css'>
+    \n@keyframes wc-skeleton-shimmer {
+      to {
+        transform: translateX(100%)
+      }
+    }
+
+    :where(.wc-block-next-previous-buttons)[hidden] {
+      display: none !important
+    }
+
+    :where(.wc-block-next-previous-buttons__icon) {
+      color: inherit
+    }
+
+    :where(.wc-block-next-previous-buttons__icon--left) {
+      padding: 2px 2px 0 0
+    }
+
+    :where(.wc-block-next-previous-buttons__icon--right) {
+      padding: 2px 0 0 2px
+    }
+
+    :where(.rtl) :where(.wc-block-next-previous-buttons__icon--left) {
+      padding: 2px 0 0 2px
+    }
+
+    :where(.rtl) :where(.wc-block-next-previous-buttons__icon--right) {
+      padding: 2px 2px 0 0
+    }
+
+    :where(.wc-block-next-previous-buttons__button) {
+      background: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      height: 40px;
+      outline-offset: -2px;
+      padding: 0;
+      pointer-events: all;
+      width: 40px;
+      z-index: 22
+    }
+
+    :where(.wc-block-next-previous-buttons__button[aria-disabled=true]) {
+      cursor: not-allowed
+    }
+
+    :where(.wc-block-next-previous-buttons__button[aria-disabled=true]) :where(.wc-block-next-previous-buttons__icon) {
+      opacity: 30%
+    }
+
+    \n\n
+    /*# sourceURL=https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/woocommerce/product-gallery-large-image-next-previous-style.css */
+    \n
+  </style>\n
+  <link rel='stylesheet' id='wc-blocks-style-store-notices-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/store-notices.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-payment-method-icons-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/payment-method-icons.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-price-filter-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/price-filter.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='woocommerce-product-button-style-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/woocommerce/product-button-style.css?ver=6.9'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-product-categories-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-categories.css?ver=wc-10.4.3'
+    media='all' />\n<style id='woocommerce-product-collection-style-inline-css'>
+    \n@keyframes wc-skeleton-shimmer {
+      to {
+        transform: translateX(100%)
+      }
+    }
+
+    .wp-block-woocommerce-product-collection {
+      margin-bottom: 30px
+    }
+
+    .wp-block-woocommerce-product-collection .wc-block-components-product-stock-indicator {
+      text-align: center
+    }
+
+    .wp-block-woocommerce-product-collection h2.wp-block-heading {
+      font-size: var(--wp--preset--font-size--small, 14px);
+      line-height: 20px
+    }
+
+    @media(max-width:600px)and (hover:none)and (pointer:coarse) {
+      .wp-block-woocommerce-product-collection:has(.is-product-collection-layout-carousel) :where(.wc-block-next-previous-buttons.wc-block-next-previous-buttons) {
+        display: none
+      }
+    }
+
+    .wc-block-components-notice-banner .wc-block-components-button.wc-block-components-notice-banner__dismiss[hidden] {
+      display: none
+    }
+
+    \n\n
+    /*# sourceURL=https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/woocommerce/product-collection-style.css */
+    \n
+  </style>\n
+  <link rel='stylesheet' id='woocommerce-product-filters-style-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/woocommerce/product-filters-style.css?ver=6.9'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-product-filter-status-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-filter-status.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='woocommerce-product-filter-price-slider-style-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/woocommerce/product-filter-price-slider-style.css?ver=6.9'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-product-filter-attribute-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-filter-attribute.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-product-filter-rating-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-filter-rating.css?ver=wc-10.4.3'
+    media='all' />\n<style id='woocommerce-product-filter-removable-chips-style-inline-css'>
+    \n@keyframes wc-skeleton-shimmer {
+      to {
+        transform: translateX(100%)
+      }
+    }
+
+    .wc-block-product-filter-removable-chips.is-vertical .wc-block-product-filter-removable-chips__items {
+      flex-direction: column
+    }
+
+    .wc-block-product-filter-removable-chips.is-content-justification-center .wc-block-product-filter-removable-chips__items {
+      justify-content: center
+    }
+
+    .wc-block-product-filter-removable-chips.is-content-justification-right .wc-block-product-filter-removable-chips__items {
+      justify-content: flex-end
+    }
+
+    .wc-block-product-filter-removable-chips.is-content-justification-space-between .wc-block-product-filter-removable-chips__items {
+      justify-content: space-between
+    }
+
+    .wc-block-product-filter-removable-chips.is-horizontal .wc-block-product-filter-removable-chips__items {
+      width: 100%
+    }
+
+    .wc-block-product-filter-removable-chips__items {
+      color: var(--wc-product-filter-removable-chips-text, currentColor);
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      list-style: none;
+      margin: 0;
+      padding: 0
+    }
+
+    .wc-block-product-filter-removable-chips__items .wc-block-product-filter-removable-chips__item {
+      align-items: center;
+      appearance: none;
+      background: var(--wc-product-filter-removable-chips-background, transparent);
+      border: 1px solid var(--wc-product-filter-removable-chips-border, color-mix(in srgb, currentColor 20%, transparent));
+      border-radius: 2px;
+      display: flex;
+      font-size: .875em;
+      gap: 8px;
+      justify-content: space-between;
+      padding: .25em .75em
+    }
+
+    .wc-block-product-filter-removable-chips__items .wc-block-product-filter-removable-chips__item .wc-block-product-filter-removable-chips__remove {
+      align-items: center;
+      background-color: transparent;
+      border: none;
+      color: var(--wc-product-filter-removable-chips-text, currentColor);
+      cursor: pointer;
+      display: flex;
+      margin: 0;
+      padding: 0
+    }
+
+    .wc-block-product-filter-removable-chips__items .wc-block-product-filter-removable-chips__item .wc-block-product-filter-removable-chips__remove .wc-block-product-filter-removable-chips__remove-icon {
+      fill: currentColor
+    }
+
+    \n\n
+    /*# sourceURL=https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/woocommerce/product-filter-removable-chips-style.css */
+    \n
+  </style>\n
+  <link rel='stylesheet' id='wc-blocks-style-product-filter-clear-button-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-filter-clear-button.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='woocommerce-product-filter-checkbox-list-style-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/woocommerce/product-filter-checkbox-list-style.css?ver=6.9'
+    media='all' />\n<style id='woocommerce-product-filter-chips-style-inline-css'>
+    \n@keyframes wc-skeleton-shimmer {
+      to {
+        transform: translateX(100%)
+      }
+    }
+
+    .wc-block-product-filter-chips fieldset {
+      display: contents
+    }
+
+    :where(.wc-block-product-filter-chips__items) {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px
+    }
+
+    .wc-block-product-filter-chips__item {
+      appearance: none;
+      background: transparent;
+      border: 1px solid color-mix(in srgb, currentColor 40%, transparent);
+      border-radius: 2px;
+      color: inherit;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: .8em;
+      padding: .25em .75em
+    }
+
+    .wc-block-product-filter-chips__item:focus {
+      outline: 1px solid currentColor;
+      outline-offset: 1px
+    }
+
+    .wc-block-product-filter-chips__item:hover {
+      background-color: color-mix(in srgb, var(--wp--preset--color--contrast) 10%, transparent)
+    }
+
+    .has-chip-text-color .wc-block-product-filter-chips__item {
+      color: var(--wc-product-filter-chips-text)
+    }
+
+    .has-chip-background-color .wc-block-product-filter-chips__item {
+      background: var(--wc-product-filter-chips-background)
+    }
+
+    .has-chip-border-color .wc-block-product-filter-chips__item {
+      border-color: var(--wc-product-filter-chips-border)
+    }
+
+    .has-selected-chip-text-color .wc-block-product-filter-chips__item[aria-checked=true] {
+      color: var(--wc-product-filter-chips-selected-text)
+    }
+
+    .has-selected-chip-background-color .wc-block-product-filter-chips__item[aria-checked=true] {
+      background: var(--wc-product-filter-chips-selected-background)
+    }
+
+    .has-selected-chip-border-color .wc-block-product-filter-chips__item[aria-checked=true] {
+      border-color: var(--wc-product-filter-chips-selected-border)
+    }
+
+    :where(.wc-block-product-filter-chips__label) {
+      align-items: center;
+      display: inline-flex;
+      gap: 4px
+    }
+
+    .wc-block-product-filter-chips__text {
+      display: contents
+    }
+
+    .wc-block-product-filter-chips__count {
+      display: contents;
+      white-space: nowrap
+    }
+
+    .wc-block-product-filter-chips__show-more {
+      appearance: none;
+      background: transparent;
+      border: none;
+      font-family: inherit;
+      padding: 0;
+      text-decoration: underline
+    }
+
+    \n\n
+    /*# sourceURL=https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/woocommerce/product-filter-chips-style.css */
+    \n
+  </style>\n
+  <link rel='stylesheet' id='wc-blocks-style-product-filter-taxonomy-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-filter-taxonomy.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='woocommerce-product-gallery-style-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/woocommerce/product-gallery-style.css?ver=6.9'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-product-image-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-image.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-product-image-gallery-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-image-gallery.css?ver=wc-10.4.3'
+    media='all' />\n<style id='woocommerce-product-price-style-inline-css'>
+    \n@keyframes wc-skeleton-shimmer {
+      to {
+        transform: translateX(100%)
+      }
+    }
+
+    .wc-block-components-product-price--align-left {
+      display: block;
+      text-align: left
+    }
+
+    .wc-block-components-product-price--align-center {
+      display: block;
+      text-align: center
+    }
+
+    .wc-block-components-product-price--align-right {
+      display: block;
+      text-align: right
+    }
+
+    .wc-block-components-product-price {
+      display: block
+    }
+
+    .wc-block-components-product-price[hidden] {
+      display: none
+    }
+
+    .wc-block-components-product-price .wc-block-all-products .wc-block-components-product-price {
+      margin-bottom: 12px
+    }
+
+    .wc-block-components-product-price ins {
+      text-decoration: none
+    }
+
+    .wc-block-components-product-price .woocommerce-Price-amount {
+      white-space: nowrap
+    }
+
+    .wc-block-components-product-price__value.is-discounted {
+      margin-left: .5em
+    }
+
+    .is-loading .wc-block-components-product-price:before {
+      background-color: currentColor !important;
+      border: 0 !important;
+      border-radius: .25rem;
+      box-shadow: none;
+      color: currentColor !important;
+      content: ".";
+      display: block;
+      display: inline-block;
+      line-height: 1;
+      max-width: 100% !important;
+      opacity: .15;
+      outline: 0 !important;
+      overflow: hidden !important;
+      pointer-events: none;
+      position: relative !important;
+      width: 100%;
+      width: 5em;
+      z-index: 1
+    }
+
+    .is-loading .wc-block-components-product-price:before>* {
+      visibility: hidden
+    }
+
+    .is-loading .wc-block-components-product-price:before:after {
+      animation: loading__animation 1.5s ease-in-out infinite;
+      background-image: linear-gradient(90deg, currentColor, hsla(0, 0%, 96%, .302), currentColor);
+      background-repeat: no-repeat;
+      content: " ";
+      display: block;
+      height: 100%;
+      left: 0;
+      position: absolute;
+      right: 0;
+      top: 0;
+      transform: translateX(-100%)
+    }
+
+    @keyframes loading__animation {
+      to {
+        transform: translateX(100%)
+      }
+    }
+
+    @media screen and (prefers-reduced-motion:reduce) {
+      .is-loading .wc-block-components-product-price:before {
+        animation: none
+      }
+    }
+
+    \n\n
+    /*# sourceURL=https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-price.css */
+    \n
+  </style>\n
+  <link rel='stylesheet' id='woocommerce-product-template-style-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/woocommerce/product-template-style.css?ver=6.9'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-product-query-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-query.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-product-rating-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-rating.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-product-rating-stars-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-rating-stars.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-product-results-count-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-results-count.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-product-sale-badge-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-sale-badge.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-product-search-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-search.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-product-sku-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-sku.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-product-summary-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-summary.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-product-title-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-title.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-rating-filter-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/rating-filter.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-reviews-by-category-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/reviews-by-category.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-reviews-by-product-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/reviews-by-product.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-stock-filter-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/stock-filter.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-order-confirmation-status-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/order-confirmation-status.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-order-confirmation-summary-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/order-confirmation-summary.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-order-confirmation-totals-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/order-confirmation-totals.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-order-confirmation-downloads-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/order-confirmation-downloads.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-order-confirmation-billing-address-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/order-confirmation-billing-address.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-order-confirmation-shipping-address-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/order-confirmation-shipping-address.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-order-confirmation-additional-information-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/order-confirmation-additional-information.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-order-confirmation-additional-fields-wrapper-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/order-confirmation-additional-fields-wrapper.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-order-confirmation-additional-fields-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/order-confirmation-additional-fields.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-order-confirmation-create-account-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/order-confirmation-create-account.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-product-details-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-details.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-product-specifications-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-specifications.css?ver=wc-10.4.3'
+    media='all' />\n<style id='woocommerce-accordion-group-style-inline-css'>
+    \n@keyframes wc-skeleton-shimmer {
+      to {
+        transform: translateX(100%)
+      }
+    }
+
+    .wp-block-woocommerce-accordion-item {
+      display: grid;
+      grid-template-rows: max-content 0fr
+    }
+
+    .wp-block-woocommerce-accordion-item.is-open {
+      grid-template-rows: max-content 1fr
+    }
+
+    .wp-block-woocommerce-accordion-item .accordion-item__heading {
+      color: inherit;
+      margin: 0;
+      padding: 0
+    }
+
+    .accordion-item__toggle {
+      align-items: center;
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      display: flex;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      letter-spacing: inherit;
+      line-height: inherit;
+      outline: none;
+      padding: var(--wp--preset--spacing--20, 1em) 0;
+      position: relative;
+      text-align: inherit;
+      text-decoration: inherit;
+      text-transform: inherit;
+      width: 100%;
+      word-spacing: inherit
+    }
+
+    .accordion-item__toggle>span {
+      width: 100%
+    }
+
+    .is-layout-flow>.wp-block-woocommerce-accordion-panel,
+    .wp-block-woocommerce-accordion-panel {
+      margin: 0;
+      overflow: hidden
+    }
+
+    .accordion-panel__wrapper {
+      padding-bottom: var(--wp--preset--spacing--20, 1em)
+    }
+
+    .is-style-no-icon .accordion-item__toggle-icon {
+      background-color: unset
+    }
+
+    .wp-block-woocommerce-accordion-header.icon-position-left .accordion-item__toggle {
+      flex-direction: row-reverse
+    }
+
+    .accordion-item__toggle:focus-visible {
+      outline: 2px solid -webkit-focus-ring-color;
+      outline-offset: 2px
+    }
+
+    @media(prefers-reduced-motion:no-preference) {
+      .wp-block-woocommerce-accordion-item .accordion-item__toggle-icon {
+        transition: transform .2s ease-in-out
+      }
+
+      .wp-block-woocommerce-accordion-item {
+        transition: grid-template-rows .3s ease-out
+      }
+    }
+
+    .is-open .accordion-item__toggle-icon.has-icon-plus {
+      transform: rotate(45deg)
+    }
+
+    .is-open .accordion-item__toggle-icon.has-icon-chevron {
+      transform: rotate(-180deg)
+    }
+
+    .is-open .accordion-item__toggle-icon.has-icon-circlePlus {
+      transform: rotate(45deg)
+    }
+
+    .is-open .accordion-item__toggle-icon.has-icon-caret {
+      transform: rotate(-180deg)
+    }
+
+    .is-open .accordion-item__toggle-icon.has-icon-chevronRight {
+      transform: rotate(90deg)
+    }
+
+    \n\n
+    /*# sourceURL=https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/woocommerce/accordion-group-style.css */
+    \n
+  </style>\n
+  <link rel='stylesheet' id='wc-blocks-style-product-reviews-title-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-reviews-title.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='woocommerce-product-review-form-style-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/woocommerce/product-review-form-style.css?ver=6.9'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-product-review-date-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-review-date.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-product-review-content-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-review-content.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-product-review-author-name-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-review-author-name.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-product-reviews-pagination-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-reviews-pagination.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-product-review-template-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/product-review-template.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-cart-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/cart.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-checkout-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/checkout.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='wc-blocks-style-mini-cart-contents-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/mini-cart-contents.css?ver=wc-10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='woocommerce-add-to-cart-with-options-style-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/woocommerce/add-to-cart-with-options-style.css?ver=6.9'
+    media='all' />\n
+  <link rel='stylesheet' id='woocommerce-add-to-cart-with-options-quantity-selector-style-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/woocommerce/add-to-cart-with-options-quantity-selector-style.css?ver=6.9'
+    media='all' />\n<style id='woocommerce-add-to-cart-with-options-variation-selector-attribute-name-style-inline-css'>
+    \n@keyframes wc-skeleton-shimmer {
+      to {
+        transform: translateX(100%)
+      }
+    }
+
+    :where(.wp-block-woocommerce-add-to-cart-with-options-variation-selector-attribute-name.wp-block-woocommerce-add-to-cart-with-options-variation-selector-attribute-name) {
+      margin-bottom: 0
+    }
+
+    \n\n
+    /*# sourceURL=https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/woocommerce/add-to-cart-with-options-variation-selector-attribute-name-style.css */
+    \n
+  </style>\n
+  <link rel='stylesheet' id='woocommerce-add-to-cart-with-options-variation-selector-attribute-options-style-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/woocommerce/add-to-cart-with-options-variation-selector-attribute-options-style.css?ver=6.9'
+    media='all' />\n<style id='woocommerce-add-to-cart-with-options-grouped-product-item-style-inline-css'>
+    \n@keyframes wc-skeleton-shimmer {
+      to {
+        transform: translateX(100%)
+      }
+    }
+
+    :where(.wp-block-woocommerce-add-to-cart-with-options-grouped-product-item .is-layout-grid) {
+      align-items: center
+    }
+
+    \n\n
+    /*# sourceURL=https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/woocommerce/add-to-cart-with-options-grouped-product-item-style.css */
+    \n
+  </style>\n
+  <link rel='stylesheet' id='woocommerce-add-to-cart-with-options-grouped-product-item-selector-style-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/client/blocks/woocommerce/add-to-cart-with-options-grouped-product-item-selector-style.css?ver=6.9'
+    media='all' />\n<style id='global-styles-inline-css'>
+    \n:root {
+      --wp--preset--aspect-ratio--square: 1;
+      --wp--preset--aspect-ratio--4-3: 4/3;
+      --wp--preset--aspect-ratio--3-4: 3/4;
+      --wp--preset--aspect-ratio--3-2: 3/2;
+      --wp--preset--aspect-ratio--2-3: 2/3;
+      --wp--preset--aspect-ratio--16-9: 16/9;
+      --wp--preset--aspect-ratio--9-16: 9/16;
+      --wp--preset--color--black: #000000;
+      --wp--preset--color--cyan-bluish-gray: #abb8c3;
+      --wp--preset--color--white: #ffffff;
+      --wp--preset--color--pale-pink: #f78da7;
+      --wp--preset--color--vivid-red: #cf2e2e;
+      --wp--preset--color--luminous-vivid-orange: #ff6900;
+      --wp--preset--color--luminous-vivid-amber: #fcb900;
+      --wp--preset--color--light-green-cyan: #7bdcb5;
+      --wp--preset--color--vivid-green-cyan: #00d084;
+      --wp--preset--color--pale-cyan-blue: #8ed1fc;
+      --wp--preset--color--vivid-cyan-blue: #0693e3;
+      --wp--preset--color--vivid-purple: #9b51e0;
+      --wp--preset--gradient--vivid-cyan-blue-to-vivid-purple: linear-gradient(135deg, rgb(6, 147, 227) 0%, rgb(155, 81, 224) 100%);
+      --wp--preset--gradient--light-green-cyan-to-vivid-green-cyan: linear-gradient(135deg, rgb(122, 220, 180) 0%, rgb(0, 208, 130) 100%);
+      --wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange: linear-gradient(135deg, rgb(252, 185, 0) 0%, rgb(255, 105, 0) 100%);
+      --wp--preset--gradient--luminous-vivid-orange-to-vivid-red: linear-gradient(135deg, rgb(255, 105, 0) 0%, rgb(207, 46, 46) 100%);
+      --wp--preset--gradient--very-light-gray-to-cyan-bluish-gray: linear-gradient(135deg, rgb(238, 238, 238) 0%, rgb(169, 184, 195) 100%);
+      --wp--preset--gradient--cool-to-warm-spectrum: linear-gradient(135deg, rgb(74, 234, 220) 0%, rgb(151, 120, 209) 20%, rgb(207, 42, 186) 40%, rgb(238, 44, 130) 60%, rgb(251, 105, 98) 80%, rgb(254, 248, 76) 100%);
+      --wp--preset--gradient--blush-light-purple: linear-gradient(135deg, rgb(255, 206, 236) 0%, rgb(152, 150, 240) 100%);
+      --wp--preset--gradient--blush-bordeaux: linear-gradient(135deg, rgb(254, 205, 165) 0%, rgb(254, 45, 45) 50%, rgb(107, 0, 62) 100%);
+      --wp--preset--gradient--luminous-dusk: linear-gradient(135deg, rgb(255, 203, 112) 0%, rgb(199, 81, 192) 50%, rgb(65, 88, 208) 100%);
+      --wp--preset--gradient--pale-ocean: linear-gradient(135deg, rgb(255, 245, 203) 0%, rgb(182, 227, 212) 50%, rgb(51, 167, 181) 100%);
+      --wp--preset--gradient--electric-grass: linear-gradient(135deg, rgb(202, 248, 128) 0%, rgb(113, 206, 126) 100%);
+      --wp--preset--gradient--midnight: linear-gradient(135deg, rgb(2, 3, 129) 0%, rgb(40, 116, 252) 100%);
+      --wp--preset--font-size--small: 13px;
+      --wp--preset--font-size--medium: 20px;
+      --wp--preset--font-size--large: 36px;
+      --wp--preset--font-size--x-large: 42px;
+      --wp--preset--font-family--inter: "Inter", sans-serif;
+      --wp--preset--font-family--cardo: Cardo;
+      --wp--preset--spacing--20: 0.44rem;
+      --wp--preset--spacing--30: 0.67rem;
+      --wp--preset--spacing--40: 1rem;
+      --wp--preset--spacing--50: 1.5rem;
+      --wp--preset--spacing--60: 2.25rem;
+      --wp--preset--spacing--70: 3.38rem;
+      --wp--preset--spacing--80: 5.06rem;
+      --wp--preset--shadow--natural: 6px 6px 9px rgba(0, 0, 0, 0.2);
+      --wp--preset--shadow--deep: 12px 12px 50px rgba(0, 0, 0, 0.4);
+      --wp--preset--shadow--sharp: 6px 6px 0px rgba(0, 0, 0, 0.2);
+      --wp--preset--shadow--outlined: 6px 6px 0px -3px rgb(255, 255, 255), 6px 6px rgb(0, 0, 0);
+      --wp--preset--shadow--crisp: 6px 6px 0px rgb(0, 0, 0);
+    }
+
+    :where(.is-layout-flex) {
+      gap: 0.5em;
+    }
+
+    :where(.is-layout-grid) {
+      gap: 0.5em;
+    }
+
+    body .is-layout-flex {
+      display: flex;
+    }
+
+    .is-layout-flex {
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .is-layout-flex> :is(*, div) {
+      margin: 0;
+    }
+
+    body .is-layout-grid {
+      display: grid;
+    }
+
+    .is-layout-grid> :is(*, div) {
+      margin: 0;
+    }
+
+    :where(.wp-block-columns.is-layout-flex) {
+      gap: 2em;
+    }
+
+    :where(.wp-block-columns.is-layout-grid) {
+      gap: 2em;
+    }
+
+    :where(.wp-block-post-template.is-layout-flex) {
+      gap: 1.25em;
+    }
+
+    :where(.wp-block-post-template.is-layout-grid) {
+      gap: 1.25em;
+    }
+
+    .has-black-color {
+      color: var(--wp--preset--color--black) !important;
+    }
+
+    .has-cyan-bluish-gray-color {
+      color: var(--wp--preset--color--cyan-bluish-gray) !important;
+    }
+
+    .has-white-color {
+      color: var(--wp--preset--color--white) !important;
+    }
+
+    .has-pale-pink-color {
+      color: var(--wp--preset--color--pale-pink) !important;
+    }
+
+    .has-vivid-red-color {
+      color: var(--wp--preset--color--vivid-red) !important;
+    }
+
+    .has-luminous-vivid-orange-color {
+      color: var(--wp--preset--color--luminous-vivid-orange) !important;
+    }
+
+    .has-luminous-vivid-amber-color {
+      color: var(--wp--preset--color--luminous-vivid-amber) !important;
+    }
+
+    .has-light-green-cyan-color {
+      color: var(--wp--preset--color--light-green-cyan) !important;
+    }
+
+    .has-vivid-green-cyan-color {
+      color: var(--wp--preset--color--vivid-green-cyan) !important;
+    }
+
+    .has-pale-cyan-blue-color {
+      color: var(--wp--preset--color--pale-cyan-blue) !important;
+    }
+
+    .has-vivid-cyan-blue-color {
+      color: var(--wp--preset--color--vivid-cyan-blue) !important;
+    }
+
+    .has-vivid-purple-color {
+      color: var(--wp--preset--color--vivid-purple) !important;
+    }
+
+    .has-black-background-color {
+      background-color: var(--wp--preset--color--black) !important;
+    }
+
+    .has-cyan-bluish-gray-background-color {
+      background-color: var(--wp--preset--color--cyan-bluish-gray) !important;
+    }
+
+    .has-white-background-color {
+      background-color: var(--wp--preset--color--white) !important;
+    }
+
+    .has-pale-pink-background-color {
+      background-color: var(--wp--preset--color--pale-pink) !important;
+    }
+
+    .has-vivid-red-background-color {
+      background-color: var(--wp--preset--color--vivid-red) !important;
+    }
+
+    .has-luminous-vivid-orange-background-color {
+      background-color: var(--wp--preset--color--luminous-vivid-orange) !important;
+    }
+
+    .has-luminous-vivid-amber-background-color {
+      background-color: var(--wp--preset--color--luminous-vivid-amber) !important;
+    }
+
+    .has-light-green-cyan-background-color {
+      background-color: var(--wp--preset--color--light-green-cyan) !important;
+    }
+
+    .has-vivid-green-cyan-background-color {
+      background-color: var(--wp--preset--color--vivid-green-cyan) !important;
+    }
+
+    .has-pale-cyan-blue-background-color {
+      background-color: var(--wp--preset--color--pale-cyan-blue) !important;
+    }
+
+    .has-vivid-cyan-blue-background-color {
+      background-color: var(--wp--preset--color--vivid-cyan-blue) !important;
+    }
+
+    .has-vivid-purple-background-color {
+      background-color: var(--wp--preset--color--vivid-purple) !important;
+    }
+
+    .has-black-border-color {
+      border-color: var(--wp--preset--color--black) !important;
+    }
+
+    .has-cyan-bluish-gray-border-color {
+      border-color: var(--wp--preset--color--cyan-bluish-gray) !important;
+    }
+
+    .has-white-border-color {
+      border-color: var(--wp--preset--color--white) !important;
+    }
+
+    .has-pale-pink-border-color {
+      border-color: var(--wp--preset--color--pale-pink) !important;
+    }
+
+    .has-vivid-red-border-color {
+      border-color: var(--wp--preset--color--vivid-red) !important;
+    }
+
+    .has-luminous-vivid-orange-border-color {
+      border-color: var(--wp--preset--color--luminous-vivid-orange) !important;
+    }
+
+    .has-luminous-vivid-amber-border-color {
+      border-color: var(--wp--preset--color--luminous-vivid-amber) !important;
+    }
+
+    .has-light-green-cyan-border-color {
+      border-color: var(--wp--preset--color--light-green-cyan) !important;
+    }
+
+    .has-vivid-green-cyan-border-color {
+      border-color: var(--wp--preset--color--vivid-green-cyan) !important;
+    }
+
+    .has-pale-cyan-blue-border-color {
+      border-color: var(--wp--preset--color--pale-cyan-blue) !important;
+    }
+
+    .has-vivid-cyan-blue-border-color {
+      border-color: var(--wp--preset--color--vivid-cyan-blue) !important;
+    }
+
+    .has-vivid-purple-border-color {
+      border-color: var(--wp--preset--color--vivid-purple) !important;
+    }
+
+    .has-vivid-cyan-blue-to-vivid-purple-gradient-background {
+      background: var(--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple) !important;
+    }
+
+    .has-light-green-cyan-to-vivid-green-cyan-gradient-background {
+      background: var(--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan) !important;
+    }
+
+    .has-luminous-vivid-amber-to-luminous-vivid-orange-gradient-background {
+      background: var(--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange) !important;
+    }
+
+    .has-luminous-vivid-orange-to-vivid-red-gradient-background {
+      background: var(--wp--preset--gradient--luminous-vivid-orange-to-vivid-red) !important;
+    }
+
+    .has-very-light-gray-to-cyan-bluish-gray-gradient-background {
+      background: var(--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray) !important;
+    }
+
+    .has-cool-to-warm-spectrum-gradient-background {
+      background: var(--wp--preset--gradient--cool-to-warm-spectrum) !important;
+    }
+
+    .has-blush-light-purple-gradient-background {
+      background: var(--wp--preset--gradient--blush-light-purple) !important;
+    }
+
+    .has-blush-bordeaux-gradient-background {
+      background: var(--wp--preset--gradient--blush-bordeaux) !important;
+    }
+
+    .has-luminous-dusk-gradient-background {
+      background: var(--wp--preset--gradient--luminous-dusk) !important;
+    }
+
+    .has-pale-ocean-gradient-background {
+      background: var(--wp--preset--gradient--pale-ocean) !important;
+    }
+
+    .has-electric-grass-gradient-background {
+      background: var(--wp--preset--gradient--electric-grass) !important;
+    }
+
+    .has-midnight-gradient-background {
+      background: var(--wp--preset--gradient--midnight) !important;
+    }
+
+    .has-small-font-size {
+      font-size: var(--wp--preset--font-size--small) !important;
+    }
+
+    .has-medium-font-size {
+      font-size: var(--wp--preset--font-size--medium) !important;
+    }
+
+    .has-large-font-size {
+      font-size: var(--wp--preset--font-size--large) !important;
+    }
+
+    .has-x-large-font-size {
+      font-size: var(--wp--preset--font-size--x-large) !important;
+    }
+
+    \n:where(.wp-block-post-template.is-layout-flex) {
+      gap: 1.25em;
+    }
+
+    :where(.wp-block-post-template.is-layout-grid) {
+      gap: 1.25em;
+    }
+
+    \n:where(.wp-block-term-template.is-layout-flex) {
+      gap: 1.25em;
+    }
+
+    :where(.wp-block-term-template.is-layout-grid) {
+      gap: 1.25em;
+    }
+
+    \n:where(.wp-block-columns.is-layout-flex) {
+      gap: 2em;
+    }
+
+    :where(.wp-block-columns.is-layout-grid) {
+      gap: 2em;
+    }
+
+    \n:root :where(.wp-block-pullquote) {
+      font-size: 1.5em;
+      line-height: 1.6;
+    }
+
+    \n
+    /*# sourceURL=global-styles-inline-css */
+    \n
+  </style>\n
+  <link rel='stylesheet' id='inf-style-172-css' href='https://infinitely.test/wp-content/uploads/2026/01/infinitely.css'
+    media='all' />\n
+  <link rel='stylesheet' id='inf-style-173-css'
+    href='https://infinitely.test/wp-content/uploads/2026/01/global-rules.css' media='all' />\n
+  <link rel='stylesheet' id='woocommerce-layout-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/css/woocommerce-layout.css?ver=10.4.3'
+    media='all' />\n
+  <link rel='stylesheet' id='woocommerce-smallscreen-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/css/woocommerce-smallscreen.css?ver=10.4.3'
+    media='only screen and (max-width: 768px)' />\n
+  <link rel='stylesheet' id='woocommerce-general-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/css/woocommerce.css?ver=10.4.3' media='all' />\n
+  <link rel='stylesheet' id='woocommerce-blocktheme-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/css/woocommerce-blocktheme.css?ver=10.4.3'
+    media='all' />\n<style id='woocommerce-inline-inline-css'>
+    \n.woocommerce form .form-row .required {
+      visibility: visible;
+    }
+
+    \n
+    /*# sourceURL=woocommerce-inline-inline-css */
+    \n
+  </style>\n
+  <link rel='stylesheet' id='woocommerce-coming-soon-css'
+    href='https://infinitely.test/wp-content/plugins/woocommerce/assets/css/coming-soon.css?ver=10.4.3' media='all' />
+  \n\x3Cscript src="https://infinitely.test/wp-includes/js/dist/hooks.min.js?ver=dd5603f07f9220ed27f1"
+  id="wp-hooks-js">\x3C/script>\n\x3Cscript src="https://stats.wp.com/w.js?ver=202603"
+  id="woo-tracks-js">\x3C/script>\n\x3Cscript
+  src="https://infinitely.test/wp-includes/js/jquery/jquery.min.js?ver=3.7.1"
+  id="jquery-core-js">\x3C/script>\n\x3Cscript
+  src="https://infinitely.test/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1"
+  id="jquery-migrate-js">\x3C/script>\n\x3Cscript
+  src="https://infinitely.test/wp-content/plugins/woocommerce/assets/js/jquery-blockui/jquery.blockUI.min.js?ver=2.7.0-wc.10.4.3"
+  id="wc-jquery-blockui-js" defer data-wp-strategy="defer">\x3C/script>\n\x3Cscript id="wc-add-to-cart-js-extra">\nvar
+  wc_add_to_cart_params =
+  {"ajax_url":"/wp-admin/admin-ajax.php","wc_ajax_url":"/?wc-ajax=%%endpoint%%","i18n_view_cart":"View
+  cart","cart_url":"https://infinitely.test/cart/","is_cart":"","cart_redirect_after_add":"no"};\n//#
+  sourceURL=wc-add-to-cart-js-extra\n\x3C/script>\n\x3Cscript
+  src="https://infinitely.test/wp-content/plugins/woocommerce/assets/js/frontend/add-to-cart.min.js?ver=10.4.3"
+  id="wc-add-to-cart-js" defer data-wp-strategy="defer">\x3C/script>\n\x3Cscript
+  src="https://infinitely.test/wp-content/plugins/woocommerce/assets/js/js-cookie/js.cookie.min.js?ver=2.1.4-wc.10.4.3"
+  id="wc-js-cookie-js" defer data-wp-strategy="defer">\x3C/script>\n\x3Cscript id="woocommerce-js-extra">\nvar
+  woocommerce_params =
+  {"ajax_url":"/wp-admin/admin-ajax.php","wc_ajax_url":"/?wc-ajax=%%endpoint%%","i18n_password_show":"Show
+  password","i18n_password_hide":"Hide password"};\n//# sourceURL=woocommerce-js-extra\n\x3C/script>\n\x3Cscript
+  src="https://infinitely.test/wp-content/plugins/woocommerce/assets/js/frontend/woocommerce.min.js?ver=10.4.3"
+  id="woocommerce-js" defer data-wp-strategy="defer">\x3C/script>\n
+  <link rel="https://api.w.org/" href="https://infinitely.test/wp-json/" />
+  <link rel="alternate" title="JSON" type="application/json" href="https://infinitely.test/wp-json/wp/v2/pages/17" />
+  <link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://infinitely.test/xmlrpc.php?rsd" />\n
+  <meta name="generator" content="WordPress 6.9" />\n
+  <meta name="generator" content="WooCommerce 10.4.3" />\n
+  <link rel="canonical" href="https://infinitely.test/home/" />\n
+  <link rel='shortlink' href='https://infinitely.test/?p=17' />\n\t<noscript>
+    <style>
+      .woocommerce-product-gallery {
+        opacity: 1 !important;
+      }
+    </style>
+  </noscript>\n\t<style class='wp-fonts-local'>
+    \n@font-face {
+      font-family: Inter;
+      font-style: normal;
+      font-weight: 300 900;
+      font-display: fallback;
+      src: url('https://infinitely.test/wp-content/plugins/woocommerce/assets/fonts/Inter-VariableFont_slnt,wght.woff2') format('woff2');
+      font-stretch: normal;
+    }
+
+    \n@font-face {
+      font-family: Cardo;
+      font-style: normal;
+      font-weight: 400;
+      font-display: fallback;
+      src: url('https://infinitely.test/wp-content/plugins/woocommerce/assets/fonts/cardo_normal_400.woff2') format('woff2');
+    }
+
+    \n
+  </style>\n<style id="inf-css">
+    body {
+      background-color: blue
+    }
+
+    body {
+      background-color: red
+    }
+  </style>\x3Cscript id="inf-motions">console.log('montions loaded')\x3C/script>`
+</head>
+
+<body>
+
+</body>
+
 </html>
-
-
-<!-- This file is the host HTML file that contains the iframe for the editor.
- It includes a div with id "host" where the iframe will be mounted.
- The host.js script is responsible for creating and managing the iframe. -->
-
-
-
-
- <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <!-- <base href="/"> -->
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Infinitely Studio Editor – Build and edit websites in real-time with speed, privacy, and complete creative control."
-    />
-    <meta
-      name="keywords"
-      content="real-time website editor, fast visual editor, offline web design tool, drag and drop builder, responsive preview, live CSS animation editor, reusable components editor, web page builder interface, no-code development tool, Infinitely Studio editor, custom layout builder, motion design editor, interactive UI builder, design tool for developers, advanced website editor"
-    />
-
-    <title>Infinitely Studio</title>
-  </head>
-  <body class="bg-gray-900">
-    <div id="root"></div>
-
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
-</html>
-
-
-

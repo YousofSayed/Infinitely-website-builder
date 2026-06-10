@@ -154,8 +154,8 @@ export const SelectState = ({ placeholder }) => {
   }
 
   function addState(state = "") {
-    let clone = structuredClone(states);
-    let index = isNumber(currentStateIndex) ? currentStateIndex : clone.length;
+    let clone = structuredClone(states); 
+    let index = isNumber(currentStateIndex) && currentStateIndex != -1 ? currentStateIndex : clone.length;
     const media = getCurrentMediaDevice(editor);
     console.log(
       "condition : ",
@@ -188,6 +188,8 @@ export const SelectState = ({ placeholder }) => {
       ];
     }
 
+          console.log(clone , 'clone', index);
+
     const currentSelector = getCurrentSelector(selector, editor.getSelected());
     const ruleString = `${currentSelector}${clone[index].states}`;
     let oldRuleStyle = {};
@@ -211,6 +213,7 @@ export const SelectState = ({ placeholder }) => {
 
       return response;
     });
+    
 
     console.log("oldRuleStyle before: ", oldRuleStyle, rulesWillRemoved);
     clone[index].statesAsArray = [
@@ -258,6 +261,7 @@ export const SelectState = ({ placeholder }) => {
       ...media,
     });
 
+    currentStateIndex === -1 && setCurrentStateIndex(index)
     console.log("states added well : ", state);
   }
 
@@ -433,7 +437,7 @@ export const SelectState = ({ placeholder }) => {
 
         <SmallButton
           className="flex-shrink-0 bg-surface-tertiary  "
-          tooltipTitle="Add state"
+          // tooltipTitle="Add state"
           onClick={(ev) => {
             addState(state);
           }}
@@ -443,7 +447,7 @@ export const SelectState = ({ placeholder }) => {
 
         <SmallButton
           className=" flex-shrink-0 bg-surface-tertiary  "
-          tooltipTitle="Add new line"
+          // tooltipTitle="Add new line"
           onClick={(ev) => {
             addNewStateContainer();
           }}

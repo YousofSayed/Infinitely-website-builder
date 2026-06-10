@@ -1,4 +1,4 @@
-export const open_symbols_manager ="open:symbols-manager";
+export const open_symbols_manager = "open:symbols-manager";
 export const close_current_modal = 'close:current:modal';
 export const select_page = 'select:page';
 export const open_rest_models_modal = `open:models:modal`;
@@ -12,3 +12,4 @@ export const open_page_helmet_modal = `open:page-helmet:modal`;
 export const open_code_manager_modal = `open:code-manager:modal`;
 export const open_symbols_and_templates_manager_modal = `open:symbols-and-templates-manager:modal`;
 export const open_file_editor_modal = `open:file-editor:modal`;
+export const open_symbol_code_editor_modal = `open:symbol-code-editor:modal`;

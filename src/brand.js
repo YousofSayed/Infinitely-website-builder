@@ -8,7 +8,7 @@ const configs = import.meta.glob("./config/*.json", {
 const BRAND_BY_HOST = {
   localhost: "infinitely",
   "infinitely.pages.dev": "infinitely",
-  "builder.easyorders.com": "easyorders",
+  // "builder.easyorders.com": "easyorders",
 };
 
 const host = location.hostname;

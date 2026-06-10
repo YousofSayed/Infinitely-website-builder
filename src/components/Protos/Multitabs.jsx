@@ -7,11 +7,11 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
  * @param {{tabs : { title: React.JSX, content: React.JSX }[] , style:CSSStyleDeclaration , preventViewScroll:boolean , onTabClick : (ev:MouseEvent , index:number)=>void}} param0
  * @returns
  */
-export const MultiTab = ({
+export const MultiTab = ({ 
   tabs = [{ title: "", content: "" }],
   style,
   preventViewScroll = false,
-  onTabClick = (ev, i) => {},
+  onTabClick = (ev, i) => { },
 }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [animatRef] = useAutoAnimate();
@@ -28,7 +28,7 @@ export const MultiTab = ({
             // background:generateBeautifulHexColor(true , .1),
           }
         }
-        className="group flex  h-[50px] border-b backdrop-blur-md border-slate-800 rounded-tl-lg rounded-tr-lg overflow-hidden"
+        className="group flex w-full   border-b backdrop-blur-md border-slate-800 rounded-tl-lg rounded-tr-lg overflow-hidden"
       >
         {tabs.map((tab, index) => (
           <button
@@ -37,11 +37,14 @@ export const MultiTab = ({
               onTabClick(ev, index);
               setActiveTab(index);
             }}
-            className={`w-1/4 py-3 text-center backdrop-blur-md  border-r-2 capitalize border-r-slate-600 font-semibold text-text-primary hover:bg-blue-700  hover:text-text-primary  transition duration-300 ${
+            style={{
+              width : tabs.length === 1 ? "fit-content" :  `calc(100% / ${tabs.length})`
+            }}
+            className={` px-2 py-3 text-center backdrop-blur-md  border-r-2 capitalize border-r-slate-600 font-semibold text-text-primary   hover:text-text-primary  transition duration-300 ${
               activeTab === index
-                ? "  bg-brand-primary font-bold "
-                : "text-slate-400"
-            }`}
+              ? "  bg-brand-primary font-bold "
+              : "text-slate-300 hover:bg-slate-700"
+              }`}
           >
             {tab.title}
           </button>
@@ -49,9 +52,8 @@ export const MultiTab = ({
       </nav>
       <div
         key={activeTab}
-        className={`h-full ${
-          preventViewScroll ? "overflow-hidden" : " overflow-y-auto"
-        } p-1`}
+        className={`h-full ${preventViewScroll ? "overflow-hidden" : " overflow-y-auto"
+          } p-1`}
       >
         {tabs[activeTab].content}
       </div>

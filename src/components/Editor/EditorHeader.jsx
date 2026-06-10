@@ -27,32 +27,62 @@ import {
 import {
   buildGsapMotionsScript,
   buildScriptFromCmds,
+  doInNormal,
+  doInWordpress,
+  doInWordpressAsync,
   exportProject,
   getComponentRules,
   getCurrentPageName,
   getProjectData,
   getProjectSettings,
+  getWpPageConfig,
+  getWpRestBase,
+  gjsComponentsToJSON,
+  isWordpress,
   preventSelectNavigation,
   reorderCss,
   shareProject,
+  wpWorkerCallbackMaker,
 } from "../../helpers/functions";
 import { Select } from "./Protos/Select";
 import { PagesSelector } from "./PagesSelector";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
 import { open_code_manager_modal } from "../../constants/InfinitelyCommands";
-import { preview_url } from "../../constants/shared";
+import { current_project_id, inf_symbol_Id_attribute, preview_url } from "../../constants/shared";
 import { ScrollableToolbar } from "../Protos/ScrollableToolbar";
 import { Hr } from "../Protos/Hr";
 import { editorContainerInstance } from "../../constants/InfinitelyInstances";
 import { InfinitelyEvents } from "../../constants/infinitelyEvents";
-import { fetcherWorker } from "../../helpers/defineWorkers";
+import { fetcherWorker, offlineInstallerWorker, pageBuilderWorker } from "../../helpers/defineWorkers";
 import { OptionsButton } from "../Protos/OptionsButton";
 import { cloneDeep } from "lodash";
 import { detectedType } from "../../helpers/jsDocs";
 import { UlContextProvider, useUlContext } from "../Protos/UlProvider";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { useNotifiers } from "../../hooks/useNotifiers";
+import {
+  wp_connect,
+  wp_get,
+  wp_get_posts_with_inf_meta,
+  wp_get_single,
+  wp_update_media,
+  wp_update_media_files,
+  wp_update_meta,
+  wp_update_option,
+  wp_update_single,
+  wp_update_symbols,
+  wp_write_files,
+} from "../../Apps/wordpress/functions";
+import { Button } from "../Protos/Button";
+import { useLiveQuery } from "dexie-react-hooks";
+import { db } from "../../helpers/db";
+import { Loader } from "../Loader";
+import { infinitelyWorker } from "../../helpers/infinitelyWorker";
+import { wp_get_post_id } from "../../Apps/wordpress/functions_ui";
+import { wp_preview_bc } from "../../helpers/channels";
+import LLM from "@themaximalist/llm.js";
+import { minify } from "csso";
 
 export const HomeHeader = () => {
   const editor = useEditorMaybe();
@@ -69,8 +99,13 @@ export const HomeHeader = () => {
   const { selectedId, setSeletedId } = useUlContext();
   const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
   const [mediaCond, setMediaCond] = useRecoilState(mediaConditionState);
+  const [publish, setPublish] = useState(false);
+  const [storeLoad, setStoreLoad] = useState(false);
   const [asideControllersNotifires, setAsideControllersNotifires] =
     useRecoilState(asideControllersNotifiresState);
+  const [animatedRefForPublishBtn] = useAutoAnimate();
+  const projectId = +localStorage.getItem(current_project_id);
+
   // const [isAnimationsChanged, setAnimationsChanged] = useRecoilState(
   //   isAnimationsChangedState
   // );
@@ -79,6 +114,24 @@ export const HomeHeader = () => {
     width: "",
     height: "",
   });
+
+  useLiveQuery(async () => {
+    await doInWordpressAsync(async () => {
+      const projectData = await getProjectData();
+      // console.log(
+      //   "publish state :",
+      //   Boolean(projectData.currentEditingPage?.need_publish_to_wp),
+      //   Boolean(projectData?.scripts_need_to_publish),
+      // );
+
+      return setPublish(
+        Boolean(projectData.currentEditingPage?.need_publish_to_wp),
+        //  ||
+        //   Boolean(projectData?.scripts_need_to_publish),
+      );
+    });
+  });
+
 
   const setMediaConditon = (value) => {
     setMediaCond(value);
@@ -91,7 +144,7 @@ export const HomeHeader = () => {
   const setCustomDevice = (prop, value) => {
     prop == "width" && (widthRef.current = value);
     prop == "height" && (heightRef.current = value);
-    console.log("new value" , value , prop);
+    console.log("new value", value, prop);
     const uid = uniqueID();
 
     if (!value) {
@@ -139,7 +192,7 @@ export const HomeHeader = () => {
       return wa - wb;
     });
 
-    console.log("new devices : ", devices);
+    // console.log("new devices : ", devices);
 
     const newDevices = cloneDeep(
       concatedArray.reverse().map((dev, i) => {
@@ -149,23 +202,23 @@ export const HomeHeader = () => {
         };
         // .set({ priority: i + 1 });
         return dev;
-      })
+      }),
     );
 
     const newDeviceWithNewPiriority = newDevices.find(
-      (dev) => dev.name === uid
+      (dev) => dev.name === uid,
     );
-    console.log(`new deivce : `, newDeviceWithNewPiriority);
+    // console.log(`new deivce : `, newDeviceWithNewPiriority);
 
     customDevice.current = editor.DeviceManager.add(newDeviceWithNewPiriority);
     // customDevice.current = editor.DeviceManager.add(newDevice);
-    console.log(
-      "new media devices :",
-      editor.DeviceManager.getAll()
-        .toArray()
-        .map((dev) => dev.attributes),
-      editor.getCss()
-    );
+    // console.log(
+    //   "new media devices :",
+    //   editor.DeviceManager.getAll()
+    //     .toArray()
+    //     .map((dev) => dev.attributes),
+    //   editor.getCss(),
+    // );
 
     editor.setDevice(uid);
     editor.trigger("inf:rules:update");
@@ -178,6 +231,204 @@ export const HomeHeader = () => {
     setZoomValue((value * 100).toFixed(2));
   };
 
+  const publishToWp = async () => {
+    let tId = toast.loading(<ToastMsgInfo msg={`Publish to wordpress...✨`} />);
+    const res_base = getWpRestBase();
+    const wp_post = getWpPageConfig();
+    const projectId = +localStorage.getItem(current_project_id);
+    const projectData = await getProjectData();
+    const { projectSettings } = getProjectSettings();
+    const symbols = editor.getWrapper().find(`["${inf_symbol_Id_attribute}"]`).map(cmp => {
+      const symbol_id = cmp.getAttributes()[inf_symbol_Id_attribute];
+
+      if (!symbol_id) return null;
+
+      return {
+        symbol_id,
+        post_meta: {
+          before_save: '__DELETE__',
+          saved: {
+            html: gjsComponentsToJSON(cmp, true),
+            css: minify(getComponentRules({
+              editor,
+              cmp,
+              nested: true,
+            }).stringRules).css
+          }
+        }
+      }
+    }).filter(Boolean);
+
+    let steps = 0;
+    const max_steps = 2 + Number(Boolean(symbols.length));
+    setPublish(false);
+
+    const afterSave = async () => {
+      steps++;
+      if (steps >= max_steps) {
+        await db.projects.update(projectId, {
+          scripts_need_to_publish: false,
+          projectSetting: projectSettings,
+          save_state: "saved",
+          current_inf_meta: {
+            before_save: {
+              ...(projectData?.current_inf_meta?.before_save || {}),
+            },
+            saved: {
+              ...(projectData?.current_inf_meta?.before_save || {}),
+            },
+          },
+          currentEditingPage: {
+            need_publish_to_wp: false,
+            save_state: "saved",
+          },
+        });
+        wp_preview_bc.postMessage({
+          props: {
+            url: wp_post.link,
+            mode: "preview",
+            save_state: "saved",
+          },
+        });
+        toast.done(tId);
+      }
+    };
+
+    // wp_update_symbols
+    wpWorkerCallbackMaker(offlineInstallerWorker, 'wp_update_symbols', {
+      symbols
+    }, async (res) => {
+      console.log('wp_update_symbols', res);
+      if (res.done) {
+        await afterSave();
+        toast.success(<ToastMsgInfo msg={`Symbols updated 💙`} />);
+      } else {
+        toast.dismiss(tId);
+        toast.error(<ToastMsgInfo msg={`Faild to update symbols 😡`} />);
+        throw new Error(`Faild to update symbols 😡 , why?`);
+      }
+    })
+
+    // wp_update_meta;
+    wpWorkerCallbackMaker(
+      fetcherWorker,
+      "wp_update_meta",
+      {
+        projectId,
+        post_id: wp_get_post_id(),
+        post_type: wp_post.type,
+        meta_key: "inf_meta",
+        merge: true,
+        meta_value: {
+          before_save: null,
+          saved: {
+            ...(projectData?.current_inf_meta?.before_save || {}),
+          },
+        },
+      },
+      async (res) => {
+        if (res.done) {
+          await afterSave();
+          toast.success(
+            <ToastMsgInfo msg={`Your amazing edits published 💙`} />,
+          );
+        } else {
+          toast.dismiss(tId);
+          toast.error(<ToastMsgInfo msg={`Post Edits not published 😡`} />);
+          throw new Error(`User Edits not published 😡 , why?`);
+        }
+      },
+    );
+
+    // wp_update_option;
+    wpWorkerCallbackMaker(
+      infinitelyWorker,
+      "wp_update_option",
+      {
+        optionName: "inf_config",
+        value: { ...projectData, currentEditingPage: {}, current_inf_meta: {} },
+        projectId,
+        merge: true,
+      },
+      async (res) => {
+        if (res.done) {
+          await afterSave();
+          toast.success(<ToastMsgInfo msg={`Config merged 💙`} />);
+        } else {
+          toast.dismiss(tId);
+          toast.error(<ToastMsgInfo msg={`Config not published 😡`} />);
+          throw new Error(`User Config not published 😡 , why?`);
+        }
+      },
+    );
+
+
+
+    // wpWorkerCallbackMaker(
+    //   pageBuilderWorker,
+    //   "wp_update_main_global_files",
+    //   {
+    //     data: {
+    //       id: projectId,
+    //       projectSetting: projectSettings,
+    //       projectData,
+    //       global: {
+    //         css: "",
+    //         js: "",
+    //       },
+    //     },
+    //   },
+    //   async (res) => {
+    //     if (res.done) {
+    //       await afterSave();
+    //       toast.success(<ToastMsgInfo msg={`Editor scripts updated 💙`} />);
+    //     } else {
+    //       toast.dismiss(tId);
+    //       toast.error(
+    //         <ToastMsgInfo msg={`Faild to update editor scripts 😡`} />,
+    //       );
+    //       throw new Error(`Editor scripts not updated 😡 , why?`);
+    //     }
+    //   },
+    // );
+  };
+
+  // useEffect(() => {
+  //   (async () => {
+  //     const llm = new LLM();
+  //     llm.model = 'qwen2.5-coder:1.5b';
+  //     llm.system(`You are an Infinitely Stduio Ai Assaistant , you created by team of Infinitely Studio , you are expert in ai and machine learning , who created infinitely studio is yousef sayed , infinitely studio is website builder can build frontend headless websites and it is website builder for wordpress , your role is to generate code for website builder , user will give you prompts to generate code , your job is to only give user the code (only code) no more . `)
+  //     const res = await llm.chat(
+  //       " generate hero section by HTML & CSS code for a coffee website and make design soo fancy and modern and make it responsive and make it look like a coffee shop website",
+  //       { stream: false, max_thinking_tokens: 30000000 }
+  //     );
+  //     console.log(`hiiiiiiiiiiiiiiiiiiiiiiiiii`)
+
+  //     console.log("Final response:", res);
+  //   })()
+  // }, [])
+
+  useEffect(() => {
+    if (!editor) return;
+    const saveStart = () => {
+      setPublish(false);
+      setStoreLoad(true);
+    };
+
+    const saveEnd = () => {
+      setStoreLoad(false);
+    };
+
+
+    editor.on(InfinitelyEvents.storage.storeStart, saveStart);
+    editor.on(InfinitelyEvents.storage.storeEnd, saveEnd);
+
+    return () => {
+      editor.off(InfinitelyEvents.storage.storeStart, saveStart);
+      editor.off(InfinitelyEvents.storage.storeEnd, saveEnd);
+    };
+  }, [editor]);
+
   useEffect(() => {
     if (!(editor && editor.getContainer())) return;
     // console.log('html editor : ' , editor.getWrapper().getInnerHTML({withProps:true , withScripts: true}));
@@ -186,15 +437,21 @@ export const HomeHeader = () => {
 
     const changeDeviceCallback = () => {
       const currentDeviceName = editor.getDevice();
-      
+
       const currentDevice = editor.Devices.get(currentDeviceName);
-      console.log('currentDeviceName' , currentDevice);
+      console.log("currentDeviceName", currentDevice);
       setDimaonsion({
         height: parseFloat(currentDevice.attributes.height) || "",
         width: parseFloat(currentDevice.attributes.widthMedia) || "",
       });
       setMediaValue(editor.config.mediaCondition);
       reorderCss(editor);
+      // setInterval(() => {
+      //   editor.refresh({ tools: true });
+      //   editor.Canvas.refresh({ all: true, spots: true });
+      //   editor.Canvas.refreshSpots();
+      // }, 500)
+      // alert('wowow')
     };
     editor.on("change:device", changeDeviceCallback);
     editor.on(InfinitelyEvents.devices.update, changeDeviceCallback);
@@ -207,7 +464,7 @@ export const HomeHeader = () => {
   }, [editor]);
 
   useEffect(() => {
-    console.log("from lol");
+
 
     if (!editor) return;
     if (!currentEl.currentEl) return;
@@ -261,7 +518,7 @@ export const HomeHeader = () => {
     if (!editor) return;
     editorContainerInstance.on(
       InfinitelyEvents.editorContainer.update,
-      zoomCallback
+      zoomCallback,
     );
 
     const deviceChange = () => {
@@ -280,7 +537,7 @@ export const HomeHeader = () => {
     return () => {
       editorContainerInstance.off(
         InfinitelyEvents.editorContainer.update,
-        zoomCallback
+        zoomCallback,
       );
       editor.off("change:device", deviceChange);
       editor.off("canvas:frame:load:body", deviceChange);
@@ -290,7 +547,7 @@ export const HomeHeader = () => {
   useNotifiers();
 
   return (
-    <header className="w-full h-[60px]  zoom-80 px-2 bg-surface-secondary  border-b-[1.5px]  border-slate-400    flex items-center justify-between gap-5">
+    <header className="w-full h-[55px]  zoom-80 px-2 bg-surface-secondary  border-b-[1.5px]  border-slate-400    flex items-center justify-between gap-5">
       <ScrollableToolbar
         className="w-[37.5%] h-full items-center flex-shrink-0 max-w-[700px]"
         space={3}
@@ -393,7 +650,7 @@ export const HomeHeader = () => {
                       "rule : ",
                       rule,
                       rule.trim() ==
-                        `${editor.config.mediaCondition}: ${widthMedia}px`
+                      `${editor.config.mediaCondition}: ${widthMedia}px`,
                     );
 
                     return (
@@ -402,7 +659,7 @@ export const HomeHeader = () => {
                         style={{
                           backgroundColor:
                             rule.trim() ==
-                            `${editor.config.mediaCondition}: ${widthMedia}px`
+                              `${editor.config.mediaCondition}: ${widthMedia}px`
                               ? "var(--main-bg)"
                               : "",
                         }}
@@ -420,7 +677,7 @@ export const HomeHeader = () => {
                           editor.getConfig().mediaCondition = mediaCondition;
                           localStorage.setItem(
                             "media-condition",
-                            mediaCondition
+                            mediaCondition,
                           );
                           const sle = editor.getSelected();
                           setDimaonsion({
@@ -550,12 +807,25 @@ export const HomeHeader = () => {
             icon={Icons.showInFrontEnd}
             isObjectParamsIcon
             onClick={(ev) => {
-              localStorage.setItem(preview_url, getCurrentPageName());
-              window.open(
-                `/${getCurrentPageName()}`,
-                "infinitely-preview"
-                // 'width=800,height=600,top=50,left=50,scrollbars=yes,resizable=yes,location=yes,menubar=no,toolbar=no,status=yes,titlebar=yes'
-              );
+              doInNormal(() => {
+                localStorage.setItem(preview_url, getCurrentPageName());
+                window.open(
+                  `/${getCurrentPageName()}`,
+                  "infinitely-preview",
+                  // 'width=800,height=600,top=50,left=50,scrollbars=yes,resizable=yes,location=yes,menubar=no,toolbar=no,status=yes,titlebar=yes'
+                );
+              });
+
+              doInWordpress(async () => {
+                localStorage.setItem(preview_url, getCurrentPageName());
+                const wp_post = getWpPageConfig();
+                const projectData = await getProjectData();
+                window.open(
+                  `/wordpress/preview?url=${wp_post.link}&save_state=${projectData.currentEditingPage.save_state}&mode=preview`,
+                  "infinitely-preview",
+                  // 'width=800,height=600,top=50,left=50,scrollbars=yes,resizable=yes,location=yes,menubar=no,toolbar=no,status=yes,titlebar=yes'
+                );
+              });
               // console.log("navigated to frontend");
 
               // navigate("/preview" , {});
@@ -598,16 +868,16 @@ export const HomeHeader = () => {
                       // "http://tmpfiles.org/11276583/dasd.zip"
                       const fileUrl = response.data.url.replace(
                         "http://tmpfiles.org/",
-                        "https://tmpfiles.org/dl/"
+                        "https://tmpfiles.org/dl/",
                       );
                       await navigator.clipboard.writeText(
-                        `${window.origin}/workspace?file=${btoa(fileUrl)}`
+                        `${window.origin}/workspace?file=${btoa(fileUrl)}`,
                       );
                       toast.info(
                         <ToastMsgInfo
                           msg={`Share URL is copied , so you can share now💙`}
                         />,
-                        { progressClassName: "bg-brand-primary" }
+                        { progressClassName: "bg-brand-primary" },
                       );
                     }
                     fetcherWorker.removeEventListener("message", callback);
@@ -647,7 +917,7 @@ export const HomeHeader = () => {
             fillObjIcon={false}
             fillObjectIconOnHover
             notify={Object.values(asideControllersNotifires).some(
-              (val) => val === true
+              (val) => val === true,
             )}
             title="edite component"
           />
@@ -660,6 +930,30 @@ export const HomeHeader = () => {
             title="add blocks"
           />
         </>
+
+        {isWordpress() && (
+          <section className="ml-2 w-[calc(100%+25px)]">
+            <Button
+              refForward={animatedRefForPublishBtn}
+              disabled={storeLoad || !publish}
+              onClick={(ev) => {
+                publishToWp();
+              }}
+              className="font-bold capitalize flex items-center justify-center gap-2 w-full"
+            >
+              {storeLoad && (
+                <section>
+                  <Loader
+                    width={20}
+                    height={20}
+                    loaderClassName={"border-white"}
+                  />
+                </section>
+              )}
+              {storeLoad ? <p>Process</p> : <p>Publish</p>}
+            </Button>
+          </section>
+        )}
 
         {/* <Button>Publish</Button> */}
         {/* </div> */}

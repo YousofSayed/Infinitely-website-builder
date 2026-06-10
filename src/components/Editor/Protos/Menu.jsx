@@ -5,10 +5,11 @@ import { Virtuoso } from "react-virtuoso";
 import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
 import { FitTitle } from "./FitTitle";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { Loader } from "../../Loader";
 
 /**
  *
- * @param   {{keywords: string[] ,className:string, placeholder:string ,isDynamic:boolean , innerStt:string ,onMenuScroll:(ev:UIEvent)=>void , onKeyDown : (ev:KeyboardEvent)=>void, onInput:(ev:InputEvent)=>void,  onInputClick:(ev:MouseEvent)=>void , dynamicInputClassName:string ,choosenKeyword:string, currentChoose:number, menuRef : {[current:string] :HTMLElement} , editorRef : {current : HTMLElement | null} , onItemClicked:(ev:MouseEvent , keyword:string ,i:number , keywordsLength:number)=>void}} param0
+ * @param   {{keywords: string[] ,  onScrollEnd?: () => void, className:string, placeholder:string ,isDynamic:boolean , innerStt:string ,onMenuScroll:(ev:UIEvent)=>void , onKeyDown : (ev:KeyboardEvent)=>void, onInput:(ev:InputEvent)=>void,  onInputClick:(ev:MouseEvent)=>void , dynamicInputClassName:string ,choosenKeyword:string, currentChoose:number, menuRef : {[current:string] :HTMLElement} , editorRef : {current : HTMLElement | null} , onItemClicked:(ev:MouseEvent , keyword:string ,i:number , keywordsLength:number)=>void}} param0
  * @returns
  */
 export const Menu = ({
@@ -21,84 +22,21 @@ export const Menu = ({
   isOpen = false,
   isDynamic = false,
   innerStt = "",
-  onInput = (ev) => {},
-  onKeyDown = (ev) => {},
-  onInputClick = (ev) => {},
-  onMenuScroll = (ev) => {},
+  onInput = (ev) => { },
+  onKeyDown = (ev) => { },
+  onInputClick = (ev) => { },
+  onMenuScroll = (ev) => { },
+  onScrollEnd = () => { },
   placeholder = "",
   dynamicInputClassName = "",
   onItemClicked,
   i,
 }) => {
-  const [keywordsState, setKeywordsState] = useState([]);
-  const choosenRef = useRef(refType);
-  const unChoosenRef = useRef();
-  const keywordsLengthRef = useRef(0);
   const refs = useRef([]); // Create a ref array
-  const [scrollValue, setScollValue] = useState();
-  const prevNumber = useRef();
   const listRef = useRef();
   const [animatRef] = useAutoAnimate();
-  // useEffect(()=>{
-  //   listRef.current && animatRef(listRef.current)
-  // },[listRef])
-  // useEffect(() => {
-  //   console.log("length ooo : ", keywords.length, keywords.slice(100, 5000));
-  //   const newValue = keywordsLengthRef.current + 100;
-  //   if (keywords.length && keywords.length >= 100) {
-  //     const preKeywords =
-  //       keywordsLengthRef.current >= 100 ? [...keywordsState] : [];
 
-  //     console.log("fuuuu : ", [
-  //       ...preKeywords,
-  //       ...keywords.slice(keywordsLengthRef.current, newValue),
-  //     ]);
-  //     setKeywordsState([
-  //       ...preKeywords,
-  //       ...keywords.slice(keywordsLengthRef.current, newValue),
-  //     ]);
-  //     keywordsLengthRef.current = newValue;
-  //   } else {
-  //     setKeywordsState(keywords.length ? keywords : ["No Items Founded..."]);
-  //   }
-  // }, []);
-
-  // useLayoutEffect(() => {
-  //   refs.current[currentChoose]?.scrollIntoView({
-  //     behavior: "smooth",
-  //     block: "center",
-  //     // inline: "center",
-  //   });
-
-  //   if (menuRef.current) {
-  //     const totalHeight = keywords.length * 50; // Total height = itemCount * itemSize
-  //     if (currentChoose == 0 && prevNumber.current == keywords.length - 1) {
-  //       menuRef.current.scrollTo(0);
-  //     } else if (
-  //       currentChoose == keywords.length - 1 &&
-  //       prevNumber.current == 0
-  //     ) {
-  //       menuRef.current.scrollTo(totalHeight);
-  //     }
-  //     console.log("currentChoose from cond", currentChoose);
-  //   }
-
-  //   prevNumber.current = currentChoose; // == 0 || currentChoose == keywords.length-1 ? currentChoose : null;
-
-  //   choosenKeyword.current = refs.current[currentChoose]?.textContent;
-  // }, [menuRef, choosenRef, currentChoose]);
-
-  // useLayoutEffect(() => {
-  //   const totalHeight = keywords.length * 50; // Total height = itemCount * itemSize
-  //   console.log('totalHeight :' , totalHeight );
-
-  //   if (!menuRef || !menuRef.current || totalHeight < 300) return;
-  //   if (currentChoose == 0) {
-  //     menuRef.current.scrollTo(0);
-  //   } else if (currentChoose == keywords.length - 1) {
-  //     menuRef.current.scrollTo(totalHeight);
-  //   }
-  // }, [keywords]);
+  const safeKeywords = keywords.filter((k) => k !== "__inf_loading__");
 
   useEffect(() => {
     // Ensure the current item is scrolled into view
@@ -123,110 +61,60 @@ export const Menu = ({
       // offset: 0, //
     });
 
-    // console.log("keywords : ", keywords); 
-
-    // document.body.scrollIntoView({
-    //   block:'end'
-    // })
-
-    // if (menuRef.current) {
-    //   const totalHeight = keywords.length * 50; // Total height = itemCount * itemSize
-    //   if (currentChoose === 0 && prevNumber.current === keywords.length - 1) {
-    //     menuRef.current.scrollTo(0); // Scroll to top
-    //   } else if (
-    //     currentChoose === keywords.length - 1 &&
-    //     prevNumber.current === 0
-    //   ) {
-    //     menuRef.current.scrollTo(totalHeight); // Scroll to bottom
-    //   }
-    //   console.log("currentChoose from cond", currentChoose);
-    // }
-
-    // prevNumber.current = currentChoose;
-
-    choosenKeyword.current = keywords[currentChoose];
+    choosenKeyword.current = safeKeywords[currentChoose];
     // console.log('content : ', refs.current[currentChoose]?.textContent);
     // menuRef, choosenRef, currentChoose , isOpen ,
-  },[currentChoose]);
+  }, [currentChoose, safeKeywords]);
 
-  // useLayoutEffect(() => {
-  //   const totalHeight = keywords.length * 50; // Total height = itemCount * itemSize
-  //   console.log("totalHeight:", totalHeight);
+  if (keywords.length === 1 && keywords[0] === "__inf_loading__") {
+    return (
+      <section className="w-full h-full flex items-center justify-center min-h-[100px]">
+        <Loader width={40} height={40} />
+      </section>
+    );
+  }
 
-  //   if (!menuRef || !menuRef.current || totalHeight < 300) return;
-  //   if (currentChoose === 0) {
-  //     menuRef.current.scrollTo(0); // Scroll to top
-  //   } else if (currentChoose === keywords.length - 1) {
-  //     menuRef.current.scrollTo(totalHeight); // Scroll to bottom
-  //   }
-  // }, [keywords]);
+  if (safeKeywords.length === 0) {
+    return (
+      <section className="w-full h-full flex items-center justify-center min-h-[50px] p-4 text-text-primary opacity-60 font-semibold">
+        No items here
+      </section>
+    );
+  }
 
   return isDynamic ? (
     <section
-    ref={animatRef}
-      className={`w-full shadow-lg flex gap-2  shadow-gray-950 border-[1px] max-h-[300px] border-border-default rounded-lg   bg-surface-secondary overflow-hidden   ${
-        className ? className : "w-full"
-      }`}
+      ref={animatRef}
+      className={`w-full shadow-lg flex gap-2  shadow-gray-950 border-[1px] max-h-[300px] border-border-default rounded-lg   bg-surface-secondary overflow-hidden   ${className ? className : "w-full"
+        }`}
     >
       <section className="w-[500px] h-[300px] overflow-y-auto" ref={menuRef}>
         <Virtuoso
-        ref={listRef}
-          totalCount={keywords.length}
+          ref={listRef}
+          totalCount={safeKeywords.length}
           itemContent={(index) => {
-            const item = keywords[index];
+            const item = safeKeywords[index];
             return (
               <li
                 key={index}
                 id={`list-item-${index}`}
                 ref={(el) => (refs.current[index] = el)}
                 onClick={(ev) => {
-                  onItemClicked(ev, item, index, keywords.length);
+                  onItemClicked(ev, item, index, safeKeywords.length);
                 }}
-                className={`${
-                  currentChoose == index
-                    ? "bg-brand-primary hover:bg-brand-primary"
-                    : "bg-transparent hover:bg-gray-700"
-                } ${
-                  item.toLowerCase() == "No Items Founded...".toLowerCase()
+                className={`${currentChoose == index
+                  ? "bg-brand-primary hover:bg-brand-primary"
+                  : "bg-transparent hover:bg-gray-700"
+                  } ${item.toLowerCase() == "No Items Founded...".toLowerCase()
                     ? "pointer-events-none bg-transparent"
                     : ""
-                }  py-[12px] px-2 text-nowrap w-full  overflow-x-auto   transition-all cursor-pointer [&:not(:last-child)]:border-b-[1px] border-border-default  text-text-primary  text-[16px] font-semibold `}
+                  }  py-[12px] px-2 text-nowrap w-full  overflow-x-auto   transition-all cursor-pointer [&:not(:last-child)]:border-b-[1px] border-border-default  text-text-primary  text-[16px] font-semibold `}
               >
                 {item}
               </li>
             );
           }}
         />
-        {/* <ViewportList
-          items={keywords}
-          // itemSize={50}
-          viewportRef={menuRef}
-          ref={listRef}
-          // axis="y"
-          // itemMargin={8}
-        >
-          {(item, index) => (
-            <li
-              key={index}
-              id={`list-item-${index}`}
-              ref={(el) => (refs.current[index] = el)}
-              onClick={(ev) => {
-                onItemClicked(ev, item, index, keywords.length);
-              }}
-              className={`${
-                currentChoose == index
-                  ? "bg-brand-primary hover:bg-brand-primary"
-                  : "bg-transparent hover:bg-gray-700"
-              } ${
-                item.toLowerCase() == "No Items Founded...".toLowerCase()
-                  ? "pointer-events-none bg-transparent"
-                  : ""
-              }  py-[12px] px-2 text-nowrap w-full  overflow-x-auto   transition-all cursor-pointer [&:not(:last-child)]:border-b-[1px] border-border-default  text-text-primary  text-[16px] font-semibold `}
-            >
-              {item}
-            </li>
-          )}
-        </ViewportList> */}
       </section>
 
       <HighlightContentEditable
@@ -246,14 +134,17 @@ export const Menu = ({
       <Virtuoso
         ref={listRef}
         initialTopMostItemIndex={currentChoose < 0 ? 0 : currentChoose}
-        totalCount={keywords.length}
+        totalCount={safeKeywords.length}
         style={{ gap: "unset", marginBottom: "unset" }}
-        components={{ Item: (props) => <div {...props}></div> }}
-        
-        itemContent={(index) => {
-          const item = keywords[index]; // || "No Items Founded...";
-          // console.log("item : ", item, index, currentChoose);
+        endReached={(index) => {
+          console.log('scroll end index : ', index);
+          console.log(onScrollEnd);
 
+          onScrollEnd?.()
+        }}
+        components={{ Item: (props) => <div className="flex flex-col gap-2" {...props}></div> }}
+        itemContent={(index) => {
+          const item = safeKeywords[index]; // || "No Items Founded...";
           return (
             <li
               key={index}
@@ -268,59 +159,33 @@ export const Menu = ({
                   // borderBottom: "1px solid #475569"
                 }
               }
-              className={`flex items-center ${
-                currentChoose == index
-                  ? "bg-brand-primary hover:bg-brand-primary"
-                  : "bg-transparent hover:bg-slate-600"
-              }  p-2 text-nowrap w-full  overflow-x-auto  transition-all cursor-pointer border-b-2 border-[var(--color-border-default)!important]  text-text-primary  text-[16px] font-semibold `}
+              className={`flex items-center    p-2 text-nowrap w-full  overflow-x-auto  transition-all cursor-pointer   text-text-primary  text-[16px] font-semibold `}
             >
-              <FitTitle
-              // style={{
-              //   backgroundColor:currentChoose == index ? 'transparent' : '#2563eb'
-              // }}
-                className={`${
-                  currentChoose == index
-                    ? "bg-surface-secondary hover:bg-gray-700"
-                    : "bg-brand-primary hover:bg-brand-primary"
-                }`}
+              <h1
+                // style={{
+                //   backgroundColor:currentChoose == index ? 'transparent' : '#2563eb'
+                // }}
+                className={`
+                  font-semibold w-full p-2
+                  rounded-lg
+                  flex
+                  items-center
+                  justify-center
+                  overflow-hidden
+                  text-ellipsis   
+                  transition-colors
+                  ${currentChoose == index
+                    ? "bg-brand-primary "
+                    : "bg-surface-tertiary hover:bg-brand-primary"
+                  }`}
               >
                 {" "}
-                {item}
-              </FitTitle>
+                {new String(item)}
+              </h1>
             </li>
           );
         }}
       />
-      {/* <ViewportList
-      items={keywords}
-      itemSize={50}
-      ref={listRef}
-      viewportRef={menuRef}
-      axis="y"
-      // itemMargin={8}
-    >
-      {(item, index) => (
-        <li
-          key={index}
-          id={`list-item-${index}`}
-          ref={(el) => (refs.current[index] = el)}
-          onClick={(ev) => {
-            onItemClicked(ev, item, index, keywords.length);
-          }}
-          className={`${
-            currentChoose == index
-              ? "bg-brand-primary hover:bg-brand-primary"
-              : "bg-transparent hover:bg-gray-700"
-          } ${
-            item.toLowerCase() == "No Items Founded...".toLowerCase()
-              ? "pointer-events-none bg-transparent"
-              : ""
-          }  py-[12px] px-2 text-nowrap w-full  overflow-x-auto   transition-all cursor-pointer [&:not(:last-child)]:border-b-[1px] border-border-default  text-text-primary  text-[16px] font-semibold `}
-        >
-          {item}
-        </li>
-      )}
-    </ViewportList> */}
     </section>
   );
 };

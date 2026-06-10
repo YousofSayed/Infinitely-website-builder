@@ -2,7 +2,7 @@ import React, { useRef, useState } from "react";
 import { assetsType, refType } from "../../helpers/jsDocs";
 import { Input } from "../Editor/Protos/Input";
 import { SmallButton } from "../Editor/Protos/SmallButton";
-import { getProjectData, getProjectSettings } from "../../helpers/functions";
+import { doInNormalAsync, doInWordpressAsync, getProjectData, getProjectSettings } from "../../helpers/functions";
 import { Popover } from "../Editor/Popover";
 import { VirtuosoGrid } from "react-virtuoso";
 import { GridComponents } from "./VirtusoGridComponent";
@@ -12,6 +12,16 @@ import { Icons } from "../Icons/Icons";
 import { opfs } from "../../helpers/initOpfs";
 import { defineRoot } from "../../helpers/bridge";
 import { Loader } from "../Loader";
+import { wp_get } from "../../Apps/wordpress/functions";
+import { current_project_id } from "../../constants/shared";
+import { isArray } from "lodash";
+import { Normal } from "./Normal";
+import { WpFileView } from "./wordpress/WpFileView";
+import { toast } from "react-toastify";
+import { ToastMsgInfo } from "../Editor/Protos/ToastMsgInfo";
+import { Wordpress } from "./wordpress/Wordpress";
+import { NoItemsHere } from "./NoItemsHere";
+import { BusyProvider } from "./BusyProvider";
 
 /**
  *
@@ -31,14 +41,59 @@ export const ChooseFile = ({
   mediaType = "",
   ext = "",
   isCssProp = false,
-  callback = () => {},
+  callback = () => { },
 }) => {
   const mediaRef = useRef(refType);
   const [showMediaPopover, setShowMediaPopover] = useState(false);
   const [mediaForPopover, setMediaForPopover] = useState(assetsType);
   const [showLoader, setShowLoader] = useState(false);
   const timeout = useRef();
+  const wpQueryParams = useRef({
+    per_page: 100,
+    page: 1,
+    mime_type: mediaType,
+  });
+  const tid = useRef();
+  const projectId = +localStorage.getItem(current_project_id);
   // const editor = useEditorMaybe();
+
+  const getWpMedia = async () => {
+    const projectData = await getProjectData(projectId);
+    const excludes = projectData.mainEditorScripts.footer.concat(projectData.mainEditorScripts.header).concat(projectData.globalCss).concat(projectData.globalJs).concat(projectData.mainEditorStyles);
+    setShowLoader(true);
+    console.log('media type : ', mediaType, mediaForPopover);
+    wpQueryParams.current.page = 1;
+    const res = await wp_get({
+      endpoint: "media",
+      params: wpQueryParams.current,
+      projectId,
+    });
+    if (isArray(res)) {
+      const filtered = res.filter(item => !excludes.some(ex => ex.id === item.id)).filter(item => item.mime_type.includes(mediaType));
+      setMediaForPopover((old) => [...filtered]);
+    } else {
+      setMediaForPopover([]);
+      console.error("Error in fetching media : ", res);
+    }
+    setShowLoader(false);
+  }
+
+  const onScrollEnd = async () => {
+    if (mediaForPopover.length <= wpQueryParams.current.per_page) return;
+    wpQueryParams.current.page++;
+    tid.current = toast.loading(<ToastMsgInfo msg="Loading more media..." />)
+    const res = await wp_get({
+      endpoint: "media",
+      params: wpQueryParams.current,
+      projectId,
+    });
+    if (isArray(res)) {
+      setMediaForPopover((old) => [...old, ...res]);
+    } else {
+      console.error("Error in fetching media : ", res);
+    }
+    toast.dismiss(tid.current);
+  }
 
   return (
     <section ref={mediaRef} className="flex gap-2 w-full">
@@ -55,7 +110,7 @@ export const ChooseFile = ({
         }}
       />
       <SmallButton
-      // className="p-[unset]"
+        // className="p-[unset]"
         onClick={async (ev) => {
           ev.preventDefault();
           ev.stopPropagation();
@@ -63,47 +118,55 @@ export const ChooseFile = ({
           setShowMediaPopover(true);
           timeout.current && clearTimeout(timeout.current);
           timeout.current = setTimeout(async () => {
-            let assets = await Promise.all(
-              (
-                await opfs.getAllFiles(defineRoot("assets"))
-              ).map((handle) => handle.getOriginFile())
-            );
-            // const clone = [...assets];
-            console.log(assets,ext, "before");
 
-            if (mediaType && !ext) {
-              if (Array.isArray(mediaType)) {
-                assets = assets.filter((file) => {
-                  console.log(file.type);
-                  return mediaType.some((type) => file.type.includes(type));
-                });
-              } else if (typeof mediaType == "string") {
-                assets = assets.filter((file) => {
-                  console.log(file.type);
+            await doInNormalAsync(async () => {
+              let assets = await Promise.all(
+                (
+                  await opfs.getAllFiles(defineRoot("assets"))
+                ).map((handle) => handle.getOriginFile())
+              );
+              // const clone = [...assets];
+              console.log(assets, ext, "before");
 
-                  return file.type.includes(mediaType);
-                });
+              if (mediaType && !ext) {
+                if (Array.isArray(mediaType)) {
+                  assets = assets.filter((file) => {
+                    console.log(file.type);
+                    return mediaType.some((type) => file.type.includes(type));
+                  });
+                } else if (typeof mediaType == "string") {
+                  assets = assets.filter((file) => {
+                    console.log(file.type);
+
+                    return file.type.includes(mediaType);
+                  });
+                }
               }
-            }
 
-            if (ext) {
-              if (Array.isArray(ext)) {
-                assets = assets.filter((file) => {
-                  console.log(file.type);
-                  return ext.some((type) => file.name.endsWith(type));
-                });
-              } else if (typeof ext == "string") {
-                assets = assets.filter((file) => {
-                  console.log(file.type);
+              if (ext) {
+                if (Array.isArray(ext)) {
+                  assets = assets.filter((file) => {
+                    console.log(file.type);
+                    return ext.some((type) => file.name.endsWith(type));
+                  });
+                } else if (typeof ext == "string") {
+                  assets = assets.filter((file) => {
+                    console.log(file.type);
 
-                  return file.name.endsWith(ext);
-                });
+                    return file.name.endsWith(ext);
+                  });
+                }
               }
-            }
-            console.log("assets : ", assets);
+              console.log("assets : ", assets);
 
-            setMediaForPopover(assets);
-            setShowLoader(false);
+              setMediaForPopover(assets);
+              setShowLoader(false);
+
+            });
+
+            await doInWordpressAsync(async () => {
+              await getWpMedia();
+            })
           }, 10);
         }}
       >
@@ -125,9 +188,20 @@ export const ChooseFile = ({
                 components={GridComponents}
                 totalCount={mediaForPopover.length}
                 listClassName="px-2"
+                endReached={onScrollEnd}
                 itemContent={(i) => {
                   const asset = mediaForPopover[i];
-                  return <FileView asset={asset} callback={callback} isCssProp={isCssProp} />;
+                  return <>
+                    <Normal>
+                      <BusyProvider>
+                        <FileView asset={asset} callback={callback} isCssProp={isCssProp} /></BusyProvider>
+                    </Normal>
+
+                    <Wordpress>
+                      <BusyProvider>
+                        <WpFileView media={asset} callback={callback} isCssProp={isCssProp} allowCheckBox={false} showOptions={false} /></BusyProvider>
+                    </Wordpress>
+                  </>;
                 }}
               />
             )}
@@ -135,11 +209,7 @@ export const ChooseFile = ({
             {showLoader && <Loader />}
 
             {!mediaForPopover.length && !showLoader && (
-              <section className="flex items-center justify-center h-full w-full">
-                <h1 className="font-bold text-slate-300 text-xl">
-                  No Files Founded..!
-                </h1>
-              </section>
+              <NoItemsHere title="No Files Founded..!" />
             )}
           </section>
         </Popover>

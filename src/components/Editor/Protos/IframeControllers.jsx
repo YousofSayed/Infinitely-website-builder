@@ -14,10 +14,13 @@ import {
   zoomValueState,
 } from "../../../helpers/atoms";
 import { useNavigate } from "react-router-dom";
-import { getProjectData } from "../../../helpers/functions";
+import {
+  doInWordpressAsync,
+  getProjectData,
+  reloadInfinitely,
+} from "../../../helpers/functions";
 import {
   killAllGsapMotions,
-  reloadEditor,
   runAllGsapMotions,
 } from "../../../helpers/customEvents";
 import { useProjectSettings } from "../../../hooks/useProjectSettings";
@@ -31,7 +34,11 @@ import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./ToastMsgInfo";
 import { cleanMotions, filterMotionsByPage } from "../../../helpers/bridge";
-import { current_page_id } from "../../../constants/shared";
+import { current_page_id, current_project_id } from "../../../constants/shared";
+import { db } from "../../../helpers/db";
+import { wp_update_main_global_files } from "../../../Apps/wordpress/functions";
+import { wp_save_editor_scripts } from "../../../Apps/wordpress/functions_ui";
+import { editorObserver } from "../../../plugins/addDevices";
 
 // import { unMountApp } from "../../../main";
 // import { reBuildApp, unMountApp } from "../../../main";
@@ -41,10 +48,10 @@ export const IframeControllers = () => {
   const navigate = useNavigate();
   const [showLayers, setShowLayers] = useRecoilState(showLayersState);
   const [showAnimBuilder, setShowAnimBuilder] = useRecoilState(
-    showAnimationsBuilderState
+    showAnimationsBuilderState,
   );
   const [isAnimationsChanged, setAnimationsChanged] = useRecoilState(
-    isAnimationsChangedState
+    isAnimationsChangedState,
   );
   const [animations, setAnimations] = useRecoilState(animationsState);
   const [zoomValue, setZoomValue] = useRecoilState(zoomValueState);
@@ -55,12 +62,13 @@ export const IframeControllers = () => {
   const [projectSetting, setProjectSettings] = useProjectSettings();
   const [reloader, setReloader] = useRecoilState(reloaderState);
   const [globalUndoAndRedo, setGlobalUndoAndRedo] = useRecoilState(
-    globalUndoAndRedoStates
+    globalUndoAndRedoStates,
   );
   const [shows, setShows] = useRecoilState(showsState);
   const [reloadRequired, setReloadRequired] = useState(false);
   const redoTimeoutRef = useRef();
   const undoTimeoutRef = useRef();
+
   useEffect(() => {
     if (!editor) return;
     editor.Keymaps.remove("core:undo");
@@ -73,7 +81,7 @@ export const IframeControllers = () => {
     const callback = (ev) => {
       const isUndo = (ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "z";
       const isRedo = (ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "y";
-    
+
       // If in an input/textarea/contenteditable, allow native undo
       const active = document.activeElement;
       const isTextInput =
@@ -81,16 +89,14 @@ export const IframeControllers = () => {
         active.tagName === "TEXTAREA" ||
         active.isContentEditable;
 
-        console.log('active : ' , active);
-        
+      console.log("active : ", active);
+
       if (isTextInput) {
         // ✅ Allow browser native undo/redo in inputs but keep focus
         // prevent GrapesJS or other listeners from stealing it
 
         return;
       }
-
-      
 
       if (isUndo || isRedo) {
         ev.preventDefault();
@@ -119,24 +125,27 @@ export const IframeControllers = () => {
     const reloadRequiredCallback = (ev) => {
       const { state } = ev.detail;
       setReloadRequired(state);
+      doInWordpressAsync(() => {
+        wp_save_editor_scripts()
+      });
       if (state) {
         toast.warn(<ToastMsgInfo msg={`Reload required`} />);
       }
     };
 
-    // window.addEventListener("click", clickCallback);
-    window.addEventListener("keyup", callback, true);
     reloadRequiredInstance.on(
       InfinitelyEvents.editor.require,
-      reloadRequiredCallback
+      reloadRequiredCallback,
     );
+    // window.addEventListener("click", clickCallback);
+    window.addEventListener("keyup", callback, true);
     // editor.on("canvas:frame:load:body", cb);
     return () => {
       // editor.off("canvas:frame:load:body", cb);
       window.removeEventListener("keyup", callback, true);
       reloadRequiredInstance.off(
         InfinitelyEvents.editor.require,
-        reloadRequiredCallback
+        reloadRequiredCallback,
       );
     };
   }, [editor]);
@@ -179,25 +188,22 @@ export const IframeControllers = () => {
   };
 
   const setComponentsView = () => {
-    //   if(editor.Commands.isActive("preview"))return;
-    //   const command = `core:component-outline`;
-    //  const isActive = editor.Commands.isActive(command);
-    //   isActive ? editor.stopCommand(command) : editor.runCommand(command);
-    //   console.log('isActive : ' ,isActive);
     editor.runCommand("ui:outline");
-    // const acitveCommand = Object.keys(editor.Commands.active);
-    // acitveCommand.includes(command)
-    //   ? editor.stopCommand(command)
-    //   : editor.runCommand(command);
   };
 
   const emitZoomValue = (decrease = false) => {
+    // editorObserver.unobserve(editor.getContainer());
+    // console.log('editor resizer observer : ', editorObserver);
+    editor.getContainer().setAttribute('zooming' , true);
     let value = editor.getContainer().style.zoom;
     value = decrease ? +value - 0.1 : +value + 0.1;
     editor.getContainer().style.zoom = value;
     editorContainerInstance.emit(InfinitelyEvents.editorContainer.update, {
       value,
     });
+    // setTimeout(()=>{
+    //    editorObserver.observe(editor.getContainer() , {box:'device-pixel-content-box'});
+    // })
   };
 
   return (
@@ -255,7 +261,7 @@ export const IframeControllers = () => {
         fillObjectIconOnHover
         fillObjIconStroke={false}
         isObjectParamsIcon
-        // hover={false}
+      // hover={false}
       >
         {Icons.zoomIn({ height: `100%`, width: 22 })}
       </Li>
@@ -288,7 +294,7 @@ export const IframeControllers = () => {
         fillObjectIconOnHover
         fillObjIconStroke={false}
         isObjectParamsIcon
-        // hover={false}
+      // hover={false}
       >
         {Icons.zoomOut({ height: `100%`, width: 22 })}
       </Li>
@@ -344,7 +350,7 @@ export const IframeControllers = () => {
             await cleanMotions(projectData.motions, projectData.pages, {
               [pageName]: editor.getWrapper().getInnerHTML({ withProps: true }),
             }),
-            pageName
+            pageName,
           );
           console.log("motions : ", motions);
           // killAllGsapMotions(motions);
@@ -369,7 +375,7 @@ export const IframeControllers = () => {
             await cleanMotions(projectData.motions, projectData.pages, {
               [pageName]: editor.getWrapper().getInnerHTML({ withProps: true }),
             }),
-            pageName
+            pageName,
           );
           console.log("filterd motions : ", motions);
 
@@ -445,9 +451,11 @@ export const IframeControllers = () => {
 
           window.dispatchEvent(new CustomEvent("clear:script"));
           editor.off();
+          // editor.load();
           // editor.destroy();
           setTimeout(() => {
-            location.replace(location.href);
+            // location.replace(location.href);
+            reloadInfinitely();
           }, 0);
         }}
         title="Reload Canvas"

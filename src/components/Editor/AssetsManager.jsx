@@ -15,14 +15,6 @@ import { useSetClassForCurrentEl } from "../../hooks/useSetclassForCurrentEl";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
 import { Input } from "./Protos/Input";
-import {
-  createFileURL,
-  getCurrentMediaDevice,
-  getCurrentSelector,
-  getInfinitelySymbolInfo,
-  getProjectData,
-  getProjectSettings,
-} from "../../helpers/functions";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
   current_page_id,
@@ -55,8 +47,8 @@ import { Hr } from "../Protos/Hr";
 import { FileView } from "../Protos/FileView";
 import { opfs } from "../../helpers/initOpfs";
 import { assetsWorker } from "../../helpers/defineWorkers";
-import { For } from "million/react";
 import { config } from "../../brand";
+import { NoItemsHere } from "../Protos/NoItemsHere";
 
 /**
  *
@@ -71,18 +63,12 @@ export const AssetsManager = () => {
   const editor = useEditorMaybe();
   const [warn, setWarn] = useState("");
   const [files, setFiles] = useState(filesType);
-  const cssPropForAM = useRecoilValue(cssPropForAssetsManagerState);
-  const setCssPropForAM = useSetRecoilState(cssPropForAssetsManagerState);
+
   const projectId = +localStorage.getItem(current_project_id);
-  const selector = useRecoilValue(selectorState);
-  const rule = useRecoilValue(ruleState);
-  const setClass = useSetClassForCurrentEl();
   const allFilesRef = useRef(filesType);
-  const assetType = useRecoilValue(assetTypeState);
-  const setAssetType = useSetRecoilState(assetTypeState);
+
   const [showLoader, setShowLoader] = useState(true);
   const [storageDetails, setStorageDetails] = useState(storageDetailsType);
-  // const editor = useEditorMaybe();
   /**
    * @type {{current : HTMLInputElement}}
    */
@@ -100,7 +86,7 @@ export const AssetsManager = () => {
      */
     const cb = (ev) => {
       if (ev.data.command == "setVar") {
-        const init = initDBAssetsSw(() => {});
+        const init = initDBAssetsSw(() => { });
         init.then((sw) => {
           sw.postMessage(ev.data);
         });
@@ -118,40 +104,13 @@ export const AssetsManager = () => {
         ).map(async (handle) => await handle.getOriginFile())
       );
 
-      // const files = await Promise.all(
-      //   (
-      //     await opfs.getAllFiles(
-      //       assetFolder,
-      //       {recursive:false}
-      //     )
-      //   ).map(async (file) => await file.getFile())
-      // );
+
       setFiles(assets);
     };
-
-    // const opfsCreateCleaner = opfs.on("all",async (data) => {
-    // console.log("Files created in OPFS : ", data);
-    // // if (data?.currentRoot?.name && !data.currentRoot.name.includes("assets")) return;
-    // const files = await Promise.all(
-    //   (
-    //     await opfs.getAllFiles(
-    //       await opfs.root,
-    //       `projects/project-${projectId}/assets`
-    //     )
-    //   ).map(async (file) => await file.getFile())
-    // );
-    // console.log("Files created in OPFS After : ", files);
-
-    // setFiles(
-    //  files
-    // );
-    // });
 
     const cleaner1 = opfs.on("all", getFilesCb);
 
     const cleaner2 = opfs.onBroadcast("all", getFilesCb);
-    // const opfsRemovedCleaner = opfs.on("entriesRemoved",getFilesCb);
-    // const opfsRemovedCleaner = opfs.on("entriesRemoved",getFilesCb);
 
     assetsWorker.addEventListener("message", cb);
 
@@ -173,24 +132,7 @@ export const AssetsManager = () => {
   };
 
   const getAssetsFromAM = async () => {
-    // const projectData = await await getProjectData();
-    // const assets = cssPropForAM
-    //   ? projectData.assets.filter((asset) =>
-    //       asset.file.type.toLowerCase().includes("image")
-    //     )
-    //   : assetType
-    //   ? projectData.assets.filter((asset) =>
-    //       asset.file.type.toLowerCase().includes(assetType)
-    //     )
-    //   : projectData.assets;
-    // console.log("folders : ", await opfs.getAllFolders(await opfs.root));
-    // opfs.getAllFiles
-    // const assetsRoot = await opfs.getFolder(
-    //   defineRoot(`assets`)
-    // );
 
-    // const assets = await Promise.all((await assetsRoot.children()).filter(handle=>handle.kind =='file').map(handle => handle.getOriginFile()))
-    // const files = await opfs.getAllFiles(assetsRoot, { recursive: false });
     const assetsRoot = await opfs.getAllFiles(defineRoot(`assets`));
     const assets = (
       await Promise.all(
@@ -202,12 +144,7 @@ export const AssetsManager = () => {
     allFilesRef.current = assets;
     console.log("files or assets : ", assets);
 
-    // if (assets.length) {
-    //   for (const asset of assets) {
-    //     asset.blobUrl = URL.createObjectURL(asset.file);
-    //   }
-    // }
-    // allFilesRef.current = assets;
+
     setFiles(assets);
     setShowLoader(false);
   };
@@ -228,33 +165,11 @@ export const AssetsManager = () => {
        */
       const files = [...ev.target.files];
 
-      // const inputFiles = files.map((file) => ({
-      //   file: file,
-      //   id: uniqueID(),
-      //   // blobUrl: URL.createObjectURL(file),
-      // }));
-      // const projectData = await getProjectData();
+
 
       const filesSize = getFilesSize(files);
       console.log(filesSize.MB, filesSize.GB);
-      // return
 
-      // if (filesSize.MB > 10) {
-      //   toast.warn(<ToastMsgInfo msg={`Files Size Is Too Large!!`} />);
-      //   setShowLoader(false);
-      //   return;
-      // }
-
-      // const projectData = await getProjectData();
-      // console.log("itr : ", projectData.assets);
-
-      // await db.projects.update(projectId, {
-      // assets: [
-      //   ...(Array.isArray(projectData.assets) ? projectData.assets : []),
-      //   ...inputFiles,
-      // ],
-      // });
-      // const id = toast.loading(<ToastMsgInfo msg={`Uploading...`} />);
       assetsWorker.postMessage({
         command: "uploadAssets",
         props: {
@@ -264,12 +179,6 @@ export const AssetsManager = () => {
         },
       });
 
-      // infinitelyWorker.postMessage({
-      //   command: "keepSwLive",
-      //   props: {
-      //     projectId: +localStorage.getItem(current_project_id),
-      //   },
-      // });
     } catch (error) {
       console.error(`Assets Manager : ${error}`);
 
@@ -312,7 +221,7 @@ export const AssetsManager = () => {
   return (
     <main className="w-full h-full">
       <section className=" w-full h-full m-auto  rounded-lg overflow-hidden flex flex-col gap-2">
-        <header className="h-[50px!important] flex justify-between items-center gap-2 p-2  rounded-tl-full rounded-tr-2xl rounded-br-2xl rounded-bl-full bg-surface-tertiary ">
+        <header className="h-[50px!important] flex justify-between items-center gap-2 p-2  overflow-hidden  rounded-lg  bg-surface-tertiary ">
           <figure>
             {/* {Icons.logo({ width: 38 })} */}
             <img src={config.logo} alt="logo" />
@@ -344,7 +253,7 @@ export const AssetsManager = () => {
             className="h-full flex-shrink-0 bg-surface-secondary"
             title={"Upload"}
             onClick={openUploader}
-            // className="py-[7.5px] px-[30px]  font-bold text-lg"
+          // className="py-[7.5px] px-[30px]  font-bold text-lg"
           >
             {Icons.upload({ strokeColor: "white" })}
           </SmallButton>
@@ -420,7 +329,7 @@ export const AssetsManager = () => {
             // className="h-full"
             className="p-[unset] h-full"
             // itemClassName="p-[unset]"
-            listClassName=" pr-2"
+            listClassName={`${files.length > 3 ? " pr-2" : ""}`}
             itemContent={(index) => {
               const i = index,
                 asset = files[index];
@@ -432,14 +341,7 @@ export const AssetsManager = () => {
         )}
 
         {!files.length && !showLoader && (
-          <section className="w-full h-full flex flex-col gap-2 justify-center items-center">
-            <figure>
-              <img src={noData} className="max-w-full max-h-[300px]" />
-            </figure>
-            <p className="text-slate-300 font-semibold text-2xl">
-              No assets found
-            </p>
-          </section>
+          <NoItemsHere title={`No assets found`} />
         )}
 
         <input
@@ -454,4 +356,4 @@ export const AssetsManager = () => {
   );
 };
 
-// console.log(encodeURI(`WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4`) == 'whatsapp%20video%202025-04-09%20at%206.37.02%20am.mp4');
+// console.log(encodeURI(`WhatsApp Vido 2025-04-09 at 6.37.02 AM.mp4`) == 'whatsapp%20video%202025-04-09%20at%206.37.02%20am.mp4');

@@ -45,8 +45,8 @@ export const SplineScene = ({ editor }) => {
               tagName: "spline-viewer",
               attributes: el.attributes
                 ? Object.fromEntries(
-                    [...el.attributes].map((attr) => [attr.name, attr.value])
-                  )
+                  [...el.attributes].map((attr) => [attr.name, attr.value])
+                )
                 : {},
               layerable: false,
               selectable: false,
@@ -169,20 +169,21 @@ export const SplineScene = ({ editor }) => {
         if (newUrl && currentUrl && newUrl === currentUrl) {
           delete childAttrs["url"];
         }
-        child.removeAttributes(Object.keys(childAttrs || {}));
-        Object.entries(newAttrs).forEach(([key, value]) => {
-          childEl.setAttribute(key, value);
-        });
+        // child.removeAttributes(Object.keys(childAttrs || {}));
+        // Object.entries(newAttrs).forEach(([key, value]) => {
+        //   childEl.setAttribute(key, value);
+        // });
+        child.setAttributes(newAttrs);
         editor.clearDirtyCount();
       },
-      toHTML() {
-        const child = this.components().models[0];
-        return child.toHTML({
-          withProps: true,
-          keepInlineStyle: true,
-          attributes: this.getAttributes(),
-        });
-      },
+      // toHTML() {
+      //   const child = this.components().models[0];
+      //   return child.toHTML({
+      //     withProps: true,
+      //     keepInlineStyle: true,
+      //     attributes: this.getAttributes(),
+      //   });
+      // },
     },
   });
 

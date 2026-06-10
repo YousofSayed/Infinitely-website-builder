@@ -1,47 +1,26 @@
-import {
-  BrowserRouter,
-  Navigate,
-  Route,
-  Routes,
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
+import { Route, Routes, useNavigate } from "react-router-dom";
 import { StyleAside } from "./components/Editor/StyleAside";
 import { Blocks } from "./components/Editor/Blocks";
 import { TraitsAside } from "./components/Editor/TraitsAside";
-import React, {
-  lazy,
-  Suspense,
-  useEffect,
-  useLayoutEffect,
-  useState,
-} from "react";
-import { Loader } from "./components/Loader";
+import React, { useEffect } from "react";
 import { Workspace } from "./views/Workspace";
 import { Commands } from "./components/Editor/Commands";
-import { ChooseModel } from "./components/Editor/Protos/ChooseModel";
-// import { DynamicContent } from "./components/Editor/Protos/DynamicContent";
-// import { DynamicAttributes } from "./components/Editor/Protos/DynamicAttributes";
 import { infinitelyWorker } from "./helpers/infinitelyWorker";
 import { appInstallingState, dbAssetsSwState } from "./helpers/atoms";
 import { initDBAssetsSw } from "./serviceWorkers/initDBAssets-sw";
 import { useRecoilState } from "recoil";
-// import "react-toastify/dist/ReactToastify.css";
 import { current_project_id } from "./constants/shared";
-import { getProjectData } from "./helpers/functions";
-// import { swAliveInterval } from "./helpers/keepSwAlive";
 import { Editor } from "./views/Editor";
 import { Motion } from "./components/Editor/Protos/Motion";
-import { pageBuilderWorker, refresherWorker } from "./helpers/defineWorkers";
-import { Preview } from "./views/Preview";
-import { useLiveQuery } from "dexie-react-hooks";
-import { useOfflineHandler } from "./hooks/useOfflineHandler";
+import { refresherWorker } from "./helpers/defineWorkers";
 import { opfs } from "./helpers/initOpfs";
 import { isDevMode } from "./helpers/bridge";
 import { Opfs } from "./views/Opfs";
 import { Interactions } from "./components/Editor/Interactions";
 import { AppInstalling } from "./views/AppInstalling";
-import { Share } from "./views/Share";
+import { WpSelect } from "./wordpress/WpSelect";
+import { WpCreate } from "./wordpress/WpCreate";
+import { Preview } from "./wordpress/Preview";
 // import { esmToUmd } from "./helpers/initBabel";
 
 function App() {
@@ -54,7 +33,6 @@ function App() {
   const [appInstalling, setAppInstalling] = useRecoilState(appInstallingState);
   const navigate = useNavigate();
   // const location = useLocation();
-
 
   useEffect(() => {
     /**
@@ -73,8 +51,7 @@ function App() {
         a.click();
         a.remove();
         URL.revokeObjectURL(url);
-        console.log('export project from main: ');
-        
+        console.log("export project from main: ");
       } else if (command == "varsToServiceWorker") {
         console.log("recived preview pages from worker , props : ", props);
 
@@ -164,7 +141,6 @@ function App() {
     };
   }, []);
 
-
   const createProjectFolder = async () => {
     console.log("main rooooot : ", opfs.root);
     const projectFolder = await opfs.getFolder("projects");
@@ -210,7 +186,11 @@ function App() {
         <Route path="/preview" element={<Preview />} />
 
         <Route path="/workspace" element={<Workspace />}></Route>
-        <Route path="/share" element={<Share />}></Route>
+        <Route path="wordpress/create" element={<WpCreate />}></Route>
+        <Route path="wordpress/select" element={<WpSelect />}></Route>
+        <Route path="wordpress/preview" element={<Preview />}></Route>
+
+        {/* <Route path="/share" element={<Share />}></Route> */}
 
         {isDevMode() && <Route path="opfs-dev" element={<Opfs />} />}
       </Routes>

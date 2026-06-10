@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { Icons } from "../Icons/Icons";
 import { Li } from "../Protos/Li";
 import { useEditorMaybe } from "@grapesjs/react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   open_custom_font_installer_modal,
   open_dynamic_templates_modal,
@@ -17,8 +17,11 @@ import {
 import { dropBoxFilesMeta, refType } from "../../helpers/jsDocs";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
+  getAppType,
+  getLogoAppNavLink,
   getProject,
   getProjectData,
+  isWordpress,
   loadProject,
   workerCallbackMaker,
 } from "../../helpers/functions";
@@ -44,6 +47,7 @@ import { opfs } from "../../helpers/initOpfs";
 import { infinitelyWorker } from "../../helpers/infinitelyWorker";
 import { FitTitle } from "./Protos/FitTitle";
 import { config } from "../../brand";
+import { minify } from "csso";
 
 export const HomeNav = () => {
   const editor = useEditorMaybe();
@@ -70,6 +74,30 @@ export const HomeNav = () => {
       globalInstance.off(InfinitelyEvents.global.pull_require, callback);
     };
   }, [projectData]);
+
+  // useEffect(()=>{
+  //   console.log('minify : ' , minify(`@keyframes lol {
+  //       0%{
+  //         opacity:0%;
+  //       }
+
+  //       100%{
+  //         opacity:;
+  //       }
+  //     } 
+
+  //     @keyframes lol {
+  //       0%{
+  //         opacity:;
+  //       }
+
+  //       100%{
+  //         opacity:1%;
+  //       }
+  //     }  
+  //     ` , {restructure:true}).css);
+
+  // },[])
 
   // useEffect(() => {
   //   (async () => {
@@ -113,8 +141,11 @@ export const HomeNav = () => {
       <div className="flex flex-col items-center gap-5">
         <figure className="pb-[20px] pt-1 border-b-[1px] border-slate-400 ">
           {/* {Icons.logo({})} */}
-          <img src={config.logo} alt="logo"  />
+          <Link to={getLogoAppNavLink()} className="cursor-pointer">
+            <img src={config.logo} alt="logo" />
+          </Link>
         </figure>
+
         <ul className="flex flex-col gap-5 items-center">
           {/* <Li>{Icons.plus()}</Li> */}
           <Li
@@ -305,7 +336,7 @@ export const HomeNav = () => {
               </OptionsButton>
             </li>
           )}
-
+          {isWordpress() && <Li title="Wordpress" icon={Icons.wordpress} isObjectParamsIcon />}
           {/* <Li title="Github" icon={Icons.git} /> */}
         </ul>
       </div>
@@ -340,6 +371,8 @@ export const HomeNav = () => {
               }
             }}
           />
+
+
         </ul>
       </div>
     </nav>

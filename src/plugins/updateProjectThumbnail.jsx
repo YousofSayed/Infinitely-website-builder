@@ -12,27 +12,8 @@ import { opfs } from "../helpers/initOpfs";
 import { snapdom } from "@zumer/snapdom";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
+import { pageBuilderWorker } from "../helpers/defineWorkers";
 export let updateThumbnailTimeout;
-async function fixBackgroundImages(el) {
-  const elements = el.querySelectorAll("*");
-  await Promise.all(
-    Array.from(elements).map(async (node) => {
-      const bg = getComputedStyle(node).backgroundImage;
-      const match = bg.match(/url\(["']?(.*?)["']?\)/);
-      if (match) {
-        const url = match[1];
-        try {
-          const res = await fetch(url, { mode: "cors", cache: "force-cache" });
-          const blob = await res.blob();
-          const objectUrl = URL.createObjectURL(blob);
-          node.style.backgroundImage = `url("${objectUrl}")`;
-        } catch (e) {
-          console.warn("Failed to load BG image", url, e);
-        }
-      }
-    })
-  );
-}
 
 /**
  *
@@ -79,22 +60,13 @@ export const takeScreenShot = async (editor, calcDays = true, callback) => {
       editor.Canvas.getBody().classList.remove("screenshot-mode");
       
       console.log("blob : ", blob);
-      infinitelyWorker.postMessage({
-        command: "writeFilesToOPFS",
-        props: {
-          files: [
-            {
-              path: defineRoot(`screenshot.webp`),
-              content: blob,
-            },
-          ],
-        },
-      });
 
-      workerCallbackMaker(
-        infinitelyWorker,
+       workerCallbackMaker(
+        pageBuilderWorker,
         "writeFilesToOPFS",
         async ({ done }) => {
+          console.log('recived message from take screenshot' , done);
+          
           if (!done) {
             toast.dismiss(tId);
             toast.error(<ToastMsgInfo msg={`Error taking screenshot`} />);
@@ -114,13 +86,27 @@ export const takeScreenShot = async (editor, calcDays = true, callback) => {
         }
       );
 
+      pageBuilderWorker.postMessage({
+        command: "writeFilesToOPFS",
+        props: {
+          files: [
+            {
+              path: defineRoot(`screenshot.webp`),
+              content: blob,
+            },
+          ],
+        },
+      });
+
+     
+
       // localStorage.setItem("last-screenshot", new Date());
     } catch (error) {
       toast.dismiss(tId);
       toast.error(<ToastMsgInfo msg={`Error taking screenshot: ${error}`} />);
       console.error("Error taking screenshot: ", error);
     }
-  }, 2000);
+  }, 700);
 };
 /**
  *

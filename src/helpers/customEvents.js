@@ -166,7 +166,7 @@ export const runAllGsapMotions = (motions) => {
       detail: {
         motions,
         methods: [],
-        killAllFirst:true,
+        killAllFirst: true,
         props: {},
       },
     })
@@ -184,10 +184,20 @@ export const killAllGsapMotions = (motions) => {
   );
 };
 
-export const reloadEditor =  () => {
+export const reloadEditor = () => {
   window.parent.dispatchEvent(
     new CustomEvent(InfinitelyEvents.editor.reload, {
       detail: {},
+    })
+  );
+};
+
+export const navigateFromAnyWhere = (to = "") => {
+  window.parent.dispatchEvent(
+    new CustomEvent(InfinitelyEvents.navigator.navigate, {
+      detail: {
+        to,
+      },
     })
   );
 };

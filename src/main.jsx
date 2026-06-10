@@ -63,9 +63,26 @@ setProjectSettings();
 RecoilEnv.RECOIL_DUPLICATE_ATOM_KEY_CHECKING_ENABLED = false;
 let cleaner;
 const originalFetch = window.fetch;
+/**
+ * @type {{input : RequestInfo | URL, init : RequestInit | undefined}[]}
+ */
+// const fetchStack = [];
+// window.addEventListener("online", async () => {
+//   const indexes = [];
+//   toast.success(<ToastMsgInfo msg="You are online now 💙" />);
+//   for (let i = 0; i < fetchStack.length; i++) {
+//     const { input, init } = fetchStack[i];
+//     await originalFetch(input, init);
+//     indexes.push(i);
+//   }
 
+//   for (const index of indexes) {
+//     fetchStack.splice(index, 1);
+//   }
+// });
 window.fetch = async (input, init) => {
   if (!navigator.onLine) {
+    // fetchStack.push({ input, init });
     toast.error(<ToastMsgInfo msg="You are offline" />);
     return new Response(JSON.stringify({ error: "Offline" }), {
       status: 503,

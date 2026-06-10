@@ -15,7 +15,16 @@ import { Button } from "../Protos/Button";
 import { Icons } from "../Icons/Icons";
 import { addClickClass } from "../../helpers/cocktail";
 import { iframeType, refType } from "../../helpers/jsDocs";
-import { getCurrentPageName } from "../../helpers/functions";
+import {
+  doInNormal,
+  doInWordpress,
+  doInWordpressAsync,
+  emitChange,
+  getCurrentPageName,
+  getProjectData,
+  getWpPageConfig,
+  reorderCss,
+} from "../../helpers/functions";
 import { current_page_id, current_project_id } from "../../constants/shared";
 import { InfinitelyEvents } from "../../constants/infinitelyEvents";
 import monacoLoader from "@monaco-editor/loader";
@@ -33,11 +42,13 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Loader } from "../Loader";
 import Portal from "./Portal";
 import interact from "interactjs";
+import { opfs } from "../../helpers/initOpfs";
+import { defineRoot } from "../../helpers/bridge";
 
 export const Iframe = () => {
   const showLayers = useRecoilValue(showLayersState);
   const [showAnimBuilder, setShowAnimBuilder] = useRecoilState(
-    showAnimationsBuilderState
+    showAnimationsBuilderState,
   );
   const [isResize, setIsResize] = useState(false);
   const [reloader, setReloader] = useRecoilState(reloaderState);
@@ -45,11 +56,11 @@ export const Iframe = () => {
   const [showDragLayer, setShowDragLayer] = useRecoilState(showDragLayerState);
   const [animations, setAnimations] = useRecoilState(animationsState);
   const [animationsWillRemove, setAnimationsWillRemove] = useRecoilState(
-    animationsWillRemoveState
+    animationsWillRemoveState,
   );
   const [saveLoad, setSaveLoad] = useState(false);
   const [isAnimationsChanged, setAnimationsChanged] = useRecoilState(
-    isAnimationsChangedState
+    isAnimationsChangedState,
   );
   const pageName = localStorage.getItem(current_page_id);
 
@@ -65,9 +76,12 @@ export const Iframe = () => {
   const projectId = +localStorage.getItem(current_project_id);
   const setStyle = useSetClassForCurrentEl();
   const [autoAnimate] = useAutoAnimate();
+  const [animatePreviewContainer] = useAutoAnimate();
   const [showLoader, setShowLoader] = useState(true);
+  const [showPreviewLoader, setShowPreviewLoader] = useState(true);
   const editorWrapper = useRef(refType);
   const previewRef = useRef(refType);
+
   const saveAnimations = () => {
     if (isAnimationsChanged) {
       setSaveLoad(true);
@@ -78,6 +92,11 @@ export const Iframe = () => {
           command: "removeAnimation",
           props: {
             keyframes: animationsWillRemove,
+            projectId,
+            editorCss: editor.getCss({
+              keepUnusedStyles: false,
+              avoidProtected: true,
+            }),
           },
         });
         /**
@@ -92,6 +111,11 @@ export const Iframe = () => {
               command: "saveAnimations",
               props: {
                 animations,
+                projectId,
+                editorCss: editor.getCss({
+                  keepUnusedStyles: false,
+                  avoidProtected: true,
+                }),
               },
             });
             keyframesGetterWorker.removeEventListener("message", callback);
@@ -104,102 +128,16 @@ export const Iframe = () => {
           command: "saveAnimations",
           props: {
             animations,
+            projectId,
+            editorCss: editor.getCss({
+              keepUnusedStyles: false,
+              avoidProtected: true,
+            }),
           },
         });
       }
     }
   };
-
-//   useEffect(() => {
-//   const iframe = previewIframe.current;
-//   if (!iframe || !iframe.parentElement) return;
-
-//   const container = iframe.parentElement;
-//   let resizeFrame;
-
-//   const resizeObserver = new ResizeObserver((entries) => {
-//     // Prevent too-frequent paint by using requestAnimationFrame
-//     cancelAnimationFrame(resizeFrame);
-//     resizeFrame = requestAnimationFrame(() => {
-//       for (const entry of entries) {
-//         const { width, height } = entry.contentRect;
-
-//         // Apply style directly to the iframe
-//         iframe.style.width = width + 'px';
-//         iframe.style.height = height + 'px';
-//       }
-//     });
-//   });
-
-//   // Disable pointer events during resize to prevent iframe content blocking
-//   const onResizeStart = () => (iframe.style.pointerEvents = 'none');
-//   const onResizeEnd = () => (iframe.style.pointerEvents = 'auto');
-
-//   // Attach to global resize or your resizer if available
-//   window.addEventListener('resize', onResizeStart);
-//   window.addEventListener('mouseup', onResizeEnd);
-//   window.addEventListener('touchend', onResizeEnd);
-
-//   // Observe parent container
-//   resizeObserver.observe(container);
-
-//   return () => {
-//     cancelAnimationFrame(resizeFrame);
-//     resizeObserver.disconnect();
-//     window.removeEventListener('resize', onResizeStart);
-//     window.removeEventListener('mouseup', onResizeEnd);
-//     window.removeEventListener('touchend', onResizeEnd);
-//   };
-// }, [previewIframe]);
-
-  // interact(previewIframe.current).resizable({
-  //   // resize from all edges and corners
-  //   edges: { bottom: true, top: true, left: true, right: true },
-  //   // left: true, right: true,
-  //   // margin: 155,
-  //   listeners: {
-  //     move(event) {
-  //       var target = event.target;
-  //       var x = parseFloat(target.getAttribute("data-x")) || 0;
-  //       var y = parseFloat(target.getAttribute("data-y")) || 0;
-
-  //       // update the element's style
-  //       target.style.width = event.rect.width + "px";
-  //       target.style.height = event.rect.height + "px";
-
-  //       // translate when resizing from top or left edges
-  //       x += event.deltaRect.left;
-  //       y += event.deltaRect.top;
-
-  //       target.style.transform = "translate(" + x + "px," + y + "px)";
-
-  //       target.setAttribute("data-x", x);
-  //       target.setAttribute("data-y", y);
-  //       // setIsResize(true);
-  //       // setShowDragLayer(true);
-  //       // target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height)
-  //     },
-  //     end() {
-  //       console.log("up");
-  //       // setIsResize(false);
-  //       // setShowDragLayer(false);
-  //     },
-  //   },
-  //   modifiers: [
-  //     // keep the edges inside the parent
-  //     interact.modifiers.restrictEdges({
-  //       outer: "parent",
-  //     }),
-
-  //     // minimum size
-  //     interact.modifiers.restrictSize({
-  //       min: { width: 100, height: 50 },
-  //     }),
-  //   ],
-
-  //   inertia: true,
-  // });
-  // }, [previewIframe]);
 
   useEffect(() => {
     if (!editor) return;
@@ -208,14 +146,37 @@ export const Iframe = () => {
      *
      * @param {MessageEvent} ev
      */
-    const callback = (ev) => {
+    const callback = async (ev) => {
       const { command, props } = ev.data;
       if (command == "saveAnimations" && props.done) {
         setSaveLoad(false);
         setAnimationsChanged(false);
-        editor.load();
+        await doInWordpressAsync(async () => {
+          const projectData = await getProjectData();
+          const css =
+            projectData.current_inf_meta[
+              projectData.currentEditingPage.save_state
+            ].css;
+          reorderCss(editor, css);
+        });
+
+        await doInNormalAsync(async () => {
+          const pageName = localStorage.getItem(current_page_id);
+          const cssFile = (
+            await opfs.getFile(defineRoot(`css/${pageName}.css`))
+          ).getOriginFile();
+          reorderCss(editor, await cssFile.text());
+        });
+        emitChange();
       }
     };
+
+    setAnimationsChanged(animations.some((kf) => kf.changed));
+    console.log(
+      "changed :",
+      animations.some((kf) => kf.changed),
+      animations,
+    );
 
     keyframesGetterWorker.addEventListener("message", callback);
     return () => {
@@ -225,7 +186,6 @@ export const Iframe = () => {
 
   useEffect(() => {
     if (!editor) return;
-    console.log("auto save : ", editor.Storage.config.autosave);
 
     const infCallback = (ev) => {
       // console.log("fire from inf instance");
@@ -263,26 +223,28 @@ export const Iframe = () => {
 
     editorStorageInstance.on(
       InfinitelyEvents.storage.loadStart,
-      loaderStartCallback
+      loaderStartCallback,
     );
     editorStorageInstance.on(
       InfinitelyEvents.storage.loadEnd,
-      loaderEndCallback
+      loaderEndCallback,
     );
-    // editor.on('storage:end:load', loaderEndCallback);
     editor.on("canvas:frame:load:body", loadMonaco);
+    editor.on(InfinitelyEvents.storage.loadEnd, loaderEndCallback);
+    console.log("auto save : ", editor.Storage.config.autosave);
 
     return () => {
       styleInfInstance.off(InfinitelyEvents.style.set, infCallback);
       editor.off("canvas:frame:load:body", loadMonaco);
       editorStorageInstance.off(
         InfinitelyEvents.storage.loadStart,
-        loaderStartCallback
+        loaderStartCallback,
       );
       editorStorageInstance.off(
         InfinitelyEvents.storage.loadEnd,
-        loaderEndCallback
+        loaderEndCallback,
       );
+      editor.off(InfinitelyEvents.storage.loadEnd, loaderEndCallback);
       // editor.off('storage:end:load', loaderEndCallback);
       // window.removeEventListener("keydown", preventDefaultSave);
       // window.removeEventListener("keydown", saveCallback);
@@ -293,31 +255,55 @@ export const Iframe = () => {
     if (!editor) return;
 
     editor.Canvas.refresh();
-  }, [showAnimBuilder, showLayers]);
+  }, [showAnimBuilder, showLayers, editor]);
 
   useEffect(() => {
     if (!showPreview) {
       setPreviewSrc("");
       return;
     }
-    const pageName = localStorage.getItem(current_page_id);
-    const urlSrc =
-      pageName.toLowerCase() == "index"
-        ? "./index.html"
-        : `../pages/${pageName}.html`;
 
-    setPreviewSrc(urlSrc);
+    setUrlPage();
   }, [showPreview]);
 
+  useEffect(()=>{
+    if(!previewRef.current)return;
+    animatePreviewContainer(previewRef.current);
+  },[previewRef])
+
+  const getReloadUrl = (url) => {
+    if (!url) return url;
+    return `${url}${url.includes("?") ? "&" : "?"}reload=${Date.now()}`;
+  };
+
+  const onPreviewLoad = () => {
+    setShowPreviewLoader(false);
+  };
+
+  const setUrlPage = (forceReload = false) => {
+    setShowPreviewLoader(true);
+
+    doInNormal(() => {
+      const url = getCurrentPageName();
+      setPreviewSrc(forceReload ? getReloadUrl(url) : url);
+    });
+
+    doInWordpressAsync(async () => {
+      const wp_post = getWpPageConfig();
+      const projectData = await getProjectData();
+      const url = `${wp_post.link}?&save_state=${projectData.currentEditingPage.save_state}&mode=preview`;
+      setPreviewSrc(forceReload ? getReloadUrl(url) : url);
+    });
+  };
+
   const reloadPreview = () => {
-    setPreviewSrc(new String(getCurrentPageName()));
-    // getAndSetPreviewData(previewPageName, false, { firstPreview: false });
+    setUrlPage(true);
   };
 
   return (
     <section className="relative bg-[#aaa]    h-full" ref={autoAnimate}>
       {showAnimBuilder && (
-        <section className="grid place-items-center p-2 absolute top-0 left-0 z-20 bg-black/40 w-full h-full">
+        <section className="grid place-items-center p-2 absolute top-0 left-0 z-20 bg-blue-900/40 backdrop-blur-sm w-full h-full">
           <section className="flex flex-col items-center justify-center self-center p-3 bg-surface-secondary shadow-2xl shadow-slate-950 rounded-lg gap-5">
             <figure className="relative  w-fit ">
               {Icons.animation(undefined, undefined, "#2563eb", 60, 60)}
@@ -328,7 +314,7 @@ export const Iframe = () => {
               <span className="text-blue-600 font-bold text-2xl"> "</span>
             </h1>
 
-            <section className="flex gap-2"> 
+            <section className="flex gap-2">
               <Button
                 className="bg-[crimson!important] font-semibold"
                 onClick={(ev) => {
@@ -349,40 +335,18 @@ export const Iframe = () => {
               </Button>
 
               <Button
-                // disabled={
-                //   isAnimationsChanged == "pendding" ||
+                disabled={!isAnimationsChanged || saveLoad}
+                // className={`font-semibold ${
                 //   !Boolean(isAnimationsChanged)
-                //     ? true
-                //     : false
-                // }
-                // style={{
-                //   backgroundColor:'red !important',
-                //   opacity:
-                //     // isAnimationsChanged == "pendding" ||
-                //     !Boolean(isAnimationsChanged)
-                //       ? ".7"
-                //       : "1",
-                //   cursor:
-                //   'not-allowed'
-                //     // isAnimationsChanged == "pendding" ||
-                //     // Boolean(isAnimationsChanged)
-                //     //   ? "pointer"
-                //     //   : "not-allowed",
-                // }}
-                //  style={{
-                //   backgroundColor: 'green',
-                // }}
-                className={`font-semibold ${
-                  !Boolean(isAnimationsChanged)
-                    ? `opacity-[.7] cursor-not-allowed `
-                    : ""
-                }`}
+                //     ? `opacity-[.7] cursor-not-allowed `
+                //     : ""
+                // }`}
                 onClick={(ev) => {
                   console.log("isAnimationsChanged: ", isAnimationsChanged);
 
                   if (!isAnimationsChanged) {
                     toast.info(
-                      <ToastMsgInfo msg={`You did not do any change!`} />
+                      <ToastMsgInfo msg={`You did not do any change!`} />,
                     );
                   }
                   saveAnimations();
@@ -399,13 +363,9 @@ export const Iframe = () => {
         id="editor-wrapper"
         ref={editorWrapper}
         style={{
-          display: showPreview ? "none" : "block",
-          // scale:showPreview ? 0 : 1,
           width: "100%",
           height: "100%",
           overflow: "auto",
-          contain: "layout , content , size , paint",
-          transform: "translateZ(0)",
         }}
       >
         <Canvas
@@ -416,17 +376,9 @@ export const Iframe = () => {
         />
       </section>
 
-      {/* <FloatingButton/> */}
-
-      {/* {showDragLayer && (
-        <section className="absolute top-0 left-0 w-full h-full z-[900]  opacity-[0]"></section>
-      )} */}
-
-      {/* {showPreview && ( */}
-
       {showLoader && (
-        <section className="absolute top-0 left-0 w-full h-full z-[1000000] bg-surface-secondary flex justify-center items-center">
-          <Loader zIndex={1000} />
+        <section className="absolute top-0 left-0 w-full h-full z-[1] bg-surface-secondary flex justify-center items-center">
+          <Loader zIndex={1} />
         </section>
       )}
 
@@ -434,7 +386,7 @@ export const Iframe = () => {
         ref={virtualBrowserWindow}
         style={{
           display: showPreview ? "block" : "none",
-          contain: "layout , size , paint",
+          // contain: "layout , size , paint",
         }}
         className="w-full h-full rounded-xl overflow-hidden p-1 fixed left-0 top-0 z-[1000] "
         // style={{ display: showPreview ? "block" : "none" }}
@@ -449,8 +401,8 @@ export const Iframe = () => {
               >
                 {/* resizing elements */}
                 <div className="absolute top-0 left-[calc(50%-40px)] w-[80px] h-[5px] bg-brand-primary"></div>
-                <div></div>
-                <div></div>
+                {/* <div></div>
+                <div></div> */}
                 {/* resizing elements */}
                 {/* {showPreview && ( */}
                 <header className="w-full h-[60px] flex items-center justify-between p-2 rounded-tl-lg rounded-tr-lg  bg-surface-secondary">
@@ -525,11 +477,17 @@ export const Iframe = () => {
                   }}
                 >
                   <section ref={previewRef} className="h-full w-full">
+                    {showPreviewLoader && (
+                      <section className="absolute top-0 left-0 w-full h-full z-[1] bg-surface-secondary flex justify-center items-center">
+                        <Loader zIndex={1} />
+                      </section>
+                    )}
                     <iframe
                       ref={previewIframe}
                       id="preview"
                       allowFullScreen
                       src={previewSrc || urlSrc}
+                      onLoad={onPreviewLoad}
                       security="restricted"
                       about="target"
                       allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
@@ -537,18 +495,9 @@ export const Iframe = () => {
                       style={{
                         willChange: "transform",
                         contain: `strict`,
-                        transform:`translateZ(0)`
+                        transform: `translateZ(0)`,
                       }}
-                      // sandbox=""
-                      // sandbox="allow-same-origin allow-scripts allow-modals allow-forms allow-popups"
-                      // src="about:srcdoc"
-                      // srcDoc=""
-                      // srcDoc={`<video
-                      //    src="../assets/WhatsApp Video 2025-04-09 at 6.37.02 AM.mp4"
-                      //    controls
-                      //  ></video>`}
                       className={`bg-white w-full h-full   transition-all border-[5px] rounded-bl-lg rounded-br-lg border-slate-900`}
-                      // srcDoc={srcDoc}
                     ></iframe>
                   </section>
                 </section>

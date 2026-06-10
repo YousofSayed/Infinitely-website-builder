@@ -11,9 +11,14 @@ import { useProjectSettings } from "../../../hooks/useProjectSettings";
 import { Input } from "../Protos/Input";
 import {
   advancedSearchSuggestions,
+  doInNormalAsync,
+  doInWordpressAsync,
+  emitChange,
   getProjectData,
   getProjectSettings,
+  getWpPageConfig,
   isProjectSettingPropTrue,
+  wpWorkerCallbackMaker,
 } from "../../../helpers/functions";
 import { Hr } from "../../Protos/Hr";
 import { Button } from "../../Protos/Button";
@@ -23,13 +28,21 @@ import { current_project_id } from "../../../constants/shared";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "../Protos/ToastMsgInfo";
 import { useEditorMaybe } from "@grapesjs/react";
-import { classesFinderWorker } from "../../../helpers/defineWorkers";
+import {
+  classesFinderWorker,
+  fetcherWorker,
+  pageBuilderWorker,
+} from "../../../helpers/defineWorkers";
 import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
 import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 import { For } from "million/react";
 import { Icons } from "../../Icons/Icons";
 import { addClickClass } from "../../../helpers/cocktail";
 import { takeScreenShot } from "../../../plugins/updateProjectThumbnail.jsx";
+import {
+  wp_update_meta,
+  wp_update_option,
+} from "../../../Apps/wordpress/functions.jsx";
 export const SettingsModal = () => {
   const editor = useEditorMaybe();
   const projectId = +localStorage.getItem(current_project_id);
@@ -50,12 +63,12 @@ export const SettingsModal = () => {
      * @param {(key:keyof import('../../../helpers/types').ProjectSetting)=>void} callback
      */
 
-    (key, callback = () => {}) => {
+    (key, callback = () => { }) => {
       if (key == currentChange) {
         callback(key);
       }
     },
-    [currentChange]
+    [currentChange],
   );
 
   const callback = useCallback(
@@ -80,32 +93,28 @@ export const SettingsModal = () => {
               projectSettings: projectSettings,
               inlineStylesInners: [
                 ...(editor?.Canvas?.getDocument?.()?.querySelectorAll?.(
-                  "style"
+                  "style",
                 ) || []),
               ].map((styleEl) => styleEl.innerHTML),
             },
           });
           // editor.load();
-          reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {
-            state: true,
-          });
+          emitChange()
         };
 
         isCurrentChange("enable_tailwind", () => {
           isProjectSettingPropTrue(
             "enable_tailwind",
             enableTailwind,
-            enableTailwind
+            enableTailwind,
           );
         });
 
         isCurrentChange("enable_spline_viewer", () => {
-          console.log("lalalalalalaala");
+          // console.log("lalalalalalaala");
 
           // editor.load();
-          reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {
-            state: true,
-          });
+          emitChange()
         });
 
         isCurrentChange("stop_all_animation_on_page", (key) => {
@@ -116,7 +125,7 @@ export const SettingsModal = () => {
             },
             () => {
               editor.getWrapper().removeClass(`inf-stop-all-animations`);
-            }
+            },
           );
         });
 
@@ -128,32 +137,30 @@ export const SettingsModal = () => {
             },
             () => {
               editor.StorageManager.setAutosave(false);
-            }
+            },
           );
         });
 
         isCurrentChange("enable_swiperjs", () => {
           // editor.load();
-          reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {
-            state: true,
-          });
+          emitChange()
         });
 
         isCurrentChange("disable_will_change_in_editor", () => {
           // editor.load();
-          reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {
-            state: true,
-          });
+          emitChange()
         });
+        isCurrentChange("optimize_outlines", () => {
+          emitChange()
+        });
+
+        isCurrentChange("disable_gsap_core", emitChange);
+        isCurrentChange("disable_gsap_scrollTrigger", emitChange);
+        isCurrentChange("disable_gsap_splitText", emitChange);
       }, 100);
 
-      isCurrentChange("optimize_outlines", () => {
-        reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {
-          state: true,
-        });
-      });
     },
-    [currentChange]
+    [currentChange],
   );
 
   useEffect(() => {
@@ -181,10 +188,10 @@ export const SettingsModal = () => {
     }
     const filterdKeys = advancedSearchSuggestions(
       Object.keys(projectSettings),
-      value
+      value,
     );
     const newObject = Object.fromEntries(
-      filterdKeys.map((key) => [key, projectSettings[key]])
+      filterdKeys.map((key) => [key, projectSettings[key]]),
     );
     // const clone = structuredClone(settings);
     // filterdKeys.forEach((key) => {
@@ -214,7 +221,7 @@ export const SettingsModal = () => {
         <section className="grid grid-cols-3 gap-2">
           <For
             each={Object.entries(
-              searchedSettings ? searchedSettings : projectSettings
+              searchedSettings ? searchedSettings : projectSettings,
             )}
           >
             {([key, value], i) => (
@@ -251,32 +258,74 @@ export const SettingsModal = () => {
         </section>
       </section>
       <hr className="border-border-default" />
-      <footer className="flex gap-2">
+      <footer className="flex gap-2 justify-between flex-wrap">
         <Button
           onClick={async (ev) => {
             // addClickClass(ev.currentTarget , 'click')
             const tId = toast.loading(
-              <ToastMsgInfo msg={`Process cleaning...`} />
+              <ToastMsgInfo msg={`Process cleaning...`} />,
             );
             try {
-              const projectData = await getProjectData();
-              const cleanedMotions = await cleanMotions(
-                projectData.motions,
-                projectData.pages
-              );
+              await doInNormalAsync(async () => {
+                const projectData = await getProjectData();
+                const cleanedMotions = await cleanMotions(
+                  projectData.motions,
+                  projectData.pages,
+                );
 
-              console.log("cleaned motions: ", cleanedMotions);
+                console.log("cleaned motions: ", cleanedMotions);
 
-              await db.projects.update(projectId, {
-                motions: cleanedMotions,
+                await db.projects.update(projectId, {
+                  motions: cleanedMotions,
+                });
+
+                toast.done(tId);
+                toast.success(
+                  <ToastMsgInfo msg={`Motions cleared successfully`} />,
+                );
               });
-              toast.done(tId);
-              toast.success(
-                <ToastMsgInfo msg={`Motions cleared successfully`} />
-              );
+
+              await doInWordpressAsync(async () => {
+                // const projectData = await getProjectData();
+                const wp_post = getWpPageConfig();
+                editor.trigger(InfinitelyEvents.storage.storeStart);
+                wpWorkerCallbackMaker(
+                  fetcherWorker,
+                  "wp_clean_motions",
+                  {
+                    projectId,
+                  },
+                  async (res) => {
+                    console.log("res : ", res);
+                    if (res.done) {
+                      await db.projects.update(projectId, {
+                        motions: res.res,
+                      });
+                      const projectData = await getProjectData();
+                      projectData.current_inf_meta = {};
+                      projectData.currentEditingPage = {};
+                      delete projectData.wp_meta.password;
+                      delete projectData.wp_meta.app_password;
+                      await wp_update_option({
+                        optionName: "inf_config",
+                        value: projectData,
+                        merge: true,
+                        projectId,
+                      });
+                      toast.done(tId);
+                      toast.success(
+                        <ToastMsgInfo msg={`Motions cleared successfully`} />,
+                      );
+                      editor.trigger(InfinitelyEvents.storage.storeEnd);
+                    } else {
+                      throw new Error(`Faild to clear motions`);
+                    }
+                  },
+                );
+              });
             } catch (error) {
               toast.dismiss(tId);
-              toast.success(<ToastMsgInfo msg={`Faild to clean motions`} />);
+              toast.success(<ToastMsgInfo msg={error.message} />);
             }
           }}
         >
@@ -286,28 +335,66 @@ export const SettingsModal = () => {
           onClick={async (ev) => {
             // addClickClass(ev.currentTarget , 'click')
             const tId = toast.loading(
-              <ToastMsgInfo msg={`Process cleaning...`} />
+              <ToastMsgInfo msg={`Process cleaning...`} />,
             );
             try {
-              const projectData = await getProjectData();
-              const cleanedInteractions = await cleanInteractions(
-                projectData.interactions,
-                projectData.pages
-              );
-              console.log("cleand interactions : ", cleanedInteractions);
+              await doInNormalAsync(async () => {
+                const projectData = await getProjectData();
+                const cleanedInteractions = await cleanInteractions(
+                  projectData.interactions,
+                  projectData.pages,
+                );
+                console.log("cleand interactions : ", cleanedInteractions);
 
-              await db.projects.update(projectId, {
-                interactions: cleanedInteractions,
+                await db.projects.update(projectId, {
+                  interactions: cleanedInteractions,
+                });
+                toast.done(tId);
+                toast.success(
+                  <ToastMsgInfo msg={`Interactions cleared successfully`} />,
+                );
               });
-              toast.done(tId);
-              toast.success(
-                <ToastMsgInfo msg={`Interactions cleared successfully`} />
-              );
+
+              await doInWordpressAsync(async () => {
+                const wp_post = getWpPageConfig();
+                editor.trigger(InfinitelyEvents.storage.storeStart);
+                wpWorkerCallbackMaker(
+                  pageBuilderWorker,
+                  "wp_clean_interactions",
+                  { projectId },
+                  async (props) => {
+                    if (props.done) {
+                      console.log("interactions props : ", props);
+                      await db.projects.update(projectId, {
+                        interactions: props.res,
+                      });
+                      const projectData = await getProjectData();
+                      projectData.current_inf_meta = {};
+                      projectData.currentEditingPage = {};
+                      delete projectData.wp_meta.password;
+                      delete projectData.wp_meta.app_password;
+                      await wp_update_option({
+                        optionName: "inf_config",
+                        value: projectData,
+                        merge: true,
+                        projectId,
+                      });
+                      toast.done(tId);
+                      toast.success(
+                        <ToastMsgInfo
+                          msg={`Interactions cleared successfully`}
+                        />,
+                      );
+                      editor.trigger(InfinitelyEvents.storage.storeEnd);
+                    } else {
+                      throw new Error(`Faild to clean interactions`);
+                    }
+                  },
+                );
+              });
             } catch (error) {
               toast.dismiss(tId);
-              toast.success(
-                <ToastMsgInfo msg={`Faild to clean interactions`} />
-              );
+              toast.success(<ToastMsgInfo msg={error.message} />);
             }
 
             // console.log(projectData.interactions ,await cleanInteractions(projectData.interactions , projectData.pages));

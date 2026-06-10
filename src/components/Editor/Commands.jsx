@@ -73,6 +73,7 @@ export const Commands = () => {
     setSelectedAttributes(selectedAttributes);
     setCustomDirectives({
       ...customDirevtives,
+      'v-if': selectedAttributes['v-if'],
       "v-for": {
         ...(parseForDirective(selectedAttributes["v-for"]) || {}),
       },
@@ -88,23 +89,29 @@ export const Commands = () => {
       setSelectedAttributes(selectedAttributes);
       setCustomDirectives({
         ...customDirevtives,
+        'v-if': selectedAttributes['v-if'],
         "v-for": {
           ...(parseForDirective(selectedAttributes["v-for"]) || {}),
         },
       });
-      console.log({
-        ...customDirevtives,
-        "v-for": {
-          ...customDirevtives["v-for"],
-          ...(parseForDirective(selectedAttributes["v-for"]) || {}),
-        },
-      });
+      // console.log({
+      //   ...customDirevtives,
+      //   'v-if': selectedAttributes['v-if'],
+      //   "v-for": {
+      //     ...customDirevtives["v-for"],
+      //     ...(parseForDirective(selectedAttributes["v-for"]) || {}),
+      //   },
+      // });
 
       setCmdsContext();
     };
     editor.on(InfinitelyEvents.directives.update, callback);
+    // editor.on('undo', callback);
+    // editor.on('redo', callback);
     return () => {
       editor.off(InfinitelyEvents.directives.update, callback);
+      // editor.off('redo', callback);
+      // editor.off('undo', callback);
     };
   }, [editor]);
 
@@ -235,11 +242,10 @@ export const Commands = () => {
     } else if (suffixes?.includes?.("style")) {
       const newVal = `
                                   ${setType("CSSStyleDeclaration")}
-                                  ${
-                                    isStartsAndEndsWithParens(value)
-                                      ? value
-                                      : (value && `(${value})`) || `({\n\n})`
-                                  }`;
+                                  ${isStartsAndEndsWithParens(value)
+          ? value
+          : (value && `(${value})`) || `({\n\n})`
+        }`;
       isSetValue && mEditor.setValue(newVal);
       return newVal;
     } else {
@@ -340,20 +346,26 @@ export const Commands = () => {
                         return;
                       }
 
-                      if (
-                        (customDirevtives["v-for"].varName ||
-                          customDirevtives["v-for"].index) &&
-                        !value
-                      ) {
-                        // return;
-                      } else {
-                        handleAddingAttributes(
-                          value
-                            ? `(${customDirevtives["v-for"].varName} , ${customDirevtives["v-for"].index}) in ${value}`
-                            : "",
-                          "v-for"
-                        );
-                      }
+                      // if (
+                      //   (customDirevtives["v-for"].varName ||
+                      //     customDirevtives["v-for"].index) &&
+                      //   !value
+                      // ) {
+                      //   // return;
+                      // } else {
+                      //   handleAddingAttributes(
+                      //     value
+                      //       ? `(${customDirevtives["v-for"].varName} , ${customDirevtives["v-for"].index}) in ${value}`
+                      //       : "",
+                      //     "v-for"
+                      //   );
+                      // }
+                      console.log('update code v-for',`(${customDirevtives["v-for"].varName} , ${customDirevtives["v-for"].index}) in ${value}`.match(/^\(\s*(\w+)\s*,\s*(\w+)\s*\)\s+in\s+(.+)?$/));
+                      
+                      handleAddingAttributes(
+                        `(${customDirevtives["v-for"].varName} , ${customDirevtives["v-for"].index}) in ${value}`,
+                        "v-for"
+                      );
                     },
                   }}
                 />
@@ -426,11 +438,10 @@ export const Commands = () => {
                   )
                 )}
                 key={i}
-                className={`${
-                  Object.keys(selectedAttributes).includes(cmd.directive)
+                className={`${Object.keys(selectedAttributes).includes(cmd.directive)
                     ? "border-l-2 border-l-blue-600"
                     : ""
-                }`}
+                  }`}
               >
                 {cmd.type == "object" && (
                   <section className="flex gap-2 mt-2">
@@ -454,10 +465,9 @@ export const Commands = () => {
                           )?.[cmd.directive]?.value;
 
                           const formatedVal = js_beautify(
-                            `(${
-                              attrVal && isStartsAndEndsWithParens(attrVal)
-                                ? attrVal
-                                : `{
+                            `(${attrVal && isStartsAndEndsWithParens(attrVal)
+                              ? attrVal
+                              : `{
                           
                           }`
                             })`
@@ -476,7 +486,7 @@ export const Commands = () => {
                           // }, 300);
                           if (!value) {
                             cmd.callback({
-                              value:'',
+                              value: '',
                               editor,
                             })
                             return;
@@ -486,27 +496,25 @@ export const Commands = () => {
                             value: isStartsAndEndsWithParens(value)
                               ? objectSplitter(value)
                               : objectSplitter(
-                                  js_beautify(
-                                    `(${
-                                      value ||
-                                      `{
+                                js_beautify(
+                                  `(${value ||
+                                  `{
                           
                           }`
-                                    })`
-                                  )
-                                ),
+                                  })`
+                                )
+                              ),
                             editor,
                           });
                         },
                         onMount(monacEditor) {
                           monacEditor.setValue(
                             js_beautify(
-                              `(${
-                                getDirectiveContext(
-                                  selectedAttributes,
-                                  cmd.directive
-                                )?.[cmd.directive]?.value ||
-                                `{
+                              `(${getDirectiveContext(
+                                selectedAttributes,
+                                cmd.directive
+                              )?.[cmd.directive]?.value ||
+                              `{
                           
                           }`
                               })`
@@ -543,12 +551,11 @@ export const Commands = () => {
                         )?.[cmd.directive]?.value
                       }
                       codeProps={{
-                        value: `${
-                          getDirectiveContext(
-                            selectedAttributes,
-                            cmd.directive
-                          )?.[cmd.directive]?.value || ""
-                        }`,
+                        value: `${getDirectiveContext(
+                          selectedAttributes,
+                          cmd.directive
+                        )?.[cmd.directive]?.value || ""
+                          }`,
                         language: cmd.codeLang ? cmd.codeLang : "javascript",
                         onChange(value) {
                           // typingTimeout.current &&
@@ -567,11 +574,10 @@ export const Commands = () => {
                         onMount(mEditor) {
                           mEditor.setValue(
                             js_beautify(
-                              `${
-                                getDirectiveContext(
-                                  selectedAttributes,
-                                  cmd.directive
-                                )?.[cmd.directive]?.value || ""
+                              `${getDirectiveContext(
+                                selectedAttributes,
+                                cmd.directive
+                              )?.[cmd.directive]?.value || ""
                               }`
                             )
                           );
@@ -745,8 +751,8 @@ export const Commands = () => {
                             editor,
                             value:
                               cmd.nestedMaybeObjectModel &&
-                              (cmd.suffixValue == "class" ||
-                                cmd.suffixValue == "style")
+                                (cmd.suffixValue == "class" ||
+                                  cmd.suffixValue == "style")
                                 ? objectSplitter(cmd.value)
                                 : cmd.value,
                             suffix: cmd.suffixValue,
@@ -870,21 +876,21 @@ export const Commands = () => {
                                       targetAttribute: key,
                                       value: cmd.nestedMaybeObjectModel
                                         ? (() => {
-                                            const clearedValue =
-                                              clearCommnets(value);
-                                            console.log("valo : ", value);
+                                          const clearedValue =
+                                            clearCommnets(value);
+                                          console.log("valo : ", value);
 
-                                            if (
-                                              clearedValue.startsWith(`(`) &&
-                                              clearedValue.endsWith(`)`)
-                                            ) {
-                                              return (
-                                                objectSplitter(value) || value
-                                              );
-                                            } else {
-                                              return value;
-                                            }
-                                          })()
+                                          if (
+                                            clearedValue.startsWith(`(`) &&
+                                            clearedValue.endsWith(`)`)
+                                          ) {
+                                            return (
+                                              objectSplitter(value) || value
+                                            );
+                                          } else {
+                                            return value;
+                                          }
+                                        })()
                                         : value,
                                     });
                                   },

@@ -68,9 +68,8 @@ export const Property = ({
 
   return (
     <section
-      className={`${sectionClassName} flex flex-col ${
-        wrap && "flex-wrap gap-3 py-2"
-      } gap-2  bg-surface-tertiary p-1 rounded-lg`}
+      className={`${sectionClassName} flex flex-col ${wrap && "flex-wrap gap-3 py-2"
+        } gap-2  bg-surface-tertiary p-1 rounded-lg`}
     >
       {label ? (
         <FitTitle className="capitalize flex items-center  justify-center custom-font-size w-fit flex-shrink-0  overflow-hidden text-ellipsis ">
@@ -81,9 +80,8 @@ export const Property = ({
       )}
       <Input
         autoCorrect="off"
-        className={`${
-          inputClassName ? inputClassName : `${wrap ? "w-full" : "w-full"}`
-        } h-full   font-semibold bg-surface-secondary rounded-lg px-2 py-2 outline-none border-2 border-transparent focus:border-blue-600 transition-colors text-white`}
+        className={`${inputClassName ? inputClassName : `${wrap ? "w-full" : "w-full"}`
+          } h-full   font-semibold bg-surface-secondary rounded-lg px-2 py-2 outline-none border-2 border-transparent focus:border-blue-600 transition-colors text-white`}
         type={special ? "number" : "text"}
         value={val}
         placeholder={placeholder || label}

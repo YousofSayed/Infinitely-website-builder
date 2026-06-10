@@ -296,10 +296,9 @@ export const Layer = ({
         className={`group layer relative flex items-center justify-between w-full  p-3 rounded-md
           transition-all hover:bg-surface-tertiary 
           
-          ${
-            isOpentNested && getLayerLength(layer)
-              ? "bg-surface-tertiary"
-              : "bg-surface-main"
+          ${isOpentNested && getLayerLength(layer)
+            ? "bg-surface-tertiary"
+            : "bg-surface-main"
           } ${className ? className : "bg-surface-tertiary"} `}
       >
         <div
@@ -396,6 +395,8 @@ export const Layer = ({
           className="absolute left-0 bottom-[0] w-[85%] h-[15px] rounded-bl-lg rounded-br-lg bg-purple-500 z-[2] opacity-[0]  transition-all"
         ></div>
 
+        {/* {layer.getTrait('hide')?.getValue?.() === 'true' && <i className="absolute right-[0] top-[-10px]">{Icons.hidden({strokeColor:'white' , width:20})}</i>} */}
+
         <section className="flex gap-2 items-center">
           {!!layer
             .components()
@@ -403,18 +404,17 @@ export const Layer = ({
               (lyr) =>
                 lyr.props().layerable && lyr.getName().toLowerCase() != "box"
             ).length && (
-            <button
-              className={`${
-                isOpentNested && "rotate-[360deg]"
-              } transition-all rotate-[270deg]`}
-              onClick={(ev) => {
-                ev.stopPropagation();
-                openNested();
-              }}
-            >
-              {Icons.arrow(selected ? "white" : "")}
-            </button>
-          )}
+              <button
+                className={`${isOpentNested && "rotate-[360deg]"
+                  } transition-all rotate-[270deg]`}
+                onClick={(ev) => {
+                  ev.stopPropagation();
+                  openNested();
+                }}
+              >
+                {Icons.arrow(selected ? "white" : "")}
+              </button>
+            )}
 
           <section
             className="flex gap-2 items-center"
@@ -480,13 +480,15 @@ export const Layer = ({
           //       ? "none"
           //       : "auto",
           // }}
-          className={`flex gap-2 items-center drag-icon-btn`}
+          className={`flex gap-2 items-center drag-icon-btn ml-2`}
           onClick={(ev) => {
             ev.stopPropagation();
             editor.select(null);
             editor.trigger("component:deselected");
           }}
         >
+          {layer.getAttributes?.()?.['hide'] === 'true' && <i className=" right-[0] top-[-10px]">{Icons.hidden({ strokeColor: 'white', width: 20 })}</i>}
+
           {/* <> */}
           <a
             id={`${layer.getId()}-tb`}
@@ -583,7 +585,9 @@ export const Layer = ({
           >
             {Icons.drag({ fill: selected ? "white" : undefined })}
           </button>
+
         </section>
+        {/* {layer.getTrait('hide')} */}
       </section>
 
       {layer.components().models.length && isOpentNested ? (
@@ -593,10 +597,9 @@ export const Layer = ({
               ? `calc(100% -  ${layer.components().models.length}px)`
               : `100%`,
           }}
-          className={`child flex min-h-full ${
-            isOpentNested &&
+          className={`child flex min-h-full ${isOpentNested &&
             "border-l-2 border-l-slate-600 hover:border-l-blue-600 rounded-bl-lg  pl-[8px]"
-          } flex-col self-end justify-end  transition-all `}
+            } flex-col self-end justify-end  transition-all `}
         >
           {/* <Virtuoso
             ref={nestedLayyersRef}

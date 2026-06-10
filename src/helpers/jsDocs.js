@@ -360,3 +360,13 @@ export let undoRedoShowProps = {
   attributesBuilder: false,
   animationBuilder: false,
 };
+
+/**
+ * @type {import('./types').WpPage}
+ */
+export let wp_page = {}
+
+/**
+ * @type {import('./types').WpPages}
+ */
+export let wp_pages = []

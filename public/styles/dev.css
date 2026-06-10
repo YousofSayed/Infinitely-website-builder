@@ -4,7 +4,7 @@
 /* html , body , body *{
   contain: layout , paint , size , style , content ;
  } */
-html body{
+html body {
   transform: translateZ(0);
   backface-visibility: hidden;
 }
@@ -20,11 +20,13 @@ video {
 all: unset ;
 } */
 @layer base {
-  [data-gjs-type="wrapper"] {
+  body {
     background-color: white;
   }
 }
-.preventWhenScroll  , .preventWhenScroll * {
+
+.preventWhenScroll,
+.preventWhenScroll * {
   transition: none !important;
   animation-play-state: paused !important;
   animation: none !important;
@@ -78,50 +80,56 @@ infinitely-svg svg {
   /* filter: none !important; */
 }
 
-.drop-area {
-  width: 100%;
-  height: 70px;
-  background-color: #eeeeeea1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-transform: capitalize;
-  font-weight: 500;
+@layer base {
+  .drop-area {
+    width: 100%;
+    height: 70px;
+    background-color: #eeeeeea1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-transform: capitalize;
+    font-weight: 500;
+  }
+
+  .drop-area>* {
+    pointer-events: none;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .drop {
+    background-color: #eee;
+    min-height: 70px;
+    height: 70px;
+    position: relative;
+    color: black ;
+    font-weight: bold ;
+  }
+
+  .drop::before {
+    content: "Drop Here";
+    position: absolute;
+    width: fit-content;
+    height: fit-content;
+    top: 50%;
+    left: 50%;
+    font-weight: 500;
+    text-transform: capitalize;
+    transform: translate(-50%, -50%);
+    color: black !important;
+    font-weight: bold !important;
+  }
+
+  swiper-slide.drop {
+    height: 500px;
+  }
+
 }
-
-.drop-area>* {
-  pointer-events: none;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.drop {
-  background-color: #eee;
-  min-height: 70px;
-  height: 70px;
-  position: relative;
-  color: black !important;
-  font-weight: bold !important;
-}
-
-.drop::before {
-  content: "Drop Here";
-  position: absolute;
-  width: fit-content;
-  height: fit-content;
-  top: 50%;
-  left: 50%;
-  font-weight: 500;
-  text-transform: capitalize;
-  transform: translate(-50%, -50%);
-  color: black !important;
-  font-weight: bold !important;
-}
-
-swiper-slide.drop {
-  height: 500px;
+[hide="true"]{
+  display: none !important;
 }
 
 .min-h-60 {

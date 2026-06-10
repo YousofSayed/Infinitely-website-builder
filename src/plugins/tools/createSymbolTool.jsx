@@ -15,7 +15,7 @@ export const createSymbolTool = (editor) => {
     cond: !symbolInfo.isSymbol,
     commandCallback: (ed) => {
       ed.runCommand("open:custom:modal", {
-        title: <ModalTitle icon={Icons.components('white')} title={`Create Sympol (Global Component)`} />,
+        title: <ModalTitle icon={Icons.components('white')} title={`Create Symbol (Global Component)`} />,
         JSXModal: <ReusableSympol editor={ed} />,
       });
     },

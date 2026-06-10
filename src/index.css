@@ -27,12 +27,14 @@
   /* height: 100%; */
 }
 
-body:has(#main-modal) #editor-container{
+body:has(#main-modal) #editor-container {
   display: none !important;
 }
- body:has(#preview-container) #main-group{
+
+body:has(#preview-container) #main-group {
   display: none !important;
 }
+
 
 body:has(#main-modal) {
   #editor-container {
@@ -40,7 +42,7 @@ body:has(#main-modal) {
   }
 }
 
-button:disabled{
+button:disabled {
   cursor: not-allowed;
   opacity: .7;
 }
@@ -101,6 +103,113 @@ body {
   will-change: contents;
 }
 
+.inf-blur {
+  position: relative;
+  background-color: rgba(94, 94, 94, 0.103) !important;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.inf-blur * {
+  z-index: 1;
+}
+
+.inf-blur::before,
+.inf-blur::after {
+  content: '';
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  background-color: var(--color-brand-primary);
+  backdrop-filter: blur(90px);
+  border-radius: 50%;
+  opacity: 0;
+  box-shadow: 50px 50px 1700px 270px var(--color-brand-primary);
+  z-index: 0;
+
+  /* Entrance + roaming */
+  animation: appear 1.2s ease-out forwards,
+    roam1 20s cubic-bezier(0.45, 0, 0.55, 1) 1.2s infinite alternate;
+  will-change: transform, opacity;
+}
+
+/* Slightly different path for second element */
+.inf-blur::after {
+  animation: appear 1.2s ease-out forwards,
+    roam2 22s cubic-bezier(0.45, 0, 0.55, 1) 1.2s infinite alternate;
+}
+
+.inf-blur::before {
+  left: -120%;
+  top: -120%;
+}
+
+.inf-blur::after {
+  left: 80%;
+  /* instead of right:-500px */
+  top: 80%;
+  /* instead of bottom:-500px */
+}
+
+/* Entrance animation */
+@keyframes appear {
+  0% {
+    transform: translate(-50px, -50px) scale(0.5) rotate(0deg);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translate(10px, 10px) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* Roaming paths with subtle scale & rotation */
+@keyframes roam1 {
+  0% {
+    transform: translate(10px, 10px) scale(1) rotate(0deg);
+  }
+
+  25% {
+    transform: translate(180px, 30px) scale(1.05) rotate(10deg);
+  }
+
+  50% {
+    transform: translate(120px, 200px) scale(0.95) rotate(-10deg);
+  }
+
+  75% {
+    transform: translate(250px, 150px) scale(1.02) rotate(5deg);
+  }
+
+  100% {
+    transform: translate(40px, 220px) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes roam2 {
+  0% {
+    transform: translate(220px, 40px) scale(1) rotate(0deg);
+  }
+
+  25% {
+    transform: translate(50px, 150px) scale(1.03) rotate(-8deg);
+  }
+
+  50% {
+    transform: translate(200px, 200px) scale(0.97) rotate(6deg);
+  }
+
+  75% {
+    transform: translate(120px, 50px) scale(1.01) rotate(-4deg);
+  }
+
+  100% {
+    transform: translate(180px, 180px) scale(1) rotate(0deg);
+  }
+}
+
+
 .monaco-editor,
 .monaco-editor .overflow-guard {
   overflow: visible !important;
@@ -114,9 +223,9 @@ body {
 .gjs-cv-canvas iframe,
 #editor-container {
   /* transform: translateZ(0); */
-  will-change: zoom;
+  /* will-change: zoom;
   backface-visibility: hidden;
-  contain: layout paint size;
+  contain: layout paint size; */
 }
 
 
@@ -206,7 +315,7 @@ textarea,
   /* aspect-ratio: ; */
   gap: 7px;
 }
-
+/* https://www.googleapis.com/auth/spreadsheets */
 /* Hide the blue hover outline */
 /* .gjs-highlighter {
   display: none !important;

@@ -32,7 +32,7 @@ export const Projects = () => {
     console.log("res : ", res);
 
     setShowLoader(false);
-    setDbProjects(cloneDeep(res));
+    setDbProjects(res);
     // return res;
   });
 
@@ -48,11 +48,9 @@ export const Projects = () => {
     // <section className="relative w-full h-full flex flex-col">
     <section
       ref={animtedRef}
-      className={`${
-        dbProjects?.length ? "" : "p-2"
-      } container m-auto gap-3 overflow-hidden h-full bg-surface-main w-full rounded-lg ${
-        !dbProjects?.length && "flex items-center justify-center"
-      }`}
+      className={`${dbProjects?.length ? "" : "p-2"
+        } container m-auto gap-3 overflow-hidden h-full bg-surface-main w-full rounded-lg ${!dbProjects?.length && "flex items-center justify-center"
+        }`}
     >
       {dbProjects?.length && (
         // <VirtuosoGrid
@@ -65,7 +63,7 @@ export const Projects = () => {
         // />
 
         <section className="h-full grid gap-2 p-1 overflow-auto grid-cols-[repeat(auto-fill,minmax(250px,1fr))]">
-          <For each={dbProjects}>
+          <For each={dbProjects} memo={false}>
             {(project, i) => {
               return <Project key={project.id} project={project} />;
             }}
@@ -86,7 +84,7 @@ export const Projects = () => {
             src={noDataImg}
             className="max-w-[300px] opacity-[.9] ml-[-36px]"
             alt="no data is here"
-            // loading="lazy"
+          // loading="lazy"
           />
           <figcaption className="text-text-primary font-semibold text-2xl ">
             No Projects Yet

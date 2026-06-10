@@ -9,7 +9,6 @@ import { LibraryInstallerModal } from "../components/Editor/Modals/LibraryInstal
 import {
   open_code_manager_modal,
   open_custom_font_installer_modal,
-  open_dynamic_templates_modal,
   open_file_editor_modal,
   open_files_manager_modal,
   open_library_installer_modal,
@@ -17,6 +16,7 @@ import {
   open_pages_manager_modal,
   open_rest_models_modal,
   open_settings_modal,
+  open_symbol_code_editor_modal,
   open_symbols_and_templates_manager_modal,
 } from "../constants/InfinitelyCommands";
 import { CustomFontsModal } from "../components/Editor/Modals/CustomFontsModal";
@@ -26,6 +26,10 @@ import { PageHelmetModal } from "../components/Editor/Modals/PageHelmetModal";
 import { CodeManagerModal } from "../components/Editor/Modals/CodeManagerModal";
 import { SymbolsAndTemplatesManager } from "../components/Editor/Modals/SymbolsAndTemplatesManager";
 import { FileEditorModal } from "../components/Editor/Modals/FileEditorModal";
+import { isWordpress } from "../helpers/functions";
+import { WpCodeManagerModal } from "../components/Editor/Modals/wordpress/CodeManagerModal";
+import { MediaManager } from "../components/Editor/Modals/wordpress/MediaManager";
+import { SymbolCodeEditor } from "../components/Editor/Modals/SymbolCodeEditor";
 
 export const ModalTitle = ({ icon, title }) => {
   return (
@@ -63,9 +67,9 @@ export function customModal(editor) {
 
   editor.Commands.add(open_files_manager_modal, (editor, sender, options) => {
     editor.runCommand("open:custom:modal", {
-      title: <ModalTitle icon={Icons.gallery('white')} title={"Files Manager"} />,
-      JSXModal: <AssetsManager editor={editor} />,
-      height:'90%'
+      title: <ModalTitle icon={Icons.gallery('white')} title={"Media Manager"} />,
+      JSXModal: isWordpress() ? <MediaManager /> : <AssetsManager editor={editor} />,
+      height: '90%'
     });
   });
 
@@ -99,13 +103,22 @@ export function customModal(editor) {
   //   }
   // );
 
+  editor.Commands.add(open_symbol_code_editor_modal, (editor, sender, options) => {
+    editor.runCommand("open:custom:modal", {
+      title: <ModalTitle icon={Icons.code({ strokeColor: 'white' })} title={"Symbol Code Editor"} />,
+      JSXModal: <SymbolCodeEditor />,
+      width: "90%",
+      height: "93%",
+    });
+  });
+
   editor.Commands.add(
     open_library_installer_modal,
     (editor, sender, options) => {
       editor.runCommand("open:custom:modal", {
         title: (
           <ModalTitle
-            icon={Icons.installLibrary({strokeColor:'white'})}
+            icon={Icons.installLibrary({ strokeColor: 'white' })}
             title={"Library Installer"}
           />
         ),
@@ -131,7 +144,7 @@ export function customModal(editor) {
       editor.runCommand("open:custom:modal", {
         title: (
           <ModalTitle
-            icon={Icons.fonts({ width: 30, height: 30  , strokeColor:'white'})}
+            icon={Icons.fonts({ width: 30, height: 30, strokeColor: 'white' })}
             title={"Custom font Installer"}
           />
         ),
@@ -153,7 +166,7 @@ export function customModal(editor) {
 
   editor.Commands.add(open_page_helmet_modal, (editor, sender, options) => {
     editor.runCommand("open:custom:modal", {
-      title: <ModalTitle icon={Icons.helmet({fill:'white'})} title={"Page Helmet"} />,
+      title: <ModalTitle icon={Icons.helmet({ fill: 'white' })} title={"Page Helmet"} />,
       JSXModal: <PageHelmetModal />,
       width: "55%",
       height: "90%",
@@ -164,11 +177,11 @@ export function customModal(editor) {
     editor.runCommand("open:custom:modal", {
       title: (
         <ModalTitle
-          icon={Icons.code({ strokeWidth: 3 , strokeColor:'white'})}
+          icon={Icons.code({ strokeWidth: 3, strokeColor: 'white' })}
           title={"Page Code Manager"}
         />
       ),
-      JSXModal: <CodeManagerModal />,
+      JSXModal: isWordpress() ? <WpCodeManagerModal /> : <CodeManagerModal />,
       width: "90%",
       height: "93%",
     });
@@ -178,7 +191,7 @@ export function customModal(editor) {
     editor.runCommand("open:custom:modal", {
       title: (
         <ModalTitle
-          icon={Icons.file({ strokeWidth: 3 ,width:24 , height:24 , fill: "white" })}
+          icon={Icons.file({ strokeWidth: 3, width: 24, height: 24, fill: "white" })}
           title={"File Editor"}
         />
       ),

@@ -14,28 +14,29 @@ export type gradientValues = {
     {
       color: string;
       opacity: string;
-    }
+    },
   ];
 }[];
 
 import type * as CSS from "csstype";
 import type { JSX } from "react";
 import type { Editor, Component as GjsComponent } from "grapesjs";
+import { wpCommands } from "./wp_commands_worker";
 
 type CSSProperties = CSS.PropertiesHyphen; // ✅ dash-case CSS properties
 
 export type InfinitelyStyle = {
   type:
-    | "property"
-    | "select"
-    | "choose"
-    | "color"
-    | "multi-choice"
-    | "multi-function-prop"
-    | "multi-values-for-single-prop"
-    | "directions"
-    | "title"
-    | "custom";
+  | "property"
+  | "select"
+  | "choose"
+  | "color"
+  | "multi-choice"
+  | "multi-function-prop"
+  | "multi-values-for-single-prop"
+  | "directions"
+  | "title"
+  | "custom";
   cssProp: keyof CSSProperties | (keyof CSSProperties)[];
   title?: string;
   placeholder?: string;
@@ -99,7 +100,7 @@ export type TraitCallProps = {
   traits?: InfinitelyTrait[];
   oldValue: string;
   newValue: string;
-  asset: InfinitelyAsset | undefined;
+  asset: InfinitelyAsset | InfinitelyWpMedia | undefined;
   mediaBreakpoint: number;
   model: Component;
 };
@@ -112,20 +113,20 @@ export type TraitCallback = ({
   asset,
   mediaBreakpoint,
   model,
-  props: {},
+  props: { },
 }: TraitCallProps) => void;
 
 export type InfinitelyTrait = {
   type:
-    | "text"
-    | "select"
-    | "textarea"
-    | "media"
-    | "button"
-    | "switch"
-    | "custom"
-    | "object"
-    | "add-props";
+  | "text"
+  | "select"
+  | "textarea"
+  | "media"
+  | "button"
+  | "switch"
+  | "custom"
+  | "object"
+  | "add-props";
   // propsType: "text" | "code";
   //For add-props type
   addPropsInputType: "text" | "code";
@@ -151,8 +152,8 @@ export type InfinitelyTrait = {
   options: string[];
   ext: string;
   keywords:
-    | string[]
-    | (({ projectData }: { projectData: Project }) => string[]);
+  | string[]
+  | (({ projectData }: { projectData: Project }) => string[]);
   command: string;
   component: import("react").JSX.Element;
   textareaLanguage: string;
@@ -173,7 +174,7 @@ export type InfinitelyTrait = {
   }) => void;
   onSwitch: (value: boolean) => void;
   buttonEvents: (
-    handlers: TraitCallProps
+    handlers: TraitCallProps,
   ) => import("react").HTMLAttributes<HTMLButtonElement>;
   showCallback: (trait: TraitCallProps) => boolean;
   hideCallback: (trait: TraitCallProps) => boolean;
@@ -215,10 +216,12 @@ export interface Interaction {
   id: string | number;
   event: keyof ElementEventMap;
   actions: Actions;
+  attr_for_wp: Record<string, string>;
   instances: {
     [key: string]: {
       id: string;
       page: string;
+      attr_for_wp: Record<string, string>;
     };
   };
   // onInteractionSelected: (component: Component) => void;
@@ -248,15 +251,15 @@ export interface CMD {
     name: string;
     type: "text" | "select" | "object" | "array" | "number" | "code";
     role:
-      | "normal"
-      | "varName"
-      | "varValue"
-      | "className"
-      | "classValue"
-      | "params"
-      | "eventName"
-      | "forVarName"
-      | "forVarIndex";
+    | "normal"
+    | "varName"
+    | "varValue"
+    | "className"
+    | "classValue"
+    | "params"
+    | "eventName"
+    | "forVarName"
+    | "forVarIndex";
     value: string | object | string[];
     keywords?: string[];
     lang: "html" | "javascript" | "css";
@@ -461,6 +464,47 @@ export type InfinitelyPage = {
   symbols: string[];
   bodyAttributes: {};
   helmet: PageHelmet;
+  need_publish_to_wp?: boolean | undefined;
+  // wp_page_meta:Wp_Page_Meta
+};
+
+export type InfinitelyWpPage = {
+  libs: {
+    css: LibraryConfig[];
+    jsHeader: LibraryConfig[];
+    jsFooter: LibraryConfig[];
+  };
+  fonts: {
+    [key: string]: InfinitelyFont;
+  };
+  components: Component[];
+  id: number | string;
+  name: string;
+  symbols: string[];
+  bodyAttributes: {};
+  helmet: PageHelmet;
+  rest_base: string;
+  js: string | Blob;
+  css: string | Blob;
+  motions: string | Blob;
+  tailwind: string | Blob;
+  type: string;
+  date: string;
+  need_publish_to_wp?: boolean | undefined;
+  url: string;
+  title: string;
+  slug: string;
+  modified: string;
+  source_url: string;
+  media_type: string;
+  mime_type: string;
+  author: string;
+  meta: string;
+  featured_media: string;
+  comment_status: string;
+  ping_status: string;
+  template: string;
+  // wp_page_meta:Wp_Page_Meta
 };
 
 export type InfinitelyBlock = {
@@ -514,14 +558,110 @@ export type InfinitelyFont = {
 };
 
 export type InfinitelyFonts = {
-  [key: string]: InfinitelyFont;
+  [key: string]: InfinitelyFont & InfinitelyWpMedia;
+};
+
+export type InfinitelyWpMedia = {
+  id: number;
+  date: string; // ISO date string
+  date_gmt: string; // ISO date string
+  guid: {
+    rendered: string;
+  };
+  modified: string; // ISO date string
+  modified_gmt: string; // ISO date string
+  slug: string;
+  status: string; // e.g. "inherit"
+  type: string; // e.g. "attachment"
+  link: string;
+  svg_content: string | null;
+  title: {
+    rendered: string;
+  };
+  author: number;
+  featured_media: number;
+  comment_status: string; // "open" | "closed"
+  ping_status: string; // "open" | "closed"
+  template: string;
+  meta: {
+    inf_meta: unknown[];
+    inf_template_type: string;
+  };
+  class_list: string[];
+  inf_meta: unknown[];
+  description: {
+    rendered: string; // HTML string
+  };
+  caption: {
+    rendered: string; // HTML string
+  };
+  alt_text: string;
+  media_type: string; // e.g. "file"
+  mime_type: string; // e.g. "application/octet-stream"
+  media_details: {
+    filesize: number;
+    sizes: Record<string, unknown>; // empty object in your example
+  };
+  post: number | null;
+  source_url: string;
+  _links: {
+    self: Array<{
+      href: string;
+      targetHints?: {
+        allow: string[];
+      };
+    }>;
+    collection: Array<{
+      href: string;
+    }>;
+    about: Array<{
+      href: string;
+    }>;
+    author: Array<{
+      embeddable: boolean;
+      href: string;
+    }>;
+    replies: Array<{
+      embeddable: boolean;
+      href: string;
+    }>;
+  };
+};
+
+export type GrapesJSComponent = {
+  tagName: string;
+  attributes?: Record<string, string>;
+  children?: GrapesJSComponent[]; // recursive for nested elements
+  content?: string; // optional text content
+};
+
+export type InfinitelyPageMetaConfig = {
+  html: GrapesJSComponent[]; // top-level components
+  css: string;
+  js: string;
+  bodyAttributes?: Record<string, string>;
+  motions: { [key: string]: MotionType };
+  interactions: InteractionsInDB;
+};
+
+export type InfinitelyPageMeta = {
+  before_save: InfinitelyPageMetaConfig | null;
+  saved: InfinitelyPageMetaConfig | null;
+};
+
+export type Wp_Meta = {
+  website_url: string;
+  username: string;
+  password: string;
+  app_password: string;
 };
 
 export interface Project {
   id: number;
   name: string;
+  app_type: "normal" | "wordpress";
+  wp_meta: Wp_Meta;
   description: string;
-  type: string;
   imgSrc: string;
   logo: Blob | string | undefined;
   jsHeaderLibs: LibraryConfig[];
@@ -557,6 +697,67 @@ export interface Project {
     jsFooterLibs: boolean;
     cssLibs: boolean;
   };
+
+  devices: import("grapesjs").DeviceProperties[];
+  lastScreenshot: Date | string;
+}
+
+export interface WpProject {
+  id: number;
+  name: string;
+  app_type: "normal" | "wordpress";
+  wp_meta: Wp_Meta;
+  description: string;
+  logo: Blob | string | undefined;
+  jsHeaderLibs: LibraryConfig[] | InfinitelyWpMedia[];
+  jsFooterLibs: LibraryConfig[] | InfinitelyWpMedia[];
+  cssLibs: LibraryConfig[] | InfinitelyWpMedia[];
+  colors: string[];
+  scripts_need_to_publish: boolean;
+  scripts_need_arranged: boolean;
+  blocks: {
+    [key: string]: InfinitelyBlock;
+  };
+  mainEditorScripts: {
+    header: InfinitelyWpMedia[];
+    footer: InfinitelyWpMedia[];
+  };
+  mainEditorStyles: InfinitelyWpMedia[];
+  symbolBlocks: { name: string; media: string; id: string; category: string }[];
+  restAPIModels: RestAPIModel[];
+  dynamicTemplates: { [key: string]: DynamicTemplatesType };
+  assets: InfinitelyAsset[];
+  currentEditingPage: InfinitelyWpPage;
+  current_inf_meta: {
+    before_save: InfinitelyWpPage;
+    saved: InfinitelyWpPage;
+  };
+  symbols: { [key: string]: InfinitelySymbol };
+  globalCss: string | Blob | InfinitelyWpMedia;
+  globalJs: string | Blob | InfinitelyWpMedia;
+  globalRules: {
+    [ruleKey: string]: import("grapesjs").CssRule;
+  };
+  fonts: InfinitelyFonts;
+  motions: { [key: string]: MotionType };
+  apps: "Dropbox";
+  dropboxFileMeta?: DropBoxFileMeta;
+  dbx_pull_requried?: boolean;
+  interactions: InteractionsInDB;
+  inited: boolean;
+  minified_js: InfinitelyWpMedia;
+  minified_css: InfinitelyWpMedia;
+  projectSetting: ProjectSetting;
+  installStates: {
+    types: boolean;
+    globalTypes: boolean;
+    fonts: boolean;
+    jsHeaderLibs: boolean;
+    jsFooterLibs: boolean;
+    cssLibs: boolean;
+  };
+  before_save: WpProject | null;
+  save_state: "before_save" | "save";
   devices: import("grapesjs").DeviceProperties[];
   lastScreenshot: Date | string;
 }
@@ -705,6 +906,8 @@ export type MotionAnimationType = {
   // multiOptions: { [key: string]: string[] };
 };
 
+export type WpCommands = keyof typeof wpCommands;
+
 export type MotionType = {
   name: string;
   id: string;
@@ -714,10 +917,12 @@ export type MotionType = {
     [key: string]: {
       id: string;
       page: string;
+      script_for_wp: string;
     };
   };
   excludes?: string[];
   isTimeLine: boolean;
+  isLoop : boolean;
   isSplitText: boolean;
   timeLineName: string;
   timeline: {};
@@ -733,6 +938,7 @@ export type MotionType = {
     multiOptions: { [key: string]: string[] };
   };
   animations: MotionAnimationType[];
+  script_for_wp: string;
 };
 
 export type ShowProps = {
@@ -784,3 +990,80 @@ export interface BrandConfig {
     description: string;
   };
 }
+
+export type WpPage = {
+  id: number;
+  date: string;
+  date_gmt: string;
+  guid: {
+    rendered: string;
+  };
+  modified: string;
+  modified_gmt: string;
+  slug: string;
+  status: string;
+  type: string;
+  link: string;
+  title: {
+    rendered: string;
+  };
+  content: {
+    rendered: string;
+    protected: boolean;
+  };
+  excerpt: {
+    rendered: string;
+    protected: boolean;
+  };
+  author: number;
+  featured_media: number;
+  parent: number;
+  menu_order: number;
+  comment_status: string;
+  ping_status: string;
+  template: string;
+  meta: {
+    footnotes: string;
+  };
+  class_list: string[];
+  _links: {
+    self: Array<{
+      href: string;
+      targetHints?: {
+        allow: string[];
+      };
+    }>;
+    collection: Array<{
+      href: string;
+    }>;
+    about: Array<{
+      href: string;
+    }>;
+    author: Array<{
+      embeddable: boolean;
+      href: string;
+    }>;
+    replies: Array<{
+      embeddable: boolean;
+      href: string;
+    }>;
+    "version-history": Array<{
+      count: number;
+      href: string;
+    }>;
+    "predecessor-version": Array<{
+      id: number;
+      href: string;
+    }>;
+    "wp:attachment": Array<{
+      href: string;
+    }>;
+    curies: Array<{
+      name: string;
+      href: string;
+      templated: boolean;
+    }>;
+  };
+};
+
+export type WpPages = WpPage[];

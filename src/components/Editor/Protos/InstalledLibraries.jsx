@@ -17,74 +17,174 @@ import { Accordion } from "../../Protos/Accordion";
 import { AccordionItem } from "../../Protos/AccordionItem";
 import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
 import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
+import { Input } from "./Input";
+import { FitTitle } from "./FitTitle";
+import { toast } from "react-toastify";
+import { doInNormal, doInNormalAsync, doInWordpressAsync, getProjectData } from "../../../helpers/functions";
+import { wp_delete_media_files_by_slugs, wp_update_option } from "../../../Apps/wordpress/functions";
+import { ToastMsgInfo } from "./ToastMsgInfo";
+import { opfs } from "../../../helpers/initOpfs";
+import { cloneDeep } from "lodash";
+import { Checkbox } from "../../Protos/Checkbox";
 
 const ReactSortableComponent = memo(
-  ({ libraries = [], prop = "", updateList = (newList, key) => {} }) => {
-    const editor = useEditorMaybe();
+  ({ libraries = {}, prop = "", updateList = (newList, key) => { } }) => {
+    const [selected, setSelected] = useState([]);
+    const [checkedAll, setCheckedAll] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const libs = libraries[prop].libs;
+    // const editor = useEditorMaybe();
+
+    const deleteLibraries = async () => {
+      const cnfrm = confirm(`Are you sure to delete selected libraries ? 🤔`);
+      if (!cnfrm) return;
+      setIsDeleting(true);
+      const tid = toast.loading(<ToastMsgInfo msg={`Deleting selected libraries...`} />);
+      try {
+        const projectId = +localStorage.getItem(current_project_id);
+        // const project = await await db.projects.get(projectId);
+        // const data = project;
+        const newArr = libs.filter((lib) => !(selected.some(slLib => slLib.name === lib.name)));
+        console.log('new arr selected: ', newArr);
+        const libsPathes = selected.map(lib => lib.path);
+        const libsTypesPathes = selected.map(lib => lib.typesPath).filter(Boolean);
+        const slugs = selected.map(lib => lib.slug);
+
+        const deleteLibFromDB = async () => {
+          await opfs.removeFiles([
+            ...libsPathes,
+            ...libsTypesPathes,
+          ]);
+          await db.projects.update(projectId, {
+            [prop]: newArr,
+          });
+        };
+
+        await doInNormalAsync(async () => {
+          await deleteLibFromDB();
+        })
+
+        await doInWordpressAsync(async () => {
+          const projecdData = await getProjectData();
+          const cnfrm = confirm(`Do you want to delete those libraries from media library too ? 🤔`);
+          if (cnfrm) {
+            const wp_delete_file_res = await wp_delete_media_files_by_slugs({
+              projectId,
+              slugs,
+            });
+
+            if (!wp_delete_file_res.success) {
+              console.error(wp_delete_file_res);
+              throw new Error(`Faild to delete libraries 😥`);
+            }
+          }
+
+          projecdData[prop] = newArr;
+          const wp_update_option_res = await wp_update_option({
+            projectId,
+            optionName: 'inf_config',
+            value: projecdData,
+          });
+
+          if (!wp_update_option_res?.success) {
+            console.error(wp_update_option_res);
+            throw new Error(`Faild to delete library 😥`);
+          }
+
+          await deleteLibFromDB();
+        })
+
+        toast.done(tid);
+        toast.success(<ToastMsgInfo msg={"Library Removed Successfully"} />);
+        reloadRequiredInstance.emit(InfinitelyEvents.editor.require, { state: true });
+      } catch (error) {
+        toast.dismiss(tid);
+        toast.error(<ToastMsgInfo msg={"Faild To Remove Library"} />);
+        throw new Error(`Error From Installed Library Details Cmp ${error}`);
+      } finally {
+        setCheckedAll(false);
+        setIsDeleting(false);
+      }
+    };
+
+    const selectAll = () => {
+      console.log(cloneDeep(libs));
+      if (checkedAll) {
+        setSelected([]);
+      } else {
+        setSelected(cloneDeep(libs));
+      }
+    }
+
+    useEffect(() => {
+      setCheckedAll(selected.length === libs.length);
+    }, [selected])
+
     return (
-      <ReactSortable
-        handle=".handle"
-        list={libraries[prop].libs}
-        setList={(newList) => {
-          if (!newList || !newList.length) return;
-          updateList(newList, prop);
-        }}
-        onUpdate={(ev) => {
-          // editor.load();
-          reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {state:true});
-        }}
-      >
-        {libraries[prop]?.libs?.map((lib, x) => (
-          <InstalledLibraryDetails library={lib} key={x} dbKey={prop} />
-        ))}
-      </ReactSortable>
+      <section className={`${isDeleting && 'cursor-not-allowed pointer-events-none'}`}>
+        {Boolean(libs.length) && <header className="flex items-center justify-between p-2 rounded-lg bg-surface-secondary">
+          <section className="flex items-center gap-2">
+
+
+            <Checkbox checked={checkedAll} title="select all" onChange={() => { selectAll() }} />
+
+            <FitTitle className="flex items-center gap-2 capitalize bg-surface-tertiary">
+              selected : {selected.length}
+
+            </FitTitle>
+          </section>
+
+          <section>
+          </section>
+
+          <section>
+            <Button className="bg-surface-tertiary hover:bg-[crimson] transition-colors font-semibold"
+              onClick={async () => {
+                await deleteLibraries();
+              }}
+            >
+              {Icons.trash('white')}
+              Delete
+            </Button>
+          </section>
+        </header>}
+
+        {!Boolean(libs.length) && <section className="capitalize p-2 rounded-lg font-semibold text-2xl text-blue-300 flex justify-center items-center animate-pulse bg-surface-secondary">Nothing here 😪</section>}
+
+        <ReactSortable
+          handle=".handle"
+          list={libraries[prop].libs}
+          setList={(newList) => {
+            if (!newList || !newList.length) return;
+            updateList(newList, prop);
+          }}
+          onUpdate={(ev) => {
+            // editor.load();
+            doInNormal(() => {
+              reloadRequiredInstance.emit(InfinitelyEvents.editor.require, { state: true });
+
+            })
+          }}
+        >
+          {libraries[prop]?.libs?.map((lib, x) => (
+            <InstalledLibraryDetails library={lib} key={x} dbKey={prop} selected={selected} setSelected={setSelected} />
+          ))}
+        </ReactSortable>
+      </section>
     );
   }
 );
 
 export const InstalledLibraries = () => {
   const projectId = +localStorage.getItem(current_project_id);
-  const editor = useEditorMaybe();
-  const refs = useRef([]);
   const [libraries, setLibraries] = useState({});
-  const [renderPortals, setRenderPortals] = useState(false);
   const conatinerRef = useRef(refType);
+  const [scriptsNeedToPublish, setScriptsNeedToPublish] = useState(false);
+  
 
-  // useEffect(() => {
-  //   if (!conatinerRef && !conatinerRef.current) return;
-  //   // console.log('container : ' , conatinerRef , conatinerRef.current , conatinerRef.current.childNodes);
-
-  //   // setRenderPortals(true);
-
-  //   const getNodes = () => {
-  //     setTimeout(() => {
-  //       const childs = conatinerRef.current.children;
-  //       if (!childs.length) {
-  //         getNodes();
-  //       } else {
-  //         setRenderPortals(true);
-  //       }
-  //     }, 5);
-  //   };
-  //   getNodes();
-  // }, [conatinerRef, conatinerRef.current]);
 
   useLiveQuery(async () => {
     const data = await db.projects.get(projectId);
-    // console.log("live query from libs", data, {
-    //   jsHeaderLibs: {
-    //     libs: data.jsHeaderLibs,
-    //     desc: "Header Scripts",
-    //   },
-    //   jsFooterLibs: {
-    //     libs: data.jsFooterLibs,
-    //     desc: "Footer Scripts",
-    //   },
-    //   cssLibs: {
-    //     libs: data.cssLibs,
-    //     desc: "Styles",
-    //   },
-    // });
 
     setLibraries({
       jsHeaderLibs: {
@@ -100,6 +200,8 @@ export const InstalledLibraries = () => {
         desc: "Styles",
       },
     });
+
+    setScriptsNeedToPublish(data?.scripts_need_arranged);
   });
 
   const updateList = async (list, key) => {
@@ -109,59 +211,91 @@ export const InstalledLibraries = () => {
     console.log("new List : ", list);
 
     // const data = await db.projects.get(projectId);
-    db.projects.update(projectId, {
-      [key]: [...list],
+    await doInNormalAsync(async () => {
+      await db.projects.update(projectId, {
+        [key]: [...list],
+      });
     });
+
+    await doInWordpressAsync(async () => {
+      const projecdData = await getProjectData();
+      const scripts_need_arranged = JSON.stringify(projecdData[key]) !== JSON.stringify(list);
+      await db.projects.update(projectId, {
+        [key]: [...list],
+        scripts_need_arranged ,
+      });
+    })
   };
+
+  const saveOrders = async () => {
+    const tid = toast.loading(<ToastMsgInfo msg={`Saving orders...`} />);
+
+    try {
+      const projectData = await getProjectData();
+      const wp_update_config_res = await wp_update_option({
+        projectId,
+        optionName: 'inf_config',
+        value: projectData
+      });
+      if (!wp_update_config_res?.success) {
+        throw new Error(`Faild to save orders 😥`);
+      }
+       await db.projects.update(projectId, {
+        scripts_need_arranged : false,
+      });
+      toast.done(tid);
+      toast.success(<ToastMsgInfo msg={`Orders saved successfully 😎`} />);
+    } catch (error) {
+      toast.dismiss(tid);
+      toast.error(<ToastMsgInfo msg={error.message || 'Faild to save orders'} />);
+      throw new Error(error);
+    }
+
+  }
   // const [list, setList] = useState(["1", "2", "3", "4"]);
 
-  /**
-   *
-   * @param {import('../../../helpers/types').LibraryConfig} library
-   */
-  const deleteLibrary = async (library) => {
-    const data = await (await db.projects.get(projectId)).data;
-    const librariesArray = library.isLocal
-      ? data.jsLocalLibraries
-      : data.jsCDNLibraries;
-    const newArr = librariesArray.filter(
-      (jsLibrary) => jsLibrary.id != library.id
-    );
-  };
+
 
   return (
-    <section className="px-1 py-2 flex flex-col gap-2 h-full">
-      <Accordion attributes={{ ref: conatinerRef }}>
-        {libraries &&
-          Object.keys(libraries)?.map((key, i) => {
-            return (
-              <AccordionItem
-                // data-accordion-key={key}
+    <section className="relative flex flex-col gap-2 h-full w-full rounded-lg">
+      <section className="relative overflow-y-auto overflow-x-hidden hideScrollBar px-1  py-2 flex flex-col gap-2 h-full ">
 
-                key={i}
-                title={libraries[key].desc}
-                allowPopupLength
-                // className="bg-[var(--color-surface-tertiary)!important] relative"
-                // classNames={{ content: "bg-surface-tertiary p-[unset]" }}
-                length={libraries[key]?.libs.length}
-                slotProps={{
-                  transition: {
-                    unmountOnExit: true,
-                    timeout: 10, // Duration of the animation in milliseconds
-                    // easing: 'ease-in-out',
-                    // properties: ['height', 'opacity'], // Properties to animate
-                  },
-                }}
-              >
-                <ReactSortableComponent
-                  libraries={libraries}
-                  prop={key}
-                  updateList={updateList}
-                />
-              </AccordionItem>
-            );
-          })}
-      </Accordion>
+        <Accordion attributes={{ ref: conatinerRef }}>
+          {libraries &&
+            Object.keys(libraries)?.map((key, i) => {
+              return (
+                <AccordionItem
+                  // data-accordion-key={key}
+
+                  key={i}
+                  title={libraries[key].desc}
+                  allowPopupLength
+                  // className="bg-[var(--color-surface-tertiary)!important] relative"
+                  // classNames={{ content: "bg-surface-tertiary p-[unset]" }}
+                  length={libraries[key]?.libs.length}
+                  slotProps={{
+                    transition: {
+                      unmountOnExit: true,
+                      timeout: 10, // Duration of the animation in milliseconds
+                      // easing: 'ease-in-out',
+                      // properties: ['height', 'opacity'], // Properties to animate
+                    },
+                  }}
+                >
+                  <ReactSortableComponent
+                    libraries={libraries}
+                    prop={key}
+                    updateList={updateList}
+                  />
+                </AccordionItem>
+              );
+            })}
+        </Accordion>
+        {scriptsNeedToPublish && <Button className="w-fit sticky bottom-[0] right-[5px] font-semibold capitalize" onClick={async () => {
+          await saveOrders()
+        }}>Save orders</Button>}
+      </section>
+
     </section>
   );
 };

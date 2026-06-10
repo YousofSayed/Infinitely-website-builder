@@ -9,7 +9,7 @@ export const selectTagName = {
   keywords: tagNames,
   type: "select",
   callback({ editor, trait, newValue }) {
-    editor.getSelected().set("tagName", newValue);
+    editor.getSelected().set("tagName", newValue || "div");
   },
 };
 

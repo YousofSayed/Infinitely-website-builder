@@ -11,6 +11,7 @@ import {
   getProjectData,
   getProjectSettings,
   isProjectSettingPropTrue,
+  isWordpress,
 } from "../../../helpers/functions";
 import { css_beautify, html_beautify, js_beautify } from "js-beautify";
 
@@ -79,13 +80,13 @@ export const CodeEditor = ({
       });
 
       const globalJs = await (
-        await opfs.getFile(defineRoot(`global/global.js`))
+        await opfs.getFile(defineRoot(isWordpress() ? 'global.js' : `global/global.js`))
       ).text();
       const localJs = await (
-        await opfs.getFile(defineRoot(`js/${currentPageName}.js`))
+        await opfs.getFile(defineRoot(isWordpress() ? 'local.js' : `js/${currentPageName}.js`))
       ).text();
 
-      
+
 
       const devLibs = (
         await Promise.all(
@@ -118,7 +119,7 @@ export const CodeEditor = ({
         );
 
 
-        setTimeout(async () => {
+      setTimeout(async () => {
         for (const lib of [
           ...projectData.jsHeaderLibs,
           ...projectData.jsFooterLibs,
@@ -193,7 +194,24 @@ export const CodeEditor = ({
             }
           }
         }
-      }, 10);
+      }, 5);
+
+      // setTimeout(async () => {
+        const libs = [
+          ...projectData.jsHeaderLibs,
+          ...projectData.jsFooterLibs,
+        ];
+
+        for (const lib of libs) {
+          const fileContent = await (await opfs.getFile(defineRoot(lib.path))).text();
+          monaco.languages.typescript.javascriptDefaults.addExtraLib(
+            fileContent,
+            `lolo.d.ts`
+          );
+          console.log('file content : ' ,`lolol.js`, fileContent);
+          
+        }
+      // }, 5)
 
       setTimeout(async () => {
         ///// Global types
@@ -258,7 +276,7 @@ export const CodeEditor = ({
             );
           }
         }
-      }, 10);
+      }, 5);
 
       monaco.languages.typescript.javascriptDefaults.addExtraLib(
         libSource,
@@ -267,7 +285,7 @@ export const CodeEditor = ({
 
       monaco.languages.registerCompletionItemProvider("javascript", {
         // Trigger suggestions on typing 'try' or a space
-        triggerCharacters: ["t", " "],
+        triggerCharacters: ["t", " ","atr" , "astr" , 'tr'],
         provideCompletionItems: function (model, position) {
           // Get the text until the cursor position
           var textUntilPosition = model.getValueInRange({
@@ -300,20 +318,40 @@ export const CodeEditor = ({
               label: "trycatch",
               kind: monaco.languages.CompletionItemKind.Snippet,
               insertText: [
-                "(()=>(",
+                "(()=>{",
                 "try {",
                 "retrun (",
                 "\t${1:// Your code here}",
                 ")",
                 "} catch (error) {",
-                "\tconsole.error(error, 'error in this el:', $el);",
+                "\tconsole.error(error, 'error in this el:', );",
                 "throw new Error({message: error.message, stack: error.stack});",
                 "}",
-                "))()",
+                "})()",
               ].join("\n"),
               insertTextRules:
                 monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
               documentation: "Inserts a try...catch block for error handling",
+              range: range,
+            },
+            {
+              label: "asynctrycatch",
+              kind: monaco.languages.CompletionItemKind.Snippet,
+              insertText: [
+                "(async()=>{",
+                "try {",
+                "retrun (",
+                "\t${1:// Your code here}",
+                ")",
+                "} catch (error) {",
+                "\tconsole.error(error, 'error in this el:', \$el);",
+                "throw new Error({message: error.message, stack: error.stack});",
+                "}",
+                "})()",
+              ].join("\n"),
+              insertTextRules:
+                monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+              documentation: "Inserts async a try...catch block for error handling",
               range: range,
             },
           ];

@@ -19,7 +19,6 @@ export const Image = ({ editor }) => {
     // extend:'image',
     // extendView:'image',
     view: {
-      events: {},
       onActive(ev) {
         ev.preventDefault();
         ev.stopPropagation();
@@ -120,24 +119,7 @@ export const Image = ({ editor }) => {
 
         // let loadCounter = 0;
         op.el.addEventListener("error", async (ev) => {
-          // if(!op.el.src)return
-          // console.log('img , no src here' , op.el.src);
-
-          // console.log('from outer :' , loadCounter);
-
-          // try {
-          //   if(loadCounter >3)throw new Error('More of calling')
-          //   op.el.src = URL.createObjectURL(await (await fetch(`${window.origin}/${op.el.src}`)).blob());
-          //   loadCounter++;
-          //   console.log('from in :' , loadCounter);
-
-          // editor.refresh({tools:true});
-          // editor.Canvas.refresh({all:true,spots:true});
-          // editor.Canvas.refreshSpots()
-
-          // } catch (error) {
-
-          // }
+          
           op.el.src = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3R5bGU9ImZpbGw6IHJnYmEoMCwwLDAsMC4xNSk7IHRyYW5zZm9ybTogc2NhbGUoMC43NSkiPgogICAgICAgIDxwYXRoIGQ9Ik0yLjI4IDNMMSA0LjI3bDIgMlYxOWMwIDEuMS45IDIgMiAyaDEyLjczbDIgMkwyMSAyMS43MiAyLjI4IDNtMi41NSAwTDIxIDE5LjE3VjVhMiAyIDAgMCAwLTItMkg0LjgzTTguNSAxMy41bDIuNSAzIDEtMS4yNUwxNC43MyAxOEg1bDMuNS00LjV6Ij48L3BhdGg+CiAgICAgIDwvc3ZnPg==`;
         });
       },
