@@ -1,7 +1,11 @@
-// src/serviceWorkers/initDBAssetsSw.js
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { refresherWorker } from "@/helpers/defineWorkers";
 import { toast } from "react-toastify";
-import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
-import { refresherWorker } from "../helpers/defineWorkers";
+
+// src/serviceWorkers/initDBAssetsSw.js
+
+
+
 
 // export const initDBAssetsSw = async (setSw = () => {}) => {
 //   if (!("serviceWorker" in navigator)) {
@@ -192,5 +196,3 @@ export const initDBAssetsSw = async (setSw = () => {}) => {
     // });
   }
 };
-
-

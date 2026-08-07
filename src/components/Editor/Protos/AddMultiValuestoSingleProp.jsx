@@ -1,14 +1,14 @@
+import { currentElState } from "@/helpers/atoms";
+import { useSetClassForCurrentEl } from "@/hooks/useSetclassForCurrentEl";
+import { useUpdateInputValue } from "@/hooks/useUpdateInputValue";
+import { Icons } from "@/components/Icons/Icons";
+import { P } from "@/components/Protos/P";
+import { Choices } from "@/components/Editor/Protos/Choices";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
 import React, { useEffect, useState } from "react";
-import { Select } from "./Select";
-import { SmallButton } from "./SmallButton";
-import { Icons } from "../../Icons/Icons";
-import { Choices } from "./Choices";
-import { useSetClassForCurrentEl } from "../../../hooks/useSetclassForCurrentEl";
-import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
 import { useRecoilValue } from "recoil";
-import { currentElState } from "../../../helpers/atoms";
-import { P } from "../../Protos/P";
-import { FitTitle } from "./FitTitle";
 
 /**
  *

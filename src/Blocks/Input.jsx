@@ -1,9 +1,9 @@
-import { Icons } from "../components/Icons/Icons";
-import { inputTypes } from "../constants/hsValues";
-import { open_files_manager_modal } from "../constants/InfinitelyCommands";
-import { selectInputType } from "../constants/traits";
-import { defineTraits, traitCallback } from "../helpers/functions";
-import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
+import { Icons } from "@/components/Icons/Icons";
+import { inputTypes } from "@/constants/hsValues";
+import { open_files_manager_modal } from "@/constants/InfinitelyCommands";
+import { selectInputType } from "@/constants/traits";
+import { defineTraits, traitCallback } from "@/helpers/functions";
+import { reactToStringMarkup } from "@/helpers/reactToStringMarkup";
 
 /**
  *

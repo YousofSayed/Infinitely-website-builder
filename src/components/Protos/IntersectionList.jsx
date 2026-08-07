@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
-import { refType } from "../../helpers/jsDocs";
-import { entries } from "lodash";
-import { toast } from "react-toastify";
-import { Loader } from "../Loader";
+import { refType } from "@/helpers/jsDocs";
+import { Loader } from "@/components/Loader";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { entries } from "lodash";
+import React, { useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
+
 /**
  * @template T
  * @typedef {Object} IntersectionListProps

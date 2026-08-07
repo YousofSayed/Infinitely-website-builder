@@ -1,4 +1,5 @@
-import { css, html } from "../../helpers/cocktail";
+import { css, html } from "@/helpers/cocktail";
+
 const mainColor = "#64748B";
 
 export const editorIcons = {

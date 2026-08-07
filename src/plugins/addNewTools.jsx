@@ -1,13 +1,11 @@
-import React from "react";
-
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import {
   doActionAndPreventSaving,
   getInfinitelySymbolInfo,
   initToolbar,
-} from "../helpers/functions";
-
+} from "@/helpers/functions";
+import React from "react";
 import { toast } from "react-toastify";
-import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
 
 /**
  *

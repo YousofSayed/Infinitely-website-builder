@@ -1,12 +1,12 @@
+import { editorIcons } from "@/components/Icons/editorIcons";
+import { Icons } from "@/components/Icons/Icons";
+import { dynamic_container, dynamic_text } from "@/constants/cmpsTypes";
+import { inf_symbol_Id_attribute } from "@/constants/shared";
+import { currentElState } from "@/helpers/atoms";
+import { html, uniqueID } from "@/helpers/cocktail";
+import { defineTraits } from "@/helpers/functions";
+import { reactToStringMarkup } from "@/helpers/reactToStringMarkup";
 import { useRecoilValue } from "recoil";
-import { html, uniqueID } from "../helpers/cocktail";
-import { currentElState } from "../helpers/atoms";
-import { editorIcons } from "../components/Icons/editorIcons";
-import { dynamic_container, dynamic_text } from "../constants/cmpsTypes";
-import { defineTraits } from "../helpers/functions";
-import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
-import { Icons } from "../components/Icons/Icons";
-import { inf_symbol_Id_attribute } from "../constants/shared";
 
 const svgText = html`<svg style="width:24px;height:24px" viewBox="0 0 24 24">
   <path

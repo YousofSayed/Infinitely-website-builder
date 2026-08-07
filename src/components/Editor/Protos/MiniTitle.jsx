@@ -6,5 +6,5 @@ export const MiniTitle = ({ children , className}) => {
         <p className="text-white font-bold">{children}</p>
       </section>
     );
-  };
-   
+
+};

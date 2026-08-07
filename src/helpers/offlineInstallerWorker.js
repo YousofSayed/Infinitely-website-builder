@@ -1,7 +1,7 @@
-import { offlineInstaller } from "./workerCommands";
-import { doWorkerPattern } from "./workersPattern";
-import { wpCommands } from "./wp_commands_worker";
+import { offlineInstaller } from "@/helpers/workerCommands";
+import { doWorkerPattern } from "@/helpers/workersPattern";
+import { wpCommands } from "@/helpers/wp_commands_worker";
 
-const commands = { offlineInstaller , ...wpCommands};
+export const commands = { offlineInstaller , ...wpCommands};
 
 doWorkerPattern(commands);

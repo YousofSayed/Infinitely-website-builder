@@ -1,7 +1,7 @@
-import { Icons } from "../components/Icons/Icons";
-import { html } from "../helpers/cocktail";
-import { defineTraits } from "../helpers/functions";
-import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
+import { Icons } from "@/components/Icons/Icons";
+import { html } from "@/helpers/cocktail";
+import { defineTraits } from "@/helpers/functions";
+import { reactToStringMarkup } from "@/helpers/reactToStringMarkup";
 
 /**
  *

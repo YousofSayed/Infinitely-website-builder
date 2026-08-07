@@ -1,30 +1,30 @@
-import { useEditorMaybe } from "@grapesjs/react";
-import React, { useEffect, useRef, useState } from "react";
-import { Input } from "../Protos/Input";
-import { Button } from "../../Protos/Button";
-import { dbPagesType, pagesType, refType } from "../../../helpers/jsDocs";
-import { Icons } from "../../Icons/Icons";
-import { useLiveQuery } from "dexie-react-hooks";
-import {
-  advancedSearchSuggestions,
-  getProjectData,
-} from "../../../helpers/functions";
-import { db } from "../../../helpers/db";
+import { open_page_helmet_modal } from "@/constants/InfinitelyCommands";
 import {
   current_page_helmet,
   current_project_id,
-} from "../../../constants/shared";
-import { uniqueID } from "../../../helpers/cocktail";
-import { open_page_helmet_modal } from "../../../constants/InfinitelyCommands";
-import { FitTitle } from "../Protos/FitTitle";
-import { SmallButton } from "../Protos/SmallButton";
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "../Protos/ToastMsgInfo";
-import { Hr } from "../../Protos/Hr";
-import { buildPage, defineRoot } from "../../../helpers/bridge";
-import { opfs } from "../../../helpers/initOpfs";
+} from "@/constants/shared";
+import { buildPage, defineRoot } from "@/helpers/bridge";
+import { uniqueID } from "@/helpers/cocktail";
+import { db } from "@/helpers/db";
+import { assetsWorker } from "@/helpers/defineWorkers";
+import {
+  advancedSearchSuggestions,
+  getProjectData,
+} from "@/helpers/functions";
+import { opfs } from "@/helpers/initOpfs";
+import { dbPagesType, pagesType, refType } from "@/helpers/jsDocs";
+import { Icons } from "@/components/Icons/Icons";
+import { Button } from "@/components/Protos/Button";
+import { Hr } from "@/components/Protos/Hr";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { Input } from "@/components/Editor/Protos/Input";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { useEditorMaybe } from "@grapesjs/react";
+import { useLiveQuery } from "dexie-react-hooks";
 import { cloneDeep } from "lodash";
-import { assetsWorker } from "../../../helpers/defineWorkers";
+import React, { useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
 
 export const PagesManager = () => {
   const editor = useEditorMaybe();

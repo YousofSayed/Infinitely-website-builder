@@ -1,5 +1,5 @@
 {
-  "name": "infinite-react",
+  "name": "infinitely-studio",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,13 +9,21 @@
     "dev": "node --max-old-space-size=8024 ./node_modules/vite/bin/vite.js",
     "build": "node --max-old-space-size=8024 ./node_modules/vite/bin/vite.js build",
     "preview": "vite preview",
-    "electron:dev": "concurrently \"npm run start\" \"wait-on http://localhost:5173 && electron .\"",
+    "electron:dev": "concurrently \"deno run start\" \"wait-on https://127.0.0.1:5173 && electronmon --trace  --watch electron-main.cjs --watch preload.js .\"",
     "electron:build": "npm run build && electron-builder",
-    "electron": "electron .",
+    "electron": "electronmon --trace .",
     "lint": "eslint . src --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint src --ext .js,.ts,.jsx,.tsx --fix"
   },
   "main": "electron-main.cjs",
+ "electronmon": {
+  "patterns": [
+    "!src/**",
+    "!public/**",
+    "!dist/**",
+    "!node_modules/**"
+  ]
+},
   "build": {
     "appId": "com.infinitely.app",
     "productName": "Infinitely Studio",
@@ -38,6 +46,7 @@
     "@monaco-editor/loader": "^1.5.0",
     "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-accordion": "^1.2.11",
+    "@tanstack/react-query": "^5.101.4",
     "@themaximalist/llm.js": "^1.0.3",
     "@typescript/ata": "^0.9.8",
     "@wordpress/block-serialization-default-parser": "^5.21.0",
@@ -96,6 +105,7 @@
     "concurrently": "^9.2.0",
     "electron": "^37.2.0",
     "electron-builder": "^26.0.12",
+    "electronmon": "^2.0.4",
     "eslint": "^9.34.0",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-react": "^7.37.5",

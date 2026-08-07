@@ -1,6 +1,6 @@
 import { uniqueId } from 'lodash'
 import React, { useId, useRef } from 'react'
-import { Input } from '../Editor/Protos/Input';
+import { Input } from '@/components/Editor/Protos/Input';
 
 export const Checkbox = ({
     title = '',

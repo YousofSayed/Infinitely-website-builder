@@ -1,36 +1,43 @@
-import { Route, Routes, useNavigate } from "react-router-dom";
-import { StyleAside } from "./components/Editor/StyleAside";
-import { Blocks } from "./components/Editor/Blocks";
-import { TraitsAside } from "./components/Editor/TraitsAside";
+import { Blocks } from "@/components/Editor/Blocks";
+import { Commands } from "@/components/Editor/Commands";
+import { Interactions } from "@/components/Editor/Interactions";
+import { Motion } from "@/components/Editor/Protos/Motion";
+import { StyleAside } from "@/components/Editor/StyleAside";
+import { TraitsAside } from "@/components/Editor/TraitsAside";
+import { current_project_id } from "@/constants/shared";
+import {
+  appInstallingState,
+  appTypeStt,
+  dbAssetsSwState,
+} from "@/helpers/atoms";
+import { isDevMode } from "@/helpers/bridge";
+import { refresherWorker } from "@/helpers/defineWorkers";
+import { getAppType } from "@/helpers/functions";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
+import { opfs } from "@/helpers/initOpfs";
+import { initDBAssetsSw } from "@/serviceWorkers/initDBAssets-sw";
+import { AppInstalling } from "@/views/AppInstalling";
+import { Editor } from "@/views/Editor";
+import { Opfs } from "@/views/Opfs";
+import { Workspace } from "@/views/Workspace";
+import { Preview } from "@/wordpress/Preview";
+import { WpCreate } from "@/wordpress/WpCreate";
+import { WpSelect } from "@/wordpress/WpSelect";
 import React, { useEffect } from "react";
-import { Workspace } from "./views/Workspace";
-import { Commands } from "./components/Editor/Commands";
-import { infinitelyWorker } from "./helpers/infinitelyWorker";
-import { appInstallingState, dbAssetsSwState } from "./helpers/atoms";
-import { initDBAssetsSw } from "./serviceWorkers/initDBAssets-sw";
+import { Route, Routes, useNavigate } from "react-router-dom";
 import { useRecoilState } from "recoil";
-import { current_project_id } from "./constants/shared";
-import { Editor } from "./views/Editor";
-import { Motion } from "./components/Editor/Protos/Motion";
-import { refresherWorker } from "./helpers/defineWorkers";
-import { opfs } from "./helpers/initOpfs";
-import { isDevMode } from "./helpers/bridge";
-import { Opfs } from "./views/Opfs";
-import { Interactions } from "./components/Editor/Interactions";
-import { AppInstalling } from "./views/AppInstalling";
-import { WpSelect } from "./wordpress/WpSelect";
-import { WpCreate } from "./wordpress/WpCreate";
-import { Preview } from "./wordpress/Preview";
-// import { esmToUmd } from "./helpers/initBabel";
+
+//
 
 function App() {
   // const Editor = lazy(async () => ({
-  //   default: (await import("./views/Editor")).Editor,
+  //   default: (await import("@/views/Editor")).Editor,
   // }));
-  // const Editor = lazy( async() => await import("./views/Editor"));
+  // const Editor = lazy( async() => await import("@/views/Editor"));
 
   const [dbAssetsSw, setDBAssetsSw] = useRecoilState(dbAssetsSwState);
   const [appInstalling, setAppInstalling] = useRecoilState(appInstallingState);
+  const [appSate, setAppState] = useRecoilState(appTypeStt);
   const navigate = useNavigate();
   // const location = useLocation();
 
@@ -69,7 +76,7 @@ function App() {
       } else if (command == "initSevrviceWorker") {
         console.log(
           "recived preview pages from initSevrviceWorker , props : ",
-          props
+          props,
         );
         initDBAssetsSw(setDBAssetsSw);
       }
@@ -102,22 +109,11 @@ function App() {
       } else {
         localStorage.setItem("installed", "true");
         setAppInstalling(false);
-        // navigator.serviceWorker.getRegistration().then((registration) => {
-        //   if (registration && registration.active) {
-        //     registration.active.addEventListener("statechange", (e) => {
-        //       if (e.target.state === "redundant") {
-        //         console.log(
-        //           "Service Worker became redundant (unregistered or replaced)."
-        //         );
-        //       }
-        //     });
-        //   }
-        // });
       }
       console.log(
         "Previous registrations:",
         prevRegs,
-        navigator.serviceWorker.controller
+        navigator.serviceWorker.controller,
       );
     })();
 
@@ -139,6 +135,10 @@ function App() {
     return () => {
       refresherWorker.removeEventListener("message", messageCallback);
     };
+  }, []);
+
+  useEffect(() => {
+    setAppState(getAppType());
   }, []);
 
   const createProjectFolder = async () => {

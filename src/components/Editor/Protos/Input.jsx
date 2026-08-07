@@ -1,5 +1,5 @@
+import { refType } from "@/helpers/jsDocs";
 import React, { useEffect, useRef, useState } from "react";
-import { refType } from "../../../helpers/jsDocs";
 
 // million-ignore
 /**

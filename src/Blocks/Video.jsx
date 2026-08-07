@@ -1,8 +1,8 @@
-import { Icons } from "../components/Icons/Icons";
-import { open_files_manager_modal } from "../constants/InfinitelyCommands";
-import { html, uniqueID } from "../helpers/cocktail";
-import { defineTraits, traitCallback } from "../helpers/functions";
-import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
+import { Icons } from "@/components/Icons/Icons";
+import { open_files_manager_modal } from "@/constants/InfinitelyCommands";
+import { html, uniqueID } from "@/helpers/cocktail";
+import { defineTraits, traitCallback } from "@/helpers/functions";
+import { reactToStringMarkup } from "@/helpers/reactToStringMarkup";
 
 /**
  *

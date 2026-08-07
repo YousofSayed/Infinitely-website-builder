@@ -1,10 +1,10 @@
 import {
   current_project_id,
   is_installation_checked,
-} from "../constants/shared";
+} from "@/constants/shared";
+import { offlineInstallerWorker, routerWorker } from "@/helpers/defineWorkers";
+import { workerCallbackMaker } from "@/helpers/functions";
 import { useEffect } from "react";
-import { offlineInstallerWorker, routerWorker } from "../helpers/defineWorkers";
-import { workerCallbackMaker } from "../helpers/functions";
 
 export const useOfflineHandler = () => {
   useEffect(() => {

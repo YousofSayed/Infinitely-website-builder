@@ -1,20 +1,20 @@
-import React, { memo, useEffect, useState } from "react";
-import { displayValues } from "../../../constants/cssProps";
-import { useRecoilValue } from "recoil";
-import { currentElState } from "../../../helpers/atoms";
-import { GridLayout } from "./GridLayout";
-import { FlexLayout } from "./FlexLayout";
-import { SelectStyle } from "./SelectStyle";
-import { Size } from "./Size";
-import { MiniTitle } from "./MiniTitle";
-import { Positioning } from "./Positioning";
-import { Paddaing } from "./Paddding";
-import { Margin } from "./Margin";
-import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
+import { displayValues } from "@/constants/cssProps";
+import { currentElState } from "@/helpers/atoms";
+import { useUpdateInputValue } from "@/hooks/useUpdateInputValue";
+import { Display } from "@/components/Editor/Protos/Display";
+import { FlexChildProps } from "@/components/Editor/Protos/FlexChildProps";
+import { FlexLayout } from "@/components/Editor/Protos/FlexLayout";
+import { GridLayout } from "@/components/Editor/Protos/GridLayout";
+import { GridPropsChilds } from "@/components/Editor/Protos/GridPropsChilds";
+import { Margin } from "@/components/Editor/Protos/Margin";
+import { MiniTitle } from "@/components/Editor/Protos/MiniTitle";
+import { Paddaing } from "@/components/Editor/Protos/Paddding";
+import { Positioning } from "@/components/Editor/Protos/Positioning";
+import { SelectStyle } from "@/components/Editor/Protos/SelectStyle";
+import { Size } from "@/components/Editor/Protos/Size";
 import { useEditorMaybe } from "@grapesjs/react";
-import { FlexChildProps } from "./FlexChildProps";
-import { GridPropsChilds } from "./GridPropsChilds";
-import { Display } from "./Display";
+import React, { memo, useEffect, useState } from "react";
+import { useRecoilValue } from "recoil";
 
 /**
  *

@@ -1,5 +1,6 @@
+
 import React from 'react'
-import { Element } from '../Protos/Element'
+import { Element } from '@/components/Editor/Protos/Element'
 
 export const Layouts = () => {
   return (

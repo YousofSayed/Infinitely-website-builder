@@ -1,33 +1,31 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { config } from '../../../../brand';
-import { Input } from '../../Protos/Input';
-import { SmallButton } from '../../Protos/SmallButton';
-import { Icons } from '../../../Icons/Icons';
-import { wp_delete_media_files_by_slugs, wp_get, wp_upload_multiple_files } from '../../../../Apps/wordpress/functions';
-import { isArray } from 'lodash';
-import { VirtuosoGrid } from 'react-virtuoso';
-import { WpFileView } from '../../../Protos/wordpress/WpFileView';
-import { NoItemsHere } from '../../../Protos/NoItemsHere';
-import { current_project_id } from '../../../../constants/shared';
-import { Loader } from '../../../Loader';
-import { GridComponents } from '../../../Protos/VirtusoGridComponent';
+import { wp_delete_media_files_by_slugs, wp_get, wp_upload_multiple_files } from '@/apps/wordpress/functions';
+import { current_project_id } from '@/constants/shared';
+import { toMB } from '@/helpers/bridge';
+import { assetsWorker, pageBuilderWorker } from '@/helpers/defineWorkers';
+import { getProjectData, wpWorkerCallbackMaker } from '@/helpers/functions';
+import { Icons } from '@/components/Icons/Icons';
+import { Loader } from '@/components/Loader';
+import { BusyProvider, useBusy } from '@/components/Protos/BusyProvider';
+import { NoItemsHere } from '@/components/Protos/NoItemsHere';
+import { GridComponents } from '@/components/Protos/VirtusoGridComponent';
+import { WpFileView } from '@/components/Protos/wordpress/WpFileView';
+import { Input } from '@/components/Editor/Protos/Input';
+import { SmallButton } from '@/components/Editor/Protos/SmallButton';
+import { ToastMsgInfo } from '@/components/Editor/Protos/ToastMsgInfo';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
+import { isArray } from 'lodash';
+import React, { useEffect, useRef, useState } from 'react'
+import { config } from '@/config/brand';
 import { toast } from 'react-toastify';
-import { ToastMsgInfo } from '../../Protos/ToastMsgInfo';
-import { toMB } from '../../../../helpers/bridge';
-import { getProjectData, wpWorkerCallbackMaker } from '../../../../helpers/functions';
-import { BusyProvider, useBusy } from '../../../Protos/BusyProvider';
-import { assetsWorker, pageBuilderWorker } from '../../../../helpers/defineWorkers';
-
-
+import { VirtuosoGrid } from 'react-virtuoso';
 
 export const MediaManager = () => {
     /**
-     * @type {[import('../../../../helpers/types').InfinitelyWpMedia[] , React.Dispatch<React.SetStateAction<import('../../../../helpers/types').InfinitelyWpMedia[]>>]}
+     * @type {[import('@/helpers/types').InfinitelyWpMedia[] , React.Dispatch<React.SetStateAction<import('@/helpers/types').InfinitelyWpMedia[]>>]}
      */
     const [mediaFiles, setMediaFiles] = useState([]);
     /**
-     * @type {[import('../../../../helpers/types').InfinitelyWpMedia[] , React.Dispatch<React.SetStateAction<import('../../../../helpers/types').InfinitelyWpMedia[]>>]}
+     * @type {[import('@/helpers/types').InfinitelyWpMedia[] , React.Dispatch<React.SetStateAction<import('@/helpers/types').InfinitelyWpMedia[]>>]}
      */
     const [mediaSelected, setMediaSelected] = useState([]);
     const [loading, setLoading] = useState(false);

@@ -1,18 +1,19 @@
-import { isFunction } from "lodash";
-import { current_project_id } from "../constants/shared";
-import { defineRoot, isDaysAgo } from "../helpers/bridge";
-import { db } from "../helpers/db";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { current_project_id } from "@/constants/shared";
+import { defineRoot, isDaysAgo } from "@/helpers/bridge";
+import { db } from "@/helpers/db";
+import { pageBuilderWorker } from "@/helpers/defineWorkers";
 import {
   getImgAsBlob,
   getProjectData,
   workerCallbackMaker,
-} from "../helpers/functions";
-import { infinitelyWorker } from "../helpers/infinitelyWorker";
-import { opfs } from "../helpers/initOpfs";
+} from "@/helpers/functions";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
+import { opfs } from "@/helpers/initOpfs";
 import { snapdom } from "@zumer/snapdom";
+import { isFunction } from "lodash";
 import { toast } from "react-toastify";
-import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
-import { pageBuilderWorker } from "../helpers/defineWorkers";
+
 export let updateThumbnailTimeout;
 
 /**

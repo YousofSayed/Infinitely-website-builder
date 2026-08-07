@@ -1,8 +1,8 @@
-import { initOPFS, listenToOPFSBroadcastChannel, removeOPFSEntry, uploadAssets } from "./workerCommands";
-import { doWorkerPattern } from "./workersPattern";
-import { wpCommands } from "./wp_commands_worker";
+import { initOPFS, listenToOPFSBroadcastChannel, removeOPFSEntry, uploadAssets } from "@/helpers/workerCommands";
+import { doWorkerPattern } from "@/helpers/workersPattern";
+import { wpCommands } from "@/helpers/wp_commands_worker";
 
-const commands = {
+export const commands = {
     uploadAssets,
     initOPFS,
     listenToOPFSBroadcastChannel,

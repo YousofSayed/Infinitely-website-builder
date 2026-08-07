@@ -1,17 +1,18 @@
+
 /**
  *
- * @param {{code:string , projectId:number , libConfig : import('./types').LibraryConfig }} props
+ * @param {{code:string , projectId:number , libConfig : import('@/helpers/types').LibraryConfig }} props
  */
 export async function installTypes({ projectId, code, libConfig }) {
   if (!code) return;
   const ts = (await import("typescript")).default;
   const { setupTypeAcquisition } = await import("@typescript/ata");
   const { uniqueId } = await import("lodash");
-  const opfs = (await import("./initOpfs")).opfs;
-  const db = (await import("./db")).db;
+  const opfs = (await import("@/helpers/initOpfs")).opfs;
+  const db = (await import("@/helpers/db")).db;
   const tId = uniqueId("install-types-id-");
-  const { workerSendToast, initOPFS } = await import("./workerCommands");
-  const { defineRoot, needsWrapping, wrapModule } = await import("./bridge");
+  const { workerSendToast, initOPFS } = await import("@/helpers/workerCommands");
+  const { defineRoot, needsWrapping, wrapModule } = await import("@/helpers/bridge");
   const projectData = await db.projects.get(projectId);
   await initOPFS({ id: +projectId });
 

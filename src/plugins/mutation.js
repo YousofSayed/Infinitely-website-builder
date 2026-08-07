@@ -1,5 +1,5 @@
-import { isChrome } from "../helpers/bridge";
-import { getProjectData } from "../helpers/functions";
+import { isChrome } from "@/helpers/bridge";
+import { getProjectData } from "@/helpers/functions";
 
 /**
  * @type {MutationObserverInit}

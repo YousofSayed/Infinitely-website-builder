@@ -1,15 +1,15 @@
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "../../components/Editor/Protos/ToastMsgInfo";
-import { isFunction } from "lodash";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { current_project_id } from "@/constants/shared";
+import { createRestartableAsync } from "@/helpers/bridge";
+import { db } from "@/helpers/db";
 import {
   getProjectData,
   getProjectSettings,
   getWpPageConfig,
-} from "../../helpers/functions";
-import { createRestartableAsync } from "../../helpers/bridge";
-import { current_project_id } from "../../constants/shared";
-import { wp_update_main_global_files, wp_update_option } from "./functions";
-import { db } from "../../helpers/db";
+} from "@/helpers/functions";
+import { wp_update_main_global_files, wp_update_option } from "@/apps/wordpress/functions";
+import { isFunction } from "lodash";
+import { toast } from "react-toastify";
 
 export async function wp_toast_handler({
   returnCallback = () => {},

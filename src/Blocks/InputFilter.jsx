@@ -1,6 +1,6 @@
+import { selectInputType } from "@/constants/traits";
+import { defineTraits } from "@/helpers/functions";
 import React from "react";
-import { defineTraits } from "../helpers/functions";
-import { selectInputType } from "../constants/traits";
 
 /**
  *

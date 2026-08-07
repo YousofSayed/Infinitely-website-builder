@@ -1,15 +1,15 @@
-import React, { useState } from "react";
-import { FitTitle } from "../Editor/Protos/FitTitle";
-import { cloneDeep, isArray, isBoolean, isPlainObject } from "lodash";
-import { Accordion } from "./Accordion";
-import { AccordionItem } from "./AccordionItem";
-import { editNestedObject, getNestedValue, removeNestedKey } from "../../helpers/bridge";
-import { parseAndReturnInputIfNot } from "../../helpers/cocktail";
-import { Select } from "../Editor/Protos/Select";
+import { editNestedObject, getNestedValue, removeNestedKey } from "@/helpers/bridge";
+import { parseAndReturnInputIfNot } from "@/helpers/cocktail";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { Icons } from "@/components/Icons/Icons";
+import { Accordion } from "@/components/Protos/Accordion";
+import { AccordionItem } from "@/components/Protos/AccordionItem";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { SmallButton } from "../Editor/Protos/SmallButton";
+import { cloneDeep, isArray, isBoolean, isPlainObject } from "lodash";
 import { Input } from "postcss";
-import { Icons } from "../Icons/Icons";
+import React, { useState } from "react";
 
 export const AddNestedProps = ({
   object = {},

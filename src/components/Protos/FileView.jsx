@@ -1,25 +1,25 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { assetType, refType } from "../../helpers/jsDocs";
-import { useEditorMaybe } from "@grapesjs/react";
 import {
   current_page_id,
   current_project_id,
   file_deleted_success_msg,
-} from "../../constants/shared";
+} from "@/constants/shared";
+import { defineRoot, getFileSize, toMB } from "@/helpers/bridge";
+import { addClickClass } from "@/helpers/cocktail";
+import { db } from "@/helpers/db";
 import {
   getProjectData,
   getProjectSettings,
   isOverflowedHiddenEl,
-} from "../../helpers/functions";
-import { ToastMsgInfo } from "../Editor/Protos/ToastMsgInfo";
+} from "@/helpers/functions";
+import { opfs } from "@/helpers/initOpfs";
+import { assetType, refType } from "@/helpers/jsDocs";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { Icons } from "@/components/Icons/Icons";
+import { useEditorMaybe } from "@grapesjs/react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
-import { addClickClass } from "../../helpers/cocktail";
-import { defineRoot, getFileSize, toMB } from "../../helpers/bridge";
-import { FitTitle } from "../Editor/Protos/FitTitle";
-import { Icons } from "../Icons/Icons";
 import { Tooltip } from "react-tooltip";
-import { db } from "../../helpers/db";
-import { opfs } from "../../helpers/initOpfs";
 
 export const FileView = ({
   asset = assetType,

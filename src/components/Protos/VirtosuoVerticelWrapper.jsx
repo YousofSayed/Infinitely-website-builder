@@ -1,6 +1,6 @@
+import { isElementScrollable } from "@/helpers/functions";
+import { refType } from "@/helpers/jsDocs";
 import React, { useLayoutEffect, useRef, useState } from "react";
-import { isElementScrollable } from "../../helpers/functions";
-import { refType } from "../../helpers/jsDocs";
 
 export const VirtosuoVerticelWrapper = (props) => {
   const elRef = useRef(refType);

@@ -1,16 +1,29 @@
-/** @jsxImportSource react */
+import { current_project_id } from "@/constants/shared";
+import { addClickClass, uniqueID } from "@/helpers/cocktail";
+import { db } from "@/helpers/db";
+import { getProjectData } from "@/helpers/functions";
+import { Icons } from "@/components/Icons/Icons";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { Input } from "@/components/Editor/Protos/Input";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { useLiveQuery } from "dexie-react-hooks";
 import React, { memo, useEffect, useRef, useState, useTransition } from "react";
 import { HexAlphaColorPicker } from "react-colorful";
-import { addClickClass, uniqueID } from "../../../helpers/cocktail";
-import { Input } from "./Input";
-import { SmallButton } from "./SmallButton";
-import { Icons } from "../../Icons/Icons";
-import { FitTitle } from "./FitTitle";
-import { db } from "../../../helpers/db";
-import { getProjectData } from "../../../helpers/functions";
-import { current_project_id } from "../../../constants/shared";
-import { useLiveQuery } from "dexie-react-hooks";
-import { useAutoAnimate } from "@formkit/auto-animate/react";
+
+/** @jsxImportSource react */
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  *

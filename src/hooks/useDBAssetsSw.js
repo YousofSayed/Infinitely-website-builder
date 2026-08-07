@@ -4,7 +4,7 @@ import { useRecoilState } from 'recoil'
 export const useDBAssetsSw = () => {
   const [dbAssetsSw , setDBAssetsSw] = useRecoilState(dbAssetsSw);
 
-  useEffect(()=>{
+useEffect(()=>{
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', async () => { // Wait for page load
           try {

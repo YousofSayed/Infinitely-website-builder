@@ -1,6 +1,3 @@
-import React, { memo,} from "react";
-import { Property } from "./Property";
-import { SelectStyle } from "./SelectStyle";
 import {
   animationCompositions,
   animationDirections,
@@ -9,10 +6,12 @@ import {
   animationPlayStates,
   animationTimingFunctions,
   positionValues,
-} from "../../../constants/cssProps";
-import { AddMultiValuestoSingleProp } from "./AddMultiValuestoSingleProp";
-
-import { AnimationName } from "./AnimationName";
+} from "@/constants/cssProps";
+import { AddMultiValuestoSingleProp } from "@/components/Editor/Protos/AddMultiValuestoSingleProp";
+import { AnimationName } from "@/components/Editor/Protos/AnimationName";
+import { Property } from "@/components/Editor/Protos/Property";
+import { SelectStyle } from "@/components/Editor/Protos/SelectStyle";
+import React, { memo,} from "react";
 
 export const Animation = (() => {
 

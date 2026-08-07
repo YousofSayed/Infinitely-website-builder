@@ -1,8 +1,8 @@
+import { Icons } from "@/components/Icons/Icons";
+import { Adder } from "@/components/Editor/Protos/Adder";
+import { Property } from "@/components/Editor/Protos/Property";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
 import React from "react";
-import { Property } from "./Property";
-import { SmallButton } from "./SmallButton";
-import { Icons } from "../../Icons/Icons";
-import { Adder } from "./Adder";
 
 export const LinearGradient = () => {
   return (

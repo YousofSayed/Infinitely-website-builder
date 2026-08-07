@@ -1,4 +1,4 @@
-import JSZip from "jszip";
+import { preivewScripts } from "@/constants/shared";
 import {
   buildPage,
   getInitProjectData,
@@ -7,18 +7,18 @@ import {
   installRestModelsAPI,
   restoreBlobs,
   reversTryCatchInDirectives,
-} from "./bridge";
+} from "@/helpers/bridge";
+import { db } from "@/helpers/db";
+import { opfs } from "@/helpers/initOpfs";
+import { installTypes } from "@/helpers/installTypes";
+import { uploadAssets, workerSendToast } from "@/helpers/workerCommands";
+import JSZip from "jszip";
 import { parseHTML } from "linkedom";
 import { isNumber, random, sortBy, uniqueId } from "lodash";
-import { db } from "./db";
-import { uploadAssets, workerSendToast } from "./workerCommands";
-import { opfs } from "./initOpfs";
-import { preivewScripts } from "../constants/shared";
-import { installTypes } from "./installTypes";
 
 /**
  *
- * @param {{file:File , data:import('./types').Project   , projectId : number , isUpdate:boolean , opfsRoot : string}} props
+ * @param {{file:File , data:import('@/helpers/types').Project   , projectId : number , isUpdate:boolean , opfsRoot : string}} props
  */
 export const loadProject = async (props) => {
   const toastIds = [];
@@ -43,7 +43,7 @@ export const loadProject = async (props) => {
     const file = props.file;
     const mime = await (await import("mime/lite")).default;
     /**
-     * @type {import('../../helpers/types').Project}
+     * @type {import('@/helpers/types').Project}
      */
     let newProject = {
       pages: {},
@@ -92,7 +92,7 @@ export const loadProject = async (props) => {
      */
     const pages = {};
     /**
-     * @type {import('./types').Project}
+     * @type {import('@/helpers/types').Project}
      */
     let dbJSONData = getInitProjectData({ pages: {} });
     for (const path in projectFiles) {
@@ -231,7 +231,7 @@ export const loadProject = async (props) => {
 
 /**
  *
- * @param {{file:File , data:import('./types').Project   , projectId : number , isUpdate:boolean , opfsRoot : string}} props
+ * @param {{file:File , data:import('@/helpers/types').Project   , projectId : number , isUpdate:boolean , opfsRoot : string}} props
  */
 export const loadWpProject = async (props) => {
   const toastIds = [];
@@ -256,7 +256,7 @@ export const loadWpProject = async (props) => {
     const file = props.file;
     const mime = await (await import("mime/lite")).default;
     /**
-     * @type {import('../../helpers/types').Project}
+     * @type {import('@/helpers/types').Project}
      */
     let newProject = {
       pages: {},
@@ -305,7 +305,7 @@ export const loadWpProject = async (props) => {
      */
     const pages = {};
     /**
-     * @type {import('./types').Project}
+     * @type {import('@/helpers/types').Project}
      */
     let dbJSONData = getInitProjectData({ pages: {} });
     for (const path in projectFiles) {

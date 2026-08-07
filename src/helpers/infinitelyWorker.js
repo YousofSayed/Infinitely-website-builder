@@ -1,12 +1,13 @@
-import { current_project_id } from "../constants/shared";
-import workerUrl from "./worker.js?worker&url";
-import { WorkerProxy } from "./WorkerProxy";
+import { current_project_id } from "@/constants/shared";
+import workerUrl from "@/helpers/worker?worker&url";
+import { WorkerProxy } from "@/helpers/WorkerProxy";
 
 let infinitelyWorker = new WorkerProxy(new URL(workerUrl, import.meta.url), {
   type: "module",
 });
+console.log('workerUrl',workerUrl);
 
-const reInitInfinitelyWorker = () => {
+const reInitInfinitelyWorker = () => { //****Unused****//
   infinitelyWorker.terminate();
   infinitelyWorker = new Worker(new URL("./worker", import.meta.url), {
     type: "module",

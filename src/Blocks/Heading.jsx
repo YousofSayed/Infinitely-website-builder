@@ -1,7 +1,7 @@
-import { Icons } from "../components/Icons/Icons";
-import { heading_tags } from "../constants/shared";
-import { defineTraits } from "../helpers/functions";
-import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
+import { Icons } from "@/components/Icons/Icons";
+import { heading_tags } from "@/constants/shared";
+import { defineTraits } from "@/helpers/functions";
+import { reactToStringMarkup } from "@/helpers/reactToStringMarkup";
 
 /**
  *

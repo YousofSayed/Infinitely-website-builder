@@ -1,17 +1,16 @@
-import { defaultAttributeNames, tagNames } from "../constants/hsValues";
-import parseObjectLiteral from "object-literal-parse";
-
-import { parse } from "../helpers/cocktail";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { defaultAttributeNames, tagNames } from "@/constants/hsValues";
+import { parseStringObjToKV } from "@/helpers/bridge";
+import { parse } from "@/helpers/cocktail";
 import {
   defineTraits,
   mount,
   preventSelectNavigation,
   unMount,
-} from "../helpers/functions";
-import { parseStringObjToKV } from "../helpers/bridge";
+} from "@/helpers/functions";
 import { isBoolean, isFunction } from "lodash";
+import parseObjectLiteral from "object-literal-parse";
 import { toast } from "react-toastify";
-import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
 
 /**
  *
@@ -30,7 +29,7 @@ export const getLoopComponent = (sle) => {
  * @param {[string,string]} param0
  * @param {string} oldValue
  * @param {import('grapesjs').Component} sle
- * @param {import('../helpers/types').InfinitelyTrait} trait
+ * @param {import('@/helpers/types').InfinitelyTrait} trait
  * @returns
  */
 /**
@@ -39,7 +38,7 @@ export const getLoopComponent = (sle) => {
  * @param {string} oldValue
  * @param {import('grapesjs').Component} sle
  * @param {{
- * trait : import('../helpers/types').InfinitelyTrait ,
+ * trait : import('@/helpers/types').InfinitelyTrait ,
  * editor : import('grapesjs').Editor ,
  * isValueUpdater : boolean
  * }} props

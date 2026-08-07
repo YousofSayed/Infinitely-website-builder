@@ -1,6 +1,6 @@
+import { filterTypes, filterUnits } from "@/constants/cssProps";
+import { MultiFunctionProp } from "@/components/Editor/Protos/MultiFunctionProp";
 import React from "react";
-import { MultiFunctionProp } from "./MultiFunctionProp";
-import { filterTypes, filterUnits } from "../../../constants/cssProps";
 
 export const Backdrop = () => {
   return (

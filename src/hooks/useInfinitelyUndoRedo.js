@@ -1,7 +1,7 @@
+import { showsState } from "@/helpers/atoms";
 import { useUndoRedo } from "@anandarizki/use-undo-redo";
 import React, { useEffect } from "react";
 import { useRecoilState } from "recoil";
-import { showsState } from "../helpers/atoms";
 
 export const useInfinitelyUndoRedo = (state) => {
   const [undo, redo] = useUndoRedo(state);

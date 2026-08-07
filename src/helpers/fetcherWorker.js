@@ -1,9 +1,9 @@
-import { installTypes } from "./installTypes";
-import { shareProject } from "./workerCommands";
-import { doWorkerPattern } from "./workersPattern";
-import { wpCommands } from "./wp_commands_worker";
+import { installTypes } from "@/helpers/installTypes";
+import { shareProject } from "@/helpers/workerCommands";
+import { doWorkerPattern } from "@/helpers/workersPattern";
+import { wpCommands } from "@/helpers/wp_commands_worker";
 
-const commands = {
+export const commands = {
   shareProject,
   installTypes,
   ...wpCommands,

@@ -1,5 +1,6 @@
-import { Icons } from '../components/Icons/Icons'
-import { reactToStringMarkup } from '../helpers/reactToStringMarkup'
+
+import { Icons } from '@/components/Icons/Icons'
+import { reactToStringMarkup } from '@/helpers/reactToStringMarkup'
 
 /**
  * 

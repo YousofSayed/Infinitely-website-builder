@@ -1,31 +1,48 @@
-import { useLiveQuery } from "dexie-react-hooks";
-import React, { memo, useEffect, useRef, useState } from "react";
-import { db } from "../../../helpers/db";
-import { current_page_id, current_project_id } from "../../../constants/shared";
-import { Button } from "../../Protos/Button";
-import { Icons } from "../../Icons/Icons";
-import { InstalledLibraryDetails } from "./InstalledLibraryDetails";
-import { MultiTab } from "../../Protos/Multitabs";
-import { DetailsNormal } from "../../Protos/DetailsNormal";
-import { ReactSortable } from "react-sortablejs";
+import { wp_delete_media_files_by_slugs, wp_update_option } from "@/apps/wordpress/functions";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { reloadRequiredInstance } from "@/constants/InfinitelyInstances";
+import { current_page_id, current_project_id } from "@/constants/shared";
+import { db } from "@/helpers/db";
+import { doInNormal, doInNormalAsync, doInWordpressAsync, getProjectData } from "@/helpers/functions";
+import { opfs } from "@/helpers/initOpfs";
+import { refType } from "@/helpers/jsDocs";
+import { Icons } from "@/components/Icons/Icons";
+import { Accordion } from "@/components/Protos/Accordion";
+import { AccordionItem } from "@/components/Protos/AccordionItem";
+import { Button } from "@/components/Protos/Button";
+import { Checkbox } from "@/components/Protos/Checkbox";
+import { DetailsNormal } from "@/components/Protos/DetailsNormal";
+import { InfAccordion } from "@/components/Protos/InfAccordion";
+import { MultiTab } from "@/components/Protos/Multitabs";
+import Portal from "@/components/Editor/Portal";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { Input } from "@/components/Editor/Protos/Input";
+import { InstalledLibraryDetails } from "@/components/Editor/Protos/InstalledLibraryDetails";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useEditorMaybe } from "@grapesjs/react";
-// import { InfAccordion } from "../../Protos/InfAccordion";
-// import { AccordionItem } from "@heroui/accordion";
-import Portal from "../Portal";
-import { refType } from "../../../helpers/jsDocs";
-import { Accordion } from "../../Protos/Accordion";
-import { AccordionItem } from "../../Protos/AccordionItem";
-import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
-import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
-import { Input } from "./Input";
-import { FitTitle } from "./FitTitle";
-import { toast } from "react-toastify";
-import { doInNormal, doInNormalAsync, doInWordpressAsync, getProjectData } from "../../../helpers/functions";
-import { wp_delete_media_files_by_slugs, wp_update_option } from "../../../Apps/wordpress/functions";
-import { ToastMsgInfo } from "./ToastMsgInfo";
-import { opfs } from "../../../helpers/initOpfs";
+import { useLiveQuery } from "dexie-react-hooks";
 import { cloneDeep } from "lodash";
-import { Checkbox } from "../../Protos/Checkbox";
+import React, { memo, useEffect, useRef, useState } from "react";
+import { ReactSortable } from "react-sortablejs";
+import { toast } from "react-toastify";
+
+// 
+// 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const ReactSortableComponent = memo(
   ({ libraries = {}, prop = "", updateList = (newList, key) => { } }) => {

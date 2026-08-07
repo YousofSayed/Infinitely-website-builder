@@ -1,5 +1,5 @@
-import { editorIcons } from "../components/Icons/editorIcons";
-import { html, parseToHTML } from "../helpers/cocktail";
+import { editorIcons } from "@/components/Icons/editorIcons";
+import { html, parseToHTML } from "@/helpers/cocktail";
 
 /**
  *

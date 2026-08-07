@@ -1,17 +1,17 @@
-import React, { memo, useEffect, useState } from "react";
-import { Select } from "./Select";
-import { SmallButton } from "./SmallButton";
-import { Icons } from "../../Icons/Icons";
-import { Input } from "./Input";
-import { filterTypes, filterUnits } from "../../../constants/cssProps";
-import { Adder } from "./Adder";
-import { useSetClassForCurrentEl } from "../../../hooks/useSetclassForCurrentEl";
-import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
-import { pushBetween } from "../../../helpers/cocktail";
-import { useRemoveCssProp } from "../../../hooks/useRemoveCssProp";
+import { filterTypes, filterUnits } from "@/constants/cssProps";
+import { pushBetween } from "@/helpers/cocktail";
+import { useRemoveCssProp } from "@/hooks/useRemoveCssProp";
+import { useSetClassForCurrentEl } from "@/hooks/useSetclassForCurrentEl";
+import { useUpdateInputValue } from "@/hooks/useUpdateInputValue";
+import { Icons } from "@/components/Icons/Icons";
+import { Adder } from "@/components/Editor/Protos/Adder";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { Input } from "@/components/Editor/Protos/Input";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { Textarea } from "@/components/Editor/Protos/Textarea";
 import { useEditorMaybe } from "@grapesjs/react";
-import { Textarea } from "./Textarea";
-import { FitTitle } from "./FitTitle";
+import React, { memo, useEffect, useState } from "react";
 
 export const MultiFunctionProp = (
   ({ cssProp, placeholder, keywords, units = {} }) => {

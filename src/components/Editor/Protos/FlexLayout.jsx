@@ -1,18 +1,18 @@
-import React, { useEffect, useState } from "react";
-import { SharedBetweenFlexAndGridLayout } from "./SharedBetweenFlexAndGridLayout";
-import { alignSelfValues } from "../../../constants/cssProps";
-import { getIconForMultiChoice } from "../../../helpers/functions";
-import { MultiChoice } from "./MultiChoice";
-import { P } from "../../Protos/P";
-import { Select } from "./Select";
-import { Property } from "./Property";
-import { SelectStyle } from "./SelectStyle";
-import { Icons } from "../../Icons/Icons";
-import { FitTitle } from "./FitTitle";
-import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
-import { useRecoilState } from "recoil";
-import { currentElState } from "../../../helpers/atoms";
+import { alignSelfValues } from "@/constants/cssProps";
+import { currentElState } from "@/helpers/atoms";
+import { getIconForMultiChoice } from "@/helpers/functions";
+import { useUpdateInputValue } from "@/hooks/useUpdateInputValue";
+import { Icons } from "@/components/Icons/Icons";
+import { P } from "@/components/Protos/P";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { MultiChoice } from "@/components/Editor/Protos/MultiChoice";
+import { Property } from "@/components/Editor/Protos/Property";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SelectStyle } from "@/components/Editor/Protos/SelectStyle";
+import { SharedBetweenFlexAndGridLayout } from "@/components/Editor/Protos/SharedBetweenFlexAndGridLayout";
 import { useEditorMaybe } from "@grapesjs/react";
+import React, { useEffect, useState } from "react";
+import { useRecoilState } from "recoil";
 
 export const FlexLayout = () => {
   const [dir, setDir] = useState("");

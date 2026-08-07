@@ -1,3 +1,4 @@
+
 type AllHTMLElements =  HTMLElementTagNameMap[keyof HTMLElementTagNameMap] & HTMLElement & Element  & HTMLObjectElement
 var $el:AllHTMLElements;
 var $event :   GlobalEventHandlersEventMap[keyof GlobalEventHandlersEventMap];
@@ -8,4 +9,3 @@ var $event :   GlobalEventHandlersEventMap[keyof GlobalEventHandlersEventMap];
 // var $nextTick : (callback : ()=>void)=>void
 // var $data : {}
 // var $id : (id:string)=>string
-

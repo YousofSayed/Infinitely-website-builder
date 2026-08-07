@@ -1,7 +1,7 @@
-import { editorIcons } from "../components/Icons/editorIcons";
-import { tagNames } from "../constants/hsValues";
-import { selectTagName } from "../constants/traits";
-import { defineTraits } from "../helpers/functions";
+import { editorIcons } from "@/components/Icons/editorIcons";
+import { tagNames } from "@/constants/hsValues";
+import { selectTagName } from "@/constants/traits";
+import { defineTraits } from "@/helpers/functions";
 
 /**
  *

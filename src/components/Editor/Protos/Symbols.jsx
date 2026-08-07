@@ -1,17 +1,17 @@
-import React, { useState } from "react";
-import { blocksArrayType, symbolsType } from "../../../helpers/jsDocs";
-import { useLiveQuery } from "dexie-react-hooks";
+import { current_project_id } from "@/constants/shared";
+import { db } from "@/helpers/db";
 import {
   extractAllRulesWithChildRules,
   getProjectData,
-} from "../../../helpers/functions";
-import { Button } from "../../Protos/Button";
-import { Icons } from "../../Icons/Icons";
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "./ToastMsgInfo";
-import { current_project_id } from "../../../constants/shared";
-import { db } from "../../../helpers/db";
+} from "@/helpers/functions";
+import { blocksArrayType, symbolsType } from "@/helpers/jsDocs";
+import { Icons } from "@/components/Icons/Icons";
+import { Button } from "@/components/Protos/Button";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useEditorMaybe } from "@grapesjs/react";
+import { useLiveQuery } from "dexie-react-hooks";
+import React, { useState } from "react";
+import { toast } from "react-toastify";
 
 export const Symbols = () => {
   const [symbols, setSymbols] = useState(blocksArrayType);

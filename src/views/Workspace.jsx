@@ -1,18 +1,18 @@
-import React, { memo, useEffect } from "react";
-import { Header } from "../components/Workspace/Header";
-import { Projects } from "../components/Workspace/Projects";
-import { CreateProjectModal } from "../components/Workspace/CreateProjectModal";
-import { toast, ToastContainer } from "react-toastify";
-import { infinitelyWorker } from "../helpers/infinitelyWorker";
-import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
-import { parse } from "../helpers/cocktail";
-import { useWorkerToast } from "../hooks/useWorkerToast";
-import { useParams, useSearchParams } from "react-router-dom";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { CreateProjectModal } from "@/components/Workspace/CreateProjectModal";
+import { Header } from "@/components/Workspace/Header";
+import { Projects } from "@/components/Workspace/Projects";
+import { parse } from "@/helpers/cocktail";
 import {
   downloadFile,
   downloadFileByLink,
   loadProject,
-} from "../helpers/functions";
+} from "@/helpers/functions";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
+import { useWorkerToast } from "@/hooks/useWorkerToast";
+import React, { memo, useEffect } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
 
 export const Workspace = memo(() => {
   const [searchParams] = useSearchParams();

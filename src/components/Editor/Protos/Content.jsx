@@ -1,7 +1,7 @@
+import { currentElState, undoAndRedoStates } from "@/helpers/atoms";
+import { updateSelectedWrapper } from "@/helpers/customEvents";
 import React, { useEffect, useRef, useState } from "react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
-import { currentElState, undoAndRedoStates } from "../../../helpers/atoms";
-import { updateSelectedWrapper } from "../../../helpers/customEvents";
 
 export const Content = () => {
   const currentElObj = useRecoilValue(currentElState);

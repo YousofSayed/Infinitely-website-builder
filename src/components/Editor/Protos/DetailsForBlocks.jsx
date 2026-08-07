@@ -1,3 +1,5 @@
+import { refType } from "@/helpers/jsDocs";
+import { Details } from "@/components/Editor/Protos/Details";
 import React, {
   memo,
   useEffect,
@@ -5,8 +7,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Details } from "./Details";
-import { refType } from "../../../helpers/jsDocs";
 
 /**
  *

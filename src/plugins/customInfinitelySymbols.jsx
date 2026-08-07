@@ -1,15 +1,23 @@
-import { InfinitelyEvents } from "../constants/infinitelyEvents";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
 import {
   current_project_id,
   current_symbol_id,
   inf_class_name,
   inf_symbol_Id_attribute,
-} from "../constants/shared";
-import { defineRoot } from "../helpers/bridge";
-import { uniqueID } from "../helpers/cocktail";
-import { db } from "../helpers/db";
-import { getInfinitelySymbolInfo, initSymbol, reorderCss } from "../helpers/functions";
-import { opfs } from "../helpers/initOpfs";
+  inf_template_id,
+} from "@/constants/shared";
+import { defineRoot } from "@/helpers/bridge";
+import { uniqueID } from "@/helpers/cocktail";
+import { db } from "@/helpers/db";
+import {
+  doInNormal,
+  doInWordpress,
+  getInfinitelySymbolInfo,
+  initSymbol,
+  reorderCss,
+  triggerSymbolEvent,
+} from "@/helpers/functions";
+import { opfs } from "@/helpers/initOpfs";
 
 /**
  *
@@ -30,28 +38,14 @@ export const customInfinitelySymbols = (editor) => {
     //   firstLoad = false;
     // });
 
-    editor.getWrapper().find(`[${inf_symbol_Id_attribute}]`).map(cmp => cmp.getAttributes()[inf_symbol_Id_attribute]).forEach(id => initSymbol(id, editor));
+    editor
+      .getWrapper()
+      .find(`[${inf_symbol_Id_attribute}]`)
+      .map((cmp) => cmp.getAttributes()[inf_symbol_Id_attribute])
+      .forEach((id) => initSymbol(id, editor));
   });
 
-  editor.on('component:add',
-    /**
-   *
-   * @param {import('grapesjs').Component} cmp
-   * @returns
-   */
-    async(cmp) => {
-      console.log('component:add : ', cmp);
-      if (!cmp)return;
-      const symbolInf = getInfinitelySymbolInfo(cmp);
-      if(symbolInf.isSymbol && symbolInf.isMain){
-        initSymbol(symbolInf.mainId , editor);
-        const style_file = await opfs.getFile(defineRoot(`temp/symbols/${symbolInf.mainId}/style.css`));
-        if(!style_file)return;
-        const style_file_content = await style_file.text();
-        reorderCss(editor , `${style_file_content} ${editor.getCss()} ` , true);
-        // editor.addComponents(`<style>${style_file_content}</style>`);
-      } 
-    })
+  
 
   //update symbol
   /**
@@ -68,7 +62,7 @@ export const customInfinitelySymbols = (editor) => {
 
     if (!symbol.isSymbol) return;
     // console.log('componets addded : ' , cmp , cmp.getEl() , symbol.symbol?.getEl());
-    console.log('from update symbol', addedComponent);
+    console.log("from update symbol", addedComponent);
     const symbolId = symbol.symbol.getAttributes()[inf_symbol_Id_attribute];
 
     // console.log("what is problem?", cmp);
@@ -80,7 +74,7 @@ export const customInfinitelySymbols = (editor) => {
         // console.log("Component updated: ", cmp, symbol.symbol.getEl());
 
         const addedCmpSymbolInfo = getInfinitelySymbolInfo(addedComponent);
-        if (addedComponent && addedComponent.get('type') != "textnode") {
+        if (addedComponent && addedComponent.get("type") != "textnode") {
           if (addedComponent.getAttributes()[inf_symbol_Id_attribute]) {
             editor.UndoManager.stop();
             addedComponent.removeAttributes(inf_symbol_Id_attribute, {
@@ -91,15 +85,17 @@ export const customInfinitelySymbols = (editor) => {
             // return;
           }
 
-          addedComponent
-            ? addedComponent.addAttributes(
+          if (addedComponent) {
+            const newClass = `inf-${uniqueID()}`;
+            addedComponent.addAttributes(
               {
-                [inf_class_name]: `inf-${uniqueID()}`,
+                [inf_class_name]: newClass,
               },
-              { avoidStore: true }
-            )
-            : null;
+              { avoidStore: true },
+            );
 
+            addedComponent.addClass(newClass);
+          }
         }
 
         sessionStorage.setItem(current_symbol_id, symbolId);
@@ -108,7 +104,7 @@ export const customInfinitelySymbols = (editor) => {
           `${InfinitelyEvents.symbols.update}:${symbolId}`,
           symbolId,
           cmp,
-          JSON.stringify(symbol.symbol)
+          JSON.stringify(symbol.symbol),
         );
       }, 0);
     };
@@ -129,17 +125,18 @@ export const customInfinitelySymbols = (editor) => {
       const symbolInfo = getInfinitelySymbolInfo(cmp);
       if (symbolInfo.isSymbol) {
         changeAttrsCallback = () => {
-          editor.trigger(
-            `${InfinitelyEvents.symbols.update}:${symbolInfo.mainId}`,
-            symbolInfo.mainId,
-            cmp,
-            JSON.stringify(symbolInfo.symbol)
-          );
+          // editor.trigger(
+          //   `${InfinitelyEvents.symbols.update}:${symbolInfo.mainId}`,
+          //   symbolInfo.mainId,
+          //   symbolInfo.symbol,
+          //   JSON.stringify(symbolInfo.symbol)
+          // );
+          triggerSymbolEvent(editor, cmp);
         };
 
         symbolInfo.symbol.on("change:attributes", changeAttrsCallback);
       }
-    }
+    },
   );
 
   editor.on(
@@ -150,14 +147,16 @@ export const customInfinitelySymbols = (editor) => {
      * @returns
      */ (cmp) => {
       const symbolInfo = getInfinitelySymbolInfo(cmp);
+      symbolInfo.isSymbol && sessionStorage.removeItem(current_symbol_id);
       if (symbolInfo.isSymbol && changeAttrsCallback) {
         symbolInfo.symbol.off("change:attributes", changeAttrsCallback);
         changeAttrsCallback = null;
       }
-    }
+    },
   );
 
   editor.on("component:update:components", updateSymbols);
+  editor.on("component:update:props", updateSymbols);
   // editor.on("component:update:attributes", (model, attr) => {
   //   // console.log("attributes updated : ", model, attr);
   //   if (!model) return;

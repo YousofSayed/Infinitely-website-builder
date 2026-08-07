@@ -1,30 +1,29 @@
-import React, { useEffect, useState } from "react";
-import { Button } from "../../Protos/Button";
-import { Icons } from "../../Icons/Icons";
-import {  current_project_id } from "../../../constants/shared";
-import { db } from "../../../helpers/db";
-import { useEditorMaybe } from "@grapesjs/react";
-import { toast } from "react-toastify";
-import { SmallButton } from "./SmallButton";
+import { wp_delete_media_files_by_slugs, wp_update_option } from "@/apps/wordpress/functions";
 import {
   open_file_editor_modal,
-} from "../../../constants/InfinitelyCommands";
+} from "@/constants/InfinitelyCommands";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { reloadRequiredInstance } from "@/constants/InfinitelyInstances";
+import {  current_project_id } from "@/constants/shared";
+import { fileInfoState } from "@/helpers/atoms";
+import { defineRoot } from "@/helpers/bridge";
+import { db } from "@/helpers/db";
+import { doInNormalAsync, doInWordpressAsync, getProjectData } from "@/helpers/functions";
+import { opfs } from "@/helpers/initOpfs";
+import { Icons } from "@/components/Icons/Icons";
+import { Button } from "@/components/Protos/Button";
+import { Checkbox } from "@/components/Protos/Checkbox";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { useEditorMaybe } from "@grapesjs/react";
+import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { useRecoilState } from "recoil";
-import { fileInfoState } from "../../../helpers/atoms";
-import { defineRoot } from "../../../helpers/bridge";
-import { opfs } from "../../../helpers/initOpfs";
-import { ToastMsgInfo } from "./ToastMsgInfo";
-import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
-import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
-import { doInNormalAsync, doInWordpressAsync, getProjectData } from "../../../helpers/functions";
-import { wp_delete_media_files_by_slugs, wp_update_option } from "../../../Apps/wordpress/functions";
-
-import { Checkbox } from "../../Protos/Checkbox";
 
 //million-ignore
 /**
  *
- * @param {{library:import('../../../helpers/types').LibraryConfig , onDelete : (ev : MouseEvent)=>void , dbKey:string}} param0
+ * @param {{library:import('@/helpers/types').LibraryConfig , onDelete : (ev : MouseEvent)=>void , dbKey:string}} param0
  * @returns
  */
 export const InstalledLibraryDetails = (

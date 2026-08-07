@@ -1,7 +1,7 @@
-import { Icons } from "../components/Icons/Icons";
-import { media_types, text_tags } from "../constants/shared";
-import {  getParentNode } from "../helpers/functions";
-import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
+import { Icons } from "@/components/Icons/Icons";
+import { media_types, text_tags } from "@/constants/shared";
+import {  getParentNode } from "@/helpers/functions";
+import { reactToStringMarkup } from "@/helpers/reactToStringMarkup";
 
 /**
  *

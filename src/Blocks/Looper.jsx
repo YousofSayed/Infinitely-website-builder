@@ -1,19 +1,19 @@
-import React from "react";
-import { toast } from "react-toastify";
-import { Icons } from "../components/Icons/Icons";
-import { current_project_id, headersProps } from "../constants/shared";
-import { parse, stringify, uniqueID } from "../helpers/cocktail";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { Icons } from "@/components/Icons/Icons";
+import { current_project_id, headersProps } from "@/constants/shared";
+import { parse, stringify, uniqueID } from "@/helpers/cocktail";
 import {
   defineTraits,
   getProjectData,
   mount,
   unMount,
-} from "../helpers/functions";
-import { infinitelyWorker } from "../helpers/infinitelyWorker";
-import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
-import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
-import { setPropToLoopCmp } from "../plugins/globalTraits";
+} from "@/helpers/functions";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
+import { reactToStringMarkup } from "@/helpers/reactToStringMarkup";
+import { setPropToLoopCmp } from "@/plugins/globalTraits";
 import { uniqueId } from "lodash";
+import React from "react";
+import { toast } from "react-toastify";
 
 /**
  *

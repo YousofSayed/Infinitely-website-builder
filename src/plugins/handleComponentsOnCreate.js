@@ -1,4 +1,4 @@
-import { stringify } from "../helpers/cocktail";
+import { stringify } from "@/helpers/cocktail";
 
 /**
  *

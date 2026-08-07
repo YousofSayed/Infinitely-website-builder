@@ -1,10 +1,10 @@
+import { useUpdateInputValue } from "@/hooks/useUpdateInputValue";
+import { P } from "@/components/Protos/P";
+import { ScrollableToolbar } from "@/components/Protos/ScrollableToolbar";
+import { Color } from "@/components/Editor/Protos/Color";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { SelectedBorder } from "@/components/Editor/Protos/SelectedBorder";
 import React, { useEffect, useState } from "react";
-import { P } from "../../Protos/P";
-import { Color } from "./Color";
-import { SelectedBorder } from "./SelectedBorder";
-import { FitTitle } from "./FitTitle";
-import { ScrollableToolbar } from "../../Protos/ScrollableToolbar";
-import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
 
 export const BorderColor = () => {
   const [option, setOption] = useState("all");

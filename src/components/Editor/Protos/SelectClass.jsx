@@ -1,17 +1,17 @@
-import React, { memo, useEffect, useState } from "react";
-import { Select } from "./Select";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { current_project_id, inf_class_name } from "@/constants/shared";
+import { currentElState, selectorState } from "@/helpers/atoms";
+import { infinitelyCallback } from "@/helpers/bridge";
+import { db } from "@/helpers/db";
+import { classesFinderWorker } from "@/helpers/defineWorkers";
+import { getProjectSettings } from "@/helpers/functions";
+import { Icons } from "@/components/Icons/Icons";
+import { Choices } from "@/components/Editor/Protos/Choices";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
 import { useEditorMaybe } from "@grapesjs/react";
-import { SmallButton } from "./SmallButton";
-import { Icons } from "../../Icons/Icons";
-import { Choices } from "./Choices";
+import React, { memo, useEffect, useState } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
-import { currentElState, selectorState } from "../../../helpers/atoms";
-import { current_project_id, inf_class_name } from "../../../constants/shared";
-import { db } from "../../../helpers/db";
-import { classesFinderWorker } from "../../../helpers/defineWorkers";
-import { getProjectSettings } from "../../../helpers/functions";
-import { infinitelyCallback } from "../../../helpers/bridge";
-import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 
 export const SelectClass = () => {
   const editor = useEditorMaybe();

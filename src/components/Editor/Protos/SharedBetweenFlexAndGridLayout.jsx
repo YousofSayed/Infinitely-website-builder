@@ -1,18 +1,18 @@
-import React from "react";
-import { P } from "../../Protos/P";
-import { MultiChoice } from "./MultiChoice";
 import {
   alignContentValues,
   alignItemsValues,
   alignSelfValues,
   justifyContentValues,
   justifyItemsValues,
-} from "../../../constants/cssProps";
-import { getIconForMultiChoice } from "../../../helpers/functions";
-import { Select } from "./Select";
-import { SelectStyle } from "./SelectStyle";
-import { Icons } from "../../Icons/Icons";
-import { FitTitle } from "./FitTitle";
+} from "@/constants/cssProps";
+import { getIconForMultiChoice } from "@/helpers/functions";
+import { Icons } from "@/components/Icons/Icons";
+import { P } from "@/components/Protos/P";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { MultiChoice } from "@/components/Editor/Protos/MultiChoice";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SelectStyle } from "@/components/Editor/Protos/SelectStyle";
+import React from "react";
 
 export const SharedBetweenFlexAndGridLayout = ({
   isFlex = false,

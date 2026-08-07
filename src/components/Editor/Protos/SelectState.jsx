@@ -1,26 +1,26 @@
-import { useEditorMaybe } from "@grapesjs/react";
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { statesKeys } from "../../../constants/cssProps";
-import { Select } from "./Select";
-import { refType, statesType, stateType } from "../../../helpers/jsDocs";
-import { Icons } from "../../Icons/Icons";
-import { uniqueID } from "../../../helpers/cocktail";
-import { SmallButton } from "./SmallButton";
-import { ChoicesForStates } from "./ChoicesForStates";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { statesKeys } from "@/constants/cssProps";
+import { styleRgx } from "@/constants/rgxs";
 import {
   cmpRulesState,
   currentElState,
   ruleState,
   selectorState,
-} from "../../../helpers/atoms";
+} from "@/helpers/atoms";
+import { uniqueID } from "@/helpers/cocktail";
 import {
   extractRulesByIdWithDetails,
   getCurrentMediaDevice,
   getCurrentSelector,
-} from "../../../helpers/functions";
+} from "@/helpers/functions";
+import { refType, statesType, stateType } from "@/helpers/jsDocs";
+import { Icons } from "@/components/Icons/Icons";
+import { ChoicesForStates } from "@/components/Editor/Protos/ChoicesForStates";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { useEditorMaybe } from "@grapesjs/react";
 import { cloneDeep, isArray, isNumber } from "lodash";
-import { styleRgx } from "../../../constants/rgxs";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 
 // console.log({0:[],1:[]});
 

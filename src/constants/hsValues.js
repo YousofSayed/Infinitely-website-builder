@@ -1,3 +1,4 @@
+
 export const inputTypes = [
   "button", // Button element that triggers actions
   "checkbox", // Checkbox for binary choices (true/false)

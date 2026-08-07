@@ -1,21 +1,21 @@
-import { toast } from "react-toastify";
-import { uniqueID } from "../helpers/cocktail";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { uniqueID } from "@/helpers/cocktail";
 import {
   getInfinitelySymbolInfo,
   getProjectSettings,
   isValidAttribute,
-} from "../helpers/functions";
+} from "@/helpers/functions";
 import {
   alpineEventModifiers,
   alpineTransition,
   alpineTransitionModifiers,
-} from "./alpineConstants";
-import { defaultAttributeNames, eventNames } from "./hsValues";
-import { InfinitelyEvents } from "./infinitelyEvents";
-import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
-import React from "react";
-import { current_symbol_id } from "./shared";
+} from "@/constants/alpineConstants";
+import { defaultAttributeNames, eventNames } from "@/constants/hsValues";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { current_symbol_id } from "@/constants/shared";
 import { isArray } from "lodash";
+import React from "react";
+import { toast } from "react-toastify";
 
 const defaultDirectiveCallback = async ({
   editor,
@@ -81,7 +81,7 @@ const defaultDirectiveCallback = async ({
 };
 
 /**
- * @type {import('../helpers/types').Directive[]}
+ * @type {import('@/helpers/types').Directive[]}
  */
 export const directives = [
   {

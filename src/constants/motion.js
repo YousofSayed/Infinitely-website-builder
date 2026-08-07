@@ -1,4 +1,4 @@
-import { getGsapCssProperties } from "../helpers/functions";
+import { getGsapCssProperties } from "@/helpers/functions";
 
 export const easeValues = [
   "none",
@@ -451,4 +451,3 @@ export const splitTextOptions = {
   // --- Cleanup control ---
   autoKill: [true, false], // whether to auto kill tween/timeline on revert
 };
-

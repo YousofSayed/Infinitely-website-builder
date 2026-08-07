@@ -1,20 +1,20 @@
 // import '../wdyr.js'
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App.jsx";
+import App from "@/app/App.jsx";
 import "grapesjs/dist/css/grapes.min.css";
-import "./index.css";
-import { makeAppResponsive } from "./helpers/cocktail.js";
+import "@/index.css";
+import { makeAppResponsive } from "@/helpers/cocktail";
 import { RecoilEnv, RecoilRoot } from "recoil";
 import { ErrorBoundary } from "react-error-boundary";
 import { BrowserRouter, HashRouter } from "react-router-dom";
-import { version } from "./constants/Version.js";
-import { setProjectSettings } from "./helpers/functions.js";
+import { version } from "@/constants/Version";
+import { setProjectSettings } from "@/helpers/functions";
 import { toast } from "react-toastify";
-import { ToastMsgInfo } from "./components/Editor/Protos/ToastMsgInfo.jsx";
-import { isDevMode } from "./helpers/bridge.js";
-import { applyBrandConfig, config, configs } from "./brand.js";
-
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { isDevMode } from "@/helpers/bridge";
+import { applyBrandConfig, config, configs } from "@/config/brand";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // Save the initial state of window
 
 applyBrandConfig(config);
@@ -39,24 +39,28 @@ const appStatus = {
     "background:#000; padding:20px 100px;",
     "background:#fff; padding:20px 100px;",
     "background:#009739; padding:20px 100px;",
-    "background:linear-gradient(135deg, #ce1126 50%, transparent 50%); padding:20px 100px;"
+    "background:linear-gradient(135deg, #ce1126 50%, transparent 50%); padding:20px 100px;",
   );
   console.log(
     "%c🇵🇸  FREE PALESTINE 🇵🇸",
-    "font-size: 40px; font-weight:bold; color:#009739; text-shadow:2px 2px 4px #000;"
+    "font-size: 40px; font-weight:bold; color:#009739; text-shadow:2px 2px 4px #000;",
   );
 })();
 console.table(appStatus);
-// if (!isDevMode()) {
-//   const originalLog = window.console.log;
-//   window.console.log = (...data) => {
-//     // // Prevent infinite loop
-//     // if (data.includes("[APP_STATUS]")) return;
-//     // window.console.clear();
-//     // console.table(appStatus);
-//     // // originalLog(...data);
-//   };
-// }
+if (!isDevMode()) {
+  window.addEventListener("error", (e) => {
+    console.error(`
+        File: ${e.filename},
+        Line: ${e.lineno},
+        Column: ${e.colno},
+        Error: ${e.error},
+      `);
+  });
+
+  window.addEventListener("unhandledrejection", (e) => {
+    console.error(e.reason);
+  });
+}
 console.log("configs : ", configs);
 
 setProjectSettings();
@@ -98,49 +102,52 @@ window.fetch = async (input, init) => {
     throw error;
   }
 };
+const queryClient = new QueryClient();
 
 // ✅ Main App with unique keys to reset Recoil & Router state
 const Main = () => {
   const uniqueKey = Date.now();
 
   return (
-    <RecoilRoot>
-      <BrowserRouter basename="/">
-        <ErrorBoundary
-          key={uniqueKey}
-          fallbackRender={({ error, resetErrorBoundary }) => (
-            <div
-              className="flex items-center justify-center min-h-screen h-full bg-surface-main text-text-primary relative overflow-hidden"
-              role="alert"
-            >
-              {/* Blurry Background */}
-              <div className="absolute inset-0 bg-surface-secondary/60 backdrop-blur-xl"></div>
+    <QueryClientProvider client={queryClient}>
+      <RecoilRoot>
+        <BrowserRouter basename="/">
+          <ErrorBoundary
+            key={uniqueKey}
+            fallbackRender={({ error, resetErrorBoundary }) => (
+              <div
+                className="flex items-center justify-center min-h-screen h-full bg-surface-main text-text-primary relative overflow-hidden"
+                role="alert"
+              >
+                {/* Blurry Background */}
+                <div className="absolute inset-0 bg-surface-secondary/60 backdrop-blur-xl"></div>
 
-              {/* Error Card */}
-              <div className="relative z-10 max-w-md p-8 bg-surface-secondary rounded-xl shadow-xl border border-slate-800">
-                <h1 className="text-2xl font-semibold text-red-500 mb-4">
-                  Something went wrong!
-                </h1>
-                <p className="text-slate-300 mb-4">
-                  We encountered an error while processing your request.
-                </p>
-                <pre className="bg-surface-main text-text-primary p-4 rounded-lg border border-slate-800 overflow-auto max-h-40 mb-6">
-                  {error.message}
-                </pre>
-                <button
-                  onClick={resetErrorBoundary}
-                  className="w-full px-4 py-2 bg-red-500 text-slate-100 font-medium rounded-md hover:bg-red-600 transition focus:outline-none focus:ring focus:ring-red-400"
-                >
-                  Try Again
-                </button>
+                {/* Error Card */}
+                <div className="relative z-10 max-w-md p-8 bg-surface-secondary rounded-xl shadow-xl border border-slate-800">
+                  <h1 className="text-2xl font-semibold text-red-500 mb-4">
+                    Something went wrong!
+                  </h1>
+                  <p className="text-slate-300 mb-4">
+                    We encountered an error while processing your request.
+                  </p>
+                  <pre className="bg-surface-main text-text-primary p-4 rounded-lg border border-slate-800 overflow-auto max-h-40 mb-6">
+                    {error.message}
+                  </pre>
+                  <button
+                    onClick={resetErrorBoundary}
+                    className="w-full px-4 py-2 bg-red-500 text-slate-100 font-medium rounded-md hover:bg-red-600 transition focus:outline-none focus:ring focus:ring-red-400"
+                  >
+                    Try Again
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
-        >
-          <App />
-        </ErrorBoundary>
-      </BrowserRouter>
-    </RecoilRoot>
+            )}
+          >
+            <App />
+          </ErrorBoundary>
+        </BrowserRouter>
+      </RecoilRoot>
+    </QueryClientProvider>
   );
 };
 

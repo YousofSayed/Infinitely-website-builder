@@ -1,9 +1,9 @@
-import React, { useRef, useState, useTransition } from "react";
-import { Icons } from "../../Icons/Icons";
-import { P } from "../../Protos/P";
+import { accorddingState } from "@/helpers/atoms";
+import { Icons } from "@/components/Icons/Icons";
+import { P } from "@/components/Protos/P";
 import { uniqueId } from "lodash";
+import React, { useRef, useState, useTransition } from "react";
 import { useRecoilState } from "recoil";
-import { accorddingState } from "../../../helpers/atoms";
 
 export const Details = ({ children, label, ref, id , setIsShow = (_)=>{} , className = '' }) => {
   const [showDetails, setShowDetails] = useState(false);

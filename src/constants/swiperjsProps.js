@@ -1,3 +1,4 @@
+
 export const swiperJsProps = {
   // Core
   init: false,

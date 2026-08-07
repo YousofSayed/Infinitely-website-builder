@@ -1,10 +1,10 @@
-import { getProjectSettings } from "../helpers/functions";
+import { projectSettingsState } from "@/helpers/atoms";
+import { getProjectSettings } from "@/helpers/functions";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { projectSettingsState } from "../helpers/atoms";
 
 /**
  * 
- * @returns {[import('../helpers/types').ProjectSetting , React.Dispatch<React.SetStateAction<import('../helpers/types').ProjectSetting>>]}
+ * @returns {[import('@/helpers/types').ProjectSetting , React.Dispatch<React.SetStateAction<import('@/helpers/types').ProjectSetting>>]}
  */
 export const useProjectSettings = () => {
   const projectSettingsFromLocal = getProjectSettings();
@@ -14,7 +14,7 @@ export const useProjectSettings = () => {
   
   /**
    *
-   * @param {import('../helpers/types').ProjectSetting} newSettings
+   * @param {import('@/helpers/types').ProjectSetting} newSettings
    */
   const setProjectSetting = (newSettings) => {
     projectSettingsFromLocal.set(newSettings);

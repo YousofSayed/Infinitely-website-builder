@@ -1,17 +1,19 @@
-import React, { memo, useEffect, useLayoutEffect, useState } from "react";
-import { HomeNav } from "../components/Editor/EditorNav";
-import { HomeHeader } from "../components/Editor/EditorHeader";
-import { Iframe } from "../components/Editor/Iframe";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { GJEditor } from "../components/Editor/GJEditor";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-import { Aside } from "../components/Editor/Protos/Aside";
-import {
-  Navigate,
-  Outlet,
-  useNavigate,
-  useResolvedPath,
-} from "react-router-dom";
+import { AnimationsBuilder } from "@/components/Editor/AnimationsBuilder";
+import { CustomModals } from "@/components/Editor/CustomModals";
+import { HomeHeader } from "@/components/Editor/EditorHeader";
+import { HomeNav } from "@/components/Editor/EditorNav";
+import { GJEditor } from "@/components/Editor/GJEditor";
+import { Iframe } from "@/components/Editor/Iframe";
+import { Aside } from "@/components/Editor/Protos/Aside";
+import { AsideControllers } from "@/components/Editor/Protos/AsideControllers";
+import { Layers } from "@/components/Editor/Protos/Layers";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { StyleAside } from "@/components/Editor/StyleAside";
+import { Loader } from "@/components/Loader";
+import { BusyProvider } from "@/components/Protos/BusyProvider";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { app_type, current_project_id } from "@/constants/shared";
+import { tailwindClasses } from "@/constants/tailwindClasses";
 import {
   appInstallingState,
   currentElState,
@@ -24,37 +26,44 @@ import {
   showLayersState,
   showPreviewState,
   showStylesBuilderForMotionBuilderState,
-} from "../helpers/atoms";
-import { Layers } from "../components/Editor/Protos/Layers";
-import { CustomModals } from "../components/Editor/CustomModals";
-import { AnimationsBuilder } from "../components/Editor/AnimationsBuilder";
-import { toast, ToastContainer } from "react-toastify";
-import { AsideControllers } from "../components/Editor/Protos/AsideControllers";
-import { initDBAssetsSw } from "../serviceWorkers/initDBAssets-sw";
-import { app_type, current_project_id } from "../constants/shared";
-import { getProjectData, getProjectSettings } from "../helpers/functions";
-import {
-  infinitelyWorker,
-  reInitInfinitelyWorker,
-} from "../helpers/infinitelyWorker";
-// import { swAliveInterval } from "../helpers/keepSwAlive";
-import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
+} from "@/helpers/atoms";
 import {
   assetsWorker,
   offlineInstallerWorker,
   pageBuilderWorker,
   routerWorker,
-} from "../helpers/defineWorkers";
-import { useWorkerToast } from "../hooks/useWorkerToast";
-import { opfs } from "../helpers/initOpfs";
-import { Loader } from "../components/Loader";
+} from "@/helpers/defineWorkers";
+import {
+  getProjectData,
+  getProjectId,
+  getProjectSettings,
+  workerCallbackMakerWithProps,
+} from "@/helpers/functions";
+import {
+  infinitelyWorker,
+  reInitInfinitelyWorker,
+} from "@/helpers/infinitelyWorker";
+import { opfs } from "@/helpers/initOpfs";
+import { swAliveInterval } from "@/helpers/keepSwAlive";
+import { useOfflineHandler } from "@/hooks/useOfflineHandler";
+import { useWorkerToast } from "@/hooks/useWorkerToast";
+import { useWorkreFetch } from "@/hooks/useWorkreFetch";
+import { initDBAssetsSw } from "@/serviceWorkers/initDBAssets-sw";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { useOfflineHandler } from "../hooks/useOfflineHandler";
-import { useWorkreFetch } from "../hooks/useWorkreFetch";
-import { StyleAside } from "../components/Editor/StyleAside";
-import { InfinitelyEvents } from "../constants/infinitelyEvents";
-import { BusyProvider } from "../components/Protos/BusyProvider";
-// import { tailwindClasses } from "../constants/tailwindClasses";
+import React, { memo, useEffect, useLayoutEffect, useState } from "react";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import {
+  Navigate,
+  Outlet,
+  useNavigate,
+  useResolvedPath,
+} from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+
+//
+
+//
 // tailwindClasses
 export function Editor({ params }) {
   const navigate = useNavigate();
@@ -73,12 +82,12 @@ export function Editor({ params }) {
   const [appInstalling, setAppInstalling] = useRecoilState(appInstallingState);
   const [reloader, setReloader] = useRecoilState(reloaderState);
   const [currentWpPageName, setCurrentWpPageName] = useRecoilState(
-    currentWpPageNameState
+    currentWpPageNameState,
   );
   const app_type_name = localStorage.getItem(app_type);
   const currentPageName = localStorage.getItem(current_project_id);
   const [showStylesBuilder, setShowStylesBuilder] = useRecoilState(
-    showStylesBuilderForMotionBuilderState
+    showStylesBuilderForMotionBuilderState,
   );
 
   useLayoutEffect(() => {
@@ -103,27 +112,47 @@ export function Editor({ params }) {
 
       setShowCustomModal(false);
     };
-    opfs.id = +localStorage.getItem(current_project_id);
-    opfs.init(+localStorage.getItem(current_project_id));
+    opfs.id = getProjectId();
+    (async () => {
+      await opfs.init(+localStorage.getItem(current_project_id));
 
-    infinitelyWorker.postMessage({
-      command: "initOPFS",
-      props: { id: opfs.id },
-    });
+      console.log('opfs id is :' ,opfs.id );
+      
 
-    assetsWorker.postMessage({
-      command: "initOPFS",
-      props: { id: opfs.id },
-    });
+      infinitelyWorker.postMessage({
+        command: "initOPFS",
+        props: { id: getProjectId() },
+      });
 
-    routerWorker.postMessage({
-      command: "clean-opfs-broadcast",
-    });
-    routerWorker.postMessage({
-      command: "listenToOPFSBroadcastChannel",
-      props: { id: +localStorage.getItem(current_project_id) },
-    });
-    getProjectSettings();
+      assetsWorker.postMessage({
+        command: "initOPFS",
+        props: { id: getProjectId() },
+      });
+
+      routerWorker.postMessage({
+        command: "clean-opfs-broadcast",
+      });
+
+      workerCallbackMakerWithProps(
+        routerWorker,
+        "listenToOPFSBroadcastChannel",
+        {
+          id: getProjectId(),
+        },
+        (props) => {
+          if (props.done) {
+            console.log(`props.done is ${props.done}`)
+            setIsAssetsWorkerDone(true);
+          }
+        },
+      );
+      //  routerWorker.postMessage({
+      //    command: "listenToOPFSBroadcastChannel",
+      //    props: { id: +localStorage.getItem(current_project_id) },
+      //  });
+    })();
+
+    // getProjectSettings();
 
     let reinitTimeout;
     const infinitelyWorkerIniter = (ev) => {
@@ -158,27 +187,28 @@ export function Editor({ params }) {
   useWorkreFetch(offlineInstallerWorker);
 
   useEffect(() => {
-    const cb = (ev) => {
-      const { command, props } = ev.data;
-      if (command == "listenToOPFSBroadcastChannel" && props.done) {
-        setIsAssetsWorkerDone(true);
-        // assetsWorker.removeEventListener("message", cb);
-      }
-    };
+    // const cb = (ev) => {
+    //   const { command, props } = ev.data;
+    //   if (command == "listenToOPFSBroadcastChannel" && props.done) {
+    //     setIsAssetsWorkerDone(true);
+    //     // assetsWorker.removeEventListener("message", cb);
+    //   }
+    // };
     const windowNavigate = (ev) => {
       navigate(ev.detail.to);
     };
     window.addEventListener(
       InfinitelyEvents.navigator.navigate,
-      windowNavigate
+      windowNavigate,
     );
-    routerWorker.addEventListener("message", cb);
+    // routerWorker.addEventListener("message", cb);
+
     setCurrentEl({ currentEl: null, addStyle: null });
     return () => {
-      routerWorker.removeEventListener("message", cb);
+      // routerWorker.removeEventListener("message", cb);
       window.removeEventListener(
         InfinitelyEvents.navigator.navigate,
-        windowNavigate
+        windowNavigate,
       );
     };
   }, []);
@@ -204,9 +234,9 @@ export function Editor({ params }) {
             position="top-left"
             toastClassName={`bg-surface-secondary`}
             className={`z-[1000000]    `}
-          // containerId={`main-toast-container`}
+            // containerId={`main-toast-container`}
 
-          // stacked={true}
+            // stacked={true}
           />
           <GJEditor key={reloader}>
             {/* <WithEditor> */}
@@ -219,10 +249,11 @@ export function Editor({ params }) {
               <section
                 // ref={parent}
                 id="main-group"
-                className={`${showPreview
+                className={`${
+                  showPreview
                     ? "w-full"
                     : "w-[calc(100%-55px)] border-l-[1.5px] border-slate-400"
-                  } flex flex-col h-full `}
+                } flex flex-col h-full `}
               >
                 {/* {!showPreview && <HomeHeader />} */}
                 <HomeHeader />
@@ -232,7 +263,7 @@ export function Editor({ params }) {
                   className="flex h-full w-full"
                   direction="horizontal"
                   autoSaveId="panels"
-                // ref={parentForPanelsGroup}
+                  // ref={parentForPanelsGroup}
                 >
                   {(showAnimBuilder || showLayers || showStylesBuilder) &&
                     !showPreview && (
@@ -287,7 +318,9 @@ export function Editor({ params }) {
                   <PanelResizeHandle className="w-[5px] bg-brand-primary opacity-0 hover:opacity-[1] transition-all" />
                   <Panel defaultSize={300} order={3} id="right-panel">
                     <Aside>
-                      {pathname.pathname != "/add-blocks" && <AsideControllers />}
+                      {pathname.pathname != "/add-blocks" && (
+                        <AsideControllers />
+                      )}
                       <Outlet />
                     </Aside>
                   </Panel>

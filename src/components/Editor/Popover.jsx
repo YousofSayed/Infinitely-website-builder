@@ -1,3 +1,14 @@
+import {
+  popoverRefState,
+  popoverState,
+  showDragLayerState,
+} from "@/helpers/atoms";
+import { uniqueID } from "@/helpers/cocktail";
+import { currentRefType, refType } from "@/helpers/jsDocs";
+import { Icons } from "@/components/Icons/Icons";
+import Portal from "@/components/Editor/Portal";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
+import interact from "interactjs";
 import React, {
   memo,
   useEffect,
@@ -5,18 +16,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import {
-  popoverRefState,
-  popoverState,
-  showDragLayerState,
-} from "../../helpers/atoms";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { uniqueID } from "../../helpers/cocktail";
-import { currentRefType, refType } from "../../helpers/jsDocs";
-import Portal from "./Portal";
-import { Icons } from "../Icons/Icons";
-import interact from "interactjs";
-import { useAutoAnimate } from "@formkit/auto-animate/react";
 
 export const Popover = ({
   targetRef = currentRefType,

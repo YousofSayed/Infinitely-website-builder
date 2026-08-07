@@ -1,4 +1,4 @@
-import { google_fonts_api_key } from "./APIsKeys";
+import { google_fonts_api_key } from "@/constants/APIsKeys";
 
 export const google_fonts_endpoint = `https://www.googleapis.com/webfonts/v1/webfonts?key=${google_fonts_api_key}`;
 export const google_fonts_search_by_font_family = `https://www.googleapis.com/webfonts/v1/webfonts?key=${google_fonts_api_key}&family=`;

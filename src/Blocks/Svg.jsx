@@ -1,14 +1,14 @@
-import { wp_get_blob_media_by_slug } from "../Apps/wordpress/functions";
-import { Icons } from "../components/Icons/Icons";
-import { current_project_id } from "../constants/shared";
+import { wp_get_blob_media_by_slug } from "@/apps/wordpress/functions";
+import { Icons } from "@/components/Icons/Icons";
+import { current_project_id } from "@/constants/shared";
 import {
   defineTraits,
   doActionAndPreventSaving,
   doInNormalAsync,
   doInWordpressAsync,
   getParentNode,
-} from "../helpers/functions";
-import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
+} from "@/helpers/functions";
+import { reactToStringMarkup } from "@/helpers/reactToStringMarkup";
 
 /**
  *

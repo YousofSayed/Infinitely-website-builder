@@ -1,10 +1,10 @@
+import { hsZoo } from "@/constants/hsValues";
+import { Icons } from "@/components/Icons/Icons";
+import { Choices } from "@/components/Editor/Protos/Choices";
+import { Input } from "@/components/Editor/Protos/Input";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
 import React, { useEffect, useState } from "react";
-import { Input } from "../Input";
-import { SmallButton } from "../SmallButton";
-import { Icons } from "../../../Icons/Icons";
-import { Choices } from "../Choices";
-import { Select } from "../Select";
-import { hsZoo } from "../../../../constants/hsValues";
 
 export const ArrayInput = ({
   array,

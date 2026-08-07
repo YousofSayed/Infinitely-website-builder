@@ -2,9 +2,9 @@ import {
   current_project_id,
   motionId,
   motionInstanceId,
-} from "../constants/shared";
-import { getProjectData } from "../helpers/functions";
-import { infinitelyWorker } from "../helpers/infinitelyWorker";
+} from "@/constants/shared";
+import { getProjectData } from "@/helpers/functions";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
 
 /**
  *

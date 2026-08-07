@@ -1,11 +1,11 @@
-import { Icons } from "../components/Icons/Icons";
-import { html } from "../helpers/bridge";
+import { Icons } from "@/components/Icons/Icons";
+import { html } from "@/helpers/bridge";
 import {
   defineTraits,
   doActionAndPreventSaving,
   getProjectSettings,
-} from "../helpers/functions";
-import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
+} from "@/helpers/functions";
+import { reactToStringMarkup } from "@/helpers/reactToStringMarkup";
 
 /**
  *

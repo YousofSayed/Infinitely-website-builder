@@ -1,5 +1,5 @@
-import React from "react";
-import { atom } from "recoil";
+import { parse } from "@/helpers/cocktail";
+import { getGlobalSettings, getProjectSettings } from "@/helpers/functions";
 import {
   animationsType,
   animeStylesType,
@@ -19,9 +19,14 @@ import {
   tooltipDataType,
   undoRedoShowProps,
   varType,
-} from "./jsDocs";
-import { getGlobalSettings, getProjectSettings } from "./functions";
-import { parse } from "./cocktail";
+} from "@/helpers/jsDocs";
+import React from "react";
+import { atom } from "recoil";
+
+export const appTypeStt = atom({
+  key: "appTypeStt",
+  default: null, // unknown until project load resolves
+});
 
 export const widths = atom({
   key: "widths",
@@ -100,7 +105,7 @@ export const searchWord = atom({
 });
 
 /**
- * @type {{[categoryName: string]: import('./types').InfinitelyBlock[];}}
+ * @type {{[categoryName: string]: import('@/helpers/types').InfinitelyBlock[];}}
  */
 export let editorBlocksType = [];
 

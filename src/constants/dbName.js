@@ -1,1 +1,2 @@
-export const db_name = 'Infinitely'; 
+
+export const db_name = 'Infinitely';

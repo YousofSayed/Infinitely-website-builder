@@ -1,27 +1,27 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { pageHelmetType, refType } from "../../../helpers/jsDocs";
-import { useLiveQuery } from "dexie-react-hooks";
-import { getProjectData, store } from "../../../helpers/functions";
+import blankImg from "@/assets/images/blank.jpg";
+import { open_pages_manager_modal } from "@/constants/InfinitelyCommands";
 import {
   current_page_helmet,
   current_page_id,
   current_project_id,
-} from "../../../constants/shared";
-import { Input } from "../Protos/Input";
-import blankImg from "../../../assets/images/blank.jpg";
-import { Button } from "../../Protos/Button";
-import { Icons } from "../../Icons/Icons";
+} from "@/constants/shared";
+import { defineRoot } from "@/helpers/bridge";
+import { html, uniqueID } from "@/helpers/cocktail";
+import { getProjectData, store } from "@/helpers/functions";
+import { opfs } from "@/helpers/initOpfs";
+import { pageHelmetType, refType } from "@/helpers/jsDocs";
+import { Icons } from "@/components/Icons/Icons";
+import { Button } from "@/components/Protos/Button";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { Input } from "@/components/Editor/Protos/Input";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useEditorMaybe } from "@grapesjs/react";
-import { open_pages_manager_modal } from "../../../constants/InfinitelyCommands";
-import { Select } from "../Protos/Select";
-import { FitTitle } from "../Protos/FitTitle";
-import { SmallButton } from "../Protos/SmallButton";
-import { opfs } from "../../../helpers/initOpfs";
-import { defineRoot } from "../../../helpers/bridge";
+import { useLiveQuery } from "dexie-react-hooks";
 import { random, uniqueId } from "lodash";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
-import { ToastMsgInfo } from "../Protos/ToastMsgInfo";
-import { html, uniqueID } from "../../../helpers/cocktail";
 
 //million-ignore
 export const PageHelmetModal = () => {
@@ -216,7 +216,7 @@ export const PageHelmetModal = () => {
 
   /**
    *
-   * @param {{key:keyof import('../../../helpers/types').PageHelmet , value:string , isBlob:boolean , mimeType:string , isLogo:boolean}} param0
+   * @param {{key:keyof import('@/helpers/types').PageHelmet , value:string , isBlob:boolean , mimeType:string , isLogo:boolean}} param0
    */
   const updatePageHelmet = useCallback(
     async ({ key, value, isBlob = false, mimeType, isLogo = false }) => {

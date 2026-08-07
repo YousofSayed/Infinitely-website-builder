@@ -1,16 +1,16 @@
-import React, { useEffect, useRef, useState } from "react";
-import { useRecoilValue } from "recoil";
 import {
   currentElState,
   ruleState,
   selectorState,
-} from "../../../helpers/atoms";
-import { useSetClassForCurrentEl } from "../../../hooks/useSetclassForCurrentEl";
+} from "@/helpers/atoms";
+import { useRemoveCssProp } from "@/hooks/useRemoveCssProp";
+import { useSetClassForCurrentEl } from "@/hooks/useSetclassForCurrentEl";
+import { useUpdateInputValue } from "@/hooks/useUpdateInputValue";
+import { ScrollableToolbar } from "@/components/Protos/ScrollableToolbar";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
 import { useEditorMaybe } from "@grapesjs/react";
-import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
-import { useRemoveCssProp } from "../../../hooks/useRemoveCssProp";
-import { ScrollableToolbar } from "../../Protos/ScrollableToolbar";
-import { FitTitle } from "./FitTitle";
+import React, { useEffect, useRef, useState } from "react";
+import { useRecoilValue } from "recoil";
 
 /**
  *

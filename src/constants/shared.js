@@ -1,4 +1,4 @@
-import { isChrome } from "../helpers/bridge";
+import { isChrome } from "@/helpers/bridge";
 
 export const current_project_id = `currentProjectId`;
 export const gsap_animation_state = "gsap_animation_state";
@@ -35,6 +35,7 @@ export const inf_symbol_instance_Id_attribute = `inf-symbol-instance-id`;
 export const inf_bridge_id = `inf-bridge-id`;
 export const inf_class_name = `inf-class-name`;
 export const inf_template_id = `inf-template-id`;
+export const inf_template_name = `inf-template-name`;
 export const inf_css_urls = `inf-css-urls`;
 export const inf_build_url = `inf-build-url`;
 export const inf_cmds_id = `inf-cmds-id`;
@@ -324,7 +325,7 @@ export const makeCPTTemplates = (postTypes = []) =>
 /**
  *
  * @param {{
- * projectSetting:import('../helpers/types').ProjectSetting
+ * projectSetting:import('@/helpers/types').ProjectSetting
  * disablePvue:boolean,
  * disableGsapCore:boolean,
  * disableGsapScrollTrigger:boolean,
@@ -429,7 +430,7 @@ export const buildScripts = ({ projectSetting = {}, inserts = [] }) => {
 /**
  *
  * @param {{
- * projectSetting:import('../helpers/types').ProjectSetting
+ * projectSetting:import('@/helpers/types').ProjectSetting
  * disablePvue:boolean,
  * disableGsapCore:boolean,
  * disableGsapScrollTrigger:boolean,
@@ -527,7 +528,7 @@ export const buildWpScripts = ({ projectSetting = {}, inserts = [] }) => {
 /**
  *
  * @param {{
- * projectSetting:import('../helpers/types').ProjectSetting
+ * projectSetting:import('@/helpers/types').ProjectSetting
  * disablePvue:boolean,
  * disableGsapCore:boolean,
  * disableGsapScrollTrigger:boolean,

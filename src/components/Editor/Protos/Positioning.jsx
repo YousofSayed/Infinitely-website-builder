@@ -1,10 +1,10 @@
+import { positionValues } from "@/constants/cssProps";
+import { DirectionsModel } from "@/components/Editor/Protos/DirectionsModel";
+import { MiniTitle } from "@/components/Editor/Protos/MiniTitle";
+import { Property } from "@/components/Editor/Protos/Property";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SelectStyle } from "@/components/Editor/Protos/SelectStyle";
 import React from "react";
-import { Select } from "./Select";
-import { positionValues } from "../../../constants/cssProps";
-import { Property } from "./Property";
-import { DirectionsModel } from "./DirectionsModel";
-import { SelectStyle } from "./SelectStyle";
-import { MiniTitle } from "./MiniTitle";
 
 export const Positioning = () => {
   return (

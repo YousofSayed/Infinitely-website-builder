@@ -1,6 +1,6 @@
-import { getAllStyleSheetClasses } from "./workerCommands";
-import { doWorkerPattern } from "./workersPattern";
+import { getAllStyleSheetClasses } from "@/helpers/workerCommands";
+import { doWorkerPattern } from "@/helpers/workersPattern";
 
-const commands = {getAllStyleSheetClasses};
+export const commands = {getAllStyleSheetClasses};
 
 doWorkerPattern(commands)

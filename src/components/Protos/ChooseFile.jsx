@@ -1,27 +1,27 @@
-import React, { useRef, useState } from "react";
-import { assetsType, refType } from "../../helpers/jsDocs";
-import { Input } from "../Editor/Protos/Input";
-import { SmallButton } from "../Editor/Protos/SmallButton";
-import { doInNormalAsync, doInWordpressAsync, getProjectData, getProjectSettings } from "../../helpers/functions";
-import { Popover } from "../Editor/Popover";
-import { VirtuosoGrid } from "react-virtuoso";
-import { GridComponents } from "./VirtusoGridComponent";
-import { FileView } from "./FileView";
+import { wp_get } from "@/apps/wordpress/functions";
+import { current_project_id } from "@/constants/shared";
+import { defineRoot } from "@/helpers/bridge";
+import { doInNormalAsync, doInWordpressAsync, getProjectData, getProjectSettings } from "@/helpers/functions";
+import { opfs } from "@/helpers/initOpfs";
+import { assetsType, refType } from "@/helpers/jsDocs";
+import { Popover } from "@/components/Editor/Popover";
+import { Input } from "@/components/Editor/Protos/Input";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { Icons } from "@/components/Icons/Icons";
+import { Loader } from "@/components/Loader";
+import { BusyProvider } from "@/components/Protos/BusyProvider";
+import { FileView } from "@/components/Protos/FileView";
+import { NoItemsHere } from "@/components/Protos/NoItemsHere";
+import { Normal } from "@/components/Protos/Normal";
+import { GridComponents } from "@/components/Protos/VirtusoGridComponent";
+import { Wordpress } from "@/components/Protos/wordpress/Wordpress";
+import { WpFileView } from "@/components/Protos/wordpress/WpFileView";
 import { useEditorMaybe } from "@grapesjs/react";
-import { Icons } from "../Icons/Icons";
-import { opfs } from "../../helpers/initOpfs";
-import { defineRoot } from "../../helpers/bridge";
-import { Loader } from "../Loader";
-import { wp_get } from "../../Apps/wordpress/functions";
-import { current_project_id } from "../../constants/shared";
 import { isArray } from "lodash";
-import { Normal } from "./Normal";
-import { WpFileView } from "./wordpress/WpFileView";
+import React, { useRef, useState } from "react";
 import { toast } from "react-toastify";
-import { ToastMsgInfo } from "../Editor/Protos/ToastMsgInfo";
-import { Wordpress } from "./wordpress/Wordpress";
-import { NoItemsHere } from "./NoItemsHere";
-import { BusyProvider } from "./BusyProvider";
+import { VirtuosoGrid } from "react-virtuoso";
 
 /**
  *

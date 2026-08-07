@@ -1,6 +1,9 @@
-// million-ignore
+import { addClickClass } from "@/helpers/cocktail";
 import React from "react";
-import { addClickClass } from "../../helpers/cocktail";
+
+// million-ignore
+
+
 
 /**
  * Reusable blue button with click animation.

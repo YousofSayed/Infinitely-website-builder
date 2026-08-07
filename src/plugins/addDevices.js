@@ -1,7 +1,7 @@
-import { InfinitelyEvents } from "../constants/infinitelyEvents";
-import { editorContainerInstance } from "../constants/InfinitelyInstances";
-import { killAllGsapMotions } from "../helpers/customEvents";
-import { getProjectData, restartGSAPMotions } from "../helpers/functions";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { editorContainerInstance } from "@/constants/InfinitelyInstances";
+import { killAllGsapMotions } from "@/helpers/customEvents";
+import { getProjectData, restartGSAPMotions } from "@/helpers/functions";
 
 /**
  * @type {ResizeObserver}

@@ -1,17 +1,17 @@
-import React from "react";
-import {
-  addItemInToolBarForEditor,
-  getProjectData,
-} from "../../helpers/functions";
-import { reactToStringMarkup } from "../../helpers/reactToStringMarkup";
-import { Icons } from "../../components/Icons/Icons";
+import { Icons } from "@/components/Icons/Icons";
 import {
   mainMotionId,
   motionId,
   motionInstanceId,
-} from "../../constants/shared";
-import { db } from "../../helpers/db";
-import { runGsapMethod } from "../../helpers/customEvents";
+} from "@/constants/shared";
+import { runGsapMethod } from "@/helpers/customEvents";
+import { db } from "@/helpers/db";
+import {
+  addItemInToolBarForEditor,
+  getProjectData,
+} from "@/helpers/functions";
+import { reactToStringMarkup } from "@/helpers/reactToStringMarkup";
+import React from "react";
 
 export const runGsapMotionTool = (editor) => {
   return addItemInToolBarForEditor({

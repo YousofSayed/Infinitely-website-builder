@@ -1,37 +1,38 @@
-import { useEditorMaybe } from "@grapesjs/react";
-import React, { memo, useEffect, useRef, useState } from "react";
-import { Input } from "../Protos/Input";
-import { Select } from "../Protos/Select";
 import {
   httpGetterMethods,
   httpSetterMethods,
-} from "../../../constants/hsValues";
-import { Icons } from "../../Icons/Icons";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { restModelsVarsState, varsState } from "../../../helpers/atoms";
-import { Button } from "../../Protos/Button";
-import { ObjectInput } from "../Protos/Commands/ObjectInput";
-import { MiniTitle } from "../Protos/MiniTitle";
-import { SmallButton } from "../Protos/SmallButton";
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "../Protos/ToastMsgInfo";
-import { useLiveQuery } from "dexie-react-hooks";
-import { db } from "../../../helpers/db";
-import { current_project_id } from "../../../constants/shared";
-import { downloadFile, getProjectData } from "../../../helpers/functions";
+} from "@/constants/hsValues";
+import { current_project_id } from "@/constants/shared";
+import { restModelsVarsState, varsState } from "@/helpers/atoms";
 import {
   addClickClass,
   parse,
   stringify,
   uniqueID,
-} from "../../../helpers/cocktail";
-import { FitTitle } from "../Protos/FitTitle";
-import { isPlainObject, uniqueId } from "lodash";
-import { CodeEditor } from "../Protos/CodeEditor";
+} from "@/helpers/cocktail";
+import { db } from "@/helpers/db";
+import { downloadFile, getProjectData } from "@/helpers/functions";
+import { Icons } from "@/components/Icons/Icons";
+import { Button } from "@/components/Protos/Button";
+import { CodeEditor } from "@/components/Editor/Protos/CodeEditor";
+import { ObjectInput } from "@/components/Editor/Protos/Commands/ObjectInput";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { Input } from "@/components/Editor/Protos/Input";
+import { MiniTitle } from "@/components/Editor/Protos/MiniTitle";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-// import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-// import { PrismAsyncLight as SyntaxHighlighter } from "react-syntax-highlighter";
-// import json from "react-syntax-highlighter/dist/esm/languages/prism/json";
+import { useEditorMaybe } from "@grapesjs/react";
+import { useLiveQuery } from "dexie-react-hooks";
+import { isPlainObject, uniqueId } from "lodash";
+import React, { memo, useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+
+// 
+// 
+// 
 
 // setTimeout(() => {
 //   SyntaxHighlighter.registerLanguage("json", json);
@@ -180,7 +181,7 @@ export const RestAPIModels = memo(() => {
     if (!file) return;
     const fileAsText = await file.text();
     /**
-     * @type {import('../../../helpers/types').RestAPIModel}
+     * @type {import('@/helpers/types').RestAPIModel}
      */
     const fileAsJson = JSON.parse(fileAsText);
     console.log("file as json : ", fileAsJson);

@@ -1,4 +1,4 @@
-import { InfinitelyEvents } from "../constants/infinitelyEvents";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
 
 /**
  *
@@ -147,7 +147,7 @@ export const pvUnMount = (el) => {
 /**
  *
  * @param {string[]} methodName
- * @param {import('./types').MotionType} motion
+ * @param {import('@/helpers/types').MotionType} motion
  */
 export const runGsapMethod = (methods, motion, props = []) => {
   const runGsapCm = new CustomEvent("gsap:run", {

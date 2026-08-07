@@ -1,12 +1,12 @@
-import React from "react";
+import { Icons } from "@/components/Icons/Icons";
+import { mainMotionId, motionId, motionInstanceId } from "@/constants/shared";
+import { runGsapMethod } from "@/helpers/customEvents";
 import {
   addItemInToolBarForEditor,
   getProjectData,
-} from "../../helpers/functions";
-import { reactToStringMarkup } from "../../helpers/reactToStringMarkup";
-import { Icons } from "../../components/Icons/Icons";
-import { mainMotionId, motionId, motionInstanceId } from "../../constants/shared";
-import { runGsapMethod } from "../../helpers/customEvents";
+} from "@/helpers/functions";
+import { reactToStringMarkup } from "@/helpers/reactToStringMarkup";
+import React from "react";
 
 export const killGsapMotionTool = (editor) => {
   return addItemInToolBarForEditor({

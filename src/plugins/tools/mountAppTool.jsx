@@ -1,12 +1,12 @@
-import React from "react";
+import { editorIcons } from "@/components/Icons/editorIcons";
+import { current_page_id, inf_cmds_id } from "@/constants/shared";
 import {
   addItemInToolBarForEditor,
   buildScriptFromCmds,
   getProjectData,
   mount,
-} from "../../helpers/functions";
-import { editorIcons } from "../../components/Icons/editorIcons";
-import { current_page_id, inf_cmds_id } from "../../constants/shared";
+} from "@/helpers/functions";
+import React from "react";
 
 /**
  *

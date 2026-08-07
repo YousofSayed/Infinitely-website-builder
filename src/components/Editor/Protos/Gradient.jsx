@@ -1,20 +1,20 @@
+import { pushBetween, uniqueID } from "@/helpers/cocktail";
+import { getCloneArray } from "@/helpers/functions";
+import { useRemoveCssProp } from "@/hooks/useRemoveCssProp";
+import { useSetClassForCurrentEl } from "@/hooks/useSetclassForCurrentEl";
+import { useUpdateInputValue } from "@/hooks/useUpdateInputValue";
+import { Icons } from "@/components/Icons/Icons";
+import { Adder } from "@/components/Editor/Protos/Adder";
+import { ColorPicker } from "@/components/Editor/Protos/ColorPicker";
+import { Input } from "@/components/Editor/Protos/Input";
+import { LinearGradient } from "@/components/Editor/Protos/LinearGradient";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
 import React, { useEffect, useState } from "react";
-import { Select } from "./Select";
-import { LinearGradient } from "./LinearGradient";
-import { SmallButton } from "./SmallButton";
-import { Icons } from "../../Icons/Icons";
-import { Input } from "./Input";
-import { pushBetween, uniqueID } from "../../../helpers/cocktail";
-import { useSetClassForCurrentEl } from "../../../hooks/useSetclassForCurrentEl";
-import { Adder } from "./Adder";
-import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
-import { useRemoveCssProp } from "../../../hooks/useRemoveCssProp";
-import { ColorPicker } from "./ColorPicker";
-import { getCloneArray } from "../../../helpers/functions";
 
 /**
  *
- * @param {import("../../../helpers/types").gradientValues} values
+ * @param {import("@/helpers/types").gradientValues} values
  * @param {string} type
  * @returns
  */
@@ -87,7 +87,7 @@ function parseGradient(input = "") {
 
 /**
  *
- * @param {{values : import("../../../helpers/types").gradientValues , deleteAllContainer:(index:number , values:[]  ) setValues:Function , index:number}} param0
+ * @param {{values : import("@/helpers/types").gradientValues , deleteAllContainer:(index:number , values:[]  ) setValues:Function , index:number}} param0
  * @returns
  */
 

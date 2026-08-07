@@ -1,6 +1,7 @@
+import { Property } from "@/components/Editor/Protos/Property";
+import { SharedBetweenFlexAndGridLayout } from "@/components/Editor/Protos/SharedBetweenFlexAndGridLayout";
 import React from "react";
-import { SharedBetweenFlexAndGridLayout } from "./SharedBetweenFlexAndGridLayout";
-import { Property } from "./Property";
+
 // Icons.
 export const GridLayout = () => {
   // console.log(CSS.supports('width' , '2'));

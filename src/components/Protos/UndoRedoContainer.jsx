@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { currentElState, showsState } from "../../helpers/atoms";
-import { useRecoilState } from "recoil";
+import { currentElState, showsState } from "@/helpers/atoms";
 import { useUndoRedo } from "@anandarizki/use-undo-redo";
 import { cloneDeep } from "lodash";
+import React, { useEffect, useState } from "react";
+import { useRecoilState } from "recoil";
 
 /**
  *
@@ -16,7 +16,7 @@ import { cloneDeep } from "lodash";
 
 /**
  * @typedef {Object} Props
- * @property {keyof import('../../helpers/types').ShowProps} showProp
+ * @property {keyof import('@/helpers/types').ShowProps} showProp
  * @property {any} state
  * @property {any} defaultValue
  * @property {React.JSX.Element} children

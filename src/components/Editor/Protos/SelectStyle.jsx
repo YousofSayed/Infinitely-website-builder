@@ -1,7 +1,7 @@
+import { useSetClassForCurrentEl } from "@/hooks/useSetclassForCurrentEl";
+import { useUpdateInputValue } from "@/hooks/useUpdateInputValue";
+import { Select } from "@/components/Editor/Protos/Select";
 import React, { useState } from "react";
-import { Select } from "./Select";
-import { useSetClassForCurrentEl } from "../../../hooks/useSetclassForCurrentEl";
-import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
 
 /**
  *

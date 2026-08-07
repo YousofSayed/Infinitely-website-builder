@@ -10,10 +10,10 @@ export function doWorkerPattern(commands) {
     console.log(`Infinitly worker event got it : ${command}`);
     try {
       const res = await commands[command](props);
-      console.log('res from worker : ' , res);
-      
+      console.log("res from worker : ",command, res);
+
       self.postMessage({
-        _send_worker_id:ev.data?._send_worker_id || undefined, 
+        _send_worker_id: ev.data?._send_worker_id || undefined,
         command,
         props: {
           done: true,
@@ -23,22 +23,26 @@ export function doWorkerPattern(commands) {
       props = null;
     } catch (error) {
       self.postMessage({
-        _send_worker_id:ev.data?._send_worker_id || undefined, 
+        _send_worker_id: ev.data?._send_worker_id || undefined,
         command,
         props: {
           done: false,
-          res: null,
+          error: {
+            message: error?.message,
+            stack: error?.stack,
+            name: error?.name,
+          },
         },
       });
 
-      throw new Error(error);
+      // throw new Error(error);
     }
   });
 
   self.addEventListener("error", (ev) => {
     console.error(`From Worker : ${ev.error} , with line : ${ev.lineno}`);
   });
-  self.addEventListener("unhandledrejection", (ev) => {
-    console.error("Worker unhandled rejection:", ev.reason);
-  });
+  // self.addEventListener("unhandledrejection", (ev) => {
+  //   console.error("Worker unhandled rejection:", ev.reason);
+  // });
 }

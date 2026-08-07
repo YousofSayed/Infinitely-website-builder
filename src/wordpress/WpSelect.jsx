@@ -1,7 +1,3 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { config } from "../brand";
-import { Select } from "../components/Editor/Protos/Select";
-import { Button } from "../components/Protos/Button";
 import {
   wp_create_option,
   wp_create_single,
@@ -14,7 +10,14 @@ import {
   wp_update_meta,
   wp_update_single,
   wp_write_files,
-} from "../Apps/wordpress/functions";
+} from "@/Apps/wordpress/functions";
+import { config } from "@/brand";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { Select } from "@/components/Editor/Protos/Select";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { Icons } from "@/components/Icons/Icons";
+import { Loader } from "@/components/Loader";
+import { Button } from "@/components/Protos/Button";
 import {
   current_page_id,
   current_project_id,
@@ -23,26 +26,23 @@ import {
   wp_edite_mode,
   wp_page_config,
   wp_rest_base_edite,
-} from "../constants/shared";
-import { wp_page, wp_pages } from "../helpers/jsDocs";
-import { toast, ToastContainer } from "react-toastify";
-import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
-import { currentWpPageNameState } from "../helpers/atoms";
-import { useRecoilState } from "recoil";
-import { Link, Navigate, useNavigate } from "react-router-dom";
-import { isArray, isNaN, isNumber, isPlainObject } from "lodash";
-import { db } from "../helpers/db";
-import { Icons } from "../components/Icons/Icons";
-import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { Loader } from "../components/Loader";
-import { FitTitle } from "../components/Editor/Protos/FitTitle";
-import { useOnline } from "../hooks/useOnline";
+} from "@/constants/shared";
+import { currentWpPageNameState } from "@/helpers/atoms";
+import { functionToString } from "@/helpers/bridge";
+import { db } from "@/helpers/db";
 import {
   wpWorkerCallbackListener,
   wpWorkerCallbackMaker,
-} from "../helpers/functions";
-import { infinitelyWorker } from "../helpers/infinitelyWorker";
-import { functionToString } from "../helpers/bridge";
+} from "@/helpers/functions";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
+import { wp_page, wp_pages } from "@/helpers/jsDocs";
+import { useOnline } from "@/hooks/useOnline";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { isArray, isNaN, isNumber, isPlainObject } from "lodash";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import { useRecoilState } from "recoil";
 
 export const SelectWpTemplate = () => {
   const [template, setTemplate] = useState(wp_page);

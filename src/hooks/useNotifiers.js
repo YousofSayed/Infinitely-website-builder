@@ -1,17 +1,17 @@
-import { useEditorMaybe } from "@grapesjs/react";
-import React, { useEffect, useState } from "react";
-import { useRecoilState, useRecoilValue } from "recoil";
-import {
-  asideControllersNotifiresState,
-  cmpRulesState,
-  currentElState,
-} from "../helpers/atoms";
 import {
   interactionId,
   mainInteractionId,
   mainMotionId,
   motionId,
-} from "../constants/shared";
+} from "@/constants/shared";
+import {
+  asideControllersNotifiresState,
+  cmpRulesState,
+  currentElState,
+} from "@/helpers/atoms";
+import { useEditorMaybe } from "@grapesjs/react";
+import React, { useEffect, useState } from "react";
+import { useRecoilState, useRecoilValue } from "recoil";
 
 export const useNotifiers = () => {
   const editor = useEditorMaybe();

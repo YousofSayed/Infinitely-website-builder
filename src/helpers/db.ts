@@ -1,8 +1,13 @@
-// db.ts
+import { db_name } from "@/constants/dbName";
+import { InfinitelyAsset, Project, WpProject } from "@/helpers/types";
 import Dexie, { type EntityTable } from "dexie";
-import { db_name } from "../constants/dbName";
 import { ProjectData } from "grapesjs";
-import { InfinitelyAsset, Project, WpProject } from "./types";
+
+// db.ts
+
+
+
+
 
 
 

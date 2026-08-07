@@ -1,4 +1,3 @@
-import { cloneDeep, isPlainObject, random, uniqueId } from "lodash";
 import {
   current_page_id,
   current_project_id,
@@ -8,8 +7,9 @@ import {
   mainMotionId,
   motionId,
   motionInstanceId,
-} from "../constants/shared";
-import { buildInteractionsAttributes } from "../helpers/bridge";
+} from "@/constants/shared";
+import { buildInteractionsAttributes } from "@/helpers/bridge";
+import { db } from "@/helpers/db";
 import {
   deleteAttributesInAllPages,
   doInNormal,
@@ -19,8 +19,8 @@ import {
   handleCloneComponent,
   preventSelectNavigation,
   store,
-} from "../helpers/functions";
-import { db } from "../helpers/db";
+} from "@/helpers/functions";
+import { cloneDeep, isPlainObject, random, uniqueId } from "lodash";
 
 /**
  *

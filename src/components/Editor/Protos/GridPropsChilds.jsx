@@ -1,4 +1,5 @@
-import { Property } from './Property'
+
+import { Property } from '@/components/Editor/Protos/Property'
 
 export const GridPropsChilds = () => {
   return (

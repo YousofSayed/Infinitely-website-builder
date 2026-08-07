@@ -6,10 +6,10 @@ import React, {
   useState,
   useTransition,
 } from "react";
-import { SwitchButton } from "../../Protos/SwitchButton";
-// import { InfAccordion } from "../../Protos/InfAccordion";
+import { SwitchButton } from "@/components/Protos/SwitchButton";
+// import { InfAccordion } from "@/components/Protos/InfAccordion";
 // import { Accordion, AccordionItem } from "@heroui/accordion";
-import { Select } from "./Select";
+// import { Select } from "@/Select";
 import {
   doInNormal,
   doInNormalAsync,
@@ -26,26 +26,26 @@ import {
   setAttributesInAllPages,
   store,
   workerCallbackMaker,
-} from "../../../helpers/functions";
-import { Adder } from "./Adder";
-import { Input } from "./Input";
+} from "@/helpers/functions";
+import { Adder } from "@/components/Editor/Protos/Adder";
+import { Input } from "@/components/Editor/Protos/Input";
 import {
   advancedGsapOptions,
   getGsapAnimationOptions,
   getGsapScrollTriggerOptions,
   getGsapTimelineProps,
   splitTextOptions,
-} from "../../../constants/motion";
-import { SmallButton } from "./SmallButton";
-import { Icons, mainColor } from "../../Icons/Icons";
-import { MiniTitle } from "./MiniTitle";
+} from "@/constants/motion";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { Icons, mainColor } from "@/components/Icons/Icons";
+import { MiniTitle } from "@/components/Editor/Protos/MiniTitle";
 import {
   animationsType,
   motionAnimationType,
   motionType,
-} from "../../../helpers/jsDocs";
-import noData from "../../../assets/images/no-data.svg";
-import { Button } from "../../Protos/Button";
+} from "@/helpers/jsDocs";
+import noData from "@/assets/images/no-data.svg";
+import { Button } from "@/components/Protos/Button";
 import { useEditorMaybe } from "@grapesjs/react";
 import {
   add,
@@ -65,7 +65,7 @@ import {
   parseAndReturnInputIfNot,
   stringify,
   uniqueID,
-} from "../../../helpers/cocktail";
+} from "@/helpers/cocktail";
 import { useRecoilState } from "recoil";
 import {
   currentElState,
@@ -73,40 +73,42 @@ import {
   globalUndoAndRedoStates,
   showsState,
   showStylesBuilderForMotionBuilderState,
-} from "../../../helpers/atoms";
-import { infinitelyWorker } from "../../../helpers/infinitelyWorker";
+} from "@/helpers/atoms";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
 import {
   current_page_id,
   current_project_id,
   mainMotionId,
   motionId,
   motionInstanceId,
-} from "../../../constants/shared";
+} from "@/constants/shared";
 import { useLiveQuery } from "dexie-react-hooks";
-import { runGsapMethod } from "../../../helpers/customEvents";
-import { FitTitle } from "./FitTitle";
+import { runGsapMethod } from "@/helpers/customEvents";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
 import {
   buildGsapMotionsScript,
   deepValues,
   editNestedObject,
   getNestedValue,
   removeNestedKey,
-} from "../../../helpers/bridge";
+} from "@/helpers/bridge";
 import { Tooltip } from "react-tooltip";
 import { toast } from "react-toastify";
-import { ToastMsgInfo } from "./ToastMsgInfo";
-import { OptionsButton } from "../../Protos/OptionsButton";
-import { ScrollableToolbar } from "../../Protos/ScrollableToolbar";
-import { AccordionItem } from "../../Protos/AccordionItem";
-import { Accordion } from "../../Protos/Accordion";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { OptionsButton } from "@/components/Protos/OptionsButton";
+import { ScrollableToolbar } from "@/components/Protos/ScrollableToolbar";
+import { AccordionItem } from "@/components/Protos/AccordionItem";
+import { Accordion } from "@/components/Protos/Accordion";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { Memo } from "../../Protos/Memo";
-import { UndoRedoContainer } from "../../Protos/UndoRedoContainer";
+import { Memo } from "@/components/Protos/Memo";
+import { UndoRedoContainer } from "@/components/Protos/UndoRedoContainer";
 import {
   wp_create_single,
   wp_get,
   wp_get_single,
-} from "../../../Apps/wordpress/functions";
+} from "@/apps/wordpress/functions";
+import { Select } from "@/components/Editor/Protos/Select";
+
 const parseValue = (value) => {
   try {
     return (
@@ -1143,7 +1145,7 @@ export const Motion = () => {
   const [timeline, setTimeline] = useState(false);
 
   /**
-   * @type {import('../../../helpers/types').MotionType}
+   * @type {import('@/helpers/types').MotionType}
    */
   const mType = null;
   const [motion, setMotion] = useState(mType);
@@ -1202,7 +1204,7 @@ export const Motion = () => {
   ];
 
   /**
-   * @type {import('../../../helpers/types').MotionAnimationType}
+   * @type {import('@/helpers/types').MotionAnimationType}
    */
   const initialMotionAnimation = {
     from: {},
@@ -1369,7 +1371,7 @@ export const Motion = () => {
 
   /**
    *
-   * @param {import('../../../helpers/types').MotionType} newMotion
+   * @param {import('@/helpers/types').MotionType} newMotion
    * @returns
    */
   const updateDB = async (newMotion, callback = () => { }) => {
@@ -1605,7 +1607,7 @@ export const Motion = () => {
     }
 
     /**
-     * @type {import('../../../helpers/types').MotionType}
+     * @type {import('@/helpers/types').MotionType}
      */
     const newMotion = {
       ...(motion || {}),
@@ -1777,7 +1779,7 @@ export const Motion = () => {
     const file = ev.target.files[0];
     if (!file) return;
     /**
-     * @type {import('../../../helpers/types').MotionType}
+     * @type {import('@/helpers/types').MotionType}
      */
     const motionUploaded = JSON.parse(await file.text());
     const sle = editor.getSelected();

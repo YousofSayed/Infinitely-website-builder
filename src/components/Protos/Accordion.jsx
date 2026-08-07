@@ -1,5 +1,5 @@
 import React from 'react'
-import { AccordionProvider } from './DetailsNormal'
+import { AccordionProvider } from '@/components/Protos/DetailsNormal'
 // import {Accordion as RadixAccordion , Root}from '@radix-ui/react-accordion'
 export const Accordion = ({children}) => {
   return (
@@ -12,7 +12,8 @@ export const Accordion = ({children}) => {
   )
 }
 // import * as AccordionPrimitive from "@radix-ui/react-accordion";
-// import React from "react";
+
+// 
 // export const Accordion = ({ children }) => {
 //   return (
 //     <AccordionPrimitive.Root type="single" collapsible className="w-full">

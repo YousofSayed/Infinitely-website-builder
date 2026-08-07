@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
-import { popoverState } from '../helpers/atoms'
+import { popoverState } from '@/helpers/atoms'
 
 export const useShowPopover = (dependencies=[]) => {
     const popoverData = useRecoilValue(popoverState);
-    const setPopoverData = useSetRecoilState(popoverState);
+
+const setPopoverData = useSetRecoilState(popoverState);
 
     useEffect(()=>{
         console.log('update : ' , popoverData , dependencies);

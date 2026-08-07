@@ -1,3 +1,4 @@
+
 export const open_symbols_manager = "open:symbols-manager";
 export const close_current_modal = 'close:current:modal';
 export const select_page = 'select:page';

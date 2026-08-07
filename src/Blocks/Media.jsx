@@ -1,14 +1,14 @@
-import { Link, useNavigate } from "react-router-dom";
-import { Icons } from "../components/Icons/Icons";
-import { defaultAttributeNames, tagNames } from "../constants/hsValues";
-import { media_types } from "../constants/shared";
-import { html, parse } from "../helpers/cocktail";
+import { Icons } from "@/components/Icons/Icons";
+import { defaultAttributeNames, tagNames } from "@/constants/hsValues";
+import { media_types } from "@/constants/shared";
+import { html, parse } from "@/helpers/cocktail";
 import {
   defineTraits,
   doActionAndPreventSaving,
   preventSelectNavigation,
-} from "../helpers/functions";
-import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
+} from "@/helpers/functions";
+import { reactToStringMarkup } from "@/helpers/reactToStringMarkup";
+import { Link, useNavigate } from "react-router-dom";
 
 /**
  *

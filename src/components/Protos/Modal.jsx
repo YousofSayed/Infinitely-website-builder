@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Icons } from '../Icons/Icons';
+import { Icons } from '@/components/Icons/Icons';
 
 export const Modal = ({
     title = '',

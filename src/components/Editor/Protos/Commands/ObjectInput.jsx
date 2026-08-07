@@ -1,13 +1,13 @@
+import { hsZoo } from "@/constants/hsValues";
+import { varsState } from "@/helpers/atoms";
+import { evalObject, replaceLastWord } from "@/helpers/functions";
+import { Icons } from "@/components/Icons/Icons";
+import { DetailsNormal } from "@/components/Protos/DetailsNormal";
+import { Input } from "@/components/Editor/Protos/Input";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
 import React, { useState } from "react";
-import { SmallButton } from "../SmallButton";
-import { Icons } from "../../../Icons/Icons";
-import { Input } from "../Input";
-import { Select } from "../Select";
 import { useRecoilValue } from "recoil";
-import { varsState } from "../../../../helpers/atoms";
-import { hsZoo } from "../../../../constants/hsValues";
-import { evalObject, replaceLastWord } from "../../../../helpers/functions";
-import { DetailsNormal } from "../../../Protos/DetailsNormal";
 
 export const ObjectInput = ({
   obj = {},

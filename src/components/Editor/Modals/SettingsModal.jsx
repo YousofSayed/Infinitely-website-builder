@@ -1,14 +1,18 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { SwitchButton } from "../../Protos/SwitchButton";
-import { MiniTitle } from "../Protos/MiniTitle";
-import { useProjectSettings } from "../../../hooks/useProjectSettings";
-import { Input } from "../Protos/Input";
+import {
+  wp_update_meta,
+  wp_update_option,
+} from "@/apps/wordpress/functions.jsx";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { reloadRequiredInstance } from "@/constants/InfinitelyInstances";
+import { current_project_id } from "@/constants/shared";
+import { cleanInteractions, cleanMotions } from "@/helpers/bridge";
+import { addClickClass } from "@/helpers/cocktail";
+import { db } from "@/helpers/db";
+import {
+  classesFinderWorker,
+  fetcherWorker,
+  pageBuilderWorker,
+} from "@/helpers/defineWorkers";
 import {
   advancedSearchSuggestions,
   doInNormalAsync,
@@ -19,30 +23,27 @@ import {
   getWpPageConfig,
   isProjectSettingPropTrue,
   wpWorkerCallbackMaker,
-} from "../../../helpers/functions";
-import { Hr } from "../../Protos/Hr";
-import { Button } from "../../Protos/Button";
-import { cleanInteractions, cleanMotions } from "../../../helpers/bridge";
-import { db } from "../../../helpers/db";
-import { current_project_id } from "../../../constants/shared";
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "../Protos/ToastMsgInfo";
+} from "@/helpers/functions";
+import { useProjectSettings } from "@/hooks/useProjectSettings";
+import { takeScreenShot } from "@/plugins/updateProjectThumbnail.jsx";
+import { Icons } from "@/components/Icons/Icons";
+import { Button } from "@/components/Protos/Button";
+import { Hr } from "@/components/Protos/Hr";
+import { SwitchButton } from "@/components/Protos/SwitchButton";
+import { Input } from "@/components/Editor/Protos/Input";
+import { MiniTitle } from "@/components/Editor/Protos/MiniTitle";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useEditorMaybe } from "@grapesjs/react";
-import {
-  classesFinderWorker,
-  fetcherWorker,
-  pageBuilderWorker,
-} from "../../../helpers/defineWorkers";
-import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
-import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
 import { For } from "million/react";
-import { Icons } from "../../Icons/Icons";
-import { addClickClass } from "../../../helpers/cocktail";
-import { takeScreenShot } from "../../../plugins/updateProjectThumbnail.jsx";
-import {
-  wp_update_meta,
-  wp_update_option,
-} from "../../../Apps/wordpress/functions.jsx";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { toast } from "react-toastify";
+
 export const SettingsModal = () => {
   const editor = useEditorMaybe();
   const projectId = +localStorage.getItem(current_project_id);
@@ -59,11 +60,11 @@ export const SettingsModal = () => {
   const isCurrentChange = useCallback(
     /**
      *
-     * @param {keyof import('../../../helpers/types').ProjectSetting} key
-     * @param {(key:keyof import('../../../helpers/types').ProjectSetting)=>void} callback
+     * @param {keyof import('@/helpers/types').ProjectSetting} key
+     * @param {(key:keyof import('@/helpers/types').ProjectSetting)=>void} callback
      */
 
-    (key, callback = () => { }) => {
+    (key, callback = () => {}) => {
       if (key == currentChange) {
         callback(key);
       }
@@ -99,7 +100,7 @@ export const SettingsModal = () => {
             },
           });
           // editor.load();
-          emitChange()
+          emitChange();
         };
 
         isCurrentChange("enable_tailwind", () => {
@@ -114,7 +115,7 @@ export const SettingsModal = () => {
           // console.log("lalalalalalaala");
 
           // editor.load();
-          emitChange()
+          emitChange();
         });
 
         isCurrentChange("stop_all_animation_on_page", (key) => {
@@ -143,22 +144,21 @@ export const SettingsModal = () => {
 
         isCurrentChange("enable_swiperjs", () => {
           // editor.load();
-          emitChange()
+          emitChange();
         });
 
         isCurrentChange("disable_will_change_in_editor", () => {
           // editor.load();
-          emitChange()
+          emitChange();
         });
         isCurrentChange("optimize_outlines", () => {
-          emitChange()
+          emitChange();
         });
 
         isCurrentChange("disable_gsap_core", emitChange);
         isCurrentChange("disable_gsap_scrollTrigger", emitChange);
         isCurrentChange("disable_gsap_splitText", emitChange);
       }, 100);
-
     },
     [currentChange],
   );
@@ -258,8 +258,11 @@ export const SettingsModal = () => {
         </section>
       </section>
       <hr className="border-border-default" />
-      <footer className="flex gap-2 justify-between flex-wrap">
+      <footer className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2">
         <Button
+          style={{
+            justifyContent: "center",
+          }}
           onClick={async (ev) => {
             // addClickClass(ev.currentTarget , 'click')
             const tId = toast.loading(
@@ -331,7 +334,11 @@ export const SettingsModal = () => {
         >
           Clean unused motions
         </Button>
+
         <Button
+          style={{
+            justifyContent: "center",
+          }}
           onClick={async (ev) => {
             // addClickClass(ev.currentTarget , 'click')
             const tId = toast.loading(
@@ -402,7 +409,11 @@ export const SettingsModal = () => {
         >
           Clean unused interactions
         </Button>
+
         <Button
+          style={{
+            justifyContent: "center",
+          }}
           onClick={(ev) => {
             // addClickClass(ev.currentTarget, "click");
             takeScreenShot(editor, false);

@@ -1,15 +1,15 @@
-import { useEditorMaybe } from "@grapesjs/react";
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
-import { layersType, refType } from "../../../helpers/jsDocs";
-import { uniqueID } from "../../../helpers/cocktail";
-import { Layer } from "./Layer";
-import { Virtuoso } from "react-virtuoso";
-import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { uniqueID } from "@/helpers/cocktail";
+import { layersType, refType } from "@/helpers/jsDocs";
+import { Icons } from "@/components/Icons/Icons";
+import { LazyList } from "@/components/Protos/LazyList";
+import { VirtosuoVerticelWrapper } from "@/components/Protos/VirtosuoVerticelWrapper";
+import { Layer } from "@/components/Editor/Protos/Layer";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { LazyList } from "../../Protos/LazyList";
-import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
+import { useEditorMaybe } from "@grapesjs/react";
 import { For } from "million/react";
-import { Icons } from "../../Icons/Icons";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
+import { Virtuoso } from "react-virtuoso";
 
 export const Layers = memo(() => {
   const editor = useEditorMaybe();

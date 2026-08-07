@@ -1,4 +1,16 @@
-import { toast } from "react-toastify";
+import {
+  wp_get,
+  wp_get_header_footer,
+  wp_get_single,
+  wp_inf_render_components,
+  wp_inf_render_template,
+  wp_update_option,
+  wp_update_single,
+} from "@/apps/wordpress/functions";
+import { wp_get_post_id } from "@/apps/wordpress/functions_ui";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { editorStorageInstance } from "@/constants/InfinitelyInstances";
 import {
   current_page_id,
   current_project_id,
@@ -7,8 +19,18 @@ import {
   mainScriptsForEditor,
   wp_page_config,
   wp_rest_base_edite,
-} from "../constants/shared";
-import { navigateFromAnyWhere } from "../helpers/customEvents";
+} from "@/constants/shared";
+import {
+  defineRoot,
+  fileNameToMediaSlug,
+  html,
+  mediaSlugToFileName,
+  objToAttributes,
+} from "@/helpers/bridge";
+import { wp_preview_bc } from "@/helpers/channels";
+import { navigateFromAnyWhere } from "@/helpers/customEvents";
+import { db } from "@/helpers/db";
+import { fetcherWorker, pageBuilderWorker } from "@/helpers/defineWorkers";
 import {
   cssToDataURL,
   getComponentRules,
@@ -23,34 +45,12 @@ import {
   screenshotTimout,
   workerCallbackMaker,
   wpWorkerCallbackMaker,
-} from "../helpers/functions";
-import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
-import {
-  wp_get,
-  wp_get_header_footer,
-  wp_get_single,
-  wp_inf_render_components,
-  wp_inf_render_template,
-  wp_update_option,
-  wp_update_single,
-} from "../Apps/wordpress/functions";
-import { cloneDeep, isArray, isPlainObject, uniqueId } from "lodash";
-import { editorStorageInstance } from "../constants/InfinitelyInstances";
-import { InfinitelyEvents } from "../constants/infinitelyEvents";
-import { updateThumbnailTimeout } from "./updateProjectThumbnail";
-import { infinitelyWorker } from "../helpers/infinitelyWorker";
-import {
-  defineRoot,
-  fileNameToMediaSlug,
-  html,
-  mediaSlugToFileName,
-  objToAttributes,
-} from "../helpers/bridge";
-import { db } from "../helpers/db";
-import { fetcherWorker, pageBuilderWorker } from "../helpers/defineWorkers";
-import { wp_get_post_id } from "../Apps/wordpress/functions_ui";
-import { wp_preview_bc } from "../helpers/channels";
+} from "@/helpers/functions";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
+import { updateThumbnailTimeout } from "@/plugins/updateProjectThumbnail";
 import { minify } from "csso";
+import { cloneDeep, isArray, isPlainObject, uniqueId } from "lodash";
+import { toast } from "react-toastify";
 
 let loadFooterScriptsCallback, loadHeadScriptsCallback, loadMainScriptsCallback;
 let storeTimeout;
@@ -194,7 +194,7 @@ export const wp_remote_storage = (editor) => {
       }
 
       /**
-       * @type {import('../helpers/types').WpPage}
+       * @type {import('@/helpers/types').WpPage}
        */
       const page = await wp_get_single({
         projectId,
@@ -228,7 +228,7 @@ export const wp_remote_storage = (editor) => {
       }
 
       /**
-       * @type {import("../helpers/types").InfinitelyPageMeta}
+       * @type {import("@/helpers/types").InfinitelyPageMeta}
        */
       let inf_meta = page?.inf_meta;
 
@@ -356,6 +356,9 @@ export const wp_remote_storage = (editor) => {
         const symbolsStyles = symbols_styles_el
           ? symbols_styles_el.innerHTML
           : "";
+
+          console.log('symbolsStyles : ' , symbolsStyles);
+          
 
         data.css = minify(`${data.css || ""} ${symbolsStyles}`, {
           restructure: true,
@@ -684,8 +687,8 @@ export const wp_remote_storage = (editor) => {
               const symbolEl = editor
                 .getWrapper()
                 .find(`[${inf_symbol_Id_attribute}="${currentSymbolId}"]`)[0];
-
-              const symbolInf = getInfinitelySymbolInfo(editor.getSelected());
+              const cmp = editor.getSelected() || editor.getWrapper().find(`[${inf_symbol_Id_attribute}="${currentSymbolId}"]`)[0]
+              const symbolInf = getInfinitelySymbolInfo(cmp);
               const symbol = symbolInf?.symbol || symbolEl;
               // const currentSymbol = projectData?.symbols?.[currentSymbolId];
 
@@ -807,7 +810,7 @@ export const wp_remote_storage = (editor) => {
 
             wpWorkerCallbackMaker(
               infinitelyWorker,
-              "wp_update_meta",
+              "wp_update_meta", 
               {
                 projectId,
                 post_type: wp_post.type,
@@ -824,7 +827,7 @@ export const wp_remote_storage = (editor) => {
                 },
               },
               async (res) => {
-                console.log("res : ", res);
+                console.log("res from wp_update_meta in wp_remote_storage.js : ", res);
                 if (res.done) {
                   afterSave();
                 } else {

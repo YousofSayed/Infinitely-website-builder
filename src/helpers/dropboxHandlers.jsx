@@ -1,20 +1,20 @@
-import { toast } from "react-toastify";
-import { authUrl } from "../constants/dropbox";
+import { DropArea } from "@/blocks/DropArea";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { authUrl } from "@/constants/dropbox";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { globalInstance } from "@/constants/InfinitelyInstances";
 import {
   dbx_sign_in_state,
   dropbox_code_verifier,
   dropbox_refresh_token,
   dropbox_token,
-} from "../constants/shared";
-import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
-import { DropArea } from "../Blocks/DropArea";
-import { loadProject, workerCallbackMaker } from "./functions";
+} from "@/constants/shared";
+import { db } from "@/helpers/db";
+import { loadProject, workerCallbackMaker } from "@/helpers/functions";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
+import { opfs } from "@/helpers/initOpfs";
 import { isFunction } from "lodash";
-import { globalInstance } from "../constants/InfinitelyInstances";
-import { InfinitelyEvents } from "../constants/infinitelyEvents";
-import { opfs } from "./initOpfs";
-import { db } from "./db";
-import { infinitelyWorker } from "./infinitelyWorker";
+import { toast } from "react-toastify";
 
 // Dropbox PKCE Flow for permanent (refreshable) token
 const DROPBOX_CLIENT_ID = "ii7jhayl4qz7feg";
@@ -329,7 +329,7 @@ export async function getDropboxFileMeta(path) {
 /**
  *
  * @param {string} path
- * @param {import('./types').Project} data
+ * @param {import('@/helpers/types').Project} data
  */
 export async function loadDropBoxProject(path, data = {}) {
   const tId = toast.loading(
@@ -577,7 +577,7 @@ async function validateDropboxToken() {
 
 /**
  *
- * @param {import('./types').Project} projectData
+ * @param {import('@/helpers/types').Project} projectData
  * @param {()=>void} callback
  * @returns
  */
@@ -693,7 +693,7 @@ export async function checkDropboxFileConflict(path, localRev) {
 
 /**
  *
- * @param {import('./types').Project} projectData
+ * @param {import('@/helpers/types').Project} projectData
  */
 export async function shareLink(projectData) {
   await navigator.clipboard.writeText(

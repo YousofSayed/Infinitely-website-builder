@@ -1,6 +1,6 @@
+import { Input } from "@/components/Editor/Protos/Input";
+import { Icons } from "@/components/Icons/Icons";
 import React, { useRef } from "react";
-import { Icons } from "../Icons/Icons";
-import { Input } from "../Editor/Protos/Input";
 
 export const SearchHeader = ({
   search = (value = "") => {},

@@ -1,7 +1,7 @@
+import { addClickClass } from "@/helpers/cocktail";
+import { Icons } from "@/components/Icons/Icons";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Draggable from "react-draggable";
-import { Icons } from "../Icons/Icons";
-import { addClickClass } from "../../helpers/cocktail";
 
 /**
  * A great component that displays a shop name!

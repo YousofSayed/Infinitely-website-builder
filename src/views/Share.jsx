@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { useQueries } from "../helpers/cocktail";
+import { dropbox_refresh_token, dropbox_token } from "@/constants/shared";
+import { useQueries } from "@/helpers/cocktail";
 import {
   getDropboxFileBlob,
   getDropboxFileMeta,
-} from "../helpers/dropboxHandlers";
-import { dropbox_refresh_token, dropbox_token } from "../constants/shared";
-import { infinitelyWorker } from "../helpers/infinitelyWorker";
-import { loadProject, workerCallbackMaker } from "../helpers/functions";
+} from "@/helpers/dropboxHandlers";
+import { loadProject, workerCallbackMaker } from "@/helpers/functions";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
+import React, { useEffect, useState } from "react";
 
 export const Share = () => {
   const [preview, setPreview] = useState(false);

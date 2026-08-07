@@ -1,3 +1,4 @@
+
 export class Infinitely {
     #eventTarget
     constructor() {
@@ -28,4 +29,3 @@ export class Infinitely {
         this.#eventTarget.removeEventListener(eventName, callback); 
     }
 }
-

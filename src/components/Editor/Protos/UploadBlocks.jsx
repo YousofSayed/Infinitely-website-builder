@@ -1,26 +1,31 @@
-import React, { useRef, useState } from "react";
-import { blocksArrayType } from "../../../helpers/jsDocs";
-import { Icons } from "../../Icons/Icons";
-import { Button } from "../../Protos/Button";
-import { SymbolsAndTemplatesHandler } from "./SymbolsAndTemplatesHandler";
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "./ToastMsgInfo";
+import { current_project_id } from "@/constants/shared";
+import { defineRoot } from "@/helpers/bridge";
+import { db } from "@/helpers/db";
 import {
   advancedSearchSuggestions,
+  doInNormalAsync,
+  doInWordpressAsync,
   getProjectData,
+  getProjectId,
   restoreBlobs,
-} from "../../../helpers/functions";
-import { Input } from "./Input";
-import { db } from "../../../helpers/db";
-import { current_project_id } from "../../../constants/shared";
+} from "@/helpers/functions";
+import { opfs } from "@/helpers/initOpfs";
+import { blocksArrayType } from "@/helpers/jsDocs";
+import { Icons } from "@/components/Icons/Icons";
+import { Button } from "@/components/Protos/Button";
+import { GridComponents } from "@/components/Protos/VirtusoGridComponent";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { Input } from "@/components/Editor/Protos/Input";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { SymbolsAndTemplatesHandler } from "@/components/Editor/Protos/SymbolsAndTemplatesHandler";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useEditorMaybe } from "@grapesjs/react";
-import { VirtuosoGrid } from "react-virtuoso";
-import { GridComponents } from "../../Protos/VirtusoGridComponent";
-import { FitTitle } from "./FitTitle";
-import { SmallButton } from "./SmallButton";
-import { opfs } from "../../../helpers/initOpfs";
-import { defineRoot } from "../../../helpers/bridge";
 import { For } from "million/react";
+import React, { useRef, useState } from "react";
+import { toast } from "react-toastify";
+import { VirtuosoGrid } from "react-virtuoso";
+import { useInsertPostsMutation } from "@/queries/wp.queries";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
 
 export const UploadBlocks = () => {
   const [uploadedBlocks, setUploadedBlocks] = useState(blocksArrayType);
@@ -28,6 +33,12 @@ export const UploadBlocks = () => {
   const projectId = +localStorage.getItem(current_project_id);
   const inputRef = useRef();
   const editor = useEditorMaybe();
+  const [type, setType] = useState("");
+  const {
+    mutate: insertPosts,
+    isPending: insertPostsPending,
+    isSuccess: insertPostsSuccess,
+  } = useInsertPostsMutation(type);
 
   /**
    *
@@ -39,89 +50,159 @@ export const UploadBlocks = () => {
      */
     const file = input.files[0];
     input.value = "";
-    const symbolsOrTemplates = await restoreBlobs(
-      JSON.parse((await file.text()) || "{}")
-    );
-    if (
-      !symbolsOrTemplates?.[0]?.type &&
-      (symbolsOrTemplates[0].type != "symbol" ||
-        symbolsOrTemplates[0].type != "template")
-    ) {
-      toast.error(
-        <ToastMsgInfo
-          msg={"Invalid file"}
-          description={
-            "The file you uploaded is not a valid file. Please upload a valid file."
-          }
-        />
+    const getType = (arr = []) => [
+      ...new Set(arr.filter((block) => block.type).map((block) => block.type)),
+    ];
+    const validateType = ({ types, symbolType, templateType }) =>
+      types.length &&
+      types.length < 2 &&
+      (types[0] == symbolType || types[0] == templateType);
+
+    await doInNormalAsync(async () => {
+      const symbolsOrTemplates = await restoreBlobs(
+        JSON.parse((await file.text()) || "{}"),
       );
-      input.value = "";
-      return;
-    }
-    setUploadedBlocks(symbolsOrTemplates);
-    allBlocks.current = symbolsOrTemplates;
+      const types = getType(symbolsOrTemplates);
+      if (
+        !validateType({
+          types,
+          symbolType: "symbol",
+          templateType: "template",
+        })
+      ) {
+        toast.error(<ToastMsgInfo msg={"Invalid file"} />);
+        input.value = "";
+        return;
+      }
+      setType(types[0]);
+      setUploadedBlocks(symbolsOrTemplates);
+      allBlocks.current = symbolsOrTemplates;
+    });
+
+    await doInWordpressAsync(async () => {
+      const symbolsOrTemplates = JSON.parse((await file.text()) || "{}");
+      const types = getType(symbolsOrTemplates);
+      console.log(
+        "types :",
+        types,
+        validateType({
+          types,
+          symbolType: "inf_symbols",
+          templateType: "inf_blocks",
+        }),
+      );
+
+      if (
+        !validateType({
+          types,
+          symbolType: "inf_symbols",
+          templateType: "inf_blocks",
+        })
+      ) {
+        toast.error(<ToastMsgInfo msg={"Invalid file"} />);
+        return;
+      }
+
+      for (const symbOrtemp of symbolsOrTemplates) {
+        symbOrtemp.name = symbOrtemp.slug;
+        symbOrtemp.media = symbOrtemp?.meta?.media;
+      }
+      setType(types[0]);
+      setUploadedBlocks(symbolsOrTemplates);
+      allBlocks.current = symbolsOrTemplates;
+    });
     input.value = "";
   };
 
   const saveBlocksToDB = async () => {
-    const projectData = await getProjectData();
-    /**
-     * @type {{[key:string]:import('../../../helpers/types').InfinitelyBlock}}
-     */
-    const blocks = {};
-    /**
-     * @type {{[key:string] : import('../../../helpers/types').InfinitelySymbol}}
-     */
-    const symbols = {};
-    await Promise.all(
-      uploadedBlocks.map(async (block) => {
-        // const restoredBlock = restoreBlobs(block);
-        console.log("restored block : ", block);
-        await opfs.createFiles([
-          {
-            path: defineRoot(
-              `editor/${block.type}s/${block.id}/${block.id}.html`
-            ),
-            content: block.content,
-          },
-          {
-            path: defineRoot(
-              `editor/${block.type}s/${block.id}/${block.id}.css`
-            ),
-            content: block.style,
-          },
-        ]);
-        editor.Css.addRules(block.style);
-        block.content = "";
-        block.style = "";
+    const tid = toast.loading(<ToastMsgInfo msg={`Saving...`} />);
+    const afterSave = () => {
+      editor.trigger("block:add");
+      editor.trigger("block:update");
+      toast.done(tid);
+      setUploadedBlocks([]);
+      toast.success(<ToastMsgInfo msg={`All done👍`} />);
+    };
 
-        blocks[block.id] = block;
-        if (block.type == "symbol") {
-          symbols[`${block.id}`] = block;
-        } else {
-        }
-        return block;
-      })
-    );
+    await doInNormalAsync(async () => {
+      const projectData = await getProjectData();
+      /**
+       * @type {{[key:string]:import('@/helpers/types').InfinitelyBlock}}
+       */
+      const blocks = {};
+      /**
+       * @type {{[key:string] : import('@/helpers/types').InfinitelySymbol}}
+       */
+      const symbols = {};
+      await Promise.all(
+        uploadedBlocks.map(async (block) => {
+          // const restoredBlock = restoreBlobs(block);
+          console.log("restored block : ", block);
+          await opfs.createFiles([
+            {
+              path: defineRoot(
+                `editor/${block.type}s/${block.id}/${block.id}.html`,
+              ),
+              content: block.content,
+            },
+            {
+              path: defineRoot(
+                `editor/${block.type}s/${block.id}/${block.id}.css`,
+              ),
+              content: block.style,
+            },
+          ]);
+          editor.Css.addRules(block.style);
+          block.content = "";
+          block.style = "";
 
-    console.log(symbols, blocks);
+          blocks[block.id] = block;
+          if (block.type == "symbol") {
+            symbols[`${block.id}`] = block;
+          } else {
+          }
+          return block;
+        }),
+      );
 
-    await db.projects.update(projectId, {
-      blocks: {
-        ...projectData.blocks,
-        ...blocks,
-      },
-      symbols: {
-        ...projectData.symbols,
-        ...symbols,
-      },
+      console.log(symbols, blocks);
+
+      await db.projects.update(projectId, {
+        blocks: {
+          ...projectData.blocks,
+          ...blocks,
+        },
+        symbols: {
+          ...projectData.symbols,
+          ...symbols,
+        },
+      });
+      afterSave();
+    });
+
+    await doInWordpressAsync(async () => {
+      
+       await insertPosts(
+        {
+          projectId,
+          posts: uploadedBlocks.map((block) => ({
+            post: {
+              post_type: block.type,
+              post_title: block.name,
+              post_name: block.slug,
+              post_status: "publish",
+            },
+            meta: block.meta,
+          })),
+        },
+        {
+          // onSuccess: () => afterSave(),
+        },
+      );
+      afterSave()
     });
 
     // editor.load();
-    editor.trigger("block:add");
-    editor.trigger("block:update");
-    setUploadedBlocks([]);
-    toast.success(<ToastMsgInfo msg={`Blocks saved successfully👍`} />);
   };
 
   const deleteUploadedBlock = (id) => {
@@ -139,7 +220,7 @@ export const UploadBlocks = () => {
       allBlocks.current,
       value,
       undefined,
-      "name"
+      "name",
     );
     setUploadedBlocks(filtered);
   };
@@ -168,8 +249,14 @@ export const UploadBlocks = () => {
       ) : (
         <section className="h-full flex flex-col gap-2">
           <header className="flex gap-2 rounded-md">
-            <Input type="search" placeholder="Search..." className="w-full bg-surface-tertiary" onInput={(ev)=>search(ev.target.value)}/>
+            <Input
+              type="search"
+              placeholder="Search..."
+              className="w-full bg-surface-tertiary"
+              onInput={(ev) => search(ev.target.value)}
+            />
             <SmallButton
+              disabled={insertPostsPending}
               title={"save blocks"}
               onClick={() => {
                 saveBlocksToDB();
@@ -207,6 +294,7 @@ export const UploadBlocks = () => {
                     <SmallButton
                       title={"delete"}
                       className="p-2 bg-surface-secondary  hover:bg-[crimson!important] transition-all"
+                      tooltipClassName="bg-[crimson!important]"
                       onClick={() => {
                         deleteUploadedBlock(symbol.id);
                       }}

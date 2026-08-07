@@ -1,9 +1,9 @@
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { parse } from "@/helpers/cocktail";
+import { assetsWorker, fetcherWorker, keyframesGetterWorker } from "@/helpers/defineWorkers";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
 import { useEffect } from "react";
-import { infinitelyWorker } from "../helpers/infinitelyWorker";
-import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
 import { toast } from "react-toastify";
-import { parse } from "../helpers/cocktail";
-import { assetsWorker, fetcherWorker, keyframesGetterWorker } from "../helpers/defineWorkers";
 
 export function useWorkerToast() {
     useEffect(() => {

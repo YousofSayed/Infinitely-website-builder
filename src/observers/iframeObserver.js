@@ -1,4 +1,5 @@
-import { handleIframeDragEls } from "../helpers/iframeFunctions";
+// FIXME: unresolved import - handleIframeDragEls is not defined anywhere in this codebase snapshot - needs manual attention
+import { handleIframeDragEls } from "@/helpers/iframeFunctions";
 
 /**
  * 

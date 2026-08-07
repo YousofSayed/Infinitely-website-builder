@@ -1,27 +1,27 @@
-import { useLiveQuery } from "dexie-react-hooks";
-import React, { useEffect, useRef, useState } from "react";
-import { db } from "../../../helpers/db";
+import { wp_delete_media_files_by_slugs, wp_update_option } from "@/apps/wordpress/functions";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { reloadRequiredInstance } from "@/constants/InfinitelyInstances";
+import { current_project_id } from "@/constants/shared";
+import { doInNormalAsyncInWorker, getFileSize } from "@/helpers/bridge";
+import { db } from "@/helpers/db";
 import {
   advancedSearchSuggestions,
   doInNormalAsync,
   doInWordpressAsync,
   getProjectData,
-} from "../../../helpers/functions";
-import { Button } from "../../Protos/Button";
-import { Icons } from "../../Icons/Icons";
-import { current_project_id } from "../../../constants/shared";
-import { Input } from "./Input";
+} from "@/helpers/functions";
+import { opfs } from "@/helpers/initOpfs";
+import { Icons } from "@/components/Icons/Icons";
+import { Button } from "@/components/Protos/Button";
+import { Checkbox } from "@/components/Protos/Checkbox";
+import { NoItemsHere } from "@/components/Protos/NoItemsHere";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { Input } from "@/components/Editor/Protos/Input";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useEditorMaybe } from "@grapesjs/react";
-import { FitTitle } from "./FitTitle";
-import { doInNormalAsyncInWorker, getFileSize } from "../../../helpers/bridge";
-import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
-import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
-import { opfs } from "../../../helpers/initOpfs";
-import { wp_delete_media_files_by_slugs, wp_update_option } from "../../../Apps/wordpress/functions";
+import { useLiveQuery } from "dexie-react-hooks";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
-import { ToastMsgInfo } from "./ToastMsgInfo";
-import { Checkbox } from "../../Protos/Checkbox";
-import { NoItemsHere } from "../../Protos/NoItemsHere";
 
 //million-ignore
 export const InstalledFonts = () => {

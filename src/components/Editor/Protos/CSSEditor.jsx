@@ -1,5 +1,6 @@
-import React, { useRef, useEffect } from "react";
+
 import Editor, { useMonaco ,DiffEditor } from "@monaco-editor/react";
+import React, { useRef, useEffect } from "react";
 
 const MonacoEditorWithESM = () => {
   const editorRef = useRef(null);
@@ -78,7 +79,7 @@ const MonacoEditorWithESM = () => {
     <Editor
       height="90vh"
       defaultLanguage="javascript"
-      defaultValue={`import { greet } from './module.js';\nconsole.log(greet("React"));`}
+      defaultValue={`\nconsole.log(greet("React"));`}
       onMount={handleEditorDidMount}
     />
   );

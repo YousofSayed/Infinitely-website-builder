@@ -1,5 +1,5 @@
 import React, { memo } from "react";
-import { DetailsNormal } from "./DetailsNormal";
+import { DetailsNormal } from "@/components/Protos/DetailsNormal";
 import { random, uniqueId } from "lodash";
 // import {AccordionItem as RadixAccordionItem , AccordionHeader , AccordionContent} from '@radix-ui/react-accordion'
 

@@ -1,3 +1,3 @@
-import { OPFS } from "./opfs";
+import { OPFS } from "@/helpers/opfs";
 
 export const opfs = new OPFS();

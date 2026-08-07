@@ -1,3 +1,4 @@
+
 /**
  *
  * @param {import('grapesjs').Editor} editor

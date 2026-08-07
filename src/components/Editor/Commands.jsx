@@ -1,42 +1,54 @@
-import React, { memo, useEffect, useRef, useState } from "react";
-import { directives } from "../../constants/cmds";
-import { Input } from "./Protos/Input";
-import { DetailsNormal } from "../Protos/DetailsNormal";
-import { Details } from "./Protos/Details";
-import { Button } from "../Protos/Button";
-import { SmallButton } from "./Protos/SmallButton";
-import { Icons } from "../Icons/Icons";
-import { Select } from "./Protos/Select";
-import { ObjectInput } from "./Protos/Commands/ObjectInput";
+import { directives } from "@/constants/cmds";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { commentRgx } from "@/constants/rgxs";
+import { current_symbol_id } from "@/constants/shared";
+import { currentElState } from "@/helpers/atoms";
 import {
   getAlpineContext,
   getDirectiveContext,
   parseForDirective,
-} from "../../helpers/bridge";
+} from "@/helpers/bridge";
+import { parse } from "@/helpers/cocktail";
+import { getInfinitelySymbolInfo } from "@/helpers/functions";
+import { useCmdsContext } from "@/hooks/useCmdsContext";
+import { useInfinitelyUndoRedo } from "@/hooks/useInfinitelyUndoRedo";
+import { Icons } from "@/components/Icons/Icons";
+import { Accordion } from "@/components/Protos/Accordion";
+import { AccordionItem } from "@/components/Protos/AccordionItem";
+import { Button } from "@/components/Protos/Button";
+import { DetailsNormal } from "@/components/Protos/DetailsNormal";
+import { InfAccordion } from "@/components/Protos/InfAccordion";
+import { SearchHeader } from "@/components/Protos/SearchHeader";
+import { SwitchButton } from "@/components/Protos/SwitchButton";
+import { Choices } from "@/components/Editor/Protos/Choices";
+import { ObjectInput } from "@/components/Editor/Protos/Commands/ObjectInput";
+import { Details } from "@/components/Editor/Protos/Details";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { Input } from "@/components/Editor/Protos/Input";
+import { MiniTitle } from "@/components/Editor/Protos/MiniTitle";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useEditorMaybe } from "@grapesjs/react";
-import { useRecoilValue } from "recoil";
-import { currentElState } from "../../helpers/atoms";
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
-import { InfinitelyEvents } from "../../constants/infinitelyEvents";
 import { js_beautify } from "js-beautify";
 import { cloneDeep } from "lodash";
-import { Choices } from "./Protos/Choices";
-import { MiniTitle } from "./Protos/MiniTitle";
+import React, { memo, useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
 import { Tooltip } from "react-tooltip";
-import { useCmdsContext } from "../../hooks/useCmdsContext";
-// import { InfAccordion } from "../Protos/InfAccordion";
-// import { AccordionItem } from "@heroui/accordion";
-import { getInfinitelySymbolInfo } from "../../helpers/functions";
-import { current_symbol_id } from "../../constants/shared";
-import { SearchHeader } from "../Protos/SearchHeader";
-import { commentRgx } from "../../constants/rgxs";
-import { FitTitle } from "./Protos/FitTitle";
-import { SwitchButton } from "../Protos/SwitchButton";
-import { parse } from "../../helpers/cocktail";
-import { Accordion } from "../Protos/Accordion";
-import { AccordionItem } from "../Protos/AccordionItem";
-import { useInfinitelyUndoRedo } from "../../hooks/useInfinitelyUndoRedo";
+import { useRecoilValue } from "recoil";
+
+// 
+// 
+
+
+
+
+
+
+
+
+
+
 
 export const Commands = () => {
   const editor = useEditorMaybe();

@@ -1,4 +1,5 @@
 "use strict";
+
 /*cocktail (typeScript version) library created at 3/10/2023 - Devloped by yousef sayed*/
 /*===================(Start Dom)===================*/
 const _callbacksContainer = {};

@@ -1,11 +1,11 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { refType } from "../../../helpers/jsDocs";
-import { HighlightContentEditable } from "./HighlightContentEditable";
-import { Virtuoso } from "react-virtuoso";
-import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
-import { FitTitle } from "./FitTitle";
+import { refType } from "@/helpers/jsDocs";
+import { Loader } from "@/components/Loader";
+import { VirtosuoVerticelWrapper } from "@/components/Protos/VirtosuoVerticelWrapper";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { HighlightContentEditable } from "@/components/Editor/Protos/HighlightContentEditable";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { Loader } from "../../Loader";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Virtuoso } from "react-virtuoso";
 
 /**
  *

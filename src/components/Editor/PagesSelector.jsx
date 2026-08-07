@@ -1,14 +1,14 @@
-import React, { memo, useEffect, useState } from "react";
-import { Select } from "./Protos/Select";
+import { select_page } from "@/constants/InfinitelyCommands";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { current_page_id, current_project_id } from "@/constants/shared";
+import { showPreviewState } from "@/helpers/atoms";
+import { db } from "@/helpers/db";
+import { Icons } from "@/components/Icons/Icons";
+import { Select } from "@/components/Editor/Protos/Select";
 import { useEditorMaybe } from "@grapesjs/react";
-import { Icons } from "../Icons/Icons";
-import { current_page_id, current_project_id } from "../../constants/shared";
-import { db } from "../../helpers/db";
-import { InfinitelyEvents } from "../../constants/infinitelyEvents";
-import { select_page } from "../../constants/InfinitelyCommands";
 import { useLiveQuery } from "dexie-react-hooks";
+import React, { memo, useEffect, useState } from "react";
 import { useRecoilValue } from "recoil";
-import { showPreviewState } from "../../helpers/atoms";
 
 export const PagesSelector = (() => {
   const editor = useEditorMaybe();

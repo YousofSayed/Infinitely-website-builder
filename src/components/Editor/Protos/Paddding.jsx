@@ -1,6 +1,6 @@
+import { DirectionsModel } from "@/components/Editor/Protos/DirectionsModel";
+import { MiniTitle } from "@/components/Editor/Protos/MiniTitle";
 import React from "react";
-import { MiniTitle } from "./MiniTitle";
-import { DirectionsModel } from "./DirectionsModel";
 
 export const Paddaing = () => {
   return (

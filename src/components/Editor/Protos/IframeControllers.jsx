@@ -1,8 +1,12 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Li } from "../../Protos/Li";
-import { Icons } from "../../Icons/Icons";
-import { useEditorMaybe } from "@grapesjs/react";
-import { useRecoilState, useSetRecoilState } from "recoil";
+import { wp_update_main_global_files } from "@/apps/wordpress/functions";
+import { wp_save_editor_scripts } from "@/apps/wordpress/functions_ui";
+import { animationsSavingMsg } from "@/constants/confirms";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import {
+  editorContainerInstance,
+  reloadRequiredInstance,
+} from "@/constants/InfinitelyInstances";
+import { current_page_id, current_project_id } from "@/constants/shared";
 import {
   animationsState,
   globalUndoAndRedoStates,
@@ -12,36 +16,33 @@ import {
   showLayersState,
   showsState,
   zoomValueState,
-} from "../../../helpers/atoms";
-import { useNavigate } from "react-router-dom";
+} from "@/helpers/atoms";
+import { cleanMotions, filterMotionsByPage } from "@/helpers/bridge";
+import {
+  killAllGsapMotions,
+  runAllGsapMotions,
+} from "@/helpers/customEvents";
+import { db } from "@/helpers/db";
 import {
   doInWordpressAsync,
   getProjectData,
   reloadInfinitely,
-} from "../../../helpers/functions";
-import {
-  killAllGsapMotions,
-  runAllGsapMotions,
-} from "../../../helpers/customEvents";
-import { useProjectSettings } from "../../../hooks/useProjectSettings";
-import { Hr } from "../../Protos/Hr";
-import { animationsSavingMsg } from "../../../constants/confirms";
-import {
-  editorContainerInstance,
-  reloadRequiredInstance,
-} from "../../../constants/InfinitelyInstances";
-import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
+} from "@/helpers/functions";
+import { useProjectSettings } from "@/hooks/useProjectSettings";
+import { reBuildApp, unMountApp } from "@/main";
+import { editorObserver } from "@/plugins/addDevices";
+import { Icons } from "@/components/Icons/Icons";
+import { Hr } from "@/components/Protos/Hr";
+import { Li } from "@/components/Protos/Li";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { useEditorMaybe } from "@grapesjs/react";
+import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { ToastMsgInfo } from "./ToastMsgInfo";
-import { cleanMotions, filterMotionsByPage } from "../../../helpers/bridge";
-import { current_page_id, current_project_id } from "../../../constants/shared";
-import { db } from "../../../helpers/db";
-import { wp_update_main_global_files } from "../../../Apps/wordpress/functions";
-import { wp_save_editor_scripts } from "../../../Apps/wordpress/functions_ui";
-import { editorObserver } from "../../../plugins/addDevices";
+import { useRecoilState, useSetRecoilState } from "recoil";
 
-// import { unMountApp } from "../../../main";
-// import { reBuildApp, unMountApp } from "../../../main";
+// 
+// 
 
 export const IframeControllers = () => {
   const editor = useEditorMaybe();

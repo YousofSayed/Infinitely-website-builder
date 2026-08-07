@@ -1,24 +1,24 @@
-import React, { useEffect, useState } from "react";
-import { JSLibraryType } from "../../../helpers/jsDocs";
-import { Button } from "../../Protos/Button";
-import { Icons } from "../../Icons/Icons";
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "./ToastMsgInfo";
-import { db } from "../../../helpers/db";
-import { current_page_id, current_project_id } from "../../../constants/shared";
+import { wp_update_option, wp_upload_file } from "@/apps/wordpress/functions";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { reloadRequiredInstance } from "@/constants/InfinitelyInstances";
+import { current_page_id, current_project_id } from "@/constants/shared";
+import { defineRoot, doGlobalType, getFileSize, hasExportDefault } from "@/helpers/bridge";
+import { html, uniqueID } from "@/helpers/cocktail";
+import { db } from "@/helpers/db";
+import { fetcherWorker } from "@/helpers/defineWorkers";
+import { detectGlobalsSandbox, doInNormalAsync, doInWordpressAsync, getProjectData, isNormal, jsToDataURL } from "@/helpers/functions";
+import { opfs } from "@/helpers/initOpfs";
+import { JSLibraryType } from "@/helpers/jsDocs";
+import { Icons } from "@/components/Icons/Icons";
+import { Button } from "@/components/Protos/Button";
+import { Input } from "@/components/Editor/Protos/Input";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useEditorMaybe } from "@grapesjs/react";
-import { detectGlobalsSandbox, doInNormalAsync, doInWordpressAsync, getProjectData, isNormal, jsToDataURL } from "../../../helpers/functions";
-import { html, uniqueID } from "../../../helpers/cocktail";
-import { Input } from "./Input";
-import { opfs } from "../../../helpers/initOpfs";
-import { defineRoot, doGlobalType, getFileSize, hasExportDefault } from "../../../helpers/bridge";
-import { Tooltip } from "react-tooltip";
-import { fetcherWorker } from "../../../helpers/defineWorkers";
-import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
-import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
-import { wp_update_option, wp_upload_file } from "../../../Apps/wordpress/functions";
 import { isPlainObject } from "lodash";
 import { Mime } from "mime";
+import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import { Tooltip } from "react-tooltip";
 
 //million-ignore
 export const JsLibrary = ({
@@ -117,8 +117,8 @@ export const JsLibrary = ({
 
       /**
        *
-       * @param {keyof import('../../../helpers/types').Project} key
-       * @param {import('../../../helpers/types').LibraryConfig} newContent
+       * @param {keyof import('@/helpers/types').Project} key
+       * @param {import('@/helpers/types').LibraryConfig} newContent
        */
       const updater = async (key, newContent = {}) => {
         // const realKey = `${libraryType}${key}`;
@@ -183,7 +183,7 @@ export const JsLibrary = ({
 
       !installData.globalName && (installData.globalName = installData.globalName || isJs ? (await detectGlobalsSandbox(fileUrl))?.[0] : "")
       /**
-       * @type {import('../../../helpers/types').LibraryConfig}
+       * @type {import('@/helpers/types').LibraryConfig}
        */
       const defaultData = {
         ...installData,

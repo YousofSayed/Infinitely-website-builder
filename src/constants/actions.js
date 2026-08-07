@@ -1,5 +1,6 @@
+
 /**
- * @type {import('../helpers/types').Action[]}
+ * @type {import('@/helpers/types').Action[]}
  */
 export const actions = [
   //   {
@@ -972,4 +973,3 @@ export const actions = [
     }
   }
 ];
-

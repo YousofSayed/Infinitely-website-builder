@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { ChooseFile } from "../../Protos/ChooseFile";
+import { cssPropForAssetsManagerState } from "@/helpers/atoms";
+import { useRemoveCssProp } from "@/hooks/useRemoveCssProp";
+import { useSetClassForCurrentEl } from "@/hooks/useSetclassForCurrentEl";
+import { useUpdateInputValue } from "@/hooks/useUpdateInputValue";
+import { ChooseFile } from "@/components/Protos/ChooseFile";
 import { useEditorMaybe } from "@grapesjs/react";
+import React, { useEffect, useState } from "react";
 import { useSetRecoilState } from "recoil";
-import { cssPropForAssetsManagerState } from "../../../helpers/atoms";
-import { useSetClassForCurrentEl } from "../../../hooks/useSetclassForCurrentEl";
-import { useRemoveCssProp } from "../../../hooks/useRemoveCssProp";
-import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
 
 export const BackgroundImage = () => {
   const editor = useEditorMaybe();

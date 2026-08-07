@@ -8,26 +8,27 @@ import icons from "./public/icons/icons.json";
 import { chunkSplitPlugin } from "vite-plugin-chunk-split";
 // import MillionLint from "@million/lint";
 // import tailwindcss from '@tailwindcss/vite'
-import million from 'million/compiler'
-import mkcert from 'vite-plugin-mkcert';
-import path from 'path';
+import million from "million/compiler";
+import mkcert from "vite-plugin-mkcert";
+import path from "path";
 
 export default defineConfig({
-  base: '/',
+  base: "/",
   define: {
     global: "globalThis",
     // 'process.env': {}, // Shim process.env
   },
 
-  //  server: {
-  //   watch: {
-  //     ignored: ['**/node_modules/**', '**/.git/**']
-  //   },
-  //   //  headers: {
-  //   //    "Cross-Origin-Embedder-Policy": "unsafe-none",
-  //   //   "Cross-Origin-Opener-Policy": "unsafe-none",
-  //   // }
-  // },
+  server: {
+    https: true,
+    port: 5173,
+    strictPort: true,
+    hmr: {
+      protocol: "wss",
+      host: "127.0.0.1",
+      port: 5173,
+    },
+  },
   optimizeDeps: {
     esbuildOptions: {
       // Node.js global to browser globalThis
@@ -40,7 +41,8 @@ export default defineConfig({
   resolve: {
     alias: {
       global: "global-this",
-      // '@grapesjs/react': path.resolve(__dirname, 'src/grapesjs-react-adapter.jsx'),
+      "@": path.resolve(__dirname, "./src"),
+      // '@grapesjs/react': path.resolve(__dirname, 'src/lib/grapesjs-react-adapter.jsx'),
     },
   },
   plugins: [
@@ -59,14 +61,11 @@ export default defineConfig({
       //   type: "module", // Explicitly set the service worker type to module
       //   navigateFallback: "/", // Fallback for navigation
       // },
+      devOptions: {
+        enabled: false,
+      },
 
       strategies: "generateSW",
-      // injectManifest: {
-      //   rollupFormat: "es",
-
-      // },
-      // srcDir: "src",
-      // filename: "sw.ts",
       manifest: {
         name: "Infinitely Studio",
         description: "Infinitely Studio",
@@ -82,77 +81,6 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,tff,webp}"],
         maximumFileSizeToCacheInBytes: 10485760,
         runtimeCaching: [
-          //       {
-          //         handler({event , request , url , params}){
-          //           (async () => {
-          //   const url = new URL(event.request.url);
-          //   const splittedUrl = url.pathname.split("/");
-          //   const fileName = splittedUrl.pop();
-          //   let folderPath = splittedUrl.join("/");
-          //   folderPath = folderPath.startsWith("/") ? folderPath.replace("/", "") : folderPath;
-          //   const projectId = vars["projectId"];
-
-          //   if (!projectId) {
-          //     return new Response(new Blob(["Project ID not found"], { type: "text/plain" }), {
-          //       status: 400,
-          //     });
-          //   }
-
-          //   console.log(`From sw project id is: ${projectId}`);
-
-          //   opfsBroadcastChannel.postMessage({
-          //     type: "getFile",
-          //     from: "sw",
-          //     folderPath,
-          //     fileName,
-          //     projectId,
-          //   });
-
-          //   /**
-          //    * @type {File|undefined}
-          //    */
-          //   const responseFile = await new Promise((resolve, reject) => {
-          //     /**
-          //      * @param {MessageEvent} ev
-          //      */
-          //     const callback = (ev) => {
-          //       console.log("from service worker sendFile broadcast", folderPath, fileName);
-          //       const { type, file, isExisit } = ev.data;
-
-          //       if (type !== "sendFile") {
-          //         reject(`No file found: ${file}, ${isExisit}`);
-          //         opfsBroadcastChannel.removeEventListener("message", callback);
-          //         return;
-          //       }
-
-          //       if (isExisit && file) {
-          //         resolve(file);
-          //       } else {
-          //         reject(`No file found: ${file}, ${isExisit}`);
-          //       }
-          //       opfsBroadcastChannel.removeEventListener("message", callback);
-          //     };
-
-          //     opfsBroadcastChannel.addEventListener("message", callback);
-          //   });
-
-          //   if (responseFile) {
-          //     return new Response(responseFile, {
-          //       status: 200,
-          //       headers: {
-          //         "Content-Type": responseFile.type || "application/octet-stream",
-          //         "Access-Control-Allow-Origin": "*", // For cross-origin iframes
-          //       },
-          //     });
-          //   }
-
-          //   return fetch(event.request)
-          //   // return new Response(new Blob(["404 not found!"], { type: "text/plain" }), {
-          //   //   status: 404,
-          //   // });
-          // })()
-          //         }
-          //       },
           {
             urlPattern: /\.(?:png|jpg|jpeg|svg|webp)$/, // Cache images at runtime
             handler: "CacheFirst",
@@ -179,43 +107,6 @@ export default defineConfig({
         importScripts: ["/dbAssets-sw.js"],
       },
     }),
-    // chunkSplitPlugin({
-    //   strategy: "default",
-    //   // customSplitting: {
-    //   //   vendor0: [/\breact\b/],
-    //   //   vendor1: [/\bgrapesjs\b/],
-    //   //   vendor2: [
-    //   //     /\@monaco-editor\/react/,
-    //   //     /react-resizable-panels/,
-    //   //     /react-virtuoso/,
-    //   //   ],
-    //   //   vendor3: [/react-sortablejs/, /linkedom/, /csso/],
-
-    //   //   vendor4: [
-    //   //     /lodash/,
-    //   //     /js-beautify/,
-    //   //     /interactjs/,
-    //   //     /react-error-boundary/,
-
-    //   //     /mime/,
-    //   //   ],
-    //   //   vendor5: [
-    //   //     /react-sticky-el/,
-    //   //     // /react-syntax-highlighter/,
-    //   //     /react-toastify/,
-    //   //     /react-tooltip/,
-    //   //     /react-virtuoso/,
-    //   //     /recoil/,
-    //   //     /serialize-javascript/,
-    //   //   ],
-    //   //   vendor6: [/react-dom/, /react-router-dom/],
-    //   //   vendor7: [/\@grapesjs\/react/],
-    //   //   vendor8: [/html-to-image/, /lodash/, /html2canvas-pro/],
-    //   //   typescript:[/\btypescript\b/],
-    //   //   icons: [/Icons\.jsx/],
-    //   // },
-    // }),
-    // mergePrecacheIntoDbAssetsSw(),
   ],
   worker: {
     format: "es", // Use 'es' instead of 'iife'
@@ -225,19 +116,18 @@ export default defineConfig({
     rollupOptions: {
       // treeshake:false,
       input: {
-        main: './index.html',
-        app: './app.html',
+        main: "./index.html",
+        app: "./app.html",
       },
     },
-    target: 'es2022',
+    target: "es2022",
     sourcemap: true,
-    minify: 'esbuild',
+    minify: "esbuild",
     chunkSizeWarningLimit: "5000",
     assetsDir: "static",
-    outDir: 'dist',
+    outDir: "dist",
     server: {
-      https: true
-    }
+      https: true,
+    },
   },
 });
-

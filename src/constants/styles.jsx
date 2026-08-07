@@ -1,12 +1,12 @@
-import { AnimationName } from "../components/Editor/Protos/AnimationName";
-import { BackgroundImage } from "../components/Editor/Protos/BackgroundImage";
-import { BorderColor } from "../components/Editor/Protos/BorderColor";
-import { BorderRadius } from "../components/Editor/Protos/BorderRadius";
-import { BorderStyle } from "../components/Editor/Protos/BorderStyle";
-import { Display } from "../components/Editor/Protos/Display";
-import { FontFamily } from "../components/Editor/Protos/FontFamily";
-import { Gradient } from "../components/Editor/Protos/Gradient";
-import { Icons } from "../components/Icons/Icons";
+import { AnimationName } from "@/components/Editor/Protos/AnimationName";
+import { BackgroundImage } from "@/components/Editor/Protos/BackgroundImage";
+import { BorderColor } from "@/components/Editor/Protos/BorderColor";
+import { BorderRadius } from "@/components/Editor/Protos/BorderRadius";
+import { BorderStyle } from "@/components/Editor/Protos/BorderStyle";
+import { Display } from "@/components/Editor/Protos/Display";
+import { FontFamily } from "@/components/Editor/Protos/FontFamily";
+import { Gradient } from "@/components/Editor/Protos/Gradient";
+import { Icons } from "@/components/Icons/Icons";
 import {
   animationCompositions,
   animationDirections,
@@ -45,10 +45,10 @@ import {
   wordBreakValues,
   wordWrap,
   writingModeValues,
-} from "./cssProps";
+} from "@/constants/cssProps";
 
 /**
- * @type {import('../helpers/types').InfinitelyStyles}
+ * @type {import('@/helpers/types').InfinitelyStyles}
  */
 export const styles = {
   Layout: [

@@ -1,9 +1,9 @@
-import { current_project_id } from "../constants/shared";
-import { initDBAssetsSw } from "../serviceWorkers/initDBAssets-sw";
-import { isDevMode } from "./bridge";
-import { db } from "./db";
-import { getProjectData } from "./functions";
-import { infinitelyWorker } from "./infinitelyWorker";
+import { current_project_id } from "@/constants/shared";
+import { initDBAssetsSw } from "@/serviceWorkers/initDBAssets-sw";
+import { isDevMode } from "@/helpers/bridge";
+import { db } from "@/helpers/db";
+import { getProjectData } from "@/helpers/functions";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
 
 export const swAliveInterval = setInterval(() => {
   // infinitelyWorker.postMessage({

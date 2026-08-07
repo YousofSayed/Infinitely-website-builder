@@ -1,7 +1,11 @@
-// million-ignore
+import { addClickClass } from "@/helpers/cocktail";
 import React from "react";
-import { addClickClass } from "../../../helpers/cocktail";
 import { Tooltip } from "react-tooltip";
+
+// million-ignore
+
+
+
 
 // million-ignore
 /**

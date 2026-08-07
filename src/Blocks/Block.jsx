@@ -1,7 +1,6 @@
-import { editorIcons } from "../components/Icons/editorIcons";
-import { selectTagName } from "../constants/traits";
-import { defineTraits } from "../helpers/functions";
-
+import { editorIcons } from "@/components/Icons/editorIcons";
+import { selectTagName } from "@/constants/traits";
+import { defineTraits } from "@/helpers/functions";
 
 /**
  *

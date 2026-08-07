@@ -1,8 +1,8 @@
+import { currentElState } from "@/helpers/atoms";
+import { onFocus, onInput, onKeyDown, onKeyUp } from "@/helpers/propertyInputHandlers";
+import { useUpdateInputValue } from "@/hooks/useUpdateInputValue";
 import React, { useState } from "react";
-import { onFocus, onInput, onKeyDown, onKeyUp } from "../../../helpers/propertyInputHandlers";
 import { useRecoilValue } from "recoil";
-import { currentElState } from "../../../helpers/atoms";
-import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
 
 export const SidesInput = ({
   value,

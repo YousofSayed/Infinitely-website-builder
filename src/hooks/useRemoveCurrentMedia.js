@@ -1,18 +1,18 @@
-import { useEditorMaybe } from "@grapesjs/react";
-import React from "react";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import {
   cmpRulesState,
   currentElState,
   ruleState,
   selectorState,
-} from "../helpers/atoms";
+} from "@/helpers/atoms";
 import {
   getComponentRules,
   getCurrentMediaDevice,
   getCurrentSelector,
-} from "../helpers/functions";
-import { useRemoveCssProp } from "./useRemoveCssProp";
+} from "@/helpers/functions";
+import { useRemoveCssProp } from "@/hooks/useRemoveCssProp";
+import { useEditorMaybe } from "@grapesjs/react";
+import React from "react";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 
 export const useRemoveCurrentMedia = () => {
   const editor = useEditorMaybe();

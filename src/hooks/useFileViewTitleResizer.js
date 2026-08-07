@@ -1,6 +1,6 @@
+import { isOverflowedHiddenEl } from '@/helpers/functions';
 import React, { useLayoutEffect, useRef, useState } from 'react'
-import { refType } from '../helpers/jsDocs';
-import { isOverflowedHiddenEl } from '../helpers/functions';
+import { refType } from '@/helpers/jsDocs';
 
 export const useFileViewTitleResizer = (ref = refType, setShowFileNameTooltib) => {
     const fileNameRef = ref;

@@ -1,11 +1,11 @@
+import { borderStyles } from "@/constants/cssProps";
+import { P } from "@/components/Protos/P";
+import { ScrollableToolbar } from "@/components/Protos/ScrollableToolbar";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SelectedBorder } from "@/components/Editor/Protos/SelectedBorder";
+import { SelectStyle } from "@/components/Editor/Protos/SelectStyle";
 import React, { useEffect, useState } from "react";
-import { SelectedBorder } from "./SelectedBorder";
-import { Select } from "./Select";
-import { borderStyles } from "../../../constants/cssProps";
-import { P } from "../../Protos/P";
-import { SelectStyle } from "./SelectStyle";
-import { FitTitle } from "./FitTitle";
-import { ScrollableToolbar } from "../../Protos/ScrollableToolbar";
 
 export const BorderStyle = () => {
   const [option, setOption] = useState("all");

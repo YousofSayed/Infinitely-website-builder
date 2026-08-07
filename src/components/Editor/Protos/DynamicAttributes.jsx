@@ -1,24 +1,24 @@
-import { useEditorMaybe } from "@grapesjs/react";
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { useRecoilValue } from "recoil";
-import { restModelState } from "../../../helpers/atoms";
-import { Select } from "./Select";
-import { Button } from "../../Protos/Button";
-import { Icons } from "../../Icons/Icons";
-import { SmallButton } from "./SmallButton";
-import { defaultAttributeNames } from "../../../constants/hsValues";
-import { Input } from "./Input";
-import { dynamicAttributesType } from "../../../helpers/jsDocs";
-import { MiniTitle } from "./MiniTitle";
-import { HighlightContentEditable } from "./HighlightContentEditable";
+import { defaultAttributeNames } from "@/constants/hsValues";
+import { current_project_id } from "@/constants/shared";
+import { restModelState } from "@/helpers/atoms";
+import { db } from "@/helpers/db";
 import {
   getModelResAndKeys,
   parseDynamicContent,
   viewDynamicContent,
-} from "../../../helpers/functions";
+} from "@/helpers/functions";
+import { dynamicAttributesType } from "@/helpers/jsDocs";
+import { Icons } from "@/components/Icons/Icons";
+import { Button } from "@/components/Protos/Button";
+import { HighlightContentEditable } from "@/components/Editor/Protos/HighlightContentEditable";
+import { Input } from "@/components/Editor/Protos/Input";
+import { MiniTitle } from "@/components/Editor/Protos/MiniTitle";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { useEditorMaybe } from "@grapesjs/react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { current_project_id } from "../../../constants/shared";
-import { db } from "../../../helpers/db";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useRecoilValue } from "recoil";
 
 export const DynamicAttributes = () => {
   const editor = useEditorMaybe();

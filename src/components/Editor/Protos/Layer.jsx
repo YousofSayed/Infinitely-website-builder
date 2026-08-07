@@ -1,18 +1,18 @@
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
-import { Icons } from "../../Icons/Icons";
-import { useEditorMaybe } from "@grapesjs/react";
-import { useRecoilValue, useSetRecoilState } from "recoil";
-import { sharedLayerState } from "../../../helpers/atoms";
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "./ToastMsgInfo";
-import { addClickClass, uniqueID } from "../../../helpers/cocktail";
-import { OptionsButton } from "../../Protos/OptionsButton";
-import { Tooltip } from "react-tooltip";
-import { Input } from "./Input";
+import { sharedLayerState } from "@/helpers/atoms";
+import { addClickClass, uniqueID } from "@/helpers/cocktail";
+import { initToolbar } from "@/helpers/functions";
+import { refType } from "@/helpers/jsDocs";
+import { Icons } from "@/components/Icons/Icons";
+import { OptionsButton } from "@/components/Protos/OptionsButton";
+import { Input } from "@/components/Editor/Protos/Input";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { refType } from "../../../helpers/jsDocs";
+import { useEditorMaybe } from "@grapesjs/react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
+import { Tooltip } from "react-tooltip";
 import { Virtuoso } from "react-virtuoso";
-import { initToolbar } from "../../../helpers/functions";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 
 /**
  *

@@ -1,10 +1,11 @@
+
 import React from 'react'
-import { MultiTab } from '../../Protos/Multitabs'
-import { CustomFontsInstaller } from '../Protos/CustomFontsInstaller'
-import { TabLabel } from '../Protos/TabLabel'
-import { Icons } from '../../Icons/Icons'
-import { GoogleFontsInstaller } from '../Protos/GoogleFontsInstaller'
-import { InstalledFonts } from '../Protos/InstalledFonts'
+import { MultiTab } from '@/components/Protos/Multitabs'
+import { CustomFontsInstaller } from '@/components/Editor/Protos/CustomFontsInstaller'
+import { TabLabel } from '@/components/Editor/Protos/TabLabel'
+import { Icons } from '@/components/Icons/Icons'
+import { GoogleFontsInstaller } from '@/components/Editor/Protos/GoogleFontsInstaller'
+import { InstalledFonts } from '@/components/Editor/Protos/InstalledFonts'
 
 export const CustomFontsModal = () => {
   return (

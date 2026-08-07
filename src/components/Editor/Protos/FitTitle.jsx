@@ -1,8 +1,8 @@
+import { uniqueID } from "@/helpers/cocktail";
+import { isOverflowedHiddenEl } from "@/helpers/functions";
+import { refType } from "@/helpers/jsDocs";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { refType } from "../../../helpers/jsDocs";
 import { Tooltip } from "react-tooltip";
-import { isOverflowedHiddenEl } from "../../../helpers/functions";
-import { uniqueID } from "../../../helpers/cocktail";
 
 /**
  *

@@ -1,4 +1,4 @@
-import { Infinitely } from "../helpers/Infinitely";
+import { Infinitely } from "@/helpers/Infinitely";
 
 export const globalInstance = new Infinitely();
 export const styleInfInstance = new Infinitely();

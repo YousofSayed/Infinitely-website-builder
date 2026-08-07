@@ -1,10 +1,17 @@
-// million-ignore
-import React, { useRef, useState, useTransition } from "react";
-import { SmallButton } from "../Editor/Protos/SmallButton";
-import { Icons } from "../Icons/Icons";
-import { Tooltip } from "react-tooltip";
-import { addClickClass, uniqueID } from "../../helpers/cocktail";
+import { addClickClass, uniqueID } from "@/helpers/cocktail";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { Icons } from "@/components/Icons/Icons";
 import { unwrap } from "million/react";
+import React, { useRef, useState, useTransition } from "react";
+import { Tooltip } from "react-tooltip";
+
+// million-ignore
+
+
+
+
+
+
 
 // million-ignore
 /**

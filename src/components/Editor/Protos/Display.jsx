@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from "react";
-import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
-import { useRecoilValue } from "recoil";
+import { displayValues } from "@/constants/cssProps";
+import { currentElState } from "@/helpers/atoms";
+import { useSetClassForCurrentEl } from "@/hooks/useSetclassForCurrentEl";
+import { useUpdateInputValue } from "@/hooks/useUpdateInputValue";
+import { FlexChildProps } from "@/components/Editor/Protos/FlexChildProps";
+import { FlexLayout } from "@/components/Editor/Protos/FlexLayout";
+import { GridLayout } from "@/components/Editor/Protos/GridLayout";
+import { GridPropsChilds } from "@/components/Editor/Protos/GridPropsChilds";
+import { MiniTitle } from "@/components/Editor/Protos/MiniTitle";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SelectStyle } from "@/components/Editor/Protos/SelectStyle";
 import { useEditorMaybe } from "@grapesjs/react";
-import { FlexChildProps } from "./FlexChildProps";
-import { GridPropsChilds } from "./GridPropsChilds";
-import { GridLayout } from "./GridLayout";
-import { FlexLayout } from "./FlexLayout";
-import { SelectStyle } from "./SelectStyle";
-import { MiniTitle } from "./MiniTitle";
-import { currentElState } from "../../../helpers/atoms";
-import { displayValues } from "../../../constants/cssProps";
-import { Select } from "./Select";
-import { useSetClassForCurrentEl } from "../../../hooks/useSetclassForCurrentEl";
+import React, { useEffect, useState } from "react";
+import { useRecoilValue } from "recoil";
 
 export const Display = () => {
   const [option, setOption] = useState("");

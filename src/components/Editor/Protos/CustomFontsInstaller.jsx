@@ -1,29 +1,29 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
-import { Icons } from "../../Icons/Icons";
-import { Button } from "../../Protos/Button";
-import { refType, uploadFontsType } from "../../../helpers/jsDocs";
-import { uniqueID } from "../../../helpers/cocktail";
-import { Input } from "./Input";
+import { wp_update_option, wp_upload_multiple_files } from "@/apps/wordpress/functions";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { reloadRequiredInstance } from "@/constants/InfinitelyInstances";
+import { current_project_id } from "@/constants/shared";
+import { dbAssetsSwState } from "@/helpers/atoms";
+import { defineRoot, fileNameToMediaSlug, getFileSize, getFonts } from "@/helpers/bridge";
+import { uniqueID } from "@/helpers/cocktail";
+import { db } from "@/helpers/db";
 import {
   doInNormalAsync,
   doInWordpressAsync,
   getProjectData,
-} from "../../../helpers/functions";
-import { current_project_id } from "../../../constants/shared";
-import { db } from "../../../helpers/db";
+} from "@/helpers/functions";
+import { opfs } from "@/helpers/initOpfs";
+import { refType, uploadFontsType } from "@/helpers/jsDocs";
+import { Icons } from "@/components/Icons/Icons";
+import { Button } from "@/components/Protos/Button";
+import { VirtosuoVerticelWrapper } from "@/components/Protos/VirtosuoVerticelWrapper";
+import { Input } from "@/components/Editor/Protos/Input";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { useEditorMaybe } from "@grapesjs/react";
+import { isPlainObject } from "lodash";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
-import { ToastMsgInfo } from "./ToastMsgInfo";
 import { Virtuoso } from "react-virtuoso";
 import { useRecoilState } from "recoil";
-import { dbAssetsSwState } from "../../../helpers/atoms";
-import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
-import { opfs } from "../../../helpers/initOpfs";
-import { useEditorMaybe } from "@grapesjs/react";
-import { defineRoot, fileNameToMediaSlug, getFileSize, getFonts } from "../../../helpers/bridge";
-import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
-import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
-import { wp_update_option, wp_upload_multiple_files } from "../../../Apps/wordpress/functions";
-import { isPlainObject } from "lodash";
 
 const CustomScroller = React.forwardRef(({ style, ...props }, ref) => (
   <div

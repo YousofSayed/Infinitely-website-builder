@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { Choices } from "./Choices";
-import { SmallButton } from "./SmallButton";
-import { Icons } from "../../Icons/Icons";
-import { useRecoilValue } from "recoil";
-import { ruleState } from "../../../helpers/atoms";
-import { generateBeautifulHexColor } from "../../../helpers/functions";
+import { styleRgx } from "@/constants/rgxs";
+import { ruleState } from "@/helpers/atoms";
+import { generateBeautifulHexColor } from "@/helpers/functions";
+import { Icons } from "@/components/Icons/Icons";
+import { Choices } from "@/components/Editor/Protos/Choices";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
 import { isArray } from "lodash";
-import { styleRgx } from "../../../constants/rgxs";
+import React, { useEffect, useState } from "react";
+import { useRecoilValue } from "recoil";
 
 /**
  *

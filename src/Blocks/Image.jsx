@@ -1,12 +1,12 @@
-import { Icons } from "../components/Icons/Icons";
-import { open_files_manager_modal } from "../constants/InfinitelyCommands";
-import { html, uniqueID } from "../helpers/cocktail";
+import { Icons } from "@/components/Icons/Icons";
+import { open_files_manager_modal } from "@/constants/InfinitelyCommands";
+import { html, uniqueID } from "@/helpers/cocktail";
 import {
   defineTraits,
   doActionAndPreventSaving,
   traitCallback,
-} from "../helpers/functions";
-import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
+} from "@/helpers/functions";
+import { reactToStringMarkup } from "@/helpers/reactToStringMarkup";
 
 /**
  *

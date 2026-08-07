@@ -1,10 +1,10 @@
-import { select_page } from "../constants/InfinitelyCommands";
-import { InfinitelyEvents } from "../constants/infinitelyEvents";
-import { current_page_id } from "../constants/shared";
-import { defineRoot, infinitelyCallback, toMB } from "../helpers/bridge";
-import { killAllGsapMotions, runAllGsapMotions } from "../helpers/customEvents";
-import { getProjectData } from "../helpers/functions";
-import { opfs } from "../helpers/initOpfs";
+import { select_page } from "@/constants/InfinitelyCommands";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { current_page_id } from "@/constants/shared";
+import { defineRoot, infinitelyCallback, toMB } from "@/helpers/bridge";
+import { killAllGsapMotions, runAllGsapMotions } from "@/helpers/customEvents";
+import { getProjectData } from "@/helpers/functions";
+import { opfs } from "@/helpers/initOpfs";
 
 /**
  *

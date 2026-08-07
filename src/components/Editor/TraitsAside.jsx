@@ -1,31 +1,13 @@
-import React, { memo, useEffect, useRef, useState } from "react";
-import { Input } from "./Protos/Input";
-import { useEditorMaybe } from "@grapesjs/react";
-import { Button } from "../Protos/Button";
-import {
-  assetsType,
-  componentType,
-  refType,
-  traitsType,
-} from "../../helpers/jsDocs";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { open_files_manager_modal } from "@/constants/InfinitelyCommands";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { editorComponentProps, inf_build_url } from "@/constants/shared";
 import {
   asideControllersNotifiresState,
   assetTypeState,
   currentElState,
   showPreviewState,
-} from "../../helpers/atoms";
-import { SmallButton } from "./Protos/SmallButton";
-import { Icons } from "../Icons/Icons";
-import { Select } from "./Protos/Select";
-import { HighlightContentEditable } from "./Protos/HighlightContentEditable";
-import { DetailsNormal } from "../Protos/DetailsNormal";
-import { MiniTitle } from "./Protos/MiniTitle";
-import { open_files_manager_modal } from "../../constants/InfinitelyCommands";
-import { editorComponentProps, inf_build_url } from "../../constants/shared";
-import { InfinitelyEvents } from "../../constants/infinitelyEvents";
-import { CodeEditor } from "./Protos/CodeEditor";
-import { parseHTML } from "linkedom";
+} from "@/helpers/atoms";
+import { addClickClass, parse, stringify } from "@/helpers/cocktail";
 import {
   doDocument,
   generateBeautifulHexColor,
@@ -36,26 +18,62 @@ import {
   initToolbar,
   isValidAttribute,
   preventSelectNavigation,
-} from "../../helpers/functions";
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
-// import { InfAccordion } from "../Protos/InfAccordion";
-// import { AccordionItem } from "@heroui/accordion";
-import { FitTitle } from "./Protos/FitTitle";
-import { SwitchButton } from "../Protos/SwitchButton";
-import { isBoolean, isFunction, isString } from "lodash";
-import { addClickClass, parse, stringify } from "../../helpers/cocktail";
-import { useCmdsContext } from "../../hooks/useCmdsContext";
-import { useLiveQuery } from "dexie-react-hooks";
-import { Popover } from "./Popover";
-import { VirtuosoGrid } from "react-virtuoso";
-import { GridComponents } from "../Protos/VirtusoGridComponent";
-import { FileView } from "../Protos/FileView";
-import { ChooseFile } from "../Protos/ChooseFile";
-import { AccordionItem } from "../Protos/AccordionItem";
-import { Accordion } from "../Protos/Accordion";
+  triggerSymbolEvent,
+} from "@/helpers/functions";
+import {
+  assetsType,
+  componentType,
+  refType,
+  traitsType,
+} from "@/helpers/jsDocs";
+import { useCmdsContext } from "@/hooks/useCmdsContext";
+import { Icons } from "@/components/Icons/Icons";
+import { Accordion } from "@/components/Protos/Accordion";
+import { AccordionItem } from "@/components/Protos/AccordionItem";
+import { Button } from "@/components/Protos/Button";
+import { ChooseFile } from "@/components/Protos/ChooseFile";
+import { DetailsNormal } from "@/components/Protos/DetailsNormal";
+import { FileView } from "@/components/Protos/FileView";
+import { Hint } from "@/components/Protos/Hint";
+import { InfAccordion } from "@/components/Protos/InfAccordion";
+import { SwitchButton } from "@/components/Protos/SwitchButton";
+import { GridComponents } from "@/components/Protos/VirtusoGridComponent";
+import { Popover } from "@/components/Editor/Popover";
+import { CodeEditor } from "@/components/Editor/Protos/CodeEditor";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { HighlightContentEditable } from "@/components/Editor/Protos/HighlightContentEditable";
+import { Input } from "@/components/Editor/Protos/Input";
+import { MiniTitle } from "@/components/Editor/Protos/MiniTitle";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { Hint } from "../Protos/Hint";
+import { useEditorMaybe } from "@grapesjs/react";
+import { useLiveQuery } from "dexie-react-hooks";
+import { parseHTML } from "linkedom";
+import { isBoolean, isFunction, isString } from "lodash";
+import React, { memo, useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
+import { VirtuosoGrid } from "react-virtuoso";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+
+// 
+// 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export const TraitsAside = () => {
   const editor = useEditorMaybe();
@@ -468,6 +486,7 @@ export const TraitsAside = () => {
                         // preventSelectNavigation(editor, newCmp);
                         editor.trigger(InfinitelyEvents.layers.update);
                         editor.trigger(InfinitelyEvents.component.update_content);
+                        triggerSymbolEvent(editor , selectedCmp);
                       }}
                     />
                   </li>
@@ -488,7 +507,7 @@ export const TraitsAside = () => {
                 // console.log("trait type:", trait);
                 // console.log("is function ? ", isFunction(trait?.showCallback));
                 /**
-                 * @type {import('../../helpers/types').TraitCallProps}
+                 * @type {import('@/helpers/types').TraitCallProps}
                  */
                 const mainCallbackProps = {
                   editor,

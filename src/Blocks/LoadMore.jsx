@@ -1,10 +1,10 @@
+import { Icons } from "@/components/Icons/Icons";
+import { eventNames } from "@/constants/hsValues";
+import { viewEvents } from "@/constants/shared";
+import { defineTraits } from "@/helpers/functions";
+import { reactToStringMarkup } from "@/helpers/reactToStringMarkup";
+import { getLoopComponent } from "@/plugins/globalTraits";
 import React from "react";
-import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
-import { Icons } from "../components/Icons/Icons";
-import { defineTraits } from "../helpers/functions";
-import { eventNames } from "../constants/hsValues";
-import { getLoopComponent } from "../plugins/globalTraits";
-import { viewEvents } from "../constants/shared";
 
 /**
  *

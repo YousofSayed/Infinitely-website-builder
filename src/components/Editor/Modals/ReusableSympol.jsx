@@ -1,11 +1,14 @@
-import { useEditorMaybe } from "@grapesjs/react";
-import React, { useEffect, useRef, useState } from "react";
-import { Input } from "../Protos/Input";
-import { refType } from "../../../helpers/jsDocs";
-import { Button } from "../../Protos/Button";
-import html2canvas from "html2canvas-pro";
-import { Select } from "../Protos/Select";
-import { uniqueID } from "../../../helpers/cocktail";
+import { wp_insert_post } from "@/apps/wordpress/functions";
+import {
+  current_page_id,
+  current_project_id,
+  inf_class_name,
+  inf_symbol_Id_attribute,
+} from "@/constants/shared";
+import { _symbolsCachedState } from "@/constants/windowKeys";
+import { defineRoot, getOPFSProjectDir } from "@/helpers/bridge";
+import { uniqueID } from "@/helpers/cocktail";
+import { db } from "@/helpers/db";
 import {
   doInNormalAsync,
   doInWordpressAsync,
@@ -21,21 +24,21 @@ import {
   preventSelectNavigation,
   saveProjectByWorker,
   store,
-} from "../../../helpers/functions";
-import { db } from "../../../helpers/db";
-import {
-  current_page_id,
-  current_project_id,
-  inf_class_name,
-  inf_symbol_Id_attribute,
-} from "../../../constants/shared";
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "../Protos/ToastMsgInfo";
+} from "@/helpers/functions";
+import { opfs } from "@/helpers/initOpfs";
+import { refType } from "@/helpers/jsDocs";
+import { editorIcons } from "@/components/Icons/editorIcons";
+import { Button } from "@/components/Protos/Button";
+import { Input } from "@/components/Editor/Protos/Input";
+import { Select } from "@/components/Editor/Protos/Select";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { useEditorMaybe } from "@grapesjs/react";
 import { minify } from "csso";
-import { editorIcons } from "../../Icons/editorIcons";
-import { opfs } from "../../../helpers/initOpfs";
-import { defineRoot, getOPFSProjectDir } from "../../../helpers/bridge";
-import { wp_insert_post } from "../../../Apps/wordpress/functions";
+import html2canvas from "html2canvas-pro";
+import { uniqueId } from "lodash";
+import React, { useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
+import { useQueryClient } from "@tanstack/react-query";
 
 /**
  *
@@ -48,8 +51,9 @@ export const ReusableSympol = () => {
   const [props, setProps] = useState({ name: "", category: "" });
   const [imgSrc, setImgSrc] = useState("");
   const [blobImg, setBlobImg] = useState(new Blob([""], { type: "image/png" }));
+  const qc = useQueryClient();
   const [keywordsCtg, setKeywordsCtg] = useState(
-    editor.Blocks.categories.models.map((ctg) => ctg.id)
+    editor.Blocks.categories.models.map((ctg) => ctg.id),
   );
 
   const onInput = (value, prop) => {
@@ -70,7 +74,7 @@ export const ReusableSympol = () => {
 
     const addSymbolBlock = async () => {
       const projectData = await getProjectData();
-      const uuid = uniqueID();
+      const uuid = uniqueId(`${uniqueID()}-`);
       const attributes = selectedElMain.getAttributes();
       selectedElMain.addAttributes({
         [inf_symbol_Id_attribute]: uuid,
@@ -112,7 +116,6 @@ export const ReusableSympol = () => {
         draggable: true,
       });
 
-
       const prevBlocks = projectData?.blocks ? projectData.blocks : {};
 
       const rules = getComponentRules({
@@ -125,6 +128,18 @@ export const ReusableSympol = () => {
       const stringRules = rules.stringRules;
       console.log("rules  : ", JSON.stringify(rules));
 
+      const afterSave = () => {
+        editor.runCommand("close:current:modal");
+        toast.done(tId);
+        toast.success(
+          <ToastMsgInfo msg={`Symbols created and saved successfully👍`} />,
+        );
+        window[_symbolsCachedState] = false;
+        selectedEl.set({
+          draggable: dragVal,
+        });
+        editor.off("storage:after:store", afterSave);
+      };
 
       await doInNormalAsync(async () => {
         const contentPath = `editor/symbols/${uuid}/${uuid}.html`;
@@ -170,9 +185,9 @@ export const ReusableSympol = () => {
               [defineRoot(contentPath)]: isSplitter
                 ? splitterContent
                 : selectedEl.toHTML({
-                  keepInlineStyle: true,
-                  withProps: true,
-                }),
+                    keepInlineStyle: true,
+                    withProps: true,
+                  }),
 
               [defineRoot(stylePath)]: minify(stringRules).css,
             },
@@ -180,13 +195,14 @@ export const ReusableSympol = () => {
             updatePreviewPages: true,
             pageName: localStorage.getItem(current_page_id),
           },
-          editor
+          editor,
         );
+        editor.on("storage:after:store", afterSave);
       });
 
       await doInWordpressAsync(async () => {
         ///code...
-        console.log('blob image file : ', blobImg);
+        console.log("blob image file : ", blobImg);
         const dataToSave = {
           html: gjsComponentsToJSON(selectedEl, true),
           //  selectedEl.toHTML({
@@ -195,40 +211,54 @@ export const ReusableSympol = () => {
           // }),
           css: minify(stringRules).css,
           category: props.category,
-          media: selectedEl.getIcon() ||
+          media:
+            selectedEl.getIcon() ||
             editorIcons.components({
               strokeColor: "white",
               strokeWidth: 2,
-            })
+            }),
         };
 
         const res = await wp_insert_post({
           projectId,
-          featured_image: new File([blobImg], `${props.name}-${uuid}`, { type: 'image/png' }) || new File([selectedEl.getIcon() ||
-            editorIcons.components({
-              strokeColor: "white",
-              strokeWidth: 2,
-            })], `${props.name}-${uuid}`, { type: 'image/png' }),
+          // featured_image:
+          //   new File([blobImg], `${props.name}-${uuid}`, {
+          //     type: "image/png",
+          //   }) ||
+          //   new File(
+          //     [
+          //       selectedEl.getIcon() ||
+          //         editorIcons.components({
+          //           strokeColor: "white",
+          //           strokeWidth: 2,
+          //         }),
+          //     ],
+          //     `${props.name}-${uuid}`,
+          //     { type: "image/png" },
+          //   ),
 
           post_data: {
-            post_type: 'inf_symbols',
+            post_type: "inf_symbols",
             post_name: props.name,
             post_status: "publish",
             /////....
           },
 
           meta_data: {
-            'inf-symbol-id': uuid,
+            "inf-symbol-id": uuid,
+            media:dataToSave.media,
             inf_meta: {
               before_save: dataToSave,
-              saved: dataToSave
-            }
-          }
+              saved: dataToSave,
+            },
+          },
         });
         editor.Storage.setAutosave(projectSettings.enable_auto_save);
         // projectSettings.enable_auto_save && await editor.Storage.store();
-        console.log('wp_insert_post', res);
-
+        console.log("wp_insert_post", res);
+        afterSave();
+        qc.invalidateQueries({ queryKey: ["inf_symbols"] });
+        editor.trigger("block:add");
       });
 
       initToolbar(editor, selectedElMain);
@@ -236,18 +266,9 @@ export const ReusableSympol = () => {
         initSymbol(uuid, editor);
       } else {
         alert(
-          `If you have more than one splitter symbol, they will not update in real time to avoid performance drops.`
+          `If you have more than one splitter symbol, they will not update in real time to avoid performance drops.`,
         );
       }
-      editor.runCommand("close:current:modal");
-      toast.done(tId);
-      toast.success(
-        <ToastMsgInfo msg={`Symbols created and saved successfully👍`} />
-      );
-
-      selectedEl.set({
-        draggable: dragVal,
-      });
     };
     addSymbolBlock();
   };
@@ -267,9 +288,9 @@ export const ReusableSympol = () => {
     // contentRef.current.src = canvas.toDataURL();
   };
 
-  useEffect(() => {
-    getSelectedElAsImg();
-  }, []);
+  // useEffect(() => {
+  //   getSelectedElAsImg();
+  // }, []);
 
   return (
     <section className="w-full z-50 p-2 flex flex-col gap-2 overflow-auto bg-surface-tertiary rounded-lg ">

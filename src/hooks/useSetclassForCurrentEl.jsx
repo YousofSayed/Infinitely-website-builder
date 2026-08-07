@@ -1,4 +1,11 @@
-import { useRecoilState, useRecoilValue } from "recoil";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { keyframeStylesInstance } from "@/constants/InfinitelyInstances";
+import {
+  current_project_id,
+  current_symbol_id,
+  inf_class_name,
+} from "@/constants/shared";
 import {
   cmpRulesState,
   framesStylesState,
@@ -6,12 +13,14 @@ import {
   selectorState,
   showAnimationsBuilderState,
   showStylesBuilderForMotionBuilderState,
-} from "../helpers/atoms";
-
-import { useEditorMaybe } from "@grapesjs/react";
-import { useRemoveCssProp } from "./useRemoveCssProp";
+} from "@/helpers/atoms";
+import { defineRoot } from "@/helpers/bridge";
+import { uniqueID } from "@/helpers/cocktail";
+import { db } from "@/helpers/db";
+import { offlineInstallerWorker } from "@/helpers/defineWorkers";
 import {
   arrangeDevicesPeriority,
+  doInWordpress,
   getComponentRules,
   getCurrentMediaDevice,
   getCurrentSelector,
@@ -20,20 +29,14 @@ import {
   getProjectSettings,
   reorderCss,
   store,
-} from "../helpers/functions";
-import {
-  current_project_id,
-  current_symbol_id,
-  inf_class_name,
-} from "../constants/shared";
-import { InfinitelyEvents } from "../constants/infinitelyEvents";
+  wpWorkerCallbackMaker,
+} from "@/helpers/functions";
+import { useRemoveCssProp } from "@/hooks/useRemoveCssProp";
+import { useEditorMaybe } from "@grapesjs/react";
 import { random, uniqueId } from "lodash";
-import { keyframeStylesInstance } from "../constants/InfinitelyInstances";
-import { uniqueID } from "../helpers/cocktail";
-import { db } from "../helpers/db";
 import { toast } from "react-toastify";
-import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
-import { offlineInstallerWorker } from "../helpers/defineWorkers";
+import { useRecoilState, useRecoilValue } from "recoil";
+
 let setStyleTimeout = null;
 
 /**
@@ -272,21 +275,27 @@ export function useSetClassForCurrentEl() {
       setCmpRules(rulesParsed.rules || []);
 
       if (symbolInfo.isSymbol) {
-        wpWorkerCallbackMaker(
-          offlineInstallerWorker,
-          "writeFilesToOPFS",
-          {
-            files: {
-              path: defineRoot(`temp/symbols/${symbolInfo.mainId}/style.css`),
-              content: rulesParsed.stringRules,
+        doInWordpress(() => {
+          wpWorkerCallbackMaker(
+            offlineInstallerWorker,
+            "writeFilesToOPFS",
+            {
+              files: [
+                {
+                  path: defineRoot(
+                    `temp/symbols/${symbolInfo.mainId}/style.css`,
+                  ),
+                  content: rulesParsed.stringRules,
+                },
+              ],
             },
-          },
-          (props) => {
-            console.log("file writing response", props);
-          },
-        );
+            (props) => {
+              console.log("file writing response", props);
+            },
+          );
+        });
       }
-      
+
       editor.trigger("inf:rules:update", {
         rules: newCssProps,
       });

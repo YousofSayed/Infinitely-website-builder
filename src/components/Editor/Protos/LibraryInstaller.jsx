@@ -1,13 +1,13 @@
+import { JSLibrariesType } from "@/helpers/jsDocs";
+import { Loader } from "@/components/Loader";
+import { VirtosuoVerticelWrapper } from "@/components/Protos/VirtosuoVerticelWrapper";
+import { Input } from "@/components/Editor/Protos/Input";
+import { JsLibrary } from "@/components/Editor/Protos/JsLibrary";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { For } from "million/react";
 import React, { useRef, useState } from "react";
 import { toast } from "react-toastify";
-import { ToastMsgInfo } from "./ToastMsgInfo";
-import { JSLibrariesType } from "../../../helpers/jsDocs";
-import { JsLibrary } from "./JsLibrary";
-import { Loader } from "../../Loader";
 import { Virtuoso } from "react-virtuoso";
-import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
-import { Input } from "./Input";
-import { For } from "million/react";
 
 //million-ignore
 export const LibraryInstaller = () => {
@@ -25,7 +25,7 @@ export const LibraryInstaller = () => {
       const searchEndPoint = `https://api.cdnjs.com/libraries?search=${libraryName}&fields=filename,description,version,github`;
       const response = (await fetch(searchEndPoint)).json();
       /**
-       * @type {import('../../../helpers/types').JSLibrary[]}
+       * @type {import('@/helpers/types').JSLibrary[]}
        */
       const results = await (await response).results;
       console.log(results);

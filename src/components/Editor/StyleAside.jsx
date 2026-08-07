@@ -1,12 +1,5 @@
-import React, {
-  memo,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { useRecoilState, useRecoilValue } from "recoil";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { styles } from "@/constants/styles";
 import {
   animationsState,
   cmpRulesState,
@@ -17,40 +10,47 @@ import {
   selectorState,
   showAnimationsBuilderState,
   showStylesBuilderForMotionBuilderState,
-} from "../../helpers/atoms";
-import { useEditorMaybe } from "@grapesjs/react";
-import { SelectState } from "./Protos/SelectState";
-import { SelectClass } from "./Protos/SelectClass";
-import { MultiFunctionProp } from "./Protos/MultiFunctionProp";
-import { cloneDeep, isArray, isBoolean, isString, random, uniqueId } from "lodash";
-import { Accordion } from "../Protos/Accordion";
-import { AccordionItem } from "../Protos/AccordionItem";
-import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { ErrorBoundary } from "react-error-boundary";
-import { styles } from "../../constants/styles";
-import { For } from "million/react";
-import { Property } from "./Protos/Property";
-import { MiniTitle } from "./Protos/MiniTitle";
-import { SelectStyle } from "./Protos/SelectStyle";
-import { Color } from "./Protos/Color";
-import { DirectionsModel } from "./Protos/DirectionsModel";
-import { MultiChoice } from "./Protos/MultiChoice";
-import { AddMultiValuestoSingleProp } from "./Protos/AddMultiValuestoSingleProp";
-import { useUpdateInputValue } from "../../hooks/useUpdateInputValue";
+} from "@/helpers/atoms";
+import { parse } from "@/helpers/cocktail";
 import {
   getCurrentMediaDevice,
   getCurrentSelector,
   toKebabCase,
-} from "../../helpers/functions";
-import { SmallButton } from "./Protos/SmallButton";
-import { Icons } from "../Icons/Icons";
-import { FitTitle } from "./Protos/FitTitle";
-import { useRemoveCurrentMedia } from "../../hooks/useRemoveCurrentMedia";
-import { OptionsButton } from "../Protos/OptionsButton";
+} from "@/helpers/functions";
+import { useRemoveCurrentMedia } from "@/hooks/useRemoveCurrentMedia";
+import { useUpdateInputValue } from "@/hooks/useUpdateInputValue";
+import { Accordion } from "@/components/Protos/Accordion";
+import { AccordionItem } from "@/components/Protos/AccordionItem";
+import { OptionsButton } from "@/components/Protos/OptionsButton";
+import { AddMultiValuestoSingleProp } from "@/components/Editor/Protos/AddMultiValuestoSingleProp";
+import { Color } from "@/components/Editor/Protos/Color";
+import { DirectionsModel } from "@/components/Editor/Protos/DirectionsModel";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { MiniTitle } from "@/components/Editor/Protos/MiniTitle";
+import { MultiChoice } from "@/components/Editor/Protos/MultiChoice";
+import { MultiFunctionProp } from "@/components/Editor/Protos/MultiFunctionProp";
+import { Property } from "@/components/Editor/Protos/Property";
+import { SelectClass } from "@/components/Editor/Protos/SelectClass";
+import { SelectState } from "@/components/Editor/Protos/SelectState";
+import { SelectStyle } from "@/components/Editor/Protos/SelectStyle";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { useEditorMaybe } from "@grapesjs/react";
+import { cloneDeep, isArray, isBoolean, isString, random, uniqueId } from "lodash";
+import { For } from "million/react";
+import React, {
+  memo,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "react-toastify";
-import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
-import { parse } from "../../helpers/cocktail";
-import { InfinitelyEvents } from "../../constants/infinitelyEvents";
+import { useRecoilState, useRecoilValue } from "recoil";
+import { Icons } from "@/components/Icons/Icons";
 
 const SelectElementToStyle = () => (
   <h1 className="text-slate-400 custom-font-size text-center animate-pulse capitalize font-semibold bg-surface-secondary rounded-lg p-2">

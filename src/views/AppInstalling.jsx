@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Loader } from "../components/Loader";
+import { Loader } from "@/components/Loader";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import React, { useEffect, useRef, useState } from "react";
 
 const words = [
   "Preparing files",

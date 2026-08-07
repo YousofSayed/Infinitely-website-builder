@@ -1,4 +1,4 @@
-import { inputTypes, tagNames } from "./hsValues";
+import { inputTypes, tagNames } from "@/constants/hsValues";
 
 export const selectTagName = {
   placeholder: "select tag",

@@ -1,31 +1,31 @@
-import React, { memo, useEffect, useState } from "react";
-import { Color } from "./Color";
-import { SmallButton } from "./SmallButton";
-import { Icons } from "../../Icons/Icons";
-import { Input } from "./Input";
-import { Property } from "./Property";
-import { useEditorMaybe } from "@grapesjs/react";
-import { useSetRecoilState } from "recoil";
-import { cssPropForAssetsManagerState } from "../../../helpers/atoms";
-import { AssetsManager } from "../AssetsManager";
-import { SelectStyle } from "./SelectStyle";
 import {
   backgroundAttachmentValues,
   backgroundBlendModeValues,
   backgroundClipValues,
   backgroundRepeatValues,
   backgroundSize,
-} from "../../../constants/cssProps";
-import { AddMultiValuestoSingleProp } from "./AddMultiValuestoSingleProp";
-import { Gradient } from "./Gradient";
-import { MiniTitle } from "./MiniTitle";
-import { useSetClassForCurrentEl } from "../../../hooks/useSetclassForCurrentEl";
-import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
-import { Textarea } from "./Textarea";
-import { useRemoveCssProp } from "../../../hooks/useRemoveCssProp";
-import { ChooseFile } from "../../Protos/ChooseFile";
-import { FitTitle } from "./FitTitle";
-import { BackgroundImage } from "./BackgroundImage";
+} from "@/constants/cssProps";
+import { cssPropForAssetsManagerState } from "@/helpers/atoms";
+import { useRemoveCssProp } from "@/hooks/useRemoveCssProp";
+import { useSetClassForCurrentEl } from "@/hooks/useSetclassForCurrentEl";
+import { useUpdateInputValue } from "@/hooks/useUpdateInputValue";
+import { Icons } from "@/components/Icons/Icons";
+import { ChooseFile } from "@/components/Protos/ChooseFile";
+import { AssetsManager } from "@/components/Editor/AssetsManager";
+import { AddMultiValuestoSingleProp } from "@/components/Editor/Protos/AddMultiValuestoSingleProp";
+import { BackgroundImage } from "@/components/Editor/Protos/BackgroundImage";
+import { Color } from "@/components/Editor/Protos/Color";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { Gradient } from "@/components/Editor/Protos/Gradient";
+import { Input } from "@/components/Editor/Protos/Input";
+import { MiniTitle } from "@/components/Editor/Protos/MiniTitle";
+import { Property } from "@/components/Editor/Protos/Property";
+import { SelectStyle } from "@/components/Editor/Protos/SelectStyle";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { Textarea } from "@/components/Editor/Protos/Textarea";
+import { useEditorMaybe } from "@grapesjs/react";
+import React, { memo, useEffect, useState } from "react";
+import { useSetRecoilState } from "recoil";
 
 export const Background = memo(() => {
 

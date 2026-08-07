@@ -1,3 +1,4 @@
+
 export const alpineEventModifiers = [
   "prevent", // Prevents default event behavior (e.g., form submission)
   "stop", // Stops event propagation (e.g., bubbling)
@@ -50,4 +51,3 @@ export const alpineTransitionModifiers = [
   "origin", // Sets the transform origin (e.g., `.origin.top`)
   "ease",
 ];
-

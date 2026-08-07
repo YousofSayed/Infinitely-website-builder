@@ -1,22 +1,22 @@
+import { wp_connect, wp_get_option } from "@/apps/wordpress/functions";
+import { wp_toast_handler } from "@/apps/wordpress/functions_ui";
+import { apps } from "@/constants/shared";
+import { isProjectInitedState, showCrtModalState } from "@/helpers/atoms";
+import { db } from "@/helpers/db";
+import { getProjectSettings } from "@/helpers/functions";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
+import { opfs } from "@/helpers/initOpfs";
+import { Select } from "@/components/Editor/Protos/Select";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import {
   useRecoilState,
   useRecoilValue,
   useResetRecoilState,
   useSetRecoilState,
 } from "recoil";
-import { isProjectInitedState, showCrtModalState } from "../../helpers/atoms";
-import { db } from "../../helpers/db";
-import { opfs } from "../../helpers/initOpfs";
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "../Editor/Protos/ToastMsgInfo";
-import { infinitelyWorker } from "../../helpers/infinitelyWorker";
-import { Select } from "../Editor/Protos/Select";
-import { apps } from "../../constants/shared";
-import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { wp_connect, wp_get_option } from "../../Apps/wordpress/functions";
-import { wp_toast_handler } from "../../Apps/wordpress/functions_ui";
-import { getProjectSettings } from "../../helpers/functions";
 
 export const CreateProjectModal = ({
   onCloseClick = (ev) => {},

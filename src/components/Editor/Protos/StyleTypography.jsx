@@ -1,8 +1,3 @@
-import React, { memo, useState } from "react";
-import { Property } from "./Property";
-import { useRecoilValue } from "recoil";
-import { currentElState } from "../../../helpers/atoms";
-import { Select } from "./Select";
 import {
   cssFonts,
   fontWeights,
@@ -12,18 +7,23 @@ import {
   whiteSpaceValues,
   wordBreakValues,
   writingModeValues,
-} from "../../../constants/cssProps";
-import { Color } from "./Color";
-import { MultiChoice } from "./MultiChoice";
-import { Icons } from "../../Icons/Icons";
+} from "@/constants/cssProps";
+import { currentElState } from "@/helpers/atoms";
 import {
   getIconForMultiChoice,
   getProjectData,
-} from "../../../helpers/functions";
-import { SelectStyle } from "./SelectStyle";
-import { AddMultiValuestoSingleProp } from "./AddMultiValuestoSingleProp";
+} from "@/helpers/functions";
+import { Icons } from "@/components/Icons/Icons";
+import { AddMultiValuestoSingleProp } from "@/components/Editor/Protos/AddMultiValuestoSingleProp";
+import { Color } from "@/components/Editor/Protos/Color";
+import { FontFamily } from "@/components/Editor/Protos/FontFamily";
+import { MultiChoice } from "@/components/Editor/Protos/MultiChoice";
+import { Property } from "@/components/Editor/Protos/Property";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SelectStyle } from "@/components/Editor/Protos/SelectStyle";
 import { useLiveQuery } from "dexie-react-hooks";
-import { FontFamily } from "./FontFamily";
+import React, { memo, useState } from "react";
+import { useRecoilValue } from "recoil";
 
 export const StyleTypography = memo(() => {
   // const [customFonts, setCustomFonts] = useState([]);

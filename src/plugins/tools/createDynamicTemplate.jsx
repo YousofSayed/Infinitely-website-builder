@@ -1,9 +1,9 @@
+import { DynamicTemplatesCreator } from "@/components/Editor/Modals/DynamicTemplatesCreator";
+import { ReusableSympol } from "@/components/Editor/Modals/ReusableSympol";
+import { editorIcons } from "@/components/Icons/editorIcons";
+import { dynamic_container } from "@/constants/cmpsTypes";
+import { addItemInToolBarForEditor } from "@/helpers/functions";
 import React from "react";
-import { addItemInToolBarForEditor } from "../../helpers/functions";
-import { ReusableSympol } from "../../components/Editor/Modals/ReusableSympol";
-import { editorIcons } from "../../components/Icons/editorIcons";
-import { dynamic_container } from "../../constants/cmpsTypes";
-import { DynamicTemplatesCreator } from "../../components/Editor/Modals/DynamicTemplatesCreator";
 
 export const createDynamicTemplate = (editor) => {
   addItemInToolBarForEditor({

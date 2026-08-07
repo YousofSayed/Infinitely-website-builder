@@ -1,5 +1,5 @@
+import { addClickClass } from "@/helpers/cocktail";
 import React from "react";
-import { addClickClass } from "../../../helpers/cocktail";
 
 export const SelectedBorder = ({
   borderName,

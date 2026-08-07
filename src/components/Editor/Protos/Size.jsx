@@ -1,12 +1,12 @@
+import { overflowValues } from "@/constants/cssProps";
+import { getIconForMultiChoice } from "@/helpers/functions";
+import { P } from "@/components/Protos/P";
+import { MiniTitle } from "@/components/Editor/Protos/MiniTitle";
+import { MultiChoice } from "@/components/Editor/Protos/MultiChoice";
+import { Property } from "@/components/Editor/Protos/Property";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SelectStyle } from "@/components/Editor/Protos/SelectStyle";
 import React from "react";
-import { Property } from "./Property";
-import { MultiChoice } from "./MultiChoice";
-import { overflowValues } from "../../../constants/cssProps";
-import { getIconForMultiChoice } from "../../../helpers/functions";
-import { P } from "../../Protos/P";
-import { Select } from "./Select";
-import { SelectStyle } from "./SelectStyle";
-import { MiniTitle } from "./MiniTitle";
 
 export const Size = () => {
   return (

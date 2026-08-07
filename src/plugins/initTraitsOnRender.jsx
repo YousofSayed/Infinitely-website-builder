@@ -1,6 +1,6 @@
+import { parse } from "@/helpers/cocktail";
+import { getMediaBreakpoint } from "@/helpers/functions";
 import { isFunction } from "lodash";
-import { parse } from "../helpers/cocktail";
-import { getMediaBreakpoint } from "../helpers/functions";
 
 /**
  *

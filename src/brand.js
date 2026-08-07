@@ -1,5 +1,6 @@
+
 /**
- * @type {Record<string , import('./helpers/types').BrandConfig>}
+ * @type {Record<string , import('@/helpers/types').BrandConfig>}
  */
 const configs = import.meta.glob("./config/*.json", {
   eager: true,
@@ -19,7 +20,7 @@ const config = configs[`./config/${brand}.json`];
 
 /**
  * 
- * @param {import('./helpers/types').BrandConfig} config 
+ * @param {import('@/helpers/types').BrandConfig} config 
  * @returns 
  */
 function applyBrandConfig(config) {

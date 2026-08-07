@@ -1,6 +1,10 @@
-import { Canvas, useEditorMaybe } from "@grapesjs/react";
-import React, { useEffect, useRef, useState } from "react";
-import { useRecoilState, useRecoilValue } from "recoil";
+import { animationsSavingMsg } from "@/constants/confirms";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import {
+  editorStorageInstance,
+  styleInfInstance,
+} from "@/constants/InfinitelyInstances";
+import { current_page_id, current_project_id } from "@/constants/shared";
 import {
   animationsState,
   animationsWillRemoveState,
@@ -10,11 +14,10 @@ import {
   showDragLayerState,
   showLayersState,
   showPreviewState,
-} from "../../helpers/atoms";
-import { Button } from "../Protos/Button";
-import { Icons } from "../Icons/Icons";
-import { addClickClass } from "../../helpers/cocktail";
-import { iframeType, refType } from "../../helpers/jsDocs";
+} from "@/helpers/atoms";
+import { defineRoot } from "@/helpers/bridge";
+import { addClickClass } from "@/helpers/cocktail";
+import { keyframesGetterWorker } from "@/helpers/defineWorkers";
 import {
   doInNormal,
   doInWordpress,
@@ -24,26 +27,23 @@ import {
   getProjectData,
   getWpPageConfig,
   reorderCss,
-} from "../../helpers/functions";
-import { current_page_id, current_project_id } from "../../constants/shared";
-import { InfinitelyEvents } from "../../constants/infinitelyEvents";
-import monacoLoader from "@monaco-editor/loader";
-import { useSetClassForCurrentEl } from "../../hooks/useSetclassForCurrentEl";
-import { FitTitle } from "./Protos/FitTitle";
-import { keyframesGetterWorker } from "../../helpers/defineWorkers";
-import {
-  editorStorageInstance,
-  styleInfInstance,
-} from "../../constants/InfinitelyInstances";
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
-import { animationsSavingMsg } from "../../constants/confirms";
+} from "@/helpers/functions";
+import { opfs } from "@/helpers/initOpfs";
+import { iframeType, refType } from "@/helpers/jsDocs";
+import { useSetClassForCurrentEl } from "@/hooks/useSetclassForCurrentEl";
+import { Icons } from "@/components/Icons/Icons";
+import { Loader } from "@/components/Loader";
+import { Button } from "@/components/Protos/Button";
+import Portal from "@/components/Editor/Portal";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { Loader } from "../Loader";
-import Portal from "./Portal";
+import { Canvas, useEditorMaybe } from "@grapesjs/react";
+import monacoLoader from "@monaco-editor/loader";
 import interact from "interactjs";
-import { opfs } from "../../helpers/initOpfs";
-import { defineRoot } from "../../helpers/bridge";
+import React, { useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
+import { useRecoilState, useRecoilValue } from "recoil";
 
 export const Iframe = () => {
   const showLayers = useRecoilValue(showLayersState);

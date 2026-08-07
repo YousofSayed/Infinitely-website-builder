@@ -1,9 +1,11 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Select } from "./Protos/Select";
-import { SmallButton } from "./Protos/SmallButton";
-import { Icons } from "../Icons/Icons";
-import { Adder } from "./Protos/Adder";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { hsCmds } from "@/constants/hsCmds";
+import { hsZoo } from "@/constants/hsValues";
+import {
+  current_dynamic_template_id,
+  current_page_id,
+  current_project_id,
+  inf_cmds_id,
+} from "@/constants/shared";
 import {
   cmdsBuildState,
   cmdsContextState,
@@ -11,12 +13,7 @@ import {
   dynamicTemplatesState,
   restModelsVarsState,
   varsState,
-} from "../../helpers/atoms";
-import { ObjectInput } from "./Protos/Commands/ObjectInput";
-import { MiniTitle } from "./Protos/MiniTitle";
-import { Input } from "./Protos/Input";
-import { ArrayInput } from "./Protos/Commands/ArrayInput";
-
+} from "@/helpers/atoms";
 import {
   addClickClass,
   copyToClipboard,
@@ -25,7 +22,7 @@ import {
   pushBetween,
   transformToNumInput,
   uniqueID,
-} from "../../helpers/cocktail";
+} from "@/helpers/cocktail";
 import {
   buildDynamicTemplate,
   buildScriptFromCmds,
@@ -33,24 +30,26 @@ import {
   executeAndExtractFunctions,
   getProjectData,
   objectToString,
-} from "../../helpers/functions";
-import { hsCmds } from "../../constants/hsCmds";
+} from "@/helpers/functions";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
+import { cmdType, dynamicTemplatesType, refType } from "@/helpers/jsDocs";
+import { useCmdsContext } from "@/hooks/useCmdsContext";
+import { Icons } from "@/components/Icons/Icons";
+import { Loader } from "@/components/Loader";
+import { OptionsButton } from "@/components/Protos/OptionsButton";
+import { Adder } from "@/components/Editor/Protos/Adder";
+import { ArrayInput } from "@/components/Editor/Protos/Commands/ArrayInput";
+import { ObjectInput } from "@/components/Editor/Protos/Commands/ObjectInput";
+import { SmallMonacoEditor } from "@/components/Editor/Protos/Commands/SmallMonacoEditor";
+import { Input } from "@/components/Editor/Protos/Input";
+import { MiniTitle } from "@/components/Editor/Protos/MiniTitle";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
 import { useEditorMaybe } from "@grapesjs/react";
-import { cmdType, dynamicTemplatesType, refType } from "../../helpers/jsDocs";
-import { OptionsButton } from "../Protos/OptionsButton";
-import { hsZoo } from "../../constants/hsValues";
-import { useCmdsContext } from "../../hooks/useCmdsContext";
-import { SmallMonacoEditor } from "./Protos/Commands/SmallMonacoEditor";
 import { Editor } from "@monaco-editor/react";
-import { Loader } from "../Loader";
 import { useLiveQuery } from "dexie-react-hooks";
-import {
-  current_dynamic_template_id,
-  current_page_id,
-  current_project_id,
-  inf_cmds_id,
-} from "../../constants/shared";
-import { infinitelyWorker } from "../../helpers/infinitelyWorker";
+import React, { useEffect, useRef, useState } from "react";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 
 export const Commands = () => {
   const editor = useEditorMaybe();

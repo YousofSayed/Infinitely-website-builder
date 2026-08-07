@@ -1,22 +1,22 @@
-import React, { useEffect, useState } from "react";
-import { MultiTab } from "../../Protos/Multitabs";
-import { TabLabel } from "../Protos/TabLabel";
-import { Icons } from "../../Icons/Icons";
-import { useRecoilState } from "recoil";
-import { fileInfoState } from "../../../helpers/atoms";
-import { CodeEditor } from "../Protos/CodeEditor";
-import { Button } from "../../Protos/Button";
+import { open_library_installer_modal } from "@/constants/InfinitelyCommands";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { reloadRequiredInstance } from "@/constants/InfinitelyInstances";
+import { current_project_id } from "@/constants/shared";
+import { fileInfoState } from "@/helpers/atoms";
+import { defineRoot, getFileSize } from "@/helpers/bridge";
+import { db } from "@/helpers/db";
+import { getProjectData } from "@/helpers/functions";
+import { opfs } from "@/helpers/initOpfs";
+import { Icons } from "@/components/Icons/Icons";
+import { Button } from "@/components/Protos/Button";
+import { MultiTab } from "@/components/Protos/Multitabs";
+import { CodeEditor } from "@/components/Editor/Protos/CodeEditor";
+import { TabLabel } from "@/components/Editor/Protos/TabLabel";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useEditorMaybe } from "@grapesjs/react";
-import { getProjectData } from "../../../helpers/functions";
-import { current_project_id } from "../../../constants/shared";
-import { db } from "../../../helpers/db";
+import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { ToastMsgInfo } from "../Protos/ToastMsgInfo";
-import { open_library_installer_modal } from "../../../constants/InfinitelyCommands";
-import { opfs } from "../../../helpers/initOpfs";
-import { defineRoot, getFileSize } from "../../../helpers/bridge";
-import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
-import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
+import { useRecoilState } from "recoil";
 
 export const FileEditorModal = () => {
   const editor = useEditorMaybe();
@@ -38,7 +38,7 @@ export const FileEditorModal = () => {
   const saveToDB = async () => {
     // const projectData = await getProjectData();
     // /**
-    //  * @type {import('../../../helpers/types').LibraryConfig[] | undefined}
+    //  * @type {import('@/helpers/types').LibraryConfig[] | undefined}
     //  */
     // let libs, key;
 

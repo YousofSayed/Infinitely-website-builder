@@ -1,6 +1,6 @@
-import { refreshSW } from "./workerCommands";
-import { doWorkerPattern } from "./workersPattern";
+import { refreshSW } from "@/helpers/workerCommands";
+import { doWorkerPattern } from "@/helpers/workersPattern";
 
-const commands = {refreshSW};
+export const commands = {refreshSW};
 
 doWorkerPattern(commands);

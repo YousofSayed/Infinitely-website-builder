@@ -1,4 +1,5 @@
 import { createApp } from "petite-vue";
+
 const myDirective = async(ctx) => {
   // the element the directive is on
   console.log("directive should done : ", ctx.exp);

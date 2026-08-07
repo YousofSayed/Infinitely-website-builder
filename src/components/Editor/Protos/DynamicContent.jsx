@@ -1,25 +1,45 @@
-// import React, { useCallback, useEffect, useRef, useState } from "react";
-// import { useEditorMaybe } from "@grapesjs/react";
-// import { useRecoilValue } from "recoil";
-// import { restModelState } from "../../../helpers/atoms";
-// import { Select } from "./Select";
+import { dynamic_container } from "@/constants/cmpsTypes";
+import { current_project_id } from "@/constants/shared";
+import { restModelState } from "@/helpers/atoms";
+import { db } from "@/helpers/db";
 // import {
 //   getModelResAndKeys,
 //   viewDynamicContent,
-// } from "../../../helpers/functions";
-// import { toast } from "react-toastify";
-// import { ToastMsgInfo } from "./ToastMsgInfo";
-// import { dynamic_container } from "../../../constants/cmpsTypes";
-// import { SmallButton } from "./SmallButton";
-// import { Icons } from "../../Icons/Icons";
-// import { Choices } from "./Choices";
-// import { HighlightContentEditable } from "./HighlightContentEditable";
-// import { useLiveQuery } from "dexie-react-hooks";
-// import { current_project_id } from "../../../constants/shared";
-// import { db } from "../../../helpers/db";
-// import { SuggestionMenu } from "./SuggestionMenu";
-// import { flatten } from "flat";
-// import { restModelType } from "../../../helpers/jsDocs";
+// } from "@/helpers/functions";
+import { restModelType } from "@/helpers/jsDocs";
+import { Icons } from "@/components/Icons/Icons";
+import { Choices } from "@/components/Editor/Protos/Choices";
+import { HighlightContentEditable } from "@/components/Editor/Protos/HighlightContentEditable";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { SuggestionMenu } from "@/components/Editor/Protos/SuggestionMenu";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { useEditorMaybe } from "@grapesjs/react";
+import { useLiveQuery } from "dexie-react-hooks";
+import { flatten } from "flat";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
+import { useRecoilValue } from "recoil";
+
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
 
 // export const DynamicContent = () => {
 //   const editor = useEditorMaybe();

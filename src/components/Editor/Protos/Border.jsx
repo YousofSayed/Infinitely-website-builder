@@ -1,11 +1,11 @@
+import { P } from "@/components/Protos/P";
+import { BorderColor } from "@/components/Editor/Protos/BorderColor";
+import { BorderRadius } from "@/components/Editor/Protos/BorderRadius";
+import { BorderStyle } from "@/components/Editor/Protos/BorderStyle";
+import { Color } from "@/components/Editor/Protos/Color";
+import { DirectionsModel } from "@/components/Editor/Protos/DirectionsModel";
+import { Property } from "@/components/Editor/Protos/Property";
 import React, { memo } from "react";
-import { DirectionsModel } from "./DirectionsModel";
-import { Property } from "./Property";
-import { P } from "../../Protos/P";
-import { Color } from "./Color";
-import { BorderColor } from "./BorderColor";
-import { BorderStyle } from "./BorderStyle";
-import { BorderRadius } from "./BorderRadius";
 
 export const Border = memo(() => {
   return (

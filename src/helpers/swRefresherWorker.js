@@ -1,6 +1,6 @@
-import { doWorkerPattern } from "./workersPattern";
+import { doWorkerPattern } from "@/helpers/workersPattern";
 
-const commands = {
+export const commands = {
   // Define your commands here
 };
 

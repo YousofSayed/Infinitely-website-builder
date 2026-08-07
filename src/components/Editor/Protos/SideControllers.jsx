@@ -1,6 +1,6 @@
-import { addClickClass } from "../../../helpers/cocktail";
-import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
-import { SelectedBorder } from "./SelectedBorder";
+import { addClickClass } from "@/helpers/cocktail";
+import { useUpdateInputValue } from "@/hooks/useUpdateInputValue";
+import { SelectedBorder } from "@/components/Editor/Protos/SelectedBorder";
 
 export const SidesControllers = ({ option, setOption }) => {
 

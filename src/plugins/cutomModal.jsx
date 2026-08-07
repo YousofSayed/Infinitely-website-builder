@@ -1,11 +1,19 @@
-import React from "react";
-import { closeCustomModal, openCustomModal } from "../helpers/customEvents";
-import { AssetsManager } from "../components/Editor/AssetsManager";
-import { ErrorModal } from "../components/Editor/Modals/ErrorModal";
-import { PagesManager } from "../components/Editor/Modals/PagesManager";
-import { RestAPIModels } from "../components/Editor/Modals/RestAPIModels";
-import { DynamicTemplatesManager } from "../components/Editor/Modals/DynamicTemplatesManager";
-import { LibraryInstallerModal } from "../components/Editor/Modals/LibraryInstallerModal";
+import { AssetsManager } from "@/components/Editor/AssetsManager";
+import { CodeManagerModal } from "@/components/Editor/Modals/CodeManagerModal";
+import { CustomFontsModal } from "@/components/Editor/Modals/CustomFontsModal";
+import { DynamicTemplatesManager } from "@/components/Editor/Modals/DynamicTemplatesManager";
+import { ErrorModal } from "@/components/Editor/Modals/ErrorModal";
+import { FileEditorModal } from "@/components/Editor/Modals/FileEditorModal";
+import { LibraryInstallerModal } from "@/components/Editor/Modals/LibraryInstallerModal";
+import { PageHelmetModal } from "@/components/Editor/Modals/PageHelmetModal";
+import { PagesManager } from "@/components/Editor/Modals/PagesManager";
+import { RestAPIModels } from "@/components/Editor/Modals/RestAPIModels";
+import { SettingsModal } from "@/components/Editor/Modals/SettingsModal";
+import { SymbolCodeEditor } from "@/components/Editor/Modals/SymbolCodeEditor";
+import { SymbolsAndTemplatesManager } from "@/components/Editor/Modals/SymbolsAndTemplatesManager";
+import { WpCodeManagerModal } from "@/components/Editor/Modals/wordpress/CodeManagerModal";
+import { MediaManager } from "@/components/Editor/Modals/wordpress/MediaManager";
+import { Icons } from "@/components/Icons/Icons";
 import {
   open_code_manager_modal,
   open_custom_font_installer_modal,
@@ -18,18 +26,10 @@ import {
   open_settings_modal,
   open_symbol_code_editor_modal,
   open_symbols_and_templates_manager_modal,
-} from "../constants/InfinitelyCommands";
-import { CustomFontsModal } from "../components/Editor/Modals/CustomFontsModal";
-import { Icons } from "../components/Icons/Icons";
-import { SettingsModal } from "../components/Editor/Modals/SettingsModal";
-import { PageHelmetModal } from "../components/Editor/Modals/PageHelmetModal";
-import { CodeManagerModal } from "../components/Editor/Modals/CodeManagerModal";
-import { SymbolsAndTemplatesManager } from "../components/Editor/Modals/SymbolsAndTemplatesManager";
-import { FileEditorModal } from "../components/Editor/Modals/FileEditorModal";
-import { isWordpress } from "../helpers/functions";
-import { WpCodeManagerModal } from "../components/Editor/Modals/wordpress/CodeManagerModal";
-import { MediaManager } from "../components/Editor/Modals/wordpress/MediaManager";
-import { SymbolCodeEditor } from "../components/Editor/Modals/SymbolCodeEditor";
+} from "@/constants/InfinitelyCommands";
+import { closeCustomModal, openCustomModal } from "@/helpers/customEvents";
+import { isWordpress } from "@/helpers/functions";
+import React from "react";
 
 export const ModalTitle = ({ icon, title }) => {
   return (

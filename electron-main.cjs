@@ -1,42 +1,72 @@
-const { app, BrowserWindow } = require('electron');
-const path = require('path');
+const { app, BrowserWindow, session } = require("electron");
+const path = require("path");
+const fs = require("fs");
 // import {app , BrowserWindow} from 'electron'
 // import path from 'path'
 
-function createWindow() {
-  const win = new BrowserWindow({
-    width: 800,
-    height: 600,
-    icon: path.join(__dirname, 'public', 'icons', 'favicon.ico'),// process.platform === 'darwin' ? 'icon.icns' : 'icon.png'),
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      
-      preload: path.join(__dirname, 'preload.js'), // Optional, for IPC
-    },
-  });
+async function installOPFS_Ext() {
+  if (app.isPackaged) return;
 
-  // In development, load Vite's dev server
-  if (!app.isPackaged) {
-    win.loadURL('http://localhost:5173'); // Vite's default port
-  } else {
-    // In production, load the built index.html
-    win.loadFile(path.join(__dirname, 'dist', 'index.html'));
+  try {
+    const extPath = path.join(
+      process.env.LOCALAPPDATA,
+      "Microsoft",
+      "Edge",
+      "User Data",
+      "Default",
+      "Extensions",
+      "odbpcdmkgeikdcmcdlfmdkbjiaeknnbd",
+      "0.1.3_0",
+    );
+
+    const ext = await session.defaultSession.loadExtension(extPath, {
+      allowFileAccess: true,
+    });
+
+    console.log("Loaded:", ext.name);
+  } catch (err) {
+    console.error(err);
   }
 }
 
-app.whenReady().then(() => {
-  createWindow();
+async function createWindow() {
+  const win = new BrowserWindow({
+    width: 1400,
+    height: 900,
+    show: true,
+    backgroundColor: "#020617",
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false,
+    },
+  });
 
-  app.on('activate', () => {
+  await win.loadFile(path.join(__dirname, "splash.html"));
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  if (!app.isPackaged) {
+    await win.loadURL("https://127.0.0.1:5173");
+  } else {
+    await win.loadFile(path.join(__dirname, "dist", "index.html"));
+  }
+}
+
+app.whenReady().then(async () => {
+  await installOPFS_Ext();
+  await createWindow();
+
+  app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
     }
   });
 });
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
     app.quit();
   }
 });

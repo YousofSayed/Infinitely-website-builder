@@ -1,3 +1,5 @@
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
 import {
   current_dynamic_template_id,
   current_page_id,
@@ -7,8 +9,10 @@ import {
   current_template_id,
   inf_symbol_Id_attribute,
   mainScriptsForEditor,
-} from "../constants/shared";
-import { db } from "../helpers/db";
+} from "@/constants/shared";
+import { defineRoot, getPageURLException } from "@/helpers/bridge";
+import { changePageName } from "@/helpers/customEvents";
+import { db } from "@/helpers/db";
 import {
   getComponentRules,
   getInfinitelySymbolInfo,
@@ -18,22 +22,25 @@ import {
   reloadEditor,
   screenshotTimout,
   workerCallbackMaker,
-} from "../helpers/functions";
-import { InfinitelyEvents } from "../constants/infinitelyEvents";
-import { changePageName } from "../helpers/customEvents";
-import { infinitelyWorker } from "../helpers/infinitelyWorker";
+} from "@/helpers/functions";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
+import { opfs } from "@/helpers/initOpfs";
+import { initDBAssetsSw } from "@/serviceWorkers/initDBAssets-sw";
+import { updateThumbnailTimeout } from "@/plugins/updateProjectThumbnail";
 import { minify } from "csso";
-import { defineRoot, getPageURLException } from "../helpers/bridge";
-// import  "https://cdn.jsdelivr.net/npm/jest-leak-detector@29.7.0/build/index.js";
-
-// import { initDBAssetsSw } from "../serviceWorkers/initDBAssets-sw";
-import { opfs } from "../helpers/initOpfs";
-import { updateThumbnailTimeout } from "./updateProjectThumbnail";
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "../components/Editor/Protos/ToastMsgInfo";
 import { isFunction } from "lodash";
+import { toast } from "react-toastify";
 
-// import LeakDetector from "jest-leak-detector";
+// 
+
+// 
+
+
+
+
+
+
+// 
 
 let loadFooterScriptsCallback, loadHeadScriptsCallback, loadMainScriptsCallback;
 let storeTimeout;
@@ -44,7 +51,7 @@ let currentPageName = localStorage.getItem(current_page_id);
 /**
  *
  * @param {import('grapesjs').Editor} editor
- * @param {import('../helpers/types').Project} projectData
+ * @param {import('@/helpers/types').Project} projectData
  */
 const attrsCallback = (editor, projectData) => { 
   const { projectSettings } = getProjectSettings();
@@ -237,7 +244,7 @@ export const loadElements = async (
             //   attrsCallback(editor, projectData);
             // });
             editor.clearDirtyCount();
-            console.log("props : ", props);
+            console.log("parseHTMLAndRaplceSymbols props : ", props);
             res(props);
             onSend(
               [renderCssStyles(editor, cssCode), ...props.response],
@@ -687,7 +694,7 @@ export const renderCssStyles = (editor, cssCode) => {
 /**
  *
  * @param {import('grapesjs').Editor } editor
- * @param {import('../helpers/types').Project } projectData
+ * @param {import('@/helpers/types').Project } projectData
  */
 export const loadScripts = async (editor, projectData) => {
   const currentPageName = localStorage.getItem(current_page_id);
@@ -719,7 +726,7 @@ export const loadScripts = async (editor, projectData) => {
 
     /**
      *
-     * @param {import('../helpers/types').LibraryConfig} lib
+     * @param {import('@/helpers/types').LibraryConfig} lib
      * @returns
      */
     const getJsLib = (lib) => {
@@ -737,7 +744,7 @@ export const loadScripts = async (editor, projectData) => {
 
     /**
      *
-     * @param {import('../helpers/types').LibraryConfig} lib
+     * @param {import('@/helpers/types').LibraryConfig} lib
      * @returns
      */
     const getCssLib = (lib) => {
@@ -897,9 +904,9 @@ export const loadScripts = async (editor, projectData) => {
     //   ...mainScriptsForEditor,
     // ];
     /**
-     * @param {import('../helpers/types').LibraryConfig[] & Blob[] & string[]} array
+     * @param {import('@/helpers/types').LibraryConfig[] & Blob[] & string[]} array
      * @param {number} index
-     * @param {(script: HTMLScriptElement, lib: import('../helpers/types').LibraryConfig & Blob & string) => void} callback
+     * @param {(script: HTMLScriptElement, lib: import('@/helpers/types').LibraryConfig & Blob & string) => void} callback
      * @returns {Promise<boolean>}
      */
     const appendScript = async (

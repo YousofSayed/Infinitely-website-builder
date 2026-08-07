@@ -1,14 +1,14 @@
+import { cssToDataURL, jsToDataURL } from "@/helpers/functions";
+import { filesListType, JSLibrariesType } from "@/helpers/jsDocs";
+import { Icons } from "@/components/Icons/Icons";
+import { Button } from "@/components/Protos/Button";
+import { Input } from "@/components/Editor/Protos/Input";
+import { JsLibrary } from "@/components/Editor/Protos/JsLibrary";
+import { Select } from "@/components/Editor/Protos/Select";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import React, { useEffect, useRef, useState } from "react";
-import { JsLibrary } from "./JsLibrary";
-import { Input } from "./Input";
-import { Button } from "../../Protos/Button";
-import { filesListType, JSLibrariesType } from "../../../helpers/jsDocs";
-import { cssToDataURL, jsToDataURL } from "../../../helpers/functions";
-import { Icons } from "../../Icons/Icons";
 import { toast } from "react-toastify";
-import { ToastMsgInfo } from "./ToastMsgInfo";
 import { Virtuoso } from "react-virtuoso";
-import { Select } from "./Select";
 
 export const LibraryUploader = () => {
   const inputFileRef = useRef();

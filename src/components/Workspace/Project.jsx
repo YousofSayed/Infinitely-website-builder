@@ -1,45 +1,45 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import blankImg from "../../assets/images/blank.jpg";
-import { Li } from "../Protos/Li";
-import { Icons } from "../Icons/Icons";
-import { db } from "../../helpers/db";
-import { useNavigate } from "react-router-dom";
+import {
+  wp_delete_option,
+  wp_get_option,
+  wp_update_option,
+} from "@/apps/wordpress/functions";
+import { wp_toast_handler } from "@/apps/wordpress/functions_ui";
+import blankImg from "@/assets/images/blank.jpg";
 import {
   app_type,
   current_dynamic_template_id,
   current_page_id,
   current_project_id,
   wp_meta,
-} from "../../constants/shared";
-import { infinitelyWorker } from "../../helpers/infinitelyWorker";
-import { getProjectSettings } from "../../helpers/functions";
-import { useRecoilState } from "recoil";
+} from "@/constants/shared";
 import {
   currentWpPageNameState,
   dbAssetsSwState,
   isProjectInitedState,
-} from "../../helpers/atoms";
-import { opfs } from "../../helpers/initOpfs";
-import { toast } from "react-toastify";
-import { getProjectRoot } from "../../helpers/bridge";
-import { random, uniqueId } from "lodash";
+} from "@/helpers/atoms";
+import { getProjectRoot } from "@/helpers/bridge";
+import { uniqueID } from "@/helpers/cocktail";
+import { db } from "@/helpers/db";
+import { checkDropBoxSignInState } from "@/helpers/dropboxHandlers";
+import { getProjectSettings } from "@/helpers/functions";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
+import { opfs } from "@/helpers/initOpfs";
+import { refType } from "@/helpers/jsDocs";
+import { projectsImagesObserver } from "@/observers/projectsImagesObserver";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { Icons } from "@/components/Icons/Icons";
+import { Li } from "@/components/Protos/Li";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { uniqueID } from "../../helpers/cocktail";
-import { ToastMsgInfo } from "../Editor/Protos/ToastMsgInfo";
-import { checkDropBoxSignInState } from "../../helpers/dropboxHandlers";
-import { refType } from "../../helpers/jsDocs";
-import { projectsImagesObserver } from "../../observers/projectsImagesObserver";
-import {
-  wp_delete_option,
-  wp_get_option,
-  wp_update_option,
-} from "../../Apps/wordpress/functions";
-import { wp_toast_handler } from "../../Apps/wordpress/functions_ui";
+import { random, uniqueId } from "lodash";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { useRecoilState } from "recoil";
 
 // million-ignore
 /**
  *
- * @param {{project : import('../../helpers/types').Project}} param0
+ * @param {{project : import('@/helpers/types').Project}} param0
  * @returns
  */
 export const Project = ({ project }) => {

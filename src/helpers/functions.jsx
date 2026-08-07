@@ -1,26 +1,18 @@
-import { Icons } from "../components/Icons/Icons";
-import { filterUnits } from "../constants/cssProps";
+import { Icons } from "@/components/Icons/Icons";
+import { dynamic_container, dynamic_text } from "@/constants/cmpsTypes";
+import { filterUnits } from "@/constants/cssProps";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
 import {
-  addClickClass,
-  css,
-  hash,
-  html,
-  parse,
-  random,
-  uniqueID,
-} from "./cocktail";
-import { dynamic_container, dynamic_text } from "../constants/cmpsTypes";
-import {
-  projectDataType,
-  projectSettingsType,
-  refType,
-  restModelType,
-} from "./jsDocs";
+  editorStorageInstance,
+  reloadRequiredInstance,
+} from "@/constants/InfinitelyInstances";
+import { jsURLRgx } from "@/constants/rgxs";
 import {
   app_type,
   current_page_id,
   current_project_id,
   current_symbol_rule,
+  editorComponentProps,
   global_settings,
   gsap_animation_state,
   inf_bridge_id,
@@ -37,30 +29,53 @@ import {
   wp_edite_mode,
   wp_page_config,
   wp_rest_base_edite,
-} from "../constants/shared";
-import { InfinitelyEvents } from "../constants/infinitelyEvents";
-import { db } from "./db";
-import html2canvas from "html2canvas-pro";
-import { jsURLRgx } from "../constants/rgxs";
+} from "@/constants/shared";
+import { loadElements } from "@/plugins/IDB";
+import { createReusableCmpTool } from "@/plugins/tools/createReusableCmpTool";
+import { createSymbolTool } from "@/plugins/tools/createSymbolTool";
+import { killGsapMotionTool } from "@/plugins/tools/killGsapMotion";
+import { mountAppTool } from "@/plugins/tools/mountAppTool";
+import { runGsapMotionTool } from "@/plugins/tools/runGsapMotionTool";
+import { symbolCodeEditor } from "@/plugins/tools/symbolCodeEditor";
+import { unMountAppTool } from "@/plugins/tools/unMountAppTool";
+import {
+  buildInteractionsAttributes,
+  cleanMotions,
+  cloneMotion,
+  defineRoot,
+  filterMotionsByPage,
+} from "@/helpers/bridge";
+import {
+  addClickClass,
+  css,
+  hash,
+  html,
+  parse,
+  random,
+  uniqueID,
+} from "@/helpers/cocktail";
 import {
   killAllGsapMotions,
   pvMount,
   pvUnMount,
   runAllGsapMotions,
-} from "./customEvents";
-import serializeJavascript from "serialize-javascript";
+} from "@/helpers/customEvents";
+import { db } from "@/helpers/db";
 import {
   fetcherWorker,
   keyframesGetterWorker,
+  offlineInstallerWorker,
   pageBuilderWorker,
-} from "./defineWorkers";
-import { mountAppTool } from "../plugins/tools/mountAppTool";
-import { unMountAppTool } from "../plugins/tools/unMountAppTool";
-import { runGsapMotionTool } from "../plugins/tools/runGsapMotionTool";
-import { killGsapMotionTool } from "../plugins/tools/killGsapMotion";
-import { createReusableCmpTool } from "../plugins/tools/createReusableCmpTool";
-import { createSymbolTool } from "../plugins/tools/createSymbolTool";
-import { infinitelyWorker } from "./infinitelyWorker";
+} from "@/helpers/defineWorkers";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
+import {
+  projectDataType,
+  projectSettingsType,
+  refType,
+  restModelType,
+} from "@/helpers/jsDocs";
+import { minify } from "csso";
+import html2canvas from "html2canvas-pro";
 import {
   isFunction,
   isPlainObject,
@@ -68,19 +83,10 @@ import {
   random as _random,
   cloneDeep,
 } from "lodash";
-import {
-  buildInteractionsAttributes,
-  cleanMotions,
-  cloneMotion,
-  filterMotionsByPage,
-} from "./bridge";
-import { loadElements } from "../plugins/IDB";
-import {
-  editorStorageInstance,
-  reloadRequiredInstance,
-} from "../constants/InfinitelyInstances";
-import { minify } from "csso";
-import { symbolCodeEditor } from "../plugins/tools/symbolCodeEditor";
+import serializeJavascript from "serialize-javascript";
+import { toast } from "react-toastify";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+
 export {
   replaceBlobs,
   base64ToBlob,
@@ -89,7 +95,7 @@ export {
   buildGsapMotionsScript,
   getScripts,
   getStyles,
-} from "./bridge";
+} from "@/helpers/bridge";
 
 export const isValidCssUnit = (value) => {
   // Updated regex to match valid CSS units, calc(), or var(), but not single numbers
@@ -1186,7 +1192,7 @@ function transformJSONObjToHSObject(
 
 /**
  *
- * @param {import('./types').CMD[]} cmds
+ * @param {import('@/helpers/types').CMD[]} cmds
  */
 export function buildScriptFromCmds(cmds) {
   const clone = structuredClone(cmds);
@@ -1247,7 +1253,7 @@ export function buildScriptFromCmds(cmds) {
 
 /**
  *
- * @param {import('./types').CMD[]} cmds
+ * @param {import('@/helpers/types').CMD[]} cmds
  */
 export function parseCmds(cmds) {
   const script = buildScriptFromCmds(cmds);
@@ -1326,7 +1332,7 @@ export function parseCmds(cmds) {
 
 /**
  *
- * @param {import('./types').RestAPIModel[]} restModels
+ * @param {import('@/helpers/types').RestAPIModel[]} restModels
  * @param {string} valueToView
  * @returns
  */
@@ -1357,7 +1363,7 @@ export function viewDynamicContent(restModels = [], valueToView = "") {
 
 /**
  *
- * @param {import('./types').CMD[]} cmds
+ * @param {import('@/helpers/types').CMD[]} cmds
  */
 export function parseCmdsFromCMDS(cmds) {
   const vars = {},
@@ -1466,8 +1472,8 @@ export const getModelResAndKeys = (models = restModelType) => {
 /**
  *
  * @param {import('grapesjs').Editor} editor
- * @param {import('./types').ProjectData} currentprojectData
- * @param {(previousProjectData : import('./types').ProjectData )=>import('./types').ProjectData} projectData
+ * @param {import('@/helpers/types').ProjectData} currentprojectData
+ * @param {(previousProjectData : import('@/helpers/types').ProjectData )=>import('@/helpers/types').ProjectData} projectData
  */
 export function storeProjectData(
   editor,
@@ -1599,34 +1605,49 @@ export function initSymbol(id, editor) {
           const parsedNewContent = JSON.parse(newContent);
 
           const newSymbol = symbol.replaceWith(parsedNewContent, {})[0];
-          newSymbol.set({...selectedProps});
-          editor
-            .getWrapper()
-            .find(`[${inf_symbol_Id_attribute}="${id}"]`)
-            .forEach((cmp) => {
-              cmp.set({ ...selectedProps });
-            });
+          // newSymbol.set({
+          //   ...Object.fromEntries(
+          //     editorComponentProps.map((prop) => [prop, selectedProps[prop]]),
+          //   ),
+          // });
 
-          wpWorkerCallbackMaker(
-            offlineInstallerWorker,
-            "writeFilesToOPFS",
-            {
-              files: {
-                path: defineRoot(`temp/symbols/${id}/html.json`),
-                content: JSON.stringify(parsedNewContent),
-              },
-            },
-            (props) => {
-              console.log(
-                "file writing response from functions.js symbols replacer (initSymbol) callback",
-                props,
-              );
-            },
-          );
+          editorComponentProps.forEach((eProp) => {
+            newSymbol.set(eProp, selectedProps[eProp]);
+          });
+
+          // editor
+          //   .getWrapper()
+          //   .find(`[${inf_symbol_Id_attribute}="${id}"]`)
+          //   .forEach((cmp) => {
+          //     cmp.set({ ...selectedProps });
+          //   });
+
           console.log("Replaced");
           // symbol.replaceWith(regenerateSymbol(JSON.parse(newContent)));
           // symbol.set('content', regenerateSymbol(JSON.parse(newContent)));
         }
+      });
+
+      doInWordpress(() => {
+        wpWorkerCallbackMaker(
+          offlineInstallerWorker,
+          "writeFilesToOPFS",
+          {
+            files: [
+              {
+                path: defineRoot(`temp/symbols/${id}/html.json`),
+                content: newContent,
+              },
+            ],
+          },
+          (props) => {
+            console.log(
+              "file writing response from functions.js symbols replacer (initSymbol) callback",
+              props,
+            );
+            editor.trigger("block:update");
+          },
+        );
       });
       // selectedCmp.on("change:attributes", (change)=>{
       //   console.log('change : ' , change);
@@ -1647,7 +1668,7 @@ export function initSymbol(id, editor) {
 
 /**
  *
- * @param {import('./types').JSONComponent} cmp
+ * @param {import('@/helpers/types').JSONComponent} cmp
  */
 export function regenerateSymbol(cmp) {
   cmp.type != "textnode" && (cmp.attributes.id = uniqueID());
@@ -1746,6 +1767,10 @@ export function getCurrentSelector(selector, cmp) {
   return currentSelector;
 }
 
+/**
+ * 
+ * @returns {Promise<(import("@/helpers/types").Project & import("@/helpers/types").WpProject)}
+ */
 export async function getProjectData() {
   const projectId = +localStorage.getItem(current_project_id);
   return await db.projects.get(projectId);
@@ -1793,7 +1818,7 @@ export function getDynamicComponentInfo(component) {
  */
 export function getGlobalSettings() {
   /**
-   * @type {import('./types').GlobalSettings}
+   * @type {import('@/helpers/types').GlobalSettings}
    */
   const globalSettings = JSON.parse(
     localStorage.getItem(global_settings) ||
@@ -1807,7 +1832,7 @@ export function getGlobalSettings() {
     globalSettings,
     /**
      *
-     * @param {import('./types').GlobalSettings} newData
+     * @param {import('@/helpers/types').GlobalSettings} newData
      */
     set(newData) {
       localStorage.setItem(
@@ -1852,7 +1877,7 @@ export function setProjectSettings() {
 export function getProjectSettings() {
   setProjectSettings();
   /**
-   * @type {import('./types').ProjectSetting}
+   * @type {import('@/helpers/types').ProjectSetting}
    */
   const projectSettings = JSON.parse(
     localStorage.getItem(project_settings) ||
@@ -1867,7 +1892,7 @@ export function getProjectSettings() {
     projectSettings,
     /**
      *
-     * @param {import('./types').ProjectSetting} newData
+     * @param {import('@/helpers/types').ProjectSetting} newData
      */
     set(newData) {
       localStorage.setItem(
@@ -1883,9 +1908,9 @@ export function getProjectSettings() {
 
 /**
  *
- * @param {keyof import('./types').ProjectSetting} prop
- * @param {(projectSettings :import('./types').ProjectSetting, set:(newData : import('./types').ProjectSetting))=>void} resolve
- * @param {(projectSettings :import('./types').ProjectSetting, set:(newData : import('./types').ProjectSetting))=>void} reject
+ * @param {keyof import('@/helpers/types').ProjectSetting} prop
+ * @param {(projectSettings :import('@/helpers/types').ProjectSetting, set:(newData : import('@/helpers/types').ProjectSetting))=>void} resolve
+ * @param {(projectSettings :import('@/helpers/types').ProjectSetting, set:(newData : import('@/helpers/types').ProjectSetting))=>void} reject
  */
 export function isProjectSettingPropTrue(
   prop,
@@ -1912,7 +1937,7 @@ export function debounce(callback, delay) {
 
 export function getGlobalSymbolRuleInfo() {
   /**
-   * @type {import('./types').GlobalSymbolRule}
+   * @type {import('@/helpers/types').GlobalSymbolRule}
    */
   const globalSymbolRuleInfo = JSON.parse(
     sessionStorage.getItem(current_symbol_rule) || "{}",
@@ -1954,7 +1979,7 @@ export function jsonToHtml(components) {
 
 /**
  *
- * @param {import('./types').TraitCallback} callback
+ * @param {import('@/helpers/types').TraitCallback} callback
  */
 export function traitCallback(
   callback = ({ editor, newValue, oldValue, trait }) => {},
@@ -1964,7 +1989,7 @@ export function traitCallback(
 
 /**
  *
- * @param {import('./types').InfinitelyTrait[]} traits
+ * @param {import('@/helpers/types').InfinitelyTrait[]} traits
  */
 export function defineTraits(traits) {
   return traits;
@@ -2027,7 +2052,7 @@ export async function parseInfinitelyURL(url = "", specificFolder) {
 /**
  *
  * @param {string} url
- * @param {import('./types').InfinitelyAsset[] & import('./types').InfinitelyFonts} assets
+ * @param {import('@/helpers/types').InfinitelyAsset[] & import('@/helpers/types').InfinitelyFonts} assets
  * @returns
  */
 export function parseInfinitelyURLForWindow(url = "", assets) {
@@ -2799,7 +2824,7 @@ export function getProject() {
 /**
  *
  * @param {Blob | File} file
- * @param {import('./types').Project} data
+ * @param {import('@/helpers/types').Project} data
  * @param {number} projectId
  * @param {boolean} isUpdate
  */
@@ -2904,8 +2929,8 @@ export async function detectGlobalsSandbox(url) {
 /**
  *
  * @param {{
- * data : import('./types').Project ,
- * projectSetting:import('./types').ProjectSetting,
+ * data : import('@/helpers/types').Project ,
+ * projectSetting:import('@/helpers/types').ProjectSetting,
  * projectId : number ,
  * pageName:string,
  * editorData: { canvasCss:string , editorCss:string },
@@ -2921,9 +2946,9 @@ export function updatePrevirePage(props) {
 /**
  *
  * @param {{
- *  data : import('./types').Project,
+ *  data : import('@/helpers/types').Project,
  *  files : {},
- *  projectSetting : import('./types').ProjectSetting,
+ *  projectSetting : import('@/helpers/types').ProjectSetting,
  *  tailwindcssStyle : string,
  *  pageName:string,
  *  updatePreviewPages : boolean,
@@ -2960,9 +2985,9 @@ export function saveProjectByWorker(props, onDone) {
 /**
  *
  * @param {{
- *  data : import('./types').Project,
+ *  data : import('@/helpers/types').Project,
  *  files : {},
- *  projectSetting : import('./types').ProjectSetting,
+ *  projectSetting : import('@/helpers/types').ProjectSetting,
  *  tailwindcssStyle : string,
  *  pageName:string,
  *  updatePreviewPages : boolean,
@@ -3203,10 +3228,67 @@ export function workerCallbackMaker(
 }
 
 /**
- *
+ * Source of truth: the exact object registered with the worker.
+ * Adjust this import to wherever `export const wpCommands = {...}` actually lives.
+ * @typedef {  typeof import('@/helpers/worker').commands  & typeof import('@/helpers/assetsWorker').commands &  typeof import('@/helpers/fetcherWorker').commands & typeof import('@/helpers/classesFinderWorker').commands & typeof import('@/helpers/keyframesGetterWorker').commands & typeof import('@/helpers/offlineInstallerWorker').commands & typeof import('@/helpers/pageBuilderWorker').commands & typeof import('@/helpers/refresherWorker').commands & typeof import('@/helpers/swRefresherWorker').commands} Commands
+ */
+
+/**
+ * @template {keyof Commands} K
  * @param {Worker} worker
- * @param {import('./types').WpCommands} commandCallback
- * @param {(props : {})=>void} callback
+ * @param {K} commandCallback
+ * @param {Parameters<Commands[K]>[0]} props
+ * @param {(props: Parameters<Commands[K]>[0]) => (any | Promise<any>)} [resCallback]
+ * @returns {Promise<Awaited<ReturnType<Commands[K]>>>}
+ */
+export function workerCallbackMakerWithProps(
+  worker,
+  commandCallback,
+  props,
+  resCallback = (props) => {},
+  { timeout = 5000 } = {},
+) {
+  const uuid = uniqueId(`_send_worker_id-${uniqueID()}-`);
+  worker.postMessage({
+    _send_worker_id: uuid,
+    command: commandCallback,
+    props,
+  });
+  console.log("worker should send", commandCallback, uuid);
+
+  const callbackWorker = async (ev) => {
+    const data = ev?.data ?? {};
+    const { command, msg, props } = data;
+    const identifier = command ?? msg;
+
+    console.log("worker message received:", {
+      command,
+      msg,
+      expected: commandCallback,
+      identifier,
+    });
+
+    if (identifier === commandCallback && data._send_worker_id === uuid) {
+      console.log("matched, props:", props);
+      // clearTimeout(timeoutId);
+      try {
+        await resCallback(props);
+      } finally {
+        worker.removeEventListener("message", callbackWorker);
+      }
+    }
+  };
+
+  worker.addEventListener("message", callbackWorker);
+}
+
+/**
+ * @template {keyof Commands} K
+ * @param {Worker} worker
+ * @param {K} commandCallback
+ * @param {Parameters<Commands[K]>[0]} props
+ * @param {(props: Parameters<Commands[K]>[0]) => (any | Promise<any>)} [resCallback]
+ * @returns {Promise<Awaited<ReturnType<Commands[K]>>>}
  */
 export function wpWorkerCallbackMaker(
   worker,
@@ -3252,7 +3334,7 @@ export function wpWorkerCallbackMaker(
 /**
  *
  * @param {Worker} worker
- * @param {import('./types').WpCommands} commandCallback
+ * @param {import('@/helpers/types').WpCommands} commandCallback
  * @param {(props : {})=>void} callback
  */
 export function wpWorkerCallbackListener(
@@ -3290,6 +3372,57 @@ export function wpWorkerCallbackListener(
   };
 
   worker.addEventListener("message", callbackWorker);
+}
+
+/**
+ * Source of truth: the exact object registered with the worker.
+ * Adjust this import to wherever `export const wpCommands = {...}` actually lives.
+ * @typedef {typeof import("@/helpers/wp_commands_worker").wpCommands} WpCommands
+ */
+
+/**
+ * @template {keyof WpCommands} K
+ * @param {Worker} worker
+ * @param {K} command
+ * @param {Parameters<WpCommands[K]>[0]} props
+ * @param {(props: Parameters<WpCommands[K]>[0]) => (any | Promise<any>)} [localFallback]
+ * @returns {Promise<Awaited<ReturnType<WpCommands[K]>>>}
+ */
+export function callWorkerCommand(worker, command, props, localFallback) {
+  if (isNormal()) {
+    if (!isFunction(localFallback)) {
+      return Promise.reject(
+        new Error(
+          `callWorkerCommand: "${command}" has no local fallback for normal mode`,
+        ),
+      );
+    }
+    return Promise.resolve().then(() => localFallback(props));
+  }
+
+  return new Promise((resolve, reject) => {
+    wpWorkerCallbackMaker(worker, command, props, (resProps) => {
+      if (resProps?.done) {
+        resolve(resProps.res);
+      } else {
+        reject(
+          resProps?.error
+            ? Object.assign(new Error(resProps.error.message), resProps.error)
+            : new Error(`${command} failed with no error payload`),
+        );
+      }
+    });
+  });
+}
+
+/**
+ * @template {keyof WpCommands} K
+ * @param {Worker} worker
+ * @param {K} command
+ * @returns {(props: Parameters<WpCommands[K]>[0]) => Promise<Awaited<ReturnType<WpCommands[K]>>>}
+ */
+export function createWpMutationFn(worker, command) {
+  return (props) => callWorkerCommand(worker, command, props);
 }
 
 export function deleteAttributesInAllPages(
@@ -3578,7 +3711,7 @@ export function getCurrentStorageType() {
 
 /**
  *
- * @returns {import('./types').WpPage}
+ * @returns {import('@/helpers/types').WpPage}
  */
 export function getWpPageConfig() {
   return JSON.parse(localStorage.getItem(wp_page_config) || "{}");
@@ -3604,24 +3737,45 @@ export function isNormal() {
 
 export function doInWordpress(callback = () => {}) {
   if (isWordpress()) {
-    return callback();
+    try {
+      return callback();
+    } catch (error) {
+      console.error(error);
+      toast.error(<ToastMsgInfo msg={error.message} />);
+    }
   }
 }
 
 export async function doInWordpressAsync(callback = () => {}) {
   if (isWordpress()) {
-    return await callback();
+    // return await callback();
+    try {
+      return await callback();
+    } catch (error) {
+      console.error(error);
+      toast.error(<ToastMsgInfo msg={error.message} />);
+    }
   }
 }
 
 export function doInNormal(callback = () => {}) {
   if (isNormal()) {
-    return callback();
+    try {
+      return callback();
+    } catch (error) {
+      console.error(error);
+      toast.error(<ToastMsgInfo msg={error.message} />);
+    }
   }
 }
 export async function doInNormalAsync(callback = () => {}) {
   if (isNormal()) {
-    return await callback();
+    try {
+      return await callback();
+    } catch (error) {
+      console.error(error);
+      toast.error(<ToastMsgInfo msg={error.message} />);
+    }
   }
 }
 
@@ -3694,6 +3848,10 @@ export const emitChange = () => {
   });
 };
 
+/**
+ *
+ * @returns {import("@/helpers/types").AppType}
+ */
 export function getAppType() {
   const app_type_name = localStorage.getItem(app_type);
 
@@ -3706,4 +3864,25 @@ export function getLogoAppNavLink() {
   } else if (isWordpress()) {
     return "/wordpress/select";
   }
+}
+
+/**
+ *
+ * @param {import('grapesjs').Editor} editor
+ * @param {import('grapesjs').Component} cmp
+ */
+export function triggerSymbolEvent(editor, cmp) {
+  const symbolInfo = getInfinitelySymbolInfo(cmp);
+  if (symbolInfo.isSymbol) {
+    editor.trigger(
+      `${InfinitelyEvents.symbols.update}:${symbolInfo.mainId}`,
+      symbolInfo.mainId,
+      symbolInfo.symbol,
+      JSON.stringify(symbolInfo.symbol),
+    );
+  }
+}
+
+export function getProjectId() {
+  return +localStorage.getItem(current_project_id) || null;
 }

@@ -1,3 +1,32 @@
+import {
+  buildScripts,
+  inf_build_url,
+  inf_symbol_Id_attribute,
+  loading_project_msg,
+  motionId,
+  project_faild_build_msg,
+  project_successfully_build_msg,
+} from "@/constants/shared";
+import {
+  buildGsapMotionsScript,
+  chunkHtmlElements,
+  cleanMotions,
+  defineFontFace,
+  defineRoot,
+  doDocument,
+  filterMotionsByPage,
+  html,
+  minifyBlobJSAndCssStream,
+  replaceBlobs,
+} from "@/helpers/bridge";
+import { db } from "@/helpers/db";
+import { opfs } from "@/helpers/initOpfs";
+import { workerSendToast } from "@/helpers/workerCommands";
+import { html_beautify } from "js-beautify";
+import JSZip from "jszip";
+import { parseHTML } from "linkedom";
+import { cloneDeep, cloneDeepWith, isPlainObject, uniqueId } from "lodash";
+
 /**
  * /
  * /index.html
@@ -17,38 +46,19 @@
  */
 
 /**
- * @typedef  {import('./types')} Types
+ * @typedef  {import('@/helpers/types')} Types
  */
 
-// import JSZip from "jszip";
-import { db } from "./db";
-import {
-  buildGsapMotionsScript,
-  chunkHtmlElements,
-  cleanMotions,
-  defineFontFace,
-  defineRoot,
-  doDocument,
-  filterMotionsByPage,
-  html,
-  minifyBlobJSAndCssStream,
-  replaceBlobs,
-} from "./bridge";
-// import { parseHTML } from "linkedom";
-import {
-  buildScripts,
-  inf_build_url,
-  inf_symbol_Id_attribute,
-  loading_project_msg,
-  motionId,
-  project_faild_build_msg,
-  project_successfully_build_msg,
-} from "../constants/shared";
-import { cloneDeep, cloneDeepWith, isPlainObject, uniqueId } from "lodash";
-import { workerSendToast } from "./workerCommands";
-import { opfs } from "./initOpfs";
-import { html_beautify } from "js-beautify";
-import { parseHTML } from "linkedom";
+// 
+
+
+// 
+
+
+
+
+
+
 
 /**
  * @type {{[key:string]:string[]}}
@@ -57,7 +67,7 @@ let exportTimeout;
 
 /**
  *
- * @param {{asJson:boolean , projectId:number , toastId:string, projectSetting : import('./types').ProjectSetting}} props
+ * @param {{asJson:boolean , projectId:number , toastId:string, projectSetting : import('@/helpers/types').ProjectSetting}} props
  */
 export async function buildProject(props) {
   const JSZip = (await import("jszip")).default;
@@ -544,7 +554,7 @@ export async function buildProject(props) {
 
 /**
  *
- * @param {{asJson:boolean , projectId:number , toastId:string, projectSetting : import('./types').ProjectSetting}} props
+ * @param {{asJson:boolean , projectId:number , toastId:string, projectSetting : import('@/helpers/types').ProjectSetting}} props
  */
 export const getProject = async (props) => {
   const projectData = await db.projects.get(props.projectId);
@@ -565,7 +575,7 @@ export const getProject = async (props) => {
 
 /**
  *
- * @param {{asJson:boolean , projectId:number , toastId:string, projectSetting : import('./types').ProjectSetting}} props
+ * @param {{asJson:boolean , projectId:number , toastId:string, projectSetting : import('@/helpers/types').ProjectSetting}} props
  */
 export const exportProject = async (props) => {
   const toastId = uniqueId("toast-");
@@ -629,8 +639,8 @@ export const exportProject = async (props) => {
 /**
  *
  * @param {{
- * projectData : import('./types').Project ,
- * page:import('./types').InfinitelyPage ,
+ * projectData : import('@/helpers/types').Project ,
+ * page:import('@/helpers/types').InfinitelyPage ,
  * grapHeaderScripts:boolean ,
  * grapeFooterScripts:boolean ,
  * isHeaderGrapedAsync:boolean ,
@@ -640,7 +650,7 @@ export const exportProject = async (props) => {
  * grapStyles:boolean ,
  * disablePvue:boolean,
  * urlException : boolean,
- * projectSetting : import('./types').ProjectSetting
+ * projectSetting : import('@/helpers/types').ProjectSetting
  * }} param0
  * @returns
  */
@@ -765,7 +775,7 @@ async function buildPage({
     ).text();
   }
   // const dv = await (
-  //   await import("../constants/directivesAttributes")
+  //   await import("@/constants/directivesAttributes")
   // ).directivesAttributes;
 
   //  document
@@ -889,7 +899,7 @@ async function buildPage({
 
 /**
  *
- * @param {import('../helpers/types').InfinitelyFonts} fonts
+ * @param {import('@/helpers/types').InfinitelyFonts} fonts
  */
 function buildFontFaces(fonts) {
   const values = Object.values(fonts)
@@ -910,7 +920,7 @@ function buildFontFaces(fonts) {
 
 /**
  *
- * @param {{motions : {[key:string] : import('./types').MotionType} , pages : {[key:string]:import('./types').InfinitelyPage} , projectSetting : import('./types').ProjectSetting}}} param0
+ * @param {{motions : {[key:string] : import('@/helpers/types').MotionType} , pages : {[key:string]:import('@/helpers/types').InfinitelyPage} , projectSetting : import('@/helpers/types').ProjectSetting}}} param0
  */
 
 // function buildMotionScripts({ motions, pages, projectSetting }) {

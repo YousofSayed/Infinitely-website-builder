@@ -1,5 +1,5 @@
+import { generateBeautifulHexColor } from "@/helpers/functions";
 import React from "react";
-import { generateBeautifulHexColor } from "../../helpers/functions";
 
 export const Hint = ({children}) => {
   return (

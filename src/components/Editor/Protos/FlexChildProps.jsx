@@ -1,6 +1,6 @@
+import { Property } from "@/components/Editor/Protos/Property";
+import { SelectStyle } from "@/components/Editor/Protos/SelectStyle";
 import React from "react";
-import { Property } from "./Property";
-import { SelectStyle } from "./SelectStyle";
 
 export const FlexChildProps = () => {
   return (

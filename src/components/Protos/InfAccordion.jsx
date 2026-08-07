@@ -1,4 +1,9 @@
-import { Accordion, AccordionItem } from "@heroui/accordion";
+// NOTE: "@heroui/accordion" was never an installed dependency (not in package.json) - this is a
+// leftover/incorrect import. Swapped to this project's own local Accordion/AccordionItem components.
+// CAVEAT: the local components do NOT support the variant/itemClasses styling props used below -
+// those props will be silently ignored, which will change this component's visual appearance.
+import { Accordion } from "@/components/Protos/Accordion";
+import { AccordionItem } from "@/components/Protos/AccordionItem";
 import React, { memo } from "react";
 
 export const InfAccordion = ({attributes = {} , children }) => {

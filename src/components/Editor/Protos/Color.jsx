@@ -1,12 +1,12 @@
+import { currentElState } from "@/helpers/atoms";
+import { hexToRgbA, rgbStringToHex } from "@/helpers/functions";
+import { useCloseMenu } from "@/hooks/useCloseMenu";
+import { useSetClassForCurrentEl } from "@/hooks/useSetclassForCurrentEl";
+import { useUpdateInputValue } from "@/hooks/useUpdateInputValue";
+import { ColorPicker } from "@/components/Editor/Protos/ColorPicker";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
 import React, { memo, useEffect, useRef, useState, useTransition } from "react";
-import { hexToRgbA, rgbStringToHex } from "../../../helpers/functions";
-import { useSetClassForCurrentEl } from "../../../hooks/useSetclassForCurrentEl";
-import { useCloseMenu } from "../../../hooks/useCloseMenu";
-import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
 import { useRecoilValue } from "recoil";
-import { currentElState } from "../../../helpers/atoms";
-import { ColorPicker } from "./ColorPicker";
-import { FitTitle } from "./FitTitle";
 
 //million-ignore
 /**

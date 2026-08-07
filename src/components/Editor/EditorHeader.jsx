@@ -1,17 +1,21 @@
-import React, { memo, useEffect, useRef, useState } from "react";
-import { Icons } from "../Icons/Icons";
-import { Li } from "../Protos/Li";
-import { IframeControllers } from "./Protos/IframeControllers";
-import { useEditorMaybe } from "@grapesjs/react";
-import { Input } from "./Protos/Input";
 import {
-  addClickClass,
-  createBlobFileAs,
-  html,
-  transformToNumInput,
-  uniqueID,
-} from "../../helpers/cocktail";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+  wp_connect,
+  wp_get,
+  wp_get_posts_with_inf_meta,
+  wp_get_single,
+  wp_update_media,
+  wp_update_media_files,
+  wp_update_meta,
+  wp_update_option,
+  wp_update_single,
+  wp_update_symbols,
+  wp_write_files,
+} from "@/apps/wordpress/functions";
+import { wp_get_post_id } from "@/apps/wordpress/functions_ui";
+import { open_code_manager_modal } from "@/constants/InfinitelyCommands";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { editorContainerInstance } from "@/constants/InfinitelyInstances";
+import { current_project_id, inf_symbol_Id_attribute, preview_url } from "@/constants/shared";
 import {
   animationsState,
   asideControllersNotifiresState,
@@ -23,7 +27,17 @@ import {
   previewContentState,
   showPreviewState,
   zoomValueState,
-} from "../../helpers/atoms";
+} from "@/helpers/atoms";
+import { wp_preview_bc } from "@/helpers/channels";
+import {
+  addClickClass,
+  createBlobFileAs,
+  html,
+  transformToNumInput,
+  uniqueID,
+} from "@/helpers/cocktail";
+import { db } from "@/helpers/db";
+import { fetcherWorker, offlineInstallerWorker, pageBuilderWorker } from "@/helpers/defineWorkers";
 import {
   buildGsapMotionsScript,
   buildScriptFromCmds,
@@ -43,46 +57,32 @@ import {
   reorderCss,
   shareProject,
   wpWorkerCallbackMaker,
-} from "../../helpers/functions";
-import { Select } from "./Protos/Select";
-import { PagesSelector } from "./PagesSelector";
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
-import { open_code_manager_modal } from "../../constants/InfinitelyCommands";
-import { current_project_id, inf_symbol_Id_attribute, preview_url } from "../../constants/shared";
-import { ScrollableToolbar } from "../Protos/ScrollableToolbar";
-import { Hr } from "../Protos/Hr";
-import { editorContainerInstance } from "../../constants/InfinitelyInstances";
-import { InfinitelyEvents } from "../../constants/infinitelyEvents";
-import { fetcherWorker, offlineInstallerWorker, pageBuilderWorker } from "../../helpers/defineWorkers";
-import { OptionsButton } from "../Protos/OptionsButton";
-import { cloneDeep } from "lodash";
-import { detectedType } from "../../helpers/jsDocs";
-import { UlContextProvider, useUlContext } from "../Protos/UlProvider";
+} from "@/helpers/functions";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
+import { detectedType } from "@/helpers/jsDocs";
+import { useNotifiers } from "@/hooks/useNotifiers";
+import { Icons } from "@/components/Icons/Icons";
+import { Loader } from "@/components/Loader";
+import { Button } from "@/components/Protos/Button";
+import { Hr } from "@/components/Protos/Hr";
+import { Li } from "@/components/Protos/Li";
+import { OptionsButton } from "@/components/Protos/OptionsButton";
+import { ScrollableToolbar } from "@/components/Protos/ScrollableToolbar";
+import { UlContextProvider, useUlContext } from "@/components/Protos/UlProvider";
+import { PagesSelector } from "@/components/Editor/PagesSelector";
+import { IframeControllers } from "@/components/Editor/Protos/IframeControllers";
+import { Input } from "@/components/Editor/Protos/Input";
+import { Select } from "@/components/Editor/Protos/Select";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { useNotifiers } from "../../hooks/useNotifiers";
-import {
-  wp_connect,
-  wp_get,
-  wp_get_posts_with_inf_meta,
-  wp_get_single,
-  wp_update_media,
-  wp_update_media_files,
-  wp_update_meta,
-  wp_update_option,
-  wp_update_single,
-  wp_update_symbols,
-  wp_write_files,
-} from "../../Apps/wordpress/functions";
-import { Button } from "../Protos/Button";
-import { useLiveQuery } from "dexie-react-hooks";
-import { db } from "../../helpers/db";
-import { Loader } from "../Loader";
-import { infinitelyWorker } from "../../helpers/infinitelyWorker";
-import { wp_get_post_id } from "../../Apps/wordpress/functions_ui";
-import { wp_preview_bc } from "../../helpers/channels";
+import { useEditorMaybe } from "@grapesjs/react";
 import LLM from "@themaximalist/llm.js";
 import { minify } from "csso";
+import { useLiveQuery } from "dexie-react-hooks";
+import { cloneDeep } from "lodash";
+import React, { memo, useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 
 export const HomeHeader = () => {
   const editor = useEditorMaybe();
@@ -238,7 +238,7 @@ export const HomeHeader = () => {
     const projectId = +localStorage.getItem(current_project_id);
     const projectData = await getProjectData();
     const { projectSettings } = getProjectSettings();
-    const symbols = editor.getWrapper().find(`["${inf_symbol_Id_attribute}"]`).map(cmp => {
+    const symbols = editor.getWrapper().find(`[${inf_symbol_Id_attribute}]`).map(cmp => {
       const symbol_id = cmp.getAttributes()[inf_symbol_Id_attribute];
 
       if (!symbol_id) return null;
@@ -296,7 +296,8 @@ export const HomeHeader = () => {
 
     // wp_update_symbols
     wpWorkerCallbackMaker(offlineInstallerWorker, 'wp_update_symbols', {
-      symbols
+      symbols,
+      projectId
     }, async (res) => {
       console.log('wp_update_symbols', res);
       if (res.done) {

@@ -1,17 +1,17 @@
 import React from "react";
-import { Icons } from "../../Icons/Icons";
-import { Li } from "../../Protos/Li";
+import { Icons } from "@/components/Icons/Icons";
+import { Li } from "@/components/Protos/Li";
 // import { useEditorMaybe } from "@grapesjs/react";
 import { useRecoilState } from "recoil";
-import { asideControllersNotifiresState} from "../../../helpers/atoms";
+import { asideControllersNotifiresState} from "@/helpers/atoms";
 // import {
 //   interactionId,
 //   mainInteractionId,
 //   mainMotionId,
 //   motionId,
-// } from "../../../constants/shared";
-// import { dynamic_container } from "../../../constants/cmpsTypes";
-// import { isDynamicComponent } from "../../../helpers/functions";
+// } from "@/constants/shared";
+// import { dynamic_container } from "@/constants/cmpsTypes";
+// import { isDynamicComponent } from "@/helpers/functions";
 
 export const AsideControllers = () => {
   // const editor = useEditorMaybe();

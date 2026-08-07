@@ -1,3 +1,4 @@
+
 export let projectsImagesObserver = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
     if (entry.isIntersecting && entry.target?.tagName == "IMG") {

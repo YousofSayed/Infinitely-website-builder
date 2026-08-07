@@ -1,15 +1,15 @@
-import React, { JSX, useEffect, useLayoutEffect, useState } from "react";
-import { OPFS } from "../helpers/opfs";
-import { opfs } from "../helpers/initOpfs";
-import { InfAccordion } from "../components/Protos/InfAccordion";
-import { Accordion, AccordionItem } from "@heroui/accordion";
-import { SmallButton } from "../components/Editor/Protos/SmallButton";
-import { Icons } from "../components/Icons/Icons";
-import { Hr } from "../components/Protos/Hr";
-import { Button } from "../components/Protos/Button";
-import { addClickClass } from "../helpers/cocktail";
-import { downloadFile } from "../helpers/functions";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { Icons } from "@/components/Icons/Icons";
+import { Button } from "@/components/Protos/Button";
+import { Hr } from "@/components/Protos/Hr";
+import { InfAccordion } from "@/components/Protos/InfAccordion";
+import { addClickClass } from "@/helpers/cocktail";
+import { downloadFile } from "@/helpers/functions";
+import { opfs } from "@/helpers/initOpfs";
+import { OPFS } from "@/helpers/opfs";
 import { OTDir, OTFile } from "opfs-tools";
+import React, { JSX, useEffect, useLayoutEffect, useState } from "react";
+
 // {
 //   folder: FileSystemDirectoryHandle;
 //   files: FileSystemFileHandle[];

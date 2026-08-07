@@ -1,3 +1,15 @@
+import { MiniTitle } from "@/components/Editor/Protos/MiniTitle";
+import { Icons } from "@/components/Icons/Icons";
+import { swiperJsProps } from "@/constants/swiperjsProps";
+import { editNestedObject, getNestedValue } from "@/helpers/bridge";
+import { parse, parseAndReturnInputIfNot } from "@/helpers/cocktail";
+import {
+  defineTraits,
+  getMediaBreakpoint,
+  getProjectSettings,
+  preventSelectNavigation,
+} from "@/helpers/functions";
+import { reactToStringMarkup } from "@/helpers/reactToStringMarkup";
 import {
   cloneDeep,
   isArray,
@@ -5,18 +17,6 @@ import {
   isNumber,
   isPlainObject,
 } from "lodash";
-import { Icons } from "../components/Icons/Icons";
-import { swiperJsProps } from "../constants/swiperjsProps";
-import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
-import { parse, parseAndReturnInputIfNot } from "../helpers/cocktail";
-import { editNestedObject, getNestedValue } from "../helpers/bridge";
-import {
-  defineTraits,
-  getMediaBreakpoint,
-  getProjectSettings,
-  preventSelectNavigation,
-} from "../helpers/functions";
-import { MiniTitle } from "../components/Editor/Protos/MiniTitle";
 
 /**
  *
@@ -26,19 +26,19 @@ import { MiniTitle } from "../components/Editor/Protos/MiniTitle";
 export const Slider = ({ editor }) => {
   function setPropsAsTraits(props = {}) {
     /**
-     * @type {import('../helpers/types').InfinitelyTrait[]}
+     * @type {import('@/helpers/types').InfinitelyTrait[]}
      */
     const traits = [];
 
     /**
      *
      * @param {{}} props
-     * @param {import('../helpers/types').InfinitelyTrait} customPropsToNewTrait
+     * @param {import('@/helpers/types').InfinitelyTrait} customPropsToNewTrait
      */
     function createTrait(props = {}, customPropsToNewTrait = {}) {
       for (const [key, val] of Object.entries(props)) {
         /**
-         * @type {import('../helpers/types').InfinitelyTrait}
+         * @type {import('@/helpers/types').InfinitelyTrait}
          */
         const trait = {
           name: key,
@@ -215,7 +215,7 @@ export const Slider = ({ editor }) => {
 
   /**
    *
-   * @param {import('../helpers/types').TraitCallProps} param0
+   * @param {import('@/helpers/types').TraitCallProps} param0
    * @returns
    */
   const breakpointsCallback = ({
@@ -259,7 +259,7 @@ export const Slider = ({ editor }) => {
 
   /**
    *
-   * @param {import('../helpers/types').TraitCallProps & {model:import('grapesjs').Component}} param0
+   * @param {import('@/helpers/types').TraitCallProps & {model:import('grapesjs').Component}} param0
    */
   const breakpointsInit = ({ editor, trait, model, mediaBreakpoint }) => {
     const attrs = model.getAttributes();

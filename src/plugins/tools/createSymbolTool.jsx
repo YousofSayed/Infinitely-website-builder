@@ -1,12 +1,12 @@
-import React from "react";
+import { ReusableSympol } from "@/components/Editor/Modals/ReusableSympol";
+import { editorIcons } from "@/components/Icons/editorIcons";
+import { Icons } from "@/components/Icons/Icons";
 import {
   addItemInToolBarForEditor,
   getInfinitelySymbolInfo,
-} from "../../helpers/functions";
-import { ReusableSympol } from "../../components/Editor/Modals/ReusableSympol";
-import { editorIcons } from "../../components/Icons/editorIcons";
-import { ModalTitle } from "../cutomModal";
-import { Icons } from "../../components/Icons/Icons";
+} from "@/helpers/functions";
+import { ModalTitle } from "@/plugins/cutomModal";
+import React from "react";
 
 export const createSymbolTool = (editor) => {
   const symbolInfo = getInfinitelySymbolInfo(editor.getSelected());

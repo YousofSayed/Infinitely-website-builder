@@ -1,25 +1,25 @@
-import React, { memo, useEffect, useState } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
-import { db } from "../../helpers/db.ts";
-import noDataImg from "../../assets/images/no-data.svg";
-import { Button } from "../Protos/Button.jsx";
-import { Icons } from "../Icons/Icons.jsx";
-import { useRecoilState, useSetRecoilState } from "recoil";
-import { projectState, showCrtModalState } from "../../helpers/atoms.jsx";
-import { Project } from "./Project.jsx";
-import { Loader } from "../Loader.jsx";
-import { projectsType } from "../../helpers/jsDocs.js";
-import { VirtuosoGrid } from "react-virtuoso";
-import { GridComponents } from "../Protos/VirtusoGridComponent.jsx";
-import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { version } from "../../constants/Version.js";
-import { For } from "million/react";
-import { uniqueID } from "../../helpers/cocktail.js";
-import { cloneDeep, random } from "lodash";
+import noDataImg from "@/assets/images/no-data.svg";
+import { version } from "@/constants/Version.js";
+import { projectState, showCrtModalState } from "@/helpers/atoms.jsx";
+import { uniqueID } from "@/helpers/cocktail.js";
+import { db } from "@/helpers/db.ts";
+import { projectsType } from "@/helpers/jsDocs.js";
 import {
   destroyProjectsImagesObserver,
   reInitProjectsImagesObserver,
-} from "../../observers/projectsImagesObserver.js";
+} from "@/observers/projectsImagesObserver.js";
+import { Icons } from "@/components/Icons/Icons.jsx";
+import { Loader } from "@/components/Loader.jsx";
+import { Button } from "@/components/Protos/Button.jsx";
+import { GridComponents } from "@/components/Protos/VirtusoGridComponent.jsx";
+import { Project } from "@/components/Workspace/Project";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { useLiveQuery } from "dexie-react-hooks";
+import { cloneDeep, random } from "lodash";
+import { For } from "million/react";
+import React, { memo, useEffect, useState } from "react";
+import { VirtuosoGrid } from "react-virtuoso";
+import { useRecoilState, useSetRecoilState } from "recoil";
 
 //million-ignore
 export const Projects = () => {

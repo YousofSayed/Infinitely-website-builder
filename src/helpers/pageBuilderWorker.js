@@ -4,11 +4,11 @@ import {
   varsToServiceWorker,
   writePreviewPage,
   writeFilesToOPFS,
-} from "./workerCommands";
-import { doWorkerPattern } from "./workersPattern";
-import { wpCommands } from "./wp_commands_worker";
+} from "@/helpers/workerCommands";
+import { doWorkerPattern } from "@/helpers/workersPattern";
+import { wpCommands } from "@/helpers/wp_commands_worker";
 
-const commands = {
+export const commands = {
   varsToServiceWorker,
   sendPreviewPagesToServiceWorker,
   sendPreviewPageToServiceWorker,

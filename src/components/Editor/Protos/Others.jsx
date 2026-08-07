@@ -1,7 +1,7 @@
+import { cursorValues, isolationValues, mixBlendModeValues, touchActionValues } from "@/constants/cssProps";
+import { Property } from "@/components/Editor/Protos/Property";
+import { SelectStyle } from "@/components/Editor/Protos/SelectStyle";
 import React, { memo } from "react";
-import { Property } from "./Property";
-import { SelectStyle } from "./SelectStyle";
-import { cursorValues, isolationValues, mixBlendModeValues, touchActionValues } from "../../../constants/cssProps";
 
 export const Others = memo(() => {
   return (

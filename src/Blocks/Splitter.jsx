@@ -1,7 +1,7 @@
+import { Icons } from "@/components/Icons/Icons";
+import { defineTraits } from "@/helpers/functions";
+import { reactToStringMarkup } from "@/helpers/reactToStringMarkup";
 import { isFunction } from "lodash";
-import { Icons } from "../components/Icons/Icons";
-import { defineTraits } from "../helpers/functions";
-import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
 
 /**
  *

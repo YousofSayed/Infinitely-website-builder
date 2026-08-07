@@ -1,9 +1,9 @@
+import { Icons } from "@/components/Icons/Icons";
+import { html } from "@/helpers/cocktail";
+import { defineTraits } from "@/helpers/functions";
+import { reactToStringMarkup } from "@/helpers/reactToStringMarkup";
+import { getLoopComponent } from "@/plugins/globalTraits";
 import React from "react";
-import { html } from "../helpers/cocktail";
-import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
-import { Icons } from "../components/Icons/Icons";
-import { defineTraits } from "../helpers/functions";
-import { getLoopComponent } from "../plugins/globalTraits";
 
 /**
  *

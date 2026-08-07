@@ -1,8 +1,8 @@
-import GjsEditor from "@grapesjs/react";
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
-import grapesjs from "grapesjs";
-// import  "../../helpers/grapesjs.js";
-import { useRecoilState, useSetRecoilState } from "recoil";
+
+import gStyles from "../../../public/styles/style.css?raw";
+import { blocks } from "@/blocks/blocks.jsx";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents.js";
+import { current_symbol_id } from "@/constants/shared.js";
 import {
   cmpRulesState,
   currentElState,
@@ -10,35 +10,63 @@ import {
   reloaderState,
   ruleState,
   selectorState,
-} from "../../helpers/atoms";
-import { blocks } from "../../Blocks/blocks.jsx";
-// import gStyles from "../../../styles/style.css?raw";
-
-import { useNavigate } from "react-router-dom";
-import { addDevices } from "../../plugins/addDevices";
-import { customModal } from "../../plugins/cutomModal";
-import { addNewTools } from "../../plugins/addNewTools.jsx";
-import { addNewBuiltinCommands } from "../../plugins/addNewBuiltinCommands.jsx";
-import { customCmps } from "../../plugins/customCmps.jsx";
-import { html } from "../../helpers/cocktail.js";
-import { IDB } from "../../plugins/IDB";
-import { updateProjectThumbnail } from "../../plugins/updateProjectThumbnail.jsx";
-import { customInfinitelySymbols } from "../../plugins/customInfinitelySymbols";
-import { current_symbol_id } from "../../constants/shared.js";
+} from "@/helpers/atoms";
+import { isChrome } from "@/helpers/bridge.js";
+import { html } from "@/helpers/cocktail.js";
 import {
   getComponentRules,
   getCurrentStorageType,
   getInfinitelySymbolInfo,
   getProjectSettings,
-} from "../../helpers/functions.js";
-import { isChrome } from "../../helpers/bridge.js";
-import { motionsAndInteractionsCloneHandler } from "../../plugins/motionsAndInteractionsCloneHandler.jsx";
-import { globalTraits } from "../../plugins/globalTraits.jsx";
-import { initTraitsOnRender } from "../../plugins/initTraitsOnRender.jsx";
-import { editorKeymaps } from "../../plugins/editorKeymaps.jsx";
-import { InfinitelyEvents } from "../../constants/infinitelyEvents.js";
-import { wp_remote_storage } from "../../plugins/wp_remote_storage.jsx";
-import { infProps } from "../../plugins/infProps.jsx";
+} from "@/helpers/functions";
+import { addDevices } from "@/plugins/addDevices";
+import { addNewBuiltinCommands } from "@/plugins/addNewBuiltinCommands.jsx";
+import { addNewTools } from "@/plugins/addNewTools.jsx";
+import { customCmps } from "@/plugins/customCmps.jsx";
+import { customInfinitelySymbols } from "@/plugins/customInfinitelySymbols";
+import { customModal } from "@/plugins/cutomModal";
+import { editorKeymaps } from "@/plugins/editorKeymaps.jsx";
+import { globalTraits } from "@/plugins/globalTraits.jsx";
+import { IDB } from "@/plugins/IDB";
+import { infProps } from "@/plugins/infProps.jsx";
+import { initTraitsOnRender } from "@/plugins/initTraitsOnRender.jsx";
+import { motionsAndInteractionsCloneHandler } from "@/plugins/motionsAndInteractionsCloneHandler.jsx";
+import { updateEditorStyleAfterTemplateOrBlockAdded } from "@/plugins/updateEditorStyleAfterTemplateOrBlockAdded.jsx";
+import { updateProjectThumbnail } from "@/plugins/updateProjectThumbnail.jsx";
+import { wp_remote_storage } from "@/plugins/wp_remote_storage.jsx";
+import GjsEditor from "@grapesjs/react";
+import grapesjs from "grapesjs";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useRecoilState, useSetRecoilState } from "recoil";
+
+// 
+
+
+
+// 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export const GJEditor = ({ children }) => {
   const setSelectedEl = useSetRecoilState(currentElState);
@@ -70,6 +98,7 @@ export const GJEditor = ({ children }) => {
     editorKeymaps,
     IDB,
     wp_remote_storage,
+    updateEditorStyleAfterTemplateOrBlockAdded,
     // customColors,
     // updateDynamicTemplates,
     // motionsRemoverHandler,

@@ -21,12 +21,12 @@ export let currentRefType;
 export let iframeType;
 
 /**
- * @type {import('./types').InfinitelyBlock[]}
+ * @type {import('@/helpers/types').InfinitelyBlock[]}
  */
 export let blocksType;
 
 /**
- * @type {import('./types').InfinitelyBlock}
+ * @type {import('@/helpers/types').InfinitelyBlock}
  */
 export let blockType;
 
@@ -36,7 +36,7 @@ export let blockType;
 export let stateType = { 0: [] };
 
 /**
- * @type {import('./types').StatesType[]}
+ * @type {import('@/helpers/types').StatesType[]}
  */
 export let statesType = [];
 
@@ -70,12 +70,12 @@ export let keyframesWithPathesType = {};
 export let keyframesType = {};
 
 /**
- * @type {import('./types').InfinitelyTrait[]}
+ * @type {import('@/helpers/types').InfinitelyTrait[]}
  */
 export let traitsType = [];
 
 /**
- * @type {import('./types').CMD[]}
+ * @type {import('@/helpers/types').CMD[]}
  */
 export let cmdType = [];
 
@@ -85,12 +85,12 @@ export let cmdType = [];
 export let varType = [];
 
 /**
- * @type {import('./types').InfinitelyPage[]}
+ * @type {import('@/helpers/types').InfinitelyPage[]}
  */
 export let pagesType = [];
 
 /**
- * @type {{[key:string : import('./types').InfinitelyPage]}}
+ * @type {{[key:string : import('@/helpers/types').InfinitelyPage]}}
  */
 export let dbPagesType = {};
 
@@ -105,7 +105,7 @@ export let swType;
 export let layersType = [];
 
 /**
- * @type {import('./types').RestAPIModel[]}
+ * @type {import('@/helpers/types').RestAPIModel[]}
  */
 export let restModelType = [];
 
@@ -115,22 +115,22 @@ export let restModelType = [];
 export let sharedLayerType = null;
 
 /**
- * @type {{[key:string] : import('./types').DynamicTemplatesType}}
+ * @type {{[key:string] : import('@/helpers/types').DynamicTemplatesType}}
  */
 export let dynamicTemplatesType = {};
 
 /**
- * @type {import('./types').DynamicAttributes}
+ * @type {import('@/helpers/types').DynamicAttributes}
  */
 export let dynamicAttributesType = {};
 
 /**
- * @type {import('./types').CMDSContext}
+ * @type {import('@/helpers/types').CMDSContext}
  */
 export let cmdsContextType = { params: [], vars: {}, objectskeys: {} };
 
 /**
- * @type {import('./types').ProjectData}
+ * @type {import('@/helpers/types').ProjectData}
  */
 export let projectDataType = {
   templates: {},
@@ -141,27 +141,27 @@ export let projectDataType = {
 };
 
 /**
- * @type {import('./types').Project}
+ * @type {import('@/helpers/types').Project}
  */
 export let projectType = {};
 
 /**
- * @type {import('./types').Project[]}
+ * @type {import('@/helpers/types').Project[]}
  */
 export let projectsType = [];
 
 /**
- * @type {import('./cocktail').CocktailDB}
+ * @type {import('@/helpers/cocktail').CocktailDB}
  */
 export let IDBType = null;
 
 /**
- * @type {import('./types').JSLibrary}
+ * @type {import('@/helpers/types').JSLibrary}
  */
 export let JSLibraryType = {};
 
 /**
- * @type {import('./types').JSLibrary[]}
+ * @type {import('@/helpers/types').JSLibrary[]}
  */
 export let JSLibrariesType = [];
 
@@ -171,7 +171,7 @@ export let JSLibrariesType = [];
 export let filesListType = [];
 
 /**
- * @type {import('./types').GoogleFontsSchema}
+ * @type {import('@/helpers/types').GoogleFontsSchema}
  */
 export let googleFontsSchema = {};
 
@@ -186,7 +186,7 @@ export let googleFontFiles = {};
 export let uploadFontsType = [];
 
 /**
- * @type {import('./types').GlobalSettings}
+ * @type {import('@/helpers/types').GlobalSettings}
  */
 export let globalSettingsType = {
   autoSave: true,
@@ -194,7 +194,7 @@ export let globalSettingsType = {
 };
 
 /**
- * @type {import('./types').ProjectSetting}
+ * @type {import('@/helpers/types').ProjectSetting}
  */
 export let projectSettingsType = {
   minify_Css: true,
@@ -231,7 +231,7 @@ export let projectSettingsType = {
 };
 
 /**
- * @type {import('./types').DropBoxFilesMeta}
+ * @type {import('@/helpers/types').DropBoxFilesMeta}
  */
 export let dropBoxFilesMeta = [];
 
@@ -241,17 +241,17 @@ export let dropBoxFilesMeta = [];
 export let componentType;
 
 /**
- * @type {import('./types').PageHelmet}
+ * @type {import('@/helpers/types').PageHelmet}
  */
 export let pageHelmetType = {};
 
 /**
- * @type {import('./types').InfinitelySymbol[]}
+ * @type {import('@/helpers/types').InfinitelySymbol[]}
  */
 export let symbolsType = [];
 
 /**
- * @type {import('./types').InfinitelyBlock[]}
+ * @type {import('@/helpers/types').InfinitelyBlock[]}
  */
 export let blocksArrayType = [];
 
@@ -261,7 +261,7 @@ export let blocksArrayType = [];
 export let tooltipDataType = {};
 
 /**
- * @type {import('./types').MotionType}
+ * @type {import('@/helpers/types').MotionType}
  */
 export let motionType = {
   id: "",
@@ -295,17 +295,17 @@ export let motionType = {
 export let assetType = {};
 
 /**
- * @type {import('./types').InfinitelyAsset[]}
+ * @type {import('@/helpers/types').InfinitelyAsset[]}
  */
 export let assetsType = [];
 
 /**
- * @type {import('./types').MotionAnimationType}
+ * @type {import('@/helpers/types').MotionAnimationType}
  */
 export let motionAnimationType = {};
 
 /**
- * @type {import('./types').StorageDetails}
+ * @type {import('@/helpers/types').StorageDetails}
  */
 export let storageDetailsType = {
   filsLength: 0,
@@ -323,17 +323,17 @@ export let storageDetailsType = {
 };
 
 /**
- * @type {import('./types').Interaction}
+ * @type {import('@/helpers/types').Interaction}
  */
 export let interactionType = {};
 
 /**
- * @type {import('./types').Interactions}
+ * @type {import('@/helpers/types').Interactions}
  */
 export let interactionsType = [];
 
 /**
- * @type {import('./types').InteractionsInDB}
+ * @type {import('@/helpers/types').InteractionsInDB}
  */
 export let interactionInDBType = {};
 
@@ -345,12 +345,12 @@ export let detectedType = {
 };
 
 /**
- * @type {import('./types').InfinitelyRules}
+ * @type {import('@/helpers/types').InfinitelyRules}
  */
 export let cmpRules = [];
 
 /**
- * @type {import('./types').ShowProps}
+ * @type {import('@/helpers/types').ShowProps}
  */
 export let undoRedoShowProps = {
   motionBuilder: false,
@@ -362,11 +362,11 @@ export let undoRedoShowProps = {
 };
 
 /**
- * @type {import('./types').WpPage}
+ * @type {import('@/helpers/types').WpPage}
  */
 export let wp_page = {}
 
 /**
- * @type {import('./types').WpPages}
+ * @type {import('@/helpers/types').WpPages}
  */
 export let wp_pages = []

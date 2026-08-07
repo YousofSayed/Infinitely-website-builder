@@ -1,19 +1,18 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Icons } from "../../Icons/Icons";
-import { Property } from "./Property";
-import directionsImg from "../../../assets/images/directions.png";
-import { SidesControllers } from "./SideControllers";
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import directionsImg from "@/assets/images/directions.png";
 import {
   currentElState,
   framesStylesState,
   ifrDocument,
-} from "../../../helpers/atoms";
-
-import { useSetClassForCurrentEl } from "../../../hooks/useSetclassForCurrentEl";
-import { SidesInput } from "./SidesInput";
-import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
+} from "@/helpers/atoms";
+import { useSetClassForCurrentEl } from "@/hooks/useSetclassForCurrentEl";
+import { useUpdateInputValue } from "@/hooks/useUpdateInputValue";
+import { Icons } from "@/components/Icons/Icons";
+import { Property } from "@/components/Editor/Protos/Property";
+import { SidesControllers } from "@/components/Editor/Protos/SideControllers";
+import { SidesInput } from "@/components/Editor/Protos/SidesInput";
 import { useEditorMaybe } from "@grapesjs/react";
+import React, { useEffect, useRef, useState } from "react";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 
 /**
  *

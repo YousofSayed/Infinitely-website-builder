@@ -1,3 +1,18 @@
+import { inf_class_name } from "@/constants/shared";
+import {
+  cmpRulesState,
+  currentElState,
+  editorStt,
+  ruleState,
+  selectorState,
+} from "@/helpers/atoms";
+import {
+  getCurrentMediaDevice,
+  getCurrentSelector,
+} from "@/helpers/functions";
+import { Icons } from "@/components/Icons/Icons";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { useEditorMaybe } from "@grapesjs/react";
 import React, {
   memo,
   useCallback,
@@ -6,22 +21,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Icons } from "../../Icons/Icons";
-import { SmallButton } from "./SmallButton";
 import { useRecoilState, useRecoilValue } from "recoil";
-import {
-  cmpRulesState,
-  currentElState,
-  editorStt,
-  ruleState,
-  selectorState,
-} from "../../../helpers/atoms";
-import { useEditorMaybe } from "@grapesjs/react";
-import {
-  getCurrentMediaDevice,
-  getCurrentSelector,
-} from "../../../helpers/functions";
-import { inf_class_name } from "../../../constants/shared";
 
 // million-ignore
 /**

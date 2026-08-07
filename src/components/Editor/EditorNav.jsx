@@ -1,8 +1,4 @@
-import React, { useEffect, useRef } from "react";
-import { Icons } from "../Icons/Icons";
-import { Li } from "../Protos/Li";
-import { useEditorMaybe } from "@grapesjs/react";
-import { Link, useNavigate } from "react-router-dom";
+import { config } from "@/config/brand";
 import {
   open_custom_font_installer_modal,
   open_dynamic_templates_modal,
@@ -12,22 +8,12 @@ import {
   open_rest_models_modal,
   open_settings_modal,
   open_symbols_and_templates_manager_modal,
-} from "../../constants/InfinitelyCommands";
-
-import { dropBoxFilesMeta, refType } from "../../helpers/jsDocs";
-import { useLiveQuery } from "dexie-react-hooks";
-import {
-  getAppType,
-  getLogoAppNavLink,
-  getProject,
-  getProjectData,
-  isWordpress,
-  loadProject,
-  workerCallbackMaker,
-} from "../../helpers/functions";
-import { OptionsButton } from "../Protos/OptionsButton";
-import { Button } from "../Protos/Button";
-import { addClickClass } from "../../helpers/cocktail";
+} from "@/constants/InfinitelyCommands";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { globalInstance } from "@/constants/InfinitelyInstances";
+import { current_project_id } from "@/constants/shared";
+import { addClickClass } from "@/helpers/cocktail";
+import { db } from "@/helpers/db";
 import {
   checkDropBoxSignInState,
   getDropboxFileBlob,
@@ -36,18 +22,31 @@ import {
   shareLink,
   uploadDbxFileWithToastProgress,
   uploadDropboxFile,
-} from "../../helpers/dropboxHandlers";
-import { db } from "../../helpers/db";
-import { current_project_id } from "../../constants/shared";
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
-import { globalInstance } from "../../constants/InfinitelyInstances";
-import { InfinitelyEvents } from "../../constants/infinitelyEvents";
-import { opfs } from "../../helpers/initOpfs";
-import { infinitelyWorker } from "../../helpers/infinitelyWorker";
-import { FitTitle } from "./Protos/FitTitle";
-import { config } from "../../brand";
+} from "@/helpers/dropboxHandlers";
+import {
+  getAppType,
+  getLogoAppNavLink,
+  getProject,
+  getProjectData,
+  isWordpress,
+  loadProject,
+  workerCallbackMaker,
+} from "@/helpers/functions";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
+import { opfs } from "@/helpers/initOpfs";
+import { dropBoxFilesMeta, refType } from "@/helpers/jsDocs";
+import { Icons } from "@/components/Icons/Icons";
+import { Button } from "@/components/Protos/Button";
+import { Li } from "@/components/Protos/Li";
+import { OptionsButton } from "@/components/Protos/OptionsButton";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { useEditorMaybe } from "@grapesjs/react";
 import { minify } from "csso";
+import { useLiveQuery } from "dexie-react-hooks";
+import React, { useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export const HomeNav = () => {
   const editor = useEditorMaybe();

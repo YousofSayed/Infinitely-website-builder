@@ -1,9 +1,9 @@
+import { interactionId, interactionInstanceId, mainInteractionId, mainMotionId, motionId, motionInstanceId } from '@/constants/shared';
 import { isArray, isPlainObject } from 'lodash';
-import { interactionId, interactionInstanceId, mainInteractionId, mainMotionId, motionId, motionInstanceId } from '../../constants/shared';
 
 /**
  *
- * @param {{inf_meta : any , key:string , motions : Record<string,import('../../helpers/types').MotionType>}} param0
+ * @param {{inf_meta : any , key:string , motions : Record<string,import('@/helpers/types').MotionType>}} param0
  * @returns
  */
 export const loopOnInfMetaMotionsData = ({ inf_meta, key, motions }) => {
@@ -67,7 +67,7 @@ export const loopOnInfMetaMotionsData = ({ inf_meta, key, motions }) => {
 
 /**
  *
- * @param {{inf_meta : any , key:string , interactions : import('../../helpers/types').InteractionsInDB}} param0
+ * @param {{inf_meta : any , key:string , interactions : import('@/helpers/types').InteractionsInDB}} param0
  * @returns
  */
 export const loopOnInfMetaInteractionsData = ({ inf_meta, key, interactions }) => {

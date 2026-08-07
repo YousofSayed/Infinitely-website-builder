@@ -1,5 +1,5 @@
+import { refType } from "@/helpers/jsDocs";
 import { createPortal } from "react-dom";
-import { refType } from "../../helpers/jsDocs";
 
 const Portal = ({ children, container = refType }) => {
   

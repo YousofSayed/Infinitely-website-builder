@@ -1,16 +1,16 @@
-import { useEditorMaybe } from "@grapesjs/react";
-import React, { useRef, useState } from "react";
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import noDataImage from "@/assets/images/no-data.svg";
+import { dynamic_container } from "@/constants/cmpsTypes";
+import { select_page } from "@/constants/InfinitelyCommands";
+import {
+  current_dynamic_template_id,
+  current_project_id,
+  data_disable_scripting,
+} from "@/constants/shared";
 import {
   currentDynamicTemplateIdState,
   dynamicTemplatesState,
-} from "../../../helpers/atoms";
-import { Icons } from "../../Icons/Icons";
-import { Input } from "../Protos/Input";
-import { Li } from "../../Protos/Li";
-import { dynamic_container } from "../../../constants/cmpsTypes";
-import noDataImage from "../../../assets/images/no-data.svg";
-import { useLiveQuery } from "dexie-react-hooks";
+} from "@/helpers/atoms";
+import { db } from "@/helpers/db";
 import {
   advancedSearchSuggestions,
   doDocument,
@@ -19,21 +19,21 @@ import {
   regenerateSymbol,
   replaceBlobs,
   restoreBlobs,
-} from "../../../helpers/functions";
-import { dynamicTemplatesType } from "../../../helpers/jsDocs";
-import { select_page } from "../../../constants/InfinitelyCommands";
-import {
-  current_dynamic_template_id,
-  current_project_id,
-  data_disable_scripting,
-} from "../../../constants/shared";
-import { db } from "../../../helpers/db";
-import { VirtuosoGrid } from "react-virtuoso";
-import { GridComponents } from "../../Protos/VirtusoGridComponent";
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "../Protos/ToastMsgInfo";
-import { Button } from "../../Protos/Button";
+} from "@/helpers/functions";
+import { dynamicTemplatesType } from "@/helpers/jsDocs";
+import { Icons } from "@/components/Icons/Icons";
+import { Button } from "@/components/Protos/Button";
+import { Li } from "@/components/Protos/Li";
+import { GridComponents } from "@/components/Protos/VirtusoGridComponent";
+import { Input } from "@/components/Editor/Protos/Input";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { useEditorMaybe } from "@grapesjs/react";
+import { useLiveQuery } from "dexie-react-hooks";
 import { parseHTML } from "linkedom";
+import React, { useRef, useState } from "react";
+import { toast } from "react-toastify";
+import { VirtuosoGrid } from "react-virtuoso";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 
 export const DynamicTemplatesManager = () => {
   const editor = useEditorMaybe();

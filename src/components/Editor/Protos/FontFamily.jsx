@@ -1,7 +1,7 @@
+import { cssFonts } from "@/constants/cssProps";
+import { getProjectData } from "@/helpers/functions";
+import { SelectStyle } from "@/components/Editor/Protos/SelectStyle";
 import React, { useEffect, useMemo, useState } from "react";
-import { SelectStyle } from "./SelectStyle";
-import { getProjectData } from "../../../helpers/functions";
-import { cssFonts } from "../../../constants/cssProps";
 
 export const FontFamily = () => {
   const [customFonts, setCustomFonts] = useState([]);

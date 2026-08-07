@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from "react";
-import { useRecoilState, useRecoilValue } from "recoil";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { inf_symbol_Id_attribute } from "@/constants/shared";
 import {
   animationsState,
   cmpRulesState,
@@ -10,18 +10,18 @@ import {
   selectorState,
   showAnimationsBuilderState,
   showStylesBuilderForMotionBuilderState,
-} from "../helpers/atoms";
-import { useEditorMaybe } from "@grapesjs/react";
+} from "@/helpers/atoms";
+import { infinitelyCallback } from "@/helpers/bridge";
 import {
   extractAllRulesWithChildRules,
   getCurrentMediaDevice,
   getCurrentSelector,
   getStyles,
-} from "../helpers/functions";
-import { inf_symbol_Id_attribute } from "../constants/shared";
-import { InfinitelyEvents } from "../constants/infinitelyEvents";
+} from "@/helpers/functions";
+import { useEditorMaybe } from "@grapesjs/react";
 import { isFunction } from "lodash";
-import { infinitelyCallback } from "../helpers/bridge";
+import { useEffect, useMemo } from "react";
+import { useRecoilState, useRecoilValue } from "recoil";
 
 let saveTimeout;
 let idleId;

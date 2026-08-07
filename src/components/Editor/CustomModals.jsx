@@ -1,16 +1,16 @@
+import { modalDataState } from "@/helpers/atoms";
+import { addClickClass } from "@/helpers/cocktail";
+import { Icons } from "@/components/Icons/Icons";
+import { BusyProvider } from "@/components/Protos/BusyProvider";
+import { Button } from "@/components/Protos/Button";
+import { P } from "@/components/Protos/P";
+import { LibraryInstallerModal } from "@/components/Editor/Modals/LibraryInstallerModal";
+import { RestAPIModels } from "@/components/Editor/Modals/RestAPIModels";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { LibraryInstaller } from "@/components/Editor/Protos/LibraryInstaller";
+import { useEditorMaybe } from "@grapesjs/react";
 import React, { memo, useEffect, useState } from "react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
-import { modalDataState } from "../../helpers/atoms";
-import { P } from "../Protos/P";
-import { Icons } from "../Icons/Icons";
-import { addClickClass } from "../../helpers/cocktail";
-import { useEditorMaybe } from "@grapesjs/react";
-import { RestAPIModels } from "./Modals/RestAPIModels";
-import { LibraryInstaller } from "./Protos/LibraryInstaller";
-import { LibraryInstallerModal } from "./Modals/LibraryInstallerModal";
-import { FitTitle } from "./Protos/FitTitle";
-import { Button } from "../Protos/Button";
-import { BusyProvider } from "../Protos/BusyProvider";
 
 export const CustomModals = () => {
   const editor = useEditorMaybe();

@@ -1,3 +1,4 @@
+import { wpCommands } from "@/helpers/wp_commands_worker";
 import {
   EditorProps,
   Monaco,
@@ -5,7 +6,10 @@ import {
   OnChange,
   OnMount,
 } from "@monaco-editor/react";
+import type * as CSS from "csstype";
+import type { Editor, Component as GjsComponent } from "grapesjs";
 import { HTMLButtonElement } from "linkedom";
+import type { JSX } from "react";
 
 export type gradientValues = {
   direction: string;
@@ -18,10 +22,10 @@ export type gradientValues = {
   ];
 }[];
 
-import type * as CSS from "csstype";
-import type { JSX } from "react";
-import type { Editor, Component as GjsComponent } from "grapesjs";
-import { wpCommands } from "./wp_commands_worker";
+
+
+
+
 
 type CSSProperties = CSS.PropertiesHyphen; // ✅ dash-case CSS properties
 
@@ -506,6 +510,8 @@ export type InfinitelyWpPage = {
   template: string;
   // wp_page_meta:Wp_Page_Meta
 };
+
+export type AppType = "normal" | 'wordpress';
 
 export type InfinitelyBlock = {
   name: string;

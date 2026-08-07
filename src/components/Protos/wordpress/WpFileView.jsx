@@ -1,35 +1,35 @@
+import { wp_delete_media_files_by_slugs, wp_get_blob_media_by_slug, } from '@/apps/wordpress/functions';
+import { current_project_id } from '@/constants/shared';
+import { assetsWorker, pageBuilderWorker } from '@/helpers/defineWorkers';
+import { wpWorkerCallbackMaker } from '@/helpers/functions';
+import { refType } from '@/helpers/jsDocs';
+import { useFileViewTitleResizer } from '@/hooks/useFileViewTitleResizer';
+import { FitTitle } from '@/components/Editor/Protos/FitTitle';
+import { SmallButton } from '@/components/Editor/Protos/SmallButton';
+import { ToastMsgInfo } from '@/components/Editor/Protos/ToastMsgInfo';
+import { Icons } from '@/components/Icons/Icons';
+import { useBusy } from '@/components/Protos/BusyProvider';
+import { Checkbox } from '@/components/Protos/Checkbox';
+import { OptionsButton } from '@/components/Protos/OptionsButton';
+import { useEditorMaybe } from '@grapesjs/react';
+import { isArray, isFunction } from 'lodash';
 import React, { useRef, useState } from 'react'
 import mime from 'mime'
-import { toMB } from '../../../helpers/bridge';
-import { FitTitle } from '../../Editor/Protos/FitTitle';
-import { Icons } from '../../Icons/Icons';
-import { useFileViewTitleResizer } from '../../../hooks/useFileViewTitleResizer';
-import { Tooltip } from 'react-tooltip';
-import { useEditorMaybe } from '@grapesjs/react';
-import { current_project_id } from '../../../constants/shared';
-import { refType } from '../../../helpers/jsDocs';
-import { OptionsButton } from '../OptionsButton';
-import { SmallButton } from '../../Editor/Protos/SmallButton';
+import { toMB } from '@/helpers/bridge';
 import { toast } from 'react-toastify';
-import { ToastMsgInfo } from '../../Editor/Protos/ToastMsgInfo';
-import { wp_delete_media_files_by_slugs, wp_get_blob_media_by_slug, } from '../../../Apps/wordpress/functions';
-import { useBusy } from '../BusyProvider';
-import { wpWorkerCallbackMaker } from '../../../helpers/functions';
-import { assetsWorker, pageBuilderWorker } from '../../../helpers/defineWorkers';
-import { isArray, isFunction } from 'lodash';
-import { Checkbox } from '../Checkbox';
+import { Tooltip } from 'react-tooltip';
 
 /**
  * 
- * @param {{media : import('../../../helpers/types').InfinitelyWpMedia,
+ * @param {{media : import('@/helpers/types').InfinitelyWpMedia,
  *  showOptions : boolean,
- *  callback : (media : import('../../../helpers/types').InfinitelyWpMedia , url : string)=>void,
+ *  callback : (media : import('@/helpers/types').InfinitelyWpMedia , url : string)=>void,
  *  checked : boolean,
  *  onChange : (checked : boolean) => void,
  *  allowCheckBox : boolean,
  *  setData : () => void,
  *  showOptions : boolean,
- *  media : import('../../../helpers/types').InfinitelyWpMedia,
+ *  media : import('@/helpers/types').InfinitelyWpMedia,
  *  
  * }} param0 
  * @returns 

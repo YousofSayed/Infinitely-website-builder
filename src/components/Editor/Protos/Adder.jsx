@@ -1,9 +1,9 @@
+import { Icons } from "@/components/Icons/Icons";
+import { Input } from "@/components/Editor/Protos/Input";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { TinyButton } from "@/components/Editor/Protos/TinyButton";
 import React, { memo, useEffect, useMemo, useState } from "react";
-import { SmallButton } from "./SmallButton";
-import { Icons } from "../../Icons/Icons";
-import { TinyButton } from "./TinyButton";
-import { Input } from "./Input";
-import { Select } from "./Select";
 
 /**
  *

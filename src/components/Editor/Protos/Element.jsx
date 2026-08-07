@@ -1,9 +1,9 @@
+import { refsStt, searchWord } from "@/helpers/atoms";
+import { stringify } from "@/helpers/cocktail";
+import { Icons } from "@/components/Icons/Icons";
+import { P } from "@/components/Protos/P";
 import React, { memo } from "react";
-import { Icons } from "../../Icons/Icons";
 import { useRecoilValue } from "recoil";
-import { refsStt, searchWord } from "../../../helpers/atoms";
-import { stringify } from "../../../helpers/cocktail";
-import { P } from "../../Protos/P";
 
 /**
  *

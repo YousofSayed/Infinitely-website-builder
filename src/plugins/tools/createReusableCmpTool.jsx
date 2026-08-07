@@ -1,10 +1,9 @@
+import { ReusableCmb } from "@/components/Editor/Modals/ReusableCmb";
+import { editorIcons } from "@/components/Icons/editorIcons";
+import { Icons } from "@/components/Icons/Icons";
+import { addItemInToolBarForEditor, getInfinitelySymbolInfo } from "@/helpers/functions";
+import { ModalTitle } from "@/plugins/cutomModal";
 import React from "react";
-import { ReusableCmb } from "../../components/Editor/Modals/ReusableCmb";
-import { addItemInToolBarForEditor, getInfinitelySymbolInfo } from "../../helpers/functions";
-import { editorIcons } from "../../components/Icons/editorIcons";
-import { Icons } from "../../components/Icons/Icons";
-import { ModalTitle } from "../cutomModal";
-
 
 export const createReusableCmpTool = (editor) => {
   const symbolInfo = getInfinitelySymbolInfo(editor.getSelected());

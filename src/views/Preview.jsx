@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { preview_url } from '../constants/shared';
+import { preview_url } from '@/constants/shared';
 
 export const Preview = () => {
     const broadCastChannel = new BroadcastChannel('preview');

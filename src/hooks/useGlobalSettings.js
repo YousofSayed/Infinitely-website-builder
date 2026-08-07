@@ -1,7 +1,7 @@
+import { globalSettingsState } from "@/helpers/atoms";
+import { getGlobalSettings } from "@/helpers/functions";
 import React from "react";
-import { getGlobalSettings } from "../helpers/functions";
 import { useRecoilValue, useSetRecoilState } from "recoil";
-import { globalSettingsState } from "../helpers/atoms";
 
 export const useGlobalSettings = () => {
   const globalSettingsFromLocal = getGlobalSettings();
@@ -12,7 +12,7 @@ export const useGlobalSettings = () => {
     globalSettings,
     /**
      *
-     * @param {import('../helpers/types').GlobalSettings} newSettings
+     * @param {import('@/helpers/types').GlobalSettings} newSettings
      */
     setGlobalSetting(newSettings) {
       globalSettingsFromLocal.set(newSettings);

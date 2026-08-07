@@ -1,6 +1,6 @@
+import { Icons } from "@/components/Icons/Icons";
+import { Li } from "@/components/Protos/Li";
 import React, { useEffect, useState } from "react";
-import { Li } from "../../Protos/Li";
-import { Icons } from "../../Icons/Icons";
 import { Outlet } from "react-router-dom";
 
 export const ChooseModel = () => {

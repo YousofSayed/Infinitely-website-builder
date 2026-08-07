@@ -1,6 +1,6 @@
+import { editorIcons } from "@/components/Icons/editorIcons";
+import { addItemInToolBarForEditor, unMount } from "@/helpers/functions";
 import React from "react";
-import { addItemInToolBarForEditor, unMount } from "../../helpers/functions";
-import { editorIcons } from "../../components/Icons/editorIcons";
 
 /**
  *

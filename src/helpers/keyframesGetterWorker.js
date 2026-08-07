@@ -1,7 +1,7 @@
-import { getKeyFrames, saveAnimations , removeAnimation } from "./workerCommands";
-import { doWorkerPattern } from "./workersPattern";
+import { getKeyFrames, saveAnimations , removeAnimation } from "@/helpers/workerCommands";
+import { doWorkerPattern } from "@/helpers/workersPattern";
 
-const commands = {
+export const commands = {
     getKeyFrames,
     saveAnimations,
     removeAnimation,

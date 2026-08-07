@@ -1,23 +1,10 @@
-import { Editor, useMonaco } from "@monaco-editor/react";
-import React, { memo, useEffect, useRef, useState } from "react";
-import { Loader } from "../../Loader";
 import {
   codeEditorScripts,
   current_page_id,
   current_project_id,
   global_types,
-} from "../../../constants/shared";
-import {
-  getProjectData,
-  getProjectSettings,
-  isProjectSettingPropTrue,
-  isWordpress,
-} from "../../../helpers/functions";
-import { css_beautify, html_beautify, js_beautify } from "js-beautify";
-
-import { useCmdsContext } from "../../../hooks/useCmdsContext";
-import libSource from "../../../helpers/alpineType?raw";
-import { opfs } from "../../../helpers/initOpfs";
+} from "@/constants/shared";
+import libSource from "@/helpers/alpineType?raw";
 import {
   buildGsapMotionsScript,
   cleanMotions,
@@ -29,11 +16,24 @@ import {
   infinitelyCallback,
   needsWrapping,
   wrapModule,
-} from "../../../helpers/bridge";
-import { random, uniqueID } from "../../../helpers/cocktail";
+} from "@/helpers/bridge";
+import { random, uniqueID } from "@/helpers/cocktail";
+import {
+  getProjectData,
+  getProjectSettings,
+  isProjectSettingPropTrue,
+  isWordpress,
+} from "@/helpers/functions";
+import { opfs } from "@/helpers/initOpfs";
+import { useCmdsContext } from "@/hooks/useCmdsContext";
+import { Loader } from "@/components/Loader";
+import { Editor, useMonaco } from "@monaco-editor/react";
+import { css_beautify, html_beautify, js_beautify } from "js-beautify";
 import { isBoolean } from "lodash";
-// import {  } from 'lodash'
 // import infImport from "/scripts/infinitely.js?raw";
+import React, { memo, useEffect, useRef, useState } from "react";
+
+// 
 /**
  *
  * @param {{props : import('@monaco-editor/react').EditorProps , showEditorState:boolean, toFormateValue:string, extraLibs:string , allowExtraLibs:boolean , isTemplateEngine:boolean , allowCmdsContext: boolean , allowRestAPIModelsContext:boolean}} param0

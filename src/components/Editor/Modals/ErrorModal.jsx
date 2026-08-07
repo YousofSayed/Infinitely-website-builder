@@ -1,7 +1,7 @@
-import React from "react";
-import { P } from "../../Protos/P";
-import { Button } from "../../Protos/Button";
+import { Button } from "@/components/Protos/Button";
+import { P } from "@/components/Protos/P";
 import { useEditorMaybe } from "@grapesjs/react";
+import React from "react";
 
 /**
  * 

@@ -1,6 +1,6 @@
+import { DirectionsModel } from "@/components/Editor/Protos/DirectionsModel";
+import { MiniTitle } from "@/components/Editor/Protos/MiniTitle";
 import React from "react";
-import { DirectionsModel } from "./DirectionsModel";
-import { MiniTitle } from "./MiniTitle";
 
 export const Margin = () => {
   return (

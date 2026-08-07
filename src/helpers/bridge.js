@@ -1,16 +1,13 @@
-import parseObjectLiteral from "object-literal-parse";
-import { parse as parseCss, stringify as stringifyCss } from "css";
 import {
-  cloneDeep,
-  flatMapDeep,
-  isArray,
-  isBoolean,
-  isObject,
-  isPlainObject,
-  random,
-  uniqueId,
-} from "lodash";
-import serializeJavascript from "serialize-javascript";
+  wp_get,
+  wp_get_posts_with_inf_meta,
+  wp_update_media,
+  wp_update_media_files,
+  wp_update_media_files_by_slugs,
+  wp_upload_file,
+  wp_upload_multiple_files,
+} from "@/apps/wordpress/functions";
+import { tmp } from "@/constants/RestAPIEndpoints";
 import {
   buildScripts,
   buildWpHeaderScripts,
@@ -24,20 +21,23 @@ import {
   motionId,
   motionInstanceId,
   preivewScripts,
-} from "../constants/shared";
-import { db } from "./db";
-import { opfs } from "./initOpfs";
-import { buildProject } from "./exportProject";
-import { tmp } from "../constants/RestAPIEndpoints";
+} from "@/constants/shared";
+import { db } from "@/helpers/db";
+import { buildProject } from "@/helpers/exportProject";
+import { opfs } from "@/helpers/initOpfs";
+import { parse as parseCss, stringify as stringifyCss } from "css";
 import {
-  wp_get,
-  wp_get_posts_with_inf_meta,
-  wp_update_media,
-  wp_update_media_files,
-  wp_update_media_files_by_slugs,
-  wp_upload_file,
-  wp_upload_multiple_files,
-} from "../Apps/wordpress/functions";
+  cloneDeep,
+  flatMapDeep,
+  isArray,
+  isBoolean,
+  isObject,
+  isPlainObject,
+  random,
+  uniqueId,
+} from "lodash";
+import parseObjectLiteral from "object-literal-parse";
+import serializeJavascript from "serialize-javascript";
 
 export const html = String.raw;
 export const css = String.raw;
@@ -446,7 +446,7 @@ export function defineFontFace({ family, url }) {
 
 /**
  *
- * @param {import('./types').Project} projectData
+ * @param {import('@/helpers/types').Project} projectData
  * @returns
  */
 export const getFonts = (projectData, urlException = "") => {
@@ -811,7 +811,7 @@ const handleMotionSelectorValue = (value = '', attribute, motion , isSelector = 
 
 /**
  *
- * @param {import('./types').MotionType} motion
+ * @param {import('@/helpers/types').MotionType} motion
  * @param {Boolean} paused
  * @param {boolean} isInstance
  * @returns
@@ -985,7 +985,7 @@ export async function cloneMotion(motionId, projectId) {
 
 /**
  *
- * @param {{[key:string] : import('./types').MotionType}} motions
+ * @param {{[key:string] : import('@/helpers/types').MotionType}} motions
  */
 export function buildGsapMotionsScript(
   motions,
@@ -1140,7 +1140,7 @@ return built.join(`\n\n\n`);
 
 /**
  *
- * @param {{[key:string] : import('./types').MotionType}} motions
+ * @param {{[key:string] : import('@/helpers/types').MotionType}} motions
  * @param {string} pageName
  */
 export function filterMotionsByPage(motions, pageName) {
@@ -1158,8 +1158,8 @@ export function filterMotionsByPage(motions, pageName) {
 
 /**
  *
- * @param {{[key : string] : import('./types').MotionType}} motions
- * @param {{[key:string] : import('./types').InfinitelyPage}} pages
+ * @param {{[key : string] : import('@/helpers/types').MotionType}} motions
+ * @param {{[key:string] : import('@/helpers/types').InfinitelyPage}} pages
  */
 export async function cleanMotions(motions, pages, currentPages = {}) {
   const { parseHTML } = await import("linkedom");
@@ -1298,12 +1298,12 @@ export async function cleanMotions(motions, pages, currentPages = {}) {
 
 /**
  *
- * @param {import('../helpers/types').Interactions} interactions
- * @param {{[key:string] : import('./types').InfinitelyPage}} pages
+ * @param {import('@/helpers/types').Interactions} interactions
+ * @param {{[key:string] : import('@/helpers/types').InfinitelyPage}} pages
  */
 export async function cleanInteractions(interactions, pages) {
   /**
-   * @type {import('../helpers/types').Interactions}
+   * @type {import('@/helpers/types').Interactions}
    */
   const newInteractions = {};
 
@@ -1348,7 +1348,7 @@ export function advancedParse(value) {
 
 /**
  *
- * @param {import('./types').Actions} actions
+ * @param {import('@/helpers/types').Actions} actions
  * @param {string} id
  */
 export const buildFunctionsFromActions = (actions, id, isInstance = false) => {
@@ -1381,7 +1381,7 @@ export const buildFunctionsFromActions = (actions, id, isInstance = false) => {
 
 /**
  *
- * @param {import('./types').Interactions} interactions
+ * @param {import('@/helpers/types').Interactions} interactions
  * @param {string} interactionsId
  * @param {boolean} isInstance
  */
@@ -1404,7 +1404,7 @@ export function buildInteractionsAttributes(
 
 /**
  *
- * @param {import('./types').LibraryConfig[]} libs
+ * @param {import('@/helpers/types').LibraryConfig[]} libs
  */
 export async function installLibs(libs) {
   const mime = await (await import("mime/lite")).default;
@@ -1425,7 +1425,7 @@ export async function installLibs(libs) {
 
 /**
  *
- * @param {import('./types').InfinitelyFonts} fonts
+ * @param {import('@/helpers/types').InfinitelyFonts} fonts
  */
 export async function installFonts(fonts) {
   const mime = await (await import("mime/lite")).default;
@@ -1480,7 +1480,7 @@ export async function fetchFromMain(input, init, type) {
 }
 /**
  *
- * @param {import('./types').RestAPIModel[]} rModels
+ * @param {import('@/helpers/types').RestAPIModel[]} rModels
  */
 export async function installRestModelsAPI(rModels) {
   return await Promise.all(
@@ -1550,7 +1550,7 @@ export async function installRestModelsAPI(rModels) {
 
 /**
  *
- * @param {import('./types').Project} projectData
+ * @param {import('@/helpers/types').Project} projectData
  */
 export async function getTotalSizeProject(projectId, projectData) {
   return toMB(await opfs.getFolderSize(`projects/project-${projectId}`));
@@ -1608,7 +1608,7 @@ export async function handleFilesSize(assets, projectId) {
 
 /**
  *
- * @param {import('./types').LibraryConfig[]} libs
+ * @param {import('@/helpers/types').LibraryConfig[]} libs
  */
 export async function getScripts(libs, urlException = "") {
   const scripts = Promise.all(
@@ -1646,7 +1646,7 @@ export async function getScripts(libs, urlException = "") {
 
 /**
  *
- * @param {import('./types').LibraryConfig[]} libs
+ * @param {import('@/helpers/types').LibraryConfig[]} libs
  */
 export async function getStyles(libs, urlException = "") {
   const styles = Promise.all(
@@ -1859,8 +1859,8 @@ export function reversTryCatchInDirectives(document) {
 /**
  *
  * @param {string} page
- * @param {import('./types').Project} projectData
- * @param {import('./types').ProjectSetting} projectSetting
+ * @param {import('@/helpers/types').Project} projectData
+ * @param {import('@/helpers/types').ProjectSetting} projectSetting
  * @returns
  */
 export const buildPageData = async (page = "", projectData, projectSetting) => {
@@ -2069,8 +2069,8 @@ export const buildPageData = async (page = "", projectData, projectSetting) => {
  *
  * @param {{
  * page:string ,
- * projectSetting:import('./types').ProjectSetting,
- * projectData:import('./types').Project ,
+ * projectSetting:import('@/helpers/types').ProjectSetting,
+ * projectData:import('@/helpers/types').Project ,
  * editorData:{
  * canvasCss:string,
  * editorCss:string
@@ -2150,8 +2150,8 @@ export async function buildPageContentFromData({
 /**
  *
  * @param {{
- * projectData:import('./types').Project ,
- * projectSetting:import('./types').ProjectSetting,
+ * projectData:import('@/helpers/types').Project ,
+ * projectSetting:import('@/helpers/types').ProjectSetting,
  * editorData:{
  * canvasCss:string,
  * editorCss:string
@@ -2190,9 +2190,9 @@ export async function buildPagesAsBlobForSecrviceWorker({
 /**
  *
  * @param {{
- * projectData:import('./types').Project ,
+ * projectData:import('@/helpers/types').Project ,
  * pageName:string,
- * projectSetting:import('./types').ProjectSetting,
+ * projectSetting:import('@/helpers/types').ProjectSetting,
  * editorData:{
  * canvasCss:string,
  * editorCss:string
@@ -2232,7 +2232,7 @@ export async function buildPageAsBlobForSecrviceWorker({
 
 /**
  * @param {number} projectId
- * @returns {Promise<import('./types').StorageDetails>}
+ * @returns {Promise<import('@/helpers/types').StorageDetails>}
  */
 export async function getStorageDetails(projectId) {
   const storageDetails = await navigator.storage.estimate();
@@ -2385,7 +2385,7 @@ export async function buildPage({ pageName, file, css, js }) {
 
   /**
    *
-   * @param {import('./types').LibraryConfig} lib
+   * @param {import('@/helpers/types').LibraryConfig} lib
    * @param {boolean} isHeader
    * @returns
    */
@@ -2421,7 +2421,7 @@ export async function buildPage({ pageName, file, css, js }) {
   // };
 
   //  /**
-  //  * @type {import('./types').LibraryConfig[]}
+  //  * @type {import('@/helpers/types').LibraryConfig[]}
   //  */
   // const cssLibs = [...document.querySelectorAll('link[rel="stylesheet"]')]
   //   .map((lib) => {
@@ -2439,7 +2439,7 @@ export async function buildPage({ pageName, file, css, js }) {
   //   .filter(Boolean);
 
   // /**
-  //  * @type {import('./types').LibraryConfig[]}
+  //  * @type {import('@/helpers/types').LibraryConfig[]}
   //  */
   // const jsHeaderLibs = [...document.head.querySelectorAll("script")].map(
   //   (lib) => {
@@ -2472,7 +2472,7 @@ export async function buildPage({ pageName, file, css, js }) {
   );
 
   /**
-   * @type {import('./types').InfinitelyPage}
+   * @type {import('@/helpers/types').InfinitelyPage}
    */
   const page = {
     html: new File([document.body.innerHTML], `${name}.html`, {
@@ -2597,7 +2597,7 @@ export function getInitProjectData({
 
 /**
  *
- * @param {{asJson:boolean , projectId:number , toastId:string, projectSetting : import('./types').ProjectSetting}} props
+ * @param {{asJson:boolean , projectId:number , toastId:string, projectSetting : import('@/helpers/types').ProjectSetting}} props
  */
 export async function uploadProjectToTMP(props) {
   const projectData = await db.projects.get(props.projectId);
@@ -2621,8 +2621,8 @@ export function doGlobalType(libName, globalTypeName, isExportDefault = false) {
   if (!libName) throw new Error(`libName param is required`);
 
   const importStatement = isExportDefault
-    ? `import _lf from "${libName}";`
-    : `import * as _lf from "${libName}";`;
+    ? ``
+    : ``;
 
   //   const moduleDeclaration = `
   // declare module "${libName}" {
@@ -2959,9 +2959,9 @@ export function toQueryParams(obj) {
  * @param {{data : {
  * name:string,
  * description:string,
- * projectSetting:import('./types').ProjectSetting
+ * projectSetting:import('@/helpers/types').ProjectSetting
  * id:number;
- * projectData:import('./types').WpProject
+ * projectData:import('@/helpers/types').WpProject
  * app_type:string,
  * wp_meta:{
  * website_url: string,
@@ -3063,7 +3063,7 @@ export async function initMainAndGlobalFilesForWp({ data }) {
   }
 
   /**
-   * @type {{[slug: string]: import('./types').InfinitelyWpMedia}}
+   * @type {{[slug: string]: import('@/helpers/types').InfinitelyWpMedia}}
    */
   const files = uploadRes.files;
 
@@ -3085,7 +3085,7 @@ export async function initMainAndGlobalFilesForWp({ data }) {
 
 
   /**
-   * @type {import('./types').WpProject}
+   * @type {import('@/helpers/types').WpProject}
    */
   const newUpdatedConfig = {
     mainEditorScripts: {
@@ -3223,7 +3223,7 @@ export function normalizeComponentsTree(components) {
 /**
  * 
  * @param {number} projectId 
- * @param {(project : import('./types').WpProject)=>any} callack 
+ * @param {(project : import('@/helpers/types').WpProject)=>any} callack 
  */
 export async function doInWordpressAsyncInWorker(projectId, callack = async () => { }) {
   if (!projectId) {
@@ -3239,7 +3239,7 @@ export async function doInWordpressAsyncInWorker(projectId, callack = async () =
 /**
  * 
  * @param {number} projectId 
- * @param {(project : import('./types').Project)=>any} callack 
+ * @param {(project : import('@/helpers/types').Project)=>any} callack 
  */
 export async function doInNormalAsyncInWorker(projectId, callack = async () => { }) {
   if (!projectId) {

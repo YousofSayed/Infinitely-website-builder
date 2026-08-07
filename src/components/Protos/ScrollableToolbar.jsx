@@ -1,10 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
-import { currentRefType, refType } from "../../helpers/jsDocs";
-import { Icons } from "../Icons/Icons";
-import { addClickClass } from "../../helpers/cocktail";
-import { isElementScrollable } from "../../helpers/functions";
-import { scrollBarResizerObserver } from "../../observers/scrollbarReszierObserver";
+import { addClickClass } from "@/helpers/cocktail";
+import { isElementScrollable } from "@/helpers/functions";
+import { currentRefType, refType } from "@/helpers/jsDocs";
+import { scrollBarResizerObserver } from "@/observers/scrollbarReszierObserver";
+import { Icons } from "@/components/Icons/Icons";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import React, { useEffect, useRef, useState } from "react";
 
 /**
  *

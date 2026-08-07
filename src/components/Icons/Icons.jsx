@@ -1,4 +1,5 @@
-import { Path } from "../Protos/Path";
+import { Path } from "@/components/Protos/Path";
+
 export const mainColor = "#64748B";
 
 //million-ignore

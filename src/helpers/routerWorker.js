@@ -1,7 +1,7 @@
-import { listenToOPFSBroadcastChannel } from "./workerCommands";
-import { doWorkerPattern } from "./workersPattern";
+import { listenToOPFSBroadcastChannel } from "@/helpers/workerCommands";
+import { doWorkerPattern } from "@/helpers/workersPattern";
 
-const commands = {
+export const commands = {
     listenToOPFSBroadcastChannel,
 }
 doWorkerPattern(commands)

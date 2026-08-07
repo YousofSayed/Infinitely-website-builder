@@ -1,3 +1,6 @@
+import { refType } from "@/helpers/jsDocs";
+import { Icons } from "@/components/Icons/Icons";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 import React, {
   useRef,
   useEffect,
@@ -6,9 +9,7 @@ import React, {
   createContext,
   memo,
 } from "react";
-import { Icons } from "../Icons/Icons";
-import { refType } from "../../helpers/jsDocs";
-import { useAutoAnimate } from "@formkit/auto-animate/react";
+
 const AccordionContext = createContext();
 
 export const AccordionProvider = ({ children }) => {

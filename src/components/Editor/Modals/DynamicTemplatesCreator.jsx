@@ -1,24 +1,24 @@
-import React, { useEffect, useState } from "react";
-import { Input } from "../Protos/Input";
-import { Button } from "../../Protos/Button";
-import { useEditorMaybe } from "@grapesjs/react";
-import html2canvas from "html2canvas-pro";
-import {  uniqueID } from "../../../helpers/cocktail";
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "../Protos/ToastMsgInfo";
+import { current_project_id } from "@/constants/shared";
+import {  uniqueID } from "@/helpers/cocktail";
+import { db } from "@/helpers/db";
 import {
   extractChildsRules,
   extractRulesById,
   getComponentRules,
-} from "../../../helpers/functions";
-import { useLiveQuery } from "dexie-react-hooks";
-import { current_project_id } from "../../../constants/shared";
-import { db } from "../../../helpers/db";
+} from "@/helpers/functions";
 import {
   dynamicAttributesType,
   dynamicTemplatesType,
-} from "../../../helpers/jsDocs";
-import { editorIcons } from "../../Icons/editorIcons";
+} from "@/helpers/jsDocs";
+import { editorIcons } from "@/components/Icons/editorIcons";
+import { Button } from "@/components/Protos/Button";
+import { Input } from "@/components/Editor/Protos/Input";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { useEditorMaybe } from "@grapesjs/react";
+import { useLiveQuery } from "dexie-react-hooks";
+import html2canvas from "html2canvas-pro";
+import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 export const DynamicTemplatesCreator = () => {
   const editor = useEditorMaybe();

@@ -1,20 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Icons } from "../Icons/Icons";
-import { Button } from "../Protos/Button";
-import { Input } from "../Editor/Protos/Input";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { projectState, showCrtModalState } from "../../helpers/atoms";
-import { dropBoxFilesMeta, projectsType } from "../../helpers/jsDocs";
-import { db } from "../../helpers/db";
-import JSZip from "jszip";
-import { parseHTML } from "linkedom";
-import { uniqueId } from "lodash";
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "../Editor/Protos/ToastMsgInfo";
-import { restoreBlobs } from "../../helpers/bridge";
-import { infinitelyWorker } from "../../helpers/infinitelyWorker";
-import { loadProject } from "../../helpers/functions";
-import { OptionsButton } from "../Protos/OptionsButton";
+import { dbx_sign_in_state } from "@/constants/shared";
+import { projectState, showCrtModalState } from "@/helpers/atoms";
+import { restoreBlobs } from "@/helpers/bridge";
+import { addClickClass, uniqueID } from "@/helpers/cocktail";
+import { db } from "@/helpers/db";
 import {
   authDropBox,
   checkDropBoxSignInState,
@@ -25,12 +13,24 @@ import {
   loadDropBoxProject,
   logOutFromDropBox,
   refreshDropboxToken,
-} from "../../helpers/dropboxHandlers";
-import { addClickClass, uniqueID } from "../../helpers/cocktail";
-import { dbx_sign_in_state } from "../../constants/shared";
-import { SmallButton } from "../Editor/Protos/SmallButton";
+} from "@/helpers/dropboxHandlers";
+import { loadProject } from "@/helpers/functions";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
+import { dropBoxFilesMeta, projectsType } from "@/helpers/jsDocs";
+import { Input } from "@/components/Editor/Protos/Input";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { Icons } from "@/components/Icons/Icons";
+import { Loader } from "@/components/Loader";
+import { Button } from "@/components/Protos/Button";
+import { OptionsButton } from "@/components/Protos/OptionsButton";
+import JSZip from "jszip";
+import { parseHTML } from "linkedom";
+import { uniqueId } from "lodash";
 import { For } from "million/react";
-import { Loader } from "../Loader";
+import React, { useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 
 export const Header = () => {
   const setShowCrtModal = useSetRecoilState(showCrtModalState);

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { generateBeautifulHexColor } from "../../helpers/functions";
+import { generateBeautifulHexColor } from "@/helpers/functions";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import React, { useState } from "react";
 
 /**
  *

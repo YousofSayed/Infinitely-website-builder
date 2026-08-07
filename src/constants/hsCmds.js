@@ -1,10 +1,10 @@
-import { html, uniqueID } from "../helpers/cocktail";
+import { html, uniqueID } from "@/helpers/cocktail";
 import {
   getAllCssProperties,
   getAllStandardCSSProperties,
   getArrayProps,
   getWindowBuiltInClasses,
-} from "../helpers/functions";
+} from "@/helpers/functions";
 import {
   conversions,
   defaultAttributeNames,
@@ -17,10 +17,10 @@ import {
   measure,
   operators,
   putPositions,
-} from "./hsValues";
+} from "@/constants/hsValues";
 
 /**
- * @type {{[key:string] : import('../helpers/types').CMD}}
+ * @type {{[key:string] : import('@/helpers/types').CMD}}
  */
 export const hsCmds = {
   set_var: {

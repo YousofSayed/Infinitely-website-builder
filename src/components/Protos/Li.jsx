@@ -1,12 +1,12 @@
-import React, { memo, useEffect, useRef, useState } from "react";
-import { addClickClass, uniqueID } from "../../helpers/cocktail";
-import { Link, useParams, useResolvedPath } from "react-router-dom";
-import { useRecoilValue, useSetRecoilState } from "recoil";
-import { removeAllActivesState } from "../../helpers/atoms";
-import { refType } from "../../helpers/jsDocs";
-import { Tooltip } from "react-tooltip";
-import { useUlContext } from "./UlProvider";
+import { removeAllActivesState } from "@/helpers/atoms";
+import { addClickClass, uniqueID } from "@/helpers/cocktail";
+import { refType } from "@/helpers/jsDocs";
+import { useUlContext } from "@/components/Protos/UlProvider";
 import { uniqueId } from "lodash";
+import React, { memo, useEffect, useRef, useState } from "react";
+import { Link, useParams, useResolvedPath } from "react-router-dom";
+import { Tooltip } from "react-tooltip";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 
 //million-ignore
 export const Li = ({

@@ -1,43 +1,53 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Input } from "../Protos/Input";
-import { Button } from "../../Protos/Button";
-import { useEditorMaybe } from "@grapesjs/react";
-import html2canvas from "html2canvas-pro";
-import {
-  getComponentRules,
-  getProjectSettings,
-  handleCloneComponent,
-  saveProjectByWorker,
-  store,
-} from "../../../helpers/functions";
-import { html, uniqueID } from "../../../helpers/cocktail";
-import { db } from "../../../helpers/db";
+import { wp_insert_post } from "@/apps/wordpress/functions";
 import {
   current_page_id,
   current_project_id,
   inf_template_id,
-} from "../../../constants/shared";
+  inf_template_name,
+} from "@/constants/shared";
+import { _blocksCachedState } from "@/constants/windowKeys";
+import { defineRoot } from "@/helpers/bridge";
+import { html, uniqueID } from "@/helpers/cocktail";
+import { db } from "@/helpers/db";
+import {
+  doInNormalAsync,
+  doInWordpressAsync,
+  getComponentRules,
+  getProjectSettings,
+  gjsComponentsToJSON,
+  handleCloneComponent,
+  saveProjectByWorker,
+  store,
+} from "@/helpers/functions";
+import { opfs } from "@/helpers/initOpfs";
+import { editorIcons } from "@/components/Icons/editorIcons";
+import { Icons } from "@/components/Icons/Icons";
+import { Button } from "@/components/Protos/Button";
+import { Input } from "@/components/Editor/Protos/Input";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { useEditorMaybe } from "@grapesjs/react";
 import { minify } from "csso";
-import { Icons } from "../../Icons/Icons";
-import { editorIcons } from "../../Icons/editorIcons";
-import { opfs } from "../../../helpers/initOpfs";
-import { defineRoot } from "../../../helpers/bridge";
+import html2canvas from "html2canvas-pro";
+import { uniqueId } from "lodash";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
-import { ToastMsgInfo } from "../Protos/ToastMsgInfo";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const ReusableCmb = () => {
   const editor = useEditorMaybe();
   const selectedEl = editor.getSelected();
   const [imgSrc, setImgSrc] = useState("");
   const [imgBlob, setImgBlob] = useState(new Blob([""], { type: "image/png" }));
+  const [imgReady, setImgReady] = useState(false);
   const [newProps, setNewProps] = useState({
     name: "",
     ctg: "",
   });
+  const qc = useQueryClient();
 
   useEffect(() => {
     //   setCtgs([...getCategoriesId(editor)]);
-    // getImage();
+    getImage();
   }, []);
 
   const getImage = async () => {
@@ -46,19 +56,20 @@ export const ReusableCmb = () => {
     ).toBlob((blob) => {
       setImgSrc(URL.createObjectURL(blob));
       setImgBlob(blob);
+      setImgReady(true);
     }, "image/png");
   };
 
   const save = async () => {
     const tId = toast.loading(<ToastMsgInfo msg={`Saving template...`} />);
-    const {projectSettings} = getProjectSettings();
+    const { projectSettings } = getProjectSettings();
     editor.Storage.setAutosave(false);
     // sessionStorage.setItem("clone-disabled", "true");
     const sle = await editor.getSelected();
     sle.set({
       draggable: true,
     });
-    console.log(sle.props());
+
     const isSplitter = sle.get("type") == "splitter";
     let splitterContent = "";
     if (isSplitter) {
@@ -73,16 +84,14 @@ export const ReusableCmb = () => {
        </${sle.tagName.toLowerCase()}>`;
     }
 
-    // console.log("string attrs : ", splitterContent);
+    const uuid = uniqueId(`${uniqueID()}-`);
 
-    // return;
-
-    // sessionStorage.removeItem("clone-disabled");
-    // const projectDataHandled = await handleCloneComponent(sle , editor);
     const id = newProps.name + (newProps.ctg || "templates") + sle.getId();
-    sle.addAttributes({ [inf_template_id]: id });
+    sle.addAttributes({
+      [inf_template_id]: uuid,
+      [inf_template_name]: newProps.name,
+    });
     const block = {};
-    // editor.Blocks.add(id, block);
     const projectId = +localStorage.getItem(current_project_id);
     const projectData = await db.projects.get(projectId);
     const stringStyle = getComponentRules({
@@ -96,109 +105,121 @@ export const ReusableCmb = () => {
       content: contentPath,
       style: stylePath,
     };
+
+    const afterSave = () => {
+      editor.Storage.setAutosave(projectSettings.enable_auto_save);
+      window[_blocksCachedState] = false;
+      editor.runCommand("close:current:modal");
+      toast.done(tId);
+      toast.success(<ToastMsgInfo msg={`Template saved successfully👍`} />);
+      editor.off("storage:after:store", afterSave);
+    };
+
     editor.clearDirtyCount();
-    store(
-      {
-        data: {
-          // motions:projectDataHandled.motions,
-          blocks: {
-            ...projectData.blocks,
-            [id]: {
-              label: newProps.name,
-              name: newProps.name,
-              category: newProps.ctg || "templates",
-              id,
-              pathes,
-              // content: new Blob([selectedEl.toHTML({ withProps: true })], {
-              //   type: "text/html",
-              // }),
-              // style: minify(stringStyle).css,
-              type: "template",
-              media: sle.getIcon() || editorIcons.templates({fill:'white'}),
+
+    await doInNormalAsync(async () => {
+      store(
+        {
+          data: {
+            // motions:projectDataHandled.motions,
+            blocks: {
+              ...projectData.blocks,
+              [id]: {
+                label: newProps.name,
+                name: newProps.name,
+                category: newProps.ctg || "templates",
+                id,
+                pathes,
+                // content: new Blob([selectedEl.toHTML({ withProps: true })], {
+                //   type: "text/html",
+                // }),
+                // style: minify(stringStyle).css,
+                type: "template",
+                media:
+                  sle.getIcon() || editorIcons.templates({ fill: "white" }),
+              },
             },
           },
-        },
 
-        files: {
-          [defineRoot(contentPath)]: isSplitter ? splitterContent : sle.toHTML({
-            keepInlineStyle: true,
-            withProps: true,
+          files: {
+            [defineRoot(contentPath)]: isSplitter
+              ? splitterContent
+              : sle.toHTML({
+                  keepInlineStyle: true,
+                  withProps: true,
+                }),
+
+            [defineRoot(stylePath)]: minify(stringStyle).css,
+          },
+
+          pageName: localStorage.getItem(current_page_id),
+          updatePreviewPages: projectSettings.enable_auto_save,
+        },
+        editor,
+      );
+
+      editor.on("storage:after:store", afterSave);
+    });
+
+    await doInWordpressAsync(async () => {
+      const dataToSave = {
+        html: gjsComponentsToJSON(sle, true),
+        css: minify(stringStyle).css,
+        category: newProps.ctg,
+        media:
+          selectedEl.getIcon() ||
+          editorIcons.components({
+            strokeColor: "white",
+            strokeWidth: 2,
           }),
+      };
 
-          [defineRoot(stylePath)]: minify(stringStyle).css,
+      const res = await wp_insert_post({
+        projectId,
+        // featured_image:
+        //   new File([imgBlob], `${newProps.name}-${uuid}.png`, {
+        //     type: "image/png",
+        //   })
+        // ||
+        // new File(
+        //   [
+        // selectedEl.getIcon() ||
+        //   editorIcons.components({
+        //     strokeColor: "white",
+        //     strokeWidth: 2,
+        //   }),
+        //   ],
+        //   `${newProps.name}-${uuid}`,
+        //   { type: "image/png" },
+        // )
+        // ,
+
+        post_data: {
+          post_type: "inf_blocks",
+          post_name: newProps.name,
+          post_status: "publish",
+          /////....
         },
 
-        pageName: localStorage.getItem(current_page_id),
-        updatePreviewPages: projectSettings.enable_auto_save,
-      },
-      editor
-    );
-    //  editor.trigger("block:add");
-    editor.runCommand("close:current:modal");
-    toast.done(tId);
-    toast.success(<ToastMsgInfo msg={`Template saved successfully👍`} />);
+        meta_data: {
+          "inf-template-id": uuid,
+          media:
+            selectedEl.getIcon() ||
+            editorIcons.components({
+              strokeColor: "white",
+              strokeWidth: 2,
+            }),
+          inf_meta: {
+            saved: dataToSave,
+          },
+        },
+      });
+      console.log("blocks res after save : ", res);
 
-    // await opfs.writeFiles([
-    //   {
-    //     path: defineRoot(contentPath),
-    //     content: sle.toHTML({ withProps: true }),
-    //   },
-    //   {
-    //     path: defineRoot(stylePath),
-    //     content: minify(stringStyle).css,
-    //   },
-    // ]);
-
-    // await db.projects.update(projectId, {
-    //   blocks: {
-    //     ...projectData.blocks,
-    //     [id]: {
-    //       label: newProps.name,
-    //       name: newProps.name,
-    //       category: newProps.ctg || "templates",
-    //       id,
-    //       pathes,
-    //       // content: new Blob([selectedEl.toHTML({ withProps: true })], {
-    //       //   type: "text/html",
-    //       // }),
-    //       // style: minify(stringStyle).css,
-    //       type: "template",
-    //       media: sle.getIcon() || editorIcons.templates({}),
-    //     },
-    //   },
-    // });
-
-    // saveProjectByWorker(
-    //   {
-    //     data: {
-    //       blocks: {
-    //         ...projectData.blocks,
-    //         [id]: {
-    //           label: newProps.name,
-    //           name: newProps.name,
-    //           category: newProps.ctg || "templates",
-    //           id,
-    //           pathes,
-    //           // content: new Blob([selectedEl.toHTML({ withProps: true })], {
-    //           //   type: "text/html",
-    //           // }),
-    //           // style: minify(stringStyle).css,
-    //           type: "template",
-    //           media: sle.getIcon() || editorIcons.templates({}),
-    //         },
-    //       },
-    //     },
-
-    //     pageName: localStorage.getItem(current_page_id),
-    //     updatePreviewPages: true,
-    //   },
-    //   () => {
-    // editor.trigger("block:add");
-    // editor.runCommand("close:current:modal");
-    // toast.done(tId);
-    // toast.success(<ToastMsgInfo msg={`Template saved successfully👍`} />);
-    //   }
-    // );
+      afterSave();
+      qc.invalidateQueries({ queryKey: ["inf_blocks"] });
+      editor.trigger("block:add");
+    });
   };
 
   return (
@@ -222,6 +243,7 @@ export const ReusableCmb = () => {
           value={newProps.ctg}
         /> */}
         <Button
+        className="h-auto font-semibold"
           onClick={(ev) => {
             save();
           }}

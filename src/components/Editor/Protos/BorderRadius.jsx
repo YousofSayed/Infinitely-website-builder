@@ -1,6 +1,6 @@
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { Property } from "@/components/Editor/Protos/Property";
 import React from "react";
-import { Property } from "./Property";
-import { FitTitle } from "./FitTitle";
 
 export const BorderRadius = () => {
   return (

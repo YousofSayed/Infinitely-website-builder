@@ -1,14 +1,14 @@
 import {
   current_dynamic_template_id,
   current_project_id,
-} from "../constants/shared";
-import { db } from "../helpers/db";
+} from "@/constants/shared";
+import { db } from "@/helpers/db";
 import {
   getDynamicComponent,
   getProjectData,
   isDynamicComponent,
-} from "../helpers/functions";
-import { infinitelyWorker } from "../helpers/infinitelyWorker";
+} from "@/helpers/functions";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
 
 /**
  *

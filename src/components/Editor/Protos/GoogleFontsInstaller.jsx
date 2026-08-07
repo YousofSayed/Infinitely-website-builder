@@ -1,32 +1,32 @@
-import React, { useEffect, useRef, useState } from "react";
-import { googleFontFiles, googleFontsSchema } from "../../../helpers/jsDocs";
+import { wp_update_option, wp_upload_multiple_files } from "@/apps/wordpress/functions";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { reloadRequiredInstance } from "@/constants/InfinitelyInstances";
 import {
   google_fonts_endpoint,
   google_fonts_search_by_font_family,
-} from "../../../constants/RestAPIEndpoints";
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "./ToastMsgInfo";
-import { Loader } from "../../Loader";
-import { Icons } from "../../Icons/Icons";
-import { Input } from "./Input";
-import { Button } from "../../Protos/Button";
-import { doInNormalAsync, doInWordpressAsync, getProjectData } from "../../../helpers/functions";
-import { current_project_id } from "../../../constants/shared";
-import { db } from "../../../helpers/db";
-import { uniqueID } from "../../../helpers/cocktail";
-import { Virtuoso } from "react-virtuoso";
+} from "@/constants/RestAPIEndpoints";
+import { current_project_id } from "@/constants/shared";
+import { dbAssetsSwState } from "@/helpers/atoms";
+import { defineRoot, fileNameToMediaSlug, getFileSize, getFonts, toMB } from "@/helpers/bridge";
+import { uniqueID } from "@/helpers/cocktail";
+import { db } from "@/helpers/db";
+import { doInNormalAsync, doInWordpressAsync, getProjectData } from "@/helpers/functions";
+import { opfs } from "@/helpers/initOpfs";
+import { googleFontFiles, googleFontsSchema } from "@/helpers/jsDocs";
+import { Icons } from "@/components/Icons/Icons";
+import { Loader } from "@/components/Loader";
+import { Button } from "@/components/Protos/Button";
+import { Checkbox } from "@/components/Protos/Checkbox";
+import { VirtosuoVerticelWrapper } from "@/components/Protos/VirtosuoVerticelWrapper";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { Input } from "@/components/Editor/Protos/Input";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useEditorMaybe } from "@grapesjs/react";
-import { useRecoilState } from "recoil";
-import { dbAssetsSwState } from "../../../helpers/atoms";
-import { FitTitle } from "./FitTitle";
-import { VirtosuoVerticelWrapper } from "../../Protos/VirtosuoVerticelWrapper";
-import { opfs } from "../../../helpers/initOpfs";
-import { defineRoot, fileNameToMediaSlug, getFileSize, getFonts, toMB } from "../../../helpers/bridge";
-import { reloadRequiredInstance } from "../../../constants/InfinitelyInstances";
-import { InfinitelyEvents } from "../../../constants/infinitelyEvents";
-import { wp_update_option, wp_upload_multiple_files } from "../../../Apps/wordpress/functions";
 import { isPlainObject } from "lodash";
-import { Checkbox } from "../../Protos/Checkbox";
+import React, { useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
+import { Virtuoso } from "react-virtuoso";
+import { useRecoilState } from "recoil";
 
 /**
  * Component to render a single Google Font item with live preview

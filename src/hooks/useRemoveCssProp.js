@@ -4,7 +4,7 @@ import React from 'react'
 export const useRemoveCssProp = () => {
   const editor = useEditorMaybe();
 
-  return ({cssProp})=>{
+return ({cssProp})=>{
     editor?.getSelected()?.removeStyle(cssProp); 
   }
 }

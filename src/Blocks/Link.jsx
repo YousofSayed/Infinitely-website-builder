@@ -1,12 +1,12 @@
-import { Icons } from "../components/Icons/Icons";
-import { current_page_id } from "../constants/shared";
+import { Icons } from "@/components/Icons/Icons";
+import { current_page_id } from "@/constants/shared";
 import {
   defineTraits,
   doInNormal,
   getProjectData,
   isNormal,
-} from "../helpers/functions";
-import { reactToStringMarkup } from "../helpers/reactToStringMarkup";
+} from "@/helpers/functions";
+import { reactToStringMarkup } from "@/helpers/reactToStringMarkup";
 
 /**
  *

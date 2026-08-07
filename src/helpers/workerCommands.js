@@ -1,5 +1,12 @@
-import { parseHTML } from "linkedom";
-import { db } from "./db";
+import {
+  wp_create_option,
+  wp_get_media_files_by_slugs,
+  wp_update_media_files,
+  wp_update_media_files_by_slugs,
+  wp_update_meta,
+  wp_update_option,
+  wp_upload_file,
+} from "@/apps/wordpress/functions";
 import {
   buildScripts,
   global_types,
@@ -11,10 +18,8 @@ import {
   mainMotionId,
   motionId,
   motionInstanceId,
-} from "../constants/shared";
-// import { doDocument } from "./functions";
-// import monacoLoader from "@monaco-editor/loader";
-// import { buildDynamicTemplate, buildScriptFromCmds } from "./worker_functions";
+} from "@/constants/shared";
+
 import {
   buildInteractionsAttributes,
   buildPageAsBlobForSecrviceWorker,
@@ -36,26 +41,28 @@ import {
   // needsWrapping,
   uploadProjectToTMP,
   // wrapModule,
-} from "./bridge";
-import { uniqueId, isPlainObject, random, isNumber } from "lodash";
-import { opfs } from "./initOpfs";
-// import { tailwindClasses } from "../constants/tailwindClasses";
-// import { css_beautify } from "js-beautify";
-// import { stringify } from "css";
+} from "@/helpers/bridge";
+import { db } from "@/helpers/db";
+import { opfs } from "@/helpers/initOpfs";
+import { installTypes } from "@/helpers/installTypes";
+// FIXME: unresolved import - buildDynamicTemplate/buildScriptFromCmds are not defined anywhere in this codebase snapshot - needs manual attention
+
 import { minify } from "csso";
-import { installTypes } from "./installTypes";
-import {
-  wp_create_option,
-  wp_get_media_files_by_slugs,
-  wp_update_media_files,
-  wp_update_media_files_by_slugs,
-  wp_update_meta,
-  wp_update_option,
-  wp_upload_file,
-} from "../Apps/wordpress/functions";
-// import { walk, parse } from "css-tree";
-// import { initDBAssetsSw } from "../serviceWorkers/initDBAssets-sw";
-// import Dexie from "dexie";
+import { parseHTML } from "linkedom";
+
+import { uniqueId, isPlainObject, random, isNumber } from "lodash";
+
+//
+//
+//
+
+//
+//
+//
+
+//
+//
+//
 //
 const html = String.raw;
 const css = String.raw;
@@ -87,7 +94,7 @@ export async function updateAllPages(props) {
 
         const { document } = parseHTML(doDocument(pageContent));
         const oldSymbols = document.body.querySelectorAll(
-          `[${inf_symbol_Id_attribute}]`
+          `[${inf_symbol_Id_attribute}]`,
         );
 
         if (!oldSymbols.length) {
@@ -105,14 +112,14 @@ export async function updateAllPages(props) {
             oldSybmol.outerHTML = await dbSymbol.content.text();
 
             return await oldSybmol;
-          })
+          }),
         );
 
         page.html = new Blob([document.body.innerHTML], { type: "text/html" });
         page.symbols = pageSymbols;
         updatedPages[page.name] = page;
         return page;
-      })
+      }),
     );
 
     await db.projects.update(props.projectId, {
@@ -130,7 +137,7 @@ export async function updateAllPages(props) {
 /**
  *
  * @param {{
- * data : import('./types').Project ,
+ * data : import('@/helpers/types').Project ,
  * files:{[key:string] : File},
  *  projectId : number ,
  *  updatePreviewPages : boolean ,
@@ -153,7 +160,7 @@ export async function storeGrapesjsDataIfSymbols(props) {
         Object.entries(props.files).map(([key, file]) => ({
           path: defineRoot(key),
           content: file,
-        }))
+        })),
       );
     }
 
@@ -182,7 +189,7 @@ export async function storeGrapesjsDataIfSymbols(props) {
 
         const { document } = parseHTML(doDocument(pageContent));
         const oldSymbols = document.body.querySelectorAll(
-          `[${inf_symbol_Id_attribute}]`
+          `[${inf_symbol_Id_attribute}]`,
         );
 
         if (!oldSymbols.length) {
@@ -202,7 +209,7 @@ export async function storeGrapesjsDataIfSymbols(props) {
             ).text();
 
             return await oldSybmol;
-          })
+          }),
         );
 
         await opfs.writeFiles([
@@ -215,7 +222,7 @@ export async function storeGrapesjsDataIfSymbols(props) {
         page.symbols = pageSymbols;
         updatedPages[page.name] = page;
         return page;
-      })
+      }),
     );
 
     const newData = {
@@ -261,59 +268,66 @@ export async function deleteAllSymbolsById(props) {
   const projectData = await db.projects.get(props.projectId);
   const pages = structuredClone(projectData.pages);
   const updatedPages = {};
-
-  await Promise.all(
-    Object.values(pages).map(async (page) => {
-      const { document } = parseHTML(
-        doDocument(
-          await (await opfs.getFile(defineRoot(page.pathes.html))).text()
-        )
-      );
-      const deleteSymbol = (id) => {
-        const symbolsById = document.body.querySelectorAll(
-          `[${inf_symbol_Id_attribute}="${id}"]`
+  try {
+    await Promise.all(
+      Object.values(pages).map(async (page) => {
+        const { document } = parseHTML(
+          doDocument(
+            await (await opfs.getFile(defineRoot(page.pathes.html))).text(),
+          ),
         );
-        symbolsById.forEach((symbol) => {
-          if (props.unlink && !props.deleteAll) {
-            symbol.removeAttribute(inf_symbol_Id_attribute);
-          } else if (props.deleteAll) {
-            symbol.remove();
-          }
-        });
-      };
+        const deleteSymbol = (id) => {
+          const symbolsById = document.body.querySelectorAll(
+            `[${inf_symbol_Id_attribute}="${id}"]`,
+          );
+          symbolsById.forEach((symbol) => {
+            if (props.unlink && !props.deleteAll) {
+              symbol.removeAttribute(inf_symbol_Id_attribute);
+            } else if (props.deleteAll) {
+              symbol.remove();
+            }
+          });
+        };
 
-      Array.isArray(props.symbolId)
-        ? props.symbolId.forEach((id) => deleteSymbol(id))
-        : deleteSymbol(props.symbolId);
+        Array.isArray(props.symbolId)
+          ? props.symbolId.forEach((id) => deleteSymbol(id))
+          : deleteSymbol(props.symbolId);
 
-      let pageSymbols = [
-        ...document.body.querySelectorAll(`[${inf_symbol_Id_attribute}]`),
-      ].map((symbol) => symbol.getAttribute(`[${inf_symbol_Id_attribute}]`));
+        let pageSymbols = [
+          ...document.body.querySelectorAll(`[${inf_symbol_Id_attribute}]`),
+        ].map((symbol) => symbol.getAttribute(`[${inf_symbol_Id_attribute}]`));
 
-      await opfs.writeFiles([
-        {
-          path: defineRoot(page.pathes.html),
-          content: document.body.innerHTML,
-        },
-      ]);
-      // page.html = new Blob([document.body.innerHTML], { type: "text/html" });
-      page.symbols = pageSymbols;
-      updatedPages[page.name] = page;
-      return page;
-    })
-  );
+        await opfs.writeFiles([
+          {
+            path: defineRoot(page.pathes.html),
+            content: document.body.innerHTML,
+          },
+        ]);
+        // page.html = new Blob([document.body.innerHTML], { type: "text/html" });
+        page.symbols = pageSymbols;
+        updatedPages[page.name] = page;
+        return page;
+      }),
+    );
 
-  await db.projects.update(props.projectId, {
-    pages: updatedPages,
-  });
+    await db.projects.update(props.projectId, {
+      pages: updatedPages,
+    });
 
-  self.postMessage({ command: "deleteAllSymbolsById", props: { done: true } });
-  console.log("From worker : deleted props is done");
+    self.postMessage({
+      command: "deleteAllSymbolsById",
+      props: { done: true },
+    });
+    console.log("From worker : deleted props is done");
+    return { done: true };
+  } catch (error) {
+    return { done: false };
+  }
 }
 
 /**
  * @param {{
- *  data: import('./types').Project,
+ *  data: import('@/helpers/types').Project,
  *  files: { [key: string]: File },
  *  projectId: number,
  *  updatePreviewPages: boolean,
@@ -354,7 +368,7 @@ export async function updateDB(props) {
             Object.entries(files).map(([key, file]) => ({
               path: defineRoot(key),
               content: file,
-            }))
+            })),
           );
         }
 
@@ -403,8 +417,8 @@ export async function updateDB(props) {
 /**
  *
  * @param {{
- * data : import('./types').Project ,
- * projectSetting:import('./types').ProjectSetting,
+ * data : import('@/helpers/types').Project ,
+ * projectSetting:import('@/helpers/types').ProjectSetting,
  * projectId : number ,
  * pageName:string,
  * editorData: { canvasCss:string , editorCss:string },
@@ -426,7 +440,7 @@ export async function writePreviewPage(props) {
   await opfs.writeFiles([
     {
       path: defineRoot(
-        `${props.pageName == "index" ? "" : "pages"}/${props.pageName}.html`
+        `${props.pageName == "index" ? "" : "pages"}/${props.pageName}.html`,
       ),
       content: pageFile,
     },
@@ -445,7 +459,7 @@ export async function writePreviewPage(props) {
 
 /**
  *
- * @param {{projectId : number , dynamicTemplateId: string, data : import('./types').CMD[]}} props
+ * @param {{projectId : number , dynamicTemplateId: string, data : import('@/helpers/types').CMD[]}} props
  */
 // export async function updateDynamicTemplates(props) {
 //   const projectData = await db.projects.get(props.projectId);
@@ -623,7 +637,7 @@ export async function uploadAssets(props) {
     const uploadFiles = async (
       starterLoopIndex = 0,
       assetsFiles = [],
-      endCallback = () => { }
+      endCallback = () => {},
     ) => {
       console.log("uploading files : ", assetsFiles, "from worker");
       if (!assetsFiles.length) return;
@@ -640,7 +654,7 @@ export async function uploadAssets(props) {
                     path: defineRoot(`assets/${file.name}`),
                     content: file,
                   })),
-                  true
+                  true,
                 )
               ).length;
               // slicedFiles.forEach(async file=>{
@@ -655,19 +669,19 @@ export async function uploadAssets(props) {
               console.log(
                 "updating  files before response : ",
                 slicedFiles,
-                "from worker"
+                "from worker",
               );
               if (dbResponse) {
                 console.log(
                   "updating files after response : ",
                   slicedFiles,
-                  "from worker"
+                  "from worker",
                 );
 
                 res(dbResponse);
               }
             },
-            starterLoopIndex == 0 ? 0 : 50
+            starterLoopIndex == 0 ? 0 : 50,
           );
         }));
 
@@ -763,7 +777,7 @@ export function varsToServiceWorker(props = {}) {
     console.log("From worker varsToServiceWorker callback is done well 👍");
   } catch (error) {
     console.error(
-      `From worker varsToServiceWorker callback error  ${error.message}`
+      `From worker varsToServiceWorker callback error  ${error.message}`,
     );
   }
 }
@@ -785,7 +799,7 @@ export async function sendPreviewPagesToServiceWorker(props) {
 /**
  *
  * @param {{editorData : {canvasCss:string , editorCss:string} , projectId:number , pageName:string ,
- *  projectData : import('./types').Project
+ *  projectData : import('@/helpers/types').Project
  * }} props
  */
 export async function sendPreviewPageToServiceWorker(props) {
@@ -856,7 +870,7 @@ export async function offlineInstaller(props) {
           const file = new File(
             [blob],
             `${lib.name.replace(`.${ext}`, "")}.${ext}`,
-            { type: blob.type }
+            { type: blob.type },
           );
 
           await opfs.writeFiles([
@@ -868,7 +882,7 @@ export async function offlineInstaller(props) {
           lib.size = getFileSize(file).MB;
           lib.isInstallDone = true;
           return lib;
-        })
+        }),
     );
 
     if (!projectData?.installStates?.types) {
@@ -932,7 +946,7 @@ let allStyleSheetClasses;
  * projectId : number ,
  * inlineStylesInners : string[],
  * editorCss:string,
- * projectSettings : import('./types').ProjectSetting
+ * projectSettings : import('@/helpers/types').ProjectSetting
  * }} props
  * @returns
  */
@@ -946,7 +960,7 @@ export const getAllStyleSheetClasses = async (props) => {
       //   const myLol = 'myLol'
       //  console.log(eval(` console.log(myLol)`));
       const { parse, walk } = await import("css-tree");
-      const { tailwindClasses } = await import("../constants/tailwindClasses");
+      const { tailwindClasses } = await import("@/constants/tailwindClasses");
       await initOPFS({ id: props.projectId });
 
       const prjectData = await db.projects.get(props.projectId);
@@ -962,9 +976,7 @@ export const getAllStyleSheetClasses = async (props) => {
         console.log("cllassses : ", classes);
 
         return [...classes].sort();
-
       };
-
 
       await doInNormalAsyncInWorker(props.projectId, async () => {
         for (const fHandle of await opfs.getAllFiles(defineRoot(`libs/css`), {
@@ -999,17 +1011,18 @@ export const getAllStyleSheetClasses = async (props) => {
               classes,
             },
           });
-
         }
       });
 
       await doInWordpressAsyncInWorker(props.projectId, async (project) => {
-        const slugs = project.cssLibs.map((lib) => lib.slug).concat(project.globalCss.slug);
+        const slugs = project.cssLibs
+          .map((lib) => lib.slug)
+          .concat(project.globalCss.slug);
 
         // Check cache for slugs
-        const uncachedSlugs = slugs.filter(slug => !self.classesCache[slug]);
+        const uncachedSlugs = slugs.filter((slug) => !self.classesCache[slug]);
 
-        slugs.forEach(slug => {
+        slugs.forEach((slug) => {
           if (self.classesCache[slug]) {
             self.postMessage({
               command: "classes-chunks",
@@ -1018,7 +1031,7 @@ export const getAllStyleSheetClasses = async (props) => {
               },
             });
           }
-        })
+        });
 
         if (uncachedSlugs.length === 0) return;
 
@@ -1033,8 +1046,8 @@ export const getAllStyleSheetClasses = async (props) => {
             .forEach((res) => {
               const classes = getClasses(res.content);
               self.classesCache[res.slug] = {
-                classes
-              }
+                classes,
+              };
               self.postMessage({
                 command: "classes-chunks",
                 props: {
@@ -1045,15 +1058,12 @@ export const getAllStyleSheetClasses = async (props) => {
         }
       });
 
-
       self.postMessage({
         command: "classes-chunks",
         props: {
           classes: getClasses(props.editorCss),
         },
       });
-
-
 
       if (props.projectSettings.enable_tailwind) {
         self.postMessage({
@@ -1066,7 +1076,6 @@ export const getAllStyleSheetClasses = async (props) => {
 
       const per2 = performance.now();
       console.log(per2);
-
     }, 70);
   } catch (error) {
     throw new Error(error);
@@ -1289,8 +1298,8 @@ export async function createProject({ data }) {
  * @param {{data : {
  * name:string,
  * description:string,
- * projectSetting:import('./types').ProjectSetting
- * exsitedConfig:import('./types').WpProject
+ * projectSetting:import('@/helpers/types').ProjectSetting
+ * exsitedConfig:import('@/helpers/types').WpProject
  * app_type:string,
  * wp_meta:{
  * website_url: string,
@@ -1302,7 +1311,7 @@ export async function createProject({ data }) {
  */
 export async function createWpProject({ data }) {
   const tId = uniqueId("toast-");
-  const scriptTid = uniqueId('script-toast-');
+  const scriptTid = uniqueId("script-toast-");
 
   try {
     workerSendToast({
@@ -1504,17 +1513,19 @@ export async function createWpProject({ data }) {
       msg: `Uploading editor scripts and styles...`,
       type: "loading",
       dataProps: {
-        toastId: scriptTid
-      }
+        toastId: scriptTid,
+      },
     });
 
-    const updatedConfig = await (await initMainAndGlobalFilesForWp({
-      data: {
-        projectData: await db.projects.get(id),
-        projectSetting: data.projectSetting,
-        id,
-      },
-    })).config;
+    const updatedConfig = await (
+      await initMainAndGlobalFilesForWp({
+        data: {
+          projectData: await db.projects.get(id),
+          projectSetting: data.projectSetting,
+          id,
+        },
+      })
+    ).config;
 
     workerSendToast({
       isNotMessage: true,
@@ -1596,8 +1607,20 @@ export async function initOPFS({ id }) {
   await opfs.init(id);
 }
 
+/**
+ *
+ * @param {{id : number}} param0
+ * @returns
+ */
 export async function listenToOPFSBroadcastChannel({ id }) {
   console.log("Initialized listenToOPFSBroadcastChannel", id);
+
+  if (!id) {
+    console.error(
+      `Project id not found in listenToOPFSBroadcastChannel with id : ${id}`,
+    );
+    return { done: false };
+  }
 
   await initOPFS({ id });
   // const opfsBc = new BroadcastChannel("opfs");
@@ -1630,8 +1653,9 @@ export async function listenToOPFSBroadcastChannel({ id }) {
       }
 
       const fileHandle = await opfs.getFile(
-        `${getProjectRoot(id)}/${data.folderPath ? `${data.folderPath}/` : ""}${data.fileName
-        }`
+        `${getProjectRoot(id)}/${data.folderPath ? `${data.folderPath}/` : ""}${
+          data.fileName
+        }`,
       );
       const file = await fileHandle.getOriginFile();
 
@@ -1675,7 +1699,8 @@ export async function listenToOPFSBroadcastChannel({ id }) {
     props: { done: true },
   });
 
-  return broadCastCleaner;
+  // return broadCastCleaner;
+  return { done: true };
 }
 
 // export async function listenToOPFSBroadcastChannel({ id }) {
@@ -1880,7 +1905,7 @@ export async function refreshSW() {
       swRegistrationState = props.state;
       console.log(
         `From refreshSW worker got Registration state : `,
-        props.state
+        props.state,
       );
       await runer();
     }
@@ -1906,63 +1931,60 @@ export async function getKeyFrames({
   let projectData = await db.projects.get(projectId);
 
   const editorKeyframes = parse(`${editorCss}} `).stylesheet.rules.filter(
-    (rule) => rule.type == "keyframes"
+    (rule) => rule.type == "keyframes",
   );
 
-  let libsKeyframes = {}
+  let libsKeyframes = {};
 
   await doInNormalAsyncInWorker(projectId, async () => {
     libsKeyframes = Object.fromEntries(
       await Promise.all(
         projectData.cssLibs
-          .concat({ path: 'global/global.css' })
+          .concat({ path: "global/global.css" })
           .map(async (lib) => [
             lib.path,
             parse(
-              await (await opfs.getFile(defineRoot(lib.path))).text()
+              await (await opfs.getFile(defineRoot(lib.path))).text(),
             ).stylesheet.rules.filter(
-              (rule) => rule.type == "keyframes" && rule.vendor == undefined
+              (rule) => rule.type == "keyframes" && rule.vendor == undefined,
             ),
           ])
-          .concat([[`css/${pageName}.css`, editorKeyframes]])
-      )
+          .concat([[`css/${pageName}.css`, editorKeyframes]]),
+      ),
     );
   });
 
   await doInWordpressAsyncInWorker(projectId, async (project) => {
-    const slugs = project.cssLibs.concat(project.globalCss).map(lib => lib.slug);
+    const slugs = project.cssLibs
+      .concat(project.globalCss)
+      .map((lib) => lib.slug);
     const wp_files_res = await wp_get_media_files_by_slugs({
       projectId,
-      slugs
+      slugs,
     });
     if (isPlainObject(wp_files_res)) {
-      console.log('wp_files_res  : ', wp_files_res);
+      console.log("wp_files_res  : ", wp_files_res);
       for (const [key, value] of Object.entries(wp_files_res)) {
         if (!isPlainObject(value) || value.error) {
           continue;
         }
 
-        libsKeyframes[key] = parse(
-          value.content
-        ).stylesheet.rules.filter(
-          (rule) => rule.type == "keyframes" && rule.vendor == undefined
-        )
+        libsKeyframes[key] = parse(value.content).stylesheet.rules.filter(
+          (rule) => rule.type == "keyframes" && rule.vendor == undefined,
+        );
       }
 
-      libsKeyframes['css/main.css'] = parse(
-        editorCss
-      ).stylesheet.rules.filter(
-        (rule) => rule.type == "keyframes" && rule.vendor == undefined
+      libsKeyframes["css/main.css"] = parse(editorCss).stylesheet.rules.filter(
+        (rule) => rule.type == "keyframes" && rule.vendor == undefined,
       );
     }
-
   });
 
-  console.log('libsKeyframes : ', libsKeyframes);
+  console.log("libsKeyframes : ", libsKeyframes);
   const response = Object.entries(libsKeyframes).flatMap(([path, animes]) =>
-    animes.map((anim) => ({ ...anim, path }))
+    animes.map((anim) => ({ ...anim, path })),
   );
-  
+
   self.postMessage({
     command: "getKeyFrames",
     props: response,
@@ -1996,7 +2018,12 @@ export async function writeFilesToOPFS({ files }) {
  *
  * @param {{keyframes : import('css').KeyFrames[] , projectId : number , editorCss:string}} param0
  */
-export async function removeAnimation({ path, keyframes, projectId, editorCss }) {
+export async function removeAnimation({
+  path,
+  keyframes,
+  projectId,
+  editorCss,
+}) {
   let tId = uniqueId("toast-remove-animation-");
   const { stringify, parse } = await import("css");
 
@@ -2009,7 +2036,6 @@ export async function removeAnimation({ path, keyframes, projectId, editorCss })
   });
 
   try {
-
     await doInNormalAsyncInWorker(projectId, async () => {
       // Group keyframes by path to batch operations
       const keyframesByPath = keyframes.reduce((acc, kf) => {
@@ -2028,7 +2054,7 @@ export async function removeAnimation({ path, keyframes, projectId, editorCss })
           const kfNames = new Set(kfs.map((kf) => kf.name));
 
           parsedFile.stylesheet.rules = parsedFile.stylesheet.rules.filter(
-            (rule) => !(rule.type == "keyframes" && kfNames.has(rule.name))
+            (rule) => !(rule.type == "keyframes" && kfNames.has(rule.name)),
           );
           console.log("Removing keyframes from path:", path, kfs);
 
@@ -2054,7 +2080,6 @@ export async function removeAnimation({ path, keyframes, projectId, editorCss })
               type: "success",
             });
           });
-
         } catch (error) {
           kfs.forEach((kf) => {
             self.postMessage({
@@ -2085,72 +2110,92 @@ export async function removeAnimation({ path, keyframes, projectId, editorCss })
       }
     });
 
-
     await doInWordpressAsyncInWorker(projectId, async (project) => {
-      const slugs = keyframes.map(kf => kf.path).filter(path => path != 'css/main.css');
+      const slugs = keyframes
+        .map((kf) => kf.path)
+        .filter((path) => path != "css/main.css");
       const wp_files_res = await wp_get_media_files_by_slugs({
         projectId,
-        slugs
+        slugs,
       });
       if (isPlainObject(wp_files_res)) {
-        let wp_files_res_handler = Object.values(wp_files_res).filter(value => !value.error).map(value => {
-          const parsedFile = parse(value.content);
-          parsedFile.stylesheet.rules = parsedFile.stylesheet.rules.filter(
-            (rule) => !(rule.type == "keyframes" && keyframes.some(kf => rule.name == kf.name && kf.path === value.slug))
-          );
+        let wp_files_res_handler = Object.values(wp_files_res)
+          .filter((value) => !value.error)
+          .map((value) => {
+            const parsedFile = parse(value.content);
+            parsedFile.stylesheet.rules = parsedFile.stylesheet.rules.filter(
+              (rule) =>
+                !(
+                  rule.type == "keyframes" &&
+                  keyframes.some(
+                    (kf) => rule.name == kf.name && kf.path === value.slug,
+                  )
+                ),
+            );
 
-          value.content = stringify(parsedFile);
-          return value;
-        });
+            value.content = stringify(parsedFile);
+            return value;
+          });
 
         const wp_update_media_res = await wp_update_media_files_by_slugs({
           projectId,
-          files: Object.fromEntries(wp_files_res_handler.map(value => [value.slug, value.content]))
+          files: Object.fromEntries(
+            wp_files_res_handler.map((value) => [value.slug, value.content]),
+          ),
         });
 
         if (!wp_update_media_res.success) {
-          throw new Error(`wp_files_res is not plain object  ${wp_update_media_res}`)
+          throw new Error(
+            `wp_files_res is not plain object  ${wp_update_media_res}`,
+          );
         }
 
         //current-post-editing
         const parsedFile = parse(editorCss);
         parsedFile.stylesheet.rules = parsedFile.stylesheet.rules.filter(
-          (rule) => !(rule.type == "keyframes" && keyframes.some(kf => rule.name == kf.name && kf.path == 'css/main.css'))
+          (rule) =>
+            !(
+              rule.type == "keyframes" &&
+              keyframes.some(
+                (kf) => rule.name == kf.name && kf.path == "css/main.css",
+              )
+            ),
         );
 
         const css_meta = stringify(parsedFile);
-        !project.current_inf_meta.saved && (project.current_inf_meta.saved = {})
-        !project.current_inf_meta.before_save && (project.current_inf_meta.before_save = {});
+        !project.current_inf_meta.saved &&
+          (project.current_inf_meta.saved = {});
+        !project.current_inf_meta.before_save &&
+          (project.current_inf_meta.before_save = {});
         const meta_value = {
           ...project.current_inf_meta,
           [project.currentEditingPage.save_state]: {
             ...project.current_inf_meta[project.currentEditingPage.save_state],
-            css: css_meta
-          }
+            css: css_meta,
+          },
         };
         const wp_update_meta_res = await wp_update_meta({
           projectId,
-          meta_key: 'inf_meta',
+          meta_key: "inf_meta",
           meta_value,
           merge: true,
           post_id: project.currentEditingPage.id,
           post_type: project.currentEditingPage.type,
-
         });
 
         if (!wp_update_meta_res.success) {
-          throw new Error(`wp_update_meta_res is not plain object  ${wp_update_meta_res}`)
+          throw new Error(
+            `wp_update_meta_res is not plain object  ${wp_update_meta_res}`,
+          );
         }
 
         await db.projects.update(projectId, {
           current_inf_meta: meta_value,
         });
-
       } else {
-        throw new Error(`wp_files_res is not plain object  ${wp_files_res}`)
+        throw new Error(`wp_files_res is not plain object  ${wp_files_res}`);
       }
-    })
-
+    });
 
     workerSendToast({
       isNotMessage: true,
@@ -2202,15 +2247,13 @@ export async function saveAnimations({ animations, projectId, editorCss }) {
       acc[item.path] = [];
     }
 
-    if (item.path === 'css/main.css') {
+    if (item.path === "css/main.css") {
       wordpressCssMain.push(item);
     }
 
     if (item.path === projectData?.globalCss?.slug) {
       wordpressGlobal.push(item);
     }
-
-
 
     acc[item.path].push(item);
     return acc;
@@ -2222,7 +2265,7 @@ export async function saveAnimations({ animations, projectId, editorCss }) {
     for (const key in result) {
       console.log(
         "stringify(result[key]) : ",
-        stringify({ stylesheet: { rules: result[key] } })
+        stringify({ stylesheet: { rules: result[key] } }),
       );
 
       const fileContent = await (await opfs.getFile(defineRoot(key))).text();
@@ -2236,7 +2279,7 @@ export async function saveAnimations({ animations, projectId, editorCss }) {
             })}`,
             {
               restructure: true,
-            }
+            },
           ).css,
         },
       ]);
@@ -2247,42 +2290,44 @@ export async function saveAnimations({ animations, projectId, editorCss }) {
     const slugs = Object.keys(result);
     const wp_files_res = await wp_get_media_files_by_slugs({
       projectId,
-      slugs
+      slugs,
     });
 
     if (isPlainObject(wp_files_res)) {
-      const wp_files_res_handler = Object.values(wp_files_res).filter(value => !value.error).map(value => {
-        // const parsedFile = parse(value.content);
+      const wp_files_res_handler = Object.values(wp_files_res)
+        .filter((value) => !value.error)
+        .map((value) => {
+          // const parsedFile = parse(value.content);
 
-
-        value.content =
-          minify(
+          value.content = minify(
             `${value.content} \n ${stringify({
               stylesheet: { rules: result[value.slug] },
             })}`,
             {
               restructure: true,
-            }
+            },
           ).css;
-        return value;
-      });
+          return value;
+        });
 
       const wp_update_media_res = await wp_update_media_files_by_slugs({
         projectId,
-        files: Object.fromEntries(wp_files_res_handler.map(value => [value.slug, value.content]))
+        files: Object.fromEntries(
+          wp_files_res_handler.map((value) => [value.slug, value.content]),
+        ),
       });
 
       if (!isPlainObject(wp_update_media_res)) {
-        throw new Error(`wp_update_media_res is not plain object  ${wp_update_media_res}`)
+        throw new Error(
+          `wp_update_media_res is not plain object  ${wp_update_media_res}`,
+        );
       }
-
-    }
-    else {
+    } else {
       console.error(wp_files_res, slugs);
-      throw new Error(`wp_files_res is not plain object  ${wp_files_res} : ${wp_files_res}`)
+      throw new Error(
+        `wp_files_res is not plain object  ${wp_files_res} : ${wp_files_res}`,
+      );
     }
-
-
 
     if (wordpressCssMain.length) {
       const css_meta = minify(
@@ -2291,25 +2336,24 @@ export async function saveAnimations({ animations, projectId, editorCss }) {
         })}`,
         {
           restructure: true,
-        }
+        },
       ).css;
 
       const meta_value = {
         ...project.current_inf_meta,
         [project.currentEditingPage.save_state]: {
           ...project.current_inf_meta[project.currentEditingPage.save_state],
-          css: css_meta
-        }
+          css: css_meta,
+        },
       };
 
       const wp_update_meta_res = await wp_update_meta({
         projectId,
-        meta_key: 'inf_meta',
+        meta_key: "inf_meta",
         meta_value,
         merge: true,
         post_id: project.currentEditingPage.id,
         post_type: project.currentEditingPage.type,
-
       });
 
       await db.projects.update(projectId, {
@@ -2317,23 +2361,30 @@ export async function saveAnimations({ animations, projectId, editorCss }) {
       });
 
       if (!wp_update_meta_res.success) {
-        throw new Error(`wp_update_meta_res is not plain object  ${wp_update_meta_res}`)
+        throw new Error(
+          `wp_update_meta_res is not plain object  ${wp_update_meta_res}`,
+        );
       }
     }
 
     if (wordpressGlobal.length) {
-      const wpGlobalCss = await (await opfs.getFile(defineRoot(`global.css`))).text();
-      const newFileContent = minify(`${wpGlobalCss} ${stringify({
-        stylesheet: { rules: wordpressGlobal }
-      })}`, { restructure: true }).css
-      await opfs.writeFiles([{
-        path: defineRoot(`global.css`),
-        content: newFileContent
-      }])
+      const wpGlobalCss = await (
+        await opfs.getFile(defineRoot(`global.css`))
+      ).text();
+      const newFileContent = minify(
+        `${wpGlobalCss} ${stringify({
+          stylesheet: { rules: wordpressGlobal },
+        })}`,
+        { restructure: true },
+      ).css;
+      await opfs.writeFiles([
+        {
+          path: defineRoot(`global.css`),
+          content: newFileContent,
+        },
+      ]);
     }
   });
-
-
 
   self.postMessage({
     command: "saveAnimations",
@@ -2376,7 +2427,7 @@ export async function saveAnimations({ animations, projectId, editorCss }) {
 
 /**
  *
- * @param {{ projectId:number ,  projectSetting : import('./types').ProjectSetting}} props
+ * @param {{ projectId:number ,  projectSetting : import('@/helpers/types').ProjectSetting}} props
  */
 export async function shareProject(props) {
   let tId = uniqueId("share-project-");
@@ -2442,8 +2493,8 @@ export async function deleteAttributesInAllPages({
     const page = projectData.pages[key];
     const { document } = parseHTML(
       doDocument(
-        await (await opfs.getFile(defineRoot(page.pathes.html))).text()
-      )
+        await (await opfs.getFile(defineRoot(page.pathes.html))).text(),
+      ),
     );
 
     /**
@@ -2456,7 +2507,7 @@ export async function deleteAttributesInAllPages({
     for (const key in attributes) {
       !selector &&
         (els = document.querySelectorAll(
-          `[${attributes[key] ? `${key}="${attributes[key]}"` : key}]`
+          `[${attributes[key] ? `${key}="${attributes[key]}"` : key}]`,
         ));
 
       els.forEach((el) => {
@@ -2500,8 +2551,8 @@ export async function setAttributesInAllPages({ projectId, selectors = {} }) {
       const page = projectData.pages[key];
       const { document } = parseHTML(
         doDocument(
-          await (await opfs.getFile(defineRoot(page.pathes.html))).text()
-        )
+          await (await opfs.getFile(defineRoot(page.pathes.html))).text(),
+        ),
       );
 
       for (const selector in selectors) {
@@ -2568,8 +2619,8 @@ export async function removeAttributesInAllPages({
       const page = projectData.pages[key];
       const { document } = parseHTML(
         doDocument(
-          await (await opfs.getFile(defineRoot(page.pathes.html))).text()
-        )
+          await (await opfs.getFile(defineRoot(page.pathes.html))).text(),
+        ),
       );
 
       for (const selector in selectors) {
@@ -2628,12 +2679,12 @@ export async function deleteAllMotionsById({ projectId, mId }) {
     const page = projectData.pages[key];
     const { document } = parseHTML(
       doDocument(
-        await (await opfs.getFile(defineRoot(page.pathes.html))).text()
-      )
+        await (await opfs.getFile(defineRoot(page.pathes.html))).text(),
+      ),
     );
 
     const els = document.querySelectorAll(
-      `[${motionId}="${mId}"] , [${mainMotionId}="${mId}"]`
+      `[${motionId}="${mId}"] , [${mainMotionId}="${mId}"]`,
     );
     if (els && els.length) {
       els.forEach((el) => {
@@ -2671,12 +2722,12 @@ export async function setInteractionsAttributes({ interactionsId, projectId }) {
     const page = projectData.pages[key];
     const { document } = parseHTML(
       doDocument(
-        await (await opfs.getFile(defineRoot(page.pathes.html))).text()
-      )
+        await (await opfs.getFile(defineRoot(page.pathes.html))).text(),
+      ),
     );
 
     const els = document.querySelectorAll(
-      `[${interactionId}="${interactionsId}"] , [${mainInteractionId}="${interactionsId}"]`
+      `[${interactionId}="${interactionsId}"] , [${mainInteractionId}="${interactionsId}"]`,
     );
 
     els.forEach((el) => {
@@ -2684,7 +2735,7 @@ export async function setInteractionsAttributes({ interactionsId, projectId }) {
       const interactionsAttributes = buildInteractionsAttributes(
         interactions,
         instanceId ? instanceId : interactionsId,
-        Boolean(instanceId)
+        Boolean(instanceId),
       );
       for (const attr in interactionsAttributes) {
         el.setAttribute(attr, interactionsAttributes[attr]);
@@ -2721,7 +2772,7 @@ export async function parseHTMLAndRaplceSymbols({ pageName = "", projectId }) {
       const symbolId = el.getAttribute(inf_symbol_Id_attribute);
       el.outerHTML = await (
         await opfs.getFile(
-          defineRoot(`editor/symbols/${symbolId}/${symbolId}.html`)
+          defineRoot(`editor/symbols/${symbolId}/${symbolId}.html`),
         )
       ).text();
     }
@@ -2749,23 +2800,26 @@ export async function parseHTMLAndRaplceSymbols({ pageName = "", projectId }) {
     //   svg.replaceWith(img);
     // });
     let response = [...document.body.children].map((el) => el.outerHTML);
+    const propsRes = {
+      response,
+      symbols: Object.fromEntries(
+        [...els].map((el) => [
+          el.getAttribute(inf_symbol_Id_attribute),
+          el.outerHTML,
+        ]),
+      ),
+      // bodyInnerHTML : document.body.innerHTML,
+      done: true,
+    };
+
     self.postMessage({
       command: "parseHTMLAndRaplceSymbols",
-      props: {
-        response,
-        symbols: Object.fromEntries(
-          [...els].map((el) => [
-            el.getAttribute(inf_symbol_Id_attribute),
-            el.outerHTML,
-          ])
-        ),
-        // bodyInnerHTML : document.body.innerHTML,
-        done: true,
-      },
+      props: propsRes,
     });
     response = null;
     document.body.innerHTML = "";
     document = null;
+    return propsRes;
   } catch (error) {
     self.postMessage({
       command: "parseHTMLAndRaplceSymbols",

@@ -1,3 +1,16 @@
+import { popoverRefState, popoverState } from "@/helpers/atoms";
+import {
+  advancedSearchSuggestions,
+  replaceLastWord,
+} from "@/helpers/functions";
+import { Icons } from "@/components/Icons/Icons";
+import { Loader } from "@/components/Loader";
+import { P } from "@/components/Protos/P";
+import { Popover } from "@/components/Editor/Popover";
+import { CodeEditor } from "@/components/Editor/Protos/CodeEditor";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { Menu } from "@/components/Editor/Protos/Menu";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 import React, {
   useCallback,
   useEffect,
@@ -7,20 +20,7 @@ import React, {
   useState,
   useTransition,
 } from "react";
-import { Icons } from "../../Icons/Icons";
-import {
-  advancedSearchSuggestions,
-  replaceLastWord,
-} from "../../../helpers/functions";
-import { Menu } from "./Menu";
-import { P } from "../../Protos/P";
 import { useRecoilValue, useSetRecoilState } from "recoil";
-import { popoverRefState, popoverState } from "../../../helpers/atoms";
-import { Popover } from "../Popover";
-import { CodeEditor } from "./CodeEditor";
-import { FitTitle } from "./FitTitle";
-import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { Loader } from "../../Loader";
 
 /**
  *

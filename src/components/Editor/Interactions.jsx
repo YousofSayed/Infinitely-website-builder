@@ -1,15 +1,23 @@
-import React, { useEffect, useRef, useState } from "react";
+import { actions } from "@/constants/actions";
+import { eventNames } from "@/constants/hsValues";
 import {
-  interactionInDBType,
-  interactionsType,
-  interactionType,
-  refType,
-} from "../../helpers/jsDocs";
-import { Select } from "./Protos/Select";
-import { eventNames } from "../../constants/hsValues";
-import { SmallButton } from "./Protos/SmallButton";
-import { Icons } from "../Icons/Icons";
-import { useLiveQuery } from "dexie-react-hooks";
+  current_page_id,
+  current_project_id,
+  interactionId,
+  interactionInstanceId,
+  mainInteractionId,
+} from "@/constants/shared";
+import { currentElState, showsState } from "@/helpers/atoms";
+import { buildInteractionsAttributes } from "@/helpers/bridge";
+import {
+  addClickClass,
+  parse,
+  pushBetween,
+  stringify,
+  uniqueID,
+} from "@/helpers/cocktail";
+import { db } from "@/helpers/db";
+import { keyframesGetterWorker } from "@/helpers/defineWorkers";
 import {
   deleteAttributesInAllPages,
   doInNormal,
@@ -22,49 +30,56 @@ import {
   store,
   updatePrevirePage,
   workerCallbackMaker,
-} from "../../helpers/functions";
-import { useRecoilState, useRecoilValue } from "recoil";
-import { currentElState, showsState } from "../../helpers/atoms";
-import { useEditorMaybe } from "@grapesjs/react";
+} from "@/helpers/functions";
+import { removeAttributesInAllPages } from "@/helpers/functions";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
 import {
-  current_page_id,
-  current_project_id,
-  interactionId,
-  interactionInstanceId,
-  mainInteractionId,
-} from "../../constants/shared";
-import { cloneDeep, isPlainObject, random, uniqueId } from "lodash";
-import {
-  addClickClass,
-  parse,
-  pushBetween,
-  stringify,
-  uniqueID,
-} from "../../helpers/cocktail";
-import { db } from "../../helpers/db";
-import { infinitelyWorker } from "../../helpers/infinitelyWorker";
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
-import { FitTitle } from "./Protos/FitTitle";
-import { Input } from "./Protos/Input";
-import { actions } from "../../constants/actions";
-import { MiniTitle } from "./Protos/MiniTitle";
-import { SwitchButton } from "../Protos/SwitchButton";
-// import { InfAccordion } from "../Protos/InfAccordion";
-// import { AccordionItem } from "@heroui/accordion";
-import { keyframesGetterWorker } from "../../helpers/defineWorkers";
-import { ScrollableToolbar } from "../Protos/ScrollableToolbar";
-import { Accordion } from "../Protos/Accordion";
-import { AccordionItem } from "../Protos/AccordionItem";
-import { Button } from "../Protos/Button";
+  interactionInDBType,
+  interactionsType,
+  interactionType,
+  refType,
+} from "@/helpers/jsDocs";
+import { useInfinitelyUndoRedo } from "@/hooks/useInfinitelyUndoRedo";
+import { Icons } from "@/components/Icons/Icons";
+import { Accordion } from "@/components/Protos/Accordion";
+import { AccordionItem } from "@/components/Protos/AccordionItem";
+import { Button } from "@/components/Protos/Button";
+import { InfAccordion } from "@/components/Protos/InfAccordion";
+import { Memo } from "@/components/Protos/Memo";
+import { OptionsButton } from "@/components/Protos/OptionsButton";
+import { ScrollableToolbar } from "@/components/Protos/ScrollableToolbar";
+import { SwitchButton } from "@/components/Protos/SwitchButton";
+import { UndoRedoContainer } from "@/components/Protos/UndoRedoContainer";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { Input } from "@/components/Editor/Protos/Input";
+import { MiniTitle } from "@/components/Editor/Protos/MiniTitle";
+import { Select } from "@/components/Editor/Protos/Select";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { OptionsButton } from "../Protos/OptionsButton";
+import { useEditorMaybe } from "@grapesjs/react";
+import { useLiveQuery } from "dexie-react-hooks";
+import { cloneDeep, isPlainObject, random, uniqueId } from "lodash";
+import React, { useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
 import { Tooltip } from "react-tooltip";
-import { buildInteractionsAttributes } from "../../helpers/bridge";
-import { useInfinitelyUndoRedo } from "../../hooks/useInfinitelyUndoRedo";
-import { removeAttributesInAllPages } from "../../helpers/functions";
-import { Memo } from "../Protos/Memo";
-import { UndoRedoContainer } from "../Protos/UndoRedoContainer";
+import { useRecoilState, useRecoilValue } from "recoil";
+
+// 
+// 
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const actionsKeywords = actions.map((action) => action.label);
 const advancedParse = (value) => {
@@ -293,7 +308,7 @@ export const Interaction = ({
 
   /**
    *
-   * @param {import('../../helpers/types').Actions} actions
+   * @param {import('@/helpers/types').Actions} actions
    */
   const buildFunctionsFromActions = (actions) => {
     // console.log(actions);
@@ -963,7 +978,7 @@ export const Interactions = () => {
     if (!sle) return;
     const projectData = await getProjectData();
     /**
-     * @type {import('../../helpers/types').Interactions}
+     * @type {import('@/helpers/types').Interactions}
      */
     const fileContent = JSON.parse(await files[0].text());
     ev.target.value = "";

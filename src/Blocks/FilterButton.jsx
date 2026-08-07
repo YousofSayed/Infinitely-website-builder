@@ -1,5 +1,5 @@
-import { parse } from "../helpers/cocktail";
-import { defineTraits } from "../helpers/functions";
+import { parse } from "@/helpers/cocktail";
+import { defineTraits } from "@/helpers/functions";
 
 /**
  *

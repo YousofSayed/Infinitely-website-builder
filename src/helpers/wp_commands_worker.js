@@ -38,8 +38,14 @@ import {
   wp_get_symbols,
   wp_update_symbol,
   wp_update_symbols,
-} from "../Apps/wordpress/functions";
-import { writeFilesToOPFS } from "./workerCommands";
+  wp_get_blocks,
+  wp_get_posts,
+  wp_insert_post,
+  wp_insert_posts,
+  wp_delete_posts,
+  wp_unlink_symbols
+} from "@/apps/wordpress/functions";
+import { writeFilesToOPFS } from "@/helpers/workerCommands";
 
 export const wpCommands = {
   wp_get,
@@ -82,4 +88,10 @@ export const wpCommands = {
   wp_update_symbol,
   wp_update_symbols,
   writeFilesToOPFS,
+  wp_get_blocks,
+  wp_get_posts,
+  wp_insert_post,
+  wp_insert_posts,
+  wp_delete_posts,
+  wp_unlink_symbols,
 };

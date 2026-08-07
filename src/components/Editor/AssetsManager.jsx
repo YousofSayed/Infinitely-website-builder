@@ -1,32 +1,20 @@
-import React, { memo, useEffect, useRef, useState } from "react";
-import { Button } from "../Protos/Button";
-import { addClickClass, uniqueID } from "../../helpers/cocktail";
-import { Icons } from "../Icons/Icons";
-import { P } from "../Protos/P";
-import { useRecoilValue, useSetRecoilState } from "recoil";
-import {
-  assetTypeState,
-  cssPropForAssetsManagerState,
-  projectData,
-  ruleState,
-  selectorState,
-} from "../../helpers/atoms";
-import { useSetClassForCurrentEl } from "../../hooks/useSetclassForCurrentEl";
-import { toast } from "react-toastify";
-import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
-import { Input } from "./Protos/Input";
-import { useLiveQuery } from "dexie-react-hooks";
+import noData from "@/assets/images/no-data.svg";
+import { config } from "@/config/brand";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
 import {
   current_page_id,
   current_project_id,
   inf_build_url,
   inf_css_urls,
   MAX_UPLOAD_SIZE,
-} from "../../constants/shared";
-import { db } from "../../helpers/db";
-import { VirtuosoGrid } from "react-virtuoso";
-import { GridComponents } from "../Protos/VirtusoGridComponent";
-import { InfinitelyEvents } from "../../constants/infinitelyEvents";
+} from "@/constants/shared";
+import {
+  assetTypeState,
+  cssPropForAssetsManagerState,
+  projectData,
+  ruleState,
+  selectorState,
+} from "@/helpers/atoms";
 import {
   blobToDataUrlAndClean,
   cleanMotions,
@@ -34,21 +22,33 @@ import {
   getFileSize,
   getFilesSize,
   getStorageDetails,
-} from "../../helpers/bridge";
+} from "@/helpers/bridge";
+import { addClickClass, uniqueID } from "@/helpers/cocktail";
+import { db } from "@/helpers/db";
+import { assetsWorker } from "@/helpers/defineWorkers";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
+import { opfs } from "@/helpers/initOpfs";
+import { storageDetailsType } from "@/helpers/jsDocs";
+import { useSetClassForCurrentEl } from "@/hooks/useSetclassForCurrentEl";
+import { initDBAssetsSw } from "@/serviceWorkers/initDBAssets-sw";
+import { Icons } from "@/components/Icons/Icons";
+import { Loader } from "@/components/Loader";
+import { Button } from "@/components/Protos/Button";
+import { FileView } from "@/components/Protos/FileView";
+import { Hr } from "@/components/Protos/Hr";
+import { NoItemsHere } from "@/components/Protos/NoItemsHere";
+import { P } from "@/components/Protos/P";
+import { GridComponents } from "@/components/Protos/VirtusoGridComponent";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { Input } from "@/components/Editor/Protos/Input";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useEditorMaybe } from "@grapesjs/react";
-import { infinitelyWorker } from "../../helpers/infinitelyWorker";
-import { Loader } from "../Loader";
-import { initDBAssetsSw } from "../../serviceWorkers/initDBAssets-sw";
-import { SmallButton } from "./Protos/SmallButton";
-import noData from "../../assets/images/no-data.svg";
-import { FitTitle } from "./Protos/FitTitle";
-import { storageDetailsType } from "../../helpers/jsDocs";
-import { Hr } from "../Protos/Hr";
-import { FileView } from "../Protos/FileView";
-import { opfs } from "../../helpers/initOpfs";
-import { assetsWorker } from "../../helpers/defineWorkers";
-import { config } from "../../brand";
-import { NoItemsHere } from "../Protos/NoItemsHere";
+import { useLiveQuery } from "dexie-react-hooks";
+import React, { memo, useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
+import { VirtuosoGrid } from "react-virtuoso";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 
 /**
  *
@@ -57,7 +57,7 @@ import { NoItemsHere } from "../Protos/NoItemsHere";
  */
 export const AssetsManager = () => {
   /**
-   * @type {import('../../helpers/types').InfinitelyAsset[]}
+   * @type {import('@/helpers/types').InfinitelyAsset[]}
    */
   const filesType = [];
   const editor = useEditorMaybe();

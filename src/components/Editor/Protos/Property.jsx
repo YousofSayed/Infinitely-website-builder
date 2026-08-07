@@ -1,22 +1,22 @@
-import React, { useEffect, useRef, useState } from "react";
-import { P } from "../../Protos/P";
-import { useRecoilValue, useSetRecoilState } from "recoil";
 import {
   currentElState,
   ifrDocument,
   undoAndRedoStates,
-} from "../../../helpers/atoms";
-import { useSetClassForCurrentEl } from "../../../hooks/useSetclassForCurrentEl";
+} from "@/helpers/atoms";
 import {
   onFocus,
   onInput,
   onKeyDown,
   onKeyUp,
-} from "../../../helpers/propertyInputHandlers";
+} from "@/helpers/propertyInputHandlers";
+import { useSetClassForCurrentEl } from "@/hooks/useSetclassForCurrentEl";
+import { useUpdateInputValue } from "@/hooks/useUpdateInputValue";
+import { P } from "@/components/Protos/P";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { Input } from "@/components/Editor/Protos/Input";
 import { useEditor, useEditorMaybe } from "@grapesjs/react";
-import { useUpdateInputValue } from "../../../hooks/useUpdateInputValue";
-import { FitTitle } from "./FitTitle";
-import { Input } from "./Input";
+import React, { useEffect, useRef, useState } from "react";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 
 /**
  *
