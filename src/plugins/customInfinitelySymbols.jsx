@@ -13,6 +13,7 @@ import {
   doInNormal,
   doInWordpress,
   getInfinitelySymbolInfo,
+  getProjectId,
   initSymbol,
   reorderCss,
   triggerSymbolEvent,
@@ -66,7 +67,8 @@ export const customInfinitelySymbols = (editor) => {
     const symbolId = symbol.symbol.getAttributes()[inf_symbol_Id_attribute];
 
     // console.log("what is problem?", cmp);
-    const projectId = +localStorage.getItem(current_project_id);
+    const projectId = getProjectId();
+
 
     const updateSymbolInDb = () => {
       symbolTimeout && clearTimeout(symbolTimeout);
@@ -91,7 +93,7 @@ export const customInfinitelySymbols = (editor) => {
               {
                 [inf_class_name]: newClass,
               },
-              { avoidStore: true },
+              // { avoidStore: true },
             );
 
             addedComponent.addClass(newClass);

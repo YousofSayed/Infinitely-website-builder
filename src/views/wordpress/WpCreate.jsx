@@ -178,8 +178,8 @@ export const CreateWpPost = () => {
   };
   return isNumber(parseFloat(projectIdFromStorage)) &&
     !isNaN(projectIdFromStorage) ? (
-    <section className="w-full h-[100%] flex flex-col justify-center items-center">
-      <section className="w-[400px] inf-blur h-full  bg-slate-950 rounded-lg flex flex-col gap-3 justify-center items-center">
+    <section className="w-full h-[100%] flex flex-col justify-center items-center bg-slate-950 p-2 rounded-lg ">
+      <section className="w-full inf-blur h-full  bg-slate-950 rounded-lg flex flex-col gap-3 justify-center items-center">
         {
           <section className="w-full flex flex-col items-center justify-center gap-3   rounded-lg">
             <figure>
@@ -189,7 +189,7 @@ export const CreateWpPost = () => {
               Create New Wordpress Post
             </h1>
 
-            <div className="w-[50%] h-[3px] bg-blue-600 shadow-xl"></div>
+            <div className="w-[25%] h-[3px] bg-blue-600 shadow-xl"></div>
 
             {/* <h1 className="">Select post type</h1> */}
             <FitTitle>Select post type</FitTitle>
@@ -287,20 +287,7 @@ export const CreateWpTemplate = () => {
   );
 
   useEffect(() => {
-    // wp_update_meta({
-    //   post_id:223,
-    //   post_type:'wp_template',
-    //   projectId,
-    //   meta_key:'inf_meta',
-    //   meta_value:{
-    //     saved:{
-    //       html:[
-    //         {
-    //           tagName:'h1',
-    //           components:[
-    //             {
-    //               type:'textnode',
-    //               content:'It is 404 infinitely rendering - 2💙'
+
 
     setLoading(true);
     wpWorkerCallbackMaker(
@@ -321,17 +308,6 @@ export const CreateWpTemplate = () => {
     );
   }, []);
 
-  // return <h1>Hello</h1>;
-  // const getTypes = async () => {
-  //   const types = await wp_get({
-  //     endpoint: "types",
-  //     projectId,
-  //   });
-  // types_not_allowed.forEach((type) => {
-  //   delete types[type];
-  // });
-  // setTypes(types);
-  // };
 
   const createTemplate = async () => {
     setDone(false);
@@ -369,8 +345,8 @@ export const CreateWpTemplate = () => {
 
   return isNumber(parseFloat(projectIdFromStorage)) &&
     !isNaN(projectIdFromStorage) ? (
-    <section className="w-full h-[100%] flex flex-col justify-center items-center">
-      <section className="w-[400px] inf-blur h-full  bg-slate-950 rounded-lg flex flex-col gap-3 justify-center items-center">
+    <section className="w-full h-[100%] flex flex-col justify-center items-center bg-slate-950 p-2 rounded-lg">
+      <section className="w-full inf-blur h-full  bg-slate-950 rounded-lg flex flex-col gap-3 justify-center items-center">
         {
           <section className="w-full flex flex-col items-center justify-center gap-3   rounded-lg">
             <figure>
@@ -380,7 +356,7 @@ export const CreateWpTemplate = () => {
               Create New Wordpress Template
             </h1>
 
-            <div className="w-[50%] h-[3px] bg-blue-600 shadow-xl "></div>
+            <div className="w-[25%] h-[3px] bg-blue-600 shadow-xl "></div>
 
             <FitTitle>Select template</FitTitle>
             <section className="w-[300px]">
@@ -450,7 +426,7 @@ export const WpCreate = () => {
   const [animateRef] = useAutoAnimate();
 
   return (
-    <section className="flex flex-col gap-3 justify-center items-center h-full">
+    <section className="flex flex-col gap-2 justify-center items-center h-full">
       <ToastContainer
         // toastStyle={{ background: "transparent" }}
 
@@ -466,7 +442,7 @@ export const WpCreate = () => {
 
       // stacked={true}
       />
-      <section className="flex justify-center gap-5 p-2 w-[400px] items-center bg-slate-950 rounded-lg">
+      <section className="flex justify-center gap-5 p-2 container mx-auto items-center bg-slate-950 rounded-lg">
         <Button
           className="bg-slate-800 font-bold transition-colors hover:bg-blue-600"
           onClick={() => {
@@ -488,7 +464,7 @@ export const WpCreate = () => {
         </Button>
       </section>
 
-      <section className="flex justify-center gap-5 p-2 w-[400px] items-center bg-slate-950 rounded-lg">
+      <section className="flex justify-center gap-5 p-2 container mx-auto items-center bg-slate-950 rounded-lg">
         {Object.keys(cmps).map((keyCmp, i) => (
           <Button
             key={i}
@@ -503,7 +479,7 @@ export const WpCreate = () => {
         ))}
       </section>
 
-      <main ref={animateRef} className="min-h-[70%]">
+      <main ref={animateRef} className="min-h-[70%] container mx-auto">
         {Boolean(key) && cmps[key]}
       </main>
     </section>

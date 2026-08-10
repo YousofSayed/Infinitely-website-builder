@@ -23,11 +23,11 @@ export default defineConfig({
     https: true,
     port: 5173,
     strictPort: true,
-    hmr: {
-      protocol: "wss",
-      host: "127.0.0.1",
-      port: 5173,
-    },
+    // hmr: {
+    //   protocol: "wss",
+    //   host: "127.0.0.1",
+    //   port: 5173,
+    // },
   },
   optimizeDeps: {
     esbuildOptions: {

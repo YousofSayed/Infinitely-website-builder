@@ -257,7 +257,7 @@ export const ReusableSympol = () => {
         // projectSettings.enable_auto_save && await editor.Storage.store();
         console.log("wp_insert_post", res);
         afterSave();
-        qc.invalidateQueries({ queryKey: ["inf_symbols"] });
+        qc.invalidateQueries({ queryKey: ["inf_symbols"]  , refetchType: "all" });
         editor.trigger("block:add");
       });
 
@@ -294,7 +294,7 @@ export const ReusableSympol = () => {
 
   return (
     <section className="w-full z-50 p-2 flex flex-col gap-2 overflow-auto bg-surface-tertiary rounded-lg ">
-      <header className="p-2 z-50 rounded-lg flex gap-4 justify-between bg-surface-secondary">
+      <header className="p-2 z-50 rounded-lg flex gap-2 justify-between  bg-surface-secondary">
         <Input
           value={props.name}
           autoFocus={true}
@@ -302,7 +302,7 @@ export const ReusableSympol = () => {
           onInput={(ev) => {
             onInput(ev.target.value, "name");
           }}
-          className="bg-surface-tertiary w-[40%]"
+          className="bg-surface-tertiary w-[49%] "
         />
         <Select
           keywords={keywordsCtg}
@@ -313,10 +313,12 @@ export const ReusableSympol = () => {
           }}
           onEnterPress={(value) => onInput(value, "category")}
           value={props.category}
-          className="bg-surface-tertiary w-[40%]"
+          className="bg-surface-tertiary w-[49%] "
           onItemClicked={(value) => onInput(value, "category")}
         />
-        <Button onClick={onSave}>Save</Button>
+        <Button onClick={onSave} className="bg-brand-primary hover:bg-brand-secondary text-white font-semibold">
+          Save
+        </Button>
       </header>
       {/* <main className="bg-surface-secondary overflow-auto grid place-items-center rounded-lg p-2 h-[100%]">
         {!!imgSrc && (

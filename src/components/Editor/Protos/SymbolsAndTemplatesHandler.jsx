@@ -74,7 +74,7 @@ export const SymbolsAndTemplatesHandler = ({
     type === "symbol" ? "inf_symbols" : type === "template" ? "inf_blocks" : "";
   const {
     data: symbolsOrTemplates,
-    isLoading: isSymbolsOrTemplatesLoading,
+    isPending: isSymbolsOrTemplatesLoading,
     isFetching: isSymbolsOrTemplatesRefetching,
   } = usePosts(wp_type);
 
@@ -106,7 +106,7 @@ export const SymbolsAndTemplatesHandler = ({
         setSymbols(newSymbols);
       }
     });
-  }, [ symbolsOrTemplates]);
+  }, [symbolsOrTemplates]);
 
   !noFilter &&
     useLiveQuery(async () => {
@@ -127,16 +127,20 @@ export const SymbolsAndTemplatesHandler = ({
     });
 
   const refreshCurrentPage = (ids) => {
-    editor
-      .getWrapper()
-      .find(
-        `${isArray(ids) ? `${ids.map((id) => `[${inf_symbol_Id_attribute}="${id}"]`).join(" , ")}` : ` [${inf_symbol_Id_attribute}="${ids}"]`}`,
-      )
-      .forEach((symbol) =>
-        symbol.removeAttributes([inf_symbol_Id_attribute], {
-          // avoidStore: true,
-        }),
-      );
+    const idList = isArray(ids) ? ids : [ids];
+
+    const selector = idList
+      .map((id) => `[${inf_symbol_Id_attribute}="${id}"]`)
+      .join(",");
+
+    const components = editor.getWrapper().find(selector);
+
+    console.log("selector:", selector);
+    console.log("found:", components);
+
+    components.forEach((component) => {
+      component.removeAttributes([inf_symbol_Id_attribute]);
+    });
 
     preventSelectNavigation(editor, editor.getSelected());
   };
@@ -190,7 +194,7 @@ export const SymbolsAndTemplatesHandler = ({
           //   );
 
           // preventSelectNavigation(editor, editor.getSelected());
-          refreshCurrentPage();
+          refreshCurrentPage(ids);
         } else if (props.done && type == "template") {
           editor.trigger("block:add");
           editor.trigger("block:update");
@@ -208,11 +212,10 @@ export const SymbolsAndTemplatesHandler = ({
     if (!cnfrm) return;
 
     const projectData = await await getProjectData();
-    // const newBlocks = {};
-    // const blocks = structuredClone(projectData.blocks);
     const tid = toast.loading(
       <ToastMsgInfo msg={`Deleting ${name} Symbol...`} />,
     );
+
     await doInNormalAsync(async () => {
       console.log("blocks : ", projectData.blocks, id);
       await opfs.remove({
@@ -248,6 +251,8 @@ export const SymbolsAndTemplatesHandler = ({
         projectId,
         symbol_ids: [id],
       });
+
+      refreshCurrentPage(id);
     });
 
     toast.done(tid);
@@ -299,7 +304,7 @@ export const SymbolsAndTemplatesHandler = ({
           symbol_ids: ids,
         });
 
-        refreshCurrentPage();
+        refreshCurrentPage(ids);
       }
     });
     toast.done(tid);
@@ -421,8 +426,8 @@ export const SymbolsAndTemplatesHandler = ({
 
       <ShowIf
         condition={
-          Boolean(symbols?.length) && !isSymbolsOrTemplatesLoading
-          &&
+          Boolean(symbols?.length) &&
+          !isSymbolsOrTemplatesLoading &&
           !isSymbolsOrTemplatesRefetching
         }
       >
@@ -486,8 +491,8 @@ export const SymbolsAndTemplatesHandler = ({
 
       <ShowIf
         condition={
-          !symbols?.length && !isSymbolsOrTemplatesLoading
-           &&
+          !symbols?.length &&
+          !isSymbolsOrTemplatesLoading &&
           !isSymbolsOrTemplatesRefetching
         }
       >
@@ -504,7 +509,11 @@ export const SymbolsAndTemplatesHandler = ({
         </section>
       </ShowIf>
 
-      <ShowIf condition={isSymbolsOrTemplatesLoading}>
+      <ShowIf
+        condition={
+          isSymbolsOrTemplatesLoading || isSymbolsOrTemplatesRefetching
+        }
+      >
         <section className="h-full w-full flex flex-col gap-2 items-center justify-center">
           {loading ? <Loader /> : null}
         </section>

@@ -1,9 +1,12 @@
-import { wp_connect, wp_get_option } from "@/apps/wordpress/functions";
 import { wp_toast_handler } from "@/apps/wordpress/functions_ui";
 import { apps } from "@/constants/shared";
 import { isProjectInitedState, showCrtModalState } from "@/helpers/atoms";
 import { db } from "@/helpers/db";
-import { getProjectSettings } from "@/helpers/functions";
+import {
+  getProjectId,
+  getProjectSettings,
+  wpWorkerCallbackMaker,
+} from "@/helpers/functions";
 import { infinitelyWorker } from "@/helpers/infinitelyWorker";
 import { opfs } from "@/helpers/initOpfs";
 import { Select } from "@/components/Editor/Protos/Select";
@@ -17,6 +20,11 @@ import {
   useResetRecoilState,
   useSetRecoilState,
 } from "recoil";
+import {
+  useConnectWpMutation,
+  useGetWpOptionQueryMutation,
+} from "@/queries/wp.queries";
+import { urlRgx } from "@/constants/rgxs";
 
 export const CreateProjectModal = ({
   onCloseClick = (ev) => {},
@@ -34,6 +42,10 @@ export const CreateProjectModal = ({
   const [animatedRed] = useAutoAnimate();
   const [isProjectInited, setIsProjectInited] =
     useRecoilState(isProjectInitedState);
+
+  const { mutateAsync: wp_connect } = useConnectWpMutation();
+
+  const { mutateAsync: wp_get_option } = useGetWpOptionQueryMutation();
 
   const [data, setData] = useState({
     name: "",
@@ -59,98 +71,138 @@ export const CreateProjectModal = ({
         throw new Error(`Wordpress meta data is missed`);
       }
 
-      data.wp_meta.website_url = (new URL(data.wp_meta.website_url)).origin.replace(/http(\s)?\:\/\//ig , '') ;
+      if (!data.wp_meta.website_url.match(urlRgx)) {
+        toast.error(
+          <ToastMsgInfo msg={`Wordpress website url is invalid 😩`} />,
+        );
+        throw new Error(`Wordpress website url is invalid`);
+      }
+      data.wp_meta.website_url = new URL(data.wp_meta.website_url).origin;
 
-      console.log('origin : ' ,  data.wp_meta.website_url);
-      
-      wp_toast_handler({
-        returnCallback: async () =>
-          await wp_connect({
-            username: data.wp_meta.username,
-            password: data.wp_meta.password,
-            website_url: data.wp_meta.website_url,
-          }),
+      console.log("origin : ", data.wp_meta.website_url);
 
-        toast_loading_msg: `Connecting to your wordpres website`,
-        toast_success_msg: `Connected to wordpress successfully 💙`,
-        toast_error_msg: `Faild to connect to wordpress 😩`,
-        async onSuccess(jsonRes) {
-          const tId = toast.loading(
-            <ToastMsgInfo msg={`Checking config...`} />
-          );
-          const exsitedConfig = await (async () => {
-            try {
-              const res = await wp_get_option({
+      const tId = toast.loading(
+        <ToastMsgInfo msg={`Connecting to your wordpress website...`} />,
+      );
+
+      await wp_connect(
+        {
+          username: data.wp_meta.username,
+          password: data.wp_meta.password,
+          website_url: data.wp_meta.website_url,
+        },
+        {
+          onSuccess: async (jsonRes) => {
+            console.log("Connected to WordPress successfully 💙", jsonRes);
+            toast.done(tId);
+            toast.success(
+              <ToastMsgInfo msg={`Connected to wordpress successfully 💙`} />,
+            );
+
+            const tIdConfig = toast.loading(
+              <ToastMsgInfo msg={`Checking config...`} />,
+            );
+            await wp_get_option(
+              {
                 optionName: "inf_config",
+                // projectId : 
                 wp_meta_data: {
                   ...data.wp_meta,
                   app_password: jsonRes.app_password,
                 },
-              });
-
-              if (!res?.success) {
-                return {};
-              } else {
-                return res.value;
-              }
-            } catch (error) {
-              throw new Error(error);
-            } finally {
-              toast.done(tId);
-            }
-          })();
-
-          console.log("exsitedConfig", exsitedConfig);
-
-          infinitelyWorker.postMessage({
-            command: "createWpProject",
-            props: {
-              data: {
-                ...data,
-                exsitedConfig: exsitedConfig,
-                projectSetting: getProjectSettings().projectSettings,
-                wp_meta: {
-                  ...data.wp_meta,
-                  app_password: jsonRes.app_password,
+              },
+              {
+                onSuccess: (res) => {
+                  console.log("exsitedConfig", res);
+                  toast.done(tIdConfig);
+                  wpWorkerCallbackMaker(
+                    infinitelyWorker,
+                    "createWpProject",
+                    {
+                      data: {
+                        ...data,
+                        exsitedConfig: res?.value || {},
+                        projectSetting: getProjectSettings().projectSettings,
+                        wp_meta: {
+                          ...data.wp_meta,
+                          app_password: jsonRes.app_password,
+                        },
+                      },
+                    },
+                    (props) => {
+                      if (props?.done) {
+                        setShowCrtModal(false);
+                        setData({ name: "", description: "" });
+                      }
+                    },
+                  );
+                },
+                onError: (error) => {
+                  console.error("Error getting inf_config:", error);
+                  toast.done(tIdConfig);
+                  toast.error(
+                    <ToastMsgInfo msg={`Failed to get inf_config 😩`} />,
+                  );
                 },
               },
-            },
-          });
+            );
+          },
+          onError: (error) => {
+            console.error("Error connecting to WordPress:", error);
+            toast.done(tId);
+            toast.error(
+              <ToastMsgInfo msg={`Failed to connect to WordPress 😩`} />,
+            );
+          },
         },
-      });
-      // const tid = toast.loading(
-      //   <ToastMsgInfo msg={`Connecting to your wordpres website`} />
-      // );
-      // try {
-      //   // const appPasswordRes = await fetch(
-      //   //   `https://${data.wp_meta.website_url}/wp-json/infinitley-api/v1/connect`,
-      //   //   {
-      //   //     method: "POST",
-      //   //     headers: {
-      //   //       "Content-Type": "application/json",
-      //   //     },
-      //   //     body: JSON.stringify({
-      //   //       username: data.wp_meta.username,
-      //   //       password: data.wp_meta.password,
-      //   //     }),
-      //   //   }
-      //   // );
-      //   const jsonRes = await wp_connect({
-      //     username: data.wp_meta.username,
-      //     password: data.wp_meta.password,
-      //     website_url: data.wp_meta.website_url,
-      //   });
-      //   if (jsonRes.success) {
-      //     toast.done(tid);
-      //     console.log("app psw : ", jsonRes);
-      //     toast.success(
-      //       <ToastMsgInfo msg={`Connected to wordpress successfully`} />
+      );
+
+      // wp_toast_handler({
+      //   returnCallback: async () =>
+      //     await wp_connect({
+      //       username: data.wp_meta.username,
+      //       password: data.wp_meta.password,
+      //       website_url: data.wp_meta.website_url,
+      //     }),
+
+      //   toast_loading_msg: `Connecting to your wordpres website`,
+      //   toast_success_msg: `Connected to wordpress successfully 💙`,
+      //   toast_error_msg: `Faild to connect to wordpress 😩`,
+      //   async onSuccess(jsonRes) {
+      //     const tId = toast.loading(
+      //       <ToastMsgInfo msg={`Checking config...`} />,
       //     );
+      //     const exsitedConfig = await (async () => {
+      //       try {
+      //         const res = await wp_get_option({
+      // optionName: "inf_config",
+      // wp_meta_data: {
+      //   ...data.wp_meta,
+      //   app_password: jsonRes.app_password,
+      // },
+      //         });
+
+      //         if (!res?.success) {
+      //           return {};
+      //         } else {
+      //           return res.value;
+      //         }
+      //       } catch (error) {
+      //         throw new Error(error);
+      //       } finally {
+      //         toast.done(tId);
+      //       }
+      //     })();
+
+      //     console.log("exsitedConfig", exsitedConfig);
+
       //     infinitelyWorker.postMessage({
-      //       command: "createProject",
+      //       command: "createWpProject",
       //       props: {
       //         data: {
       //           ...data,
+      //           exsitedConfig: exsitedConfig,
+      //           projectSetting: getProjectSettings().projectSettings,
       //           wp_meta: {
       //             ...data.wp_meta,
       //             app_password: jsonRes.app_password,
@@ -158,15 +210,8 @@ export const CreateProjectModal = ({
       //         },
       //       },
       //     });
-      //   } else {
-      //     toast.dismiss(tid);
-      //     toast.error(<ToastMsgInfo msg={jsonRes.message} />);
-      //   }
-      // } catch (error) {
-      //   toast.dismiss(tid);
-      //   toast.error(<ToastMsgInfo msg={`Faild to connect to wordpress 😩`} />);
-      //   throw new Error(error);
-      // }
+      //   },
+      // });
     } else {
       infinitelyWorker.postMessage({
         command: "createProject",
@@ -368,8 +413,6 @@ export const CreateProjectModal = ({
                       ev.preventDefault();
                       onButtonClick(ev);
                       addProject();
-                      setShowCrtModal(false);
-                      setData({ name: "", description: "" });
                     }}
                     type="submit"
                     className="w-full bg-brand-primary text-text-primary hover:bg-slate-600 py-2 rounded-md transition duration-150"

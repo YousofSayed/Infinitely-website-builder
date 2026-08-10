@@ -21,25 +21,19 @@ import { Editor } from "@/views/Editor";
 import { Opfs } from "@/views/Opfs";
 import { Workspace } from "@/views/Workspace";
 import { Preview } from "@/wordpress/Preview";
-import { WpCreate } from "@/wordpress/WpCreate";
-import { WpSelect } from "@/wordpress/WpSelect";
+
 import React, { useEffect } from "react";
 import { Route, Routes, useNavigate } from "react-router-dom";
 import { useRecoilState } from "recoil";
-
-//
+import ElectronTitleBar from "./components/desktop/ElectronTitleBar";
+import { WpCreate } from "./views/wordpress/WpCreate";
+import { WpSelect } from "./views/wordpress/WpSelect";
 
 function App() {
-  // const Editor = lazy(async () => ({
-  //   default: (await import("@/views/Editor")).Editor,
-  // }));
-  // const Editor = lazy( async() => await import("@/views/Editor"));
-
   const [dbAssetsSw, setDBAssetsSw] = useRecoilState(dbAssetsSwState);
   const [appInstalling, setAppInstalling] = useRecoilState(appInstallingState);
   const [appSate, setAppState] = useRecoilState(appTypeStt);
   const navigate = useNavigate();
-  // const location = useLocation();
 
   useEffect(() => {
     /**
@@ -151,50 +145,56 @@ function App() {
     }
   };
 
+  console.log("electron api :", window.electron);
+  console.log("is desktop:", window.electron?.isDesktop);
+
   return (
     // <Suspense fallback={<Loader />}>
-    appInstalling ? (
-      <AppInstalling />
-    ) : (
-      <Routes>
-        <Route
-          path="/"
-          element={<Editor />}
-          action={
-            Boolean(+localStorage.getItem(current_project_id))
-              ? null
-              : () => navigate("/workspace")
-          }
-        >
-          <Route path="add-blocks" element={<Blocks />} />
-          <Route path="edite">
-            <Route path="styling" element={<StyleAside />} />
-            <Route path="traits" element={<TraitsAside />} />
-            <Route path="commands" element={<Commands />} />
-            <Route path="interactions" element={<Interactions />} />
-            <Route path="motion" element={<Motion />} />
-            {/* <Route path="choose-and-write-model" element={<ChooseModel />}>
+    <main className="w-full h-full flex flex-col overflow-hidden relative">
+      {window.electron?.isDesktop && <ElectronTitleBar />}
+      {appInstalling ? (
+        <AppInstalling />
+      ) : (
+        <Routes>
+          <Route
+            path="/"
+            element={<Editor />}
+            action={
+              Boolean(+localStorage.getItem(current_project_id))
+                ? null
+                : () => navigate("/workspace")
+            }
+          >
+            <Route path="add-blocks" element={<Blocks />} />
+            <Route path="edite">
+              <Route path="styling" element={<StyleAside />} />
+              <Route path="traits" element={<TraitsAside />} />
+              <Route path="commands" element={<Commands />} />
+              <Route path="interactions" element={<Interactions />} />
+              <Route path="motion" element={<Motion />} />
+              {/* <Route path="choose-and-write-model" element={<ChooseModel />}>
               <Route path="dynamic-content" element={<DynamicContent />} />
               <Route
                 path="dynamic-attributes"
                 element={<DynamicAttributes />}
               />
             </Route> */}
+            </Route>
           </Route>
-        </Route>
 
-        <Route path="/preview" element={<Preview />} />
+          <Route path="/preview" element={<Preview />} />
 
-        <Route path="/workspace" element={<Workspace />}></Route>
-        <Route path="wordpress/create" element={<WpCreate />}></Route>
-        <Route path="wordpress/select" element={<WpSelect />}></Route>
-        <Route path="wordpress/preview" element={<Preview />}></Route>
+          <Route path="/workspace" element={<Workspace />}></Route>
+          <Route path="wordpress/create" element={<WpCreate />}></Route>
+          <Route path="wordpress/select" element={<WpSelect />}></Route>
+          <Route path="wordpress/preview" element={<Preview />}></Route>
 
-        {/* <Route path="/share" element={<Share />}></Route> */}
+          {/* <Route path="/share" element={<Share />}></Route> */}
 
-        {isDevMode() && <Route path="opfs-dev" element={<Opfs />} />}
-      </Routes>
-    )
+          {isDevMode() && <Route path="opfs-dev" element={<Opfs />} />}
+        </Routes>
+      )}
+    </main>
     // </Suspense>
   );
 }

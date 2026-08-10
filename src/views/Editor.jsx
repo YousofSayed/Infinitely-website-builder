@@ -112,12 +112,17 @@ export function Editor({ params }) {
 
       setShowCustomModal(false);
     };
-    opfs.id = getProjectId();
+
     (async () => {
+      if (!getProjectId()) {
+        console.error("opfs id is not found, reloading the page");
+        setReloader((prev) => prev + 1);
+        return;
+      }
+      opfs.id = getProjectId();
       await opfs.init(+localStorage.getItem(current_project_id));
 
-      console.log('opfs id is :' ,opfs.id );
-      
+      console.log("opfs id is :", opfs.id);
 
       infinitelyWorker.postMessage({
         command: "initOPFS",
@@ -141,7 +146,7 @@ export function Editor({ params }) {
         },
         (props) => {
           if (props.done) {
-            console.log(`props.done is ${props.done}`)
+            console.log(`props.done is ${props.done}`);
             setIsAssetsWorkerDone(true);
           }
         },
@@ -152,48 +157,22 @@ export function Editor({ params }) {
       //  });
     })();
 
-    // getProjectSettings();
-
-    let reinitTimeout;
-    const infinitelyWorkerIniter = (ev) => {
-      const { command } = ev.data;
-      if (command === "updateDB") {
-        clearTimeout(reinitTimeout);
-        reinitTimeout = setTimeout(() => {
-          infinitelyWorker.reInit((worker) => {
-            worker.postMessage({
-              command: "initOPFS",
-              props: { id: opfs.id },
-            });
-          });
-        }, 0); // wait a bit after last updateDB message
-      }
-    };
-
-    // infinitelyWorker.addEventListener("message", infinitelyWorkerIniter);
+ 
     window.addEventListener("open:custom:modal", openModal);
     window.addEventListener("close:custom:modal", closeModal);
 
     return () => {
       window.removeEventListener("open:custom:modal", openModal);
       window.removeEventListener("close:custom:modal", closeModal);
-      infinitelyWorker.removeEventListener("message", infinitelyWorkerIniter);
       // broadCastCleaner();
       // clearInterval(swAliveInterval);
     };
   }, []);
 
-  useOfflineHandler();
-  useWorkreFetch(offlineInstallerWorker);
+ 
 
   useEffect(() => {
-    // const cb = (ev) => {
-    //   const { command, props } = ev.data;
-    //   if (command == "listenToOPFSBroadcastChannel" && props.done) {
-    //     setIsAssetsWorkerDone(true);
-    //     // assetsWorker.removeEventListener("message", cb);
-    //   }
-    // };
+
     const windowNavigate = (ev) => {
       navigate(ev.detail.to);
     };
@@ -213,7 +192,10 @@ export function Editor({ params }) {
     };
   }, []);
 
+   useOfflineHandler();
+  useWorkreFetch(offlineInstallerWorker);
   useWorkerToast();
+
   const isProject = Boolean(+localStorage.getItem(current_project_id));
   // const [parentForPanelsGroup] = useAutoAnimate();
   // backdrop-blur-md bg-[#020617BF]
@@ -222,7 +204,7 @@ export function Editor({ params }) {
       <Navigate to={"/wordpress/select"} replace />
     ) : isAssetsWorkerDone ? (
       <BusyProvider>
-        <section className="w-full h-full">
+        <section className={`w-full ${window.electron?.isDesktop ? "h-[calc(100%-40px)]" : "h-full"}  relative`}>
           <ToastContainer
             // toastStyle={{ background: "transparent" }}
 

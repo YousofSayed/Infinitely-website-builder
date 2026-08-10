@@ -6,6 +6,7 @@
   box-sizing: border-box;
   scroll-behavior: smooth;
   font-size: 14px;
+  outline: none;
 }
 
 .gjs-cv-canvas,
@@ -105,110 +106,221 @@ body {
 
 .inf-blur {
   position: relative;
-  background-color: rgba(94, 94, 94, 0.103) !important;
+  isolation: isolate;
   overflow: hidden;
+
+  background: rgba(94, 94, 94, 0.103) !important;
+
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
-.inf-blur * {
+.inf-blur > * {
+  position: relative;
   z-index: 1;
 }
 
+/* =========================================================
+   AMBIENT SHADOWS
+   ========================================================= */
+
 .inf-blur::before,
 .inf-blur::after {
-  content: '';
+  content: "";
+
   position: absolute;
-  width: 200px;
-  height: 200px;
-  background-color: var(--color-brand-primary);
-  backdrop-filter: blur(90px);
-  border-radius: 50%;
-  opacity: 0;
-  box-shadow: 50px 50px 1700px 270px var(--color-brand-primary);
-  z-index: 0;
 
-  /* Entrance + roaming */
-  animation: appear 1.2s ease-out forwards,
-    roam1 20s cubic-bezier(0.45, 0, 0.55, 1) 1.2s infinite alternate;
-  will-change: transform, opacity;
+  /*
+   * MUCH larger than the viewport.
+   * This prevents a recognizable "shape".
+   */
+  width: 100%;
+  height: 100%;
+
+  pointer-events: none;
+  z-index: -1;
+
+  opacity: 1;
+
+  will-change: transform;
 }
 
-/* Slightly different path for second element */
-.inf-blur::after {
-  animation: appear 1.2s ease-out forwards,
-    roam2 22s cubic-bezier(0.45, 0, 0.55, 1) 1.2s infinite alternate;
-}
+
+/* =========================================================
+   TOP / LEFT AMBIENT LIGHT
+   ========================================================= */
 
 .inf-blur::before {
-  left: -120%;
-  top: -120%;
+  left: -35%;
+  top: -45%;
+
+  transform: scale(1.5);
+
+  background:
+    radial-gradient(
+      ellipse 55% 45% at 25% 25%,
+      var(--color-brand-primary) 0%,
+      color-mix(
+        in srgb,
+        var(--color-brand-primary) 65%,
+        transparent
+      ) 20%,
+      color-mix(
+        in srgb,
+        var(--color-brand-primary) 30%,
+        transparent
+      ) 40%,
+      transparent 72%
+    );
+
+  filter: blur(45px);
+
+  animation:
+    inf-shadow-1
+    20s
+    cubic-bezier(0.45, 0, 0.55, 1)
+    infinite alternate;
 }
+
+
+/* =========================================================
+   BOTTOM / RIGHT AMBIENT LIGHT
+   ========================================================= */
 
 .inf-blur::after {
-  left: 80%;
-  /* instead of right:-500px */
-  top: 80%;
-  /* instead of bottom:-500px */
+  right: -35%;
+  bottom: -45%;
+
+  transform: scale(1.5);
+
+  background:
+    radial-gradient(
+      ellipse 60% 50% at 75% 75%,
+      var(--color-brand-primary) 0%,
+      color-mix(
+        in srgb,
+        var(--color-brand-primary) 65%,
+        transparent
+      ) 20%,
+      color-mix(
+        in srgb,
+        var(--color-brand-primary) 30%,
+        transparent
+      ) 40%,
+      transparent 75%
+    );
+
+  filter: blur(50px);
+
+  animation:
+    inf-shadow-2
+    23s
+    cubic-bezier(0.45, 0, 0.55, 1)
+    infinite alternate;
 }
 
-/* Entrance animation */
-@keyframes appear {
-  0% {
-    transform: translate(-50px, -50px) scale(0.5) rotate(0deg);
-    opacity: 0;
-  }
 
-  100% {
-    transform: translate(10px, 10px) scale(1) rotate(0deg);
-    opacity: 1;
-  }
-}
+/* =========================================================
+   MOVEMENT 1
+   ========================================================= */
 
-/* Roaming paths with subtle scale & rotation */
-@keyframes roam1 {
+@keyframes inf-shadow-1 {
   0% {
-    transform: translate(10px, 10px) scale(1) rotate(0deg);
+    transform:
+      scale(1.5)
+      translate3d(0, 0, 0);
   }
 
   25% {
-    transform: translate(180px, 30px) scale(1.05) rotate(10deg);
+    transform:
+      scale(1.65)
+      translate3d(8%, 5%, 0);
   }
 
   50% {
-    transform: translate(120px, 200px) scale(0.95) rotate(-10deg);
+    transform:
+      scale(1.45)
+      translate3d(15%, 12%, 0);
   }
 
   75% {
-    transform: translate(250px, 150px) scale(1.02) rotate(5deg);
+    transform:
+      scale(1.7)
+      translate3d(5%, 18%, 0);
   }
 
   100% {
-    transform: translate(40px, 220px) scale(1) rotate(0deg);
+    transform:
+      scale(1.55)
+      translate3d(12%, 8%, 0);
   }
 }
 
-@keyframes roam2 {
+
+/* =========================================================
+   MOVEMENT 2
+   ========================================================= */
+
+@keyframes inf-shadow-2 {
   0% {
-    transform: translate(220px, 40px) scale(1) rotate(0deg);
+    transform:
+      scale(1.5)
+      translate3d(0, 0, 0);
   }
 
   25% {
-    transform: translate(50px, 150px) scale(1.03) rotate(-8deg);
+    transform:
+      scale(1.65)
+      translate3d(-8%, -5%, 0);
   }
 
   50% {
-    transform: translate(200px, 200px) scale(0.97) rotate(6deg);
+    transform:
+      scale(1.45)
+      translate3d(-15%, -12%, 0);
   }
 
   75% {
-    transform: translate(120px, 50px) scale(1.01) rotate(-4deg);
+    transform:
+      scale(1.7)
+      translate3d(-5%, -18%, 0);
   }
 
   100% {
-    transform: translate(180px, 180px) scale(1) rotate(0deg);
+    transform:
+      scale(1.55)
+      translate3d(-12%, -8%, 0);
   }
 }
 
+
+/* =========================================================
+   SMALL SCREENS
+   ========================================================= */
+
+@media (max-width: 600px) {
+  .inf-blur::before,
+  .inf-blur::after {
+    width: 150%;
+    height: 150%;
+
+    filter: blur(35px);
+
+    transform: scale(1.4);
+  }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .inf-blur::before,
+  .inf-blur::after {
+    animation: none;
+  }
+}
 
 .monaco-editor,
 .monaco-editor .overflow-guard {

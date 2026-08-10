@@ -15,7 +15,11 @@ import { wp_get_post_id } from "@/apps/wordpress/functions_ui";
 import { open_code_manager_modal } from "@/constants/InfinitelyCommands";
 import { InfinitelyEvents } from "@/constants/infinitelyEvents";
 import { editorContainerInstance } from "@/constants/InfinitelyInstances";
-import { current_project_id, inf_symbol_Id_attribute, preview_url } from "@/constants/shared";
+import {
+  current_project_id,
+  inf_symbol_Id_attribute,
+  preview_url,
+} from "@/constants/shared";
 import {
   animationsState,
   asideControllersNotifiresState,
@@ -37,7 +41,11 @@ import {
   uniqueID,
 } from "@/helpers/cocktail";
 import { db } from "@/helpers/db";
-import { fetcherWorker, offlineInstallerWorker, pageBuilderWorker } from "@/helpers/defineWorkers";
+import {
+  fetcherWorker,
+  offlineInstallerWorker,
+  pageBuilderWorker,
+} from "@/helpers/defineWorkers";
 import {
   buildGsapMotionsScript,
   buildScriptFromCmds,
@@ -68,7 +76,10 @@ import { Hr } from "@/components/Protos/Hr";
 import { Li } from "@/components/Protos/Li";
 import { OptionsButton } from "@/components/Protos/OptionsButton";
 import { ScrollableToolbar } from "@/components/Protos/ScrollableToolbar";
-import { UlContextProvider, useUlContext } from "@/components/Protos/UlProvider";
+import {
+  UlContextProvider,
+  useUlContext,
+} from "@/components/Protos/UlProvider";
 import { PagesSelector } from "@/components/Editor/PagesSelector";
 import { IframeControllers } from "@/components/Editor/Protos/IframeControllers";
 import { Input } from "@/components/Editor/Protos/Input";
@@ -83,6 +94,7 @@ import { cloneDeep } from "lodash";
 import React, { memo, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { Wordpress } from "../Protos/wordpress/Wordpress";
 
 export const HomeHeader = () => {
   const editor = useEditorMaybe();
@@ -131,7 +143,6 @@ export const HomeHeader = () => {
       );
     });
   });
-
 
   const setMediaConditon = (value) => {
     setMediaCond(value);
@@ -238,26 +249,32 @@ export const HomeHeader = () => {
     const projectId = +localStorage.getItem(current_project_id);
     const projectData = await getProjectData();
     const { projectSettings } = getProjectSettings();
-    const symbols = editor.getWrapper().find(`[${inf_symbol_Id_attribute}]`).map(cmp => {
-      const symbol_id = cmp.getAttributes()[inf_symbol_Id_attribute];
+    const symbols = editor
+      .getWrapper()
+      .find(`[${inf_symbol_Id_attribute}]`)
+      .map((cmp) => {
+        const symbol_id = cmp.getAttributes()[inf_symbol_Id_attribute];
 
-      if (!symbol_id) return null;
+        if (!symbol_id) return null;
 
-      return {
-        symbol_id,
-        post_meta: {
-          before_save: '__DELETE__',
-          saved: {
-            html: gjsComponentsToJSON(cmp, true),
-            css: minify(getComponentRules({
-              editor,
-              cmp,
-              nested: true,
-            }).stringRules).css
-          }
-        }
-      }
-    }).filter(Boolean);
+        return {
+          symbol_id,
+          post_meta: {
+            before_save: "__DELETE__",
+            saved: {
+              html: gjsComponentsToJSON(cmp, true),
+              css: minify(
+                getComponentRules({
+                  editor,
+                  cmp,
+                  nested: true,
+                }).stringRules,
+              ).css,
+            },
+          },
+        };
+      })
+      .filter(Boolean);
 
     let steps = 0;
     const max_steps = 2 + Number(Boolean(symbols.length));
@@ -295,20 +312,25 @@ export const HomeHeader = () => {
     };
 
     // wp_update_symbols
-    wpWorkerCallbackMaker(offlineInstallerWorker, 'wp_update_symbols', {
-      symbols,
-      projectId
-    }, async (res) => {
-      console.log('wp_update_symbols', res);
-      if (res.done) {
-        await afterSave();
-        toast.success(<ToastMsgInfo msg={`Symbols updated 💙`} />);
-      } else {
-        toast.dismiss(tId);
-        toast.error(<ToastMsgInfo msg={`Faild to update symbols 😡`} />);
-        throw new Error(`Faild to update symbols 😡 , why?`);
-      }
-    })
+    wpWorkerCallbackMaker(
+      offlineInstallerWorker,
+      "wp_update_symbols",
+      {
+        symbols,
+        projectId,
+      },
+      async (res) => {
+        console.log("wp_update_symbols", res);
+        if (res.done) {
+          await afterSave();
+          toast.success(<ToastMsgInfo msg={`Symbols updated 💙`} />);
+        } else {
+          toast.dismiss(tId);
+          toast.error(<ToastMsgInfo msg={`Faild to update symbols 😡`} />);
+          throw new Error(`Faild to update symbols 😡 , why?`);
+        }
+      },
+    );
 
     // wp_update_meta;
     wpWorkerCallbackMaker(
@@ -362,8 +384,6 @@ export const HomeHeader = () => {
         }
       },
     );
-
-
 
     // wpWorkerCallbackMaker(
     //   pageBuilderWorker,
@@ -420,7 +440,6 @@ export const HomeHeader = () => {
       setStoreLoad(false);
     };
 
-
     editor.on(InfinitelyEvents.storage.storeStart, saveStart);
     editor.on(InfinitelyEvents.storage.storeEnd, saveEnd);
 
@@ -465,8 +484,6 @@ export const HomeHeader = () => {
   }, [editor]);
 
   useEffect(() => {
-
-
     if (!editor) return;
     if (!currentEl.currentEl) return;
     // if (!cmpRules.length) return;
@@ -651,7 +668,7 @@ export const HomeHeader = () => {
                       "rule : ",
                       rule,
                       rule.trim() ==
-                      `${editor.config.mediaCondition}: ${widthMedia}px`,
+                        `${editor.config.mediaCondition}: ${widthMedia}px`,
                     );
 
                     return (
@@ -660,7 +677,7 @@ export const HomeHeader = () => {
                         style={{
                           backgroundColor:
                             rule.trim() ==
-                              `${editor.config.mediaCondition}: ${widthMedia}px`
+                            `${editor.config.mediaCondition}: ${widthMedia}px`
                               ? "var(--main-bg)"
                               : "",
                         }}
@@ -932,8 +949,8 @@ export const HomeHeader = () => {
           />
         </>
 
-        {isWordpress() && (
-          <section className="ml-2 w-[calc(100%+25px)]">
+        <Wordpress>
+          <section className="ml-2 max-w-[200px] w-[calc(100%+25px)]">
             <Button
               refForward={animatedRefForPublishBtn}
               disabled={storeLoad || !publish}
@@ -954,7 +971,8 @@ export const HomeHeader = () => {
               {storeLoad ? <p>Process</p> : <p>Publish</p>}
             </Button>
           </section>
-        )}
+          
+        </Wordpress>
 
         {/* <Button>Publish</Button> */}
         {/* </div> */}

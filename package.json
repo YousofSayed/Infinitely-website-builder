@@ -9,21 +9,21 @@
     "dev": "node --max-old-space-size=8024 ./node_modules/vite/bin/vite.js",
     "build": "node --max-old-space-size=8024 ./node_modules/vite/bin/vite.js build",
     "preview": "vite preview",
-    "electron:dev": "concurrently \"deno run start\" \"wait-on https://127.0.0.1:5173 && electronmon --trace  --watch electron-main.cjs --watch preload.js .\"",
+    "electron:dev": "concurrently \"npm run start\" \"wait-on https://localhost:5173 && electronmon --trace  --watch electron-main.cjs --watch preload.js .\"",
     "electron:build": "npm run build && electron-builder",
     "electron": "electronmon --trace .",
     "lint": "eslint . src --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint src --ext .js,.ts,.jsx,.tsx --fix"
   },
   "main": "electron-main.cjs",
- "electronmon": {
-  "patterns": [
-    "!src/**",
-    "!public/**",
-    "!dist/**",
-    "!node_modules/**"
-  ]
-},
+  "electronmon": {
+    "patterns": [
+      "!src/**",
+      "!public/**",
+      "!dist/**",
+      "!node_modules/**"
+    ]
+  },
   "build": {
     "appId": "com.infinitely.app",
     "productName": "Infinitely Studio",
@@ -84,7 +84,6 @@
     "recoil": "^0.7.7",
     "serialize-javascript": "^6.0.2",
     "terser": "^5.39.0",
-    "typescript": "^5.9.2",
     "use-debounce": "^10.0.5",
     "vite": "^5.4.17",
     "workbox-cacheable-response": "^7.3.0",
@@ -115,6 +114,7 @@
     "gsap": "^3.12.7",
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.14",
+    "typescript": "^5.9.3",
     "vite-plugin-chunk-split": "^0.5.0",
     "vite-plugin-mkcert": "^1.17.9",
     "vite-plugin-pwa": "^1.0.0",

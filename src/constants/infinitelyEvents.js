@@ -15,6 +15,15 @@ export const InfinitelyEvents = {
     reload: "infinitely:editor:reload",
     require: `infinitely:editor:require-reload`,
   },
+  blocks: {
+    update: "infinitely:blocks:update",
+    add: "infinitely:blocks:add",
+    remove_wp_symbols: "infinitely:blocks:remove-wp-symbols",
+    restore_wp_symbols: "infinitely:blocks:restore-wp-symbols",
+    remove_wp_templates: "infinitely:blocks:remove-wp-templates",
+    restore_wp_templates: "infinitely:blocks:restore-wp-templates",
+    symbols_need_reload: "infinitely:blocks:symbols-need-reload",
+  },
   ruleTitle:{
     update:`infinitely:rule-title:update`
   },

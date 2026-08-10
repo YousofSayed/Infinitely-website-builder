@@ -358,86 +358,8 @@ export const addNewTools = (editor) => {
         isGrid: displayVal == "grid",
       };
     };
-    // const displayVal = isParentFlexOrGrid();
-    // if (!sleProps.resizable) return;
-    // if (displayVal.isFlex || displayVal.isGrid) return;
-    // const resizerEl = editor.Canvas.getResizerEl();
-    // resizerEl.innerHTML = html`<div
-    //   class="gjs-resizer-c"
-    //   style="display: block;"
-    // >
-    //   <i class="gjs-resizer-h gjs-resizer-h-tl" data-gjs-handler="tl"></i
-    //   ><i class="gjs-resizer-h gjs-resizer-h-tc" data-gjs-handler="tc"></i
-    //   ><i class="gjs-resizer-h gjs-resizer-h-tr" data-gjs-handler="tr"></i
-    //   ><i class="gjs-resizer-h gjs-resizer-h-cl" data-gjs-handler="cl"></i
-    //   ><i class="gjs-resizer-h gjs-resizer-h-cr" data-gjs-handler="cr"></i
-    //   ><i class="gjs-resizer-h gjs-resizer-h-bl" data-gjs-handler="bl"></i
-    //   ><i class="gjs-resizer-h gjs-resizer-h-bc" data-gjs-handler="bc"></i
-    //   ><i class="gjs-resizer-h gjs-resizer-h-br" data-gjs-handler="br"></i>
-    // </div>`;
-    // const resizer = resizerEl.querySelector(`.gjs-resizer-c`);
-    // console.log("after set resizer element : ", sle.getEl());
-
-    // interacter = interact(sle.getEl(), {
-    //   context: editor.Canvas.getWindow().document,
-    // });
-
-    // interacter.resizable({
-    //   // resize from all edges and corners
-    //   edges: { left: true, right: true, bottom: true, top: true },
-
-    //   listeners: {
-    //     start(event) {
-    //       event.preventDefault();
-    //       disableDragAndDrop(false, editor.getWrapper());
-    //     },
-    //     move(event) {
-    //       console.log("moooooove");
-    //       const target = event.target;
-    //       event.preventDefault();
-    //       if (editor.getSelected() != sle) return;
-    //       disableDragAndDrop(false, editor.getWrapper());
-
-    //       styleInfInstance.emit(InfinitelyEvents.style.set, {
-    //         cssProp: ["width", "height"],
-    //         value: [`${event.rect.width}px`, `${event.rect.height}px`],
-    //       });
-
-    //       // event.stopPropagation();
-    //     },
-    //     end(event) {
-    //       event.preventDefault();
-    //       event.stopPropagation();
-    //       disableDragAndDrop(true, editor.getWrapper());
-    //       preventSelectNavigation(editor, sle);
-    //       // editor.select(sle);
-    //     },
-    //   },
-    //   modifiers: [
-    //     // keep the edges inside the parent
-    //     interact.modifiers.restrictEdges({
-    //       outer: "parent",
-    //     }),
-
-    //     // minimum size
-    //     interact.modifiers.restrictSize({
-    //       min: { width: 100, height: 50 },
-    //     }),
-    //   ],
-
-    //   inertia: true,
-    // });
+   
   });
 
-  editor.on(
-    "component:deselected",
-    /**
-     *
-     * @param {import('grapesjs').Component} cmp
-     */
-    (cmp) => {
-      interacter && interacter.unset();
-      console.log("cmp interactjs unseted");
-    }
-  );
+  
 };

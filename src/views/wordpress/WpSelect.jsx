@@ -82,7 +82,7 @@ export const SelectWpTemplate = () => {
   return isNumber(parseFloat(projectIdFromStorage)) &&
     !isNaN(projectIdFromStorage) ? (
     <section className="w-full  flex flex-col h-full justify-center items-center ">
-      <section className="w-[400px] h-full  bg-slate-950 rounded-lg flex flex-col gap-5 justify-center items-center p-5">
+      <section className="w-full h-full  bg-slate-950 rounded-lg flex flex-col gap-5 justify-center items-center p-5">
         <section
           ref={animateRef}
           className="flex flex-col gap-3 items-center justify-center p-5 inf-blur bg-slate-800 w-full h-full   rounded-lg"
@@ -302,7 +302,7 @@ export const SelectWpPost = () => {
   return isNumber(parseFloat(projectIdFromStorage)) &&
     !isNaN(projectIdFromStorage) ? (
     <section className="w-full  flex flex-col h-full justify-center items-center ">
-      <section className="w-[400px] overflow-auto h-full  bg-slate-950 rounded-lg flex flex-col gap-5 justify-center items-center p-5">
+      <section className="w-full overflow-auto h-full  bg-slate-950 rounded-lg flex flex-col gap-5 justify-center items-center p-5">
         <section
           ref={animateRef}
           className="flex flex-col gap-3 items-center justify-center p-5 inf-blur bg-slate-800 w-full h-full   rounded-lg"
@@ -490,7 +490,7 @@ export const WpSelect = () => {
   const [animateRef] = useAutoAnimate();
 
   return (
-    <section className="flex flex-col gap-3 justify-center items-center h-full">
+    <section className="flex flex-col gap-2 justify-center items-center h-full">
       <ToastContainer
         // toastStyle={{ background: "transparent" }}
 
@@ -506,7 +506,7 @@ export const WpSelect = () => {
 
       // stacked={true}
       />
-      <section className="flex justify-center gap-5 p-2 w-[400px] items-center bg-slate-950 rounded-lg">
+      <section className="flex justify-center gap-5 p-2 container mx-auto items-center bg-slate-950 rounded-lg">
         <Button
           className="bg-slate-800 font-bold transition-colors hover:bg-blue-600"
           onClick={() => {
@@ -527,7 +527,7 @@ export const WpSelect = () => {
         </Button>
       </section>
 
-      <section className="flex justify-center gap-5 p-2 w-[400px] items-center bg-slate-950 rounded-lg">
+      <section className="flex justify-center gap-5 p-2 container mx-auto items-center bg-slate-950 rounded-lg">
         {Object.keys(cmps).map((keyCmp, i) => (
           <Button
             key={i}
@@ -542,7 +542,7 @@ export const WpSelect = () => {
         ))}
       </section>
 
-      <main ref={animateRef} className="min-h-[70%]">
+      <main ref={animateRef} className="min-h-[70%] container mx-auto">
         {Boolean(key) && cmps[key]}
       </main>
     </section>

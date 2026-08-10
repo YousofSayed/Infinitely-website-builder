@@ -7,33 +7,39 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useEditorMaybe } from "@grapesjs/react";
+import { cloneDeep } from "lodash";
 
 /**
  *
- * @param {{label : string , HTMLChildren : HTMLElement[]}} param0
+ * @param {{label : string , blocks : import("@/helpers/types").InfinitelyBlock[]}} param0
  * @returns
  */
-export const DetailsForBlocks = (({ label, HTMLChildren }) => {
+export const DetailsForBlocks = (({ label, blocks }) => {
   const [isShow, setIsShow] = useState(false);
-  const blocksContainerRef = useRef(refType);
+  const blocksContainerRef = useRef();
+  const editor = useEditorMaybe();
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!blocksContainerRef.current) return;
+    if(!editor) return;
+
     blocksContainerRef.current.querySelectorAll(`*`).forEach(el=>el.remove());
     blocksContainerRef.current.innerHTML = "";
-    if (!isShow) {
-      blocksContainerRef.current.querySelectorAll(`*`).forEach(el=>el.remove());
-      blocksContainerRef.current.innerHTML = "";
-    } else {
-    }
-    const fragment = document.createDocumentFragment();
 
-    HTMLChildren.forEach((HTMLChild) => {
-      fragment.appendChild(HTMLChild);
-    });
+    const fragment = document.createDocumentFragment();
+    for (const block of cloneDeep(blocks)) {
+      const renderedBlock = editor.Blocks.render(cloneDeep(block), { external: true });
+      if (renderedBlock) {
+        fragment.appendChild(renderedBlock);
+      }
+    }
+
+  
     blocksContainerRef.current.appendChild(fragment);
-    console.log("should blocks done : ", blocksContainerRef.current, fragment);
-  }, [isShow, HTMLChildren]);
+  }, [blocksContainerRef.current , blocks , editor]);
+
+
 
   return (
     // <AccordionItem title={label} setIsShow={setIsShow}>

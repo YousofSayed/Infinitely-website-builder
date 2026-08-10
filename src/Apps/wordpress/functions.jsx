@@ -40,7 +40,7 @@ export function createWpToken(wp_meta) {
  * @returns {string} Full `https://<site>/wp-json/<endpoint>` URL.
  */
 export function createWebsiteLink(wp_meta, endpoint = `wp/v2`) {
-  return `https://${wp_meta.website_url}/wp-json/${endpoint}`;
+  return `${wp_meta.website_url}/wp-json/${endpoint}`;
 }
 
 /**
@@ -1067,7 +1067,7 @@ export async function wp_connect({ username, password, website_url = "" }) {
   );
 
   const response = await fetch(
-    `https://${website_url}/wp-json/infinitely-api/v1/connect`,
+    `${website_url}/wp-json/infinitely-api/v1/connect`,
     {
       method: "POST",
       headers: {

@@ -107,7 +107,7 @@ export const searchWord = atom({
 /**
  * @type {{[categoryName: string]: import('@/helpers/types').InfinitelyBlock[];}}
  */
-export let editorBlocksType = [];
+export let editorBlocksType = {};
 
 export const blocksStt = atom({
   key: "blocks",

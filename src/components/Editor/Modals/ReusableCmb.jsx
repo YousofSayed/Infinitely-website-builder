@@ -217,7 +217,7 @@ export const ReusableCmb = () => {
       console.log("blocks res after save : ", res);
 
       afterSave();
-      qc.invalidateQueries({ queryKey: ["inf_blocks"] });
+      qc.invalidateQueries({ queryKey: ["inf_blocks"]  , refetchType: "all" });
       editor.trigger("block:add");
     });
   };

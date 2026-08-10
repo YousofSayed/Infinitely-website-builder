@@ -36,9 +36,11 @@ export const updateEditorStyleAfterTemplateOrBlockAdded = (editor) => {
           const style_file = await opfs.getFile(
             defineRoot(`temp/symbols/${symbolInf.mainId}/style.css`),
           );
+          
           if (!style_file) return;
           const style_file_content = await style_file.text();
-          sessionStorage.removeItem(current_symbol_id);
+          console.log('style_file : ' , style_file , style_file_content || undefined  , symbolInf.mainId);
+          // sessionStorage.removeItem(current_symbol_id)/;
           reorderCss(editor, `${style_file_content} ${editor.getCss()} `, true);
           // editor.addComponents(`<style>${style_file_content}</style>`);
         }

@@ -7,7 +7,7 @@ import {
 } from "@/constants/windowKeys";
 import { blocksStt, editorBlocksType } from "@/helpers/atoms";
 import { defineRoot } from "@/helpers/bridge";
-import { html } from "@/helpers/cocktail";
+import { addClickClass, html } from "@/helpers/cocktail";
 import { db } from "@/helpers/db";
 import {
   offlineInstallerWorker,
@@ -15,6 +15,7 @@ import {
 } from "@/helpers/defineWorkers";
 import {
   advancedSearchSuggestions,
+  doInNormal,
   doInNormalAsync,
   doInWordpressAsync,
   getProjectData,
@@ -33,15 +34,26 @@ import { DetailsForBlocks } from "@/components/Editor/Protos/DetailsForBlocks";
 import { Input } from "@/components/Editor/Protos/Input";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { useEditorMaybe } from "@grapesjs/react";
-import { isArray, isPlainObject } from "lodash";
-import React, { memo, useEffect, useRef, useState } from "react";
+import { cloneDeep, isArray, isPlainObject } from "lodash";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { usePosts } from "@/queries/wp.queries";
 import { useWordpress } from "@/hooks/useWordpress";
 import { ShowIf } from "@/components/ShowIf";
-
-//
-//
+import { useQueryClient } from "@tanstack/react-query";
+import { useNormal } from "@/hooks/useNormal";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
+import { Icons } from "../Icons/Icons";
+import { Wordpress } from "../Protos/wordpress/Wordpress";
+import { toast } from "react-toastify";
+import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
 
 export const Blocks = () => {
   const editor = useEditorMaybe();
@@ -50,56 +62,25 @@ export const Blocks = () => {
   const allBlocksAsObject = useRef(blockType);
   const [loading, setLoading] = useState(false);
   const [animatedRef] = useAutoAnimate();
+  const qc = useQueryClient();
+  const [isSymbolsNeedReload, setIsSymbolsNeedReload] = useState(false);
+  const [animatedRefForHeader] = useAutoAnimate();
+
   const {
     data: wpSymbols,
-    isLoading: isWpSymbolsLoading,
-    isRefetching: isWpSymbolsFetching,
+    isPending: isWpSymbolsLoading,
+    isFetching: isWpSymbolsFetching,
   } = usePosts("inf_symbols");
 
   const {
     data: wpTemplates,
-    isLoading: isWpTemplatesLoading,
-    isRefetching: isWpTemplatesFetching,
+    isPending: isWpTemplatesLoading,
+    isFetching: isWpTemplatesFetching,
   } = usePosts("inf_blocks");
 
-  useEffect(() => {
-    if (!editor || !editor.Blocks) {
-      console.log(editor);
-      return;
-    }
-
-    editor.on("block:add", callback);
-    editor.on("block:update", callback);
-
-    return () => {
-      editor.off("block:add", callback);
-      editor.off("block:update", callback);
-      // editor.off("block:add", callback);
-    };
-  }, [editor]);
-
-  useEffect(() => {
-    if (!editor) return;
-    // console.log("yyyyyyyyyyyyyyyaaaaaaaaaaaaaaaaaaaaaaaa");
-
-    callback();
-  }, [editor]);
-
-  useWordpress(() => {
-    if (!wpSymbols || !wpTemplates || !editor) return;
-    callback();
-  }, [editor, wpSymbols, wpTemplates]);
-
-  // useEffect(() => {
-  //   if (!editor) return;
-
-  // }, [editor]);
-
-  const callback = async () => {
+  // 1. MOVED UP: Define callback early so it can be used synchronously in useRef/useEffect
+  const callback = useCallback(async () => {
     console.log("editor from callback : ", editor);
-    /**
-     * @type {import('@/helpers/types').InfinitelyBlock[]}
-     */
     let blocks = [];
     await doInNormalAsync(async () => {
       blocks = await Promise.all(
@@ -114,21 +95,11 @@ export const Blocks = () => {
             block.content instanceof Blob &&
               (block.content = await block.content.text());
 
-            // block.style instanceof Blob &&
-            // (block.style = await block.style.text());
-
-            // block.style && editor.Css.addRules(block.style);
-
             if (block?.pathes) {
               block.content = await (
                 await opfs.getFile(defineRoot(block.pathes.content))
               ).text();
-
-              // block.style = await (
-              //   await opfs.getFile(defineRoot(block.pathes.style))
-              // ).text();
             }
-            // console.log('block style : ' , block.style);
             console.log("block : ", block);
 
             return block;
@@ -137,47 +108,32 @@ export const Blocks = () => {
       );
     });
 
-    const editorBlocks = editor.Blocks.getAll().models.map(
-      (block) => block.attributes,
-    );
-    const allBlocks = [...editorBlocks, ...blocks];
-    allBlocksAsObject.current = allBlocks;
-    const handledBlocks = handleCustomBlock(allBlocks, editor);
-    console.log("update blocks : ", handledBlocks);
-    // editor.BlockManager.add('sda',{
+    const editorBlocks = editor.Blocks.getAll().models.map((block) => {
+      const attrs = block.attributes;
+      return cloneDeep({
+        ...attrs,
+        category:
+          attrs.category && typeof attrs.category === "object"
+            ? attrs.category.id
+            : attrs.category,
+      });
+    });
 
-    // })
-    setBlocks((old) => ({
-      ...handledBlocks,
-    }));
-    blocksRef.current = handledBlocks;
-
-    const setBlocksHandler = () => {
-      const allBlocks = [...editorBlocks, ...blocks];
-      const handledBlocks = handleCustomBlock(allBlocks, editor);
-      setBlocks((old) => ({
-        ...handledBlocks,
-      }));
-      blocksRef.current = handledBlocks;
-    };
-
-    //For Symbols
     await doInWordpressAsync(async () => {
-      // setLoading(true);
       const projectData = await getProjectData();
       console.log("wpSymbols:", wpSymbols);
+      const files = [];
 
       if (wpSymbols?.data) {
-        const files = [];
         let symbol_state;
         for (const block of wpSymbols.data) {
           const blockMeta = block?.meta?.inf_meta;
-          // blockMeta[projectData.currentEditingPage.save_state] ||
           const current_save_state = isPlainObject(blockMeta.before_save)
             ? "before_save"
             : "saved";
           symbol_state =
             symbol_state === "before_save" ? symbol_state : current_save_state;
+
           const blockData = blockMeta[current_save_state] || null;
           const symbolId = block?.meta?.["inf-symbol-id"];
           if (!blockData) {
@@ -209,26 +165,7 @@ export const Blocks = () => {
             },
           );
 
-          wpWorkerCallbackMaker(
-            offlineInstallerWorker,
-            "writeFilesToOPFS",
-            {
-              files,
-            },
-            (props) => {
-              console.log("file writing response", props);
-            },
-          );
-          console.log(
-            block,
-            " blockData ",
-            blockData,
-            symbolId,
-            "****",
-            projectData.currentEditingPage.save_state,
-          );
           blocks.push(blockData);
-          setBlocksHandler();
         }
 
         console.log("symbol_state : ", symbol_state);
@@ -244,141 +181,9 @@ export const Blocks = () => {
         window[_symbolsCachedState] = true;
       }
 
-      // if (!window[_symbolsCachedState]) {
-      //   wpWorkerCallbackMaker(
-      //     offlineInstallerWorker,
-      //     "wp_get_symbols",
-      //     {
-      //       projectId: localStorage.getItem(current_project_id),
-      //     },
-      //     async (props) => {
-      //       console.log("symbols res : ", props);
-      //       const projectData = await getProjectData();
-      //       if (props.done && isArray(props.res.data)) {
-      //         setLoading(false);
-      //         const files = [];
-      //         let symbol_state;
-      //         for (const block of props.res.data) {
-      //           const blockMeta = block?.meta?.inf_meta;
-      //           // blockMeta[projectData.currentEditingPage.save_state] ||
-      //           const current_save_state = isPlainObject(blockMeta.before_save)
-      //             ? "before_save"
-      //             : "saved";
-      //           symbol_state =
-      //             symbol_state === "before_save"
-      //               ? symbol_state
-      //               : current_save_state;
-      //           const blockData = blockMeta[current_save_state] || null;
-      //           const symbolId = block?.meta?.["inf-symbol-id"];
-      //           if (!blockData) {
-      //             console.warn(`Block data not founded for ${block}!`);
-      //             continue;
-      //           }
-
-      //           blockData.content = blockData.html;
-      //           blockData.name = block.slug;
-      //           blockData.title = block.slug;
-      //           blockData.label = block.slug;
-      //           blockData.type = "symbol";
-      //           blockData.category = blockData.category || "symbols";
-      //           blockData.media = blockData.media || "";
-
-      //           if (!window[symbolsCached]) {
-      //             window[symbolsCached] = new Set();
-      //           }
-
-      //           if (!window[symbolsCached].has(symbolId)) {
-      //             files.push(
-      //               {
-      //                 path: defineRoot(`temp/symbols/${symbolId}/html.json`),
-      //                 content: JSON.stringify(blockData.html),
-      //               },
-      //               {
-      //                 path: defineRoot(`temp/symbols/${symbolId}/style.css`),
-      //                 content: blockData.css,
-      //               },
-      //               {
-      //                 path: defineRoot(`temp/symbols/${symbolId}/config.json`),
-      //                 content: JSON.stringify({
-      //                   ...blockData,
-      //                 }),
-      //               },
-      //             );
-      //           }
-
-      //           window[symbolsCached].add(symbolId);
-
-      //           wpWorkerCallbackMaker(
-      //             offlineInstallerWorker,
-      //             "writeFilesToOPFS",
-      //             {
-      //               files,
-      //             },
-      //             (props) => {
-      //               console.log("file writing response", props);
-      //             },
-      //           );
-      //           console.log(
-      //             block,
-      //             " blockData ",
-      //             blockData,
-      //             symbolId,
-      //             "****",
-      //             projectData.currentEditingPage.save_state,
-      //           );
-      //           blocks.push(blockData);
-      //           setBlocksHandler();
-      //         }
-
-      //         console.log("symbol_state : ", symbol_state);
-
-      //         symbol_state &&
-      //           (await db.projects.update(projectData.id, {
-      //             currentEditingPage: {
-      //               ...projectData.currentEditingPage,
-      //               save_state: symbol_state,
-      //               need_publish_to_wp: true,
-      //             },
-      //           }));
-      //         window[_symbolsCachedState] = true;
-      //       }
-      //     },
-      //   );
-      // }
-
-      // if (window[_symbolsCachedState]) {
-      //   const symbolFolders = await opfs.getAllFolders(
-      //     defineRoot(`temp/symbols`),
-      //   );
-
-      //   for (const symbolFolder of symbolFolders) {
-      //     console.log("folder name : ", symbolFolder.name, symbolFolder.path);
-      //     const files = Object.fromEntries(
-      //       await Promise.all(
-      //         (await opfs.getAllFiles(symbolFolder.path)).map(async (fileH) => {
-      //           return [fileH.name, await (await fileH.getOriginFile()).text()];
-      //         }),
-      //       ),
-      //     );
-      //     console.log("files : ", files);
-
-      //     const block = {
-      //       ...JSON.parse(files["config.json"]),
-      //       content: JSON.parse(files["html.json"]),
-      //     };
-
-      //     blocks.push(block);
-      //   }
-
-      //   setLoading(false);
-      //   setBlocksHandler();
-      // }
-
       if (wpTemplates?.data) {
-        const files = [];
         for (const block of wpTemplates.data) {
           const blockMeta = block?.meta?.inf_meta;
-          // blockMeta[projectData.currentEditingPage.save_state] ||
           const current_save_state = "saved";
 
           const blockData = blockMeta[current_save_state] || null;
@@ -413,17 +218,6 @@ export const Blocks = () => {
             },
           );
 
-          wpWorkerCallbackMaker(
-            pageBuilderWorker,
-            "writeFilesToOPFS",
-            {
-              files,
-            },
-            (props) => {
-              console.log("file writing response", props);
-            },
-          );
-
           console.log(
             block,
             " blockData ",
@@ -433,138 +227,139 @@ export const Blocks = () => {
             projectData.currentEditingPage.save_state,
           );
           blocks.push(blockData);
-          setBlocksHandler();
         }
       }
+
+      wpWorkerCallbackMaker(
+        offlineInstallerWorker,
+        "writeFilesToOPFS",
+        {
+          files,
+        },
+        (props) => {
+          console.log("file writing response", props);
+        },
+      );
     });
 
-    //For Blocks
-    // await doInWordpressAsync(async () => {
-    //   // setLoading(true);
+    const allBlocks = [...editorBlocks, ...blocks];
+    const blocksByCategory = {};
+    for (const block of cloneDeep(allBlocks)) {
+      const ctg = block?.category?.id || block.category || "uncategorized";
+      if (!blocksByCategory[ctg]) blocksByCategory[ctg] = [];
+      blocksByCategory[ctg].push(block);
+    }
 
-    //   if (!window[_blocksCachedState]) {
-    //     wpWorkerCallbackMaker(
-    //       pageBuilderWorker,
-    //       "wp_get_blocks",
-    //       {
-    //         projectId: +localStorage.getItem(current_project_id),
-    //       },
-    //       async (props) => {
-    //         console.log("blocks res : ", props);
-    //         const projectData = await getProjectData();
-    //         if (props.done && isArray(props.res.data)) {
-    //           setLoading(false);
-    //           const files = [];
-    //           for (const block of props.res.data) {
-    //             const blockMeta = block?.meta?.inf_meta;
-    //             // blockMeta[projectData.currentEditingPage.save_state] ||
-    //             const current_save_state = "saved";
+    allBlocksAsObject.current = blocksByCategory;
+    setBlocks(cloneDeep(blocksByCategory));
+    blocksRef.current = cloneDeep(blocksByCategory);
+  }, [editor, wpSymbols, wpTemplates]);
 
-    //             const blockData = blockMeta[current_save_state] || null;
-    //             const blocklId = block?.meta?.["inf-template-id"];
-    //             if (!blockData) {
-    //               console.warn(`Block data not founded for ${block}!`);
-    //               continue;
-    //             }
+  // 2. FIX: Keep a mutable ref to the latest callback to solve stale closures
+  const callbackRef = useRef(callback);
+  useEffect(() => {
+    callbackRef.current = callback;
+  }, [callback]);
 
-    //             // block.featured_image
-    //             // instanceof Blob &&
-    //             // (block.media = html`
-    //             //   <img src="${URL.createObjectURL(block.featured_image
-    //             //   )}" />
-    //             // `);
+  // 3. FIX: Use callbackRef so GrapesJS events always process the newest data
+  useNormal(() => {
+    if (!editor || !editor.Blocks) {
+      console.log(editor);
+      return;
+    }
 
-    //             blockData.content = blockData.html;
-    //             blockData.name = block.slug;
-    //             blockData.title = block.slug;
-    //             blockData.label = block.slug;
-    //             blockData.type = "template";
-    //             blockData.category = blockData.category || "templates";
-    //             blockData.media = blockData.media || "";
+    const stableCallback = (...args) => callbackRef.current(...args);
 
-    //             if (!window[blocksCached]) {
-    //               window[blocksCached] = new Set();
-    //             }
+    stableCallback();
 
-    //             if (!window[blocksCached].has(blocklId)) {
-    //               files.push(
-    //                 {
-    //                   path: defineRoot(`temp/templates/${blocklId}/html.json`),
-    //                   content: JSON.stringify(blockData.html),
-    //                 },
-    //                 {
-    //                   path: defineRoot(`temp/templates/${blocklId}/style.css`),
-    //                   content: blockData.css,
-    //                 },
-    //                 {
-    //                   path: defineRoot(
-    //                     `temp/templates/${blocklId}/config.json`,
-    //                   ),
-    //                   content: JSON.stringify({
-    //                     ...blockData,
-    //                   }),
-    //                 },
-    //               );
-    //             }
+    editor.on("block:add", stableCallback);
+    editor.on("block:update", stableCallback);
 
-    //             window[blocksCached].add(blocklId);
+    return () => {
+      editor.off("block:add", stableCallback);
+      editor.off("block:update", stableCallback);
+    };
+  }, [editor]);
 
-    //             wpWorkerCallbackMaker(
-    //               pageBuilderWorker,
-    //               "writeFilesToOPFS",
-    //               {
-    //                 files,
-    //               },
-    //               (props) => {
-    //                 console.log("file writing response", props);
-    //               },
-    //             );
-    //             console.log(
-    //               block,
-    //               " blockData ",
-    //               blockData,
-    //               blocklId,
-    //               "****",
-    //               projectData.currentEditingPage.save_state,
-    //             );
-    //             blocks.push(blockData);
-    //             setBlocksHandler();
-    //           }
+  // 4. FIX: Added wpTemplates dependencies to ensure it triggers when templates finish loading
+  useWordpress(() => {
+    if (!editor) return;
+    if (
+      isWpSymbolsLoading ||
+      isWpSymbolsFetching ||
+      isWpTemplatesLoading ||
+      isWpTemplatesFetching
+    ) {
+      editor.trigger(InfinitelyEvents.blocks.remove_wp_symbols);
+    } else {
+      editor.trigger(InfinitelyEvents.blocks.restore_wp_symbols);
+    }
+  }, [
+    editor,
+    wpSymbols,
+    wpTemplates,
+    isWpSymbolsLoading,
+    isWpSymbolsFetching,
+    isWpTemplatesLoading,
+    isWpTemplatesFetching,
+  ]);
 
-    //           window[_blocksCachedState] = true;
-    //         }
-    //       },
-    //     );
-    //   }
+  // 5. FIX: Use callbackRef and REMOVE data dependencies to prevent effect race conditions
+  useWordpress(() => {
+    if (!editor) return;
+    const hideSymbolsNow = () => {
+      setBlocks((old) => {
+        const clone = cloneDeep(old);
+        delete clone.symbols;
+        return clone;
+      });
+      setLoading(true); 
+    };
 
-    //   if (window[_blocksCachedState]) {
-    //     const blocksFolders = await opfs.getAllFolders(
-    //       defineRoot(`temp/templates`),
-    //     );
+    const restoreSymbolsNow = async () => {
+      console.log("Restoring Symbols Blocks 🍕");
+      await callbackRef.current();
+      setLoading(false);
+      setIsSymbolsNeedReload(false);
+    };
 
-    //     for (const blockFolder of blocksFolders) {
-    //       console.log("folder name : ", blockFolder.name, blockFolder.path);
-    //       const files = Object.fromEntries(
-    //         await Promise.all(
-    //           (await opfs.getAllFiles(blockFolder.path)).map(async (fileH) => {
-    //             return [fileH.name, await (await fileH.getOriginFile()).text()];
-    //           }),
-    //         ),
-    //       );
-    //       console.log("files : ", files);
+    const symbolReloadHandler = ({ state }) => {
+      setIsSymbolsNeedReload(state);
+    };
 
-    //       const block = {
-    //         ...JSON.parse(files["config.json"]),
-    //         content: JSON.parse(files["html.json"]),
-    //       };
+    editor.on(InfinitelyEvents.blocks.remove_wp_symbols, hideSymbolsNow);
+    editor.on(InfinitelyEvents.blocks.restore_wp_symbols, restoreSymbolsNow);
+    editor.on(InfinitelyEvents.blocks.symbols_need_reload, symbolReloadHandler);
 
-    //       blocks.push(block);
-    //     }
+    return () => {
+      editor.off(InfinitelyEvents.blocks.remove_wp_symbols, hideSymbolsNow);
+      editor.off(InfinitelyEvents.blocks.restore_wp_symbols, restoreSymbolsNow);
+      editor.off(
+        InfinitelyEvents.blocks.symbols_need_reload,
+        symbolReloadHandler,
+      );
+    };
+  }, [editor]); // Only depends on editor now, eliminating the race condition
 
-    //     setLoading(false);
-    //     setBlocksHandler();
-    //   }
-    // });
+  const reloadSymbols = async () => {
+    const tid = toast.loading(<ToastMsgInfo msg={`Reloading blocks...`} />);
+    try {
+      await doInWordpressAsync(async () => {
+        await qc.invalidateQueries({
+          queryKey: ["inf_symbols"],
+          refetchType: "all",
+        });
+      });
+
+      setIsSymbolsNeedReload(false);
+      toast.done(tid);
+      toast.success(<ToastMsgInfo msg={`Blocks reloaded successfully 💙`} />);
+    } catch (error) {
+      toast.dismiss(tid);
+      toast.error(<ToastMsgInfo msg={`Faild to reload blocks 😥`} />);
+      setIsSymbolsNeedReload(true);
+      throw error;
+    }
   };
 
   const search = (value = "") => {
@@ -574,48 +369,61 @@ export const Blocks = () => {
       false,
       ["category", "name", "id", "label"],
     );
-    setBlocks(handleCustomBlock(newBlocks, editor));
+    setBlocks(newBlocks);
   };
 
   return (
     <section ref={animatedRef} className="flex flex-col gap-2 h-full w-full ">
-      <SearchHeader search={search} />
+      <header className="w-full relative" ref={animatedRefForHeader}>
+        <SearchHeader search={search} />
+        <Wordpress>
+          <i
+            role="button"
+            style={{
+              opacity: isSymbolsNeedReload ? "1" : ".6",
+              pointerEvents: isSymbolsNeedReload ? "auto" : "none",
+            }}
+            className="absolute right-5 top-1/2 -translate-y-1/2 [&_path]:stroke-[2.5px] [&_svg]:w-5 [&_svg]:h-5 cursor-pointer"
+            onClick={async (e) => {
+              addClickClass(e.currentTarget, "click");
+              await reloadSymbols();
+            }}
+          >
+            <Icons.refresh />
+            {isSymbolsNeedReload && (
+              <span className="block absolute -right-1 -top-1  w-3 h-3 bg-[crimson] rounded-full"></span>
+            )}
+          </i>
+        </Wordpress>
+      </header>
+
       <Accordion>
-        {Object.keys(blocksAtom).map((ctg, i) => {
-          return (
-            <AccordionItem title={ctg} key={i}>
-              <DetailsForBlocks
-                // key={i}
-                // label={ctg}
-                HTMLChildren={blocksAtom[ctg]}
-              />
-            </AccordionItem>
-          );
-        })}
+        <ShowIf condition={Object.keys(blocksAtom).length}>
+          {Object.keys(blocksAtom).map((ctg, i) => {
+            return (
+              <AccordionItem title={ctg} key={i}>
+                <ShowIf condition={blocksAtom[ctg]?.length}>
+                  <DetailsForBlocks blocks={blocksAtom[ctg]} />
+                </ShowIf>
+              </AccordionItem>
+            );
+          })}
+        </ShowIf>
       </Accordion>
 
       <ShowIf
         condition={
           loading ||
           isWpSymbolsLoading ||
-          // isWpSymbolsFetching ||
-          isWpTemplatesLoading 
-          // || isWpTemplatesFetching
+          isWpSymbolsFetching ||
+          isWpTemplatesLoading ||
+          isWpTemplatesFetching
         }
       >
         <section className="mt-3">
-          <Loader width={60} height={60} />
+          <Loader width={30} height={30} />
         </section>
       </ShowIf>
-      {/* {(loading ||
-        isWpSymbolsLoading ||
-        isWpSymbolsFetching ||
-        isWpTemplatesLoading ||
-        isWpTemplatesFetching) && (
-        <section className="mt-3">
-          <Loader width={60} height={60} />
-        </section>
-      )} */}
     </section>
   );
 };

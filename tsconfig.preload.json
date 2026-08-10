@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": ".electron-types",
+    "module": "commonjs",
+    "target": "ES2022",
+    "skipLibCheck": true
+  },
+  "include": ["preload.c npx tsc -p tsconfig.preload.jsonjs"]
+}

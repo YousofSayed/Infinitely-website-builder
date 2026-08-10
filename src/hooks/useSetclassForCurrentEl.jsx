@@ -17,7 +17,10 @@ import {
 import { defineRoot } from "@/helpers/bridge";
 import { uniqueID } from "@/helpers/cocktail";
 import { db } from "@/helpers/db";
-import { offlineInstallerWorker } from "@/helpers/defineWorkers";
+import {
+  offlineInstallerWorker,
+  pageBuilderWorker,
+} from "@/helpers/defineWorkers";
 import {
   arrangeDevicesPeriority,
   doInWordpress,
@@ -26,6 +29,7 @@ import {
   getCurrentSelector,
   getInfinitelySymbolInfo,
   getProjectData,
+  getProjectId,
   getProjectSettings,
   reorderCss,
   store,
@@ -151,101 +155,7 @@ export function useSetClassForCurrentEl() {
       } else {
         sessionStorage.removeItem(current_symbol_id);
       }
-      // console.log(
-      //   "from updater  : ",
-      //   // editor.getSelectedAll(),
-      //   newCssProps,
-      //   // editor.DeviceManager.get(editor.getDevice()).attributes,
-      //   // `${currentSelector}${rule.ruleString}`,
-      //   // cssProp,
-      //   // newCssProps,
-      //   // {
-      //   //   ...Media,
-      //   //   addStyles: true,
 
-      //   //   // addStyle: true,
-      //   // }
-      // );
-
-      // arrangeDevicesPeriority(editor);
-
-      // (async () => {
-      //   const projectData = await getProjectData();
-      //   const projectId = +localStorage.getItem(current_project_id);
-      //   const { projectSettings } = getProjectSettings();
-      //   const devices =
-      //     projectData?.devices ||
-      //     editor.Devices.getAll()
-      //       .toArray()
-      //       .map((dev) => dev.attributes);
-
-      //   const currentDeviceName = editor.getDevice();
-      //   const currentDevice = editor.Devices.get(currentDeviceName)?.attributes;
-      //   const newDevices = [
-      //     ...new Set(
-      //       devices.concat(currentDevice).map((dev) => JSON.stringify(dev))
-      //     ),
-      //   ].map((dev) => JSON.parse(dev));
-
-      //   if (projectSettings.enable_auto_save) {
-      //     editor.Storage.setAutosave(false);
-      //     editor.CssComposer.setRule(
-      //       `${currentSelector}${rule.ruleString}`,
-      //       newCssProps || { [cssProp]: "" },
-      //       {
-      //         ...Media,
-      //         addStyles: true,
-      //         validate: false,
-      //         // inline:true,
-      //         // addStyle: true,
-      //       }
-      //     );
-
-      //     setCmpRules(
-      //       getComponentRules({
-      //         editor,
-      //         cmp: editor.getSelected(),
-      //       }).rules || []
-      //     );
-
-      //     store(
-      //       {
-      //         data: {
-      //           devices: newDevices,
-      //         },
-      //       },
-      //       editor
-      //     );
-      //   } else {
-      //     editor.CssComposer.setRule(
-      //       `${currentSelector}${rule.ruleString}`,
-      //       newCssProps || { [cssProp]: "" },
-      //       {
-      //         ...Media,
-      //         addStyles: true,
-      //         validate: false,
-      //         // inline:true,
-      //         // addStyle: true,
-      //       }
-      //     );
-
-      //     setCmpRules(
-      //       getComponentRules({
-      //         editor,
-      //         cmp: editor.getSelected(),
-      //       }).rules || []
-      //     );
-
-      //     await db.projects.update(projectId, {
-      //       devices: newDevices,
-      //     });
-      //   }
-      // editor.trigger("inf:rules:update", {
-      //   rules: newCssProps,
-      // });
-
-      // console.log("new media devices :",editor.DeviceManager.getAll().toArray().map(dev=>dev.attributes));
-      // })();
       console.log(
         "new media devices :",
         editor.DeviceManager.getAll()
@@ -274,45 +184,41 @@ export function useSetClassForCurrentEl() {
 
       setCmpRules(rulesParsed.rules || []);
 
-      if (symbolInfo.isSymbol) {
-        doInWordpress(() => {
+      if (symbolInfo.isSymbol) {   
+
+        if (!getProjectSettings().projectSettings.enable_auto_save) {
           wpWorkerCallbackMaker(
-            offlineInstallerWorker,
-            "writeFilesToOPFS",
+            pageBuilderWorker,
+            "wp_update_symbol",
             {
-              files: [
-                {
-                  path: defineRoot(
-                    `temp/symbols/${symbolInfo.mainId}/style.css`,
-                  ),
-                  content: rulesParsed.stringRules,
+              projectId: getProjectId(),
+              symbol_id: symbolInfo.mainId,
+              symbol_meta: {
+                inf_meta: {
+                  before_save: {
+                    css: rulesParsed.stringRules,
+                  },
                 },
-              ],
+              },
             },
             (props) => {
-              console.log("file writing response", props);
+              if (props.done) {
+                editor.trigger(InfinitelyEvents.blocks.symbols_need_reload, {
+                  state: true,
+                });
+              }
             },
           );
-        });
+        }
       }
 
       editor.trigger("inf:rules:update", {
         rules: newCssProps,
       });
-      // reorderCss(editor);
-      // editor.getSelected().addStyle(newCssProps)
-
-      // console.log(cssProp, rule.ruleString, "%$%%$#$", editor.getCss());
-      // console.log("Editor Css:", editor.getDevice());
-      // console.log(editor.Devices.get("tablet").getWidthMedia());
     };
 
     setStyleTimeout && clearTimeout(setStyleTimeout);
     setStyleTimeout = setTimeout(() => {
-      // if ("requestIdleCallback" in window) {
-      //   requestIdleCallback(setter);
-      // } else {
-      // }
       setter();
     }, 100);
   };

@@ -262,11 +262,11 @@ export const getIconForMultiChoice = (iconName) => {
  *
  * @param {import('grapesjs').Block[]} blocks
  * @param {import('grapesjs').Editor} editor
- * @returns {{[categoryName : string] : import('grapesjs').BlockProperties[]}}
+ * @returns {{[categoryName : string] : HTMLElement | undefined}}
  */
 export function handleCustomBlock(blocks, editor) {
   /**
-   * @type {{[categoryName : string] : import('grapesjs').BlockProperties[]}}
+   * @type {{[categoryName : string] : HTMLElement | undefined}}
    */
   const ctgs = {};
 
@@ -1601,7 +1601,7 @@ export function initSymbol(id, editor) {
           );
           // return;
         } else {
-          console.error(`replaaaaaaaaaaaaaaaaaaaaaaaaaace here`);
+          console.log(`replaaaaaaaaaaaaaaaaaaaaaaaaaace here`);
           const parsedNewContent = JSON.parse(newContent);
 
           const newSymbol = symbol.replaceWith(parsedNewContent, {})[0];
@@ -1629,25 +1629,52 @@ export function initSymbol(id, editor) {
       });
 
       doInWordpress(() => {
-        wpWorkerCallbackMaker(
-          offlineInstallerWorker,
-          "writeFilesToOPFS",
-          {
-            files: [
-              {
-                path: defineRoot(`temp/symbols/${id}/html.json`),
-                content: newContent,
+        // wpWorkerCallbackMaker(
+        //   offlineInstallerWorker,
+        //   "writeFilesToOPFS",
+        //   {
+        //     files: [
+        //       {
+        //         path: defineRoot(`temp/symbols/${id}/html.json`),
+        //         content: newContent,
+        //       },
+        //     ],
+        //   },
+        //   (props) => {
+        //     console.log(
+        //       "file writing response from functions.js symbols replacer (initSymbol) callback",
+        //       props,
+        //     );
+        //     // editor.trigger("block:update");
+        //   },
+        // );
+        if (!getProjectSettings().projectSettings.enable_auto_save) {
+          wpWorkerCallbackMaker(
+            pageBuilderWorker,
+            "wp_update_symbol",
+            {
+              projectId: getProjectId(),
+              symbol_id: id,
+              symbol_meta: {
+                inf_meta: {
+                  before_save: {
+                    html: JSON.parse(newContent),
+                  },
+                },
               },
-            ],
-          },
-          (props) => {
-            console.log(
-              "file writing response from functions.js symbols replacer (initSymbol) callback",
-              props,
-            );
-            editor.trigger("block:update");
-          },
-        );
+            },
+            (props) => {
+              if (props.done) {
+                editor.trigger(InfinitelyEvents.blocks.symbols_need_reload, {
+                  state: true,
+                });
+              }
+            },
+          );
+        }
+        // editor.trigger(InfinitelyEvents.blocks.symbols_need_reload, {
+        //   state: true,
+        // });
       });
       // selectedCmp.on("change:attributes", (change)=>{
       //   console.log('change : ' , change);
@@ -1768,7 +1795,7 @@ export function getCurrentSelector(selector, cmp) {
 }
 
 /**
- * 
+ *
  * @returns {Promise<(import("@/helpers/types").Project & import("@/helpers/types").WpProject)}
  */
 export async function getProjectData() {
@@ -3389,16 +3416,16 @@ export function wpWorkerCallbackListener(
  * @returns {Promise<Awaited<ReturnType<WpCommands[K]>>>}
  */
 export function callWorkerCommand(worker, command, props, localFallback) {
-  if (isNormal()) {
-    if (!isFunction(localFallback)) {
-      return Promise.reject(
-        new Error(
-          `callWorkerCommand: "${command}" has no local fallback for normal mode`,
-        ),
-      );
-    }
-    return Promise.resolve().then(() => localFallback(props));
-  }
+  // if (isNormal()) {
+  //   if (!isFunction(localFallback)) {
+  //     return Promise.reject(
+  //       new Error(
+  //         `callWorkerCommand: "${command}" has no local fallback for normal mode`,
+  //       ),
+  //     );
+  //   }
+  //   return Promise.resolve().then(() => localFallback(props));
+  // }
 
   return new Promise((resolve, reject) => {
     wpWorkerCallbackMaker(worker, command, props, (resProps) => {

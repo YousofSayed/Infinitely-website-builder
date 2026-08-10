@@ -16,11 +16,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 
-/**
- *
- * @param {"symbols" | "templates"} type
- * @returns
- */
+
 export const usePosts = (type = "") => {
   return useQuery({
     queryKey: [type],
@@ -29,7 +25,8 @@ export const usePosts = (type = "") => {
         projectId: getProjectId(),
         post_type: type,
       }),
-    enabled: Boolean(type) && isWordpress(),
+      enabled: Boolean(type) && isWordpress(),
+      refetchOnMount: false,
   });
 };
 
@@ -37,8 +34,8 @@ export const useInsertPostsMutation = (type) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: createWpMutationFn(fetcherWorker, "wp_insert_posts"),
-    onSuccess: () =>{
-       qc.invalidateQueries({queryKey:[type] , refetchType:'all'});
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [type], refetchType: "all" });
     },
   });
 };
@@ -47,14 +44,28 @@ export const useDeletePostsMutation = (type) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: createWpMutationFn(fetcherWorker, "wp_delete_posts"),
-    onSuccess: () => qc.invalidateQueries({queryKey:[type] , refetchType:'all'}),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: [type], refetchType: "all" }),
   });
 };
 
-export const useUnlinkSymbolsMutation = (type)=>{
+export const useUnlinkSymbolsMutation = (type) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: createWpMutationFn(fetcherWorker, "wp_unlink_symbols"),
-    onSuccess: () => qc.invalidateQueries({queryKey:[type] , refetchType:'all'}),
+    // onSuccess: () =>
+    //   qc.invalidateQueries({ queryKey: [type], refetchType: "all" }),
   });
-}
+};
+
+export const useConnectWpMutation = () => {
+  return useMutation({
+    mutationFn: createWpMutationFn(fetcherWorker, "wp_connect"),
+  });
+};
+
+export const useGetWpOptionQueryMutation = () => {
+  return useMutation({
+    mutationFn:createWpMutationFn(fetcherWorker, "wp_get_option"),
+  });
+};

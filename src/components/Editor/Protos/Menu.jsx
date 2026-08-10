@@ -142,7 +142,7 @@ export const Menu = ({
 
           onScrollEnd?.()
         }}
-        components={{ Item: (props) => <div className="flex flex-col gap-2" {...props}></div> }}
+        components={{ Item: (props) => <div className="flex flex-col  my-2 px-2" {...props}></div> }}
         itemContent={(index) => {
           const item = safeKeywords[index]; // || "No Items Founded...";
           return (
@@ -159,7 +159,7 @@ export const Menu = ({
                   // borderBottom: "1px solid #475569"
                 }
               }
-              className={`flex items-center    p-2 text-nowrap w-full  overflow-x-auto  transition-all cursor-pointer   text-text-primary  text-[16px] font-semibold `}
+              className={`flex items-center     text-nowrap w-full  overflow-x-auto  transition-all cursor-pointer   text-text-primary  text-[16px] font-semibold `}
             >
               <h1
                 // style={{
@@ -174,6 +174,7 @@ export const Menu = ({
                   overflow-hidden
                   text-ellipsis   
                   transition-colors
+                  capitalize
                   ${currentChoose == index
                     ? "bg-brand-primary "
                     : "bg-surface-tertiary hover:bg-brand-primary"
