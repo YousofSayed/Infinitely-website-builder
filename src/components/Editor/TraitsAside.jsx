@@ -1,11 +1,16 @@
 import { open_files_manager_modal } from "@/constants/InfinitelyCommands";
 import { InfinitelyEvents } from "@/constants/infinitelyEvents";
-import { editorComponentProps, inf_build_url } from "@/constants/shared";
+import {
+  editorComponentProps,
+  inf_build_url,
+  inf_tokens_ignore,
+} from "@/constants/shared";
 import {
   asideControllersNotifiresState,
   assetTypeState,
   currentElState,
   showPreviewState,
+  wpTokensState,
 } from "@/helpers/atoms";
 import { addClickClass, parse, stringify } from "@/helpers/cocktail";
 import {
@@ -15,6 +20,8 @@ import {
   getMediaBreakpoint,
   getProjectData,
   getProjectSettings,
+  getTokensQueryVar,
+  getTokensQueryVars,
   initToolbar,
   isValidAttribute,
   preventSelectNavigation,
@@ -51,29 +58,12 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { useEditorMaybe } from "@grapesjs/react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { parseHTML } from "linkedom";
-import { isBoolean, isFunction, isString } from "lodash";
+import { isBoolean, isFunction, isString, set } from "lodash";
 import React, { memo, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { VirtuosoGrid } from "react-virtuoso";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-
-// 
-// 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+import { useWordpress } from "@/hooks/useWordpress";
 
 export const TraitsAside = () => {
   const editor = useEditorMaybe();
@@ -268,12 +258,12 @@ export const TraitsAside = () => {
   const addAttribute = ({ key, value }) => {
     const sle = editor.getSelected();
     const type = sle.get("type").toLowerCase();
-    if (isValidAttribute(key, value || '')) {
+    if (isValidAttribute(key, value || "")) {
       sle.addAttributes({ [key]: value || "" });
       setAttributes(getFilterdAttributes());
       if (type == "video" || type == "iframe" || type == "source") {
         const newSle = sle.replaceWith(sle.clone())[0];
-        preventSelectNavigation(editor, newSle)
+        preventSelectNavigation(editor, newSle);
         // getProjectSettings().set({
         //   navigate_to_style_when_Select: false,
         // });
@@ -292,11 +282,13 @@ export const TraitsAside = () => {
     const type = sle.get("type").toLowerCase();
     sle.removeAttributes([key]);
     setAttributes(getFilterdAttributes());
-
   };
 
   return (
-    <section className="flex flex-col gap-2 h-full mt-2">
+    <section
+      className="flex flex-col gap-2 h-full mt-2"
+      inf-tokens-container="true"
+    >
       <Accordion>
         {/* <AsideControllers /> */}
         <AccordionItem title={"Type Content"}>
@@ -305,8 +297,9 @@ export const TraitsAside = () => {
               <FitTitle className="custom-font-size">Type Content</FitTitle>
               <nav className="flex items-center  gap-3 p-1 px-2 bg-surface-tertiary w-fit  rounded-lg self-end text-text-primary">
                 <button
-                  className={`w-[22.5px] h-[22.5px] cursor-pointer flex items-center justify-center rounded-md transition-colors ${codeSettings.defaultLanguage == "html" && "bg-brand-primary"
-                    }`}
+                  className={`w-[22.5px] h-[22.5px] cursor-pointer flex items-center justify-center rounded-md transition-colors ${
+                    codeSettings.defaultLanguage == "html" && "bg-brand-primary"
+                  }`}
                   onClick={(ev) => {
                     addClickClass(ev.currentTarget, "click");
                     editor.getSelected().addAttributes({
@@ -322,9 +315,10 @@ export const TraitsAside = () => {
                   {Icons.html({ width: 16, height: 16 })}
                 </button>
                 <button
-                  className={`w-[22.5px] h-[22.5px] cursor-pointer flex items-center justify-center rounded-md transition-colors ${codeSettings.defaultLanguage == "javascript" &&
+                  className={`w-[22.5px] h-[22.5px] cursor-pointer flex items-center justify-center rounded-md transition-colors ${
+                    codeSettings.defaultLanguage == "javascript" &&
                     "bg-brand-primary"
-                    }`}
+                  }`}
                   onClick={(ev) => {
                     addClickClass(ev.currentTarget, "click");
                     editor.getSelected().addAttributes({
@@ -366,11 +360,11 @@ export const TraitsAside = () => {
                 // },
                 value:
                   codeSettings.defaultLanguage == "html" &&
-                    !codeSettings.enableTemplateEngine
+                  !codeSettings.enableTemplateEngine
                     ? codeSettings.htmlValueState ||
-                    codeSettings.templateEngineValueState
+                      codeSettings.templateEngineValueState
                     : codeSettings.defaultLanguage == "javascript" &&
-                      codeSettings.enableTemplateEngine
+                        codeSettings.enableTemplateEngine
                       ? `\`${codeSettings.templateEngineValueState}\``
                       : "",
                 // value: codeSettings.htmlValueState || codeSettings.templateEngineValueState,
@@ -407,7 +401,7 @@ export const TraitsAside = () => {
                   console.log(
                     type,
                     sle.isInstanceOf("text"),
-                    sle.props().editable
+                    sle.props().editable,
                   );
 
                   if (!sle.props().editable) return;
@@ -453,7 +447,7 @@ export const TraitsAside = () => {
           <ul className="flex flex-col gap-2 p-1 bg-surface-secondary rounded-lg">
             {editorComponentProps
               .map((prop) =>
-                selectedCmp ? [prop, selectedCmp?.props()[prop]] : null
+                selectedCmp ? [prop, selectedCmp?.props()[prop]] : null,
               )
               .filter(Boolean)
               .map(([prop, val], i) => {
@@ -485,8 +479,10 @@ export const TraitsAside = () => {
                         // selectedCmp.replaceWith(newCmp);
                         // preventSelectNavigation(editor, newCmp);
                         editor.trigger(InfinitelyEvents.layers.update);
-                        editor.trigger(InfinitelyEvents.component.update_content);
-                        triggerSymbolEvent(editor , selectedCmp);
+                        editor.trigger(
+                          InfinitelyEvents.component.update_content,
+                        );
+                        triggerSymbolEvent(editor, selectedCmp);
                       }}
                     />
                   </li>
@@ -542,12 +538,14 @@ export const TraitsAside = () => {
                     style={{
                       marginLeft:
                         trait.isChild && trait?.nestedKeys?.length
-                          ? `${trait.isChild && trait?.nestedKeys?.length * 0.5
-                          }rem`
+                          ? `${
+                              trait.isChild && trait?.nestedKeys?.length * 0.5
+                            }rem`
                           : "",
                     }}
-                    className={`relative flex  ${!["switch"].includes(trait.type) ? "flex-col" : ""
-                      } justify-between items-center gap-2 bg-surface-main p-2 rounded-lg `}
+                    className={`relative flex  ${
+                      !["switch"].includes(trait.type) ? "flex-col" : ""
+                    } justify-between items-center gap-2 bg-surface-main p-2 rounded-lg `}
                   >
                     {/* <h1 className="text-[14px!important] px-2 text-white capitalize font-semibold">
                     {trait.name}
@@ -572,6 +570,12 @@ export const TraitsAside = () => {
                           value={trait.value || trait.default || ""}
                           placeholder={trait.placeholder || trait.label}
                           className="py-2 w-full bg-surface-tertiary"
+                          onBlur={(ev) => {
+                            trait?.onBlur?.({
+                              ...mainCallbackProps,
+                              newValue: ev.target.value,
+                            });
+                          }}
                           onInput={(ev) => {
                             updateTraitValue({
                               name: trait.name,
@@ -604,6 +608,12 @@ export const TraitsAside = () => {
                             ? trait.keywords({ projectData })
                             : trait.keywords || []
                         }
+                        onBlur={(ev) => {
+                          trait?.onBlur?.({
+                            ...mainCallbackProps,
+                            newValue: ev.target.value,
+                          });
+                        }}
                         value={trait.value || trait.default || ""}
                         onAll={(value) => {
                           updateTraitValue({
@@ -638,8 +648,15 @@ export const TraitsAside = () => {
                             ? trait.value
                             : "",
                           ...(trait?.codeEditorProps || {}),
+
                           onMount(ed, mon) {
                             trait?.onMountHandler?.(ed, mon);
+                            ed?.onDidBlurEditorWidget?.((e) => {
+                              trait?.onBlur?.({
+                                ...mainCallbackProps,
+                                newValue: ed.getValue(),
+                              });
+                            });
                           },
                           onChange(value) {
                             updateTraitValue({
@@ -682,6 +699,13 @@ export const TraitsAside = () => {
                                 value,
                               });
                             }}
+                            onBlur={(ev) => {
+                            trait?.onBlur?.({
+                              ...mainCallbackProps,
+                              newValue: ev.target.value,
+                              
+                            })
+                          }}
                             onEnterPress={(value) => {
                               const newVal = stringify({
                                 ...parse(trait.value || {}),
@@ -758,133 +782,133 @@ export const TraitsAside = () => {
 
                         {Boolean(
                           Object.entries(
-                            parse(trait.value || trait.default) || {}
-                          ).length
+                            parse(trait.value || trait.default) || {},
+                          ).length,
                         ) && (
-                            <section className="flex flex-col gap-2 w-full">
-                              {Object.entries(
-                                parse(trait.value || trait.default) || {}
-                              ).map(([key, value], i) => {
-                                return (
-                                  <section
-                                    key={i}
-                                    className="flex flex-col gap-2"
-                                  >
-                                    <FitTitle>{key}</FitTitle>
-                                    <section className="flex gap-2">
-                                      {(trait.addPropsInputType == "text" ||
-                                        !trait.addPropsInputType) && (
-                                          <Input
-                                            placeholder={key}
-                                            className="w-full bg-surface-tertiary"
-                                            value={value || ""}
-                                            onInput={(ev) => {
-                                              const newVal = stringify({
-                                                ...parse(trait.value || {}),
-                                                [key]: ev.target.value,
-                                              });
+                          <section className="flex flex-col gap-2 w-full">
+                            {Object.entries(
+                              parse(trait.value || trait.default) || {},
+                            ).map(([key, value], i) => {
+                              return (
+                                <section
+                                  key={i}
+                                  className="flex flex-col gap-2"
+                                >
+                                  <FitTitle>{key}</FitTitle>
+                                  <section className="flex gap-2">
+                                    {(trait.addPropsInputType == "text" ||
+                                      !trait.addPropsInputType) && (
+                                      <Input
+                                        placeholder={key}
+                                        className="w-full bg-surface-tertiary"
+                                        value={value || ""}
+                                        onInput={(ev) => {
+                                          const newVal = stringify({
+                                            ...parse(trait.value || {}),
+                                            [key]: ev.target.value,
+                                          });
 
-                                              updateTraitValue({
-                                                name: trait.name,
-                                                key: "value",
-                                                value: newVal,
-                                              });
+                                          updateTraitValue({
+                                            name: trait.name,
+                                            key: "value",
+                                            value: newVal,
+                                          });
 
-                                              trait.callback &&
-                                                trait.callback({
-                                                  // editor,
-                                                  // trait,
-                                                  ...mainCallbackProps,
-                                                  // oldValue: trait.value,
-                                                  newValue: newVal,
-                                                });
-
-                                              trait.command &&
-                                                editor.runCommand(trait.command);
-                                            }}
-                                          />
-                                        )}
-
-                                      {trait.addPropsInputType == "code" && (
-                                        <Select
-                                          placeholder={key}
-                                          // className="w-full bg-surface-tertiary"
-                                          value={value || ""}
-                                          isCode
-                                          allowCmdsContext
-                                          allowRestAPIModelsContext
-                                          codeProps={{
-                                            language:
-                                              trait.addPropsCodeLanguage ||
-                                              "text",
-                                            value: value || "",
-                                            onChange: (value) => {
-                                              const newVal = stringify({
-                                                ...parse(trait.value || {}),
-                                                [key]: value,
-                                              });
-
-                                              updateTraitValue({
-                                                name: trait.name,
-                                                key: "value",
-                                                value: newVal,
-                                              });
-
-                                              trait.callback &&
-                                                trait.callback({
-                                                  editor,
-                                                  // oldValue: trait.value,
-                                                  newValue: newVal,
-                                                  trait,
-                                                });
-
-                                              trait.command &&
-                                                editor.runCommand(trait.command);
-                                            },
-                                          }}
-                                        />
-                                      )}
-
-                                      <SmallButton
-                                        onClick={() => {
-                                          isFunction(trait.deleteCallback) &&
-                                            trait.deleteCallback({
+                                          trait.callback &&
+                                            trait.callback({
+                                              // editor,
+                                              // trait,
                                               ...mainCallbackProps,
-                                              newValue: key,
+                                              // oldValue: trait.value,
+                                              newValue: newVal,
                                             });
-                                          // const parsedVal = parse(
-                                          //   trait.value || {}
-                                          // );
-                                          // delete parsedVal[key];
-                                          // const newVal = stringify({
-                                          //   ...parsedVal,
-                                          // });
 
-                                          // updateTraitValue({
-                                          //   name: trait.name,
-                                          //   key: "value",
-                                          //   value: newVal,
-                                          // });
-
-                                          // trait.callback &&
-                                          //   trait.callback({
-                                          //     editor,
-                                          //     // oldValue: trait.value,
-                                          //     newValue: newVal,
-                                          //   });
-                                          // trait.command &&
-                                          //   editor.runCommand(trait.command);
+                                          trait.command &&
+                                            editor.runCommand(trait.command);
                                         }}
-                                        className="[&_path]:stroke-white bg-surface-tertiary hover:bg-[crimson!important]"
-                                      >
-                                        {Icons.trash()}
-                                      </SmallButton>
-                                    </section>
+                                      />
+                                    )}
+
+                                    {trait.addPropsInputType == "code" && (
+                                      <Select
+                                        placeholder={key}
+                                        // className="w-full bg-surface-tertiary"
+                                        value={value || ""}
+                                        isCode
+                                        allowCmdsContext
+                                        allowRestAPIModelsContext
+                                        codeProps={{
+                                          language:
+                                            trait.addPropsCodeLanguage ||
+                                            "text",
+                                          value: value || "",
+                                          onChange: (value) => {
+                                            const newVal = stringify({
+                                              ...parse(trait.value || {}),
+                                              [key]: value,
+                                            });
+
+                                            updateTraitValue({
+                                              name: trait.name,
+                                              key: "value",
+                                              value: newVal,
+                                            });
+
+                                            trait.callback &&
+                                              trait.callback({
+                                                editor,
+                                                // oldValue: trait.value,
+                                                newValue: newVal,
+                                                trait,
+                                              });
+
+                                            trait.command &&
+                                              editor.runCommand(trait.command);
+                                          },
+                                        }}
+                                      />
+                                    )}
+
+                                    <SmallButton
+                                      onClick={() => {
+                                        isFunction(trait.deleteCallback) &&
+                                          trait.deleteCallback({
+                                            ...mainCallbackProps,
+                                            newValue: key,
+                                          });
+                                        // const parsedVal = parse(
+                                        //   trait.value || {}
+                                        // );
+                                        // delete parsedVal[key];
+                                        // const newVal = stringify({
+                                        //   ...parsedVal,
+                                        // });
+
+                                        // updateTraitValue({
+                                        //   name: trait.name,
+                                        //   key: "value",
+                                        //   value: newVal,
+                                        // });
+
+                                        // trait.callback &&
+                                        //   trait.callback({
+                                        //     editor,
+                                        //     // oldValue: trait.value,
+                                        //     newValue: newVal,
+                                        //   });
+                                        // trait.command &&
+                                        //   editor.runCommand(trait.command);
+                                      }}
+                                      className="[&_path]:stroke-white bg-surface-tertiary hover:bg-[crimson!important]"
+                                    >
+                                      {Icons.trash()}
+                                    </SmallButton>
                                   </section>
-                                );
-                              })}
-                            </section>
-                          )}
+                                </section>
+                              );
+                            })}
+                          </section>
+                        )}
                       </section>
                     )}
 
@@ -911,24 +935,24 @@ export const TraitsAside = () => {
                           trait.command && editor.runCommand(trait.command);
                           console.log("switch :", value);
                         }}
-                      // onActive={() => {
-                      //   trait?.onSwitch?.(true);
-                      //   trait.command && editor.runCommand(trait.command);
-                      //   updateTraitValue({
-                      //     name: trait.name,
-                      //     key: "value",
-                      //     value: true,
-                      //   });
-                      // }}
-                      // onUnActive={() => {
-                      //   trait?.onSwitch?.(false);
-                      //   trait.command && editor.runCommand(trait.command);
-                      //   updateTraitValue({
-                      //     name: trait.name,
-                      //     key: "value",
-                      //     value: false,
-                      //   });
-                      // }}
+                        // onActive={() => {
+                        //   trait?.onSwitch?.(true);
+                        //   trait.command && editor.runCommand(trait.command);
+                        //   updateTraitValue({
+                        //     name: trait.name,
+                        //     key: "value",
+                        //     value: true,
+                        //   });
+                        // }}
+                        // onUnActive={() => {
+                        //   trait?.onSwitch?.(false);
+                        //   trait.command && editor.runCommand(trait.command);
+                        //   updateTraitValue({
+                        //     name: trait.name,
+                        //     key: "value",
+                        //     value: false,
+                        //   });
+                        // }}
                       >
                         {trait.label}
                       </SwitchButton>
@@ -998,7 +1022,7 @@ export const TraitsAside = () => {
                         }}
                       />
                       <Button
-                        className="h-[38px] flex-shrink-0 flex-grow"
+                        className="h-[38px] shrink-0 flex-grow"
                         onClick={(ev) => {
                           removeAttribute(key);
                         }}
@@ -1012,6 +1036,7 @@ export const TraitsAside = () => {
 
             <section className="flex flex-col gap-2 items-center">
               <Input
+                {...{ [inf_tokens_ignore]: "true" }}
                 value={newAttributeName}
                 className="w-full text-center bg-surface-tertiary"
                 placeholder="Add Attribute"

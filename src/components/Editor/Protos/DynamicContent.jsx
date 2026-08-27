@@ -233,7 +233,7 @@ import { useRecoilValue } from "recoil";
 //           />
 
 //           <SmallButton
-//             className="bg-surface-secondary shadow-[unset!important] flex-shrink-0"
+//             className="bg-surface-secondary shadow-[unset!important] shrink-0"
 //             onClick={() => {
 //               addContent(`\${${val}}`);
 //             }}

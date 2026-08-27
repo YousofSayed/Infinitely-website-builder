@@ -1,4 +1,4 @@
-import { wp_update_symbol } from "@/apps/wordpress/functions";
+import { wp_update_symbol } from "@/Apps/wordpress/functions";
 import { close_current_modal } from "@/constants/InfinitelyCommands";
 import { InfinitelyEvents } from "@/constants/infinitelyEvents";
 import { inf_symbol_Id_attribute } from "@/constants/shared";

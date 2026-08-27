@@ -1,10 +1,11 @@
-import { wp_toast_handler } from "@/apps/wordpress/functions_ui";
+import { wp_toast_handler } from "@/Apps/wordpress/functions_ui";
 import { apps } from "@/constants/shared";
 import { isProjectInitedState, showCrtModalState } from "@/helpers/atoms";
 import { db } from "@/helpers/db";
 import {
   getProjectId,
   getProjectSettings,
+  workerCallbackMakerWithProps,
   wpWorkerCallbackMaker,
 } from "@/helpers/functions";
 import { infinitelyWorker } from "@/helpers/infinitelyWorker";
@@ -43,9 +44,13 @@ export const CreateProjectModal = ({
   const [isProjectInited, setIsProjectInited] =
     useRecoilState(isProjectInitedState);
 
-  const { mutateAsync: wp_connect } = useConnectWpMutation();
+  const [loading, setLoading] = useState(false);
 
-  const { mutateAsync: wp_get_option } = useGetWpOptionQueryMutation();
+  const { mutateAsync: wp_connect, isPending: isWpConnectPending } =
+    useConnectWpMutation();
+
+  const { mutateAsync: wp_get_option, isPending: isWpGetOptionPending } =
+    useGetWpOptionQueryMutation();
 
   const [data, setData] = useState({
     name: "",
@@ -105,7 +110,7 @@ export const CreateProjectModal = ({
             await wp_get_option(
               {
                 optionName: "inf_config",
-                // projectId : 
+                // projectId :
                 wp_meta_data: {
                   ...data.wp_meta,
                   app_password: jsonRes.app_password,
@@ -143,6 +148,8 @@ export const CreateProjectModal = ({
                   toast.error(
                     <ToastMsgInfo msg={`Failed to get inf_config 😩`} />,
                   );
+                  error.message &&
+                    toast.error(<ToastMsgInfo msg={error.message} />);
                 },
               },
             );
@@ -153,6 +160,7 @@ export const CreateProjectModal = ({
             toast.error(
               <ToastMsgInfo msg={`Failed to connect to WordPress 😩`} />,
             );
+            error.message && toast.error(<ToastMsgInfo msg={error.message} />);
           },
         },
       );
@@ -213,12 +221,25 @@ export const CreateProjectModal = ({
       //   },
       // });
     } else {
-      infinitelyWorker.postMessage({
-        command: "createProject",
-        props: {
-          data,
+      setLoading(true);
+      workerCallbackMakerWithProps(
+        infinitelyWorker,
+        "createProject",
+        {data},
+        (props) => {
+          if (props?.done) {
+            setShowCrtModal(false);
+            setData({ name: "", description: "" });
+            setLoading(false);
+          }
         },
-      });
+      );
+      // infinitelyWorker.postMessage({
+      //   command: "createProject",
+      //   props: {
+      //     data,
+      //   },
+      // });
     }
     // setIsProjectInited(true);
   };
@@ -230,7 +251,11 @@ export const CreateProjectModal = ({
           onClick={(ev) => {
             setShowCrtModal(false);
           }}
-          className="fixed inset-0 bg-blue-950/40 backdrop-blur-sm flex items-center justify-center z-50"
+          className={
+            `
+            fixed ${window?.electron?.isDesktop ? "top-[40px]" : "top-0"} left-0 w-full h-full bg-blue-950/40 backdrop-blur-sm flex items-center justify-center z-50
+            `
+          }
           id="createProjectModal"
         >
           <section
@@ -408,6 +433,9 @@ export const CreateProjectModal = ({
 
                 <div className="mt-6">
                   <button
+                    disabled={
+                      loading || isWpConnectPending || isWpGetOptionPending
+                    }
                     onClick={(ev) => {
                       ev.stopPropagation();
                       ev.preventDefault();
@@ -415,7 +443,7 @@ export const CreateProjectModal = ({
                       addProject();
                     }}
                     type="submit"
-                    className="w-full bg-brand-primary text-text-primary hover:bg-slate-600 py-2 rounded-md transition duration-150"
+                    className="w-full bg-brand-primary text-text-primary hover:bg-blue-500 font-semibold py-2 rounded-md transition duration-150"
                   >
                     Create Project
                   </button>

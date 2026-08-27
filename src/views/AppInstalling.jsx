@@ -42,7 +42,7 @@ export const AppInstalling = () => {
       >
         <h1
           key={state}
-          className="text-text-primary font-bold text-4xl flex-shrink-0  animate-pulse capitalize"
+          className="text-text-primary font-bold text-4xl shrink-0  animate-pulse capitalize"
         >
           {state}
         </h1>

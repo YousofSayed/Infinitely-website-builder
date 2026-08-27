@@ -1,4 +1,3 @@
-
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "@/App.jsx";
@@ -15,6 +14,9 @@ import { toast } from "react-toastify";
 import { isDevMode } from "@/helpers/bridge";
 import { applyBrandConfig, config, configs } from "@/config/brand";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import ElectronTitleBar from "./components/desktop/ElectronTitleBar";
+import Portal from "./components/Editor/Portal";
+import { queryClient } from "./utils/queryClient";
 
 applyBrandConfig(config);
 
@@ -35,12 +37,12 @@ const appStatus = {
     "background:#000; padding:20px 100px;",
     "background:#fff; padding:20px 100px;",
     "background:#009739; padding:20px 100px;",
-    "background:linear-gradient(135deg, #ce1126 50%, transparent 50%); padding:20px 100px;"
+    "background:linear-gradient(135deg, #ce1126 50%, transparent 50%); padding:20px 100px;",
   );
 
   console.log(
     "%c🇵🇸  FREE PALESTINE 🇵🇸",
-    "font-size: 40px; font-weight:bold; color:#009739; text-shadow:2px 2px 4px #000;"
+    "font-size: 40px; font-weight:bold; color:#009739; text-shadow:2px 2px 4px #000;",
   );
 })();
 
@@ -87,7 +89,7 @@ window.fetch = async (input, init) => {
         headers: {
           "Content-Type": "application/json",
         },
-      }
+      },
     );
   }
 
@@ -103,10 +105,10 @@ window.fetch = async (input, init) => {
 // React
 // -----------------------------------------------------------------------------
 
-export const queryClient = new QueryClient();
+
 
 const Main = () => {
-  return (
+  const MainRender = () => (
     <QueryClientProvider client={queryClient}>
       <RecoilRoot>
         <BrowserRouter>
@@ -142,6 +144,21 @@ const Main = () => {
       </RecoilRoot>
     </QueryClientProvider>
   );
+
+  if (window.electron?.isDesktop)
+    return (
+      <main className="h-full  w-full">
+        <Portal>
+          <ElectronTitleBar />
+        </Portal>
+
+        <section className="w-full  h-[calc(100%-40px)] fixed bottom-0 left-0">
+          <MainRender />
+        </section>
+      </main>
+    );
+
+  return <MainRender />;
 };
 
 // -----------------------------------------------------------------------------

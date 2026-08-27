@@ -1,4 +1,4 @@
-import { wp_update_option, wp_upload_multiple_files } from "@/apps/wordpress/functions";
+import { wp_update_option, wp_upload_multiple_files } from "@/Apps/wordpress/functions";
 import { InfinitelyEvents } from "@/constants/infinitelyEvents";
 import { reloadRequiredInstance } from "@/constants/InfinitelyInstances";
 import { current_project_id } from "@/constants/shared";
@@ -347,7 +347,7 @@ export const CustomFontsInstaller = () => {
 
           <footer className="h-[12.5%] flex items-center p-2 border-t-2 border-t-slate-600">
             <Button
-              className="flex-shrink-0 px-10 py-2"
+              className="shrink-0 px-10 py-2"
               onClick={(ev) => {
                 saveFontFilesInDB();
               }}

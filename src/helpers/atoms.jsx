@@ -255,6 +255,42 @@ export const showStylesBuilderForMotionBuilderState = atom({
   default: false,
 });
 
+export const showComponentsInLeftPanelState = atom({
+  key: "showComponentsInLeftPanelState",
+  default: {
+    layers: false,
+    animationsBuilder: false,
+    viewPanel: false, //old was => wpSettings
+    views: {
+      viewKey: "",
+      wordpress: {
+        supportNav: true,
+        panels: {
+          wpSettings: {
+            show: false,
+            title: "WordPress Settings",
+          },
+          wpQueriesBuilder: {
+            show: false,
+            title: "WordPress Queries Builder",
+          },
+        },
+      },
+    },
+    stylesBuilder: false,
+  },
+});
+
+export const viewsKeyState = atom({
+  key: "viewsKey",
+  default: "",
+});
+
+export const showWpSettingsState = atom({
+  key: "showWpSettingsState",
+  default: false,
+});
+
 export const animeStylesState = atom({
   key: "animeStyles",
   default: animeStylesType,
@@ -412,5 +448,25 @@ export const isProjectInitedState = atom({
 
 export const currentWpPageNameState = atom({
   key: "currentWpPageNameState",
+  default: "",
+});
+
+export const wpTokensState = atom({
+  key: "wpTokensState",
+  default: /** @type {import("@/helpers/types").WpTokenVars} */ ([]),
+});
+
+export const showWpTokensPickerState = atom({
+  key: "showWpTokensPickerState",
+  default: false,
+});
+
+export const wpQueryState = atom({
+  key: "wpQueryState",
+  default: /** @type {import("@/helpers/types").WPQueryArgs} */ ({}),
+});
+
+export const wpCurrentQueryIdState = atom({
+  key: "wpCurrentQueryIdState",
   default: "",
 });

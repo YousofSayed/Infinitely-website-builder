@@ -1,17 +1,5 @@
-import {
-  wp_connect,
-  wp_get,
-  wp_get_posts_with_inf_meta,
-  wp_get_single,
-  wp_update_media,
-  wp_update_media_files,
-  wp_update_meta,
-  wp_update_option,
-  wp_update_single,
-  wp_update_symbols,
-  wp_write_files,
-} from "@/apps/wordpress/functions";
-import { wp_get_post_id } from "@/apps/wordpress/functions_ui";
+import React, { memo, useEffect, useRef, useState } from "react";
+import { wp_get_post_id } from "@/Apps/wordpress/functions_ui";
 import { open_code_manager_modal } from "@/constants/InfinitelyCommands";
 import { InfinitelyEvents } from "@/constants/infinitelyEvents";
 import { editorContainerInstance } from "@/constants/InfinitelyInstances";
@@ -87,15 +75,14 @@ import { Select } from "@/components/Editor/Protos/Select";
 import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { useEditorMaybe } from "@grapesjs/react";
-import LLM from "@themaximalist/llm.js";
 import { minify } from "csso";
 import { useLiveQuery } from "dexie-react-hooks";
 import { cloneDeep } from "lodash";
-import React, { memo, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { Wordpress } from "../Protos/wordpress/Wordpress";
 
+// export const HomeHeader = () => <h1>helo</h1>
 export const HomeHeader = () => {
   const editor = useEditorMaybe();
   const widthRef = useRef("");
@@ -176,26 +163,8 @@ export const HomeHeader = () => {
       .toArray()
       .map((dev) => dev.attributes);
 
-    // console.log(
-    //   "new media devices :",
-    //   editor.DeviceManager.getAll()
-    //     .toArray()
-    //     .map((dev) => dev.attributes),
-    //   devices.some((dev) => +dev.priority === +newDevice.priority)
-    // );
-
     editor.DeviceManager.remove(customDevice.current);
-    // const existDevice = devices.find(
-    //   (dev) =>
-    //     parseFloat(dev.widthMedia || "0") === parseFloat(newDevice.widthMedia)
-    // );
-    // if (existDevice) {
-    //   console.log("new existDevice", existDevice);
-    //   editor.setDevice(existDevice?.id || existDevice?.name || 'desktop');
-    //   editor.trigger("inf:rules:update");
 
-    //   return;
-    // }
     const concatedArray = devices.concat(newDevice);
     concatedArray.sort((a, b) => {
       const wa = parseFloat(a.widthMedia) || Infinity; // Desktop last
@@ -222,14 +191,6 @@ export const HomeHeader = () => {
     // console.log(`new deivce : `, newDeviceWithNewPiriority);
 
     customDevice.current = editor.DeviceManager.add(newDeviceWithNewPiriority);
-    // customDevice.current = editor.DeviceManager.add(newDevice);
-    // console.log(
-    //   "new media devices :",
-    //   editor.DeviceManager.getAll()
-    //     .toArray()
-    //     .map((dev) => dev.attributes),
-    //   editor.getCss(),
-    // );
 
     editor.setDevice(uid);
     editor.trigger("inf:rules:update");
@@ -276,6 +237,9 @@ export const HomeHeader = () => {
       })
       .filter(Boolean);
 
+      console.log('symbols before publish ' , symbols);
+      
+
     let steps = 0;
     const max_steps = 2 + Number(Boolean(symbols.length));
     setPublish(false);
@@ -312,7 +276,7 @@ export const HomeHeader = () => {
     };
 
     // wp_update_symbols
-    wpWorkerCallbackMaker(
+   symbols.length && wpWorkerCallbackMaker(
       offlineInstallerWorker,
       "wp_update_symbols",
       {
@@ -414,21 +378,6 @@ export const HomeHeader = () => {
     // );
   };
 
-  // useEffect(() => {
-  //   (async () => {
-  //     const llm = new LLM();
-  //     llm.model = 'qwen2.5-coder:1.5b';
-  //     llm.system(`You are an Infinitely Stduio Ai Assaistant , you created by team of Infinitely Studio , you are expert in ai and machine learning , who created infinitely studio is yousef sayed , infinitely studio is website builder can build frontend headless websites and it is website builder for wordpress , your role is to generate code for website builder , user will give you prompts to generate code , your job is to only give user the code (only code) no more . `)
-  //     const res = await llm.chat(
-  //       " generate hero section by HTML & CSS code for a coffee website and make design soo fancy and modern and make it responsive and make it look like a coffee shop website",
-  //       { stream: false, max_thinking_tokens: 30000000 }
-  //     );
-  //     console.log(`hiiiiiiiiiiiiiiiiiiiiiiiiii`)
-
-  //     console.log("Final response:", res);
-  //   })()
-  // }, [])
-
   useEffect(() => {
     if (!editor) return;
     const saveStart = () => {
@@ -462,20 +411,22 @@ export const HomeHeader = () => {
       console.log("currentDeviceName", currentDevice);
       setDimaonsion({
         height: parseFloat(currentDevice.attributes.height) || "",
-        width: parseFloat(currentDevice.attributes.widthMedia) || "",
+        width:
+          currentDevice.getName().toLowerCase() === "desktop"
+            ? ""
+            : parseFloat(currentDevice.attributes.widthMedia) || "",
       });
-      setMediaValue(editor.config.mediaCondition);
+      setMediaValue(
+        currentDevice.getName().toLowerCase() === "desktop"
+          ? ""
+          : editor.config.mediaCondition,
+      );
       reorderCss(editor);
-      // setInterval(() => {
-      //   editor.refresh({ tools: true });
-      //   editor.Canvas.refresh({ all: true, spots: true });
-      //   editor.Canvas.refreshSpots();
-      // }, 500)
-      // alert('wowow')
     };
     editor.on("change:device", changeDeviceCallback);
     editor.on(InfinitelyEvents.devices.update, changeDeviceCallback);
-    setMediaValue(editor.config.mediaCondition);
+    editor.onReady(changeDeviceCallback);
+    // setMediaValue(editor.config.mediaCondition);
 
     return () => {
       editor.off("change:device", changeDeviceCallback);
@@ -544,8 +495,11 @@ export const HomeHeader = () => {
       if (!editor.getDevice()) return;
 
       const widthMedia = editor.Devices.get(editor.getDevice())
-        .getWidthMedia()
-        .match(/\d+/gi)[0];
+        ?.getWidthMedia?.()
+        ?.match?.(/\d+/gi)?.[0];
+
+        // console.log('widthMedia : ' , widthMedia);
+        
       setWidthMedia(+widthMedia);
     };
 
@@ -565,21 +519,22 @@ export const HomeHeader = () => {
   useNotifiers();
 
   return (
-    <header className="w-full h-[55px]  zoom-80 px-2 bg-surface-secondary  border-b-[1.5px]  border-slate-400    flex items-center justify-between gap-5">
+    <header className="w-full h-[55px]  zoom-80 px-2 bg-surface-secondary  border-b-[1.5px]  border-slate-400    flex items-center justify-between gap-2">
       <ScrollableToolbar
-        className="w-[37.5%] h-full items-center flex-shrink-0 max-w-[700px]"
-        space={3}
+        className="w-[37.5%] h-full flex shrink-0   max-w-[700px] py-2 "
+        innerClassName="!justify-start"
+        space={2}
       >
         {/* <ul className="flex gap-[25px] flex-shrink  h-full  items-center"> */}
         {/* <UlContextProvider> */}
         <ul
           ref={sizeAutoAnimate}
-          className="flex items-center gap-2 justify-between flex-shrink-0 flex-grow bg-surface-tertiary shadow-2xl shadow-slate-950 rounded-lg w-[150px] p-1"
+          className="flex items-center   h-full gap-2 justify-between shrink-0  bg-surface-tertiary shadow-2xl shadow-slate-950 rounded-lg w-[130px] p-1"
         >
           <Li
             title="Default size"
-            className="flex-shrink-0"
-            // className="max-xl:flex-shrink-0"
+            className="shrink-0"
+            // className="max-xl:shrink-0"
             onClick={(ev) => {
               editor.setDevice("desktop");
               setMediaConditon("");
@@ -595,8 +550,8 @@ export const HomeHeader = () => {
           />
           <Li
             title="max-width: 900px"
-            className="flex-shrink-0"
-            // className="max-xl:flex-shrink-0"
+            className="shrink-0"
+            // className="max-xl:shrink-0"
             onClick={(ev) => {
               editor.setDevice("tablet");
               setMediaConditon("max-width");
@@ -614,7 +569,7 @@ export const HomeHeader = () => {
 
           <Li
             title="max-width: 360px"
-            className="flex-shrink-0"
+            className="shrink-0"
             onClick={(ev) => {
               editor.setDevice("mobile");
               setMediaConditon("max-width");
@@ -630,27 +585,6 @@ export const HomeHeader = () => {
             enableSelecting
           />
           {Boolean(detectedMedia.others.length) && (
-            // <UlContextProvider>
-            // <Li
-            // title="Other sizes"
-            // // className="max-xl:flex-shrink-0"
-            // onClick={(ev) => {
-            //   editor.setDevice("mobile");
-            //   // setCurrentEl({ currentEl: editor?.getSelected()?.getEl() });
-            //   editor.trigger("device:change");
-            // }}
-            // isObjectParamsIcon
-            // fillObjectIconOnHover
-            // onClick={(ev) => {
-            //   // ev.stopPropagation();
-            //   ev.preventDefault();
-            // }}
-            // id={"other-sizes"}
-            // mode={"group"}
-            // enableSelecting
-            // notify={Boolean(detectedMedia.others.length)}
-            // >
-            // <div className="flex-shrink flex-grow-0  w-[35px] flex justify-center items-center">
             <OptionsButton
               className="hover:bg-brand-primary w-[30px!important] h-[30px]"
               notify={Boolean(detectedMedia.others.length)}
@@ -715,14 +649,10 @@ export const HomeHeader = () => {
                 </ul>
               }
             </OptionsButton>
-            // </div>
-            // </Li>
-            // </UlContextProvider>
           )}
         </ul>
-        {/* </UlContextProvider> */}
 
-        <li className="flex-shrink-0 w-[100px]">
+        <li className=" shrink-0 grow-0 w-[130px]">
           <Select
             preventInput
             keywords={["min-width", "max-width"]}
@@ -738,11 +668,11 @@ export const HomeHeader = () => {
           />
         </li>
 
-        <li className="flex  items-center h-[65%] gap-4 max-lg:flex-shrink-0">
+        <li className="flex h-full   gap-2 max-lg:shrink-0">
           <Input
             type="number"
             placeholder="Width"
-            className="bg-surface-tertiary p-1 w-[70px] text-center  h-full font-bold text-sm max-lg:flex-shrink-0"
+            className="bg-surface-tertiary p-1 w-[70px] text-center  h-full font-bold text-sm max-lg:shrink-0"
             value={dimansions.width}
             onInput={(ev) => {
               // transformToNumInput(ev.target);
@@ -756,7 +686,7 @@ export const HomeHeader = () => {
             type="number"
             value={dimansions.height}
             placeholder="Height"
-            className="bg-surface-tertiary w-[70px] p-1  text-center  h-full font-bold text-sm max-lg:flex-shrink-0 "
+            className="bg-surface-tertiary w-[70px] p-1  text-center  h-full font-bold text-sm max-lg:shrink-0 "
             onInput={(ev) => {
               // transformToNumInput(ev.target);
               setCustomDevice("height", ev.target.value);
@@ -768,11 +698,29 @@ export const HomeHeader = () => {
           <Input
             value={zoomValue}
             placeholder="Zoom"
-            className="bg-surface-tertiary w-[70px] p-1  text-center  h-full font-bold text-sm max-lg:flex-shrink-0 "
+            className="bg-surface-tertiary w-[70px] p-1  text-center  h-full font-bold text-sm max-lg:shrink-0 "
             type="number"
             onInput={(ev) => {
               // transformToNumInput(ev.target);
-              editor.getContainer().style.zoom = ev.target.value / 100;
+              // editor.getContainer().style.zoom = ev.target.value / 100;
+
+              const val = ev.target.value;
+              const container = editor.getContainer();
+
+              // ✅ 1. Add the "zooming" flag so the ResizeObserver ignores this manual change
+              container.setAttribute("zooming", "true");
+
+              // 2. Apply the manual zoom
+              container.style.zoom = val / 100;
+
+              // 3. Keep the React state and Event Bus in sync (prevents UI flicker)
+              setZoomValue(val);
+              editorContainerInstance.emit(
+                InfinitelyEvents.editorContainer.update,
+                {
+                  value: container.style.zoom,
+                },
+              );
             }}
           />
 
@@ -781,183 +729,164 @@ export const HomeHeader = () => {
         {/* </ul> */}
       </ScrollableToolbar>
 
-      {/* <Hr/> */}
-      {/* <Select
-        className="p-[unset] bg-surface-tertiary max-w-[30%] h-[calc(100%-15px)] "
-        containerClassName="bg-surface-tertiary"
-        preventInput={true}
-        keywords={pages}
-      /> */}
-      {/* <ToolbarComponent style={{width:'50%' }} overflowMode="Popup" > */}
-
-      {/* <section className="flex items-center  gap-2    w-[59%] px-2"> */}
       <ScrollableToolbar
-        className=" w-[61%] h-full items-center [&_svg]:w-[20px] [&_svg]:h-[18px] tools"
-        space={1}
+        className=" w-full   h-full   [&_svg]:w-[20px] [&_svg]:h-[18px] tools"
+        space={2}
       >
-        <IframeControllers />
-        <Hr />
-        {/* <div className="flex items-center justify-between gap-2 h-full w-full"> */}
-        <>
-          <Li
-            onClick={() => {
-              editor.runCommand(open_code_manager_modal);
-            }}
-            title="Code manager"
-            className="flex-shrink-0"
-          >
-            {Icons.code({ strokWidth: 3 })}
-          </Li>
-          <Li
-            title="preview mode"
-            icon={Icons.watch}
-            onClick={(ev) => {
-              // localStorage.setItem(preview_url, getCurrentPageName());
-              // window.open(`/preview/${getCurrentPageName()}`, "_blank");
+        <section className="flex items-center gap-2 w-full  grow-0 justify-between bg-surface-tertiary p-[5px] rounded-lg">
+          <IframeControllers />
+          <Hr />
 
-              setShowPreview((old) => !old);
-            }}
-            className="flex-shrink-0"
-          />
-
-          <Li
-            title="show in frontend"
-            icon={Icons.showInFrontEnd}
-            isObjectParamsIcon
-            onClick={(ev) => {
-              doInNormal(() => {
-                localStorage.setItem(preview_url, getCurrentPageName());
-                window.open(
-                  `/${getCurrentPageName()}`,
-                  "infinitely-preview",
-                  // 'width=800,height=600,top=50,left=50,scrollbars=yes,resizable=yes,location=yes,menubar=no,toolbar=no,status=yes,titlebar=yes'
-                );
-              });
-
-              doInWordpress(async () => {
-                localStorage.setItem(preview_url, getCurrentPageName());
-                const wp_post = getWpPageConfig();
-                const projectData = await getProjectData();
-                window.open(
-                  `/wordpress/preview?url=${wp_post.link}&save_state=${projectData.currentEditingPage.save_state}&mode=preview`,
-                  "infinitely-preview",
-                  // 'width=800,height=600,top=50,left=50,scrollbars=yes,resizable=yes,location=yes,menubar=no,toolbar=no,status=yes,titlebar=yes'
-                );
-              });
-              // console.log("navigated to frontend");
-
-              // navigate("/preview" , {});
-              // setShowPreview((old) => !old);
-            }}
-            className="flex-shrink-0"
-          />
-
-          <Li
-            icon={Icons.save}
-            title="save"
-            justHover={true}
-            className="flex-shrink-0"
-            onClick={() => {
-              editor.store();
-            }}
-          />
-
-          <section className="relative">
+          <>
             <Li
-              icon={Icons.share}
-              title="share"
-              isObjectParamsIcon
-              className="flex-shrink-0"
-              // justHover
-              fillObjIconStroke
-              fillObjectIconOnHover
               onClick={() => {
-                // editor.store();
-                shareProject();
-                /**
-                 *
-                 * @param {MessageEvent} ev
-                 */
-                const callback = async (ev) => {
-                  if (ev.data.command == "shareProject") {
-                    console.log(ev);
-                    const { response } = ev.data;
-                    if (response.status == "success") {
-                      // "http://tmpfiles.org/11276583/dasd.zip"
-                      const fileUrl = response.data.url.replace(
-                        "http://tmpfiles.org/",
-                        "https://tmpfiles.org/dl/",
-                      );
-                      await navigator.clipboard.writeText(
-                        `${window.origin}/workspace?file=${btoa(fileUrl)}`,
-                      );
-                      toast.info(
-                        <ToastMsgInfo
-                          msg={`Share URL is copied , so you can share now💙`}
-                        />,
-                        { progressClassName: "bg-brand-primary" },
-                      );
-                    }
-                    fetcherWorker.removeEventListener("message", callback);
-                  }
-                };
-                fetcherWorker.addEventListener("message", callback);
+                editor.runCommand(open_code_manager_modal);
+              }}
+              title="Code manager"
+              className="shrink-0"
+            >
+              {Icons.code({ strokWidth: 3 })}
+            </Li>
+            <Li
+              title="preview mode"
+              icon={Icons.watch}
+              onClick={(ev) => {
+                // localStorage.setItem(preview_url, getCurrentPageName());
+                // window.open(`/preview/${getCurrentPageName()}`, "_blank");
+
+                setShowPreview((old) => !old);
+              }}
+              className="shrink-0"
+            />
+
+            <Li
+              title="show in frontend"
+              icon={Icons.showInFrontEnd}
+              isObjectParamsIcon
+              onClick={(ev) => {
+                doInNormal(() => {
+                  localStorage.setItem(preview_url, getCurrentPageName());
+                  window.open(
+                    `/${getCurrentPageName()}`,
+                    "infinitely-preview",
+                    // 'width=800,height=600,top=50,left=50,scrollbars=yes,resizable=yes,location=yes,menubar=no,toolbar=no,status=yes,titlebar=yes'
+                  );
+                });
+
+                doInWordpress(async () => {
+                  localStorage.setItem(preview_url, getCurrentPageName());
+                  const wp_post = getWpPageConfig();
+                  const projectData = await getProjectData();
+                  window.open(
+                    `/wordpress/preview?url=${wp_post.link}&save_state=${projectData.currentEditingPage.save_state}&mode=preview`,
+                    "infinitely-preview",
+                    // 'width=800,height=600,top=50,left=50,scrollbars=yes,resizable=yes,location=yes,menubar=no,toolbar=no,status=yes,titlebar=yes'
+                  );
+                });
+                // console.log("navigated to frontend");
+
+                // navigate("/preview" , {});
+                // setShowPreview((old) => !old);
+              }}
+              className="shrink-0"
+            />
+
+            <Li
+              icon={Icons.save}
+              title="save"
+              justHover={true}
+              className="shrink-0"
+              onClick={() => {
+                editor.store();
               }}
             />
 
-            {/* <p className="absolute top-[100%] left-[-150px] w-[300px] p-2 bg-surface-tertiary rounded-lg z-[500]">dadsadadl dlas,dlsadlklsakdlaksldksalkdlsalkd</p> */}
-          </section>
+            <section className="relative">
+              <Li
+                icon={Icons.share}
+                title="share"
+                isObjectParamsIcon
+                className="shrink-0"
+                // justHover
+                fillObjIconStroke
+                fillObjectIconOnHover
+                onClick={() => {
+                  // editor.store();
+                  shareProject();
+                  /**
+                   *
+                   * @param {MessageEvent} ev
+                   */
+                  const callback = async (ev) => {
+                    if (ev.data.command == "shareProject") {
+                      console.log(ev);
+                      const { response } = ev.data;
+                      if (response.status == "success") {
+                        // "http://tmpfiles.org/11276583/dasd.zip"
+                        const fileUrl = response.data.url.replace(
+                          "http://tmpfiles.org/",
+                          "https://tmpfiles.org/dl/",
+                        );
+                        await navigator.clipboard.writeText(
+                          `${window.origin}/workspace?file=${btoa(fileUrl)}`,
+                        );
+                        toast.info(
+                          <ToastMsgInfo
+                            msg={`Share URL is copied , so you can share now💙`}
+                          />,
+                          { progressClassName: "bg-brand-primary" },
+                        );
+                      }
+                      fetcherWorker.removeEventListener("message", callback);
+                    }
+                  };
+                  fetcherWorker.addEventListener("message", callback);
+                }}
+              />
 
-          <Li
-            icon={Icons.export}
-            title="export"
-            justHover={true}
-            className="flex-shrink-0"
-            onClick={async () => {
-              // const projectId = +localStorage.getItem(current_project_id);
+              {/* <p className="absolute top-[100%] left-[-150px] w-[300px] p-2 bg-surface-tertiary rounded-lg z-[500]">dadsadadl dlas,dlsadlklsakdlaksldksalkdlsalkd</p> */}
+            </section>
 
-              // infinitelyWorker.postMessage({
-              //   command: "exportProject",
-              //   props: {
-              //     projectSetting: getProjectSettings().projectSettings,
-              //     projectId,
-              //     toastId: id,
-              //   },
-              // });
-              exportProject();
-            }}
-          />
-          <Li
-            to={"/edite/styling"}
-            className="flex-shrink-0"
-            icon={Icons.prush}
-            isObjectParamsIcon
-            fillObjIcon={false}
-            fillObjectIconOnHover
-            notify={Object.values(asideControllersNotifires).some(
-              (val) => val === true,
-            )}
-            title="edite component"
-          />
-          <Li
-            to={"/add-blocks"}
-            className="flex-shrink-0"
-            icon={Icons.plus}
-            fillIcon
-            fillObjIcon
-            title="add blocks"
-          />
-        </>
-
+            <Li
+              icon={Icons.export}
+              title="export"
+              justHover={true}
+              className="shrink-0"
+              onClick={async () => {
+                exportProject();
+              }}
+            />
+            <Li
+              to={"/edite/styling"}
+              className="shrink-0"
+              icon={Icons.prush}
+              isObjectParamsIcon
+              fillObjIcon={false}
+              fillObjectIconOnHover
+              notify={Object.values(asideControllersNotifires).some(
+                (val) => val === true,
+              )}
+              title="edite component"
+            />
+            <Li
+              to={"/add-blocks"}
+              className="shrink-0"
+              icon={Icons.plus}
+              fillIcon
+              fillObjIcon
+              title="add blocks"
+            />
+          </>
+        </section>
         <Wordpress>
-          <section className="ml-2 max-w-[200px] w-[calc(100%+25px)]">
+          <section className=" max-w-[200px] w-[calc(100%+25px)] h-full py-2">
             <Button
               refForward={animatedRefForPublishBtn}
               disabled={storeLoad || !publish}
               onClick={(ev) => {
                 publishToWp();
               }}
-              className="font-bold capitalize flex items-center justify-center gap-2 w-full"
+              className="font-bold capitalize flex items-center justify-center gap-2 w-full h-full"
             >
               {storeLoad && (
                 <section>
@@ -971,11 +900,7 @@ export const HomeHeader = () => {
               {storeLoad ? <p>Process</p> : <p>Publish</p>}
             </Button>
           </section>
-          
         </Wordpress>
-
-        {/* <Button>Publish</Button> */}
-        {/* </div> */}
       </ScrollableToolbar>
       {/* </section> */}
       {/* </ToolbarComponent> */}

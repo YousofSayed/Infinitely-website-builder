@@ -1,4 +1,4 @@
-import { wp_delete_media_files_by_slugs, wp_update_option } from "@/apps/wordpress/functions";
+import { wp_delete_media_files_by_slugs, wp_update_option } from "@/Apps/wordpress/functions";
 import { InfinitelyEvents } from "@/constants/infinitelyEvents";
 import { reloadRequiredInstance } from "@/constants/InfinitelyInstances";
 import { current_page_id, current_project_id } from "@/constants/shared";

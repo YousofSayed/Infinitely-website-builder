@@ -7,7 +7,7 @@ import {
   getProjectSettings,
   getWpPageConfig,
 } from "@/helpers/functions";
-import { wp_update_main_global_files, wp_update_option } from "@/apps/wordpress/functions";
+import { wp_update_main_global_files, wp_update_option } from "@/Apps/wordpress/functions";
 import { isFunction } from "lodash";
 import { toast } from "react-toastify";
 

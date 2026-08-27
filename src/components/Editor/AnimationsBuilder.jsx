@@ -8,6 +8,7 @@ import {
   framesStylesState,
   isAnimationsChangedState,
   showAnimationsBuilderState,
+  showComponentsInLeftPanelState,
   showsState,
 } from "@/helpers/atoms";
 import { keyframesGetterWorker } from "@/helpers/defineWorkers";
@@ -15,8 +16,10 @@ import {
   advancedSearchSuggestions,
   doInWordpress,
   getProjectData,
+  getProjectId,
   isWordpress,
   rgbStringToHex,
+  workerCallbackMakerWithProps,
 } from "@/helpers/functions";
 import { animationsType, animationType } from "@/helpers/jsDocs";
 import { useInfinitelyUndoRedo } from "@/hooks/useInfinitelyUndoRedo";
@@ -38,6 +41,8 @@ import { cloneDeep, isNumber } from "lodash";
 import { For } from "million/react";
 import React, { memo, useEffect, useRef, useState } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
+import { toast } from "react-toastify";
+import { ToastMsgInfo } from "./Protos/ToastMsgInfo";
 
 // million-ignore
 export const AnimationsBuilder = () => {
@@ -64,9 +69,12 @@ export const AnimationsBuilder = () => {
   const pageName = localStorage.getItem(current_page_id);
   const [globalSlug, setGlobalSlug] = useState("");
   const [path, setPath] = useState(
-    isWordpress() ? "css/main.js" : `css/${pageName}.css`,
+    isWordpress() ? "css/main.css" : `css/${pageName}.css`,
   );
-  const [chooseGlobal, setChooseGlobal] = useState("");
+  const [chooseGlobal, setChoose] = useState("");
+  const [showsComponents, setShowsComponents] = useRecoilState(
+    showComponentsInLeftPanelState,
+  );
 
   useLiveQuery(async () => {
     const projectData = await getProjectData();
@@ -74,30 +82,6 @@ export const AnimationsBuilder = () => {
       setGlobalSlug(projectData.globalCss.slug);
     });
   }, []);
-
-  // useInfinitelyUndoRedo([animations, setAnimations]);
-
-  const sendToKeyframesGetterWorker = ({ data }) => {
-    const { command, props } = data;
-    if (data.command == "getKeyFrames") {
-      setLoad(false);
-      // console.log(
-      //   "props : ",
-      //   Object.entries(props).flatMap(([path, animes]) =>
-      //     animes.map((anim) => ({ ...anim, path }))
-      //   )
-      // );
-
-      // console.log(props);
-      console.log("frames : ", props);
-      if (props.done) {
-        setAnimations(props.res);
-      } else {
-        setAnimations([]);
-      }
-      searchedAnimations.current = props;
-    }
-  };
 
   const getKeyFrames = () => {
     // console.log('frames : ' , editor.Css.getAll().models.filter(r=>r.attributes.atRuleType == 'keyframes'));
@@ -107,37 +91,133 @@ export const AnimationsBuilder = () => {
     //   { once: true }
     // );
 
-    keyframesGetterWorker.postMessage({
-      command: "getKeyFrames",
-      props: {
-        projectId: +localStorage.getItem(current_project_id),
-        pageName,
+    workerCallbackMakerWithProps(
+      keyframesGetterWorker,
+      "getKeyFrames",
+      {
         editorCss: editor.getCss({
           keepUnusedStyles: false,
           avoidProtected: true,
         }),
+        projectId: getProjectId(),
       },
-    });
-
-    keyframesGetterWorker.addEventListener(
-      "message",
-      sendToKeyframesGetterWorker,
-      // { once: true }
+      (props) => {
+        if (props.done) {
+          setAnimations(props.res);
+        } else {
+          setAnimations([]);
+        }
+        setLoad(false);
+        searchedAnimations.current = props.res;
+      },
     );
-
-    return () => {
-      keyframesGetterWorker.removeEventListener(
-        "message",
-        sendToKeyframesGetterWorker,
-        // { once: true }
-      );
-    };
-
-    // console.log(animes, animationsReady, Object.values(animes));
   };
 
+  useEffect(() => {
+    // if (!frameStyles) return;
+    // if (!animations.length) return;
+    // console.log('key frame indexes : ' , indexes)
+    if (!isNumber(indexes.animationIndex) && !isNumber(indexes.keyframeIndex))
+      return;
+    console.log("key frame indexes after: ", indexes);
+    /**
+     *
+     * @param {CustomEvent} ev
+     */
+    const callback = (ev) => {
+      const frameStyles = ev.detail;
+      const clone = structuredClone(animations);
+      const keyframe =
+        clone[indexes.animationIndex || 0].keyframes[
+          indexes.keyframeIndex || 0
+        ];
+      // keyframe.changed = true;
+      console.log("key frame event : ", ev, keyframe);
+      // const noDeclerations = [];
+      if (keyframe.type == "keyframe") {
+        keyframe.declarations = keyframe.declarations.map((dclr) => {
+          if (frameStyles[dclr.property]) {
+            dclr.value = frameStyles[dclr.property];
+          }
+          return dclr;
+        });
+        const properties = keyframe.declarations.map((dclr) => dclr.property);
+        const notFoundedKeys = new Set([
+          ...Object.keys(frameStyles),
+          ...properties,
+        ]);
+        // const isThereProperty = keyframe.declarations.some(dclr=>Boolean(frameStyles[dclr.property]));
+        notFoundedKeys.forEach((value) => {
+          console.log("value : ", value);
+          !properties.includes(value) &&
+            keyframe.declarations.push({
+              type: "declaration",
+              property: value,
+              value: frameStyles[value],
+            });
+        });
+
+        // clone[indexes.animationIndex || 0].keyframes[
+        //   indexes.keyframeIndex || 0
+        // ].declarations.concat(noDeclerations);
+
+        if (!clone[indexes.animationIndex].changed) {
+          clone[indexes.animationIndex].changed = true;
+          setAnimations(clone);
+        }
+        console.log(
+          "clone  : ",
+          clone,
+          clone[indexes.animationIndex],
+          // noDeclerations,
+          frameStyles,
+          Array.from(notFoundedKeys),
+        );
+        setAnimations(clone);
+
+        // setIsChangedAnimations(
+        //   clone[indexes.animationIndex],
+        //   indexes.animationIndex
+        // );
+      }
+    };
+
+    keyframeStylesInstance.on(InfinitelyEvents.keyframe.set, callback);
+    return () => {
+      keyframeStylesInstance.off(InfinitelyEvents.keyframe.set, callback);
+    };
+  }, [animations, indexes]);
+
+  useEffect(() => {
+    if (!(showsComponents.animationsBuilder && editor)) return;
+    console.log(
+      "editor animation builder: ",
+      editor,
+      !showsComponents.animationsBuilder && !editor,
+    );
+
+    const cleaner = getKeyFrames();
+    return () => {
+      setFramesStyles({});
+      // cleaner();
+    };
+  }, [showsComponents.animationsBuilder, editor]);
+
   const addAnimation = (animationName) => {
-    if (!animation) return;
+    if (!animationName) {
+      toast.warn(
+        <ToastMsgInfo msg="Please give a name for the animation 😀" />,
+      );
+      return;
+    }
+
+    if (!chooseGlobal) {
+      toast.warn(
+        <ToastMsgInfo msg="Please choose a distination for the animation 😀" />,
+      );
+      return;
+    }
+
     oldAnimtaions.current = cloneDeep(animations);
 
     setAnimations([
@@ -230,92 +310,6 @@ export const AnimationsBuilder = () => {
     setAnimations(searchAnims);
   };
 
-  useEffect(() => {
-    // if (!frameStyles) return;
-    // if (!animations.length) return;
-    // console.log('key frame indexes : ' , indexes)
-    if (!isNumber(indexes.animationIndex) && !isNumber(indexes.keyframeIndex))
-      return;
-    console.log("key frame indexes after: ", indexes);
-    /**
-     *
-     * @param {CustomEvent} ev
-     */
-    const callback = (ev) => {
-      const frameStyles = ev.detail;
-      const clone = structuredClone(animations);
-      const keyframe =
-        clone[indexes.animationIndex || 0].keyframes[
-          indexes.keyframeIndex || 0
-        ];
-      // keyframe.changed = true;
-      console.log("key frame event : ", ev, keyframe);
-      // const noDeclerations = [];
-      if (keyframe.type == "keyframe") {
-        keyframe.declarations = keyframe.declarations.map((dclr) => {
-          if (frameStyles[dclr.property]) {
-            dclr.value = frameStyles[dclr.property];
-          }
-          return dclr;
-        });
-        const properties = keyframe.declarations.map((dclr) => dclr.property);
-        const notFoundedKeys = new Set([
-          ...Object.keys(frameStyles),
-          ...properties,
-        ]);
-        // const isThereProperty = keyframe.declarations.some(dclr=>Boolean(frameStyles[dclr.property]));
-        notFoundedKeys.forEach((value) => {
-          console.log("value : ", value);
-          !properties.includes(value) &&
-            keyframe.declarations.push({
-              type: "declaration",
-              property: value,
-              value: frameStyles[value],
-            });
-        });
-
-        // clone[indexes.animationIndex || 0].keyframes[
-        //   indexes.keyframeIndex || 0
-        // ].declarations.concat(noDeclerations);
-
-        if (!clone[indexes.animationIndex].changed) {
-          clone[indexes.animationIndex].changed = true;
-          setAnimations(clone);
-        }
-        console.log(
-          "clone  : ",
-          clone,
-          clone[indexes.animationIndex],
-          // noDeclerations,
-          frameStyles,
-          Array.from(notFoundedKeys),
-        );
-        setAnimations(clone);
-
-        // setIsChangedAnimations(
-        //   clone[indexes.animationIndex],
-        //   indexes.animationIndex
-        // );
-      }
-    };
-
-    keyframeStylesInstance.on(InfinitelyEvents.keyframe.set, callback);
-    return () => {
-      keyframeStylesInstance.off(InfinitelyEvents.keyframe.set, callback);
-    };
-  }, [animations, indexes]);
-
-  useEffect(() => {
-    if (!(showAnimeBuilder && editor)) return;
-    console.log("editor : ", editor, !showAnimeBuilder && !editor);
-
-    const cleaner = getKeyFrames();
-    return () => {
-      setFramesStyles({});
-      cleaner();
-    };
-  }, [showAnimeBuilder, editor]);
-
   // useEffect(() => {
   //   return () => {
   //     setShows((old) => ({ ...old, animationBuilder: false }));
@@ -323,16 +317,16 @@ export const AnimationsBuilder = () => {
   // }, []);
 
   return (
-    <Memo className="h-full">
+    <main className="h-full animate-go-to">
       {load && <Loader />}
       {!load && (
         <UndoRedoContainer
           defaultValue={animationsType}
-          className="h-full"
+          className="h-full animate-go-to"
           showProp="animationBuilder"
           state={[animations, setAnimations]}
         >
-          <section className="flex flex-col gap-2  h-full  ">
+          <section className="flex flex-col gap-2  h-full  animate-go-to">
             <MiniTitle>Animations Builder</MiniTitle>
             <section className="flex flex-col gap-2 rounded-lg ">
               <Input
@@ -354,7 +348,7 @@ export const AnimationsBuilder = () => {
                         : `global/global.css`
                       : path;
                   setPath(newPath);
-                  setChooseGlobal(value);
+                  setChoose(value);
                 }}
               />
               <section className="flex gap-2">
@@ -476,7 +470,7 @@ export const AnimationsBuilder = () => {
 
                                       <SmallButton
                                         title="delete frame"
-                                        className="flex-shrink-0 bg-surface-tertiary"
+                                        className="shrink-0 bg-surface-tertiary"
                                         onClick={() => {
                                           removeKeyframe(i, x);
                                         }}
@@ -486,7 +480,7 @@ export const AnimationsBuilder = () => {
 
                                       <SmallButton
                                         title="select frame"
-                                        className="flex-shrink-0 bg-surface-tertiary"
+                                        className="shrink-0 bg-surface-tertiary"
                                         onClick={(ev) => {
                                           // setCurrentEditingIndex(i);
                                           // setCurrentEditing(id);
@@ -494,26 +488,6 @@ export const AnimationsBuilder = () => {
                                             keyframeIndex: x,
                                             animationIndex: i,
                                           });
-                                          // setCurrentEditingIndexStyles(
-                                          //   currentEditingIndexStyles == x &&
-                                          //     currentEditingIndex == i
-                                          //     ? undefined
-                                          //     : x
-                                          // );
-
-                                          // console.log(
-                                          //   Object.fromEntries(
-                                          //     keyframe?.declarations
-                                          //       .filter(
-                                          //         (dclr) =>
-                                          //           dclr.type == "declaration"
-                                          //       )
-                                          //       .map((dclr) => [
-                                          //         dclr.property,
-                                          //         dclr.value,
-                                          //       ])
-                                          //   )
-                                          // );
 
                                           console.log(
                                             "indexing",
@@ -563,7 +537,7 @@ export const AnimationsBuilder = () => {
                                                 className="w-full flex justify-between items-center gap-2 text-center "
                                               >
                                                 <article className="w-full flex justify-between  gap-2 text-center">
-                                                  <p className="w-[45%] whitespace-break-spaces break-inside-avoid-column text-text-primary text-sm  flex items-center justify-center bg-brand-primary p-2 font-semibold rounded-lg flex-shrink-0 flex-grow">
+                                                  <p className="w-[45%] whitespace-break-spaces break-inside-avoid-column text-text-primary text-sm  flex items-center justify-center bg-brand-primary p-2 font-semibold rounded-lg shrink-0 flex-grow">
                                                     {property}
                                                   </p>
                                                   <p className="text-white font-bold self-center">
@@ -601,7 +575,7 @@ export const AnimationsBuilder = () => {
           </section>
         </UndoRedoContainer>
       )}
-    </Memo>
+    </main>
   );
 };
 
@@ -663,7 +637,7 @@ export const AnimationsBuilder = () => {
 
                               <SmallButton
                                 title="delete frame"
-                                className="flex-shrink-0 bg-surface-tertiary"
+                                className="shrink-0 bg-surface-tertiary"
                                 onClick={() => {
                                   deleteFrame(i, x);
                                 }}
@@ -673,7 +647,7 @@ export const AnimationsBuilder = () => {
 
                               <SmallButton
                                 title="select frame"
-                                className="flex-shrink-0 bg-surface-tertiary"
+                                className="shrink-0 bg-surface-tertiary"
                                 onClick={(ev) => {
                                   setCurrentEditingIndex(i);
 
@@ -699,7 +673,7 @@ export const AnimationsBuilder = () => {
                                       className="w-full flex justify-between items-center gap-2 text-center "
                                     >
                                       <article className="w-full flex justify-between  gap-2 text-center">
-                                        <p className="w-[45%] whitespace-break-spaces break-inside-avoid-column text-text-primary text-sm  flex items-center justify-center bg-brand-primary p-2 font-semibold rounded-lg flex-shrink-0 flex-grow">
+                                        <p className="w-[45%] whitespace-break-spaces break-inside-avoid-column text-text-primary text-sm  flex items-center justify-center bg-brand-primary p-2 font-semibold rounded-lg shrink-0 flex-grow">
                                           {key}
                                         </p>
                                         <p className="text-white font-bold self-center">

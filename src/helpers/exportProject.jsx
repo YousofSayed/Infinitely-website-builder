@@ -1,4 +1,9 @@
 import {
+  wp_get_all_files,
+  wp_get_option,
+  wp_get_posts_with_inf_meta,
+} from "@/Apps/wordpress/functions";
+import {
   buildScripts,
   inf_build_url,
   inf_symbol_Id_attribute,
@@ -14,6 +19,8 @@ import {
   defineFontFace,
   defineRoot,
   doDocument,
+  doInNormalAsyncInWorker,
+  doInWordpressAsyncInWorker,
   filterMotionsByPage,
   html,
   minifyBlobJSAndCssStream,
@@ -49,16 +56,9 @@ import { cloneDeep, cloneDeepWith, isPlainObject, uniqueId } from "lodash";
  * @typedef  {import('@/helpers/types')} Types
  */
 
-// 
+//
 
-
-// 
-
-
-
-
-
-
+//
 
 /**
  * @type {{[key:string]:string[]}}
@@ -73,482 +73,478 @@ export async function buildProject(props) {
   const JSZip = (await import("jszip")).default;
   const mime = (await import("mime")).default;
   const zip = new JSZip();
-  const pageBuildSettings = {
-    grapStyles: props.projectSetting.grap_all_css_libs_in_single_file,
-    grapHeaderScripts:
-      props.projectSetting.grap_all_header_scripts_in_single_file,
-    grapeFooterScripts:
-      props.projectSetting.grap_all_footer_scripts_in_single_file,
-    isHeaderGrapedDefer: props.projectSetting.is_defer_graped_header_script,
-    isFooterGrapedDefer: props.projectSetting.is_defer_graped_footer_script,
-    isHeaderGrapedAsync: props.projectSetting.is_async_graped_header_script,
-    isFooterGrapedAsync: props.projectSetting.is_async_graped_footer_script,
-    disablePvue: props.projectSetting.disable_petite_vue,
-  };
-  const projectData = await db.projects.get(props.projectId);
-  await opfs.init(+props.projectId);
-
-  // const alpineBlob = await (await fetch("/scripts/alpine.js")).blob();
-  // const infImportsBuildBlob = await (
-  //   await fetch("/scripts/infImportsBuild.js")
-  // ).blob();
-
-  // try {
-
-  // console.log('props' , props , opfs.id ,projectData.logo, defineRoot(projectData.logo) );
-
-  /**
-   *
-   * @param {File} file
-   */
-  const transformImageToWebp = (file) => {
-    return props.projectSetting.transform_Image_To_Webp &&
-      file.type.includes("image")
-      ? new File([file], file.name, { type: "image/webp" })
-      : file;
-  };
-
-  projectData.logo &&
-    zip.file(
-      "logo.png",
-      await (await opfs.getFile(defineRoot(projectData.logo))).getOriginFile()
-    );
-
-  zip.file(
-    "index.html",
-    new Blob(
-      [
-        await buildPage({
-          page: projectData.pages[`index`],
-          projectData,
-          projectSetting: props.projectSetting,
-          ...pageBuildSettings,
-          urlException: true,
-        }),
-      ],
-      { type: "text/html;charset=UTF-8" }
-    )
-  );
-  // zip.file("libs/alpine.js", alpineBlob);
-  // zip.file("libs/infImportsBuild.js", infImportsBuildBlob);
-  await Promise.all(
-    buildScripts({
+  await doInNormalAsyncInWorker(props.projectId, async () => {
+    const pageBuildSettings = {
+      grapStyles: props.projectSetting.grap_all_css_libs_in_single_file,
+      grapHeaderScripts:
+        props.projectSetting.grap_all_header_scripts_in_single_file,
+      grapeFooterScripts:
+        props.projectSetting.grap_all_footer_scripts_in_single_file,
+      isHeaderGrapedDefer: props.projectSetting.is_defer_graped_header_script,
+      isFooterGrapedDefer: props.projectSetting.is_defer_graped_footer_script,
+      isHeaderGrapedAsync: props.projectSetting.is_async_graped_header_script,
+      isFooterGrapedAsync: props.projectSetting.is_async_graped_footer_script,
       disablePvue: props.projectSetting.disable_petite_vue,
-      disableGsapCore: props.projectSetting.disable_gsap_core,
-      disableGsapScrollTrigger: props.projectSetting.disable_gsap_scrollTrigger,
-      projectSetting: props.projectSetting,
-      // inserts: [
-      //   {
-      //     index: 2,
-      //     item: {
-      //       name: `${page.name}.js`,
-      //       buildUrl: `/js/motions/${page.name}.js`,
-      //     },
-      //   },
-      // ],
-    }).map(async (url) => {
-      return zip.file(
-        `libs/js/${url.name}`,
-        await (await fetch(url.localUrl)).blob()
+    };
+    const projectData = await db.projects.get(props.projectId);
+    await opfs.init(+props.projectId);
+
+    /**
+     *
+     * @param {File} file
+     */
+    const transformImageToWebp = (file) => {
+      return props.projectSetting.transform_Image_To_Webp &&
+        file.type.includes("image")
+        ? new File([file], file.name, { type: "image/webp" })
+        : file;
+    };
+
+    projectData.logo &&
+      zip.file(
+        "logo.png",
+        await (
+          await opfs.getFile(defineRoot(projectData.logo))
+        ).getOriginFile(),
       );
-    })
-  );
 
-  //Handling assets folder
-  console.log(`Start loading assets....`);
+    zip.file(
+      "index.html",
+      new Blob(
+        [
+          await buildPage({
+            page: projectData.pages[`index`],
+            projectData,
+            projectSetting: props.projectSetting,
+            ...pageBuildSettings,
+            urlException: true,
+          }),
+        ],
+        { type: "text/html;charset=UTF-8" },
+      ),
+    );
+    // zip.file("libs/alpine.js", alpineBlob);
+    // zip.file("libs/infImportsBuild.js", infImportsBuildBlob);
+    await Promise.all(
+      buildScripts({
+        disablePvue: props.projectSetting.disable_petite_vue,
+        disableGsapCore: props.projectSetting.disable_gsap_core,
+        disableGsapScrollTrigger:
+          props.projectSetting.disable_gsap_scrollTrigger,
+        projectSetting: props.projectSetting,
+      }).map(async (url) => {
+        return zip.file(
+          `libs/js/${url.name}`,
+          await (await fetch(url.localUrl)).blob(),
+        );
+      }),
+    );
 
-  const assetsHandles = await opfs.getAllFiles(defineRoot(`assets`), {
-    recursive: true,
-  });
-  for (const handle of assetsHandles) {
-    const file = await handle.getOriginFile();
-    zip.file(`assets/${file.name}`, transformImageToWebp(file), {
-      compression: "STORE",
+    //Handling assets folder
+    console.log(`Start loading assets....`);
+
+    const assetsHandles = await opfs.getAllFiles(defineRoot(`assets`), {
+      recursive: true,
     });
-  }
-  console.log(`End loading assets....`);
-  // projectData.assets.forEach((asset) =>
-  //   zip.file(`assets/${asset.file.name}`, transformImageToWebp(asset.file), {
-  //     compression: "STORE",
-  //   })
-  // );
+    for (const handle of assetsHandles) {
+      const file = await handle.getOriginFile();
+      zip.file(`assets/${file.name}`, transformImageToWebp(file), {
+        compression: "STORE",
+      });
+    }
+    console.log(`End loading assets....`);
 
-  const cleanedMotions = await cleanMotions(
-    projectData.motions,
-    projectData.pages
-  );
-  //Handling js folder
-  for (const page of Object.values(projectData.pages)) {
-    const jsHandle = await opfs.getFile(defineRoot(page.pathes.js));
-    const cssHandle = await opfs.getFile(defineRoot(page.pathes.css));
-    const jsFile = await jsHandle.getOriginFile();
-    const cssFile = await cssHandle.getOriginFile();
-    zip.file(
-      page.pathes.js,
-      props.projectSetting.minify_Js
-        ? await minifyBlobJSAndCssStream(jsFile, "js")
-        : jsFile
+    const cleanedMotions = await cleanMotions(
+      projectData.motions,
+      projectData.pages,
     );
+    //Handling js folder
+    for (const page of Object.values(projectData.pages)) {
+      const jsHandle = await opfs.getFile(defineRoot(page.pathes.js));
+      const cssHandle = await opfs.getFile(defineRoot(page.pathes.css));
+      const jsFile = await jsHandle.getOriginFile();
+      const cssFile = await cssHandle.getOriginFile();
+      zip.file(
+        page.pathes.js,
+        props.projectSetting.minify_Js
+          ? await minifyBlobJSAndCssStream(jsFile, "js")
+          : jsFile,
+      );
 
-    zip.file(
-      page.pathes.css,
-      props.projectSetting.minify_Css
-        ? await minifyBlobJSAndCssStream(cssFile, "css")
-        : cssFile
-    );
+      zip.file(
+        page.pathes.css,
+        props.projectSetting.minify_Css
+          ? await minifyBlobJSAndCssStream(cssFile, "css")
+          : cssFile,
+      );
 
-    if (props.projectSetting.enable_tailwind) {
-      const path = `css/tailwind/${page.name}.css`;
-      const tailwindCssHandle = await opfs.getFile(defineRoot(path));
-      if (tailwindCssHandle) {
-        const twFile = await tailwindCssHandle.getOriginFile();
+      if (props.projectSetting.enable_tailwind) {
+        const path = `css/tailwind/${page.name}.css`;
+        const tailwindCssHandle = await opfs.getFile(defineRoot(path));
+        if (tailwindCssHandle) {
+          const twFile = await tailwindCssHandle.getOriginFile();
+          zip.file(
+            path,
+            // props.projectSetting.minify_Css
+            //   ? await minifyBlobJSAndCssStream(twFile, "css")
+            // :
+            twFile,
+          );
+        }
+      }
+
+      console.log(`Start loading motions`);
+
+      if (!props.projectSetting.disable_gsap_core) {
+        const filterdMotions = buildGsapMotionsScript(
+          filterMotionsByPage(cleanedMotions, page.name),
+          false,
+          props.projectSetting.remove_gsap_markers_on_build,
+          page.name,
+        );
+
+        // console.log('filtered motions : ' , filterdMotions);
+
         zip.file(
-          path,
-          // props.projectSetting.minify_Css
-          //   ? await minifyBlobJSAndCssStream(twFile, "css")
-          // :
-          twFile
+          `js/motions/${page.name}.js`,
+          props.projectSetting.minify_Js
+            ? (await (await import("terser")).minify(filterdMotions)).code
+            : filterdMotions,
+        );
+
+        projectData.motions = cleanedMotions;
+      }
+      console.log(`End loading motions`);
+    }
+
+    const templates = Object.values(projectData.blocks || {}).filter(
+      (block) => block.type == "template",
+    );
+
+    const symbols = Object.values(projectData.symbols || {});
+
+    if (templates.length) {
+      const files = await Promise.all(
+        templates.map(async (template) => {
+          const handle = await opfs.getFile(defineRoot(template.pathes.style));
+          const file = await handle.getOriginFile();
+          return file;
+        }),
+      );
+      zip.file(
+        `css/templates.css`,
+        props.projectSetting.minify_Css
+          ? await minifyBlobJSAndCssStream(
+              new Blob(files, { type: "text/css" }),
+              "css",
+            )
+          : new Blob(files, { type: "text/css" }),
+      );
+    }
+
+    if (symbols.length) {
+      const files = await Promise.all(
+        symbols.map(async (symbol) => {
+          const handle = await opfs.getFile(
+            defineRoot(`editor/symbols/${symbol.id}/${symbol.id}.css`),
+          );
+          const file = await handle.getOriginFile();
+          return file;
+        }),
+      );
+      zip.file(
+        `css/symbols.css`,
+        props.projectSetting.minify_Css
+          ? await minifyBlobJSAndCssStream(
+              new Blob(files, { type: "text/css" }),
+              "css",
+            )
+          : new Blob(files, { type: "text/css" }),
+      );
+    }
+
+    zip.file("css/fonts.css", buildFontFaces(projectData.fonts));
+
+    // Handling libs folder
+    const cssHandles = await opfs.getAllFiles(defineRoot(`libs/css`), {
+      recursive: true,
+    });
+    const cssLibsFiles = await Promise.all(
+      cssHandles.map((handle) => handle.getOriginFile()),
+    );
+    if (props.projectSetting.grap_all_css_libs_in_single_file) {
+      zip.file(
+        `libs/css/lib.css`,
+        props.projectSetting.minify_Css
+          ? await minifyBlobJSAndCssStream(
+              new Blob(cssLibsFiles, { type: `text/css` }),
+            )
+          : new Blob(cssLibsFiles, { type: "text/css" }),
+      );
+    } else {
+      for (const lib of projectData.cssLibs) {
+        if (lib.isCDN) continue;
+        const handle = await opfs.getFile(defineRoot(lib.path));
+        const file = await handle.getOriginFile();
+        console.log(file, lib.path, lib);
+        zip.file(
+          lib.path,
+          props.projectSetting.minify_Css
+            ? await minifyBlobJSAndCssStream(file, "css")
+            : file,
         );
       }
     }
 
-    console.log(`Start loading motions`);
-
-    if (!props.projectSetting.disable_gsap_core) {
-      const filterdMotions = buildGsapMotionsScript(
-        filterMotionsByPage(cleanedMotions, page.name),
-        false,
-        props.projectSetting.remove_gsap_markers_on_build,
-        page.name
-      );
-
-      // console.log('filtered motions : ' , filterdMotions);
-
+    //Handling Js
+    const jsHandles = await opfs.getAllFiles(defineRoot(`libs/js/header`), {
+      recursive: true,
+    });
+    const jsLibsFiles = await Promise.all(
+      jsHandles.map((handle) => handle.getOriginFile()),
+    );
+    if (props.projectSetting.grap_all_header_scripts_in_single_file) {
       zip.file(
-        `js/motions/${page.name}.js`,
+        `libs/js/min/header/header.lib.js`,
         props.projectSetting.minify_Js
-          ? (await (await import("terser")).minify(filterdMotions)).code
-          : filterdMotions
+          ? await minifyBlobJSAndCssStream(
+              new Blob(jsLibsFiles, { type: `application/javascript` }),
+              "js",
+            )
+          : new Blob(jsLibsFiles, {
+              type: "application/javascript",
+            }),
       );
-
-      // const cleanedMotions = await cleanMotions(
-      //   projectData.motions,
-      //   projectData.pages
-      // ); //Will used in build motion scripts function
-      // const motionScripts = buildMotionScripts({
-      //   motions: cleanedMotions,
-      //   pages: projectData.pages,
-      //   projectSetting: props.projectSetting,
-      // });
-
-      // zip.file(
-      //   `js/motions/index.js`,
-      //   props.projectSetting.minify_Js
-      //     ? (await (await import("terser")).minify(motionScripts.index)).code
-      //     : motionScripts.index
-      // );
-
-      // for (const [key, value] of Object.entries(motionScripts.other)) {
-      //   zip.file(
-      //     `js/motions/${key}.js`,
-      //     props.projectSetting.minify_Js
-      //       ? (await (await import("terser")).minify(value)).code
-      //       : value
-      //   );
-      // }
-
-      projectData.motions = cleanedMotions;
-    }
-    console.log(`End loading motions`);
-
-    // if (page.symbols.length) {
-    //   const files = await Promise.all(
-    //     page.symbols.map(async (symbol) => {
-    //       const handle = await opfs.getFile(
-    //         defineRoot(`editor/symbols/${symbol}/${symbol}.css`)
-    //       );
-    //       const file = await handle.getOriginFile();
-    //       return file;
-    //     })
-    //   );
-    //   zip.file(
-    //     `css/symbols/${page.name}.css`,
-    //     props.projectSetting.minify_Css
-    //       ? await minifyBlobJSAndCssStream(
-    //           new Blob(files, { type: "text/css" }),
-    //           "css"
-    //         )
-    //       : new Blob(files, { type: "text/css" })
-    //   );
-    // }
-  }
-
-  const templates = Object.values(projectData.blocks || {}).filter(
-    (block) => block.type == "template"
-  );
-
-  const symbols = Object.values(projectData.symbols || {});
-
-  if (templates.length) {
-    const files = await Promise.all(
-      templates.map(async (template) => {
-        const handle = await opfs.getFile(defineRoot(template.pathes.style));
+    } else {
+      for (const lib of projectData.jsHeaderLibs) {
+        if (lib.isCDN) continue;
+        const handle = await opfs.getFile(defineRoot(lib.path));
         const file = await handle.getOriginFile();
-        return file;
-      })
+
+        console.log(file, lib.path, lib);
+        zip.file(
+          lib.path,
+          props.projectSetting.minify_Js
+            ? await minifyBlobJSAndCssStream(file, "js")
+            : file,
+        );
+      }
+    }
+
+    const jsFooterHandles = await opfs.getAllFiles(
+      defineRoot(`libs/js/footer`),
+      {
+        recursive: true,
+      },
+    );
+    const jsFooterLibsFiles = await Promise.all(
+      jsFooterHandles.map((handle) => handle.getOriginFile()),
+    );
+
+    if (props.projectSetting.grap_all_footer_scripts_in_single_file) {
+      zip.file(
+        `libs/js/min/footer/footer.lib.js`,
+        props.projectSetting.minify_Js
+          ? await minifyBlobJSAndCssStream(
+              new Blob(jsFooterLibsFiles, { type: "application/javascript" }),
+              "js",
+            )
+          : new Blob(jsFooterLibsFiles, { type: "application/javascript" }),
+      );
+    } else {
+      for (const lib of projectData.jsFooterLibs) {
+        if (lib.isCDN) continue;
+        const handle = await opfs.getFile(defineRoot(lib.path));
+        const file = await handle.getOriginFile();
+        console.log(file, lib.path, lib);
+        zip.file(
+          lib.path,
+          props.projectSetting.minify_Js
+            ? await minifyBlobJSAndCssStream(file, "js")
+            : file,
+        );
+      }
+    }
+
+    //Handling fonts folder
+    for (const font of Object.values(projectData.fonts)) {
+      if (font.isCDN) continue;
+      const handle = await opfs.getFile(defineRoot(font.path));
+      const file = await handle.getOriginFile();
+      zip.file(font.path, file);
+    }
+
+    //Handling globals folder
+    const infinitelyStyles = props.projectSetting
+      .include_canvas_styles_in_build_file
+      ? await (await fetch("/styles/style.css")).blob()
+      : "";
+
+    const globalRules = !props.projectSetting.enable_tailwind
+      ? await (await fetch(`/styles/global-rules.css`)).blob()
+      : "";
+
+    console.log(`Start loading Globals`);
+    const globalJsFile = await (
+      await opfs.getFile(defineRoot(`global/global.js`))
+    ).getOriginFile();
+    const globalCssFile = await (
+      await opfs.getFile(defineRoot(`global/global.css`))
+    ).getOriginFile();
+
+    zip.file(
+      `global/global.js`,
+      props.projectSetting.minify_Js
+        ? await minifyBlobJSAndCssStream(globalJsFile, "js")
+        : globalJsFile,
     );
     zip.file(
-      `css/templates.css`,
+      `global/global.css`,
       props.projectSetting.minify_Css
-        ? await minifyBlobJSAndCssStream(
-            new Blob(files, { type: "text/css" }),
-            "css"
-          )
-        : new Blob(files, { type: "text/css" })
+        ? await minifyBlobJSAndCssStream(globalCssFile, "css")
+        : globalCssFile,
     );
-  }
+    props.projectSetting.include_canvas_styles_in_build_file &&
+      zip.file(`global/infinitely.css`, infinitelyStyles);
+    console.log(`End loading Globals`);
 
-  if (symbols.length) {
-    const files = await Promise.all(
-      symbols.map(async (symbol) => {
-        const handle = await opfs.getFile(
-          defineRoot(`editor/symbols/${symbol.id}/${symbol.id}.css`)
+    !props.projectSetting.enable_tailwind &&
+      zip.file(`/global/global-rules.css`, globalRules);
+
+    //Handling pages folder
+    console.log(`Start loading pages`);
+    const pages = Object.values(projectData.pages).filter(
+      (page) => page.name.toLowerCase() != "index",
+      // && page.name.toLowerCase() != "playground"
+    );
+    console.log("pages build : ", pages);
+
+    for (const page of pages) {
+      zip.file(
+        page.pathes.html.replace("editor/", ""),
+        new Blob(
+          [
+            await buildPage({
+              projectData,
+              page,
+              projectSetting: props.projectSetting,
+              ...pageBuildSettings,
+            }),
+          ],
+          { type: "text/html;charset=UTF-8" },
+        ),
+      );
+    }
+    console.log(`End loading pages`);
+
+    for (const rm of projectData.restAPIModels) {
+      rm.response = "";
+    }
+
+    const editorDataBlob = new Blob(
+      [JSON.stringify(await replaceBlobs(projectData))],
+      { type: "application/json" },
+    );
+
+    zip.file("editor/infinitely.json", editorDataBlob);
+    const screenshot = await (
+      await opfs.getFile(defineRoot(`screenshot.webp`))
+    ).getOriginFile();
+    zip.file("screenshot.webp", screenshot);
+
+    //Handling Editor Data
+    if (props.projectSetting.include_symbols_in_export) {
+      const allSymbolsFiles = await opfs.getAllFiles(
+        defineRoot(`editor/symbols`),
+        { recursive: true },
+      ); //Css & Js
+
+      for (const handle of allSymbolsFiles) {
+        const path = handle.path.replace(
+          `projects/project-${props.projectId}/`,
+          "",
         );
         const file = await handle.getOriginFile();
-        return file;
-      })
-    );
-    zip.file(
-      `css/symbols.css`,
-      props.projectSetting.minify_Css
-        ? await minifyBlobJSAndCssStream(
-            new Blob(files, { type: "text/css" }),
-            "css"
-          )
-        : new Blob(files, { type: "text/css" })
-    );
-  }
+        zip.file(path, file);
+      }
+    }
 
-  zip.file("css/fonts.css", buildFontFaces(projectData.fonts));
+    if (props.projectSetting.include_blocks_templates_in_export) {
+      const allTemplatesFiles = await opfs.getAllFiles(
+        defineRoot(`editor/templates`),
+        { recursive: true },
+      ); //Css & Js
 
-  // Handling libs folder
-  const cssHandles = await opfs.getAllFiles(defineRoot(`libs/css`), {
-    recursive: true,
+      for (const handle of allTemplatesFiles) {
+        const path = handle.path.replace(
+          `projects/project-${props.projectId}/`,
+          "",
+        );
+        const file = await handle.getOriginFile();
+        zip.file(path, file);
+      }
+    }
+
+    console.log(`Project end loading`);
   });
-  const cssLibsFiles = await Promise.all(
-    cssHandles.map((handle) => handle.getOriginFile())
-  );
-  if (props.projectSetting.grap_all_css_libs_in_single_file) {
-    zip.file(
-      `libs/css/lib.css`,
-      props.projectSetting.minify_Css
-        ? await minifyBlobJSAndCssStream(
-            new Blob(cssLibsFiles, { type: `text/css` })
-          )
-        : new Blob(cssLibsFiles, { type: "text/css" })
-    );
-  } else {
-    for (const lib of projectData.cssLibs) {
-      if (lib.isCDN) continue;
-      const handle = await opfs.getFile(defineRoot(lib.path));
-      const file = await handle.getOriginFile();
-      console.log(file, lib.path, lib);
+
+  await doInWordpressAsyncInWorker(props.projectId, async () => {
+    /**
+     * @type {File[]}
+     */
+    let files = [];
+    let posts = await wp_get_posts_with_inf_meta({
+      projectId: props.projectId,
+    });
+
+    if (!props.projectSetting.include_symbols_in_export) {
+      posts = posts.filter((post) => !post.type !== "inf_symbols");
+    }
+
+    if (!props.projectSetting.include_blocks_templates_in_export) {
+      posts = posts.filter((post) => !post.type !== "inf_blocks");
+    }
+
+    for (const post of posts) {
       zip.file(
-        lib.path,
-        props.projectSetting.minify_Css
-          ? await minifyBlobJSAndCssStream(file, "css")
-          : file
+        `posts/${post.slug}.json`,
+        new Blob([JSON.stringify(post)], { type: "application/json" }),
       );
     }
-  }
 
-  //Handling Js
-  const jsHandles = await opfs.getAllFiles(defineRoot(`libs/js/header`), {
-    recursive: true,
+    if (props.projectSetting.include_wp_assets_in_export) {
+      const filesResFormData = await wp_get_all_files({
+        projectId: props.projectId,
+      });
+
+      files = filesResFormData.getAll("files");
+
+      for (const file of files) {
+        zip.file(`assets/${file.name}`, file);
+      }
+    }
+
+    const inf_config = await wp_get_option({
+      optionName: "inf_config",
+      projectId: props.projectId,
+    });
+
+    inf_config?.value?.wp_meta?.password && delete inf_config.value.wp_meta.password
+
+    zip.file(
+      `editor/infinitely.json`,
+      new Blob([JSON.stringify(inf_config?.value || {})], {
+        type: "application/json",
+      }),
+    );
+
+    console.log(
+      "All wordpres data you need to export : ",
+      posts,
+      files,
+      inf_config,
+    );
   });
-  const jsLibsFiles = await Promise.all(
-    jsHandles.map((handle) => handle.getOriginFile())
-  );
-  if (props.projectSetting.grap_all_header_scripts_in_single_file) {
-    zip.file(
-      `libs/js/min/header/header.lib.js`,
-      props.projectSetting.minify_Js
-        ? await minifyBlobJSAndCssStream(
-            new Blob(jsLibsFiles, { type: `application/javascript` }),
-            "js"
-          )
-        : new Blob(jsLibsFiles, {
-            type: "application/javascript",
-          })
-    );
-  } else {
-    for (const lib of projectData.jsHeaderLibs) {
-      if (lib.isCDN) continue;
-      const handle = await opfs.getFile(defineRoot(lib.path));
-      const file = await handle.getOriginFile();
-
-      console.log(file, lib.path, lib);
-      zip.file(
-        lib.path,
-        props.projectSetting.minify_Js
-          ? await minifyBlobJSAndCssStream(file, "js")
-          : file
-      );
-    }
-  }
-
-  const jsFooterHandles = await opfs.getAllFiles(defineRoot(`libs/js/footer`), {
-    recursive: true,
-  });
-  const jsFooterLibsFiles = await Promise.all(
-    jsFooterHandles.map((handle) => handle.getOriginFile())
-  );
-
-  if (props.projectSetting.grap_all_footer_scripts_in_single_file) {
-    zip.file(
-      `libs/js/min/footer/footer.lib.js`,
-      props.projectSetting.minify_Js
-        ? await minifyBlobJSAndCssStream(
-            new Blob(jsFooterLibsFiles, { type: "application/javascript" }),
-            "js"
-          )
-        : new Blob(jsFooterLibsFiles, { type: "application/javascript" })
-    );
-  } else {
-    for (const lib of projectData.jsFooterLibs) {
-      if (lib.isCDN) continue;
-      const handle = await opfs.getFile(defineRoot(lib.path));
-      const file = await handle.getOriginFile();
-      console.log(file, lib.path, lib);
-      zip.file(
-        lib.path,
-        props.projectSetting.minify_Js
-          ? await minifyBlobJSAndCssStream(file, "js")
-          : file
-      );
-    }
-  }
-
-  //Handling fonts folder
-  for (const font of Object.values(projectData.fonts)) {
-    if (font.isCDN) continue;
-    const handle = await opfs.getFile(defineRoot(font.path));
-    const file = await handle.getOriginFile();
-    zip.file(font.path, file);
-  }
-
-  //Handling globals folder
-  const infinitelyStyles = props.projectSetting
-    .include_canvas_styles_in_build_file
-    ? await (await fetch("/styles/style.css")).blob()
-    : "";
-
-  const globalRules = !props.projectSetting.enable_tailwind
-    ? await (await fetch(`/styles/global-rules.css`)).blob()
-    : "";
-
-  console.log(`Start loading Globals`);
-  const globalJsFile = await (
-    await opfs.getFile(defineRoot(`global/global.js`))
-  ).getOriginFile();
-  const globalCssFile = await (
-    await opfs.getFile(defineRoot(`global/global.css`))
-  ).getOriginFile();
-
-  zip.file(
-    `global/global.js`,
-    props.projectSetting.minify_Js
-      ? await minifyBlobJSAndCssStream(globalJsFile, "js")
-      : globalJsFile
-  );
-  zip.file(
-    `global/global.css`,
-    props.projectSetting.minify_Css
-      ? await minifyBlobJSAndCssStream(globalCssFile, "css")
-      : globalCssFile
-  );
-  props.projectSetting.include_canvas_styles_in_build_file &&
-    zip.file(`global/infinitely.css`, infinitelyStyles);
-  console.log(`End loading Globals`);
-
-  !props.projectSetting.enable_tailwind &&
-    zip.file(`/global/global-rules.css`, globalRules);
-
-  //Handling pages folder
-  console.log(`Start loading pages`);
-  const pages = Object.values(projectData.pages).filter(
-    (page) => page.name.toLowerCase() != "index"
-    // && page.name.toLowerCase() != "playground"
-  );
-  console.log("pages build : ", pages);
-
-  for (const page of pages) {
-    zip.file(
-      page.pathes.html.replace("editor/", ""),
-      new Blob(
-        [
-          await buildPage({
-            projectData,
-            page,
-            projectSetting: props.projectSetting,
-            ...pageBuildSettings,
-          }),
-        ],
-        { type: "text/html;charset=UTF-8" }
-      )
-    );
-  }
-  console.log(`End loading pages`);
-
-  for (const rm of projectData.restAPIModels) {
-    rm.response = "";
-  }
-
-  const editorDataBlob = new Blob(
-    [JSON.stringify(await replaceBlobs(projectData))],
-    { type: "application/json" }
-  );
-
-  zip.file("editor/infinitely.json", editorDataBlob);
-  const screenshot = await (
-    await opfs.getFile(defineRoot(`screenshot.webp`))
-  ).getOriginFile();
-  zip.file("screenshot.webp", screenshot);
-
-  //Handling Editor Data
-  if (props.projectSetting.include_symbols_in_export) {
-    const allSymbolsFiles = await opfs.getAllFiles(
-      defineRoot(`editor/symbols`),
-      { recursive: true }
-    ); //Css & Js
-
-    for (const handle of allSymbolsFiles) {
-      const path = handle.path.replace(
-        `projects/project-${props.projectId}/`,
-        ""
-      );
-      const file = await handle.getOriginFile();
-      zip.file(path, file);
-    }
-  }
-
-  if (props.projectSetting.include_templates_in_export) {
-    const allTemplatesFiles = await opfs.getAllFiles(
-      defineRoot(`editor/templates`),
-      { recursive: true }
-    ); //Css & Js
-
-    for (const handle of allTemplatesFiles) {
-      const path = handle.path.replace(
-        `projects/project-${props.projectId}/`,
-        ""
-      );
-      const file = await handle.getOriginFile();
-      zip.file(path, file);
-    }
-  }
-
-  console.log(`Project end loading`);
   return zip;
 }
 
@@ -706,7 +702,7 @@ async function buildPage({
       ? `<link href="${urlDots}/css/symbols.css" rel="stylesheet" />`
       : ""}
     ${Object.values(projectData.blocks).filter(
-      (block) => block.type == "template"
+      (block) => block.type == "template",
     ).length
       ? `<link href="${urlDots}/css/templates.css" rel="stylesheet"/>`
       : ""}
@@ -719,7 +715,7 @@ async function buildPage({
                   lib.path.startsWith("/")
                     ? lib.path.replace("/", "")
                     : lib.path
-                }" />`
+                }" />`,
           )
           .join("\n")
       : `<link rel="stylesheet" href="${urlDots}/libs/css/lib.css"/>`}
@@ -740,7 +736,7 @@ async function buildPage({
                         ? lib.path.replace("/", "")
                         : lib.path
                     }`
-              }" ></script>`
+              }" ></script>`,
           )
           .join("\n")
       : `<script ${(isHeaderGrapedDefer && 'defer="true"') || ""} ${
@@ -770,7 +766,7 @@ async function buildPage({
     const symbolId = el.getAttribute(inf_symbol_Id_attribute);
     el.outerHTML = await (
       await opfs.getFile(
-        defineRoot(`editor/symbols/${symbolId}/${symbolId}.html`)
+        defineRoot(`editor/symbols/${symbolId}/${symbolId}.html`),
       )
     ).text();
   }
@@ -827,7 +823,7 @@ async function buildPage({
                             ? lib.path.replace("/", "")
                             : lib.path
                         }`
-                  }" ></script>`
+                  }" ></script>`,
               )
               .join("\n")}
 
@@ -875,7 +871,6 @@ async function buildPage({
               },
             },
           ],
-        
         })
           .map(
             (url) =>
@@ -884,10 +879,10 @@ async function buildPage({
               }" ${
                 url.attributes && isPlainObject(url.attributes)
                   ? Object.entries(url.attributes).map(
-                      ([key, value]) => `${key}="${value}"`
+                      ([key, value]) => `${key}="${value}"`,
                     )
                   : ""
-              }></script>`
+              }></script>`,
           )
           .join("\n")}
       </body>
@@ -911,7 +906,7 @@ function buildFontFaces(fonts) {
           : `url("../${
               font.path.startsWith("/") ? font.path.replace("/", "") : font.path
             }")`,
-      })
+      }),
     )
     .join("\n\n\n");
 

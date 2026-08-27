@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 
-export const Loader = ({ width = 70, height = 70, zIndex , loaderClassName}) => {
+export const Loader = ({ width = 70, height = 70, zIndex , loaderClassName , className}) => {
   useEffect(()=>{
     console.log('Loader is in');
     
@@ -9,7 +9,7 @@ export const Loader = ({ width = 70, height = 70, zIndex , loaderClassName}) => 
     <section
       style={{ zIndex }}
       id="loader"
-      className="w-full h-full flex justify-center items-center bg-transparent"
+      className={`w-full h-full flex justify-center items-center bg-transparent ${className} animate-go-to`}
     >
       <div
         style={{
@@ -17,7 +17,7 @@ export const Loader = ({ width = 70, height = 70, zIndex , loaderClassName}) => 
           height,
           borderRightColor:"transparent"
         }}
-        className={`${loaderClassName} rounded-full border-2 border-blue-600 border-r-transparent animate-spin`}
+        className={` rounded-full border-2 border-blue-600 border-r-transparent animate-spin ${loaderClassName}`}
       ></div>
     </section>
   );

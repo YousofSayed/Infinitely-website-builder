@@ -84,7 +84,7 @@ export const Adder = memo((
 
           <TinyButton
             title="Delete button"
-            className={`flex-shrink-0 ${delClassName}`}
+            className={`shrink-0 ${delClassName}`}
             onClick={(ev) => {
               onDeleteClick(ev);
             }}
@@ -94,7 +94,7 @@ export const Adder = memo((
 
           <TinyButton
             title="Add Button"
-            className={`flex-shrink-0 ${addClassName}`}
+            className={`shrink-0 ${addClassName}`}
             onClick={(ev) => {
               onAddClick(ev, val);
               emptyInputValueAfterClick && setVal("");

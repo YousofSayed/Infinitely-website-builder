@@ -352,8 +352,8 @@ export const Interaction = ({
     >
       <header className="flex flex-col gap-2">
         {/* <section className="flex gap-2 justify-between ">
-          <FitTitle className="flex-shrink-0 w-full flex gap-2 items-center justify-between bg-surface-tertiary">
-            <div className="flex-shrink-0 ">Interaction ID </div>
+          <FitTitle className="shrink-0 w-full flex gap-2 items-center justify-between bg-surface-tertiary">
+            <div className="shrink-0 ">Interaction ID </div>
             <div className="text-text-primary custom-font-size font-bold flex items-center p-2 justify-end w-full bg-surface-tertiary rounded-lg max-w-[50%]">
               {interaction.id}
             </div>

@@ -77,7 +77,7 @@ export const LibraryInstaller = () => {
             <svg
               width={27.5}
               height={27.5}
-              className=" text-slate-500 flex-shrink-0"
+              className=" text-slate-500 shrink-0"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"

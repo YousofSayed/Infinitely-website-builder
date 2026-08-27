@@ -12,36 +12,30 @@ import { FitTitle } from "@/components/Editor/Protos/FitTitle";
 import { Menu } from "@/components/Editor/Protos/Menu";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import React, {
-  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
-  useTransition,
 } from "react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 
-/**
- *
- * @param {{label:string , keywords:string[],   onScrollEnd?: () => void, useLoader:boolean, zIndex : number , ignoreCurlyBrackets:boolean , allowCmdsContext:boolean, allowRestAPIModelsContext:boolean, setValue : (value:string)=>void , onValue:(value:string)=>void , isTextarea:false ,className:string , inputClassName:string ,containerClassName:string, placeholder:string, isCode:boolean , isTemplateEngine:boolean, codeProps:import('@monaco-editor/react').EditorProps, language:string,  replaceLastWorld:boolean, preventInput:boolean, icon:import('react').ReactNode, value:string , setValue:Function , isRelative : boolean, onKeywordsSeted : (keywords:string[] , setNewKeywords:(keywords:string[])=>{})=>void, onItemClicked:(keyword ,index : number)=>void , onAll : (value:string)=>void, onMenuOpen : ({menu , setKeywords , keywords } : {menu:HTMLElement , setKeywords : Function , keywords: string[]})=>void , onMenuClose:({menu , setKeywords , keywords } : {menu:HTMLElement , setKeywords : Function , keywords: string[]})=>void, onEnterPress: (keyword:string )=>void,  onInput:(value:string)=>void, wrap:boolean, setKeyword:(keyword:string )=>void , respectParenthesis : boolean,splitHyphen:boolean}} param0
- * @returns
- */
 export const Select = ({
   label,
   keywords = [],
   className = "",
   inputClassName = "",
   containerClassName = "",
-  zIndex = 1000,
-  setKeyword = (_, _2) => { },
-  onItemClicked = (_) => { },
-  onInput = (_) => { },
-  onEnterPress = (_, _2) => { },
-  onAll = (value) => { },
-  onMenuOpen = (_) => { },
-  onMenuClose = (_) => { },
-  onKeywordsSeted = (_) => { },
+  zIndex = 10,
+  setKeyword = (_, _2) => {},
+  onItemClicked = (_) => {},
+  onInput = (_) => {},
+  onEnterPress = (_, _2) => {},
+  onBlur = (_) => {},
+  onAll = (value) => {},
+  onMenuOpen = (_) => {},
+  onMenuClose = (_) => {},
+  onKeywordsSeted = (_) => {},
   placeholder = "",
   wrap = false,
   respectParenthesis = false,
@@ -57,22 +51,50 @@ export const Select = ({
   codeProps = {},
   value = "",
   replaceLastWorld = false,
-  setValue = (value = "") => { },
-  onValue = (value = "") => { },
+  setValue = (value = "") => {},
+  onValue = (value = "") => {},
   singlevalueInInput = true,
   useLoader = false,
   ignoreCurlyBrackets = false,
-  onScrollEnd = () => { },
+  onScrollEnd = () => {},
   splitHyphen = false,
+  isFetchingNext = false,
+  closeAfterPressEnter = true,
+  supportTokens = false,
 }) => {
-  // keywords = keywords.map((keyword) => new String(keyword).toString());
+  const getLabel = (item) => {
+    if (typeof item === "string") return item;
+    return item?.title || (typeof item?.value === "string" ? item.value : "");
+  };
+
+  const getValue = (item) => {
+    if (typeof item === "string") return item;
+    if (item?.value !== undefined) return item.value;
+    return item;
+  };
+
+  // Map the incoming value (ID) back to its display label (slug/title)
+  const displayValue = useMemo(() => {
+    if (value === "" || value === null || value === undefined) return "";
+
+    const matchedItem = keywords.find((k) => {
+      const kValue = getValue(k);
+      return kValue == value;
+    });
+
+    if (matchedItem) {
+      return getLabel(matchedItem);
+    }
+    return value;
+  }, [value, keywords]);
+
   const [showMenu, setMenu] = useState(false);
-  const [newKeywords, setNewKeywords] = useState(Array.from(keywords).filter(Boolean).map((keyword) => new String(keyword).toString()));
-  const [isPending, setTransition] = useTransition();
+  const [newKeywords, setNewKeywords] = useState(
+    Array.from(keywords).filter(Boolean),
+  );
   const [currentChoose, setCurrentChoose] = useState(0);
   const setPopoverData = useSetRecoilState(popoverState);
   const popoverData = useRecoilValue(popoverState);
-  // const [value, setValue] = useState(value);
   const inputRef = useRef();
   const selectRef = useRef();
   const containerRef = useRef();
@@ -82,17 +104,22 @@ export const Select = ({
   const btnRef = useRef();
   const popoverRef = useRecoilValue(popoverRefState);
   const [animatRef] = useAutoAnimate();
+  const [zIndexValue, setZIndexValue] = useState(zIndex);
+  const lastKeywordsRef = useRef([]);
 
   useLayoutEffect(() => {
     selectRef.current && animatRef(selectRef.current);
     containerRef.current && animatRef(containerRef.current);
+    if (selectRef.current && document.body.querySelector(`#main-modal`)) {
+      setZIndexValue(2000);
+    }
   }, [selectRef, containerRef]);
 
   useEffect(() => {
     if (
       respectParenthesis &&
-      inputRef.current.value.lastIndexOf(")") ==
-      inputRef.current.value.length - 1
+      inputRef.current?.value?.lastIndexOf(")") ==
+        inputRef.current.value.length - 1
     ) {
       respectParenthesisHandler();
     }
@@ -102,50 +129,53 @@ export const Select = ({
     onValue(value);
   }, [value]);
 
+  // ✅ FIX 1: The Infinite Scroll Bug
+  // We removed the filtering logic from here.
+  // When fetchNextPage adds new items, we just append them and update the highlighted index.
   useEffect(() => {
     onKeywordsSeted(keywords, setNewKeywords);
 
-    // Defensive check: only update if keywords content actually changed
-    // Comparing length first for performance, then content
-    if (keywords.length !== newKeywords.length || !keywords.every((kw, i) => kw === newKeywords[i])) {
-      console.log('keys for select updated: ', keywords);
-      setNewKeywords(keywords.filter(Boolean).map((keyword) => String(keyword)));
+    const hasChanged =
+      keywords.length !== lastKeywordsRef.current.length ||
+      !keywords.every(
+        (kw, i) => getLabel(kw) === getLabel(lastKeywordsRef.current[i]),
+      );
+
+    if (hasChanged) {
+      lastKeywordsRef.current = keywords;
+      filterKeywords(value, true);
+      // // Stop filtering the list when new API data arrives!
+      // setNewKeywords(keywords.filter(Boolean));
+
+      // // Just re-highlight the currently selected item in the new list
+      // const index = findIndex(keywords, value);
+      // setCurrentChoose(index === -1 ? 0 : index);
+      // choosenKeyword.current = index === -1 ? keywords[0] : keywords[index];
     }
-  }, [keywords]);
+  }, [keywords, value]);
 
   useEffect(() => {
     showMenu
       ? onMenuOpen({
-        menu: menuRef.current,
-        setKeywords: setNewKeywords,
-        keywords: newKeywords,
-      })
+          menu: menuRef.current,
+          setKeywords: setNewKeywords,
+          keywords: newKeywords,
+        })
       : onMenuClose({
-        menu: menuRef.current,
-        setKeywords: setNewKeywords,
-        keywords: newKeywords,
-      });
+          menu: menuRef.current,
+          setKeywords: setNewKeywords,
+          keywords: newKeywords,
+        });
     if (showMenu) {
-      console.log("ref : ", editorRef.current, inputRef?.current);
       if (!editorRef?.current || !inputRef?.current) return;
       isTextarea ? editorRef.current.focus() : inputRef.current.focus();
       const currentRefView = isTextarea ? editorRef.current : inputRef.current;
       currentRefView.setSelectionRange(
         currentRefView.value.length,
-        currentRefView.value.length
+        currentRefView.value.length,
       );
     }
   }, [showMenu]);
-
-  useEffect(() => {
-    const closeMenuCallback = () => {
-      setMenu(false);
-    };
-    document.addEventListener("click", closeMenuCallback);
-    return () => {
-      document.removeEventListener("click", closeMenuCallback);
-    };
-  }, []);
 
   useEffect(() => {
     setValue(value);
@@ -157,56 +187,79 @@ export const Select = ({
   }, [popoverRef]);
 
   const showMenuCallback = () => {
-    // isTextarea ? editorRef.current.focus() : inputRef.current.focus();
-    // setTransition(() => {
-    // });
-    setMenu(!showMenu);
+    setMenu((old) => !old);
   };
 
-  function findIndex(keywords = [], serachvalue) {
-    const index = keywords.findIndex(
-      (value, i) =>
-        (new String(value)).toLowerCase().trim() == (serachvalue.toLowerCase() || "").trim()
-    );
+  function findIndex(keywords = [], searchvalue) {
+    if (searchvalue === "" || searchvalue === null || searchvalue === undefined)
+      return -1;
 
+    const index = keywords.findIndex((item) => {
+      const label = getLabel(item).toString().toLowerCase().trim();
+      const val = getValue(item);
+      const searchStr = searchvalue.toString().toLowerCase().trim();
+
+      return label === searchStr || val == searchvalue;
+    });
     return index;
   }
 
-  /**
-   *
-   * @param {InputEvent} ev
-   */
   const filterKeywords = (
-    value,
+    searchValue = "",
     allowSetKeywords = true,
-    ignoreLastSpace = true
+    ignoreLastSpace = true,
   ) => {
-    const newKeyW = advancedSearchSuggestions(keywords, value, ignoreLastSpace);
+    // ✅ FIX 2: If search is empty, just show all keywords in their original API order
+    console.log("keywords after upadte", searchValue);
+    if (!searchValue || !searchValue?.trim?.()) {
+      allowSetKeywords && setNewKeywords(keywords.filter(Boolean));
+      const idx = findIndex(keywords, searchValue ?? value);
+      setCurrentChoose(idx === -1 ? 0 : idx);
+      choosenKeyword.current = idx === -1 ? keywords[0] : keywords[idx];
+      return;
+    }
 
-    console.log(newKeyW, "newwww", value);
+    const stringKeywords = keywords.map(getLabel);
+    const findedKeywords = stringKeywords.find(
+      (item) => item.toLowerCase() === searchValue.toLowerCase(),
+    );
+    const newKeyWStrings = findedKeywords
+      ? [findedKeywords]
+      : advancedSearchSuggestions(stringKeywords, searchValue, ignoreLastSpace);
 
-    if (!newKeyW.length) {
+    console.log(
+      "keywords after upadte",
+      stringKeywords,
+      findedKeywords,
+      newKeyWStrings,
+    );
+
+    if (!newKeyWStrings.length) {
       !isTextarea && setMenu(false);
       setNewKeywords([]);
       return;
     }
 
+    const newKeyW = newKeyWStrings
+      .map((str) => {
+        const lowerStr = str.toLowerCase().trim();
+        return keywords.find(
+          (k) => getLabel(k).toLowerCase().trim() === lowerStr,
+        );
+      })
+      .filter(Boolean);
+
     allowSetKeywords && setNewKeywords(newKeyW);
     !allowSetKeywords && setNewKeywords(keywords);
-    const index = findIndex(allowSetKeywords ? newKeyW : keywords, value);
+    const index = findIndex(allowSetKeywords ? newKeyW : keywords, searchValue);
 
     if (index == -1 && newKeyW.length) {
-      setCurrentChoose(index);
-      // choosenKeyword.current = newKeyW[0]; //no items founded
-      // setCurrentChoose(index);
-      choosenKeyword.current = value; //no items founded
+      setCurrentChoose(0);
+      choosenKeyword.current = searchValue;
     } else {
       setCurrentChoose(index);
-
       choosenKeyword.current = newKeyW[index];
     }
-    // console.log('elslslslssle : ' , index ,newKeyW  , value , newKeywords);
-    // setMenu(true);
   };
 
   const respectParenthesisHandler = () => {
@@ -214,210 +267,170 @@ export const Select = ({
     const openIndex = value.lastIndexOf("(");
     const closeIndex = value.lastIndexOf(")");
     if (openIndex !== -1 && closeIndex !== -1 && closeIndex > openIndex) {
-      // Place the cursor right after the last opening parenthesis
       const cursorPosition = openIndex + 1;
       inputRef.current.setSelectionRange(cursorPosition, cursorPosition);
     }
   };
 
-  /**
-   *
-   * @param {KeyboardEvent} ev
-   */
   const handleChooses = (ev) => {
     let cloneCurrentChooseNum = currentChoose;
 
-    console.log(ev.key);
-    //Arrow Down
     if (ev.key == "ArrowDown") {
-      // if (isTextarea && !ev.ctrlKey) return;
       isTextarea && newKeywords.length && ev.preventDefault();
       cloneCurrentChooseNum++;
 
       if (cloneCurrentChooseNum >= newKeywords.length) {
-        console.log("we got finall");
-
         setCurrentChoose(0);
         return;
       }
       setCurrentChoose(cloneCurrentChooseNum);
-      // setValue(choosenKeyword.current)
     }
-    //Ctrl & Sapce
     if ((ev.ctrlKey || ev.metaKey) && ev.key === " ") {
       ev.stopPropagation();
       selectRef.current.click();
-      // setNewKeywords(keywords);
-      // const index = keywords.findIndex(
-      //   (keyword) =>
-      //     keyword.toLowerCase() === ev.target.value.trim().toLowerCase()
-      //   //    ||
-      //   // keyword
-      //   //   .toLowerCase()
-      //   //   .includes(ev.target.value.trim().toLowerCase())
-      // );
-      // const choose = index <= -1 ? 0 : index;
-      // setCurrentChoose(choose);
-      // setKeyword(keywords[choose]);
-      // choosenKeyword.current = keywords[choose];
-      filterKeywords(ev.target.value.trim(), false);
-      setMenu(true);
-    }
-    //ArrowUp
-    else if (ev.key == "ArrowUp") {
-      // if (isTextarea && !ev.ctrlKey) return;
 
+      filterKeywords(ev.target.value.trim(), true);
+      setMenu(true);
+    } else if (ev.key == "ArrowUp") {
       isTextarea && newKeywords.length && ev.preventDefault();
       cloneCurrentChooseNum--;
       if (cloneCurrentChooseNum < 0) {
-        console.log("we fucken got it from arrow up : ", cloneCurrentChooseNum);
-
-        setCurrentChoose(new Number(newKeywords.length - 1));
+        setCurrentChoose(newKeywords.length - 1);
         return;
       }
       setCurrentChoose(cloneCurrentChooseNum);
-      // setValue(choosenKeyword.current)
-    }
-    //Enter
-    else if (ev.key == "Enter") {
+    } else if (ev.key == "Enter") {
       isTextarea && newKeywords.length && ev.preventDefault();
-      const finalvalue = splitHyphen
-        ? choosenKeyword.current.split("-")[0]
-        : choosenKeyword.current || value;
 
-      const textareavalue = isTextarea
-        ? replaceLastWord(value, finalvalue, ignoreCurlyBrackets)
-        : value;
+      const chosenItem = choosenKeyword.current;
+      const chosenLabel = chosenItem ? getLabel(chosenItem) : "";
+      const chosenValue = chosenItem ? getValue(chosenItem) : "";
 
-      setKeyword(textareavalue);
-      onAll(!replaceLastWorld ? finalvalue : textareavalue);
-      onEnterPress(!replaceLastWorld ? finalvalue : textareavalue);
-      setValue(textareavalue);
-      console.log("choosen keyword  : ", choosenKeyword.current, finalvalue);
-      console.log("finalvalue : ", textareavalue);
-      console.log("value : ", value);
+      const finalvalue = splitHyphen ? chosenLabel.split("-")[0] : chosenValue;
 
-      // !isTextarea && setMenu(false);
-      // inputRef.current.focus();
+      // const textareavalue = isTextarea
+      //   ? replaceLastWord(value, chosenLabel, ignoreCurlyBrackets)
+      //   : value;
+
+      console.log(`You selected `, chosenLabel, finalvalue);
+      setKeyword(finalvalue);
+      onAll(finalvalue);
+      onEnterPress(finalvalue);
+
+      setValue(finalvalue);
+
+      closeAfterPressEnter && setMenu(false);
+      setTimeout(() => inputRef.current?.focus(), 0);
     }
-
-    // showPopover(true);
   };
 
   return (
     <section
       ref={selectRef}
-      className={`w-full p-1  h-fit rounded-lg flex  ${wrap && "flex-wrap gap-3 py-1 pl-2"
-        }  gap-2  ${className ? className : "bg-surface-tertiary"} h-full flex ${label ? `p-1 flex-col` : `items-center p-1 `
-        }`}
+      className={`w-full p-1 relative  h-fit rounded-lg flex  ${
+        wrap && "flex-wrap gap-3 py-1 pl-2"
+      }  gap-2  ${className ? className : "bg-surface-tertiary"} h-full flex ${
+        label ? `p-1 flex-col` : `items-center p-1 `
+      }`}
     >
       {icon}
       {label ? (
-        <FitTitle className="capitalize flex items-center justify-center overflow-hidden text-ellipsis custom-font-size w-fit flex-shrink-0 ">
+        <FitTitle className="capitalize flex items-center justify-center overflow-hidden text-ellipsis custom-font-size w-fit shrink-0 ">
           {label.replaceAll(/(\s+)?\:/gi, "")}{" "}
         </FitTitle>
       ) : null}
       <div
+        data-ignore-popover
         ref={containerRef}
-        className={`h-full w-full ${isRelative ? "relative" : ""
-          }  flex items-center flex-nowrap justify-center    rounded-lg ${containerClassName ? containerClassName : "bg-surface-secondary"
-          }`}
+        className={` h-full w-full ${
+          isRelative ? "relative" : ""
+        }  flex items-center flex-nowrap justify-center    rounded-lg ${
+          containerClassName ? containerClassName : "bg-surface-secondary"
+        }`}
         onClick={(ev) => {
-          console.log("clcickckckc");
-          selectRef.current.click();
-          !preventInput && inputRef.current.click();
-          preventInput &&
-            setTimeout(() => {
-              setMenu(!showMenu);
-              setNewKeywords(keywords);
-              setCurrentChoose(findIndex(keywords, value));
-            }, 0);
-          // setShowPopover();
+          // selectRef.current.click();
+          // !preventInput && inputRef.current.click();
+          // preventInput &&
+          //   setTimeout(() => {
+          //     setMenu(!showMenu);
+          //     setNewKeywords(keywords);
+          //     setCurrentChoose(findIndex(keywords, value));
+          //   }, 0);
+
+          preventInput && inputRef.current.click() && inputRef.current.focus();
         }}
-        onDoubleClick={(ev) => {
-          preventInput && inputRef.current.focus();
-        }}
+        // onDoubleClick={(ev) => {
+        //   preventInput && inputRef.current.focus();
+        // }}
       >
         <input
-          value={value}
+          {...(supportTokens && { "data-support-tokens": supportTokens })}
+          data-ignore-popover
+          value={displayValue}
           ref={inputRef}
-          className={`w-full h-full  font-semibold   focus:border-blue-600  rounded-lg   px-2 py-2   outline-none text-white ${preventInput ? "pointer-events-none" : ""
-            } ${inputClassName ? inputClassName : "bg-surface-secondary"} `}
+          className={`w-full h-full  font-semibold   focus:border-blue-600  rounded-lg   px-2 py-2   outline-none text-white ${
+            preventInput ? "pointer-events-none" : ""
+          } ${inputClassName ? inputClassName : "bg-surface-secondary"} `}
           type="text"
           placeholder={placeholder || label}
           onClick={(ev) => {
-            ev.stopPropagation();
-            selectRef.current.click();
-            // setNewKeywords(keywords);
-            // console.log("clcickckckc", keywords);
-            // const index = keywords.findIndex(
-            //   (keyword) =>
-            //     keyword.toLowerCase() === ev.target.value.trim().toLowerCase()
-            // );
-            // const choose = index <= -1 ? 0 : index;
-            // setCurrentChoose(choose);
-            // setKeyword(keywords[choose]);
-            // choosenKeyword.current = keywords[choose];
-            // !isTextarea && !keywords.length
-            //   ? setMenu(false)
-            //   : setMenu(!showMenu);
-            filterKeywords(ev.target.value, false);
-            setMenu(!showMenu);
-            console.log("cslskslss");
+            // ev.stopPropagation();
+            // selectRef.current.click();
 
+            // ✅ FIX 3: If clicking to open, show ALL keywords instead of filtering by the selected value
+            if (ev.target.value === displayValue) {
+              setNewKeywords(keywords.filter(Boolean));
+              setCurrentChoose(findIndex(keywords, value));
+              // alert("equal value");
+            } else {
+              filterKeywords(ev.target.value, true);
+              // alert(`not equal value ${ev.target.value}`);
+            }
+
+            setMenu((old) => !old);
             isTextarea && editorRef?.current?.focus();
-
-            // showPopover({ element: selectRef, isTextarea });
-            // setShowPopover();
-            // isCode && showMenuCallback();
           }}
           onInput={(ev) => {
+            if (useLoader || isFetchingNext) return;
             setValue(ev.target.value);
             onInput(ev.target.value);
             onAll(ev.target.value);
-            filterKeywords(ev.target.value.trim());
-            // showPopover(true);
+            filterKeywords(ev.target.value.trim(), true);
           }}
+          onBlur={onBlur}
           onKeyDown={(ev) => {
             handleChooses(ev);
-
-            // showPopover(true);
           }}
-        // onFocus={(ev)=>{
-        //   if(!isCode)return
-        //   btnRef.current.click()
-        //   // ev.stopPropagation()
-        //   // setMenu(true)
-        // }}
         />
 
         <button
           title="Type Dynamic Content"
+          data-ignore-popover
           ref={btnRef}
+          className={`group absolute right-2 top-1/2 transform -translate-y-1/2   ${
+            showMenu ? "rotate-180" : "rotate-0"
+          } transition-all cursor-pointer flex-grow-0`}
           onClick={(ev) => {
-            ev.stopPropagation();
-            ev.preventDefault();
-            selectRef.current.click();
-            console.log("dsad:", keywords, choosenKeyword.current, value);
+            // ev.stopPropagation();
+            // ev.preventDefault();
+            // selectRef.current.click();
+
+            // ✅ FIX 4: Show ALL keywords when clicking the arrow button
+            setNewKeywords(keywords.filter(Boolean));
+
             const index = findIndex(keywords, value);
-            setCurrentChoose(index);
-            if (index <= -1) {
-              choosenKeyword.current = keywords[index];
-            } else {
-              choosenKeyword.current = "";
-            }
-            setNewKeywords(keywords);
-            // filterKeywords(value || "", true);
+            setCurrentChoose(index <= -1 ? 0 : index);
+            choosenKeyword.current =
+              index <= -1 ? keywords[0] : keywords[index];
+
             showMenuCallback();
-            // setShowPopover();
           }}
-          className={`group   ${showMenu ? "rotate-180" : "rotate-0"
-            } transition-all cursor-pointer flex-grow-0`}
         >
-          {!isTextarea && !isCode && Icons.arrow()}
-          {isCode && Icons.code({ width: 25, strokWidth: 3 })}
-          {isTextarea && Icons.edite({ width: 25 })}
-          {/* {isTextarea ? Icons.edite({ width: 25 }) : Icons.arrow()} */}
+          <div className="pointer-events-none">
+            {!isTextarea && !isCode && Icons.arrow()}
+            {isCode && Icons.code({ width: 25, strokWidth: 3 })}
+            {isTextarea && Icons.edite({ width: 25 })}
+          </div>
         </button>
 
         {showMenu && (
@@ -425,7 +438,7 @@ export const Select = ({
             targetRef={selectRef}
             isTextarea={isTextarea}
             isCode={isCode}
-            zIndex={zIndex}
+            zIndex={zIndexValue}
             width={
               isCode
                 ? 600
@@ -439,39 +452,35 @@ export const Select = ({
             isOpen={showMenu}
             setIsOpen={setMenu}
           >
-            {/* {console.log('new keywords222' , newKeywords , !Boolean(newKeywords.length) , useLoader)} */}
             {!isCode &&
               (useLoader ? (
-                <Loader />
+                <Loader width={30} height={30} />
               ) : (
                 <Menu
-                  // key={keywords.length}
                   onScrollEnd={onScrollEnd}
+                  isFetchingNext={isFetchingNext}
                   isDynamic={isTextarea}
-                  keywords={
-                    newKeywords
-                  }
+                  keywords={newKeywords}
                   menuRef={menuRef}
                   editorRef={editorRef}
                   isOpen={showMenu}
                   choosenKeyword={choosenKeyword}
                   currentChoose={currentChoose}
-                  innerStt={value}
+                  innerStt={displayValue}
                   dynamicInputClassName="bg-surface-tertiary"
                   placeholder="Type Dynamic Content"
                   onInputClick={(ev) => {
                     ev.stopPropagation();
                     selectRef.current.click();
                     setNewKeywords(keywords);
-                    console.log("clcickckckc", keywords);
                     const index = keywords.findIndex(
-                      (keyword) =>
-                        keyword.toLowerCase() ===
-                        ev.target.value.trim().toLowerCase()
+                      (k) =>
+                        getLabel(k).toLowerCase() ===
+                        ev.target.value.trim().toLowerCase(),
                     );
                     const choose = index <= -1 ? 0 : index;
                     setCurrentChoose(choose);
-                    setKeyword(keywords[choose]);
+                    setKeyword(getLabel(keywords[choose]));
                     choosenKeyword.current = keywords[choose];
                     setMenu(true);
                   }}
@@ -480,23 +489,13 @@ export const Select = ({
                     onInput(ev.target.value);
                     onAll(ev.target.value);
                     if (ev.target.value.endsWith(" ")) {
-                      // setNewKeywords(keywords);
                       if (ev.target.value.endsWith(" ")) {
                         console.log("ends with noo");
-
-                        // return''
                       }
                       filterKeywords("");
                       setCurrentChoose(0);
                     } else {
-                      console.log("else");
                       const values = ev.target.value.split(" ");
-                      console.log(
-                        "value : ",
-                        values,
-                        values[values.length - 1]
-                      );
-
                       filterKeywords(values[values.length - 1]);
                     }
                   }}
@@ -505,16 +504,22 @@ export const Select = ({
                   }}
                   onItemClicked={(ev, keyword, i) => {
                     ev.stopPropagation();
-                    const nkeyw = splitHyphen ? keyword.split("-")[0] : keyword;
+                    const kLabel = getLabel(keyword);
+                    const kValue = getValue(keyword);
+                    console.log("kValue", kValue);
+
+                    const nkeyw = splitHyphen ? kLabel.split("-")[0] : kValue;
                     const finalvalue = isTextarea
-                      ? replaceLastWord(value, nkeyw, ignoreCurlyBrackets)
+                      ? replaceLastWord(value, kLabel, ignoreCurlyBrackets)
                       : nkeyw;
-                    setValue(finalvalue);
+
+                    setValue(isTextarea ? finalvalue : kLabel);
                     onAll(finalvalue);
-                    onItemClicked(!replaceLastWorld ? nkeyw : finalvalue, i);
+                    onItemClicked(finalvalue, i);
                     setKeyword(finalvalue);
-                    isTextarea ? undefined : setMenu(false);
-                    inputRef.current.focus();
+
+                    setMenu(false);
+                    setTimeout(() => inputRef.current?.focus(), 0);
                   }}
                 />
               ))}
@@ -530,8 +535,6 @@ export const Select = ({
             )}
           </Popover>
         )}
-
-        {/* <section className="w-[300px] h-[300px] bg-surface-tertiary fixed left-0 top-0 z-[500]  "></section> */}
       </div>
     </section>
   );

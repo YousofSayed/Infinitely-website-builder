@@ -65,5 +65,8 @@ export const InfinitelyEvents = {
   },
   navigator:{
     navigate:'infinitely:navigator:navigate'
+  },
+  tokens:{
+    update:'infinitely:tokens:update'
   }
 };

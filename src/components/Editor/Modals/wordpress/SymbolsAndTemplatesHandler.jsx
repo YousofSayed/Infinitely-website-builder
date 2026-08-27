@@ -286,7 +286,7 @@ export const WpSymbolsAndTemplatesHandler = ({
               deleteAll();
             }}
             title="Delete All"
-            className="flex-shrink-0  h-full hover:bg-[crimson!important] bg-surface-tertiary"
+            className="shrink-0  h-full hover:bg-[crimson!important] bg-surface-tertiary"
           >
             {Icons.trash("white")}
           </SmallButton>
@@ -296,7 +296,7 @@ export const WpSymbolsAndTemplatesHandler = ({
               exportAll();
             }}
             title="Export All"
-            className="flex-shrink-0 h-full bg-surface-tertiary"
+            className="shrink-0 h-full bg-surface-tertiary"
           >
             {Icons.export("white")}
           </SmallButton>

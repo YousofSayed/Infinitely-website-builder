@@ -31,24 +31,7 @@ export const Input = ({
     setVal(value != undefined ? value : "");
   }, [value]);
 
-  // useEffect(() => {
-  //   if (!inpRef.current) return;
-  //   const callback = (e) => {
-  //     console.log("undo/redo prevented (before)", e);
-
-  //     if (e.inputType === "historyUndo" || e.inputType === "historyRedo") {
-  //       e.preventDefault();
-  //       console.log("undo/redo prevented");
-  //     }
-  //   };
-
-  //   inpRef.current.addEventListener("beforeinput", callback, { capture: true });
-  //   return () => {
-  //     inpRef.current?.removeEventListener?.("beforeinput", callback, {
-  //       capture: true,
-  //     });
-  //   };
-  // }, [inpRef]);
+  
 
   return (
     <input

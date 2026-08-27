@@ -7,6 +7,7 @@
   scroll-behavior: smooth;
   font-size: 14px;
   outline: none;
+ /* animation: go-to 0.35s ease-in-out forwards ; */
 }
 
 .gjs-cv-canvas,
@@ -319,6 +320,55 @@ body {
   .inf-blur::before,
   .inf-blur::after {
     animation: none;
+  }
+}
+
+.gjs-blocks-c:has([inf-symbol-id][current-symbol-loading]){
+  /* background-color: red !important;
+  color:aqua !important; */
+
+  position: relative;
+  pointer-events: none;
+}
+
+.gjs-blocks-c:has([inf-symbol-id][current-symbol-loading]) [inf-symbol-id] *{
+ opacity: 0 !important;
+ transition: .3s;
+}
+
+.gjs-blocks-c:has([inf-symbol-id][current-symbol-loading])::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  width: 30px;
+  height: 30px;
+
+  border: 2px solid #2563eb; /* border-blue-600 */
+  border-right-color: transparent;
+
+  border-radius: 9999px;
+
+  animation: spin-block 1s linear infinite;
+
+  z-index: 10;
+  pointer-events: none;
+  transition: .3s;
+  opacity: 1;
+  @starting-style{
+    opacity: 0;
+  }
+}
+
+@keyframes spin-block {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
   }
 }
 
@@ -655,6 +705,20 @@ details summary::before {
   right: 0;
   transition: transform 0.3s ease;
 } */
+@keyframes go-to{
+  from{
+    opacity: 0;
+  }
+  to{
+    opacity: 1;
+  }
+}
+
+.animate-go-to{
+  animation: go-to 0.17s ease-in-out forwards ;
+}
+
+
 
 details::marker {
   color: aliceblue;
@@ -716,7 +780,8 @@ details[open] summary {
 }
 
 .gjs-block-label {
-  @apply text-[13.5px] capitalize w-full;
+  font-size: clamp(10px, 13.5px, 1.5vw, 20px) !important;
+  @apply  capitalize w-full;
 }
 
 .gjs-badge {

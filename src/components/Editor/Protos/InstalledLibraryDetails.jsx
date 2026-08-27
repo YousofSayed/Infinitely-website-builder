@@ -1,4 +1,4 @@
-import { wp_delete_media_files_by_slugs, wp_update_option } from "@/apps/wordpress/functions";
+import { wp_delete_media_files_by_slugs, wp_update_option } from "@/Apps/wordpress/functions";
 import {
   open_file_editor_modal,
 } from "@/constants/InfinitelyCommands";

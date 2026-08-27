@@ -76,7 +76,7 @@ export const LibraryUploader = () => {
           }}
         />
         <Button
-          className="flex-shrink-0 px-3 py-2  h-full font-semibold "
+          className="shrink-0 px-3 py-2  h-full font-semibold "
           onClick={async (ev) => {
             if (!remoteLibraryDetail.latest || !remoteLibraryDetail.name) {
               toast.error(<ToastMsgInfo msg={`Fill All Fields`} />);
@@ -132,7 +132,7 @@ export const LibraryUploader = () => {
           Add
         </Button>
         <Button
-          className="flex-shrink-0  px-3 py-2  h-full font-semibold "
+          className="shrink-0  px-3 py-2  h-full font-semibold "
           onClick={(ev) => {
             inputFileRef.current.click();
           }}

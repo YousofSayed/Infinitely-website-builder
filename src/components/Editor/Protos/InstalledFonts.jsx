@@ -1,4 +1,4 @@
-import { wp_delete_media_files_by_slugs, wp_update_option } from "@/apps/wordpress/functions";
+import { wp_delete_media_files_by_slugs, wp_update_option } from "@/Apps/wordpress/functions";
 import { InfinitelyEvents } from "@/constants/infinitelyEvents";
 import { reloadRequiredInstance } from "@/constants/InfinitelyInstances";
 import { current_project_id } from "@/constants/shared";
@@ -191,11 +191,11 @@ export const InstalledFonts = () => {
   return (
     <section className="flex flex-col h-full gap-2 p-1">
       <header className="sticky top-0 flex justify-between gap-2 mb-2 bg-surface-secondary">
-        {/* <h1 className="text-text-primary font-bold px-[60px] py-2   border-b-2 border-b-slate-600 w-fit flex-shrink-0 ">
+        {/* <h1 className="text-text-primary font-bold px-[60px] py-2   border-b-2 border-b-slate-600 w-fit shrink-0 ">
           Fonts : {Object.keys(fonts || {}).length || undefined}
         </h1> */}
 
-        <FitTitle className="flex-shrink-0 flex items-center justify-center">
+        <FitTitle className="shrink-0 flex items-center justify-center">
           Fonts  {Object.keys(fonts || {}).length && `: ${Object.keys(fonts || {}).length}` || undefined}
         </FitTitle>
 
@@ -209,7 +209,7 @@ export const InstalledFonts = () => {
           />
         </section>
 
-        {/* <section className="w-fit bg-surface-tertiary rounded-lg px-[20px]  flex items-center gap-2 flex-shrink-0"> */}
+        {/* <section className="w-fit bg-surface-tertiary rounded-lg px-[20px]  flex items-center gap-2 shrink-0"> */}
         {/* <section className="px-2 border-r-2 border-r-slate-600">
             <input
               id="select-all"
@@ -224,7 +224,7 @@ export const InstalledFonts = () => {
           </label> */}
         {/* <h1>Select All</h1> */}
         {/* </section> */}
-        <Checkbox title="Select All" className="flex-shrink-0 flex-grow-0" onChange={selectAll} checked={filesWillBeUninstalled.length === Object.keys(fonts).length && Object.keys(fonts).length > 0} />
+        <Checkbox title="Select All" className="shrink-0 flex-grow-0" onChange={selectAll} checked={filesWillBeUninstalled.length === Object.keys(fonts).length && Object.keys(fonts).length > 0} />
       </header>
 
       <main className="overflow-auto flex flex-col gap-2 h-[90%] rounded-lg pr-1">

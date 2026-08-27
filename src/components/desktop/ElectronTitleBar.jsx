@@ -11,7 +11,7 @@ export default function  ElectronTitleBar() {
   const close = () => window.electron?.close();
 
   return (
-    <div className="flex h-[30px!important] w-full select-none bg-slate-900 text-white shrink-0 grow">
+    <div className="animate-go-to fixed left-0 top-0 flex h-[40px!important] border-b-[1px] border-b-slate-400 w-full select-none bg-slate-900 text-white shrink-0 z-[100000000]">
       {/* App / title area */}
       <div
         className="
@@ -33,7 +33,7 @@ export default function  ElectronTitleBar() {
       </div>
 
       {/* Window controls */}
-      {/* <div className="flex h-full [-webkit-app-region:no-drag]">
+      <div className="flex h-full [-webkit-app-region:no-drag]">
         <button
           type="button"
           onClick={minimize}
@@ -44,7 +44,7 @@ export default function  ElectronTitleBar() {
             hover:bg-white/10
           "
         >
-          <span className="text-xl">─</span>
+          <span className="text-base">─</span>
         </button>
 
         <button
@@ -73,7 +73,7 @@ export default function  ElectronTitleBar() {
         >
           <span className="text-xl leading-none">×</span>
         </button>
-      </div> */}
+      </div>
     </div>
   );
 }

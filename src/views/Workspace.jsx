@@ -40,7 +40,7 @@ export const Workspace = memo(() => {
   useWorkerToast();
   return (
     <main className=" h-full bg-surface-secondary flex flex-col gap-2 pb-2 overflow-hidden">
-      <ToastContainer
+      {/* <ToastContainer
         toastClassName={`bg-surface-secondary`}
         className={`z-[1000000000000]    `}
         autoClose={3000}
@@ -51,7 +51,7 @@ export const Workspace = memo(() => {
         position="bottom-right"
         // progressClassName={`bg-brand-primary`}
         // stacked={true}
-      />
+      /> */}
       <Header />
       <Projects />
       <CreateProjectModal />

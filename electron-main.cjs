@@ -1,10 +1,9 @@
 const { app, BrowserWindow, session, Menu } = require("electron");
 const path = require("path");
 const fs = require("fs");
+// const { logMemory, forceGC } = require("./desktop/utils/memory");
 
-require("./main-process.cjs");
-// import {app , BrowserWindow} from 'electron'
-// import path from 'path'
+require("./desktop/main-process.cjs");
 
 async function installOPFS_Ext() {
   if (app.isPackaged) return;
@@ -38,15 +37,15 @@ async function createWindow() {
     height: 900,
     show: true,
     backgroundColor: "#020617",
-
+    icon: path.join(__dirname, "public", "favicon.ico"),
     titleBarStyle: "hidden",
-    titleBarOverlay: {
-      color: "#0f172a", // matches your bg-slate-900
-      symbolColor: "#ffffff",
-      height: 40,
-    },
+    // titleBarOverlay: {
+    //   color: "#0f172a", // matches your bg-slate-900
+    //   symbolColor: "#ffffff",
+    //   height: 39,
+    // },
     webPreferences: {
-      preload: path.join(__dirname, "preload.cjs"),
+      preload: path.join(__dirname, "desktop/preload.cjs"),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
@@ -81,14 +80,27 @@ async function createWindow() {
     });
   }
 
-  await win.loadFile(path.join(__dirname, "splash.html"));
+  // logMemory("Before");
+
+  // setTimeout(() => {
+  //   logMemory("Before GC");
+
+  //   forceGC();
+
+  //   setTimeout(() => {
+  //     logMemory("After GC");
+  //   }, 500);
+  // }, 2000);
+
+  await win.loadFile(path.join(__dirname, "desktop/splash.html"));
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   if (!app.isPackaged) {
-    await win.loadURL("https://localhost:5173");
+    await win.loadURL("https://localhost:5173/add-blocks");
   } else {
-    await win.loadFile(path.join(__dirname, "dist", "index.html"));
+    // await win.loadFile(path.join(__dirname, "dist", "index.html"));
+    await win.loadURL("https://infinitely.pages.dev/add-blocks");
   }
 }
 

@@ -1,4 +1,7 @@
-import { current_project_id } from "@/constants/shared";
+import {
+  current_project_id,
+  inf_symbol_Id_attribute,
+} from "@/constants/shared";
 import {
   _blocksCachedState,
   _symbolsCachedState,
@@ -18,8 +21,11 @@ import {
   doInNormal,
   doInNormalAsync,
   doInWordpressAsync,
+  getComponentRules,
   getProjectData,
+  gjsComponentsToJSON,
   handleCustomBlock,
+  isWordpress,
   wpWorkerCallbackMaker,
 } from "@/helpers/functions";
 import { infinitelyWorker } from "@/helpers/infinitelyWorker";
@@ -65,6 +71,7 @@ export const Blocks = () => {
   const qc = useQueryClient();
   const [isSymbolsNeedReload, setIsSymbolsNeedReload] = useState(false);
   const [animatedRefForHeader] = useAutoAnimate();
+  const [currentSymbolLoading, setCurrentSymbolLoading] = useState("");
 
   const {
     data: wpSymbols,
@@ -79,9 +86,11 @@ export const Blocks = () => {
   } = usePosts("inf_blocks");
 
   // 1. MOVED UP: Define callback early so it can be used synchronously in useRef/useEffect
+
   const callback = useCallback(async () => {
     console.log("editor from callback : ", editor);
     let blocks = [];
+
     await doInNormalAsync(async () => {
       blocks = await Promise.all(
         Object.values(await (await getProjectData()).blocks).map(
@@ -148,6 +157,12 @@ export const Blocks = () => {
           blockData.type = "symbol";
           blockData.category = blockData.category || "symbols";
           blockData.media = blockData.media || "";
+          blockData.attributes = {
+            [inf_symbol_Id_attribute]: symbolId,
+            ...(currentSymbolLoading === symbolId
+              ? { "current-symbol-loading": currentSymbolLoading }
+              : {}),
+          };
           files.push(
             {
               path: defineRoot(`temp/symbols/${symbolId}/html.json`),
@@ -290,7 +305,9 @@ export const Blocks = () => {
       isWpTemplatesLoading ||
       isWpTemplatesFetching
     ) {
-      editor.trigger(InfinitelyEvents.blocks.remove_wp_symbols);
+      editor.trigger(InfinitelyEvents.blocks.remove_wp_symbols, {
+        symbolId: null,
+      });
     } else {
       editor.trigger(InfinitelyEvents.blocks.restore_wp_symbols);
     }
@@ -307,13 +324,20 @@ export const Blocks = () => {
   // 5. FIX: Use callbackRef and REMOVE data dependencies to prevent effect race conditions
   useWordpress(() => {
     if (!editor) return;
-    const hideSymbolsNow = () => {
-      setBlocks((old) => {
-        const clone = cloneDeep(old);
-        delete clone.symbols;
-        return clone;
-      });
-      setLoading(true); 
+    const hideSymbolsNow = ({ symbolId }) => {
+      // setBlocks((old) => {
+      //   const clone = cloneDeep(old);
+      //   delete clone.symbols;
+      //   return clone;
+      // });
+      // alert(`symbol id : ${symbolId}`)
+      // document
+      //   .querySelector(
+      //     `.gjs-blocks-c [${inf_symbol_Id_attribute}="${symbolId}"]`,
+      //   )
+      //   ?.classList?.add?.("symbol-loading");
+      setCurrentSymbolLoading(symbolId);
+      setLoading(true);
     };
 
     const restoreSymbolsNow = async () => {
@@ -321,6 +345,7 @@ export const Blocks = () => {
       await callbackRef.current();
       setLoading(false);
       setIsSymbolsNeedReload(false);
+      setCurrentSymbolLoading("");
     };
 
     const symbolReloadHandler = ({ state }) => {
@@ -340,6 +365,63 @@ export const Blocks = () => {
       );
     };
   }, [editor]); // Only depends on editor now, eliminating the race condition
+
+  useWordpress(() => {
+    if (!editor) return;
+    const update = () => {
+      const symbols = Object.fromEntries(
+        editor
+          .getWrapper()
+          .find(`[${inf_symbol_Id_attribute}]`)
+          .map((cmp) => [
+            cmp.getAttributes()[inf_symbol_Id_attribute],
+            {
+              html: gjsComponentsToJSON(cmp, true),
+              css: getComponentRules({
+                editor,
+                cmp,
+                nested: true,
+              }).stringRules,
+            },
+          ]),
+      );
+
+      qc.setQueryData(["inf_symbols"], (oldData) => {
+        if (!oldData || !oldData.data) return oldData;
+        return {
+          ...oldData,
+          data: oldData.data.map((sym) => {
+            const symId = sym?.meta?.[inf_symbol_Id_attribute] || sym.id;
+            if (symbols[symId]) {
+              return {
+                ...sym,
+                meta: {
+                  ...(sym.meta || {}),
+                  inf_meta: {
+                    ...(sym.meta?.inf_meta || {}),
+                    before_save: {
+                      ...(sym.meta?.inf_meta?.before_save || {}),
+                      ...symbols[symId],
+                    },
+                  },
+                },
+              };
+            }
+            return sym;
+          }),
+        };
+      });
+
+      callback();
+    };
+    update();
+
+    // editor.on(InfinitelyEvents.blocks.remove_wp_symbols, update);
+
+    // return () => {
+    //   editor.off(InfinitelyEvents.blocks.remove_wp_symbols, update);
+    // };
+  }, [editor, isWpSymbolsFetching, isWpSymbolsLoading, loading]);
 
   const reloadSymbols = async () => {
     const tid = toast.loading(<ToastMsgInfo msg={`Reloading blocks...`} />);
@@ -363,38 +445,52 @@ export const Blocks = () => {
   };
 
   const search = (value = "") => {
+    // console.log('allBlocksAsObject.current : value' ,value ,allBlocksAsObject.current , Object.values(allBlocksAsObject.current));
+    const allBlocksForSearch = Object.values(allBlocksAsObject.current).reduce(
+      (acc, curr) => [...acc, ...curr],
+      [],
+    );
+
     const newBlocks = advancedSearchSuggestions(
-      allBlocksAsObject.current,
-      value,
+      (allBlocksForSearch),
+      value.trim(),
       false,
       ["category", "name", "id", "label"],
     );
-    setBlocks(newBlocks);
+
+    const allBlocksAsObjectAfterSearch = newBlocks.reduce((acc, curr) => {
+      if (!acc[curr.category]) acc[curr.category] = [];
+      acc[curr.category].push(curr);
+      return acc;
+    }, {});
+    // const newBlocks = allBlocksAsObject.current.filter((block) => block.id.toLowerCase().includes(value.toLowerCase()));
+    console.log(
+      "allBlocksAsObject.current : newBlocks",
+      allBlocksAsObjectAfterSearch,
+    );
+
+    setBlocks(allBlocksAsObjectAfterSearch);
   };
 
   return (
     <section ref={animatedRef} className="flex flex-col gap-2 h-full w-full ">
       <header className="w-full relative" ref={animatedRefForHeader}>
-        <SearchHeader search={search} />
-        <Wordpress>
-          <i
-            role="button"
-            style={{
-              opacity: isSymbolsNeedReload ? "1" : ".6",
-              pointerEvents: isSymbolsNeedReload ? "auto" : "none",
-            }}
-            className="absolute right-5 top-1/2 -translate-y-1/2 [&_path]:stroke-[2.5px] [&_svg]:w-5 [&_svg]:h-5 cursor-pointer"
-            onClick={async (e) => {
-              addClickClass(e.currentTarget, "click");
-              await reloadSymbols();
-            }}
-          >
-            <Icons.refresh />
-            {isSymbolsNeedReload && (
-              <span className="block absolute -right-1 -top-1  w-3 h-3 bg-[crimson] rounded-full"></span>
-            )}
-          </i>
-        </Wordpress>
+        <SearchHeader
+          search={search}
+          allowTimeout={false}
+          showReloadIcon={isWordpress()}
+          showReloadIconNotify={true}
+          isReload={
+            loading ||
+            isWpSymbolsLoading ||
+            isWpSymbolsFetching ||
+            isWpTemplatesFetching ||
+            isWpTemplatesLoading
+          }
+          isNeedReload={isSymbolsNeedReload}
+          onReload={reloadSymbols}
+        />
+       
       </header>
 
       <Accordion>
@@ -411,7 +507,7 @@ export const Blocks = () => {
         </ShowIf>
       </Accordion>
 
-      <ShowIf
+      {/* <ShowIf
         condition={
           loading ||
           isWpSymbolsLoading ||
@@ -423,7 +519,7 @@ export const Blocks = () => {
         <section className="mt-3">
           <Loader width={30} height={30} />
         </section>
-      </ShowIf>
+      </ShowIf> */}
     </section>
   );
 };

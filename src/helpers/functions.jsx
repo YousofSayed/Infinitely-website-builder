@@ -29,6 +29,7 @@ import {
   wp_edite_mode,
   wp_page_config,
   wp_rest_base_edite,
+  wp_token_vars,
 } from "@/constants/shared";
 import { loadElements } from "@/plugins/IDB";
 import { createReusableCmpTool } from "@/plugins/tools/createReusableCmpTool";
@@ -86,6 +87,7 @@ import {
 import serializeJavascript from "serialize-javascript";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
+import { queryClient } from "@/utils/queryClient";
 
 export {
   replaceBlobs,
@@ -1649,28 +1651,57 @@ export function initSymbol(id, editor) {
         //   },
         // );
         if (!getProjectSettings().projectSettings.enable_auto_save) {
-          wpWorkerCallbackMaker(
-            pageBuilderWorker,
-            "wp_update_symbol",
-            {
-              projectId: getProjectId(),
-              symbol_id: id,
-              symbol_meta: {
-                inf_meta: {
-                  before_save: {
-                    html: JSON.parse(newContent),
-                  },
-                },
-              },
-            },
-            (props) => {
-              if (props.done) {
-                editor.trigger(InfinitelyEvents.blocks.symbols_need_reload, {
-                  state: true,
-                });
-              }
-            },
-          );
+          queryClient.setQueryData(["inf_symbols"], (oldData) => {
+            if (!oldData || !oldData.data) return oldData;
+            return {
+              ...oldData,
+              data: oldData.data.map((sym) => {
+                const symId = sym?.meta?.[inf_symbol_Id_attribute] || sym.id;
+                if (symId == id) {
+                  return {
+                    ...sym,
+                    meta: {
+                      ...(sym.meta || {}),
+                      inf_meta: {
+                        ...(sym.meta?.inf_meta || {}),
+                        before_save: {
+                          ...(sym.meta?.inf_meta?.before_save || {}),
+                          html: gjsComponentsToJSON(
+                            selectedSymbol.symbol,
+                            true,
+                          ),
+                        },
+                      },
+                    },
+                  };
+                }
+                return sym;
+              }),
+            };
+          });
+          editor.trigger(InfinitelyEvents.blocks.restore_wp_symbols);
+          // wpWorkerCallbackMaker(
+          //   pageBuilderWorker,
+          //   "wp_update_symbol",
+          //   {
+          //     projectId: getProjectId(),
+          //     symbol_id: id,
+          //     symbol_meta: {
+          //       inf_meta: {
+          //         before_save: {
+          //           html: JSON.parse(newContent),
+          //         },
+          //       },
+          //     },
+          //   },
+          //   (props) => {
+          //     if (props.done) {
+          //       editor.trigger(InfinitelyEvents.blocks.symbols_need_reload, {
+          //         state: true,
+          //       });
+          //     }
+          //   },
+          // );
         }
         // editor.trigger(InfinitelyEvents.blocks.symbols_need_reload, {
         //   state: true,
@@ -2812,7 +2843,7 @@ export function getParentNode(condition = (el) => true, el = null) {
 }
 
 export function exportProject() {
-  const projectId = +localStorage.getItem(current_project_id);
+  const projectId = getProjectId();
 
   infinitelyWorker.postMessage({
     command: "exportProject",
@@ -3296,7 +3327,7 @@ export function workerCallbackMakerWithProps(
     });
 
     if (identifier === commandCallback && data._send_worker_id === uuid) {
-      console.log("matched, props:", props);
+      console.log("matched, props:", commandCallback, props);
       // clearTimeout(timeoutId);
       try {
         await resCallback(props);
@@ -3345,7 +3376,7 @@ export function wpWorkerCallbackMaker(
     });
 
     if (identifier === commandCallback && data._send_worker_id === uuid) {
-      console.log("matched, props:", props);
+      console.log("matched, props:", commandCallback, props);
       // clearTimeout(timeoutId);
       try {
         await resCallback(props);
@@ -3635,6 +3666,7 @@ export async function reloadEditor(editor) {
       editor.Storage.setAutosave(projectSettings.enable_auto_save);
       console.log("reloadin end here");
 
+      editor.infLoading = false;
       editorStorageInstance.emit(InfinitelyEvents.storage.loadEnd);
       // editor.emit(InfinitelyEvents.storage.loadEnd);
     },
@@ -3691,8 +3723,8 @@ export function arrangeDevicesPeriority(editor) {
   const deviceManager = editor.Devices;
   const devices = deviceManager.getAll().toArray();
   devices.sort((a, b) => {
-    const wa = parseFloat(a.getWidthMedia()) || Infinity; // Desktop last
-    const wb = parseFloat(b.getWidthMedia()) || Infinity;
+    const wa = parseFloat(a.getWidthMedia?.()) || Infinity; // Desktop last
+    const wb = parseFloat(b.getWidthMedia?.()) || Infinity;
     return wa - wb;
   });
   const newDevices = cloneDeep(
@@ -3866,7 +3898,13 @@ export function gjsComponentsToJSON(wrapper, keepWrapper = false) {
 }
 
 export function reloadInfinitely() {
-  location.replace(location.href);
+  if (window.electron?.isDesktop) {
+    // Call the function exposed by your preload script
+    window.electron.reloadApp();
+  } else {
+    // Fallback for web browser
+    window.location.reload();
+  }
 }
 
 export const emitChange = () => {
@@ -3912,4 +3950,50 @@ export function triggerSymbolEvent(editor, cmp) {
 
 export function getProjectId() {
   return +localStorage.getItem(current_project_id) || null;
+}
+
+export function setWpPostConfig({ rest_base, type, post_id, post }) {
+  localStorage.setItem(wp_rest_base_edite, rest_base);
+  localStorage.setItem(wp_edite_mode, type);
+  localStorage.setItem(current_page_id, post.slug);
+  localStorage.setItem(wp_page_config, JSON.stringify(post));
+}
+
+/**
+ *
+ * @param {import("@/helpers/types").WpTokenVars} params
+ * @param {boolean} setMode
+ */
+export function setTokensQueryVars(params, setMode = false) {
+  const old = localStorage.getItem(wp_token_vars) || "[]";
+  const vars = JSON.parse(old);
+  if (setMode) {
+    localStorage.setItem(wp_token_vars, JSON.stringify(params));
+  } else {
+    localStorage.setItem(wp_token_vars, JSON.stringify([...vars, ...params]));
+  }
+  
+}
+
+/**
+ *
+ * @returns {import("@/helpers/types").WpTokenVars}
+ */
+export function getTokensQueryVars() {
+  return JSON.parse(localStorage.getItem(wp_token_vars) || "[]");
+}
+
+export function getTokensQueryVar(key, value) {
+  const vars = getTokensQueryVars();
+  return vars.find((v) => v?.[key] === value);
+}
+
+export function removeTokensQueryVar(key, value) {
+  const vars = getTokensQueryVars();
+  const newVars = vars.filter((v) => v?.[key] !== value);
+  localStorage.setItem(wp_token_vars, JSON.stringify(newVars));
+}
+
+export function clearTokensQueryVars() {
+  localStorage.removeItem(wp_token_vars);
 }

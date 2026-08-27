@@ -32,7 +32,7 @@ export const DetailsNormal = memo(
     mode = "independent",
     notify,
     notifyBg = "bg-brand-primary",
-    onSwitch = (state)=>{},
+    onSwitch = (state) => {},
     id,
   }) => {
     const { openId, setOpenId } = useContext(AccordionContext) || {};
@@ -57,7 +57,7 @@ export const DetailsNormal = memo(
 
     useEffect(() => {
       parentRef.current && autoAnimate(parentRef.current);
-      childRef.current && autoAnimate(childRef.current);
+      // childRef.current && autoAnimate(childRef.current);
     }, [parentRef, childRef]);
 
     useEffect(() => {
@@ -82,23 +82,25 @@ export const DetailsNormal = memo(
       }, 200);
     }, [isOpen, parentRef, childRef]);
 
-    useEffect(()=>{
+    useEffect(() => {
       onSwitch(isOpen);
-      if(isOpen && parentRef.current){
-        console.log('isOpen : ' , isOpen);
-        
-        parentRef.current.scrollIntoView({behavior:'smooth' , block:'start' , inline:'start'})
+      if (isOpen && parentRef.current) {
+        console.log("isOpen : ", isOpen);
+
+        parentRef.current.scrollIntoView({
+          behavior: "smooth",
+          // block: "start",
+          // inline: "start",
+        });
       }
-    },[isOpen])
-
-
+    }, [isOpen]);
 
     return (
       <section
         ref={parentRef}
         style={{
           transition: ".1s",
-          willChange:'transform , opacity , height'
+          willChange: "transform , opacity , height",
           // overflow: "hidden",
           // overflow : !isOpen ? 'hidden' : ''
         }}
@@ -134,13 +136,22 @@ export const DetailsNormal = memo(
             </span>
           </div>
         </div>
-        <div
+        {isOpen ? (
+          <div
+            // style={{ transition: "5s", transitionDelay: "0", opacity: 0 }}
+            ref={childRef}
+            className="animate-to-go"
+          >
+            {children}
+          </div>
+        ) : null}
+        {/* <div
           // style={{ transition: "5s", transitionDelay: "0", opacity: 0 }}
           ref={childRef}
         >
           {isOpen ? children : null}
-        </div>
-        
+        </div> */}
+
         {allowPopupLength && !!length && (
           <p className="w-[20px] h-[20px] bg-blue-500  text-white flex justify-center items-center font-semibold rounded-full absolute right-[-3px] top-[-7px]">
             {length}
@@ -160,5 +171,5 @@ export const DetailsNormal = memo(
       //   {isOpen ? children : null}
       // </details>
     );
-  }
+  },
 );

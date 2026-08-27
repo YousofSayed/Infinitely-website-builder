@@ -93,7 +93,7 @@ export const Header = () => {
   return (
     <header className="w-full   flex  text-text-primary font-semibold">
       <section className="container m-auto p-2 flex items-center justify-between gap-2 bg-surface-main  rounded-lg">
-        <figure className="flex items-center gap-2 pr-2 border-r-2 border-r-slate-600">
+        <figure className="flex items-center gap-2 pr-2 ">
           {Icons.logo({})}
           <figcaption className="font-bold">Workspace</figcaption>
         </figure>

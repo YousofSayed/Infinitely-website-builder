@@ -28,7 +28,7 @@ import {
   open_symbols_and_templates_manager_modal,
 } from "@/constants/InfinitelyCommands";
 import { closeCustomModal, openCustomModal } from "@/helpers/customEvents";
-import { isWordpress } from "@/helpers/functions";
+import { isNormal, isWordpress } from "@/helpers/functions";
 import React from "react";
 
 export const ModalTitle = ({ icon, title }) => {
@@ -75,7 +75,7 @@ export function customModal(editor) {
 
   editor.Commands.add(open_pages_manager_modal, (editor, sender, options) => {
     editor.runCommand("open:custom:modal", {
-      title: <ModalTitle icon={Icons.stNote('white')} title={"Pages Manager"} />,
+      title: <ModalTitle icon={Icons.stNote('white')} title={`${isNormal() ? 'Pages' : 'Posts'} Manager`} />,
       JSXModal: <PagesManager />,
       height: "90%",
     });
@@ -166,7 +166,7 @@ export function customModal(editor) {
 
   editor.Commands.add(open_page_helmet_modal, (editor, sender, options) => {
     editor.runCommand("open:custom:modal", {
-      title: <ModalTitle icon={Icons.helmet({ fill: 'white' })} title={"Page Helmet"} />,
+      title: <ModalTitle icon={Icons.helmet({ fill: 'white' })} title={`${isNormal() ? 'Page' : 'Post'} Helmet`} />,
       JSXModal: <PageHelmetModal />,
       width: "55%",
       height: "90%",
@@ -178,12 +178,12 @@ export function customModal(editor) {
       title: (
         <ModalTitle
           icon={Icons.code({ strokeWidth: 3, strokeColor: 'white' })}
-          title={"Page Code Manager"}
+          title={"Code Manager"}
         />
       ),
       JSXModal: isWordpress() ? <WpCodeManagerModal /> : <CodeManagerModal />,
       width: "90%",
-      height: "93%",
+      height: "80%",
     });
   });
 

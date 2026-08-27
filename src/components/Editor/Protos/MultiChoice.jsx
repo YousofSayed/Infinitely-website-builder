@@ -107,7 +107,7 @@ export const MultiChoice = ({
              'rotate-[90deg]' :  dir&& cssProp =='justify-content' ? 'rotate-[0]'  : ''
             }
             
-            transition-all cursor-pointer flex flex-shrink-0 justify-center items-center w-[37.5px] h-[37.5px] rounded-lg ${
+            transition-all cursor-pointer flex shrink-0 justify-center items-center w-[37.5px] h-[37.5px] rounded-lg ${
               i == currentChoice
                 ? " bg-brand-primary shadow-md shadow-slate-900 "
                 : ""

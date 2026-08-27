@@ -47,10 +47,10 @@ export const Projects = () => {
   return (
     // <section className="relative w-full h-full flex flex-col">
     <section
-      ref={animtedRef}
+      // ref={animtedRef}
       className={`${dbProjects?.length ? "" : "p-2"
-        } container m-auto gap-3 overflow-hidden h-full bg-surface-main w-full rounded-lg ${!dbProjects?.length && "flex items-center justify-center"
-        }`}
+        }  container m-auto gap-3 overflow-hidden h-full bg-surface-main w-full rounded-lg ${!dbProjects?.length && "flex items-center justify-center"
+        } animate-go-to`}
     >
       {dbProjects?.length && (
         // <VirtuosoGrid

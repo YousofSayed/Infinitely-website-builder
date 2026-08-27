@@ -227,7 +227,8 @@ export let projectSettingsType = {
   optimize_outlines:false,
   // purge_css: false,
   include_symbols_in_export: true,
-  include_templates_in_export: true,
+  include_blocks_templates_in_export: true,
+  include_wp_assets_in_export : true,
 };
 
 /**
@@ -241,7 +242,7 @@ export let dropBoxFilesMeta = [];
 export let componentType;
 
 /**
- * @type {import('@/helpers/types').PageHelmet}
+ * @type {import('@/helpers/types').PageHelmet | import("@/helpers/types").WpHelemet}
  */
 export let pageHelmetType = {};
 

@@ -17,7 +17,9 @@ import {
   getProjectData,
   getProjectId,
   getProjectSettings,
+  isNormal,
   isProjectSettingPropTrue,
+  isWordpress,
   preventSelectNavigation,
   replaceBlobs,
   workerCallbackMaker,
@@ -68,7 +70,7 @@ export const SymbolsAndTemplatesHandler = ({
   const projectId = getProjectId();
   const editor = useEditorMaybe();
   const dataRef = useRef(blocksArrayType);
-  const [animatRef] = useAutoAnimate();
+  const [animatRef] = useAutoAnimate(); 
   const [loading, setLoading] = useState(true);
   const wp_type =
     type === "symbol" ? "inf_symbols" : type === "template" ? "inf_blocks" : "";
@@ -92,6 +94,24 @@ export const SymbolsAndTemplatesHandler = ({
 
   const { mutateAsync: unlinkSymbols, isPending: isUnlinking } =
     useUnlinkSymbolsMutation(wp_type);
+
+  const getSymbolIdHandler = (symbol) => {
+    if (isNormal()) {
+      return {
+        symbol_id: symbol.id,
+        id: symbol.id,
+        name: symbol.name,
+      };
+    }
+
+    if (isWordpress()) {
+      return {
+        symbol_id: symbol.meta[inf_symbol_Id_attribute],
+        id: symbol.id,
+        name: symbol.slug,
+      };
+    }
+  };
 
   useEffect(() => {
     doInWordpressAsync(async () => {
@@ -145,23 +165,6 @@ export const SymbolsAndTemplatesHandler = ({
     preventSelectNavigation(editor, editor.getSelected());
   };
 
-  /**
-   *
-   * @param {string[]} symbols
-   */
-  const unlinkSymbol = (ids) => {
-    for (const id of ids) {
-      const symbols = editor
-        .getWrapper()
-        .find(`[${inf_symbol_Id_attribute}="${id}"]`);
-      symbols.forEach((symbol) => {
-        symbol.removeAttributes([inf_symbol_Id_attribute], {
-          avoidStore: true,
-        });
-      });
-    }
-  };
-
   const deleteSymbolsInWorker = async (ids) => {
     !noFilter && editor.trigger("block:add");
     !noFilter && editor.trigger("block:update");
@@ -205,13 +208,13 @@ export const SymbolsAndTemplatesHandler = ({
     toast.success(<ToastMsgInfo msg={`${name} Symbol removed successfully`} />);
   };
 
-  const deleteSymbol = async (id = "", name = "") => {
+  const deleteSymbol = async (id = "", name = "", wp_post_id) => {
     const cnfrm = confirm(
       `Are you sure that you want to delete this symbol (All symbols in all pages will be unlinked) ? 🤔`,
     );
     if (!cnfrm) return;
 
-    const projectData = await await getProjectData();
+    const projectData = await getProjectData();
     const tid = toast.loading(
       <ToastMsgInfo msg={`Deleting ${name} Symbol...`} />,
     );
@@ -244,7 +247,7 @@ export const SymbolsAndTemplatesHandler = ({
     await doInWordpressAsync(async () => {
       await deletePosts({
         projectId,
-        ids: [id],
+        ids: [wp_post_id],
       });
 
       await unlinkSymbols({
@@ -266,8 +269,16 @@ export const SymbolsAndTemplatesHandler = ({
       `Are you sure that you want to delete those symbols (every symbol in all pages will be unlinked) ? 🤔`,
     );
     if (!cnfrm) return;
-    const ids = symbols.map((symbol) => symbol.id);
+    const ids = symbols
+      .map((symbol) => getSymbolIdHandler(symbol).symbol_id)
+      .filter(Boolean);
+
     const tid = toast.loading(<ToastMsgInfo msg={`Deleting ${type}s...`} />);
+    const successToast = () => {
+      toast.done(tid);
+      toast.success(<ToastMsgInfo msg={`${type}s removed successfully💙`} />);
+    };
+    
     await doInNormalAsync(async () => {
       const projectData = await await getProjectData();
       const blocks = structuredClone(projectData.blocks);
@@ -291,12 +302,15 @@ export const SymbolsAndTemplatesHandler = ({
       }
 
       deleteSymbolsInWorker(ids);
+      successToast();
     });
 
     await doInWordpressAsync(async () => {
       await deletePosts({
         projectId,
-        ids,
+        ids: symbols
+          .map((symbol) => getSymbolIdHandler(symbol).id)
+          .filter(Boolean),
       });
       if (type == "symbol") {
         await unlinkSymbols({
@@ -306,9 +320,8 @@ export const SymbolsAndTemplatesHandler = ({
 
         refreshCurrentPage(ids);
       }
+      successToast();
     });
-    toast.done(tid);
-    toast.success(<ToastMsgInfo msg={`${type}s removed successfully💙`} />);
   };
 
   /**
@@ -407,7 +420,7 @@ export const SymbolsAndTemplatesHandler = ({
               deleteAll();
             }}
             title="Delete All"
-            className="flex-shrink-0  h-full hover:bg-[crimson!important] bg-surface-tertiary"
+            className="shrink-0  h-full hover:bg-[crimson!important] bg-surface-tertiary"
           >
             {Icons.trash("white")}
           </SmallButton>
@@ -417,7 +430,7 @@ export const SymbolsAndTemplatesHandler = ({
               exportAll();
             }}
             title="Export All"
-            className="flex-shrink-0 h-full bg-surface-tertiary"
+            className="shrink-0 h-full bg-surface-tertiary"
           >
             {Icons.export("white")}
           </SmallButton>
@@ -461,7 +474,11 @@ export const SymbolsAndTemplatesHandler = ({
                       tooltipClassName="bg-[crimson!important]"
                       className="p-1 bg-surface-secondary hover:bg-[crimson!important] transition-all"
                       onClick={() => {
-                        deleteSymbol(symbol.id, symbol.name);
+                        deleteSymbol(
+                          getSymbolIdHandler(symbol).symbol_id,
+                          getSymbolIdHandler(symbol).name,
+                          getSymbolIdHandler(symbol).id,
+                        );
                       }}
                     >
                       {Icons.trash("white")}

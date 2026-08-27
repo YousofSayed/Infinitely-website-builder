@@ -1,4 +1,4 @@
-import { wp_update_option, wp_upload_multiple_files } from "@/apps/wordpress/functions";
+import { wp_update_option, wp_upload_multiple_files } from "@/Apps/wordpress/functions";
 import { InfinitelyEvents } from "@/constants/infinitelyEvents";
 import { reloadRequiredInstance } from "@/constants/InfinitelyInstances";
 import {
@@ -388,7 +388,7 @@ export const GoogleFontsInstaller = () => {
       >
         {!Object.keys(fontFiles).length && (
           <section className="flex max-h-[60px] p-1">
-            <figure className="w-[50px] h-full flex-shrink-0 overflow-auto  bg-surface-tertiary grid place-items-center rounded-tl-lg rounded-bl-lg">
+            <figure className="w-[50px] h-full shrink-0 overflow-auto  bg-surface-tertiary grid place-items-center rounded-tl-lg rounded-bl-lg">
               {Icons.search({})}
             </figure>
             <Input
@@ -454,7 +454,7 @@ export const GoogleFontsInstaller = () => {
               </label>
             </button> */}
 
-            <Checkbox title="Select All" className="flex-shrink-0 flex-grow-0 py-2 px-3" onChange={onSelectAll} checked={fontFilesWillInstalled.length === Object.keys(fontFiles).length && Object.keys(fontFiles).length > 0} />
+            <Checkbox title="Select All" className="shrink-0 flex-grow-0 py-2 px-3" onChange={onSelectAll} checked={fontFilesWillInstalled.length === Object.keys(fontFiles).length && Object.keys(fontFiles).length > 0} />
           </section>
         )}
 

@@ -6,7 +6,7 @@ import {
   wp_update_meta,
   wp_update_option,
   wp_upload_file,
-} from "@/apps/wordpress/functions";
+} from "@/Apps/wordpress/functions";
 import {
   buildScripts,
   global_types,
@@ -1073,6 +1073,14 @@ export const getAllStyleSheetClasses = async (props) => {
           },
         });
       }
+
+      // send empty array to stop loader in classes selector component
+      self.postMessage({
+        command: "end-classes-chunks",
+        props: {
+          classes: null,
+        },
+      });
 
       const per2 = performance.now();
       console.log(per2);

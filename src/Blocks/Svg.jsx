@@ -1,4 +1,4 @@
-import { wp_get_blob_media_by_slug } from "@/apps/wordpress/functions";
+import { wp_get_blob_media_by_slug } from "@/Apps/wordpress/functions";
 import { Icons } from "@/components/Icons/Icons";
 import { current_project_id } from "@/constants/shared";
 import {

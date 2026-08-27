@@ -1,5 +1,5 @@
-import { wp_update_main_global_files } from "@/apps/wordpress/functions";
-import { wp_save_editor_scripts } from "@/apps/wordpress/functions_ui";
+import { wp_update_main_global_files } from "@/Apps/wordpress/functions";
+import { wp_save_editor_scripts } from "@/Apps/wordpress/functions_ui";
 import { animationsSavingMsg } from "@/constants/confirms";
 import { InfinitelyEvents } from "@/constants/infinitelyEvents";
 import {
@@ -13,6 +13,7 @@ import {
   isAnimationsChangedState,
   reloaderState,
   showAnimationsBuilderState,
+  showComponentsInLeftPanelState,
   showLayersState,
   showsState,
   zoomValueState,
@@ -22,15 +23,12 @@ import {
   killAllGsapMotions,
   runAllGsapMotions,
 } from "@/helpers/customEvents";
-import { db } from "@/helpers/db";
 import {
   doInWordpressAsync,
   getProjectData,
   reloadInfinitely,
 } from "@/helpers/functions";
 import { useProjectSettings } from "@/hooks/useProjectSettings";
-import { reBuildApp, unMountApp } from "@/main";
-import { editorObserver } from "@/plugins/addDevices";
 import { Icons } from "@/components/Icons/Icons";
 import { Hr } from "@/components/Protos/Hr";
 import { Li } from "@/components/Protos/Li";
@@ -69,7 +67,9 @@ export const IframeControllers = () => {
   const [reloadRequired, setReloadRequired] = useState(false);
   const redoTimeoutRef = useRef();
   const undoTimeoutRef = useRef();
-
+const [showsComponents, setShowsComponents] = useRecoilState(
+    showComponentsInLeftPanelState,
+  );
   useEffect(() => {
     if (!editor) return;
     editor.Keymaps.remove("core:undo");
@@ -212,7 +212,7 @@ export const IframeControllers = () => {
       <Li
         onClick={clearIFrameBody}
         title="clear canvas"
-        className="flex-shrink-0"
+        className="shrink-0"
         // icon={Icons.trash}
         justHover={true}
       >
@@ -220,7 +220,7 @@ export const IframeControllers = () => {
       </Li>
       <Li
         refForward={undoRef}
-        className="flex-shrink-0"
+        className="shrink-0"
         onClick={undo}
         title="undo"
         icon={Icons.undo}
@@ -228,7 +228,7 @@ export const IframeControllers = () => {
       />
       <Li
         refForward={redoRef}
-        className="flex-shrink-0"
+        className="shrink-0"
         onClick={redo}
         title="redo"
         icon={Icons.redo}
@@ -236,7 +236,7 @@ export const IframeControllers = () => {
       />
 
       <Li
-        className="flex-shrink-0"
+        className="shrink-0"
         onClick={() => {
           emitZoomValue();
           // editor.Canvas.setZoom(editor.Canvas.getZoom() + 1, {
@@ -268,7 +268,7 @@ export const IframeControllers = () => {
       </Li>
 
       <Li
-        className="flex-shrink-0"
+        className="shrink-0"
         onClick={() => {
           emitZoomValue(true);
           // editor.Canvas.setZoom(editor.Canvas.getZoom() - 1, {
@@ -315,7 +315,7 @@ export const IframeControllers = () => {
             fillObjIcon={false}
             icon={Icons.editGjsComponent}
             isObjectParamsIcon
-            className="flex-shrink-0"
+            className="shrink-0"
             justHover={true}
           />
 
@@ -329,7 +329,7 @@ export const IframeControllers = () => {
             }}
             title="mount components"
             fillIcon
-            className="flex-shrink-0"
+            className="shrink-0"
             fillObjIcon={false}
             icon={Icons.vue}
             isObjectParamsIcon
@@ -362,7 +362,7 @@ export const IframeControllers = () => {
         fillIcon
         fillObjIcon={false}
         icon={Icons.play}
-        className="flex-shrink-0"
+        className="shrink-0"
         isObjectParamsIcon
         justHover={true}
       />
@@ -385,7 +385,7 @@ export const IframeControllers = () => {
         }}
         title="Kill All Motions"
         fillIcon
-        className="flex-shrink-0"
+        className="shrink-0"
         fillObjIcon={false}
         icon={Icons.close}
         justHover={true}
@@ -396,7 +396,7 @@ export const IframeControllers = () => {
           editor.runCommand("toggle-preview");
           // toggleFastPreview(editor);
         }}
-        className="flex-shrink-0"
+        className="shrink-0"
         isObjectParamsIcon
         fillObjIcon
         fillObjectIconOnHover
@@ -409,16 +409,18 @@ export const IframeControllers = () => {
       <Li
         onClick={setComponentsView}
         title="outline elements"
-        className="flex-shrink-0"
+        className="shrink-0"
         icon={Icons.square}
         justHover={true}
       />
       <Li
         onClick={(ev) => {
-          setShowLayers((old) => !old);
-          setShowAnimBuilder(false);
+          // setShowLayers((old) => !old);
+          // setShowAnimBuilder(false);
+
+          setShowsComponents(old=>({...old , layers: !old.layers , animationsBuilder: false}))
         }}
-        className="flex-shrink-0"
+        className="shrink-0"
         icon={Icons.layers}
         title="layers"
       />
@@ -426,37 +428,37 @@ export const IframeControllers = () => {
         onClick={(ev) => {
           // console.log(showPreview, isAnimationsChanged);
 
-          if (isAnimationsChanged && showAnimBuilder) {
+          if (isAnimationsChanged && showsComponents.animationsBuilder) {
             const cnfrm = confirm(animationsSavingMsg);
             if (cnfrm) {
               setAnimationsChanged(false);
               setAnimations([]);
-              setShowAnimBuilder(false);
+              // setShowAnimBuilder(false);
+              setShowsComponents(old=>({...old , layers: false , animationsBuilder: false}))
             }
           } else {
-            setShowAnimBuilder(!showAnimBuilder);
-            setShowLayers(false);
+            // setShowAnimBuilder(!showAnimBuilder);
+            // setShowLayers(false);
+            setShowsComponents(old=>({...old , layers: false , animationsBuilder: !old.animationsBuilder}))
             navigate("edite/styling");
           }
           // setShowAnimBuilder((old) => !old);
         }}
-        className="flex-shrink-0"
+        className="shrink-0"
         title="Animation Builder"
         icon={Icons.animation}
       />
       <Li
-        className="flex-shrink-0"
+        className="shrink-0"
         onClick={async (ev) => {
-          // editor.off("component:remove:before");
-          console.log("reloading");
-
-          window.dispatchEvent(new CustomEvent("clear:script"));
-          editor.off();
+       
+          // editor.off();
           // editor.load();
           // editor.destroy();
           setTimeout(() => {
             // location.replace(location.href);
-            reloadInfinitely();
+            // reloadInfinitely();
+            editor.load();
           }, 0);
         }}
         title="Reload Canvas"

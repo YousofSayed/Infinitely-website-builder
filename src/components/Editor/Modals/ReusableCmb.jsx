@@ -1,4 +1,4 @@
-import { wp_insert_post } from "@/apps/wordpress/functions";
+import { wp_insert_post } from "@/Apps/wordpress/functions";
 import {
   current_page_id,
   current_project_id,
@@ -216,7 +216,8 @@ export const ReusableCmb = () => {
       });
       console.log("blocks res after save : ", res);
 
-      afterSave();
+      editor.store();
+      editor.on("storage:after:store", afterSave);
       qc.invalidateQueries({ queryKey: ["inf_blocks"]  , refetchType: "all" });
       editor.trigger("block:add");
     });
@@ -226,7 +227,7 @@ export const ReusableCmb = () => {
     <main className="flex flex-col gap-3">
       <header className="flex gap-2 justify-between">
         <Input
-          autoFocus={true}
+          // autoFocus={true}
           className="w-full bg-surface-tertiary"
           placeholder="Name"
           value={newProps.name}

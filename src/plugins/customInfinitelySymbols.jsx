@@ -87,7 +87,7 @@ export const customInfinitelySymbols = (editor) => {
             // return;
           }
 
-          if (addedComponent) {
+          if (addedComponent && !addedComponent.getAttributes()[inf_class_name]) {
             const newClass = `inf-${uniqueID()}`;
             addedComponent.addAttributes(
               {

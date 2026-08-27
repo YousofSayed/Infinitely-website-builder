@@ -8,6 +8,7 @@ import { LibraryInstallerModal } from "@/components/Editor/Modals/LibraryInstall
 import { RestAPIModels } from "@/components/Editor/Modals/RestAPIModels";
 import { FitTitle } from "@/components/Editor/Protos/FitTitle";
 import { LibraryInstaller } from "@/components/Editor/Protos/LibraryInstaller";
+import Portal from "@/components/Editor/Portal";
 import { useEditorMaybe } from "@grapesjs/react";
 import React, { memo, useEffect, useState } from "react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
@@ -18,109 +19,72 @@ export const CustomModals = () => {
   const setModalData = useSetRecoilState(modalDataState);
   const [isClose, setClose] = useState(false);
   const [modalProps, setModalProps] = useState({});
-  // useEffect(() => {
-  //   /**
-  //    *
-  //    * @param {CustomEvent} ev
-  //    */
-  //   const openModal = (ev) => {
-  //     setClose(false);
-  //     setModalData({
-  //       title: ev.detail.title,
-  //       JSXModal: ev.detail.JSXModal,
-  //       width:ev.detail.width,
-  //       height:ev.detail.height
-  //     });
-  //   };
-  //   window.addEventListener("open:custom:modal", openModal);
-  //   window.addEventListener("close:custom:modal", (ev) => {
-  //     setClose(true);
-  //   });
-  // });
 
   return (
-    <section
-      id="main-modal"
-      onClick={(ev) => {
-        // ev.stopPropagation();
-        // ev.preventDefault();
-        if (ev.target === ev.currentTarget) {
-          // Only close if clicked directly on backdrop, not children
-          editor.Commands.run("close:custom:modal");
-        }
-        // editor.Commands.run("close:custom:modal");
-      }}
-      className={`fixed   transition-all z-[2000]  bg-blue-950/40 backdrop-blur-sm right-0 left-0  w-full h-full flex justify-center items-center`}
-    >
-      <main
-        style={{
-          width: modalData.width,
-          height: modalData.height,
-          //    contain: "layout  paint  size  content  size  style",
-          // willChange: "transform",
-          // isolation:'isolate',
-          // transform: "translateZ(0)",
-          // backfaceVisibility: "hidden",
-          ...modalProps,
-        }}
+    <Portal container={document.querySelector("#root")}>
+      <section
+        id="main-modal"
         onClick={(ev) => {
-          // ev.stopPropagation();
-          // ev.preventDefault();
-          console.log("main is me");
-          // document.body.click();
+          if (ev.target === ev.currentTarget) {
+            editor.Commands.run("close:custom:modal");
+          }
         }}
-        className="z-[55] rounded-lg flex flex-col justify-between bg-surface-secondary shadow-md shadow-[#020617]"
+        style={{ zIndex: 1000 }}
+        className={`
+          fixed ${window?.electron?.isDesktop ? 'top-[40px]' : 'top-0'} left-0 transition-all bg-blue-950/40 backdrop-blur-sm w-full h-full flex justify-center items-center
+          animate-go-to`}
       >
-        <header className="w-full flex items-center rounded-lg rounded-br-none  h-[60px]  border-b-2 bg-surface-secondary border-b-slate-600">
-          <section className="w-full flex justify-between  items-center p-2">
-            {/* <p className="text-slate-300 text-lg capitalize select-none font-semibold flex items-center gap-2">
-              {modalData.title}
-            </p> */}
-            <FitTitle className="flex items-center gap-2">
-              {modalData.title}
-            </FitTitle>
-            <section className=" flex items-center gap-2">
-              <button
-                className="cursor-pointer z-50 flex items-center  justify-center w-[27px] h-[27px] bg-yellow-600 rounded-full"
-                onClick={(ev) => {
-                  addClickClass(ev.currentTarget, "click");
-                  if (modalProps.width || modalProps.height) {
-                    setModalProps({});
-                  } else {
-                    setModalProps({ width: "100%", height: "100%" });
-                  }
-                }}
-              >
-                {Icons.fullscreen({ fill: "white", height: 17, width: 17 })}
-              </button>
-              <button
-                onClick={(ev) => {
-                  addClickClass(ev.currentTarget, "click");
-                  editor.Commands.run("close:custom:modal");
-                }}
-                className="cursor-pointer z-50 flex items-center  justify-center w-[27px] h-[27px] bg-brand-primary rounded-full"
-              >
-                {Icons.close("white", 2, "blue")}
-              </button>
-            </section>
-          </section>
-        </header>
-
-        <section
-          style={{
-            // transform: "translateZ(0)",
-            // willChange: "transform",
+        <main
+          style={{ ...modalProps }}
+          onClick={(ev) => {
+            ev.stopPropagation();
           }}
-          className=" p-2 h-full max-h-full overflow-auto rounded-bl-lg rounded-br-lg bg-surface-secondary"
+          className="container m-auto h-[75%] rounded-lg flex flex-col justify-between bg-surface-secondary shadow-md shadow-[#020617]"
         >
-          <BusyProvider>
-            {modalData.JSXModal}
-          </BusyProvider>
-          {/* <RestAPIModels/> */}
-          {/* <LibraryInstaller/> */}
-          {/* <LibraryInstallerModal/>   */}
-        </section>
-      </main>
-    </section>
+          <header className="w-full flex items-center rounded-lg rounded-br-none h-[60px] border-b-2 bg-surface-secondary border-b-slate-600">
+            <section className="w-full flex justify-between items-center p-2">
+              <FitTitle className="flex items-center gap-2">
+                {modalData.title}
+              </FitTitle>
+              <section className="flex items-center gap-2">
+                {/* <button
+                  className="cursor-pointer flex items-center justify-center w-[27px] h-[27px] bg-yellow-600 rounded-full"
+                  onClick={(ev) => {
+                    addClickClass(ev.currentTarget, "click");
+                    if (modalProps.width || modalProps.height) {
+                      setModalProps({});
+                    } else {
+                      setModalProps({
+                        width: "100%",
+                        height: "100%",
+                        margin: "unset",
+                      });
+                    }
+                  }}
+                >
+                  {Icons.fullscreen({ fill: "white", height: 17, width: 17 })}
+                </button> */}
+                <button
+                  onClick={(ev) => {
+                    addClickClass(ev.currentTarget, "click");
+                    editor.Commands.run("close:custom:modal");
+                  }}
+                  className="cursor-pointer flex items-center justify-center w-[27px] h-[27px] bg-brand-primary rounded-full"
+                >
+                  {Icons.close("white", 2, "blue")}
+                </button>
+              </section>
+            </section>
+          </header>
+
+          <section className="animate-go-to p-2 h-full max-h-full overflow-auto rounded-bl-lg rounded-br-lg bg-surface-secondary">
+            <BusyProvider>
+              {modalData.JSXModal}
+
+            </BusyProvider>
+          </section>
+        </main>
+      </section>
+    </Portal>
   );
 };

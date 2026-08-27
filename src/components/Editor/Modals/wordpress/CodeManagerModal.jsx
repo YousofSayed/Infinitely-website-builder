@@ -1,4 +1,4 @@
-import { wp_save_code } from "@/apps/wordpress/functions";
+import { wp_save_code } from "@/Apps/wordpress/functions";
 import { InfinitelyEvents } from "@/constants/infinitelyEvents";
 import { reloadRequiredInstance } from "@/constants/InfinitelyInstances";
 import { current_page_id, current_project_id } from "@/constants/shared";
@@ -143,7 +143,7 @@ export const WpCodeManagerModal = () => {
         },
         global: {
           js: filesData[defineRoot('global.js')],
-          css: filesData[defineRoot('global.css')],
+          css: filesData[defineRoot('global.css')], 
         },
         save_state
       })

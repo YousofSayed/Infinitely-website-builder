@@ -1,6 +1,7 @@
 import { addClickClass } from "@/helpers/cocktail";
 import React from "react";
 import { Tooltip } from "react-tooltip";
+import Portal from "../Portal";
 
 // million-ignore
 
@@ -35,7 +36,7 @@ export const SmallButton = ({
       <button
         {...props}
         tooltip-id={id}
-        className={`w-[48px] outline-none border-2 border-transparent focus:border-blue-600 transition-colors   hover:bg-brand-primary flex rounded-lg cursor-pointer items-center justify-center flex-shrink-0  ${
+        className={`w-[48px] outline-none border-2 border-transparent focus:border-blue-600 transition-colors   hover:bg-brand-primary flex rounded-lg cursor-pointer items-center justify-center shrink-0  ${
           className ? className : "bg-surface-tertiary"
         }`}
         onClick={(ev) => {
@@ -46,7 +47,8 @@ export const SmallButton = ({
         {children}
       </button>
       {showTooltip && (tooltipTitle || props.title) && (
-        <Tooltip
+        <Portal>
+          <Tooltip
           anchorSelect={`[tooltip-id="${id}"]`}
           place="bottom-end"
           positionStrategy="fixed"
@@ -55,6 +57,7 @@ export const SmallButton = ({
         >
           {tooltipTitle || props.title}
         </Tooltip>
+        </Portal>
       )}
     </>
   );

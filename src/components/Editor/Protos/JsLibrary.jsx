@@ -1,4 +1,4 @@
-import { wp_update_option, wp_upload_file } from "@/apps/wordpress/functions";
+import { wp_update_option, wp_upload_file } from "@/Apps/wordpress/functions";
 import { InfinitelyEvents } from "@/constants/infinitelyEvents";
 import { reloadRequiredInstance } from "@/constants/InfinitelyInstances";
 import { current_page_id, current_project_id } from "@/constants/shared";
@@ -431,7 +431,7 @@ export const JsLibrary = ({
                     !Boolean(library?.manually)
                     &&
                     <Button
-                      className="bg-brand-primary text-text-primary px-5 py-2 rounded-lg hover:bg-blue-700 transition flex-shrink-0 flex-grow-0"
+                      className="bg-brand-primary text-text-primary px-5 py-2 rounded-lg hover:bg-blue-700 transition shrink-0 flex-grow-0"
                       onClick={() => {
                         install({
                           fileUrl: library.latest,
@@ -446,7 +446,7 @@ export const JsLibrary = ({
                   }
                   {!fileuploader && !library.latest.startsWith('blob') && (
                     <Button
-                      className="bg-gradient-to-r from-blue-500 to-blue-700 text-white px-5 py-2 rounded-lg transition hover:bg-blue-700 flex-shrink-0 flex-grow-0"
+                      className="bg-gradient-to-r from-blue-500 to-blue-700 text-white px-5 py-2 rounded-lg transition hover:bg-blue-700 shrink-0 flex-grow-0"
                       onClick={() => {
                         install({
                           fileUrl: library.latest,

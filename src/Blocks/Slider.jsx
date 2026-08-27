@@ -10,13 +10,7 @@ import {
   preventSelectNavigation,
 } from "@/helpers/functions";
 import { reactToStringMarkup } from "@/helpers/reactToStringMarkup";
-import {
-  cloneDeep,
-  isArray,
-  isBoolean,
-  isNumber,
-  isPlainObject,
-} from "lodash";
+import { cloneDeep, isArray, isBoolean, isNumber, isPlainObject } from "lodash";
 
 /**
  *
@@ -46,29 +40,24 @@ export const Slider = ({ editor }) => {
           label: key,
           role: "attribute",
           bindToAttribute: true,
-          //   ...customPropsToNewTrait,
         };
+        
         if (!isPlainObject(val)) {
-          //   trait.name = key;
-          //   trait.label = key;
-          //   trait.placeholder = key;
-          //   trait.role = "attribute";
-          //   trait.bindToAttribute = true;
           trait.type = isArray(val)
             ? "select"
             : isBoolean(val)
-            ? "switch"
-            : isNumber(val)
-            ? "number"
-            : "text";
+              ? "switch"
+              : isNumber(val)
+                ? "number"
+                : "text";
 
           trait.default = isArray(val)
             ? ""
             : isBoolean(val)
-            ? val
-            : isNumber(val)
-            ? val
-            : "";
+              ? val
+              : isNumber(val)
+                ? val
+                : "";
 
           isArray(val) && (trait.options = val);
           isArray(val) && (trait.keywords = val);
@@ -90,24 +79,9 @@ export const Slider = ({ editor }) => {
               for (const key in val) {
                 const trait = sle.getTrait(key);
 
-                //   trait.attributes.init &&
-                //     trait.attributes.init({ editor, model: sle, trait:trait.attributes });
                 trait.set({ value: "" });
                 sle.removeAttributes([key]);
                 console.log("from re init in switch", trait);
-
-                //   const role = trait.get("role");
-                //   if (role == "attribute") {
-                //     console.log("this is attribute");
-
-                // sle.addAttributes({
-                //   [name]: isString(value)
-                //     ? value
-                //     : JSON.stringify(trait.get("value")),
-                // });
-                //   }
-                // isString(value) ? value : JSON.stringify(trait.get("value"))
-                // sle.addAttributes({ [name]: isString(value) ? value : stringify(value) });
               }
             } else {
               for (const key in val) {
@@ -116,9 +90,7 @@ export const Slider = ({ editor }) => {
                 trait.set("default", undefined);
                 console.log("from switcher : ", trait);
               }
-              // editor.trigger("trait:value");
             }
-            //     console.log("update should be done");
           };
 
           const _keys = Object.keys(val).filter((key) => key.startsWith("_"));
@@ -133,14 +105,11 @@ export const Slider = ({ editor }) => {
             default: undefined,
             value: undefined,
             role: "handler",
-            // name:undefined,
-            // bindToAttribute: false,
-            // value: "",
             showCallback(trait) {
               const selected = editor.getSelected();
               if (!selected) return false;
               const currentTrait = selected.getTrait(trait.nestedKeys[0]);
-              // console.log("current trait : ", currentTrait);
+            
 
               if (!currentTrait) return false;
               const currentValue = currentTrait.get("value");
@@ -156,13 +125,7 @@ export const Slider = ({ editor }) => {
               if (!currentTrait) return;
               const currentValue = currentTrait.get("value");
               const parsedValue = parse(currentValue);
-              // console.log(
-              //   "from call back : ",
-              //   parsedValue,
-              //   trait.nestedKeys,
-              //   newValue
-              // );
-
+             
               if (
                 parsedValue &&
                 isArray(trait.nestedKeys) &&
@@ -171,7 +134,7 @@ export const Slider = ({ editor }) => {
                 const newObject = editNestedObject(
                   isPlainObject(parsedValue) ? parsedValue : {},
                   trait.nestedKeys.slice(1),
-                  newValue
+                  newValue,
                 );
                 console.log("from call back (after): ", newObject);
 
@@ -180,13 +143,13 @@ export const Slider = ({ editor }) => {
                 });
               } else {
                 throw new Error(
-                  `currentTrait.attributes.nestedKeys is not array or may it is not contains keys!`
+                  `currentTrait.attributes.nestedKeys is not array or may it is not contains keys!`,
                 );
               }
             },
             init({ editor, model, trait }) {
               const parentTrait = model.getTrait(
-                trait.nestedKeys[0]
+                trait.nestedKeys[0],
               )?.attributes;
               if (!parentTrait || !parentTrait.value) return;
               console.log("ininininininititititititi");
@@ -201,7 +164,6 @@ export const Slider = ({ editor }) => {
 
             // }
           });
-
         }
         // Object.keys(customPropsToNewTrait).forEach((propName) => {
         //   trait[propName] = customPropsToNewTrait[propName];
@@ -224,8 +186,8 @@ export const Slider = ({ editor }) => {
     mediaBreakpoint,
     newValue,
   }) => {
-    console.log('from call back : ' , mediaBreakpoint);
-    
+    console.log("from call back : ", mediaBreakpoint);
+
     const model = editor.getSelected();
     const breakpointsAttr = model.getAttributes()["breakpoints"];
     const parsedValue = parse(breakpointsAttr);
@@ -269,12 +231,12 @@ export const Slider = ({ editor }) => {
 
     editor.on("change:device", () => {
       const currentBreakpoint = getMediaBreakpoint(editor);
-       const breakpointKey = `breakpoints-${currentBreakpoint}-${trait.name.toLowerCase()}`;
+      const breakpointKey = `breakpoints-${currentBreakpoint}-${trait.name.toLowerCase()}`;
       const attrs = model.getAttributes();
       // console.log(` trait.value = attrs[breakpointKey] || ''; ` ,  trait.value = attrs[breakpointKey]);
-      
+
       trait.value = attrs[breakpointKey] || 0;
-      editor.trigger('trait:value')
+      editor.trigger("trait:value");
     });
   };
 
@@ -283,20 +245,19 @@ export const Slider = ({ editor }) => {
       if (!el.tagName) return false;
       return el.tagName.toLowerCase() === "swiper-container";
     },
-    view:{
-      onRender({editor  ,el ,model}){
+    view: {
+      onRender({ editor, el, model }) {
         const { projectSettings } = getProjectSettings();
-        if(!projectSettings.enable_swiperjs){
-          el.classList.add('enable-swiper')
-          el.classList.remove('drop');
-          el.querySelectorAll('*').forEach(el=>{
-            el.classList.remove('drop')
-          })
+        if (!projectSettings.enable_swiperjs) {
+          el.classList.add("enable-swiper");
+          el.classList.remove("drop");
+          el.querySelectorAll("*").forEach((el) => {
+            el.classList.remove("drop");
+          });
         }
-      }
+      },
     },
     model: {
-      
       defaults: {
         icon: reactToStringMarkup(
           Icons.slider({
@@ -304,7 +265,7 @@ export const Slider = ({ editor }) => {
             height: 25,
             fill: "white",
             strokeColor: "white",
-          })
+          }),
         ),
         components: [
           { type: "slide" },
@@ -334,7 +295,7 @@ export const Slider = ({ editor }) => {
               const parsedValue = parse(newValue);
               if (!parsedValue) return;
               const selectedChilds = [...selected.components().models].map(
-                (cmp) => cmp.clone()
+                (cmp) => cmp.clone(),
               );
               const selectedChildsLength = selectedChilds.length;
               if (parsedValue <= selectedChildsLength) {
@@ -373,9 +334,9 @@ export const Slider = ({ editor }) => {
                 showMediaBreakpoint: true,
                 callback: breakpointsCallback,
                 init: breakpointsInit,
-                hint({editor , mediaBreakpoint , trait}){
-                  return `Width < ${mediaBreakpoint}`
-                }
+                hint({ editor, mediaBreakpoint, trait }) {
+                  return `Width < ${mediaBreakpoint}`;
+                },
               },
 
               {
@@ -389,13 +350,27 @@ export const Slider = ({ editor }) => {
                 callback: breakpointsCallback,
                 init: breakpointsInit,
               },
-            ])
+            ]),
           )
           .map((trait) => {
             const originalCallback = trait.callback;
-            trait.callback = ({ editor, asset, newValue, oldValue, trait , mediaBreakpoint }) => {
+            trait.callback = ({
+              editor,
+              asset,
+              newValue,
+              oldValue,
+              trait,
+              mediaBreakpoint,
+            }) => {
               originalCallback &&
-                originalCallback({ editor, asset, newValue, oldValue, trait ,mediaBreakpoint});
+                originalCallback({
+                  editor,
+                  asset,
+                  newValue,
+                  oldValue,
+                  trait,
+                  mediaBreakpoint,
+                });
               const selected = editor.getSelected();
 
               const swiperEl = selected.getEl();
@@ -403,11 +378,10 @@ export const Slider = ({ editor }) => {
               if (swiperEl.swiper) {
                 swiperEl.swiper.destroy(true, true);
               }
-          
+
               setTimeout(() => {
                 swiperEl.initialize();
               });
-
             };
             return trait;
           }),
@@ -430,7 +404,7 @@ export const Slider = ({ editor }) => {
             height: 25,
             fill: "white",
             strokeColor: "white",
-          })
+          }),
         ),
         tagName: "swiper-slide",
         draggable: false,

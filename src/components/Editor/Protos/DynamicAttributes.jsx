@@ -199,7 +199,7 @@ export const DynamicAttributes = () => {
                 </MiniTitle>
 
                 <SmallButton
-                  className="flex-shrink-0 py-2 bg-surface-secondary"
+                  className="shrink-0 py-2 bg-surface-secondary"
                   onClick={(ev) => {
                     deleteAttribute({ attrName });
                   }}
@@ -208,7 +208,7 @@ export const DynamicAttributes = () => {
                 </SmallButton>
 
                 <SmallButton
-                  className="flex-shrink-0 py-2 bg-surface-secondary"
+                  className="shrink-0 py-2 bg-surface-secondary"
                   onClick={(ev) => {
                     closeAllTabs({ attrName });
                   }}

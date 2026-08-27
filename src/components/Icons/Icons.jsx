@@ -2136,7 +2136,7 @@ export const Icons = {
       </g>
     </svg>
   ),
-  refresh: ({ width, height, strokeColor, strokWidth, fill }) => (
+  refresh: ({ width, height, strokeColor = mainColor, strokWidth, fill }) => (
     <svg
       width={width}
       height={height}

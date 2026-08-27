@@ -9,10 +9,12 @@ import {
   ruleState,
   selectorState,
   showAnimationsBuilderState,
+  showComponentsInLeftPanelState,
   showStylesBuilderForMotionBuilderState,
 } from "@/helpers/atoms";
 import { parse } from "@/helpers/cocktail";
 import {
+  getComponentRules,
   getCurrentMediaDevice,
   getCurrentSelector,
   toKebabCase,
@@ -37,7 +39,14 @@ import { SmallButton } from "@/components/Editor/Protos/SmallButton";
 import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { useEditorMaybe } from "@grapesjs/react";
-import { cloneDeep, isArray, isBoolean, isString, random, uniqueId } from "lodash";
+import {
+  cloneDeep,
+  isArray,
+  isBoolean,
+  isString,
+  random,
+  uniqueId,
+} from "lodash";
 import { For } from "million/react";
 import React, {
   memo,
@@ -62,6 +71,10 @@ const StyleAccordion = () => {
   // const showAnimeBuilder = useRecoilValue(showAnimationsBuilderState);
   const [notifires, setNotifires] = useState({});
   const showAnimationsBuilder = useRecoilValue(showAnimationsBuilderState);
+  const [showsComponents, setShowsComponents] = useRecoilState(
+    showComponentsInLeftPanelState,
+  );
+
   const allCssProps = useRef(
     Object.fromEntries(
       Object.entries(styles).map(([key, style]) => {
@@ -89,7 +102,7 @@ const StyleAccordion = () => {
           if (directions) {
             console.log(
               "all css props : directions ,",
-              Object.values(directions)
+              Object.values(directions),
             );
 
             prev.push(...Object.values(directions));
@@ -98,8 +111,8 @@ const StyleAccordion = () => {
           return prev;
         }, []);
         return [key, cssProps];
-      })
-    )
+      }),
+    ),
   );
 
   function notifing(styles) {
@@ -137,128 +150,107 @@ const StyleAccordion = () => {
   // showAnimationsBuilder && delete stylesClone['Animation'];
 
   const filteredStyles = useMemo(() => {
-  if (!showAnimationsBuilder) return styles;
+    if (!showsComponents.animationsBuilder) return styles;
 
-  const { Animation, ...rest } = styles;
-  return rest;
-}, [styles, showAnimationsBuilder]);
-
-  // useEffect(() => {
-  //   const frameStylesHandler = (ev) => {
-
-  //     const framesStyles = ev.detail;
-  //     console.log("lol" , framesStyles);
-  //     notifing({ framesStyles });
-  //   };
-
-  //   keyframeStylesInstance.on(
-  //     InfinitelyEvents.keyframe.set,
-  //     frameStylesHandler
-  //   );
-
-  //   () => {
-  //     keyframeStylesInstance.off(
-  //       InfinitelyEvents.keyframe.set,
-  //       frameStylesHandler
-  //     );
-  //   };
-  // }, [showAnimationsBuilder]);
+    const { Animation, ...rest } = styles;
+    return rest;
+  }, [styles, showsComponents.animationsBuilder]);
 
   return (
     <Accordion>
       <For each={Object.entries(filteredStyles)}>
-        {([key, styles], i) =>
+        {([key, styles], i) => (
           <AccordionItem key={i} title={key} notify={notifires[key]}>
-              <ErrorBoundary fallbackRender={SelectElementToStyle}>
-                <section className="flex flex-col gap-1 w-full  bg-surface-secondary rounded-lg">
-                  <For each={styles}>
-                    {(
-                      {
-                        cssProp,
-                        type,
-                        title,
-                        separator,
-                        keywords,
-                        directions,
-                        choices,
-                        placeholder,
-                        splitHyphen,
-                        Component,
-                        special,
-                        units,
-                      },
-                      i
-                    ) => (
-                      <section
-                        title={cssProp}
-                        key={i}
-                        className="flex flex-col gap-1 w-full p-1 bg-surface-secondary rounded-lg"
-                      >
-                        {type == "title" && <MiniTitle>{title}</MiniTitle>}
-                        {type == "property" && (
-                          <Property
-                            cssProp={cssProp}
-                            label={title}
-                            placeholder={placeholder || title}
-                            special={special}
-                          />
-                        )}
-                        {type == "select" && (
-                          <SelectStyle
-                            cssProp={cssProp}
-                            label={title}
-                            placeholder={placeholder || title}
-                            keywords={keywords}
-                            splitHyphen={splitHyphen}
-                          />
-                        )}
-                        {type == "color" && (
-                          <Color
-                            label={title}
-                            cssProp={cssProp}
-                            placeholder={placeholder || title}
-                          />
-                        )}
-                        {type == "directions" && (
-                          <DirectionsModel
-                            tProp={directions.tProp}
-                            rProp={directions.rProp}
-                            bProp={directions.bProp}
-                            lProp={directions.lProp}
-                          />
-                        )}
-                        {type == "multi-choice" && (
-                          <MultiChoice
-                            cssProp={cssProp}
-                            choices={choices}
-                            label={title}
-                          />
-                        )}
-                        {type == "multi-function-prop" && (
-                          <MultiFunctionProp
-                            cssProp={cssProp}
-                            placeholder={placeholder || title}
-                            keywords={keywords}
-                            units={units}
-                          />
-                        )}
-                        {type == "multi-values-for-single-prop" && (
-                          <AddMultiValuestoSingleProp
-                            cssProp={cssProp}
-                            label={title}
-                            keywords={keywords}
-                            placeholder={placeholder || title}
-                            separator={separator}
-                          />
-                        )}
-                        {type == "custom" && <Component />}
-                      </section>
-                    )}
-                  </For>
-                </section>
-              </ErrorBoundary>
-            </AccordionItem>
-        }
+            <ErrorBoundary fallbackRender={SelectElementToStyle}>
+              <section className="flex flex-col gap-1 w-full  bg-surface-secondary rounded-lg">
+                <For each={styles}>
+                  {(
+                    {
+                      cssProp,
+                      type,
+                      title,
+                      separator,
+                      keywords,
+                      directions,
+                      choices,
+                      placeholder,
+                      splitHyphen,
+                      Component,
+                      special,
+                      units,
+                    },
+                    i,
+                  ) => (
+                    <section
+                      title={cssProp}
+                      key={i}
+                      className="flex flex-col gap-1 w-full p-1 bg-surface-secondary rounded-lg"
+                    >
+                      {type == "title" && <MiniTitle>{title}</MiniTitle>}
+                      {type == "property" && (
+                        <Property
+                          cssProp={cssProp}
+                          label={title}
+                          placeholder={placeholder || title}
+                          special={special}
+                        />
+                      )}
+                      {type == "select" && (
+                        <SelectStyle
+                          cssProp={cssProp}
+                          label={title}
+                          placeholder={placeholder || title}
+                          keywords={keywords}
+                          splitHyphen={splitHyphen}
+                        />
+                      )}
+                      {type == "color" && (
+                        <Color
+                          label={title}
+                          cssProp={cssProp}
+                          placeholder={placeholder || title}
+                        />
+                      )}
+                      {type == "directions" && (
+                        <DirectionsModel
+                          tProp={directions.tProp}
+                          rProp={directions.rProp}
+                          bProp={directions.bProp}
+                          lProp={directions.lProp}
+                        />
+                      )}
+                      {type == "multi-choice" && (
+                        <MultiChoice
+                          cssProp={cssProp}
+                          choices={choices}
+                          label={title}
+                        />
+                      )}
+                      {type == "multi-function-prop" && (
+                        <MultiFunctionProp
+                          cssProp={cssProp}
+                          placeholder={placeholder || title}
+                          keywords={keywords}
+                          units={units}
+                        />
+                      )}
+                      {type == "multi-values-for-single-prop" && (
+                        <AddMultiValuestoSingleProp
+                          cssProp={cssProp}
+                          label={title}
+                          keywords={keywords}
+                          placeholder={placeholder || title}
+                          separator={separator}
+                        />
+                      )}
+                      {type == "custom" && <Component />}
+                    </section>
+                  )}
+                </For>
+              </section>
+            </ErrorBoundary>
+          </AccordionItem>
+        )}
       </For>
     </Accordion>
   );
@@ -285,14 +277,17 @@ export const StyleAside = memo(({ className }) => {
   const [mediaCondTitle, setMediaCondTitle] = useState("");
   const [mediaCond, setMediaCond] = useRecoilState(mediaConditionState);
   const [isAnimationsChanged, setAnimationsChanged] = useRecoilState(
-    isAnimationsChangedState
+    isAnimationsChangedState,
   );
   const [animations, setAnimations] = useRecoilState(animationsState);
   const [showAnimBuilder, setShowAnimBuilder] = useRecoilState(
-    showAnimationsBuilderState
+    showAnimationsBuilderState,
   );
   const [showStylesBuilder, setShowStylesBuilder] = useRecoilState(
-    showStylesBuilderForMotionBuilderState
+    showStylesBuilderForMotionBuilderState,
+  );
+  const [showsComponents, setShowsComponents] = useRecoilState(
+    showComponentsInLeftPanelState,
   );
 
   const removeCurrentMediaRule = useRemoveCurrentMedia();
@@ -327,26 +322,8 @@ export const StyleAside = memo(({ className }) => {
         .widthMedia;
       // const mediaCond = editor.getConfig().mediaCondition;
       const selectorWithRule = `${currentSelector}${globalRule.ruleString}`;
-      // console.log(
-      //   "cmprs",
-      //   cmpRules,
-      //   selectorWithRule,
-      //   !cmpRules.some((rule) => {
-      //     const mainCond = rule?.rule?.trim?.() === selectorWithRule;
-      //     const isBoolCond =
-      //       isBoolean(rule.atRuleType) && isBoolean(currentMedia.atRuleType)
-      //         ? Boolean(rule.atRuleType) == Boolean(currentMedia.atRuleType)
-      //         : false;
-      //     const isMediaStringCond =
-      //       isString(rule.atRuleType) && isString(currentMedia.atRuleType)
-      //         ? rule.atRuleType == currentMedia.atRuleType
-      //         : false;
 
-      //     return mainCond && (isBoolCond || isMediaStringCond);
-      //   })
-      // );
-
-      const title = `${editor.getConfig().mediaCondition || mediaCond} ${
+      let title = `${editor.getConfig().mediaCondition || mediaCond} ${
         mediaPx && mediaCond ? `(${mediaPx})` : ""
       } ${editor.config.mediaCondition ? ":" : ""} 
     ${selectorWithRule}`;
@@ -355,7 +332,28 @@ export const StyleAside = memo(({ className }) => {
         ...currentMedia,
       });
 
-      if (edRule) {
+      const rulesOfCurrentSle = getComponentRules({
+        editor,
+        cmp: editor.getSelected(),
+        nested: true,
+      });
+
+      console.log(
+        "edRule",
+        edRule,
+        selectorWithRule,
+        rulesOfCurrentSle,
+        /(:|::)\w+/gi.test(selectorWithRule),
+      );
+
+      if (
+        !edRule &&
+        !/(:|::)\w+/gi.test(selectorWithRule) &&
+        rulesOfCurrentSle.rules.length &&
+        rulesOfCurrentSle.rules[0].states
+      ) {
+        setMediaCondTitle(`There is styles in states for ${selectorWithRule}`);
+      } else if (edRule) {
         setMediaCondTitle(title);
       } else {
         setMediaCondTitle("");
@@ -375,23 +373,7 @@ export const StyleAside = memo(({ className }) => {
 
   useEffect(() => {
     setKey(uniqueId("Accordion-id-"));
-  }, [showAnimeBuilder]);
-
-  // useEffect(()=>{
-  //   return () => {
-  //     if (isAnimationsChanged) {
-  //       const cnfrm = confirm(animationsSavingMsg);
-  //       if (cnfrm) {
-  //         // setShowAnimBuilder(false);
-  //         setAnimationsChanged(false);
-  //         setAnimations([]);
-  //         setShowAnimBuilder(false);
-  //       }
-  //     } else {
-  //       setShowAnimBuilder(false);
-  //     }
-  //   };
-  // },[isAnimationsChanged])
+  }, [showsComponents.animationsBuilder]);
 
   useEffect(() => {
     if (!editor) {
@@ -407,7 +389,7 @@ export const StyleAside = memo(({ className }) => {
     console.log(
       "seco currentSelector for states notify : ",
       currentSelector,
-      selector
+      selector,
     );
 
     // for (const rule of cmpRules) {
@@ -422,8 +404,8 @@ export const StyleAside = memo(({ className }) => {
         (rule) =>
           rule.states &&
           currentSelector &&
-          rule.rule.startsWith(currentSelector)
-      )
+          rule.rule.startsWith(currentSelector),
+      ),
     );
   }, [cmpRules, currentEl, editor, selector]);
 
@@ -436,10 +418,14 @@ export const StyleAside = memo(({ className }) => {
     //==========
     const outPut = editor.Css.getRule(
       `${currentSelector}${globalRule.ruleString}`,
-      { ...Media }
+      { ...Media },
     )?.toJSON()?.style;
 
     console.log("style output : ", outPut, JSON.stringify(outPut));
+    if(!outPut){
+      toast.warn(<ToastMsgInfo msg={`There is no styles to copy in ${currentSelector} 🥺`} />);
+      return
+    }
     await navigator.clipboard.writeText(JSON.stringify(outPut));
     toast.success(<ToastMsgInfo msg={`Styles copied successfully 👍`} />);
     return outPut || {};
@@ -459,7 +445,7 @@ export const StyleAside = memo(({ className }) => {
 
     const rule = editor.Css.getRule(
       `${currentSelector}${globalRule.ruleString}`,
-      { ...Media }
+      { ...Media },
     );
 
     editor.CssComposer.remove(rule);
@@ -472,7 +458,7 @@ export const StyleAside = memo(({ className }) => {
         validate: false,
         // inline:true,
         addStyle: true,
-      }
+      },
     );
 
     setCurrentEl({
@@ -486,11 +472,11 @@ export const StyleAside = memo(({ className }) => {
       ref={animateRef}
       className="flex flex-col w-full h-full gap-2 mt-2 "
     >
-      {!showAnimBuilder && !showStylesBuilder && (
+      {!showsComponents.animationsBuilder && !showsComponents.stylesBuilder && (
         <section className="flex gap-2">
           <FitTitle
             isShowTooltib={Boolean(mediaCondTitle)}
-            className={`custom-font-size w-full ${
+            className={`custom-font-size w-full text-base ${
               !mediaCondTitle &&
               "justify-center font-bold animate-pulse will-change-[transform,opacity] capitalize"
             }  text-ellipsis whitespace-nowrap overflow-hidden flex items-center py-2`}
@@ -571,17 +557,18 @@ export const StyleAside = memo(({ className }) => {
       )} */}
 
       <section className=" flex flex-col gap-2">
-        {!showAnimeBuilder && !showStylesBuilder && (
-          <Accordion>
-            <AccordionItem title={"classes"} notify={notifyClasses}>
-              {showClasses ? <SelectClass /> : null}
-            </AccordionItem>
+        {!showsComponents.animationsBuilder &&
+          !showsComponents.stylesBuilder && (
+            <Accordion>
+              <AccordionItem title={"classes"} notify={notifyClasses}>
+                {showClasses ? <SelectClass /> : null}
+              </AccordionItem>
 
-            <AccordionItem key={2} title={"states"} notify={notifyStates}>
-              <SelectState />
-            </AccordionItem>
-          </Accordion>
-        )}
+              <AccordionItem key={2} title={"states"} notify={notifyStates}>
+                <SelectState />
+              </AccordionItem>
+            </Accordion>
+          )}
 
         <StyleAccordion />
       </section>

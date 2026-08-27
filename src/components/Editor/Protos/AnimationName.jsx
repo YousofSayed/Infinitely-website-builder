@@ -1,4 +1,4 @@
-import { wp_get_media_files_by_slugs } from "@/apps/wordpress/functions";
+import { wp_get_media_files_by_slugs } from "@/Apps/wordpress/functions";
 import { defineRoot } from "@/helpers/bridge";
 import {
   doInNormalAsync,

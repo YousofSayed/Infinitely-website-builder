@@ -12,6 +12,7 @@ import {
   ruleState,
   selectorState,
   showAnimationsBuilderState,
+  showComponentsInLeftPanelState,
   showStylesBuilderForMotionBuilderState,
 } from "@/helpers/atoms";
 import { defineRoot } from "@/helpers/bridge";
@@ -36,6 +37,7 @@ import {
   wpWorkerCallbackMaker,
 } from "@/helpers/functions";
 import { useRemoveCssProp } from "@/hooks/useRemoveCssProp";
+import { queryClient } from "@/utils/queryClient";
 import { useEditorMaybe } from "@grapesjs/react";
 import { random, uniqueId } from "lodash";
 import { toast } from "react-toastify";
@@ -56,6 +58,9 @@ export function useSetClassForCurrentEl() {
   const [frameStyles, setFrameStyles] = useRecoilState(framesStylesState);
 
   const showAnimationsBuilder = useRecoilValue(showAnimationsBuilderState);
+  const [showsComponents, setShowsComponents] = useRecoilState(
+    showComponentsInLeftPanelState,
+  );
   const [showStylesBuilder, setShowStylesBuilder] = useRecoilState(
     showStylesBuilderForMotionBuilderState,
   );
@@ -66,7 +71,7 @@ export function useSetClassForCurrentEl() {
     const setter = () => {
       let newCssProps = {};
       const selectedCmp = editor.getSelected();
-      if (!selectedCmp && !showAnimationsBuilder) {
+      if (!selectedCmp && !showsComponents.animationsBuilder) {
         toast.warn(
           <ToastMsgInfo msg={` please select component to apply style `} />,
         );
@@ -100,7 +105,7 @@ export function useSetClassForCurrentEl() {
         // console.log("elssssssssssssooooooooooo", newCssProps, !value);
       }
 
-      if (showAnimationsBuilder || showStylesBuilder) {
+      if (showsComponents.animationsBuilder || showsComponents.stylesBuilder) {
         newCssProps = newCssProps ? newCssProps : { [cssProp]: "" };
         // setAnimeStyles((old) => ({ ...old, ...newCssProps }));
         // setAnimeStyles({ ...newCssProps });
@@ -180,35 +185,61 @@ export function useSetClassForCurrentEl() {
       const rulesParsed = getComponentRules({
         editor,
         cmp: editor.getSelected(),
+        nested:true
       });
 
       setCmpRules(rulesParsed.rules || []);
 
-      if (symbolInfo.isSymbol) {   
-
+      if (symbolInfo.isSymbol) {
         if (!getProjectSettings().projectSettings.enable_auto_save) {
-          wpWorkerCallbackMaker(
-            pageBuilderWorker,
-            "wp_update_symbol",
-            {
-              projectId: getProjectId(),
-              symbol_id: symbolInfo.mainId,
-              symbol_meta: {
-                inf_meta: {
-                  before_save: {
-                    css: rulesParsed.stringRules,
-                  },
-                },
-              },
-            },
-            (props) => {
-              if (props.done) {
-                editor.trigger(InfinitelyEvents.blocks.symbols_need_reload, {
-                  state: true,
-                });
-              }
-            },
-          );
+          queryClient.setQueryData(["inf_symbols"], (oldData) => {
+            if (!oldData || !oldData.data) return oldData;
+            return {
+              ...oldData,
+              data: oldData.data.map((sym) => {
+                const symId = sym?.meta?.[inf_symbol_Id_attribute] || sym.id;
+                if (symId == id) {
+                  return {
+                    ...sym,
+                    meta: {
+                      ...(sym.meta || {}),
+                      inf_meta: {
+                        ...(sym.meta?.inf_meta || {}),
+                        before_save: {
+                          ...(sym.meta?.inf_meta?.before_save || {}),
+                          css: rulesParsed.stringRules,
+                        },
+                      },
+                    },
+                  };
+                }
+                return sym;
+              }),
+            };
+          });
+          editor.trigger(InfinitelyEvents.blocks.restore_wp_symbols)
+          // wpWorkerCallbackMaker(
+          //   pageBuilderWorker,
+          //   "wp_update_symbol",
+          //   {
+          //     projectId: getProjectId(),
+          //     symbol_id: symbolInfo.mainId,
+          //     symbol_meta: {
+          //       inf_meta: {
+          //         before_save: {
+          //           css: rulesParsed.stringRules,
+          //         },
+          //       },
+          //     },
+          //   },
+          //   (props) => {
+          //     if (props.done) {
+          //       editor.trigger(InfinitelyEvents.blocks.symbols_need_reload, {
+          //         state: true,
+          //       });
+          //     }
+          //   },
+          // );
         }
       }
 

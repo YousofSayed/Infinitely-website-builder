@@ -11,6 +11,7 @@ import {
   isAnimationsChangedState,
   reloaderState,
   showAnimationsBuilderState,
+  showComponentsInLeftPanelState,
   showDragLayerState,
   showLayersState,
   showPreviewState,
@@ -44,6 +45,8 @@ import interact from "interactjs";
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { useRecoilState, useRecoilValue } from "recoil";
+import { useShortcuts } from "@/hooks/useShortcuts";
+import { useSetWpTokensQueryVars } from "@/hooks/useSetWpTokensQueryVars";
 
 export const Iframe = () => {
   const showLayers = useRecoilValue(showLayersState);
@@ -81,7 +84,9 @@ export const Iframe = () => {
   const [showPreviewLoader, setShowPreviewLoader] = useState(true);
   const editorWrapper = useRef(refType);
   const previewRef = useRef(refType);
-
+const [showsComponents, setShowsComponents] = useRecoilState(
+    showComponentsInLeftPanelState,
+  );
   const saveAnimations = () => {
     if (isAnimationsChanged) {
       setSaveLoad(true);
@@ -255,7 +260,7 @@ export const Iframe = () => {
     if (!editor) return;
 
     editor.Canvas.refresh();
-  }, [showAnimBuilder, showLayers, editor]);
+  }, [showAnimBuilder, showLayers, showsComponents,  editor]);
 
   useEffect(() => {
     if (!showPreview) {
@@ -300,9 +305,12 @@ export const Iframe = () => {
     setUrlPage(true);
   };
 
+  useShortcuts();
+  useSetWpTokensQueryVars();
+
   return (
     <section className="relative bg-[#aaa]    h-full" ref={autoAnimate}>
-      {showAnimBuilder && (
+      {showsComponents.animationsBuilder && (
         <section className="grid place-items-center p-2 absolute top-0 left-0 z-20 bg-blue-900/40 backdrop-blur-sm w-full h-full">
           <section className="flex flex-col items-center justify-center self-center p-3 bg-surface-secondary shadow-2xl shadow-slate-950 rounded-lg gap-5">
             <figure className="relative  w-fit ">
@@ -324,10 +332,22 @@ export const Iframe = () => {
                       // setShowAnimBuilder(false);
                       setAnimationsChanged(false);
                       setAnimations([]);
-                      setShowAnimBuilder(false);
+                      // setShowAnimBuilder(false);
+                      setShowsComponents((prev) => {
+                        return {
+                          ...prev,
+                          animationsBuilder: false,
+                        };
+                      })
                     }
                   } else {
-                    setShowAnimBuilder(false);
+                    // setShowAnimBuilder(false);
+                    setShowsComponents((prev) => {
+                      return {
+                        ...prev,
+                        animationsBuilder: false,
+                      };
+                    })
                   }
                 }}
               >
@@ -396,7 +416,7 @@ export const Iframe = () => {
             <Portal>
               <main
                 id="preview-container"
-                className="fixed  left-0 top-0 h-full w-full z-[1000]"
+                className={`fixed  left-0 ${window.electron?.isDesktop ? "top-[40px] h-[calc(100%-40px)]" : "top-0 h-full"}  w-full z-[1000000]`}
                 ref={iframeContainer}
               >
                 {/* resizing elements */}
@@ -421,7 +441,7 @@ export const Iframe = () => {
                     </button>
                   </section>
                   <ul className="flex items-center gap-3 flex-wrap">
-                    <li className="group w-[20px] h-[20px] bg-green-600 rounded-full overflow-hidden flex justify-center items-center cursor-pointer">
+                    {/* <li className="group w-[20px] h-[20px] bg-green-600 rounded-full overflow-hidden flex justify-center items-center cursor-pointer">
                       <button
                         className="opacity-0 group-hover:opacity-[1] text-white font-bold  scale-[.8]  transition-all  w-full h-full flex justify-center items-center"
                         onClick={(ev) => {
@@ -445,7 +465,7 @@ export const Iframe = () => {
                       >
                         {Icons.square("white")}
                       </button>
-                    </li>
+                    </li> */}
                     <li
                       className="group w-[20px] h-[20px] bg-red-600 rounded-full flex justify-center items-center cursor-pointer"
                       onClick={(ev) => {
@@ -470,7 +490,7 @@ export const Iframe = () => {
                 </header>
 
                 <section
-                  className="h-[calc(100%-60px)] w-full resize rounded-lg bg-white p-2 border-2 border-blue-700"
+                  className="h-[calc(100%-60px)] w-full resize rounded-lg  border-2 border-blue-700"
                   style={{
                     contain: "layout paint",
                     transform: "translateZ(0)",
@@ -485,8 +505,8 @@ export const Iframe = () => {
                     <iframe
                       ref={previewIframe}
                       id="preview"
-                      allowFullScreen
                       src={previewSrc || urlSrc}
+                      allowFullScreen
                       onLoad={onPreviewLoad}
                       security="restricted"
                       about="target"

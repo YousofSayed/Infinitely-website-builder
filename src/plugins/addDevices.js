@@ -3,62 +3,102 @@ import { editorContainerInstance } from "@/constants/InfinitelyInstances";
 import { killAllGsapMotions } from "@/helpers/customEvents";
 import { getProjectData, restartGSAPMotions } from "@/helpers/functions";
 
-/**
- * @type {ResizeObserver}
- */
-export let editorObserver ;
+export let editorObserver;
 
 /**
- * @param {import('grapesjs').Editor} editor
+ * 
+ * @param {import('grapesjs').Editor} editor 
  */
 export const addDevices = (editor) => {
   let resizerObserver, mutationsObserver;
   const deviceManager = editor.DeviceManager;
+
+  let timeout;
+  let runId = 0;
+
+  // 🔥 Memory-based guard. No DOM attributes.
+  let lastAppliedZoom = -1;
+  let lastAppliedWidth = "";
+  let lastObservedWidth = -1;
+
+  // 🔥 Stable element to observe. Do NOT observe the element we zoom.
+  let resizeTarget = null;
+
+  function getCanvasWrapper() {
+    return typeof editor.getContainer === "function"
+      ? editor.getContainer()
+      : null;
+  }
+
   function emitEditorContainerZoom() {
-    console.log("i emit !!");
+    const canvasWrapper = getCanvasWrapper();
 
     editorContainerInstance.emit(InfinitelyEvents.editorContainer.update, {
-      value: editor.getContainer().style.zoom,
+      value: canvasWrapper ? canvasWrapper.style.zoom : "1",
     });
   }
-  let timeout;
+
+  function getResizeTarget() {
+    const canvasWrapper = getCanvasWrapper();
+    if (!canvasWrapper) return null;
+
+    if (resizeTarget && resizeTarget.isConnected) {
+      return resizeTarget;
+    }
+
+    // IMPORTANT:
+    // Observe the parent/host if possible.
+    // The zoomed container must not be the resize source,
+    // otherwise changing zoom triggers ResizeObserver again.
+    resizeTarget = canvasWrapper.parentElement || canvasWrapper;
+
+    return resizeTarget;
+  }
+
+  function getStableWidth() {
+    const canvasWrapper = getCanvasWrapper();
+    const target = getResizeTarget();
+
+    if (!canvasWrapper || !target) return 0;
+
+    // If there is no parent fallback, normalize by current zoom.
+    // This prevents the element's own zoom from feeding back into itself.
+    if (target === canvasWrapper) {
+      const currentZoom = parseFloat(canvasWrapper.style.zoom) || 1;
+      const rectWidth = canvasWrapper.getBoundingClientRect().width;
+
+      return currentZoom ? rectWidth / currentZoom : rectWidth;
+    }
+
+    // Parent/host measurement.
+    // Remove padding so we measure usable content width.
+    const styles = window.getComputedStyle(target);
+    const paddingLeft = parseFloat(styles.paddingLeft) || 0;
+    const paddingRight = parseFloat(styles.paddingRight) || 0;
+
+    return target.clientWidth - paddingLeft - paddingRight;
+  }
+
   // Remove all predefined devices
   [
-    "desktop",
-    "Desktop",
-    "tablet",
-    "Tablet",
-    "mobile",
-    "Mobile",
-    "mobilePortrait",
-    "Mobile portrait",
-    "mobileLandscape",
-    "Mobile landscape",
+    "desktop", "Desktop", "tablet", "Tablet", "mobile", "Mobile",
+    "mobilePortrait", "Mobile portrait", "mobileLandscape", "Mobile landscape",
   ].forEach((device) => deviceManager.remove(device));
 
   // Add device presets
-  // window.outerWidth
   deviceManager.add({
     id: "desktop",
     name: "desktop",
-    width: "",
-    widthMedia: window.outerWidth + "px",
+    width: '',
+    widthMedia: window.outerWidth + "px", // 🔥 FIX 1: Empty means fluid/base. Do NOT lock to window.outerWidth!
     priority: 1,
-    // priority: window.outerWidth,
   });
-
-  // deviceManager.add({
-  //   id: "desktop",
-  //   widthMedia: "9999px",
-  //   priority: 1,
-  // });
 
   deviceManager.add({
     id: "tablet",
     name: "tablet",
     width: "900px",
     widthMedia: "900px",
-    // priority: 900,
     priority: 2,
   });
 
@@ -67,28 +107,26 @@ export const addDevices = (editor) => {
     name: "mobile",
     width: "480px",
     widthMedia: "480px",
-    // priority: 480,
     priority: 3,
   });
 
-  // const lastDevice = localStorage.getItem("last-device");
-  // const lastDeviceJson = localStorage.getItem("last-device-json");
-  // if (lastDevice) editor.setDevice(lastDevice);
-  // if (lastDeviceJson) {
-  //   editor.Devices.add(JSON.parse(lastDeviceJson));
-  // }
   editor.onReady(() => {
     editor.trigger(InfinitelyEvents.devices.update);
   });
 
-  let firstTime = 0;
-
   const zoomToFit = () => {
     timeout && clearTimeout(timeout);
+
+    const thisRun = ++runId;
+
     timeout = setTimeout(async () => {
-      editor.getContainer().style.zoom = 1;
-      killAllGsapMotions((await getProjectData()).motions);
-      // editor.getContainer().style.transform = `scale(1)`;
+      const projectData = await getProjectData();
+
+      // If another zoomToFit was triggered while awaiting, abort this stale run.
+      if (thisRun !== runId) return;
+
+      killAllGsapMotions(projectData && projectData.motions);
+
       if (!editor.Canvas) {
         resizerObserver && resizerObserver.disconnect();
         mutationsObserver && mutationsObserver.disconnect();
@@ -96,157 +134,149 @@ export const addDevices = (editor) => {
         mutationsObserver = null;
         return;
       }
+
       const iframe = editor.Canvas.getFrameEl();
-      const canvasWrapper = editor.getContainer();
-      if (!iframe || !canvasWrapper) return;
-     
-      // iframe.style.display = "none";
-      console.log("from zoom fit");
+      const canvasWrapper = getCanvasWrapper();
+      const target = getResizeTarget();
+
+      if (!iframe || !canvasWrapper || !target) return;
+
+      const wrapperWidth = getStableWidth();
+
+      // 🔥 Startup guard:
+      // If panel is not laid out yet, do nothing.
+      // ResizeObserver will call again when it has real size.
+      if (!wrapperWidth || wrapperWidth <= 0) return;
 
       const device = editor.getDevice();
       const deviceDef = deviceManager.get(device)?.attributes;
 
-      const targetWidth = parseFloat(deviceDef?.widthMedia || "1080");
-      // console.log("target width : ", targetWidth, deviceDef?.widthMedia);
+      // const isDesktop = device === 'desktop';
+      let targetWidth = parseFloat(deviceDef?.widthMedia);
 
-      const wrapperWidth = canvasWrapper.clientWidth;
-      // const iframeBody = iframe.contentDocument.body;
-      // iframeBody.style.transition = `.2s`;
-      // editor.getContainer().style.transformOrigin = "0 0";
-      editor.getContainer().style.willChange = "zoom";
-      editor.getContainer().style.contain = `layout paint size`;
-      // editor.getContainer().style.backfaceVisibility = `hidden`;
-      // editor.getContainer().style.transform = `translateZ(0)`;
+      // Safety only. Prevents "NaNpx" if widthMedia is missing.
+      if (!isFinite(targetWidth) || targetWidth <= 0) {
+        targetWidth = wrapperWidth;
+      }
+
+      let desiredZoom = 1;
+      let desiredIframeWidth = `${targetWidth}px`;
+
+      // If desktop or widthMedia is missing, target width is the available wrapper width
+      // if (isDesktop || isNaN(targetWidth)) {
+      //   targetWidth = wrapperWidth;
+      // }
+
+      // 🔥 FIX 2: Properly handle Desktop vs Tablet/Mobile scaling
+      // if (isDesktop) {
+      //   // Desktop always fills 100% of the available space without zooming
+      //   iframe.style.width = `100%`;
+      //   editor.getContainer().style.zoom = `1`;
+      // } else if (wrapperWidth < targetWidth) {
+      //   // Tablet/Mobile: scale down if wrapper is smaller than device width
+      //   const scale = wrapperWidth / targetWidth;
+      //   iframe.style.width = `${targetWidth}px`; // Set exact device width so CSS media queries trigger correctly
+      //   editor.getContainer().style.zoom = `${scale}`;
+      // } else {
+      //   // Tablet/Mobile: wrapper is larger than device, center it with fixed width
+      //   iframe.style.width = `${targetWidth}px`;
+      //   editor.getContainer().style.zoom = `1`;
+      // }
 
       if (wrapperWidth < targetWidth) {
+        // Tablet/Mobile: scale down if wrapper is smaller than device width
         const scale = wrapperWidth / targetWidth;
-
-        iframe.style.width = `100%`;
-        editor.getContainer().style.zoom = `${scale}`;
-
-        // editor.on('component:create',(model)=>{
-        //   model.getEl().style.zoom = scale;
-        // })
-        // editor.getContainer().style.transform = `scale(${scale})`;
-        // editor.getContainer().style.width = `${editor.getContainer().clientWidth + (editor.getContainer().clientWidth * scale)}px`;
-        // editor.getContainer().style.height = `${editor.getContainer().clientHeight + (editor.getContainer().clientHeight * scale)}px`;
-        // editor.getContainer().style.transform = `scale(${scale})`;
-        // editor.Canvas.refresh({ all: true, spots: true });
-        // editor.refresh({ tools: true });
+        desiredZoom = scale;
+        desiredIframeWidth = `${targetWidth}px`; // Set exact device width so CSS media queries trigger correctly
       } else {
-        iframe.style.width = `${targetWidth}px`;
-        editor.getContainer().style.zoom = `1`;
-        // editor.getContainer().style.transform = `scale(1)`;
-        // editor.Canvas.refresh({ all: true, spots: true });
-        // editor.refresh({ tools: true });
+        // Tablet/Mobile: wrapper is larger than device, center it with fixed width
+        desiredZoom = 1;
+        desiredIframeWidth = `${targetWidth}px`;
       }
-      // requestAnimationFrame(() => {
-      //   // iframe.style.display = null;
-      // });
+
+      // Invalid state guard
+      if (!isFinite(desiredZoom) || desiredZoom <= 0) return;
+
+      // 🔥 If already applied, stop.
+      // This is the real infinite-loop breaker.
+      if (
+        Math.abs(lastAppliedZoom - desiredZoom) < 0.001 &&
+        lastAppliedWidth === desiredIframeWidth
+      ) {
+        return;
+      }
+
+      lastAppliedZoom = desiredZoom;
+      lastAppliedWidth = desiredIframeWidth;
+
+      // 🔥 Disconnect while mutating layout.
+      // This prevents our own style change from immediately re-triggering RO.
+      editorObserver && editorObserver.disconnect();
+
+      canvasWrapper.style.willChange = "zoom";
+
+      // IMPORTANT:
+      // Removed `size` from contain.
+      // `contain: size` on an auto-sized editor root can collapse it
+      // and cause ResizeObserver loops at startup.
+      canvasWrapper.style.contain = "layout paint";
+
+      iframe.style.width = desiredIframeWidth;
+      canvasWrapper.style.zoom = `${desiredZoom}`;
+
       emitEditorContainerZoom();
       restartGSAPMotions(editor);
-     
+
+      // Re-observe after browser has applied the layout/paint.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (target.isConnected) {
+            editorObserver && editorObserver.observe(target);
+          }
+        });
+      });
     }, 80);
-    // Boolean(firstTime ) ? 80 : 0
   };
 
   editorObserver = new ResizeObserver((entries) => {
-    // const { width, height } = entries[0].contentRect;
-    // alert("Document resized:", width, height);
-   const el = entries[0].target;
-   if(el.hasAttribute('zooming')){
-    el.removeAttribute('zooming');
-    return;
-   }
+    const entry = entries && entries[0];
+    const width = entry ? entry.contentRect.width : 0;
+
+    // 🔥 Ignore subpixel jitter / self-induced micro changes.
+    if (Math.abs(width - lastObservedWidth) < 1) return;
+
+    lastObservedWidth = width;
     zoomToFit();
   });
 
-  // editor.on("canvas:frame:load:body", () => {
-  //   const documentFrame = editor.Canvas.getDocument();
+  const initialTarget = getResizeTarget();
 
-  //   // ro.observe(documentFrame.documentElement);
-  // });
-  editorObserver.observe(editor.getContainer());
-
-  // resizerObserver = new ResizeObserver(() => {
-  //   zoomToFit();
-  // });
-
-  // mutationsObserver = new MutationObserver((entries) => {
-  //   const rightPanel = document.querySelector(`#right-panel`);
-  //   const leftPanel = document.querySelector(`#left-panel`);
-  //   // entries.forEach((entry) => {
-  //   //   entry.removedNodes.forEach((node) => {
-  //   //     resizerObserver.unobserve(node);
-  //   //   });
-  //   // });
-  //   if (rightPanel) {
-  //     resizerObserver.observe(rightPanel);
-  //   }
-  //   if (leftPanel) {
-  //     resizerObserver.observe(leftPanel);
-  //   }
-  // });
+  if (initialTarget) {
+    editorObserver.observe(initialTarget);
+  }
 
   editor.on("change:device", () => {
-    // editor.getContainer().style.zoom = 1;
-    // localStorage.setItem("last-device", editor.getDevice());
-    // localStorage.setItem(
-    //   "last-device-json",
-    //   JSON.stringify(editor.Devices.get(editor.getDevice()).toJSON())
-    // );
-    // console.log(
-    //   "Device is : ",
-    //   editor.Devices.get(editor.getDevice()).toJSON()
-    // );
-    // editor.refresh();
-    // editor.Canvas.refresh();
-    // alert('must refresh!')
+    lastAppliedZoom = -1;
+    lastAppliedWidth = "";
+    lastObservedWidth = -1;
+    zoomToFit();
+  });
+
+  editor.onReady(() => {
+    zoomToFit();
+  });
+
+  window.addEventListener("resize", () => {
+    const desktopDevice = deviceManager.get("desktop");
+
+    if (desktopDevice) {
+      desktopDevice.set({ widthMedia: window.outerWidth + "px" });
+    }
+
+    lastAppliedZoom = -1;
+    lastAppliedWidth = "";
+    lastObservedWidth = -1;
 
     zoomToFit();
   });
-  // editor.on("canvas:frame:load:body", () => {
-  //   // editor.getContainer().style.zoom = 1;
-  //   zoomToFit();
-  // });
-
-  // editor.on(
-  //   "canvas:frame:load:body",
-  //   /**
-  //    *
-  //    * @param {{window:Window}} param0
-  //    */
-  //   ({ window }) => {
-  //     // console.log('from load ;' , document.querySelector(`#right-panel`));
-  //     //document.querySelector(`#panel-group`)
-
-  //     firstTime++;
-  //     if (mutationsObserver && mutationsObserver instanceof MutationObserver) {
-  //       mutationsObserver.disconnect();
-  //       mutationsObserver = null;
-  //       mutationsObserver = new MutationObserver((entries) => {
-  //         const rightPanel = document.querySelector(`#right-panel`);
-  //         const leftPanel = document.querySelector(`#left-panel`);
-  //         if (rightPanel) {
-  //           resizerObserver.observe(rightPanel);
-  //         }
-  //         if (leftPanel) {
-  //           resizerObserver.observe(leftPanel);
-  //         }
-  //       });
-  //     }
-
-  //     mutationsObserver.observe(document.querySelector(`#panels-group`), {
-  //       childList: true,
-  //       subtree: true,
-  //     });
-
-  //     zoomToFit();
-
-  //     // resizerObserver.observe(document.querySelector(`#right-panel`));
-  //     // resizerObserver.observe(document.querySelector(`#left-panel`));
-  //   }
-  // );
-
-  // window.addEventListener("resize", () => zoomToFit());
 };

@@ -1,4 +1,4 @@
-import { wp_delete_media_files_by_slugs, wp_get, wp_upload_multiple_files } from '@/apps/wordpress/functions';
+import { wp_delete_media_files_by_slugs, wp_get, wp_upload_multiple_files } from '@/Apps/wordpress/functions';
 import { current_project_id } from '@/constants/shared';
 import { toMB } from '@/helpers/bridge';
 import { assetsWorker, pageBuilderWorker } from '@/helpers/defineWorkers';
@@ -17,7 +17,7 @@ import { isArray } from 'lodash';
 import React, { useEffect, useRef, useState } from 'react'
 import { config } from '@/config/brand';
 import { toast } from 'react-toastify';
-import { VirtuosoGrid } from 'react-virtuoso';
+import { VirtuosoGrid } from 'react-virtuoso'; 
 
 export const MediaManager = () => {
     /**
@@ -230,7 +230,7 @@ export const MediaManager = () => {
                 <SmallButton
                     disabled={isBusy}
                     title={mediaSelected.length ? "Delete Selected" : "Delete All"}
-                    className="h-full flex-shrink-0 bg-surface-secondary hover:bg-[crimson!important]"
+                    className="h-full shrink-0 bg-surface-secondary hover:bg-[crimson!important]"
                     onClick={async () => {
                         await deleteAll();
                     }}
@@ -240,7 +240,7 @@ export const MediaManager = () => {
 
                 <SmallButton
                     disabled={isBusy}
-                    className="h-full flex-shrink-0 bg-surface-secondary"
+                    className="h-full shrink-0 bg-surface-secondary"
                     title={"Upload"}
                     onClick={openUploader}
                 // className="py-[7.5px] px-[30px]  font-bold text-lg"

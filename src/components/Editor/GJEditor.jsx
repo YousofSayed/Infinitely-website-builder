@@ -1,6 +1,5 @@
-
 import gStyles from "../../../public/styles/style.css?raw";
-import { blocks } from "@/blocks/blocks.jsx";
+import { blocks } from "@/Blocks/blocks.jsx";
 import { InfinitelyEvents } from "@/constants/infinitelyEvents.js";
 import { current_symbol_id } from "@/constants/shared.js";
 import {
@@ -18,7 +17,10 @@ import {
   getCurrentStorageType,
   getInfinitelySymbolInfo,
   getProjectSettings,
+  isNormal,
+  isWordpress,
 } from "@/helpers/functions";
+import { useShortcuts } from "@/hooks/useShortcuts";
 import { addDevices } from "@/plugins/addDevices";
 import { addNewBuiltinCommands } from "@/plugins/addNewBuiltinCommands.jsx";
 import { addNewTools } from "@/plugins/addNewTools.jsx";
@@ -40,33 +42,28 @@ import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRecoilState, useSetRecoilState } from "recoil";
 
-// 
-
-
-
-// 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+const plugins = [
+  infProps,
+  customCmps,
+  addDevices,
+  customModal,
+  addNewTools,
+  addNewBuiltinCommands,
+  motionsAndInteractionsCloneHandler,
+  updateProjectThumbnail,
+  customInfinitelySymbols,
+  globalTraits,
+  initTraitsOnRender,
+  editorKeymaps,
+  ...(isNormal() ? [IDB] : isWordpress() ? [wp_remote_storage] : []),
+  updateEditorStyleAfterTemplateOrBlockAdded,
+  // customColors,
+  // updateDynamicTemplates,
+  // motionsRemoverHandler,
+  // handleComponentsOnCreate,
+  // selectionPreventer,
+  // muatationDomElements,
+];
 
 export const GJEditor = ({ children }) => {
   const setSelectedEl = useSetRecoilState(currentElState);
@@ -77,13 +74,7 @@ export const GJEditor = ({ children }) => {
   const [reloader, setReloader] = useRecoilState(reloaderState);
   const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
   const [mediaCond, setMediaCond] = useRecoilState(mediaConditionState);
-
-  // const currentDynamicTemplateId = useRecoilValue(
-  //   currentDynamicTemplateIdState
-  // );
-  // const dynamicTemplates = useRecoilValue(dynamicTemplatesState);
-  // const setStyle = useSetClassForCurrentEl();
-  const [plugins, setPlugins] = useState([
+  const plugins = useRef([
     infProps,
     customCmps,
     addDevices,
@@ -96,8 +87,7 @@ export const GJEditor = ({ children }) => {
     globalTraits,
     initTraitsOnRender,
     editorKeymaps,
-    IDB,
-    wp_remote_storage,
+    ...(isNormal() ? [IDB] : isWordpress() ? [wp_remote_storage] : []),
     updateEditorStyleAfterTemplateOrBlockAdded,
     // customColors,
     // updateDynamicTemplates,
@@ -106,6 +96,12 @@ export const GJEditor = ({ children }) => {
     // selectionPreventer,
     // muatationDomElements,
   ]);
+
+  // const currentDynamicTemplateId = useRecoilValue(
+  //   currentDynamicTemplateIdState
+  // );
+  // const dynamicTemplates = useRecoilValue(dynamicTemplatesState);
+  // const setStyle = useSetClassForCurrentEl();
 
   /**
    *
@@ -124,7 +120,7 @@ export const GJEditor = ({ children }) => {
         const iframe = el;
         iframe.contentDocument.head.insertAdjacentHTML(
           `afterbegin`,
-          `<meta name="viewport" content="width=device-width, initial-scale=1.0">`
+          `<meta name="viewport" content="width=device-width, initial-scale=1.0">`,
         );
 
         if (iframe.hasAttribute("src")) return;
@@ -234,13 +230,14 @@ export const GJEditor = ({ children }) => {
       setCmpRules(rules.rules || []);
     });
   };
-  console.log("gj-editor : ", getProjectSettings().projectSettings);
+
 
   return (
     <GjsEditor
       key={reloader}
       grapesjs={grapesjs}
       options={{
+        plugins: plugins.current,
         height: "100%",
         width: "100%",
         multipleSelection: true,
@@ -342,7 +339,6 @@ export const GJEditor = ({ children }) => {
             },
         },
         // jsInHtml: true,
-        plugins,
       }}
       onEditor={onEditor}
     >

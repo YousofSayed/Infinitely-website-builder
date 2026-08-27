@@ -1,13 +1,14 @@
 import {
   wp_get,
   wp_get_header_footer,
+  wp_get_posts,
   wp_get_single,
   wp_inf_render_components,
   wp_inf_render_template,
   wp_update_option,
   wp_update_single,
-} from "@/apps/wordpress/functions";
-import { wp_get_post_id } from "@/apps/wordpress/functions_ui";
+} from "@/Apps/wordpress/functions";
+import { wp_get_post_id } from "@/Apps/wordpress/functions_ui";
 import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { InfinitelyEvents } from "@/constants/infinitelyEvents";
 import { editorStorageInstance } from "@/constants/InfinitelyInstances";
@@ -19,6 +20,7 @@ import {
   mainScriptsForEditor,
   wp_page_config,
   wp_rest_base_edite,
+  wp_token_vars,
 } from "@/constants/shared";
 import {
   defineRoot,
@@ -40,6 +42,7 @@ import {
   getComponentRules,
   getInfinitelySymbolInfo,
   getProjectData,
+  getProjectId,
   getProjectSettings,
   getWpEditeMode,
   getWpPageConfig,
@@ -51,8 +54,8 @@ import {
   wpWorkerCallbackMaker,
 } from "@/helpers/functions";
 import { infinitelyWorker } from "@/helpers/infinitelyWorker";
-import { queryClient } from "@/main";
 import { updateThumbnailTimeout } from "@/plugins/updateProjectThumbnail";
+import { queryClient } from "@/utils/queryClient";
 import { minify } from "csso";
 import { cloneDeep, isArray, isPlainObject, uniqueId } from "lodash";
 import { toast } from "react-toastify";
@@ -76,9 +79,14 @@ function addCacheBusterToAllAssets(doc = document) {
     }
   });
 }
-
+/**
+ *
+ * @param {import('grapesjs').Editor} editor
+ * @returns
+ */
 export const wp_remote_storage = (editor) => {
-  const projectID = localStorage.getItem(current_project_id);
+  console.log("wp_remote_storage.js Fired");
+  const projectID = getProjectId();
   let tId;
   editor.infDirty = 0;
 
@@ -120,6 +128,9 @@ export const wp_remote_storage = (editor) => {
           return;
         }
       }
+      editorStorageInstance.emit(InfinitelyEvents.storage.loadStart);
+      editor.trigger(InfinitelyEvents.storage.loadStart);
+      editor.trigger("storage:start:load");
       editor.clearDirtyCount();
       clearTimeouts();
       const pageSlug = localStorage.getItem(current_page_id);
@@ -150,12 +161,24 @@ export const wp_remote_storage = (editor) => {
         return;
       }
 
-      const page = await wp_get_single({
-        projectId,
-        endpoint: rest_base,
-        singleId: post_config.id,
-      });
-      if (!page) {
+      const page = await (
+        await wp_get_posts({
+          post_type: post_config.post_type,
+          projectId: projectId,
+          post_id: post_config.id,
+        })
+      )?.data;
+      console.log("page : ", page, rest_base, post_config.id);
+
+      if (!page.ok && page.error) {
+        toast.error(
+          <ToastMsgInfo msg={`Page ${pageSlug} not founded in wordpress 💔`} />,
+        );
+        navigateFromAnyWhere("/wordpress/select");
+        return;
+      }
+
+      if (!isPlainObject(page)) {
         toast.error(
           <ToastMsgInfo msg={`Page ${pageSlug} not founded in wordpress 💔`} />,
         );
@@ -311,6 +334,8 @@ export const wp_remote_storage = (editor) => {
         ...(data?.html || []),
         `<style id="inf-css">${data.css || ""}</style`,
       ];
+      
+      localStorage.removeItem(wp_token_vars);
       editor.clearDirtyCount();
       const wrapper = editor.getWrapper();
       wrapper.addAttributes(data.bodyAttributes);
@@ -430,6 +455,7 @@ export const wp_remote_storage = (editor) => {
         },
       );
       editor.infLoading = false;
+      editor.trigger("storage:end:load");
       editorStorageInstance.emit(InfinitelyEvents.storage.loadEnd);
       return;
     },
@@ -444,6 +470,7 @@ export const wp_remote_storage = (editor) => {
           const runStore = async () => {
             editor.infStore = true;
             editor.trigger(InfinitelyEvents.storage.storeStart);
+            editorStorageInstance.emit(InfinitelyEvents.storage.storeStart);
 
             const projectId = +localStorage.getItem(current_project_id);
             const currentPageId = currentPageName;
@@ -471,6 +498,11 @@ export const wp_remote_storage = (editor) => {
             if (projectSettings.enable_auto_save)
               window.addEventListener("beforeunload", beforeunload);
 
+            currentSymbolId &&
+              editor.trigger(InfinitelyEvents.blocks.remove_wp_symbols, {
+                symbolId: currentSymbolId,
+              });
+
             const handleGlobalSymbol = async () => {
               if (!currentSymbolId) return;
               const symbolEl = editor
@@ -485,7 +517,6 @@ export const wp_remote_storage = (editor) => {
               const symbol = symbolInf?.symbol || symbolEl;
               if (!symbol) return;
 
-              editor.trigger(InfinitelyEvents.blocks.remove_wp_symbols);
               const content = gjsComponentsToJSON(symbol, true);
               const style = getComponentRules({
                 editor,
@@ -606,12 +637,16 @@ export const wp_remote_storage = (editor) => {
 
                   sessionStorage.removeItem(current_symbol_id);
                   editor.trigger(InfinitelyEvents.storage.storeEnd);
-                  tId && toast.done(tId);
-                  toast[success ? "success" : "error"](
-                    <ToastMsgInfo
-                      msg={`Saved ${success ? "successfully" : "with errors"} ${success ? "✅" : "❌"}`}
-                    />,
-                  );
+                  editorStorageInstance.emit(InfinitelyEvents.storage.storeEnd);
+                  editor.trigger("storage:end:store");
+                  if (!projectSettings.enable_auto_save) {
+                    tId && toast.done(tId);
+                    toast[success ? "success" : "error"](
+                      <ToastMsgInfo
+                        msg={`Saved ${success ? "successfully" : "with errors"} ${success ? "✅" : "❌"}`}
+                      />,
+                    );
+                  }
                   editor.infStore = false;
                 }
               } catch (error) {
@@ -682,7 +717,7 @@ export const wp_remote_storage = (editor) => {
           };
           runStore();
         },
-        getProjectSettings().projectSettings?.enable_auto_save ? 700 : 0,
+        getProjectSettings().projectSettings?.enable_auto_save ? 300 : 0,
       );
       return storeTimeout;
     },

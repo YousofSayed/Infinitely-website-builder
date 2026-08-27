@@ -433,7 +433,7 @@ export const Commands = () => {
         />
 
         <SmallButton
-          className="flex-shrink-0 bg-surface-tertiary"
+          className="shrink-0 bg-surface-tertiary"
           onClick={(ev) => {
             addCmd(command);
           }}
@@ -498,7 +498,7 @@ export const Commands = () => {
                       }`}
                     >
                       <p
-                        className={`min-w-[30%] bg-blue-500  select-none border-l-[3px] p-2 text-nowrap text-[calc(4.5vh/2)] capitalize overflow-auto hideScrollBar   flex   items-center justify-center flex-shrink-0 w-fit rounded-lg  border-blue-600   text-text-primary font-bold `}
+                        className={`min-w-[30%] bg-blue-500  select-none border-l-[3px] p-2 text-nowrap text-[calc(4.5vh/2)] capitalize overflow-auto hideScrollBar   flex   items-center justify-center shrink-0 w-fit rounded-lg  border-blue-600   text-text-primary font-bold `}
                       >
                         {param.name} :{" "}
                       </p>

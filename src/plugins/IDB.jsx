@@ -299,6 +299,8 @@ export const loadElements = async (
  * @param {import('grapesjs').Editor} editor
  */
 export const IDB = (editor) => {
+  console.log('IDB.js Fired');
+  
   const projectID = localStorage.getItem(current_project_id);
   const mainCreateObjectURLMethod = URL.createObjectURL;
   const willRevokedURLs = new Map();
@@ -414,7 +416,7 @@ export const IDB = (editor) => {
           const runStore = async () => {
             // console.log(
             //   "prrrrrrrrrrrrops from store : ",
-            //   storeProps,
+            //   storeProps, 
             //   editor.infLoading
             // );
             const projectSettings = getProjectSettings().projectSettings;
@@ -433,6 +435,7 @@ export const IDB = (editor) => {
                 tId = toast.loading(<ToastMsgInfo msg={"Saving..."} />);
               }
 
+              editor.infStore = true;
               const projectID = +localStorage.getItem(current_project_id);
               const currentPageId = currentPageName;
               const currentSymbolId = sessionStorage.getItem(current_symbol_id);
@@ -630,6 +633,7 @@ export const IDB = (editor) => {
                   }
 
                   editor.Storage.setAutosave(projectSettings.enable_auto_save);
+                  editor.infStore = false;
                   // reInitInfinitelyWorker();
 
                   // res(true);

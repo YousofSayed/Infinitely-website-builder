@@ -1,4 +1,4 @@
-import { wp_delete_media_files_by_slugs, wp_get_blob_media_by_slug, } from '@/apps/wordpress/functions';
+import { wp_delete_media_files_by_slugs, wp_get_blob_media_by_slug, } from '@/Apps/wordpress/functions';
 import { current_project_id } from '@/constants/shared';
 import { assetsWorker, pageBuilderWorker } from '@/helpers/defineWorkers';
 import { wpWorkerCallbackMaker } from '@/helpers/functions';

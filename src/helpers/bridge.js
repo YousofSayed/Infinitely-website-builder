@@ -6,7 +6,7 @@ import {
   wp_update_media_files_by_slugs,
   wp_upload_file,
   wp_upload_multiple_files,
-} from "@/apps/wordpress/functions";
+} from "@/Apps/wordpress/functions";
 import { tmp } from "@/constants/RestAPIEndpoints";
 import {
   buildScripts,
@@ -184,8 +184,9 @@ export function doStringObject(object = {}) {
   let stringObj = `{ `;
   const entries = Object.entries(JSON.parse(JSON.stringify(object)));
   entries.forEach(([key, value], i) => {
-    stringObj += `${key} : ${value} ${i != entries.length - 1 ? "," : ""} ${i == entries.length - 1 ? "}" : ""
-      }`;
+    stringObj += `${key} : ${value} ${i != entries.length - 1 ? "," : ""} ${
+      i == entries.length - 1 ? "}" : ""
+    }`;
   });
   console.log(JSON.stringify(object));
   console.log(JSON.parse(JSON.stringify(object)));
@@ -243,7 +244,7 @@ export function parseForDirective(xForDirective = "") {
   if (!xForDirective || typeof xForDirective !== "string") return null;
 
   // Normalize whitespace
-  const clean = xForDirective
+  const clean = xForDirective;
   // .trim().replace(/\s+/g, " ");
 
   // --- CASE 1: (item, index) in source ---
@@ -252,7 +253,7 @@ export function parseForDirective(xForDirective = "") {
     return {
       varName: match[1],
       index: match[2],
-      array: (match[3]||'').trim(),
+      array: (match[3] || "").trim(),
     };
   }
 
@@ -262,7 +263,7 @@ export function parseForDirective(xForDirective = "") {
     return {
       varName: match[1],
       index: null,
-      array: (match[2]||'').trim(),
+      array: (match[2] || "").trim(),
     };
   }
 
@@ -272,7 +273,7 @@ export function parseForDirective(xForDirective = "") {
     return {
       varName: match[1],
       index: null,
-      array: (match[2]||'').trim(),
+      array: (match[2] || "").trim(),
     };
   }
 
@@ -366,7 +367,7 @@ export function parseStringObjToKV(strObj = "") {
   return parseMaped;
 }
 
-export async function replaceCssURLS(css = "", callback = (url = "") => { }) {
+export async function replaceCssURLS(css = "", callback = (url = "") => {}) {
   const blobRegex = /url\(['"]?(blob:[^'")]+)['"]?\)/g;
   const infinitelyRgx = /url\((\"|\'|\`)?infinitely(.+)(\"|\'|\`)?\)/g;
   const stylesheet = parseCss(
@@ -403,13 +404,15 @@ export async function replaceCssURLS(css = "", callback = (url = "") => { }) {
               if (infUrl) {
                 // console.log((await parseInfinitelyURL(infUrl)).blobUrl);
                 if (blobUrlIndex != -1) {
-                  splitted[blobUrlIndex] = `url("${await callback(infUrl)
+                  splitted[blobUrlIndex] = `url("${
+                    await callback(infUrl)
                     // (await parseInfinitelyURL(infUrl)).blobUrl
-                    }")`;
+                  }")`;
                 } else {
                   splitted = [
-                    `url("${await callback(infUrl)
-                    // (await parseInfinitelyURL(infUrl)).blobUrl
+                    `url("${
+                      await callback(infUrl)
+                      // (await parseInfinitelyURL(infUrl)).blobUrl
                     }")`,
                     ...splitted,
                   ];
@@ -614,7 +617,7 @@ export async function getFileFromHandle(path) {
   return await (await opfs.getFile(await getOPFSProjectDir(), path)).getFile();
 }
 
-export function isDevMode(resolve = (result) => { }, reject = (result) => { }) {
+export function isDevMode(resolve = (result) => {}, reject = (result) => {}) {
   const isDev = import.meta.env.MODE === "development";
   if (isDev) {
     resolve(isDev);
@@ -690,7 +693,7 @@ export function getFilesSize(files, fixed = 2) {
   };
 }
 
-export function isChrome(callback = (bool = false) => { }) {
+export function isChrome(callback = (bool = false) => {}) {
   const cond = navigator.userAgent.toLowerCase().includes("chrome");
   if (cond) {
     callback(cond);
@@ -782,32 +785,44 @@ const isFunction = (value) => {
 
 // export function infinitelyObjectSerializer(obj = {} , excludes = []) {
 //   const clone = cloneDeep(obj);
-  
+
 //   serializeJavascript
 // }
 
-const handleMotionSelectorValue = (value = '', attribute, motion , isSelector = false) => {
+const handleMotionSelectorValue = (
+  value = "",
+  attribute,
+  motion,
+  isSelector = false,
+) => {
   let finalValue = value;
 
-  if (typeof value !== 'string') {
-    console.warn('Value is not string');
+  if (typeof value !== "string") {
+    console.warn("Value is not string");
     return value;
   }
 
-  let splitedValue = value.trim().split(' ');
+  let splitedValue = value.trim().split(" ");
 
   if (motion?.isLoop) {
-
-    finalValue = splitedValue[0] === 'self' ? splitedValue.length > 1 ? `thrower(el.querySelectorAll("${splitedValue.slice(1, splitedValue.length).join(' ')}"))` : `thrower(el)` : finalValue
-  }
-  else {
+    finalValue =
+      splitedValue[0] === "self"
+        ? splitedValue.length > 1
+          ? `thrower(el.querySelectorAll("${splitedValue.slice(1, splitedValue.length).join(" ")}"))`
+          : `thrower(el)`
+        : finalValue;
+  } else {
     finalValue = value.replaceAll?.("self", attribute);
   }
-  console.log('splitedValue : ', splitedValue, splitedValue[0] === 'self', finalValue);
-
+  console.log(
+    "splitedValue : ",
+    splitedValue,
+    splitedValue[0] === "self",
+    finalValue,
+  );
 
   return finalValue;
-}
+};
 
 /**
  *
@@ -841,9 +856,9 @@ function CompileMotion(
     fromTo: [],
   };
   // const attribute = 'el';
-  const attribute =
-    `[${motion?.isInstance ? `motion-instance-id` : `motion-id`
-    }=${motion.id}]`;
+  const attribute = `[${
+    motion?.isInstance ? `motion-instance-id` : `motion-id`
+  }=${motion.id}]`;
 
   // const handleSelector = (value = '') => {
   //   if (value.includes('self')) {
@@ -880,7 +895,7 @@ function CompileMotion(
             const isFn = isFunction(value);
             value = //handleValue(value);
               typeof value === "string"
-                ? value.replaceAll?.("self", motion?.isLoop ? '$el' : attribute)
+                ? value.replaceAll?.("self", motion?.isLoop ? "$el" : attribute)
                 : value;
 
             return [
@@ -896,7 +911,7 @@ function CompileMotion(
           // }
           return [
             key,
-            handleValue(value)
+            handleValue(value),
             // typeof value === "string"
             //   ? value.replaceAll?.("self", attribute)
             //   : value,
@@ -1004,23 +1019,24 @@ export function buildGsapMotionsScript(
     let splitTextName =
       motion.splitTextName || `${uniqueId("spltTxt_")}${random(1, 9999)}`;
     let tween = `
-    ${motion.isSplitText
+    ${
+      motion.isSplitText
         ? `let ${splitTextName} = new SplitText(
     \`${compiledMotion.splitTextSelector}\`,
     new Function(\`return (${serializeJavascript(compiledMotion.splitText, {
-          space: 2,
-        }).replaceAll("\\", "\\\\")})\`)()
+      space: 2,
+    }).replaceAll("\\", "\\\\")})\`)()
   )`
         : ``
-      }
+    }
 
     let ${motion.id} = {}; \n\n
     `;
 
     const splitKeys = ["chars", "lines", "words"];
-    const attribute =
-      `[${motion?.isInstance ? `motion-instance-id` : `motion-id`
-      }=${motion.id}]`;
+    const attribute = `[${
+      motion?.isInstance ? `motion-instance-id` : `motion-id`
+    }=${motion.id}]`;
 
     const setSelector = (selector = "") => {
       let splitTarget;
@@ -1033,21 +1049,25 @@ export function buildGsapMotionsScript(
           return cond;
         });
       // console.log("splitTarget", splitTarget, split);
-      return cond ? `${splitTextName}.${splitTarget}` : motion?.isLoop ? handleMotionSelectorValue(selector, attribute, motion) : `\`${selector}\``;
+      return cond
+        ? `${splitTextName}.${splitTarget}`
+        : motion?.isLoop
+          ? handleMotionSelectorValue(selector, attribute, motion)
+          : `\`${selector}\``;
 
       // return cond ? `new Function( console.log(${splitTextName}[\\\`${splitTarget}\\\`]) ;return ${splitTextName}[\\\`${splitTarget}\\\`])()` : selector;
     };
 
     const doMotion = () => {
       if (motion.isTimeLine) {
-        tween += `${motion.id}.${motion.timeLineName || `${uniqueId("timeline_")}${random(1, 9999)}`
-          } = gsap.timeline(
+        tween += `${motion.id}.${
+          motion.timeLineName || `${uniqueId("timeline_")}${random(1, 9999)}`
+        } = gsap.timeline(
           
           
-          ()=>(${serializeJavascript(
-            compiledMotion.timeline,
-            { space: 2 ,   },
-          ).replaceAll("\\", "\\\\")})\`))
+          ()=>(${serializeJavascript(compiledMotion.timeline, {
+            space: 2,
+          }).replaceAll("\\", "\\\\")})\`))
           `;
       }
 
@@ -1061,10 +1081,10 @@ export function buildGsapMotionsScript(
           const toObject = `
          
           
-          ()=>(${serializeJavascript(
-            item.toValue,
-            { space: 2 },
-          ).replaceAll("\\", "\\\\")})
+          ()=>(${serializeJavascript(item.toValue, { space: 2 }).replaceAll(
+            "\\",
+            "\\\\",
+          )})
           `;
 
           //  new Function( ${motion?.isLoop ? `'$el',` : ''} \`return (${serializeJavascript(
@@ -1075,67 +1095,66 @@ export function buildGsapMotionsScript(
           const fromObject = `
           
          
-          ()=>(${serializeJavascript(
-            item.fromValue,
-            { space: 2 },
-          ).replaceAll("\\", "\\\\")})
+          ()=>(${serializeJavascript(item.fromValue, { space: 2 }).replaceAll(
+            "\\",
+            "\\\\",
+          )})
           `;
 
           // new Function(${ motion?.isLoop? `'$el',` : ''} \`return (${serializeJavascript(
           //   item.fromValue,
           //   { space: 2 },
           // ).replaceAll("\\", "\\\\")})\`)(${motion?.isLoop ? `$el` : ''})
-          
 
           tween += `${
-          motion.isTimeLine ? "" : `${motion.id}.${item.name} = gsap`
-        }.fromTo(${
-          setSelector(
+            motion.isTimeLine ? "" : `${motion.id}.${item.name} = gsap`
+          }.fromTo(${setSelector(
             item.selector,
-            )
-      }, (${ fromObject.trim() })() , (${ toObject.trim() })() , \`${item.positionParameter || ""
-        }\`)${motion.isTimeLine
-          ? i == compiledMotion.fromTo.length - 1
-            ? ";\n\n"
-            : ""
-          : ";\n\n"
-        }`;
-// {...${ fromObject }}, {...${ toObject } }
+          )}, (${fromObject.trim()})() , (${toObject.trim()})() , \`${
+            item.positionParameter || ""
+          }\`)${
+            motion.isTimeLine
+              ? i == compiledMotion.fromTo.length - 1
+                ? ";\n\n"
+                : ""
+              : ";\n\n"
+          }`;
+          // {...${ fromObject }}, {...${ toObject } }
           // console.log(new Function(`return ${serializeJavascript(item.toValue , {space:2, })}`)());
         }
       }
     };
 
-console.log(
-  "motions from script builder",
-  motion,
-  !motion?.excludes?.includes?.(pageName),
-);
+    console.log(
+      "motions from script builder",
+      motion,
+      !motion?.excludes?.includes?.(pageName),
+    );
 
-if (!motion?.excludes?.includes?.(pageName)) {
-  doMotion();
-}
+    if (!motion?.excludes?.includes?.(pageName)) {
+      doMotion();
+    }
 
-if (Object.keys(motion.instances).length) {
-  console.log(
-    "instances length : ",
-    motion.instances,
-    Object.keys(motion.instances),
-  );
+    if (Object.keys(motion.instances).length) {
+      console.log(
+        "instances length : ",
+        motion.instances,
+        Object.keys(motion.instances),
+      );
 
-  for (const id in motion.instances) {
-    const clone = cloneDeep(motion);
-    clone.id = id;
-    ((clone.isInstance = true), (clone.instances = {}));
-    delete clone["excludes"];
-    tween += buildGsapMotionsScript({ [id]: clone }, true, removeMarkers);
-  }
-}
+      for (const id in motion.instances) {
+        const clone = cloneDeep(motion);
+        clone.id = id;
+        ((clone.isInstance = true), (clone.instances = {}));
+        delete clone["excludes"];
+        tween += buildGsapMotionsScript({ [id]: clone }, true, removeMarkers);
+      }
+    }
 
-return tween;
+    return tween;
   });
 
-return built.join(`\n\n\n`);
+  return built.join(`\n\n\n`);
 }
 
 /**
@@ -1364,10 +1383,11 @@ export const buildFunctionsFromActions = (actions, id, isInstance = false) => {
             console.log("value", value);
             return typeof value == "string"
               ? value.replaceAll(
-                `self`,
-                `[${isInstance ? interactionInstanceId : interactionId
-                }="${id}"]`,
-              )
+                  `self`,
+                  `[${
+                    isInstance ? interactionInstanceId : interactionId
+                  }="${id}"]`,
+                )
               : value;
           })
           .join(",")})`,
@@ -1998,11 +2018,12 @@ export const buildPageData = async (page = "", projectData, projectSetting) => {
     ])
     .map(
       (url) =>
-        `<script ${url.localUrl ? `src="${url.localUrl || ""}"` : ""} ${url.attributes && isPlainObject(url.attributes)
-          ? Object.entries(url.attributes).map(
-            ([key, value]) => `${key}="${value}"`,
-          )
-          : ""
+        `<script ${url.localUrl ? `src="${url.localUrl || ""}"` : ""} ${
+          url.attributes && isPlainObject(url.attributes)
+            ? Object.entries(url.attributes).map(
+                ([key, value]) => `${key}="${value}"`,
+              )
+            : ""
         }>${url.content || ""}</script>`,
     )
     .join("\n");
@@ -2032,7 +2053,11 @@ export const buildPageData = async (page = "", projectData, projectSetting) => {
   `;
 
   data.helmet += html`
-    <link rel="icon" type="image/png"  href="${urlException}/${projectData.logo}" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="${urlException}/${projectData.logo}"
+    />
     <meta name="author" content="${helmet.author || ""}" />
     <meta name="description" content="${helmet.description || ""}" />
     <meta name="keywords" content="${helmet.keywords || ""}" />
@@ -2104,12 +2129,12 @@ export async function buildPageContentFromData({
         <link href="/styles/style.css" rel="stylesheet" />
 
         ${isTailwindEnabled
-      ? ` <link
+          ? ` <link
             href="${urlException}/css/tailwind/${page}.css"
             id="tailwind-style"
             rel="stylesheet"
           />`
-      : `
+          : `
           <link
             href="/styles/global-rules.css"
             id="global-rules"
@@ -2118,8 +2143,8 @@ export async function buildPageContentFromData({
           `}
         <!-- There is {pageData.symbolsStyles} {pageData.templatesStyles} -->
         ${Object.values(projectData.fonts).length
-      ? `<link href="${urlException}/css/fonts.css" rel="stylesheet"/>`
-      : ""}
+          ? `<link href="${urlException}/css/fonts.css" rel="stylesheet"/>`
+          : ""}
         ${pageData.helmet} ${pageData.cssLibs}
         <link
           href="${urlException}/css/${page}.css"
@@ -2128,15 +2153,15 @@ export async function buildPageContentFromData({
         />
         ${pageData.headerScripts}
         ${projectSetting.enable_spline_viewer
-      ? `<script src="https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js" type="module"></script>`
-      : ""}
+          ? `<script src="https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js" type="module"></script>`
+          : ""}
       </head>
 
       <body
         ${Object.keys(pageData.bodyAttributes || {})
-      .filter((key) => Boolean(pageData.bodyAttributes[key]))
-      .map((key) => `${key}="${pageData.bodyAttributes[key]}"`)
-      .join(" ")}
+          .filter((key) => Boolean(pageData.bodyAttributes[key]))
+          .map((key) => `${key}="${pageData.bodyAttributes[key]}"`)
+          .join(" ")}
       >
         ${pageData.content} ${pageData.footerScripts} ${pageData.globalScript}
         ${pageData.localScript} ${pageData.mainScripts}
@@ -2289,7 +2314,7 @@ export async function sendDataToServiceWorker(data) {
   });
 }
 
-export function inlineWorker(callback = () => { }, scope = {}) {
+export function inlineWorker(callback = () => {}, scope = {}) {
   let strScope = ``;
   for (const key in scope) {
     strScope += `const  ${key} = ${serializeJavascript(scope[key])};\n`;
@@ -2354,24 +2379,24 @@ export async function buildPage({ pageName, file, css, js }) {
   }
   const pageCss = css
     ? new Blob([await css[`css/${pageName}.css`].async("blob")], {
-      type: "text/css",
-    })
+        type: "text/css",
+      })
     : new Blob([""], { type: "text/css" });
 
   const pageJs = js
     ? new Blob([await js[`js/${pageName}.js`].async("blob")], {
-      type: "application/js",
-    })
+        type: "application/js",
+      })
     : new Blob([""], { type: "application/js" });
 
   const { document } = parseHTML(content);
   const pageTitle = document.title;
   const bodyAttributes = document.body.getAttributeNames().length
     ? Object.fromEntries(
-      document.body
-        .getAttributeNames()
-        .map((attr) => [attr, document.body.getAttribute(attr)]),
-    )
+        document.body
+          .getAttributeNames()
+          .map((attr) => [attr, document.body.getAttribute(attr)]),
+      )
     : {};
 
   const descMetaEl = document.querySelector('meta[name="description"]');
@@ -2620,9 +2645,7 @@ export async function uploadProjectToTMP(props) {
 export function doGlobalType(libName, globalTypeName, isExportDefault = false) {
   if (!libName) throw new Error(`libName param is required`);
 
-  const importStatement = isExportDefault
-    ? ``
-    : ``;
+  const importStatement = isExportDefault ? `` : ``;
 
   //   const moduleDeclaration = `
   // declare module "${libName}" {
@@ -2924,7 +2947,7 @@ export async function extractElementStyles({ elementsHTML, cssCode }) {
   };
 }
 
-export function infinitelyCallback(callback = () => { }, timeout = 0) {
+export function infinitelyCallback(callback = () => {}, timeout = 0) {
   if (window.requestIdleCallback) {
     return requestIdleCallback(callback, { timeout });
   } else {
@@ -2973,7 +2996,7 @@ export function toQueryParams(obj) {
  */
 export async function initMainAndGlobalFilesForWp({ data }) {
   const id = data.id;
-  const attributes = {}
+  const attributes = {};
   // Build main (header) scripts
   const mainHeaderScripts = await Promise.all(
     buildWpHeaderScripts({
@@ -3047,10 +3070,20 @@ export async function initMainAndGlobalFilesForWp({ data }) {
     type: "application/javascript",
   });
 
-  const globals = [!isPlainObject(data.projectData.globalCss) ? gCss : null, !isPlainObject(data.projectData.globalJs) ? gJs : null].filter(Boolean);
+  const globals = [
+    !isPlainObject(data.projectData.globalCss) ? gCss : null,
+    !isPlainObject(data.projectData.globalJs) ? gJs : null,
+  ].filter(Boolean);
 
   // Collect all files to upload
-  const allFiles = [...mainHeaderScripts, ...mainScripts, fontsCss, infinitelyStyles, globalRules, ...globals];
+  const allFiles = [
+    ...mainHeaderScripts,
+    ...mainScripts,
+    fontsCss,
+    infinitelyStyles,
+    globalRules,
+    ...globals,
+  ];
 
   // Upload all files in one API call
   const uploadRes = await wp_upload_multiple_files({
@@ -3059,7 +3092,9 @@ export async function initMainAndGlobalFilesForWp({ data }) {
   });
 
   if (!uploadRes.success) {
-    throw new Error(`Failed to upload media files: ${JSON.stringify(uploadRes)}`);
+    throw new Error(
+      `Failed to upload media files: ${JSON.stringify(uploadRes)}`,
+    );
   }
 
   /**
@@ -3068,21 +3103,25 @@ export async function initMainAndGlobalFilesForWp({ data }) {
   const files = uploadRes.files;
 
   const headerCDN = [
-    ...(data.projectSetting.enable_spline_viewer ? [{
-      source_url: 'https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js',
-      date: new Date(),
-      id: null,
-      link: 'https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js',
-      slug: 'spline-js',
-      modified: new Date(),
-      title: 'spline.js',
-      caption: 'spline js for 3d',
-      attributes: {
-        type: 'module',
-      }
-    }] : [])
-  ]
-
+    ...(data.projectSetting.enable_spline_viewer
+      ? [
+          {
+            source_url:
+              "https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js",
+            date: new Date(),
+            id: null,
+            link: "https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js",
+            slug: "spline-js",
+            modified: new Date(),
+            title: "spline.js",
+            caption: "spline js for 3d",
+            attributes: {
+              type: "module",
+            },
+          },
+        ]
+      : []),
+  ];
 
   /**
    * @type {import('@/helpers/types').WpProject}
@@ -3090,9 +3129,7 @@ export async function initMainAndGlobalFilesForWp({ data }) {
   const newUpdatedConfig = {
     mainEditorScripts: {
       footer: [],
-      header: [
-        ...headerCDN,
-      ],
+      header: [...headerCDN],
     },
     mainEditorStyles: [],
   };
@@ -3101,7 +3138,10 @@ export async function initMainAndGlobalFilesForWp({ data }) {
   for (const script of mainScripts) {
     const slug = fileNameToMediaSlug(script.name);
     if (files[slug]) {
-      newUpdatedConfig.mainEditorScripts.footer.push({ ...files[slug], attributes: attributes[slug] });
+      newUpdatedConfig.mainEditorScripts.footer.push({
+        ...files[slug],
+        attributes: attributes[slug],
+      });
     }
   }
 
@@ -3109,7 +3149,10 @@ export async function initMainAndGlobalFilesForWp({ data }) {
   for (const script of mainHeaderScripts) {
     const slug = fileNameToMediaSlug(script.name);
     if (files[slug]) {
-      newUpdatedConfig.mainEditorScripts.header.push({ ...files[slug], attributes: attributes[slug] });
+      newUpdatedConfig.mainEditorScripts.header.push({
+        ...files[slug],
+        attributes: attributes[slug],
+      });
     }
   }
 
@@ -3133,7 +3176,7 @@ export async function initMainAndGlobalFilesForWp({ data }) {
   if (files[gJsSlug]) {
     newUpdatedConfig.globalJs = { ...files[gJsSlug] };
   }
-  console.log('script config update : ', newUpdatedConfig, files);
+  console.log("script config update : ", newUpdatedConfig, files);
 
   return {
     success: true,
@@ -3142,23 +3185,19 @@ export async function initMainAndGlobalFilesForWp({ data }) {
   };
 }
 
-
-
-
 export function objToAttributes(objAttrs = {}) {
   return Object.entries(objAttrs)
     .map(([key, value]) => `${key} = "${value}"`)
     .join(" ");
 }
 
-export function functionToString(callback = () => { }) {
+export function functionToString(callback = () => {}) {
   return callback.toString();
 }
 
 export function functionFromString(callback = "()=>{}", ...params) {
   return new Function(`return ${callback} `)()(...params);
 }
-
 
 export function createRestartableAsync(fn) {
   let running = false;
@@ -3191,18 +3230,16 @@ export function createRestartableAsync(fn) {
   return runner;
 }
 
-
-export function mediaSlugToFileName(slug = '') {
-  return slug.replaceAll('-', '.');
+export function mediaSlugToFileName(slug = "") {
+  return slug.replaceAll("-", ".");
 }
 
-export function fileNameToMediaSlug(slug = '') {
-  return slug.replaceAll('.', '-');
+export function fileNameToMediaSlug(slug = "") {
+  return slug.replaceAll(".", "-");
 }
-
 
 export function normalizeComponent(node) {
-  if (!node || typeof node !== 'object') return node;
+  if (!node || typeof node !== "object") return node;
 
   if (node.components) {
     if (!Array.isArray(node.components)) {
@@ -3221,33 +3258,50 @@ export function normalizeComponentsTree(components) {
 }
 
 /**
- * 
- * @param {number} projectId 
- * @param {(project : import('@/helpers/types').WpProject)=>any} callack 
+ *
+ * @param {number} projectId
+ * @param {(project : import('@/helpers/types').WpProject)=>any} callack
  */
-export async function doInWordpressAsyncInWorker(projectId, callack = async () => { }) {
+export async function doInWordpressAsyncInWorker(
+  projectId,
+  callack = async () => {},
+) {
   if (!projectId) {
     throw new Error(`Project id not founded in doInWordpressAsyncInWorker`);
   }
 
   const app = await db.projects.get(projectId);
-  if (app.app_type === 'wordpress') {
+  if (app.app_type === "wordpress") {
     await callack(app);
   }
 }
 
 /**
- * 
- * @param {number} projectId 
- * @param {(project : import('@/helpers/types').Project)=>any} callack 
+ *
+ * @param {number} projectId
+ * @param {(project : import('@/helpers/types').Project)=>any} callack
  */
-export async function doInNormalAsyncInWorker(projectId, callack = async () => { }) {
+export async function doInNormalAsyncInWorker(
+  projectId,
+  callack = async () => {},
+) {
   if (!projectId) {
     throw new Error(`Project id not founded in doInNormalAsyncInWorker`);
   }
 
   const app = await db.projects.get(projectId);
-  if (!app.app_type || app.app_type === 'normal') {
+  if (!app.app_type || app.app_type === "normal") {
     await callack(app);
   }
 }
+
+export async function isProjectExist(projectId) {
+  return Boolean(await db.projects.get(projectId));
+}
+
+export const groupArrayAsObject = (groupArray = [], targetKey) =>
+  groupArray.reduce((acc, curr) => {
+    if (!acc[curr[targetKey]]) acc[curr[targetKey]] = [];
+    acc[curr[targetKey]].push(curr);
+    return acc;
+  } , {});

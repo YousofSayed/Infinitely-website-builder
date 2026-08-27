@@ -1,5 +1,5 @@
 import { parse } from "@/helpers/cocktail";
-import { getMediaBreakpoint } from "@/helpers/functions";
+import { getMediaBreakpoint, isWordpress } from "@/helpers/functions";
 import { isFunction } from "lodash";
 
 /**
@@ -14,6 +14,13 @@ export const initTraitsOnRender = (editor) => {
      * @param {import('grapesjs').Component} model
      */
     (model) => {
+      // if (isWordpress()) {
+      //   model.setTraits([
+      //     ...model.getTraits().map((tr) => tr.attributes),
+      //     ...inf_for_trait,
+      //   ]);
+      // }
+
       const traits = model.getTraits();
       const attrs = model.getAttributes();
       for (const trait of traits) {
@@ -28,12 +35,12 @@ export const initTraitsOnRender = (editor) => {
             avoidStore: true,
           });
           trait.attributes.value = attrs[trait.attributes.name];
-          // console.log(
-          //   "attr name : ",
-          //   attrs[trait.attributes.name],
-          //   trait.attributes.name
-          // );
         }
+        console.log(
+          "attr name : ",
+          attrs?.[trait?.attributes?.name],
+          trait?.attributes?.name,
+        );
 
         if (trait.attributes.role == "hadnler") {
           trait.set("value", attrs[trait.attributes.name], {
@@ -58,6 +65,6 @@ export const initTraitsOnRender = (editor) => {
         editor.clearDirtyCount();
       }
       // console.log("autoplay traits : ", traits);
-    }
+    },
   );
 };

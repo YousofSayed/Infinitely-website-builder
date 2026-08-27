@@ -1,7 +1,7 @@
 import {
   wp_update_meta,
   wp_update_option,
-} from "@/apps/wordpress/functions.jsx";
+} from "@/Apps/wordpress/functions.jsx";
 import { InfinitelyEvents } from "@/constants/infinitelyEvents";
 import { reloadRequiredInstance } from "@/constants/InfinitelyInstances";
 import { current_project_id } from "@/constants/shared";
@@ -52,11 +52,8 @@ export const SettingsModal = () => {
   const [searchValue, setSearchValue] = useState("");
   const [currentChange, setCurrentChange] = useState("");
   const [searchedSettings, setSearchedSettings] = useState();
-  // getProjectSettings().projectSettings
-  // const [settings, setSettings] = useState(
-  //   getProjectSettings().projectSettings
-  // );
 
+  
   const isCurrentChange = useCallback(
     /**
      *
@@ -172,14 +169,6 @@ export const SettingsModal = () => {
     };
   }, [editor, currentChange]);
 
-  // useEffect(() => {
-  //   // if (!editor) return;
-  //   setSettings(projectSettings);
-
-  //   // isProjectSettingPropTrue('disable_petite_vue',(projectSettings)=>{
-
-  //   // })
-  // }, [projectSettings]);
 
   const search = (value = "") => {
     if (!value) {
@@ -193,10 +182,7 @@ export const SettingsModal = () => {
     const newObject = Object.fromEntries(
       filterdKeys.map((key) => [key, projectSettings[key]]),
     );
-    // const clone = structuredClone(settings);
-    // filterdKeys.forEach((key) => {
-    //   newObject[key] = settings[key];
-    // });
+  
     console.log(newObject);
 
     setSearchedSettings(newObject);
@@ -205,10 +191,7 @@ export const SettingsModal = () => {
   return (
     <section className="h-full w-full overflow-auto flex flex-col gap-2 pr-1">
       <section className="flex flex-col gap-4 text-text-primary font-semibold">
-        {/* <h1 className="py-2 px-[30px] border-b-2 border-b-slate-600 w-fit">
-          Global Settings
-        </h1> */}
-        {/* <MiniTitle>Global Settings</MiniTitle> */}
+    
         <Input
           className="w-full bg-surface-tertiary"
           placeholder="Search..."
@@ -218,6 +201,7 @@ export const SettingsModal = () => {
             search(ev.target.value);
           }}
         />
+
         <section className="grid grid-cols-3 gap-2">
           <For
             each={Object.entries(
@@ -226,7 +210,7 @@ export const SettingsModal = () => {
           >
             {([key, value], i) => (
               <article
-                key={i}
+                key={key}
                 title={key}
                 className="flex justify-between  gap-2 items-center px-2 py-3 rounded-lg bg-surface-tertiary"
               >
@@ -257,7 +241,9 @@ export const SettingsModal = () => {
           </For>
         </section>
       </section>
+
       <hr className="border-border-default" />
+
       <footer className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2">
         <Button
           style={{

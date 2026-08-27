@@ -436,7 +436,7 @@ export const SelectState = ({ placeholder }) => {
         />
 
         <SmallButton
-          className="flex-shrink-0 bg-surface-tertiary  "
+          className="shrink-0 bg-surface-tertiary  "
           // tooltipTitle="Add state"
           onClick={(ev) => {
             addState(state);
@@ -446,7 +446,7 @@ export const SelectState = ({ placeholder }) => {
         </SmallButton>
 
         <SmallButton
-          className=" flex-shrink-0 bg-surface-tertiary  "
+          className=" shrink-0 bg-surface-tertiary  "
           // tooltipTitle="Add new line"
           onClick={(ev) => {
             addNewStateContainer();

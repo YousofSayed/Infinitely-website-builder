@@ -1,4 +1,4 @@
-import { wp_insert_post } from "@/apps/wordpress/functions";
+import { wp_insert_post } from "@/Apps/wordpress/functions";
 import {
   current_page_id,
   current_project_id,
@@ -201,64 +201,74 @@ export const ReusableSympol = () => {
       });
 
       await doInWordpressAsync(async () => {
-        ///code...
-        console.log("blob image file : ", blobImg);
-        const dataToSave = {
-          html: gjsComponentsToJSON(selectedEl, true),
-          //  selectedEl.toHTML({
-          //   keepInlineStyle: true,
-          //   withProps: true,
-          // }),
-          css: minify(stringRules).css,
-          category: props.category,
-          media:
-            selectedEl.getIcon() ||
-            editorIcons.components({
-              strokeColor: "white",
-              strokeWidth: 2,
-            }),
-        };
+        try {
+          ///code...
+          console.log("blob image file : ", blobImg);
+          const dataToSave = {
+            html: gjsComponentsToJSON(selectedEl, true),
+            //  selectedEl.toHTML({
+            //   keepInlineStyle: true,
+            //   withProps: true,
+            // }),
+            css: minify(stringRules).css,
+            category: props.category,
+            media:
+              selectedEl.getIcon() ||
+              editorIcons.components({
+                strokeColor: "white",
+                strokeWidth: 2,
+              }),
+          };
 
-        const res = await wp_insert_post({
-          projectId,
-          // featured_image:
-          //   new File([blobImg], `${props.name}-${uuid}`, {
-          //     type: "image/png",
-          //   }) ||
-          //   new File(
-          //     [
-          //       selectedEl.getIcon() ||
-          //         editorIcons.components({
-          //           strokeColor: "white",
-          //           strokeWidth: 2,
-          //         }),
-          //     ],
-          //     `${props.name}-${uuid}`,
-          //     { type: "image/png" },
-          //   ),
+          const res = await wp_insert_post({
+            projectId,
+            // featured_image:
+            //   new File([blobImg], `${props.name}-${uuid}`, {
+            //     type: "image/png",
+            //   }) ||
+            //   new File(
+            //     [
+            //       selectedEl.getIcon() ||
+            //         editorIcons.components({
+            //           strokeColor: "white",
+            //           strokeWidth: 2,
+            //         }),
+            //     ],
+            //     `${props.name}-${uuid}`,
+            //     { type: "image/png" },
+            //   ),
 
-          post_data: {
-            post_type: "inf_symbols",
-            post_name: props.name,
-            post_status: "publish",
-            /////....
-          },
-
-          meta_data: {
-            "inf-symbol-id": uuid,
-            media:dataToSave.media,
-            inf_meta: {
-              before_save: dataToSave,
-              saved: dataToSave,
+            post_data: {
+              post_type: "inf_symbols",
+              post_name: props.name,
+              post_status: "publish",
+              /////....
             },
-          },
-        });
-        editor.Storage.setAutosave(projectSettings.enable_auto_save);
-        // projectSettings.enable_auto_save && await editor.Storage.store();
-        console.log("wp_insert_post", res);
-        afterSave();
-        qc.invalidateQueries({ queryKey: ["inf_symbols"]  , refetchType: "all" });
-        editor.trigger("block:add");
+
+            meta_data: {
+              "inf-symbol-id": uuid,
+              media: dataToSave.media,
+              inf_meta: {
+                before_save: dataToSave,
+                saved: dataToSave,
+              },
+            },
+          });
+          editor.Storage.setAutosave(projectSettings.enable_auto_save);
+          console.log("wp_insert_post", res);
+          afterSave();
+          qc.invalidateQueries({
+            queryKey: ["inf_symbols"],
+            refetchType: "all",
+          });
+          editor.clearDirtyCount();
+          editor.trigger("block:add");
+        } catch (error) {
+          console.error(error.message);
+          selectedElMain.removeAttributes([inf_symbol_Id_attribute]);
+          preventSelectNavigation(editor, selectedElMain);
+          throw new Error(error);
+        }
       });
 
       initToolbar(editor, selectedElMain);
@@ -297,7 +307,7 @@ export const ReusableSympol = () => {
       <header className="p-2 z-50 rounded-lg flex gap-2 justify-between  bg-surface-secondary">
         <Input
           value={props.name}
-          autoFocus={true}
+          // autoFocus={true}
           placeholder="Name"
           onInput={(ev) => {
             onInput(ev.target.value, "name");
@@ -316,7 +326,10 @@ export const ReusableSympol = () => {
           className="bg-surface-tertiary w-[49%] "
           onItemClicked={(value) => onInput(value, "category")}
         />
-        <Button onClick={onSave} className="bg-brand-primary hover:bg-brand-secondary text-white font-semibold">
+        <Button
+          onClick={onSave}
+          className="bg-brand-primary hover:bg-brand-secondary text-white font-semibold"
+        >
           Save
         </Button>
       </header>

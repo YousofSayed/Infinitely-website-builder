@@ -20,7 +20,7 @@ import { AppInstalling } from "@/views/AppInstalling";
 import { Editor } from "@/views/Editor";
 import { Opfs } from "@/views/Opfs";
 import { Workspace } from "@/views/Workspace";
-import { Preview } from "@/wordpress/Preview";
+import { Preview } from "@/views/wordpress/Preview";
 
 import React, { useEffect } from "react";
 import { Route, Routes, useNavigate } from "react-router-dom";
@@ -28,6 +28,9 @@ import { useRecoilState } from "recoil";
 import ElectronTitleBar from "./components/desktop/ElectronTitleBar";
 import { WpCreate } from "./views/wordpress/WpCreate";
 import { WpSelect } from "./views/wordpress/WpSelect";
+import { ToastContainer } from "react-toastify";
+import { ShowIf } from "./components/ShowIf";
+import Portal from "./components/Editor/Portal";
 
 function App() {
   const [dbAssetsSw, setDBAssetsSw] = useRecoilState(dbAssetsSwState);
@@ -149,59 +152,114 @@ function App() {
   console.log("is desktop:", window.electron?.isDesktop);
 
   return (
-    // <Suspense fallback={<Loader />}>
-    <main className="w-full h-full flex flex-col overflow-hidden relative">
-      {window.electron?.isDesktop && <ElectronTitleBar />}
-      {appInstalling ? (
-        <AppInstalling />
-      ) : (
-        <Routes>
-          <Route
-            path="/"
-            element={<Editor />}
-            action={
-              Boolean(+localStorage.getItem(current_project_id))
-                ? null
-                : () => navigate("/workspace")
-            }
-          >
-            <Route path="add-blocks" element={<Blocks />} />
-            <Route path="edite">
-              <Route path="styling" element={<StyleAside />} />
-              <Route path="traits" element={<TraitsAside />} />
-              <Route path="commands" element={<Commands />} />
-              <Route path="interactions" element={<Interactions />} />
-              <Route path="motion" element={<Motion />} />
-              {/* <Route path="choose-and-write-model" element={<ChooseModel />}>
+     <>
+        <ShowIf condition={appInstalling}>
+          <AppInstalling />
+        </ShowIf>
+
+        <ShowIf condition={!appInstalling}>
+          <Routes>
+            <Route
+              path="/"
+              element={<Editor />}
+              action={
+                Boolean(+localStorage.getItem(current_project_id))
+                  ? null
+                  : () => navigate("/workspace")
+              }
+            >
+              <Route path="add-blocks" element={<Blocks />} />
+              <Route path="edite">
+                <Route path="styling" element={<StyleAside />} />
+                <Route path="traits" element={<TraitsAside />} />
+                <Route path="commands" element={<Commands />} />
+                <Route path="interactions" element={<Interactions />} />
+                <Route path="motion" element={<Motion />} />
+                {/* <Route path="choose-and-write-model" element={<ChooseModel />}>
               <Route path="dynamic-content" element={<DynamicContent />} />
               <Route
                 path="dynamic-attributes"
                 element={<DynamicAttributes />}
               />
             </Route> */}
+              </Route>
             </Route>
-          </Route>
 
-          <Route path="/preview" element={<Preview />} />
+            <Route path="/preview" element={<Preview />} />
 
-          <Route path="/workspace" element={<Workspace />}></Route>
-          <Route path="wordpress/create" element={<WpCreate />}></Route>
-          <Route path="wordpress/select" element={<WpSelect />}></Route>
-          <Route path="wordpress/preview" element={<Preview />}></Route>
+            <Route path="/workspace" element={<Workspace />}></Route>
+            <Route path="wordpress/create" element={<WpCreate />}></Route>
+            <Route path="wordpress/select" element={<WpSelect />}></Route>
+            <Route path="wordpress/preview" element={<Preview />}></Route>
 
-          {/* <Route path="/share" element={<Share />}></Route> */}
+            {/* <Route path="/share" element={<Share />}></Route> */}
 
-          {isDevMode() && <Route path="opfs-dev" element={<Opfs />} />}
-        </Routes>
-      )}
-    </main>
+            {isDevMode() && <Route path="opfs-dev" element={<Opfs />} />}
+          </Routes>
+        </ShowIf>
+        <Portal container={document.querySelector(`#root`)}>
+          <ToastContainer
+          autoClose={3000}
+          draggable={true}
+          theme="dark"
+          limit={10}
+          pauseOnHover={true}
+          position="top-left"
+          toastClassName="bg-surface-main"
+          className="z-[1000000]"
+          style={{ top: window.electron?.isDesktop ? "40px" : "1rem" }}
+        />
+        </Portal>
+      </>
+    // <Suspense fallback={<Loader />}>
+    // <main className="w-full h-full flex flex-col  relative">
+    //   {window.electron?.isDesktop && <ElectronTitleBar />}
+    //   {appInstalling ? (
+    //     <AppInstalling />
+    //   ) : (
+    //     <Routes>
+    //       <Route
+    //         path="/"
+    //         element={<Editor />}
+    //         action={
+    //           Boolean(+localStorage.getItem(current_project_id))
+    //             ? null
+    //             : () => navigate("/workspace")
+    //         }
+    //       >
+    //         <Route path="add-blocks" element={<Blocks />} />
+    //         <Route path="edite">
+    //           <Route path="styling" element={<StyleAside />} />
+    //           <Route path="traits" element={<TraitsAside />} />
+    //           <Route path="commands" element={<Commands />} />
+    //           <Route path="interactions" element={<Interactions />} />
+    //           <Route path="motion" element={<Motion />} />
+    //           {/* <Route path="choose-and-write-model" element={<ChooseModel />}>
+    //           <Route path="dynamic-content" element={<DynamicContent />} />
+    //           <Route
+    //             path="dynamic-attributes"
+    //             element={<DynamicAttributes />}
+    //           />
+    //         </Route> */}
+    //         </Route>
+    //       </Route>
+
+    //       <Route path="/preview" element={<Preview />} />
+
+    //       <Route path="/workspace" element={<Workspace />}></Route>
+    //       <Route path="wordpress/create" element={<WpCreate />}></Route>
+    //       <Route path="wordpress/select" element={<WpSelect />}></Route>
+    //       <Route path="wordpress/preview" element={<Preview />}></Route>
+
+    //       {/* <Route path="/share" element={<Share />}></Route> */}
+
+    //       {isDevMode() && <Route path="opfs-dev" element={<Opfs />} />}
+    //     </Routes>
+    //   )}
+     
+    // </main>
     // </Suspense>
   );
 }
 
 export default App;
-
-// (async()=>{
-//   const code  = await(await fetch(`https://cdn.jsdelivr.net/npm/opfs-tools@0.7.2/+esm`)).text()
-//   console.log(`esm to module : `, esmToUmd(code , 'opfs-tools'));
-// })()

@@ -9,7 +9,7 @@ import { db } from "@/helpers/db";
 import {
   loopOnInfMetaInteractionsData,
   loopOnInfMetaMotionsData,
-} from "@/apps/wordpress/helpers";
+} from "@/Apps/wordpress/helpers";
 import {
   clone,
   cloneDeep,
@@ -422,16 +422,122 @@ export async function wp_update_media_files({
   return json;
 }
 
+// /**
+//  * Upload several files at once as `multipart/form-data`, keying each part by
+//  * its slugified filename (`files[<slug>]`).
+//  *
+//  * @param {{projectId: number, files: File[] , wp_meta_init : import("@/helpers/types").Wp_Meta}} options
+//  * @returns {Promise<object>} Parsed JSON `{ files: {...} }` response from `media/upload`.
+//  * @throws {Error} If `projectId` is missing, any item in `files` isn't a `File`, or the request fails.
+//  */
+// export async function wp_upload_multiple_files({
+//   projectId,
+//   files = [],
+//   wp_meta_init,
+// }) {
+//   if (!projectId && !isPlainObject(wp_meta_init)) {
+//     throw new Error(`Project id missing`);
+//   }
+
+//   if (files.some((file) => !(file instanceof File))) {
+//     throw new Error(`Files are not files`);
+//   }
+
+//   const mime = await (await import("mime")).default;
+
+//   // files = files.map(file => {
+//   //   const newFile =
+//   //     new File([file], fileNameToMediaSlug(file.name), { type: mime.getType(file.name) })
+//   //   return newFile
+//   // })
+
+//   const formData = new FormData();
+//   // fileNameToMediaSlug(file.name)
+//   for (const file of files) {
+//     const slug = fileNameToMediaSlug(file.name);
+
+//     const ext = file.name.split(".").pop(); // js / css
+//     const wpFileName = `${slug}.${ext}`; // global-js.js
+
+//     const newFile = new File([file], wpFileName, {
+//       type: mime.getType(file.name),
+//     });
+
+//     formData.append(`files[${slug}]`, newFile);
+
+//     // let fileName = file.name.split(".");
+//     // fileName.pop();
+//     // let ext = mime.getExtension(file.type);
+//     // let type = mime.getType(file.name);
+//     // if (!(type && ext)) {
+//     //   throw new Error(`File type or extension is not valid`);
+//     // }
+
+//     // if (!ext && type) {
+//     //   ext = mime.getExtension(type);
+//     // }
+
+//     // if (!type && ext) {
+//     //   type = mime.getType(ext);
+//     // }
+
+//     // let slug = fileNameToMediaSlug(fileName.join("."));
+//     // fileName = `${slug}.${ext}`;
+
+//     // const newFile =
+//     //   new File([file], fileName, { type: type });
+//     // formData.append(`files[${slug}]`, newFile);
+//   }
+
+//   const projectData = projectId && await db.projects.get(+projectId);
+//   const wp_meta = projectData?.wp_meta || wp_meta_init;
+//   const response = await fetch(
+//     `${createWebsiteLink(wp_meta, `infinitely-api/v1/media/upload`)}`,
+//     {
+//       method: "POST",
+//       headers: {
+//         Authorization: createWpToken(wp_meta),
+//       },
+//       body: formData,
+//       credentials: "include",
+//     },
+//   );
+
+//   console.log(`media/upload : `, response , response.text());
+
+//   return ;
+//   if (!response.ok) {
+//     console.error(response.statusText + ` ${response.status} ` || "Failed to update media");
+
+//     throw new Error(response.statusText + ` ${response.status} ` || "Failed to update media");
+//   }
+//   const json = await response.json();
+
+//   if (isPlainObject(json.files)) {
+//     Object.values(json.files).map(normalizeMedia);
+//   }
+
+//   return json;
+// }
+
 /**
- * Upload several files at once as `multipart/form-data`, keying each part by
- * its slugified filename (`files[<slug>]`).
+ * Upload several files at once with dynamic .htaccess limit management.
  *
- * @param {{projectId: number, files: File[]}} options
+ * Flow:
+ * 1. POST /upload/prepare → raises PHP limits in .htaccess
+ * 2. POST /media/upload → uploads files (now accepts large files)
+ * 3. POST /upload/restore → restores original .htaccess
+ *
+ * @param {{projectId: number, files: File[], wp_meta_init?: import("@/helpers/types").Wp_Meta}} options
  * @returns {Promise<object>} Parsed JSON `{ files: {...} }` response from `media/upload`.
  * @throws {Error} If `projectId` is missing, any item in `files` isn't a `File`, or the request fails.
  */
-export async function wp_upload_multiple_files({ projectId, files = [] }) {
-  if (!projectId) {
+export async function wp_upload_multiple_files({
+  projectId,
+  files = [],
+  wp_meta_init,
+}) {
+  if (!projectId && !isPlainObject(wp_meta_init)) {
     throw new Error(`Project id missing`);
   }
 
@@ -441,76 +547,124 @@ export async function wp_upload_multiple_files({ projectId, files = [] }) {
 
   const mime = await (await import("mime")).default;
 
-  // files = files.map(file => {
-  //   const newFile =
-  //     new File([file], fileNameToMediaSlug(file.name), { type: mime.getType(file.name) })
-  //   return newFile
-  // })
-
+  // Build FormData
   const formData = new FormData();
-  // fileNameToMediaSlug(file.name)
+  let totalBytes = 0;
+
   for (const file of files) {
     const slug = fileNameToMediaSlug(file.name);
-
-    const ext = file.name.split(".").pop(); // js / css
-    const wpFileName = `${slug}.${ext}`; // global-js.js
+    const ext = file.name.split(".").pop();
+    const wpFileName = `${slug}.${ext}`;
 
     const newFile = new File([file], wpFileName, {
       type: mime.getType(file.name),
     });
 
     formData.append(`files[${slug}]`, newFile);
-
-    // let fileName = file.name.split(".");
-    // fileName.pop();
-    // let ext = mime.getExtension(file.type);
-    // let type = mime.getType(file.name);
-    // if (!(type && ext)) {
-    //   throw new Error(`File type or extension is not valid`);
-    // }
-
-    // if (!ext && type) {
-    //   ext = mime.getExtension(type);
-    // }
-
-    // if (!type && ext) {
-    //   type = mime.getType(ext);
-    // }
-
-    // let slug = fileNameToMediaSlug(fileName.join("."));
-    // fileName = `${slug}.${ext}`;
-
-    // const newFile =
-    //   new File([file], fileName, { type: type });
-    // formData.append(`files[${slug}]`, newFile);
+    totalBytes += file.size;
   }
 
-  const projectData = await db.projects.get(+projectId);
-  const wp_meta = projectData.wp_meta;
-  const response = await fetch(
-    `${createWebsiteLink(wp_meta, `infinitely-api/v1/media/upload`)}`,
+  const projectData = projectId && (await db.projects.get(+projectId));
+  const wp_meta = projectData?.wp_meta || wp_meta_init;
+  const token = createWpToken(wp_meta);
+
+  // ── Step 1: PREPARE — raise PHP limits ──
+  console.log(
+    `Preparing upload limits: ${files.length} files, ${totalBytes} bytes`,
+  );
+
+  const prepareRes = await fetch(
+    createWebsiteLink(wp_meta, `infinitely-api/v1/upload/prepare`),
     {
       method: "POST",
       headers: {
-        Authorization: createWpToken(wp_meta),
+        Authorization: token,
+        "Content-Type": "application/json",
       },
-      body: formData,
-      credentials: "include",
+      body: JSON.stringify({
+        total_bytes: totalBytes,
+        files_count: files.length,
+      }),
     },
   );
 
-  const json = await response.json();
-  console.log(`media/upload : `, json);
-
-  if (!response.ok) {
-    throw new Error("Failed to update media");
+  if (!prepareRes.ok) {
+    const errorText = await prepareRes.text();
+    console.error(`Prepare failed:`, errorText);
+    throw new Error(`Failed to prepare upload limits`);
   }
 
-  if (isPlainObject(json.files)) {
-    Object.values(json.files).map(normalizeMedia);
+  const prepareJson = await prepareRes.json();
+  console.log(`Upload limits prepared:`, prepareJson);
+
+  // ── Step 2: UPLOAD files (with raised limits) ──
+  let uploadResult;
+  try {
+    const response = await fetch(
+      createWebsiteLink(wp_meta, `infinitely-api/v1/media/upload`),
+      {
+        method: "POST",
+        headers: {
+          Authorization: token,
+        },
+        body: formData,
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(
+        `Upload failed: ${response.status} ${response.statusText}`,
+        errorText,
+      );
+      throw new Error(
+        `Upload failed: ${response.status} ${response.statusText}`,
+      );
+    }
+
+    try {
+      uploadResult = await response.json();
+    } catch (parseError) {
+      const rawText = await response.clone().text();
+      console.error(`Failed to parse JSON response:`, rawText);
+      throw new Error(`Invalid JSON response from server`);
+    }
+
+    console.log(`media/upload response:`, uploadResult);
+
+    // Normalize media files if present
+    if (uploadResult?.files && isPlainObject(uploadResult.files)) {
+      Object.values(uploadResult.files).forEach(normalizeMedia);
+    }
+  } finally {
+    // ── Step 3: RESTORE — always, even if upload failed ──
+    console.log(`Restoring original .htaccess limits...`);
+
+    try {
+      const restoreRes = await fetch(
+        createWebsiteLink(wp_meta, `infinitely-api/v1/upload/restore`),
+        {
+          method: "POST",
+          headers: {
+            Authorization: token,
+          },
+        },
+      );
+
+      if (!restoreRes.ok) {
+        const errorText = await restoreRes.text();
+        console.warn(`Restore failed (non-critical):`, errorText);
+      } else {
+        const restoreJson = await restoreRes.json();
+        console.log(`Upload limits restored:`, restoreJson);
+      }
+    } catch (restoreError) {
+      // Don't throw — restore failure shouldn't hide the upload result
+      console.warn(`Restore error (non-critical):`, restoreError);
+    }
   }
 
-  return json;
+  return uploadResult;
 }
 
 /**
@@ -716,7 +870,7 @@ export async function wp_delete_media({ mediaId, projectId }) {
  * @param {string} options.endpoint - Path segment appended after the base REST URL (e.g. `"pages"`, `"media"`).
  * @param {number} options.projectId
  * @param {object} [options.params={}] - Query params, serialized via `toQueryParams`.
- * @returns {Promise<any>} Parsed JSON response.
+ * @returns {import("@/helpers/types").WpPage[]} Parsed JSON response.
  * @throws {Error} If `projectId` or `endpoint` is missing.
  */
 export async function wp_get({ endpoint, projectId, params = {} }) {
@@ -849,6 +1003,12 @@ export async function wp_get_single({ endpoint, singleId, projectId }) {
   const response = await fetch(
     `${createWebsiteLink(wp_meta)}/${endpoint}/${singleId}`,
   );
+  if (!response.ok) {
+    return {
+      error: response.statusText,
+      ok: false,
+    };
+  }
   const json = await response.json();
   console.log(`${endpoint} : `, json);
   return json;
@@ -1198,6 +1358,7 @@ export async function wp_create_option({
  * @param {any} options.value
  * @param {number} options.projectId
  * @param {boolean} [options.merge=false] - If true, ask the server to shallow-merge `value` into the existing option instead of replacing it.
+ * @param {import("@/helpers/types").Wp_Meta} options.wp_meta_init
  * @returns {Promise<object>} Parsed JSON update result.
  * @throws {Error} If `optionName` or `projectId` is missing.
  */
@@ -1206,13 +1367,14 @@ export async function wp_update_option({
   value,
   projectId,
   merge = false,
+  wp_meta_init,
 }) {
-  if (!(optionName && projectId)) {
+  if (!(optionName && (projectId || isPlainObject(wp_meta_init)))) {
     throw new Error(`Option name or project id not founded`);
   }
 
-  const projectData = await db.projects.get(+projectId);
-  const wp_meta = projectData.wp_meta;
+  const projectData = projectId && (await db.projects.get(+projectId));
+  const wp_meta = projectData?.wp_meta || wp_meta_init;
 
   const response = await fetch(
     createWebsiteLink(wp_meta, `infinitely-api/v1/option`),
@@ -1564,7 +1726,7 @@ export async function wp_update_meta({
  *
  * @param {object} options
  * @param {number} options.projectId
- * @returns {Promise<object[]>} Array of posts, each expected to include an `inf_meta` field.
+ * @returns {Promise<import("@/helpers/types").WpPage[]>} Array of posts, each expected to include an `inf_meta` field.
  * @throws {Error} If `projectId` is missing.
  */
 export async function wp_get_posts_with_inf_meta({ projectId }) {
@@ -1905,10 +2067,11 @@ export async function wp_update_main_global_files({ data }) {
  * @param {object} options
  * @param {number} options.projectId
  * @param {string} options.post_type
- * @returns {Promise<any>} Parsed JSON array of posts.
+ * @param {number} options.post_id
+ * @returns {import("@/helpers/types").WpGetPostsResponse} Parsed JSON array of posts.
  * @throws {Error} If `projectId` is missing or the request fails.
  */
-export async function wp_get_posts({ projectId, post_type }) {
+export async function wp_get_posts({ projectId, post_type, post_id }) {
   if (!projectId) {
     throw new Error(`Option name or project id not founded`);
   }
@@ -1919,7 +2082,7 @@ export async function wp_get_posts({ projectId, post_type }) {
   const response = await fetch(
     createWebsiteLink(
       wp_meta,
-      `infinitely-api/v1/get-posts?post_type=${post_type}`,
+      `infinitely-api/v1/get-posts?post_type=${post_type}${post_id ? `&post_id=${post_id}` : ""}`,
     ),
     {
       method: "GET",
@@ -2028,20 +2191,21 @@ export async function wp_insert_post({
  * @param {Object} options
  * @param {number|string} options.projectId
  * @param {WpInsertPost[]} options.posts
+ * @param {import("@/helpers/types").Wp_Meta} options.wp_meta_init
  * @returns {Promise<any>}
  * @throws {Error} If `projectId` is missing, `posts` is empty/not an array, or the request fails.
  */
-export async function wp_insert_posts({ projectId, posts }) {
-  if (!projectId) {
-    throw new Error("Option name or project id not found");
+export async function wp_insert_posts({ projectId, posts, wp_meta_init }) {
+  if (!projectId && !isPlainObject(wp_meta_init)) {
+    throw new Error("project id not found");
   }
 
   if (!Array.isArray(posts) || posts.length === 0) {
     throw new Error("Posts array is required");
   }
 
-  const projectData = await db.projects.get(+projectId);
-  const wp_meta = projectData.wp_meta;
+  const projectData = projectId ? await db.projects.get(+projectId) : null;
+  const wp_meta = projectData?.wp_meta || wp_meta_init;
 
   const formData = new FormData();
 
@@ -2058,12 +2222,16 @@ export async function wp_insert_posts({ projectId, posts }) {
     },
   );
 
-  const json = await response.json();
-
   if (!response.ok) {
-    throw new Error(json?.message || `Request failed: ${response.status}`);
+    console.error(response.statusText || `Request failed: ${response.status}`);
+
+    throw new Error(
+      response.statusText || `Request failed: ${response.status}`,
+    );
   }
 
+  const json = await response.json();
+  console.log("Posts insetred : ", json);
   return json;
 }
 
@@ -2319,12 +2487,12 @@ export async function wp_get_blocks({ projectId }) {
 }
 
 /**
- * 
+ *
  * @param {{
  * projectId : number,
  * symbol_ids : string[]
- * }} param0 
- * @returns 
+ * }} param0
+ * @returns
  */
 export async function wp_unlink_symbols({ projectId, symbol_ids = [] }) {
   if (!projectId) {
@@ -2355,4 +2523,459 @@ export async function wp_unlink_symbols({ projectId, symbol_ids = [] }) {
   }
 
   return json;
+}
+
+/**
+ *
+ * @param {{
+ * projectId : number,
+ * post_id : number
+ * }} param0
+ * @returns {{
+ * helmet : import("@/helpers/types").WpHelemet
+ * post_id : number
+ * success : boolean
+ * }}
+ */
+export async function wp_get_post_helmet({ projectId, post_id }) {
+  if (!projectId) {
+    throw new Error(`project id not founded`);
+  }
+
+  const projectData = await db.projects.get(+projectId);
+  const wp_meta = projectData.wp_meta;
+
+  const response = await fetch(
+    createWebsiteLink(
+      wp_meta,
+      `infinitely-api/v1/helmet/get?post_id=${post_id}`,
+    ),
+    {
+      method: "GET",
+      headers: {
+        Authorization: createWpToken(wp_meta),
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  const json = await response?.json?.();
+  console.log("helmet/get:", json);
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return json;
+}
+
+/**
+ *
+ * @param {{
+ *  projectId : number,
+ *  post_id : number,
+ *  helmet : import("@/helpers/types").WpHelemet
+ *  fileBlob : Blob | File
+ * }} param0
+ * @returns
+ */
+export async function wp_update_post_helmet({
+  projectId,
+  post_id,
+  helmet,
+  fileBlob,
+}) {
+  if (!projectId) {
+    throw new Error(`project id not founded`);
+  }
+  const projectData = await db.projects.get(+projectId);
+  const wp_meta = projectData.wp_meta;
+
+  const formData = new FormData();
+  formData.append("post_id", post_id);
+  formData.append("helmet", JSON.stringify(helmet));
+  formData.append("logo", fileBlob); // ← the Blob
+
+  const response = await fetch(
+    createWebsiteLink(wp_meta, `infinitely-api/v1/helmet/update`),
+    {
+      method: "POST",
+      headers: {
+        Authorization: createWpToken(wp_meta),
+      },
+      body: formData,
+    },
+  );
+
+  const json = await response?.json?.();
+  console.log("helmet/update:", json);
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return json;
+}
+export async function wp_get_all_files({ projectId }) {
+  if (!projectId) {
+    throw new Error(`project id not founded`);
+  }
+  const projectData = await db.projects.get(+projectId);
+  const wp_meta = projectData.wp_meta;
+
+  const response = await fetch(
+    createWebsiteLink(wp_meta, `infinitely-api/v1/media/get-all-files`),
+    {
+      headers: { Authorization: createWpToken(wp_meta) },
+    },
+  );
+
+  const formDataRes = await response?.formData?.();
+  console.log("helmet/update:", formDataRes);
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return formDataRes;
+}
+
+/**
+ *
+ * @param {{
+ *  projectId : number
+ * }} param0
+ * @returns {import("@/helpers/types").SettingsGetResponse}
+ */
+export async function wp_get_settings({ projectId }) {
+  if (!projectId) {
+    throw new Error(`project id not founded`);
+  }
+  const projectData = await db.projects.get(+projectId);
+  const wp_meta = projectData.wp_meta;
+
+  const response = await fetch(
+    createWebsiteLink(wp_meta, `infinitely-api/v1/settings`),
+    {
+      headers: { Authorization: createWpToken(wp_meta) },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ *
+ * @param {{
+ *  projectId : number,
+ *  settings : import("@/helpers/types").WpSettings
+ * }} param0
+ * @returns {import("@/helpers/types").SettingsUpdateResponse}
+ */
+export async function wp_update_settings({ projectId, settings }) {
+  if (!projectId) {
+    throw new Error(`project id not founded`);
+  }
+  const projectData = await db.projects.get(+projectId);
+  const wp_meta = projectData.wp_meta;
+
+  const response = await fetch(
+    createWebsiteLink(wp_meta, `infinitely-api/v1/settings/update`),
+    {
+      method: "POST",
+      headers: {
+        Authorization: createWpToken(wp_meta),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        settings,
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch token schema with optional scope variables
+ * @param {{
+ *  projectId: number,
+ *  post_id: number,
+ *  vars?: Array<{name: string, query?: object, source?: string, data?: any}>,
+ *  include_arrays?: boolean
+ * }} param0
+ * @returns {Promise<{success: boolean, post_id: number, groups: object}>}
+ */
+export async function wp_get_tokens({
+  projectId,
+  post_id,
+  vars = [],
+  include_arrays = true,
+}) {
+  if (!projectId) {
+    throw new Error(`project id not founded`);
+  }
+  const projectData = await db.projects.get(+projectId);
+  const wp_meta = projectData.wp_meta;
+
+  // Build query params
+  const params = new URLSearchParams();
+  if (post_id) params.append("post_id", post_id);
+  if (include_arrays) params.append("include_arrays", "1");
+  if (vars.length > 0) params.append("vars", JSON.stringify(vars));
+
+  const response = await fetch(
+    createWebsiteLink(
+      wp_meta,
+      `infinitely-api/v1/get-tokens?${params.toString()}`,
+    ),
+    {
+      headers: {
+        Authorization: createWpToken(wp_meta),
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ *
+ * @param {import("@/helpers/types").WpPostTypesParams} param0
+ * @returns {import("@/helpers/types").WpPostTypesResponse}
+ */
+export async function wp_get_post_types({
+  projectId,
+  exclude = [],
+  show_builtin = false,
+}) {
+  if (!projectId) {
+    throw new Error(`project id not founded`);
+  }
+  const projectData = await db.projects.get(+projectId);
+  const wp_meta = projectData.wp_meta;
+
+  // 🔥 FIX 1: Safely convert to a comma-separated string (handles both arrays and strings)
+  const excludeString = Array.isArray(exclude) ? exclude.join(",") : exclude;
+
+  // 🔥 FIX 2: Use encodeURIComponent instead of JSON.stringify
+  const response = await fetch(
+    createWebsiteLink(
+      wp_meta,
+      `infinitely-api/v1/all-post-types?exclude=${encodeURIComponent(excludeString)}&show_builtin=${show_builtin}`,
+    ),
+    {
+      headers: {
+        Authorization: createWpToken(wp_meta),
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+/**
+ * 
+ * @param {import("@/helpers/types").WpAuthorsParams & {projectId : number}} params 
+ * @returns {import("@/helpers/types").WpAuthorsResponse}
+ */
+export async function wp_get_authors(params) {
+  if (!params.projectId) {
+    throw new Error(`project id not founded`);
+  }
+  const projectData = await db.projects.get(+projectId);
+  const wp_meta = projectData.wp_meta;
+
+  const response = await fetch(
+    createWebsiteLink(
+      wp_meta,
+      `infinitely-api/v1/authors?${new URLSearchParams(params).toString()}`,
+    ),
+    {
+      headers: {
+        Authorization: createWpToken(wp_meta),
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ *
+ * @param {import("@/helpers/types").WpPostsAllParams & {projectId: number}} params
+ * @returns {import("@/helpers/types").WpPostsAllResponse}
+ */
+export async function wp_get_all_posts(params) {
+  if (!params.projectId) {
+    throw new Error(`project id not founded`);
+  }
+  const projectData = await db.projects.get(+params.projectId);
+  const wp_meta = projectData.wp_meta;
+
+  const response = await fetch(
+    createWebsiteLink(
+      wp_meta,
+      `infinitely-api/v1/posts-all?${new URLSearchParams(params).toString()}`,
+    ),
+    {
+      headers: {
+        Authorization: createWpToken(wp_meta),
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ *
+ * @param {import("@/helpers/types").WpCategoriesAllParams & {projectId : number}} params
+ * @returns {import("@/helpers/types").WpCategoriesAllResponse}
+ */
+export async function wp_get_all_categoires(params) {
+  if (!params.projectId) {
+    throw new Error(`project id not founded`);
+  }
+  const projectData = await db.projects.get(+params.projectId);
+  const wp_meta = projectData.wp_meta;
+
+  const response = await fetch(
+    createWebsiteLink(
+      wp_meta,
+      `infinitely-api/v1/categories-all?${new URLSearchParams(params).toString()}`,
+    ),
+    {
+      headers: {
+        Authorization: createWpToken(wp_meta),
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * 
+ * @param {import("@/helpers/types").WpTagsAllParams & {projectId : number}} params
+ * @returns {import("@/helpers/types").WpTagsAllResponse} 
+ */
+export async function wp_get_all_tags(params) {
+  if (!params.projectId) {
+    throw new Error(`project id not founded`);
+  }
+  const projectData = await db.projects.get(+params.projectId);
+  const wp_meta = projectData.wp_meta;
+
+  const response = await fetch(
+    createWebsiteLink(
+      wp_meta,
+      `infinitely-api/v1/tags-all?${new URLSearchParams(params).toString()}`,
+    ),
+    {
+      headers: {
+        Authorization: createWpToken(wp_meta),
+        "Content-Type": "application/json",
+      },
+    },
+  );  
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * 
+ * @param {import("@/helpers/types").WpTaxonomiesAllParams & {projectId : number}} params
+ * @returns {import("@/helpers/types").WpTaxonomiesAllResponse}
+ */
+export async function wp_get_all_taxonomies(params) {
+  if (!params.projectId) {
+    throw new Error(`project id not founded`);
+  }
+  const projectData = await db.projects.get(+params.projectId);
+  const wp_meta = projectData.wp_meta;
+
+  const response = await fetch(
+    createWebsiteLink(
+      wp_meta,
+      `infinitely-api/v1/taxonomies-all?${new URLSearchParams(params).toString()}`,
+    ),
+    {
+      headers: {
+        Authorization: createWpToken(wp_meta),
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * 
+ * @param {import("@/helpers/types").WpTermsAllParams} params 
+ * @returns {import("@/helpers/types").WpTermsAllResponse}
+ */
+export async function wp_get_all_terms(params) {
+  if (!params.projectId) {
+    throw new Error(`project id not founded`);
+  }
+  const projectData = await db.projects.get(+params.projectId);
+  const wp_meta = projectData.wp_meta;
+
+  const response = await fetch(
+    createWebsiteLink(
+      wp_meta,
+      `infinitely-api/v1/terms-all?${new URLSearchParams(params).toString()}`,
+    ),
+    {
+      headers: {
+        Authorization: createWpToken(wp_meta),
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return response.json();
 }

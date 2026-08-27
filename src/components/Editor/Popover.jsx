@@ -1,407 +1,249 @@
-import {
-  popoverRefState,
-  popoverState,
-  showDragLayerState,
-} from "@/helpers/atoms";
-import { uniqueID } from "@/helpers/cocktail";
-import { currentRefType, refType } from "@/helpers/jsDocs";
+import { currentRefType } from "@/helpers/jsDocs";
 import { Icons } from "@/components/Icons/Icons";
 import Portal from "@/components/Editor/Portal";
-import { useAutoAnimate } from "@formkit/auto-animate/react";
-import interact from "interactjs";
 import React, {
-  memo,
   useEffect,
   useLayoutEffect,
   useRef,
   useState,
+  useCallback,
 } from "react";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { Rnd } from "react-rnd";
+import { ShowIf } from "../ShowIf";
+import { DragLayer } from "./Protos/DragLayer";
+import { getParentNode } from "@/helpers/functions";
 
 export const Popover = ({
   targetRef = currentRefType,
-  isTextarea = false,
   isCode = false,
-  language = "",
-  zIndex = 1000,
+  zIndex = 50,
   width = 0,
   height = 0,
   isOpen = false,
   setIsOpen = (value = false) => {},
   children,
+  className = "",
 }) => {
-  console.log("widthhhh : ", width);
-  const isDrag = useRef(false);
-  /**
-   * @type {{current:HTMLElement}}
-   */
-  const popoverRef = useRef();
-  /**
-   * @type {{current:HTMLElement}}
-   */
-  const dragHandleRef = useRef();
-  const [isResize, setIsResize] = useState(false);
-  const [autoAnimate] = useAutoAnimate();
-  const [showDragLayer, setShowDragLayer] = useRecoilState(showDragLayerState);
-  const popoverResizeDataRef = useRef({
-    width,
-    height,
-    left: 0,
-    top: 0,
-  });
-  const [popoverData, setPopoverData] = useState({
-    isOpen: isOpen,
-    parentWidth: 0,
-    parentHeight: 0,
-    width: width,
-    height: height,
-    top: 0,
-    right: 0,
-    left: 0,
-    bottom: 0,
-    realRight: 0,
-  });
+  const contentRef = useRef(null);
+  const panelWidth = width || 400;
+  const panelHeight = height || 300;
 
-  useLayoutEffect(() => {
-    popoverRef.current && autoAnimate(popoverRef.current);
-  }, [popoverRef]),
-    useLayoutEffect(() => {
-      console.log(
-        "popoverdata : ",
-        popoverData,
-        window.innerWidth,
-        popoverData.left + popoverData.width - window.innerWidth
-      );
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const [size, setSize] = useState({ width: panelWidth, height: panelHeight });
+  const [isDetached, setIsDetached] = useState(false);
+  const [showDragLayer, setShowDragLayer] = useState(false);
 
-      setPopoverData({
-        ...popoverData,
-        isOpen: isOpen,
-      });
-    }, [isOpen]);
+  // Refs for the rAF loop (avoids stale closures)
+  const rafRef = useRef(null);
+  const lastPosRef = useRef(null);
+  const isDetachedRef = useRef(false); // instant check, no waiting for re-render
 
-  useLayoutEffect(() => {
-    const closeMenuCallback = () => {
-      setIsOpen(false);
-    };
-    document.addEventListener("click", closeMenuCallback);
-    window.addEventListener("resize", calcWhereAmI);
-    return () => {
-      window.removeEventListener("resize", calcWhereAmI);
-      document.removeEventListener("click", closeMenuCallback);
-    };
-  }, []);
+  useEffect(() => {
+    setSize({ width: panelWidth, height: panelHeight });
+  }, [panelWidth, panelHeight]);
 
-  useLayoutEffect(() => {
-    if (
-      !popoverRef ||
-      !popoverRef.current ||
-      !dragHandleRef ||
-      !dragHandleRef.current
-    )
-      return;
+  const calcWhereAmI = useCallback(() => {
+    let x = window.innerWidth / 2 - size.width / 2;
+    let y = window.innerHeight / 2 - size.height / 2;
 
-    window.dragMoveListener = function (event) {
-      var target = event.target;
-      var x = (parseFloat(target.getAttribute("data-x")) || 0) + event.dx;
-      var y = (parseFloat(target.getAttribute("data-y")) || 0) + event.dy;
+    if (targetRef?.current) {
+      const rect = targetRef.current.getBoundingClientRect(); // ← catches transforms
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const placeBelow = spaceBelow >= size.height + 20;
 
-      target.style.transform = "translate(" + x + "px, " + y + "px)";
-      target.setAttribute("data-x", x);
-      target.setAttribute("data-y", y);
-    };
-
-    interact(popoverRef.current).resizable({
-      // resize from all edges and corners
-      edges: { bottom: true, top: true, left: true, right: true },
-      // left: true, right: true,
-      // margin: 155,
-      listeners: {
-        move(event) {
-          var target = event.target;
-          var x = parseFloat(target.getAttribute("data-x")) || 0;
-          var y = parseFloat(target.getAttribute("data-y")) || 0;
-
-          // update the element's style
-          target.style.width = event.rect.width + "px";
-          target.style.height = event.rect.height + "px";
-
-          // translate when resizing from top or left edges
-          x += event.deltaRect.left;
-          y += event.deltaRect.top;
-
-          target.style.transform = "translate(" + x + "px," + y + "px)";
-
-          target.setAttribute("data-x", x);
-          target.setAttribute("data-y", y);
-          setIsResize(true);
-          setShowDragLayer(true);
-          // target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height)
-        },
-        end() {
-          console.log("up");
-          setIsResize(false);
-          setShowDragLayer(false);
-        },
-      },
-      modifiers: [
-        // keep the edges inside the parent
-        interact.modifiers.restrictEdges({
-          outer: "parent",
-        }),
-
-        // minimum size
-        interact.modifiers.restrictSize({
-          min: { width: 100, height: 50 },
-        }),
-      ],
-
-      inertia: true,
-    });
-
-    interact(dragHandleRef.current).draggable({
-      listeners: {
-        move: function (event) {
-          var target = popoverRef.current;
-          var x = (parseFloat(target.getAttribute("data-x")) || 0) + event.dx;
-          var y = (parseFloat(target.getAttribute("data-y")) || 0) + event.dy;
-
-          target.style.transform = "translate(" + x + "px, " + y + "px)";
-          target.setAttribute("data-x", x);
-          target.setAttribute("data-y", y);
-        },
-      },
-      inertia: true,
-      modifiers: [
-        interact.modifiers.restrictRect({
-          restriction: "parent",
-          endOnly: true,
-        }),
-      ],
-    });
-    // const resizeObserver = new ResizeObserver((entries) => {
-    //   console.log("draaaaaaaaag : ", isDrag);
-
-    //   entries.forEach((entry) => {
-    //     if (isDrag.current) return;
-    //     const { width, height } = entry.contentRect;
-    //     console.log("resize : ", width, height);
-    //     popoverResizeDataRef.current = {
-    //       ...popoverResizeDataRef.current,
-    //       width,
-    //       height,
-    //     };
-    //   });
-    // });
-
-    // resizeObserver.observe(popoverRef.current);
-
-    // /**
-    //  *
-    //  * @param {MouseEvent} ev
-    //  */
-    // const handleDrag = (ev) => {
-    //   ev.stopPropagation();
-    //   ev.preventDefault();
-    //   // console.log("mooooooooooove", isDrag);
-    //   if (!isDrag.current) return;
-
-    //   const { clientX, clientY } = ev;
-    //   // popoverRef.current.style.width =
-    //   //   popoverResizeDataRef.current.width + "px";
-    //   // popoverRef.current.style.height =
-    //   //   popoverResizeDataRef.current.height + "px";
-    //   // popoverRef.current.style.left = clientX - popoverData.width + 15 + "px";
-    //   // popoverRef.current.style.top = clientY - 15 + "px";
-
-    //   popoverResizeDataRef.current = {
-    //     ...popoverResizeDataRef.current,
-    //     left: clientX - popoverData.width + 15,
-    //     top: clientY - 15,
-    //   };
-    //   setPopoverData({
-    //     ...popoverData,
-    //     width: popoverResizeDataRef.current.width,
-    //     height: popoverResizeDataRef.current.height,
-    //     left: ev.clientX + 15,
-    //     top: ev.clientY - 15,
-    //   });
-    // };
-    // window.addEventListener("mousemove", handleDrag);
-    // const closeDragMode = () => {
-    //   isDrag.current = false;
-    //   setShowDragLayer(false);
-    //   // setPopoverData({
-    //   //   ...popoverData,
-    //   //   width: popoverResizeDataRef.current.width,
-    //   //   height: popoverResizeDataRef.current.height,
-    //   //   left: popoverResizeDataRef.current.left,
-    //   //   top: popoverResizeDataRef.current.top,
-    //   // });
-    // };
-    // window.addEventListener("mouseup", closeDragMode);
-    // return () => {
-    //   popoverRef.current && resizeObserver.unobserve(popoverRef.current);
-    //   resizeObserver.disconnect();
-    //   window.removeEventListener("mousemove", handleDrag);
-    //   window.removeEventListener("mouseup", closeDragMode);
-    // };
-  }, [popoverRef]);
-
-  useLayoutEffect(() => {
-    if (!targetRef || !targetRef.current) return;
-    calcWhereAmI();
-
-    const scrolledElement = getParentScroll(targetRef.current);
-    if (!scrolledElement) return;
-    const inObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.target == targetRef.current && !entry.isIntersecting) {
-          setIsOpen(false);
-        }
-      });
-    });
-    inObserver.observe(targetRef.current);
-
-    /**
-     *
-     * @param {UIEvent} ev
-     */
-    const cb = (ev) => {
-      calcWhereAmI();
-    };
-    scrolledElement.addEventListener("scroll", cb);
-    return () => {
-      scrolledElement.removeEventListener("scroll", cb);
-      if (!targetRef.current) {
-        inObserver?.disconnect();
-        return;
-      }
-      inObserver?.unobserve(targetRef?.current);
-      inObserver?.disconnect();
-    };
-  }, [targetRef]);
-
-  const calcWhereAmI = () => {
-    const { top, left, right, bottom } =
-      targetRef.current.getBoundingClientRect();
-    console.log(width, height, "reals");
-
-    setPopoverData({
-      ...popoverData,
-      parentWidth: targetRef.current.offsetWidth,
-      parentHeight: targetRef.current.offsetHeight,
-      top: top,
-      left: left,
-      right: right,
-      bottom: bottom,
-      width: width || 300,
-      realRight: Math.ceil(window.innerWidth - right),
-      height: height || 300,
-    });
-  };
-
-  const getParentScroll = (el = refType) => {
-    if (el.tagName.toLowerCase() == "body") return null;
-    const cptStyle = getComputedStyle(el);
-    const overflowYStyle = cptStyle.overflowY;
-    const overflowXStyle = cptStyle.overflowX;
-    if (overflowXStyle != "visible" || overflowYStyle != "visible") {
-      console.log("over : ", overflowXStyle, overflowYStyle);
-
-      return el;
-    } else {
-      return getParentScroll(el.parentNode);
+      x = rect.left;
+      y = placeBelow ? rect.bottom + 8 : rect.top - size.height - 8;
     }
-  };
+
+    x = Math.max(8, Math.min(window.innerWidth - size.width - 8, x));
+    y = Math.max(8, Math.min(window.innerHeight - size.height - 8, y));
+
+    return { x, y };
+  }, [targetRef, size.width, size.height]);
+
+  // ✅ rAF POLLING LOOP — the ONLY thing that catches auto-animate transforms
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      isDetachedRef.current = false;
+      setIsDetached(false);
+      lastPosRef.current = null;
+      return;
+    }
+
+    if (isDetached) return; // user dragged it → stop following
+
+    let alive = true;
+
+    const tick = () => {
+      if (!alive || isDetachedRef.current) return;
+
+      const next = calcWhereAmI();
+
+      // Only setState when position actually changed (avoids 60 re-renders/sec)
+      if (
+        !lastPosRef.current ||
+        lastPosRef.current.x !== next.x ||
+        lastPosRef.current.y !== next.y
+      ) {
+        lastPosRef.current = next;
+        setPos(next);
+      }
+
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    tick();
+
+    return () => {
+      alive = false;
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [isOpen, isDetached, calcWhereAmI]);
+
+  // Escape + outside click
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        setIsOpen(false);
+      }
+    };
+
+    const handleClickOutside = (e) => {
+      const parentNode  = getParentNode((el) => el.hasAttribute("data-ignore-popover")  , e.target);
+      if (parentNode) return;
+      if (contentRef.current && !contentRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside, true);
+    document.addEventListener("keydown", handleKeyDown, true);
+    return () => {
+      document.removeEventListener("click", handleClickOutside, true);
+      document.removeEventListener("keydown", handleKeyDown, true);
+    };
+  }, [isOpen, setIsOpen]);
+
+  if (!isOpen) return null;
 
   return (
-    <>
-      {isOpen && (
-        <Portal container={document.querySelector("#root")}>
-          <section
-            ref={popoverRef}
-            onClick={(ev) => {
-              ev.stopPropagation();
-            }}
-            id="popover"
-            className={`${
-              isResize && `[&_*]:select-none`
-            }  fixed zoom-80  resize ${
-              !isCode && `overflow-hidden`
-            } bg-surface-secondary border border-border-default shadow-md shadow-slate-950 rounded-lg  ${zIndex && `z-[${zIndex}]`} ${
-              popoverData.isOpen ? "block" : "hidden"
-            } ${popoverData.className}`}
-            style={{
-              top:
-                popoverData.top <= (height || 300)
-                  ? popoverData.top + popoverData.parentHeight + 3
-                  : popoverData.top - popoverData.height,
-              // bottom :popoverData.top >= 300 ? popoverData.top + popoverData.parentHeight : null,
-              left:
-                popoverData.realRight <= popoverData.width
-                  ? popoverData.left -
-                    popoverData.width +
-                    popoverData.parentWidth
-                  : popoverData.left,
-              width: popoverData.width || 400,
-              height: popoverData.height || 300,
-            }}
-          >
-            {isCode && (
-              <div
-                style={{ cursor: "none" }}
-                className="z-20 absolute left-[-30px] top-0 bg-surface-tertiary rounded-tl-md rounded-bl-md overflow-hidden flex flex-col justify-center"
-              >
-                {/* <button
-                style={{ cursor: "pointer!important" }}
-                className="w-[30px] h-[30px] flex justify-center items-center cursor-pointer"
-              >
-                {Icons.minimize({ strokeColor: "white", width: 15 })}
-              </button> */}
+    <Portal container={document.querySelector("#root")}>
+      <ShowIf condition={showDragLayer}>
+        <DragLayer />
+      </ShowIf>
 
+      {/*
+        react-rnd's drag-delta math assumes its own node is `position: absolute`
+        relative to a normally-flowed offsetParent — that's its internal
+        default. Forcing `position: fixed` directly on <Rnd> (the old approach)
+        changes what the browser actually paints it relative to (the viewport)
+        without changing what react-rnd's math assumes, so the two disagree
+        the instant you start dragging: the cursor doesn't move, but the panel
+        snaps by a fixed offset. This full-viewport `position: fixed` wrapper
+        gives <Rnd> the "normally-flowed absolute parent" it expects, so its
+        internal math and the actual paint now agree — the offset is gone.
+        pointer-events: none here so this empty full-screen div doesn't block
+        clicks anywhere else on the page; <Rnd> re-enables pointer-events on
+        itself below.
+      */}
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          pointerEvents: "none",
+        }}
+      >
+        <Rnd
+          position={{ x: pos.x, y: pos.y }}
+          size={{ width: size.width, height: size.height }}
+          minWidth={250}
+          minHeight={150}
+          bounds="window"
+          dragHandleClassName="popover-drag-handle"
+          style={{ zIndex, position: "absolute", pointerEvents: "auto" }}
+          className={`bg-surface-secondary border border-border-default shadow-md shadow-slate-950 rounded-lg ${className ?? ""}`}
+          // --- Drag: detach from target, take manual control ---
+          onDragStart={() => {
+            isDetachedRef.current = true; // ← instant, kills rAF loop immediately
+            setIsDetached(true);
+            setShowDragLayer(true);
+          }}
+          onDrag={(e, d) => {
+            setPos({ x: d.x, y: d.y }); // ← required for controlled position
+          }}
+          onDragStop={(e, d) => {
+            setPos({ x: d.x, y: d.y });
+            setShowDragLayer(false);
+          }}
+          // --- Resize: same detach logic ---
+          onResizeStart={() => {
+            isDetachedRef.current = true;
+            setIsDetached(true);
+            setShowDragLayer(true);
+          }}
+          onResize={(e, dir, ref, delta, position) => {
+            setSize({ width: ref.offsetWidth, height: ref.offsetHeight });
+            setPos({ x: position.x, y: position.y });
+          }}
+          onResizeStop={(e, dir, ref, delta, position) => {
+            setSize({ width: ref.offsetWidth, height: ref.offsetHeight });
+            setPos({ x: position.x, y: position.y });
+            setShowDragLayer(false);
+          }}
+        >
+          <div ref={contentRef} className="w-full h-full flex flex-col relative">
+            {isCode && (
+              <div className="z-20 absolute left-[-30px] top-0 bg-surface-tertiary rounded-tl-md rounded-bl-md overflow-hidden flex flex-col justify-center">
                 <button
-                  className="w-[30px] h-[30px] flex justify-center items-center"
-                  onClick={(ev) => {
-                    // setPopoverData({
-                    //   ...popoverData,
-                    //   width: window.innerWidth,
-                    //   height: window.innerHeight,
-                    //   left: 0,
-                    //   top: 0,
-                    // });
-                    popoverRef.current.requestFullscreen();
-                  }}
+                  data-ignore-popover
+                  className="w-[30px] h-[30px] flex justify-center items-center hover:bg-surface-secondary transition-colors"
+                  onClick={() => contentRef.current?.requestFullscreen()}
                 >
-                  {Icons.fullscreen({ fill: "white", width: 15 })}
+                  {/* {Icons.fullscreen({ fill: "white", width: 15 })} */}
+                  <i className="pointer-events-none">
+                    <Icons.fullscreen fill="white" width={15} />
+                  </i>
                 </button>
 
                 <button
-                  ref={dragHandleRef}
-                  className=" w-[30px] h-[30px]  flex justify-center items-center  transition-all hover:opacity-[1] cursor-grab"
-                  onMouseDown={(ev) => {
-                    setShowDragLayer(true);
-                    isDrag.current = true;
-                  }}
-                  onMouseUp={(ev) => {
-                    setShowDragLayer(false);
-                    isDrag.current = false;
-                  }}
+                  data-ignore-popover
+                  className="popover-drag-handle w-[30px] h-[30px] flex justify-center items-center hover:bg-surface-secondary transition-colors cursor-grab active:cursor-grabbing"
                 >
-                  {Icons.drag({ fill: "white", width: 15, height: 20 })}
+                  {/* {Icons.drag({ fill: "white", width: 15, height: 20 })} */}
+                  <i className="pointer-events-none">
+                    <Icons.drag fill="white" width={15} height={20} />
+                  </i>
+                </button>
+
+                <button
+                  data-ignore-popover
+                  className="w-[30px] h-[30px] flex justify-center items-center hover:bg-surface-secondary transition-colors text-slate-400 hover:text-white"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <svg
+                    className="pointer-events-none"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                 </button>
               </div>
             )}
 
-            {/* <section key={popoverData.content?.toString()}>{popoverData.content}</section> */}
-            {children}
-            {/* <section
-        ref={popoverRef}
-        id="popover-portal"
-        className="w-full h-full"
-      ></section> */}
-          </section>
-        </Portal>
-      )}
-    </>
+            <div className="flex-1 min-h-0 overflow-hidden">{children}</div>
+          </div>
+        </Rnd>
+      </div>
+    </Portal>
   );
 };

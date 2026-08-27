@@ -7,6 +7,7 @@ import {
   selectorState,
 } from "@/helpers/atoms";
 import {
+  getComponentRules,
   getCurrentMediaDevice,
   getCurrentSelector,
 } from "@/helpers/functions";
@@ -26,13 +27,14 @@ import { useRecoilState, useRecoilValue } from "recoil";
 // million-ignore
 /**
  *
- * @param {{keywords : string[] , className:string , onActive : ({ keyword , index} : { keyword:string , index:number})=>void, onUnActive : ({ keyword , index} : { keyword:string , index:number})=>void,  enableSelecting:boolean,  onCloseClick : (ev : MouseEvent , keyword : string , index:number) => void , }} param0
+ * @param {{keywords : string[] , className:string  , keywordClassName:string, onActive : ({ keyword , index} : { keyword:string , index:number})=>void, onUnActive : ({ keyword , index} : { keyword:string , index:number})=>void,  enableSelecting:boolean,  onCloseClick : (ev : MouseEvent , keyword : string , index:number) => void , }} param0
  * @returns
  */
 export const Choices = ({
   keywords = [],
   enableSelecting = false,
   className = "",
+  keywordClassName = "",
   onActive = (_ev, _keyword, _index) => {},
   onUnActive = (_ev, _keyword, _index) => {},
   onCloseClick = (_, _1) => {},
@@ -70,7 +72,7 @@ export const Choices = ({
       active,
       index,
       currentIndex.current,
-      keywords[index]
+      keywords[index],
     );
 
     // active ? onActive({ keyword, index: currentIndex.current }) :  onUnActive({ keyword, index: currentIndex.current });
@@ -102,7 +104,7 @@ export const Choices = ({
         "cr:",
         rule.atRuleParams == currentMedia.atRuleParams,
         rule.atRuleParams,
-        currentMedia.atRuleParams
+        currentMedia.atRuleParams,
       );
 
       if (
@@ -174,72 +176,88 @@ export const Choices = ({
     };
   }, [selector, active, sle, editor, keywords]);
 
+  useEffect(() => {
+    if (!editor) return;
+    setCmpRules(
+      getComponentRules({
+        editor,
+        cmp: editor.getSelected(),
+        nested: true,
+      }).rules,
+    );
+  }, [editor, keywords]);
+
   return (
     <section
       className={`w-full    gap-2 flex items-center p-1 rounded-lg  ${
         className ? className : "bg-surface-tertiary"
       }`}
     >
-      {Boolean(keywords.length) && keywords.map((keyword, i) => {
-        return (
-          keyword && (
-            <p
-              onClick={(ev) => {
-                ev.stopPropagation();
-                ev.preventDefault();
-
-                if (!enableSelecting) return;
-
-                const valueWithoutDot = selector.startsWith(".")
-                  ? selector.replace(".", "").toLowerCase() ===
-                    keyword.toLowerCase()
-                  : selector.toLowerCase() === keyword.toLowerCase();
-                console.log(
-                  "selector setttting indexoo",
-                  selector,
-                  keyword,
-                  valueWithoutDot
-                );
-                setRule({
-                  is: false,
-                  ruleString: "",
-                  atRuleParams: null,
-                  atRuleType: null,
-                });
-
-                setSelector(valueWithoutDot ? "" : `.${keyword}`);
-              }}
-              key={i}
-              className={`text-nowrap break-all relative custom-font-size group px-[20px] w-fit cursor-pointer select-none  flex-shrink-0 py-2 text-white ${
-                active && currentIndex.current == i
-                  ? "bg-brand-primary"
-                  : enableSelecting
-                  ? "bg-surface-secondary"
-                  : "bg-brand-primary"
-              }  transition-all rounded-lg font-semibold`}
-            >
-              {keyword}
-              <i
+      {Boolean(keywords.length) &&
+        keywords.map((keyword, i) => {
+          return (
+            keyword && (
+              <p
                 onClick={(ev) => {
                   ev.stopPropagation();
                   ev.preventDefault();
 
-                  onCloseClick(ev, keyword, i);
+                  if (!enableSelecting) return;
+
+                  const valueWithoutDot = selector.startsWith(".")
+                    ? selector.replace(".", "").toLowerCase() ===
+                      keyword.toLowerCase()
+                    : selector.toLowerCase() === keyword.toLowerCase();
+                  console.log(
+                    "selector setttting indexoo",
+                    selector,
+                    keyword,
+                    valueWithoutDot,
+                  );
+                  setRule({
+                    is: false,
+                    ruleString: "",
+                    atRuleParams: null,
+                    atRuleType: null,
+                  });
+
+                  setSelector(valueWithoutDot ? "" : `.${keyword}`);
                 }}
-                className="absolute bg-brand-primary shadow-sm shadow-blue-950 w-[23px]  h-[23px] flex items-center justify-center rounded-full transition-all cursor-pointer opacity-0 group-hover:opacity-[1]  right-[-5px] top-[-5px] z-50"
+                key={i}
+                className={`text-nowrap break-all relative custom-font-size group px-[20px] w-fit cursor-pointer select-none  shrink-0 py-2 text-white ${
+                  active && currentIndex.current == i
+                    ? "bg-brand-primary"
+                    : enableSelecting
+                      ? "bg-surface-secondary"
+                      : "bg-brand-primary"
+                }  transition-all rounded-lg font-semibold ${keywordClassName ?? ''}`}
               >
-                {Icons.close("white", "", "white")}
-              </i>
+                {keyword}
+                <i
+                  onClick={(ev) => {
+                    ev.stopPropagation();
+                    ev.preventDefault();
 
-              {notifiers[keyword] && (
-                <span className="absolute w-[10px] h-[10px] rounded-full bg-brand-primary shadow-lg shadow-slate-950 left-[-5px] top-[-5px]"></span>
-              )}
-            </p>
-          )
-        );
-      })}
+                    onCloseClick(ev, keyword, i);
+                  }}
+                  className="absolute bg-brand-primary shadow-sm shadow-blue-950 w-[23px]  h-[23px] flex items-center justify-center rounded-full transition-all cursor-pointer opacity-0 group-hover:opacity-[1]  right-[-5px] top-[-5px] z-50"
+                >
+                  {Icons.close("white", "", "white")}
+                </i>
 
-      {!Boolean(keywords.length) && <h1 className="text-text-primary animate-pulse w-full flex justify-center items-center">No thing here </h1>}
+                {notifiers[keyword] && (
+                  <span className="absolute w-[10px] h-[10px] rounded-full bg-brand-primary shadow-lg shadow-slate-950 left-[-5px] top-[-5px]"></span>
+                )}
+              </p>
+            )
+          );
+        })}
+
+      {!Boolean(keywords.length) && (
+        <h1 className="text-text-primary animate-pulse w-full flex justify-center items-center">
+          No thing here{" "}
+        </h1>
+      )}
     </section>
   );
 };

@@ -72,7 +72,7 @@ export const Property = ({
         } gap-2  bg-surface-tertiary p-1 rounded-lg`}
     >
       {label ? (
-        <FitTitle className="capitalize flex items-center  justify-center custom-font-size w-fit flex-shrink-0  overflow-hidden text-ellipsis ">
+        <FitTitle className="capitalize flex items-center  justify-center custom-font-size w-fit shrink-0  overflow-hidden text-ellipsis ">
           {label}{" "}
         </FitTitle>
       ) : (

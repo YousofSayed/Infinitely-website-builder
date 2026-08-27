@@ -106,7 +106,7 @@ import {
   wp_create_single,
   wp_get,
   wp_get_single,
-} from "@/apps/wordpress/functions";
+} from "@/Apps/wordpress/functions";
 import { Select } from "@/components/Editor/Protos/Select";
 
 const parseValue = (value) => {

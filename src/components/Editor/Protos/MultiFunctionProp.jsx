@@ -132,7 +132,7 @@ export const MultiFunctionProp = (
             }}
           />
           <SmallButton
-            className="flex-shrink-0 bg-surface-tertiary"
+            className="shrink-0 bg-surface-tertiary"
             title={placeholder}
             onClick={(ev) => {
               setFilter("");
@@ -150,8 +150,8 @@ export const MultiFunctionProp = (
                 <Adder
                   key={i}
                   className=" bg-surface-tertiary relative minion"
-                  addClassName="bg-surface-secondary h-[42px] w-[50px] flex-shrink-0"
-                  delClassName="bg-surface-secondary h-[42px] w-[50px] flex-shrink-0"
+                  addClassName="bg-surface-secondary h-[42px] w-[50px] shrink-0"
+                  delClassName="bg-surface-secondary h-[42px] w-[50px] shrink-0"
                   inputClassName="p-[unset] px-[unset]  py-1 bg-surface-secondary"
                   placeholder="New Prop"
                   showSelectMenu={true}
@@ -173,7 +173,7 @@ export const MultiFunctionProp = (
                     <FitTitle className="capitalize">
                       {filterProp.name}
                     </FitTitle>
-                    {/* <p className="font-semibold capitalize border-l-[3px] border-blue-600 bg-surface-secondary py-2 px-3 rounded-lg text-text-primary flex-grow flex-shrink-0">
+                    {/* <p className="font-semibold capitalize border-l-[3px] border-blue-600 bg-surface-secondary py-2 px-3 rounded-lg text-text-primary flex-grow shrink-0">
                       {filterProp.name} :
                     </p> */}
                     <section className="flex  h-[40px] w-full">
@@ -208,7 +208,7 @@ export const MultiFunctionProp = (
                         Object.keys(units).length &&
                         filterUnits[filterProp.name]
                       ) && (
-                          <p className="w-[40px] font-bold  flex flex-shrink-0 rounded-tl-none rounded-bl-none items-center justify-center text-text-primary bg-surface-secondary h-[100%] rounded-lg">
+                          <p className="w-[40px] font-bold  flex shrink-0 rounded-tl-none rounded-bl-none items-center justify-center text-text-primary bg-surface-secondary h-[100%] rounded-lg">
                             {filterUnits[filterProp.name]}
                           </p>
                         )}

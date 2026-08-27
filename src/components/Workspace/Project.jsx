@@ -2,8 +2,8 @@ import {
   wp_delete_option,
   wp_get_option,
   wp_update_option,
-} from "@/apps/wordpress/functions";
-import { wp_toast_handler } from "@/apps/wordpress/functions_ui";
+} from "@/Apps/wordpress/functions";
+import { wp_toast_handler } from "@/Apps/wordpress/functions_ui";
 import blankImg from "@/assets/images/blank.jpg";
 import {
   app_type,
@@ -92,8 +92,8 @@ export const Project = ({ project }) => {
 
   return (
     <article
-      ref={autoAminRef}
-      className="relative px-2 py-1 bg-surface-secondary  rounded-lg flex flex-col h-[320px] justify-evenly  gap-2"
+      // ref={autoAminRef}
+      className="relative px-2 py-1 bg-surface-secondary  rounded-lg flex flex-col h-[320px] justify-evenly  gap-2 animate-go-to"
     >
       <figure className="flex flex-col gap-2 h-[70%]  items-center ">
         <img

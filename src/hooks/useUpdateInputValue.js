@@ -9,6 +9,7 @@ import {
   ruleState,
   selectorState,
   showAnimationsBuilderState,
+  showComponentsInLeftPanelState,
   showStylesBuilderForMotionBuilderState,
 } from "@/helpers/atoms";
 import { infinitelyCallback } from "@/helpers/bridge";
@@ -51,6 +52,9 @@ export const useUpdateInputValue = ({
   const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
   const [animations, setAnimations] = useRecoilState(animationsState);
   const conditionalCmpRules = isFunction(getAllStyles) ? cmpRules : null;
+  const [showsComponents, setShowsComponents] = useRecoilState(
+    showComponentsInLeftPanelState,
+  );
 
   // const cssPropForAM = useRecoilValue(cssPropForAssetsManagerState);
   function getRuleStyle(isDeviceEvent) {
@@ -104,16 +108,16 @@ export const useUpdateInputValue = ({
     }
 
     if (isFunction(getAllStyles)) {
-      (showAnimationsBuilder || showStylesBuilder) && console.log("framesStyles : ", framesStyles);
+      (showsComponents.animationsBuilder || showsComponents.stylesBuilder) && console.log("framesStyles : ", framesStyles);
       getAllStyles(
-        showAnimationsBuilder || showStylesBuilder ? framesStyles : getRuleStyle(isDeviceEvent) || {}
+        showsComponents.animationsBuilder || showsComponents.stylesBuilder ? framesStyles : getRuleStyle(isDeviceEvent) || {}
       );
       return;
     }
 
     
     
-    if (!currentSelector && !showAnimationsBuilder && !showStylesBuilder) {
+    if (!currentSelector && !showsComponents.animationsBuilder && !showsComponents.stylesBuilder) {
       setVal("");
       onEffect(cssProp, "");
       return;
@@ -125,7 +129,7 @@ export const useUpdateInputValue = ({
       !getRuleStyle(isDeviceEvent)[cssProp] &&
       !returnPropsAsIt &&
       !Object.values(framesStyles || {}).length &&
-      !showStylesBuilder
+      !showsComponents.stylesBuilder
     ) {
       // console.log("rrrrrrule gog: sd", cssProp, getRuleStyle());
 
@@ -134,7 +138,7 @@ export const useUpdateInputValue = ({
       return;
     }
     
-    if (slEL && !showAnimationsBuilder && !showStylesBuilder) {
+    if (slEL && !showsComponents.animationsBuilder && !showsComponents.stylesBuilder) {
       const slElStyles = slEL.getStyle();
       // const infSymbolAttrValue = slEL.getAttributes()[inf_symbol_Id_attribute];
       // console.log("styles : ");
@@ -156,7 +160,7 @@ export const useUpdateInputValue = ({
     }
       // console.log("rrrrrrule gog: ", currentSelector || rule.is, cssProp);
 
-    if (showAnimationsBuilder || showStylesBuilder) {
+    if (showsComponents.animationsBuilder || showsComponents.stylesBuilder) {
       const value = returnPropsAsIt
         ? framesStyles
         : framesStyles[cssProp] || "";
@@ -209,7 +213,8 @@ export const useUpdateInputValue = ({
     currentElObj,
     selector,
     rule,
-    showAnimationsBuilder,
+    showsComponents.animationsBuilder,
+    // showAnimationsBuilder,
     // showStylesBuilder,
     // animations,
     framesStyles,
@@ -229,8 +234,8 @@ export const useUpdateInputValue = ({
     // }
     if (
       !currentElObj?.currentEl &&
-      !showAnimationsBuilder &&
-      !showStylesBuilder &&
+      !showsComponents.animationsBuilder &&
+      !showsComponents.stylesBuilder &&
       !editor.getSelected()
     )
       return;
@@ -265,8 +270,10 @@ export const useUpdateInputValue = ({
     currentElObj,
     selector,
     rule,
-    showAnimationsBuilder,
-    showStylesBuilder,
+    // showAnimationsBuilder,
+    // showStylesBuilder,
+    showsComponents.animationsBuilder,
+    showsComponents.stylesBuilder,
     framesStyles,
     // animations,
     // cmpRules,

@@ -38,6 +38,8 @@ export const blocks = [
     label: html`<p class="custom-font-size">Text</p>`,
     category: "Basic",
     media: reactToStringMarkup(Icons.text({ fill: "currentColor" })),
+
+
     // activate: true,
     content: { type: "text" },
     select: false,

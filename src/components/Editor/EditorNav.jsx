@@ -45,8 +45,12 @@ import { useEditorMaybe } from "@grapesjs/react";
 import { minify } from "csso";
 import { useLiveQuery } from "dexie-react-hooks";
 import React, { useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { ShowIf } from "../ShowIf";
+import { Wordpress } from "../Protos/wordpress/Wordpress";
+import { useRecoilState } from "recoil";
+import { showComponentsInLeftPanelState, viewsKeyState } from "@/helpers/atoms";
 
 export const HomeNav = () => {
   const editor = useEditorMaybe();
@@ -56,6 +60,11 @@ export const HomeNav = () => {
   const projectData = useLiveQuery(async () => {
     return await getProjectData();
   });
+  const [showsComponents, setShowsComponents] = useRecoilState(
+    showComponentsInLeftPanelState,
+  );
+  const [viewsKey, setViewKey] = useRecoilState(viewsKeyState);
+
   useEffect(() => {
     const callback = async ({ detail }) => {
       console.log("req :", detail);
@@ -74,65 +83,22 @@ export const HomeNav = () => {
     };
   }, [projectData]);
 
-  // useEffect(()=>{
-  //   console.log('minify : ' , minify(`@keyframes lol {
-  //       0%{
-  //         opacity:0%;
-  //       }
+  const leave = () => {
+    if (editor.getDirtyCount()) {
+      const cnfrm = confirm(
+        `Unsaved changes will be lost. Are you sure you want to leave?`,
+      );
+      cnfrm && navigate(getLogoAppNavLink(), { viewTransition: true });
+      return;
+    }
 
-  //       100%{
-  //         opacity:;
-  //       }
-  //     } 
+    if (editor.infStore) {
+      alert(`Hang tight, saving your work! 😍`);
+      return;
+    }
 
-  //     @keyframes lol {
-  //       0%{
-  //         opacity:;
-  //       }
-
-  //       100%{
-  //         opacity:1%;
-  //       }
-  //     }  
-  //     ` , {restructure:true}).css);
-
-  // },[])
-
-  // useEffect(() => {
-  //   (async () => {
-  //     const currentPagetId = localStorage.getItem(current_page_id);
-  //     const page = await (await getProjectData()).pages[`${currentPagetId}`];
-  //     const pageFile = await(await opfs.getFile(defineRoot(page.pathes.html))).getOriginFile();
-  //     const content =  html_beautify(
-  //         await (
-  //           await Promise.all(
-  //             chunkHtmlElements(await pageFile.text()).map(async (el) => {
-  //               if (!el.includes(inf_symbol_Id_attribute)) return el;
-  //               for (const symbolId of page.symbols) {
-  //                 const symbolHandle = await opfs.getFile(
-  //                   defineRoot(`editor/symbols/${symbolId}/${symbolId}.html`)
-  //                 );
-  //                 if (!symbolHandle.exists()) continue;
-  //                 const symbolContent = await symbolHandle.text();
-  //                 el = symbolContent;
-  //               }
-  //               return el;
-  //             })
-  //           )
-  //         ).join("\n")
-  //       );
-
-  //     console.log(
-  //       'page : html',
-  //       defineRoot(page.pathes.html),
-  //       pageFile,
-  //       content,
-
-  //     );
-
-  //     testRef.current.setAttribute('srcdoc' ,  doDocument(content)) ;
-  //   })();
-  // });
+    navigate(getLogoAppNavLink(), { viewTransition: true });
+  };
 
   return (
     <nav className="h-full  w-[55px]  p-2 flex flex-col justify-between items-center bg-surface-secondary ">
@@ -140,9 +106,9 @@ export const HomeNav = () => {
       <div className="flex flex-col items-center gap-5">
         <figure className="pb-[20px] pt-1 border-b-[1px] border-slate-400 ">
           {/* {Icons.logo({})} */}
-          <Link to={getLogoAppNavLink()} className="cursor-pointer">
+          <button onClick={leave} className="cursor-pointer" viewTransition>
             <img src={config.logo} alt="logo" />
-          </Link>
+          </button>
         </figure>
 
         <ul className="flex flex-col gap-5 items-center">
@@ -227,7 +193,7 @@ export const HomeNav = () => {
                               await uploadDbxFileWithToastProgress(
                                 projectData.dropboxFileMeta.path_lower,
                                 await getProject(),
-                                projectData.dropboxFileMeta.rev
+                                projectData.dropboxFileMeta.rev,
                               );
                             if (!dataMeta) {
                               throw new Error(`No data meta founded`);
@@ -238,7 +204,7 @@ export const HomeNav = () => {
                               {
                                 dbx_pull_requried: false,
                                 dropboxFileMeta: dataMeta,
-                              }
+                              },
                             );
                             // toast.done(tId);
                           } catch (error) {
@@ -262,7 +228,7 @@ export const HomeNav = () => {
                         // disabled={!projectData.dbx_pull_requried}
                         onClick={async (ev) => {
                           const cnfrm = confirm(
-                            `Are you sure you want to pull from dropbox? This will overwrite your local project files.`
+                            `Are you sure you want to pull from dropbox? This will overwrite your local project files.`,
                           );
                           if (!cnfrm) return;
                           console.log("refff : ", pushRef.current);
@@ -303,7 +269,7 @@ export const HomeNav = () => {
                           const dataMeta = await uploadDbxFileWithToastProgress(
                             `/${projectData.name}.zip`,
                             await getProject(),
-                            ""
+                            "",
                           );
                           if (!dataMeta) {
                             throw new Error(`No data meta founded`);
@@ -314,7 +280,7 @@ export const HomeNav = () => {
                             {
                               dbx_pull_requried: false,
                               dropboxFileMeta: dataMeta,
-                            }
+                            },
                           );
                           trgBtn.disabled = false;
                         }}
@@ -335,7 +301,24 @@ export const HomeNav = () => {
               </OptionsButton>
             </li>
           )}
-          {isWordpress() && <Li title="Wordpress" icon={Icons.wordpress} isObjectParamsIcon />}
+          <Wordpress>
+            <Li
+              title="Wordpress"
+              // icon={}
+              onClick={() => {
+                setShowsComponents((old) => ({
+                  ...old,
+                  viewPanel: !old?.viewPanel,
+                  views:{
+                    ...old?.views,
+                    viewKey:'wordpress'
+                  }
+                }));
+              }}
+            >
+              <Icons.wordpress />
+            </Li>
+          </Wordpress>
           {/* <Li title="Github" icon={Icons.git} /> */}
         </ul>
       </div>
@@ -360,7 +343,7 @@ export const HomeNav = () => {
               editor.leaving = true;
               if (editor.getDirtyCount()) {
                 const cnfrm = confirm(
-                  `There is changes not saved , are you sure to leave ?`
+                  `There is changes not saved , are you sure to leave ?`,
                 );
                 if (cnfrm) {
                   navigate("workspace");
@@ -370,8 +353,6 @@ export const HomeNav = () => {
               }
             }}
           />
-
-
         </ul>
       </div>
     </nav>

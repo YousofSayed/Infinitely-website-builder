@@ -43,8 +43,21 @@ import {
   wp_insert_post,
   wp_insert_posts,
   wp_delete_posts,
-  wp_unlink_symbols
-} from "@/apps/wordpress/functions";
+  wp_unlink_symbols,
+  wp_get_post_helmet,
+  wp_update_post_helmet,
+  wp_get_all_files,
+  wp_get_settings,
+  wp_update_settings,
+  wp_get_tokens,
+  wp_get_post_types,
+  wp_get_authors,
+  wp_get_all_posts,
+  wp_get_all_categoires,
+  wp_get_all_tags,
+  wp_get_all_taxonomies,
+  wp_get_all_terms
+} from "@/Apps/wordpress/functions";
 import { writeFilesToOPFS } from "@/helpers/workerCommands";
 
 export const wpCommands = {
@@ -94,4 +107,17 @@ export const wpCommands = {
   wp_insert_posts,
   wp_delete_posts,
   wp_unlink_symbols,
+  wp_get_post_helmet,
+  wp_update_post_helmet,
+  wp_get_all_files,
+  wp_get_settings,
+  wp_update_settings,
+  wp_get_tokens,
+  wp_get_post_types,
+  wp_get_authors,
+  wp_get_all_posts,
+  wp_get_all_categoires,
+  wp_get_all_tags,
+  wp_get_all_taxonomies,
+  wp_get_all_terms,
 };

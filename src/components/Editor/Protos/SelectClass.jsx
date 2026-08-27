@@ -10,7 +10,7 @@ import { Choices } from "@/components/Editor/Protos/Choices";
 import { Select } from "@/components/Editor/Protos/Select";
 import { SmallButton } from "@/components/Editor/Protos/SmallButton";
 import { useEditorMaybe } from "@grapesjs/react";
-import React, { memo, useEffect, useState } from "react";
+import React, { memo, useEffect, useLayoutEffect, useState } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
 
 export const SelectClass = () => {
@@ -20,7 +20,9 @@ export const SelectClass = () => {
   const selectedEl = useRecoilValue(currentElState);
   const [value, setvalue] = useState("");
   const [classesKeywrods, setClassesKeywords] = useState([]);
-  const [allStyleSheetClasses, setAllStyleSheetClasses] = useState(['__inf_loading__']);
+  const [allStyleSheetClasses, setAllStyleSheetClasses] = useState([
+    "__inf_loading__",
+  ]);
   const [selectedClassName, setSelectedClassName] = useState({
     className: "bg-surface-secondary",
     index: null,
@@ -66,13 +68,34 @@ export const SelectClass = () => {
   useEffect(() => {
     if (!editor) return;
 
+    let newClasses = null;
+    //fire when select component or when editor is ready
     const callback = (ev) => {
       const { command, props } = ev.data;
       if (command === "classes-chunks" && props.classes) {
         infinitelyCallback(() => {
+          newClasses = props.classes;
           setAllStyleSheetClasses((prev) => [
             ...new Set([...prev, ...props.classes]),
           ]);
+        }, 10);
+      }
+
+      if (command === "end-classes-chunks" ) {
+
+        infinitelyCallback(() => {
+          if (!newClasses) {
+            setAllStyleSheetClasses([]);
+          }
+          //  else {
+          //   setAllStyleSheetClasses((prev) => [
+          //     ...new Set(
+          //       [...prev, ...props.classes].filter(
+          //         (c) => c !== "__inf_loading__",
+          //       ),
+          //     ),
+          //   ]);
+          // }
         }, 10);
       }
     };
@@ -81,9 +104,14 @@ export const SelectClass = () => {
     return () => classesFinderWorker.removeEventListener("message", callback);
   }, [editor]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!editor) return;
-    if (!selectedEl.currentEl) return;
+    if (!selectedEl.currentEl) {
+      // setAllStyleSheetClasses([]);
+      // return;
+    }else{
+      // setAllStyleSheetClasses['__inf_loading__']
+    };
     getClassFromInlineWorker();
   }, [editor, selectedEl]);
 
@@ -115,12 +143,12 @@ export const SelectClass = () => {
     };
   }, [editor]);
 
-  const addClass = (classNameKeyword='') => {
+  const addClass = (classNameKeyword = "") => {
     const newArr = [...classesKeywrods, classNameKeyword];
     setClassesKeywords(Array.from(new Set(newArr)));
     editor.getSelected().addClass(newArr);
     setvalue(new String(""));
-    editor.getSelected().view.render();
+    // editor.getSelected().view.render();
     // console..lgo('mohammed')
   };
 
@@ -159,7 +187,7 @@ export const SelectClass = () => {
     const prjectData = await await db.projects.get(projectId);
     const cssLibsClasses = await (
       (await Promise.all(
-        [...prjectData.cssLibs].map(async (lib) => await lib.file.text())
+        [...prjectData.cssLibs].map(async (lib) => await lib.file.text()),
       )) || []
     )
       .join("\n")
@@ -222,7 +250,7 @@ export const SelectClass = () => {
       },
     });
     console.log(
-      "postting message"
+      "postting message",
       //  parse(editor.getCss({
       //     keepUnusedStyles: true,
       //   })).stylesheet.rules
@@ -235,6 +263,8 @@ export const SelectClass = () => {
       <section className="flex gap-2">
         <Select
           value={value}
+          closeAfterPressEnter={false}
+          className={`${!Boolean(selectedEl.currentEl) ? 'pointer-events-none ' : ''} bg-surface-tertiary`}
           onInput={(value) => {
             // console.log("log classes : ", editor.getCss().match(/\.\w+/gi));
             // console.log("log classes css: ", editor.getCss());
@@ -242,7 +272,7 @@ export const SelectClass = () => {
             setvalue(value);
           }}
           onEnterPress={(value) => {
-            console.log("valuevalue : ", value);
+            // console.log("valuevalue : ", value);
 
             addClass(value);
           }}
@@ -250,21 +280,12 @@ export const SelectClass = () => {
             // setvalue(value);
             addClass(value);
           }}
-          placeholder="Calss name"
+          placeholder="Class name"
           keywords={allStyleSheetClasses}
-        // onMenuOpen={({ menu, setKeywords, keywords }) => {
-        //   setKeywords(
-        //     editor.getCss().match(/\.\w+/gi) || []
-        //   );
-        // }}
-
-        // onMenuOpen={async ({ setKeywords }) => {
-        //   setKeywords(await getAllStyleSheetClasses());
-        // }}
         />
 
         <SmallButton
-          className="flex-shrink-0 bg-surface-tertiary"
+          className="shrink-0 bg-surface-tertiary"
           onClick={(ev) => {
             addClass(value);
           }}
@@ -280,7 +301,7 @@ export const SelectClass = () => {
             className="flex-wrap flex-center bg-surface-tertiary"
             onCloseClick={(ev, keyword) => {
               removeClass(keyword);
-              editor.trigger(InfinitelyEvents.ruleTitle.update, keyword)
+              editor.trigger(InfinitelyEvents.ruleTitle.update, keyword);
             }}
             onActive={({ keyword, index }) => {
               console.log("keeeeyword : ", keyword, "active");

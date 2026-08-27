@@ -1,4 +1,4 @@
-import { wp_get } from "@/apps/wordpress/functions";
+import { wp_get } from "@/Apps/wordpress/functions";
 import { current_project_id } from "@/constants/shared";
 import { defineRoot } from "@/helpers/bridge";
 import { doInNormalAsync, doInWordpressAsync, getProjectData, getProjectSettings } from "@/helpers/functions";

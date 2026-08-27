@@ -76,7 +76,7 @@ export const ObjectInput = ({
           />
         </section>
         <SmallButton
-          className="flex-shrink-0 bg-surface-secondary"
+          className="shrink-0 bg-surface-secondary"
           onClick={(ev) => {
             onAddClick(ev, key, value);
             setKey("");
@@ -120,7 +120,7 @@ export const ObjectInput = ({
                   onClick={(ev) => {
                     onDelete(ev, propKey, obj[propKey]);
                   }}
-                  className="flex-shrink-0 bg-surface-secondary shadow-[unset] "
+                  className="shrink-0 bg-surface-secondary shadow-[unset] "
                 >
                   {Icons.delete("white")}
                 </SmallButton>

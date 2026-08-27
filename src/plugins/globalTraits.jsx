@@ -4,6 +4,7 @@ import { parseStringObjToKV } from "@/helpers/bridge";
 import { parse } from "@/helpers/cocktail";
 import {
   defineTraits,
+  isWordpress,
   mount,
   preventSelectNavigation,
   unMount,
@@ -11,6 +12,10 @@ import {
 import { isBoolean, isFunction } from "lodash";
 import parseObjectLiteral from "object-literal-parse";
 import { toast } from "react-toastify";
+import { inf_for_traits } from "./traits/wordpress/inf-for";
+import { inf_query_traits } from "./traits/wordpress/inf-query";
+import { inf_ssr_traits } from "./traits/wordpress/inf-ssr";
+import { showCallback } from "./traits/wordpress/helpers";
 
 /**
  *
@@ -73,14 +78,14 @@ export const setPropToLoopCmp = ([key, value], oldValue, sle, props = {}) => {
       "scope obj ",
       key || undefined,
       value || undefined,
-      oldValue || undefined
+      oldValue || undefined,
     );
 
     if (!key && oldValue) {
       parsedScope = parsedScope.filter(([k, v]) => k !== oldValue);
       const updatedScope = `{ ${parsedScope
         .map(
-          ([k, v]) => `${k}: ${k == key ? returnValue(value) : returnValue(v)}`
+          ([k, v]) => `${k}: ${k == key ? returnValue(value) : returnValue(v)}`,
         )
         .join(", ")} }`;
       loopCmp.addAttributes({
@@ -105,7 +110,7 @@ export const setPropToLoopCmp = ([key, value], oldValue, sle, props = {}) => {
       parsedScope,
       key,
       value || undefined,
-      oldValue || undefined
+      oldValue || undefined,
     );
 
     if (parsedScope.filter(([k, v]) => k === key).length >= 2) {
@@ -116,7 +121,7 @@ export const setPropToLoopCmp = ([key, value], oldValue, sle, props = {}) => {
         const updatedScope = `{ ${parsedScope
           .map(
             ([k, v]) =>
-              `${k}: ${k == key ? returnValue(value) : returnValue(v)}`
+              `${k}: ${k == key ? returnValue(value) : returnValue(v)}`,
           )
           .join(", ")} }`;
 
@@ -125,7 +130,7 @@ export const setPropToLoopCmp = ([key, value], oldValue, sle, props = {}) => {
           parsedScope,
           updatedScope,
           value || undefined,
-          oldValue || undefined
+          oldValue || undefined,
         );
         loopCmp.addAttributes({
           "v-scope": updatedScope,
@@ -141,7 +146,7 @@ export const setPropToLoopCmp = ([key, value], oldValue, sle, props = {}) => {
     } else {
       const updatedScope = `{ ${parsedScope
         .map(
-          ([k, v]) => `${k}: ${k == key ? returnValue(value) : returnValue(v)}`
+          ([k, v]) => `${k}: ${k == key ? returnValue(value) : returnValue(v)}`,
         )
         .join(", ")} }`;
 
@@ -150,7 +155,7 @@ export const setPropToLoopCmp = ([key, value], oldValue, sle, props = {}) => {
         parsedScope,
         updatedScope,
         value || undefined,
-        oldValue || undefined
+        oldValue || undefined,
       );
       loopCmp.addAttributes({
         "v-scope": updatedScope,
@@ -165,29 +170,23 @@ export const setPropToLoopCmp = ([key, value], oldValue, sle, props = {}) => {
  * @returns
  */
 export const globalTraits = (editor) => {
-  editor.on("component:selected", () => {
-    const sle = editor.getSelected();
-    const isWrapper = sle.getType().toLowerCase() === 'wrapper';
-    // const sleType = sle.get("type");
-    // const getLoopComponent = (cmp) =>
-    //   (editor.getSelected() || cmp)
-    //     .parents()
-    //     .find((parent) => parent.get("type") === "looper");
-    // let loopComponent = sle
-    //   .parents()
-    //   .find((parent) => parent.get("type") === "looper");
+  editor.on("component:selected", (cmp) => {
+    const sle = cmp ?? editor.getSelected();
+    const isWrapper = sle.getType().toLowerCase() === "wrapper";
 
-    const isLoop = sle
-      .parents()
-      .some((parent) => parent.get("type") === "looper");
-
-    window.isLoop = isLoop;
     const getLoopComponent = () => {
       if (!sle) return;
       if (sle.get("type") == "looper") return sle;
 
       return sle.parents().find((parent) => parent.get("type") === "looper");
     };
+
+    const isLoop = Boolean(getLoopComponent());
+    // sle
+    //   .parents()
+    //   .some((parent) => parent.get("type") === "looper");
+
+    window.isLoop = isLoop;
 
     const showCallback = () => {
       const sle = editor.getSelected();
@@ -199,13 +198,13 @@ export const globalTraits = (editor) => {
       if (!sle) return;
       if (traitsFromCallback) {
         return Object.fromEntries(
-          traitsFromCallback.map((trait) => [trait.name, trait.value])
+          traitsFromCallback.map((trait) => [trait.name, trait.value]),
         );
       }
       return Object.fromEntries(
         sle
           .getTraits()
-          .map((trait) => [trait.attributes.name, trait.attributes.value])
+          .map((trait) => [trait.attributes.name, trait.attributes.value]),
       );
     };
 
@@ -253,19 +252,21 @@ export const globalTraits = (editor) => {
       });
     };
 
-    
-    !isWrapper && sle.addTrait(defineTraits([
-      {
-        name:'hide',
-        label:'hide',
-        type:'switch',
-        role:'attribute',
-        hint:`hide or show element`,
-        onSwitch(value){
-          editor.trigger("trait:value");
-        }
-      }
-    ]))
+    !isWrapper &&
+      sle.addTrait(
+        defineTraits([
+          {
+            name: "hide",
+            label: "hide",
+            type: "switch",
+            role: "attribute",
+            hint: `hide or show element`,
+            onSwitch(value) {
+              editor.trigger("trait:value");
+            },
+          },
+        ]),
+      );
 
     isLoop &&
       sle.setTraits(
@@ -373,13 +374,13 @@ export const globalTraits = (editor) => {
                 [newValue, loopCountValue || undefined],
                 oldValue,
                 model,
-                { editor, trait }
+                { editor, trait },
               );
               setPropToLoopCmp(
                 [`start${newValue}`, 0],
                 `start${oldValue}`,
                 model,
-                { editor, trait }
+                { editor, trait },
               );
               updateVFor(traits);
               const loopCmp = getLoopComponent(model);
@@ -445,15 +446,6 @@ export const globalTraits = (editor) => {
                     oldValue,
                   },
                 });
-              // Instead of looping over a data array, we generate one inline
-              // sle.addAttributes({
-              //   "loop-count-value": count,
-              //   "v-for": `(${loopItem}${
-              //     loopIndex ? `, ${loopIndex}` : ""
-              //   }) in (Array.isArray(${loopValue}) ? ${loopValue} : []).slice(0,${
-              //     loopCountName ? loopCountName : `${loopValue}.length`
-              //   })`,
-              // });
             },
           },
 
@@ -469,36 +461,7 @@ export const globalTraits = (editor) => {
 
             showCallback,
             callback({ editor, model, newValue, oldValue, traits }) {
-              // const traitsKV = getTraitsAsKV();
-
               updateVFor(traits);
-              // if (!newValue || !traitsKV["loop-filter-name"]) {
-              //   model.addAttributes({
-              //     "v-for": `(${traitsKV["loop-item"]}${
-              //       traitsKV["loop-index"] ? `, ${traitsKV["loop-index"]}` : ""
-              //     }) in (Array.isArray(${traitsKV["loop-value"]}) ? ${
-              //       traitsKV["loop-value"]
-              //     } : []).slice(0,${
-              //       traitsKV["loop-count-name"]
-              //         ? traitsKV["loop-count-name"]
-              //         : `${traitsKV["loop-value"]}.length`
-              //     })`,
-              //   });
-              // }
-
-              // model.addAttributes({
-              //   "v-for": `(${traitsKV["loop-item"]}${
-              //     traitsKV["loop-index"] ? `, ${traitsKV["loop-index"]}` : ""
-              //   }) in (Array.isArray(${traitsKV["loop-value"]}) ? ${
-              //     traitsKV["loop-value"]
-              //   } : []).filter(${traitsKV["loop-item"]}=>${newValue} === ${
-              //     traitsKV["loop-filter-name"]
-              //   }).slice(0,${
-              //     traitsKV["loop-count-name"]
-              //       ? traitsKV["loop-count-name"]
-              //       : `${traitsKV["loop-value"]}.length`
-              //   })`,
-              // });
             },
           },
 
@@ -532,19 +495,19 @@ export const globalTraits = (editor) => {
                 Object.fromEntries(
                   Object.entries(attributes || {}).filter(([key, value]) => {
                     return key.startsWith(`v-bind`) || key.startsWith(`:`);
-                  })
-                )
+                  }),
+                ),
               ),
             stateProp: "",
             keywords: defaultAttributeNames,
             value: JSON.stringify(
               Object.fromEntries(
                 Object.entries(
-                  editor.getSelected()?.getAttributes() || {}
+                  editor.getSelected()?.getAttributes() || {},
                 ).filter(([key, value]) => {
                   return key.startsWith(`v-bind`) || key.startsWith(`:`);
-                })
-              )
+                }),
+              ),
             ),
             // showCallback: () => {
             //   const sle = editor.getSelected();
@@ -557,7 +520,7 @@ export const globalTraits = (editor) => {
                 Object.entries(attributes).map(([key, value]) => [
                   key.startsWith("v-bind") ? key : `v-bind:${key}`,
                   value,
-                ])
+                ]),
               );
               console.log("value trait", newValue, parse(`${newValue || {}}`));
 
@@ -570,33 +533,59 @@ export const globalTraits = (editor) => {
               // editor.trigger("trait:value");
             },
           },
-
-          // {
-          //   name: "destention",
-          //   label: "Destination",
-          //   type: "text",
-          //   // value: "",
-          //   placeholder: "Enter destination , Ex: data|products|images",
-          //   role: "handler",
-          //   showCallback: () => {
-          //     const sle = editor.getSelected();
-          //     return Boolean(sle?.getTrait?.("enable-loop")?.attributes?.value);
-          //   },
-          //   callback({ editor, oldValue, newValue }) {
-          //     const sle = editor.getSelected();
-          //     const loopItem =
-          //       sle.getTrait("loop-item")?.attributes?.value || "item";
-          //     const loopValue =
-          //       sle.getTrait("loop-value")?.attributes?.value || "data";
-          //     sle.addAttributes({
-          //       "v-for": `${loopItem} in ${loopValue}${newValue
-          //         .split("|")
-          //         .map((dest) => `[${dest}]`)
-          //         .join("")}`,
-          //     });
-          //   },
-          // },
-        ])
+        ]),
       );
+
+    // if (!isLoop && isWordpress()) {
+    //   sle.setTraits([
+    //     ...sle.getTraits().map((tr) => tr.attributes),
+    //     ...inf_for_trait,
+    //   ]);
+    // }
+  });
+
+  editor.on("component:create", (model) => {
+    // const isLoop =
+    if (isWordpress()) {
+      model.setTraits([
+        ...model.getTraits().map((tr) => tr.attributes),
+        ...inf_for_traits(editor).map((trait) => {
+          if (trait.showCallback) {
+            return trait;
+          }
+          trait.showCallback = showCallback({
+            model,
+            values: inf_query_traits(editor)
+              .concat(inf_ssr_traits(editor))
+              .map((t) => t.name),
+          });
+          return trait;
+        }),
+        ...inf_query_traits(editor).map((trait) => {
+          if (trait.showCallback) {
+            return trait;
+          }
+          trait.showCallback = showCallback({
+            model,
+            values: inf_for_traits(editor)
+              .concat(inf_ssr_traits(editor))
+              .map((t) => t.name),
+          });
+          return trait;
+        }),
+        ...inf_ssr_traits(editor).map((trait) => {
+          if (trait.showCallback) {
+            return trait;
+          }
+          trait.showCallback = showCallback({
+            model,
+            values: inf_query_traits(editor)
+              .concat(inf_for_traits(editor))
+              .map((t) => t.name),
+          });
+          return trait;
+        }),
+      ]);
+    }
   });
 };

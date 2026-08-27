@@ -241,7 +241,7 @@ export const AssetsManager = () => {
 
           <SmallButton
             title="Delete All"
-            className="h-full flex-shrink-0 bg-surface-secondary hover:bg-[crimson!important]"
+            className="h-full shrink-0 bg-surface-secondary hover:bg-[crimson!important]"
             onClick={() => {
               deleteAll();
             }}
@@ -250,7 +250,7 @@ export const AssetsManager = () => {
           </SmallButton>
 
           <SmallButton
-            className="h-full flex-shrink-0 bg-surface-secondary"
+            className="h-full shrink-0 bg-surface-secondary"
             title={"Upload"}
             onClick={openUploader}
           // className="py-[7.5px] px-[30px]  font-bold text-lg"
@@ -305,19 +305,6 @@ export const AssetsManager = () => {
           </section>
         )}
 
-        {/* <section
-          className={`w-full h-full  bg-gray-950 rounded-lg p-2 overflow-auto grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))]  justify-start gap-[15px] `}
-        >
-          {Boolean(files.length) && (
-            <For each={files} memo>
-              {(asset, i) => {
-                console.log("files from virtuso : ", asset);
-
-                return <FileView key={i} asset={asset} />;
-              }}
-            </For>
-          )}
-        </section> */}
         {showLoader && <Loader />}
         {!!files.length && (
           <VirtuosoGrid

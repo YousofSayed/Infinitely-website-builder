@@ -3,8 +3,7 @@ import { DetailsNormal } from "@/components/Protos/DetailsNormal";
 import { random, uniqueId } from "lodash";
 
 // million-ignore
-export const AccordionItem = memo(
-  ({
+export const AccordionItem = ({
     label,
     title,
     allowPopupLength = false,
@@ -35,8 +34,7 @@ export const AccordionItem = memo(
         {children}
       </DetailsNormal>
     );
-  },
-);
+  }
 
 // import React, { memo } from "react";
 // import { DetailsNormal } from "@/components/Protos/DetailsNormal";
