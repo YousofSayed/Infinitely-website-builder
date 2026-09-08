@@ -1373,41 +1373,7 @@ export async function createWpProject({ data }) {
         helmet: {},
         bodyAttributes: {},
       },
-      // pages: {
-      //   index: {
-      //     pathes: {
-      //       html: "editor/pages/index.html",
-      //       css: "css/index.css",
-      //       js: "js/index.js",
-      //     },
-      //     cmds: {},
-      //     id: "index",
-      //     name: "index",
-      //     symbols: [],
-      //     components: {},
-      //     helmet: {},
-      //     bodyAttributes: {},
-      //   },
-      //   playground: {
-      //     // html: new Blob([``], { type: "text/html" }),
-      //     // css: new Blob([``], { type: "text/css" }),
-      //     // js: new Blob([``], { type: "text/javascript" }),
-      //     pathes: {
-      //       html: "editor/pages/playground.html",
-      //       css: "css/playground.css",
-      //       js: "js/playground.js",
-      //     },
-      //     id: "playground",
-      //     symbols: [],
-      //     cmds: {},
-      //     name: "playground",
-      //     components: {},
-      //     helmet: {},
-      //     bodyAttributes: {},
-      //   },
-      // },
-      // globalCss: new Blob([``], { type: "text/css" }),
-      // globalJs: new Blob([``], { type: "text/javascript" }),
+   
       apps: undefined,
       installStates: {
         types: false,
@@ -1437,86 +1403,7 @@ export async function createWpProject({ data }) {
       name: data.name,
       description: data.description,
     });
-    const mainPath = `/projects/project-${id}`;
-
-    // await dir(mainPath).create()
-
-    const mainRoot = await opfs.root;
-    // const projectsRoot = await opfs.getFolder(mainRoot, "projects");
-    // const projectDir = await opfs.createFolder(projectsRoot, `project-${id}`);
-    // const dirs = [
-    //   `${mainPath}/pages`,
-    //   `${mainPath}/css`,
-    //   `${mainPath}/js`,
-    //   `${mainPath}/assets`,
-    //   `${mainPath}/fonts`,
-    //   `${mainPath}/libs`,
-    //   `${mainPath}/editor`,
-    //   `${mainPath}/editor/pages`,
-    //   `${mainPath}/editor/symbols`,
-    //   `${mainPath}/editor/templates`,
-    //   `${mainPath}/global`,
-    //   `${mainPath}/libs/js`,
-    //   `${mainPath}/libs/css`,
-    //   `${mainPath}/libs/js/header`,
-    //   `${mainPath}/libs/js/footer`,
-    // ];
-
-    // const files = [
-    //   {
-    //     path: `${mainPath}/screenshot.webp`,
-    //     content: "",
-    //   },
-    //   {
-    //     path: `${mainPath}/index.html`,
-    //     content: "",
-    //   },
-    //   {
-    //     path: `${mainPath}/global/global.js`,
-    //     content: "",
-    //   },
-
-    //   {
-    //     path: `${mainPath}/global/global.css`,
-    //     content: "",
-    //   },
-    //   {
-    //     path: `${mainPath}/editor/pages/index.html`,
-    //     content: "",
-    //   },
-    //   {
-    //     path: `${mainPath}/editor/pages/playground.html`,
-    //     content: "",
-    //   },
-    //   {
-    //     path: `${mainPath}/js/index.js`,
-    //     content: "",
-    //   },
-    //   {
-    //     path: `${mainPath}/js/playground.js`,
-    //     content: "",
-    //   },
-    //   {
-    //     path: `${mainPath}/css/index.css`,
-    //     content: "",
-    //   },
-    //   {
-    //     path: `${mainPath}/css/playground.css`,
-    //     content: "",
-    //   },
-    // ];
-
-    // await write()
-    // for (const dirTx of dirs) {
-    //   await dir(`${mainPath}/${dirTx}`).create()
-    // }
-
-    // for (const fileDetails of files) {
-    //   await write(`${mainPath}/${fileDetails.path}` , fileDetails.content)
-    // }
-
-    // await opfs.createFolders(dirs);
-    // await opfs.createFiles(files);
+    
     workerSendToast({
       msg: `Uploading editor scripts and styles...`,
       type: "loading",
@@ -2878,3 +2765,4 @@ export async function updateSymbolsStylesFiles({ symbols = {}, cssCode = "" }) {
     throw new Error(error);
   }
 }
+

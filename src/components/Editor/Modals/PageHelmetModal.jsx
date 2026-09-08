@@ -34,6 +34,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { useNormal } from "@/hooks/useNormal";
 import {
+  useGetInfMetaPostsOnly,
   useGetPostHelemt,
   usePosts,
   useUpdatePostHelemtMutation,
@@ -53,7 +54,11 @@ export const PageHelmetModal = () => {
   const [siteLogo, setSiteLogo] = useState(null);
   const [siteLogoFile, setSiteLogoFile] = useState();
   const [logoKeyRefresher, setLogoKeyRefresher] = useState("");
-  const currentPageHelmetName = sessionStorage.getItem(current_page_helmet);
+  const currentPageHelmetFromStorage =
+    /** @type {import("@/helpers/types").InfinitelyPage & import("@/helpers/types").WpPage} */ (
+      JSON.parse(sessionStorage.getItem(current_page_helmet) ?? "{}")
+    );
+  const currentPageHelmetName = currentPageHelmetFromStorage.name;
   const currentPageHelmetId = sessionStorage.getItem(current_wp_page_helmet_id);
   const projectId = +localStorage.getItem(current_project_id);
   const inputFileRef = useRef();
@@ -82,6 +87,13 @@ export const PageHelmetModal = () => {
     mutateAsync: updatePostHelemt,
     isPending: isUpdatePostHelemtPending,
   } = useUpdatePostHelemtMutation();
+
+  const {
+    data: wpMetaPosts,
+    isPending: isWpMetaPostsLoading,
+    isRefetching: isWpMetaPostsRefetching,
+    isError: isWpMetaPostsError,
+  } = useGetInfMetaPostsOnly();
 
   useLiveQuery(async () => {
     await doInNormalAsync(async () => {
@@ -153,6 +165,17 @@ export const PageHelmetModal = () => {
       setSiteLogo(postHelmet?.helmet.logo);
     }
   }, [postHelmet]);
+
+  useEffect(() => {
+    if (!editor) return;
+    if (!sessionStorage.getItem(current_wp_page_helmet_id)) {
+      editor.runCommand(open_pages_manager_modal);
+    }
+    return () => {
+      sessionStorage.removeItem(current_wp_page_helmet_id);
+      sessionStorage.removeItem(current_page_helmet);
+    };
+  }, [editor]);
 
   const setHelmetToDB = useCallback(async () => {
     console.log("setting helmet", helmet);
@@ -309,7 +332,9 @@ export const PageHelmetModal = () => {
 
           <FitTitle className="flex items-center gap-2 text-lg font-semibold h-full shrink-0 capitalize">
             <Icons.helmet fill="white" />
-            {currentPageHelmetName}
+            {currentPageHelmetFromStorage.type === "template"
+              ? `${currentPageHelmetFromStorage.name} (Template)`
+              : currentPageHelmetFromStorage.name}
           </FitTitle>
         </section>
       </header>
@@ -423,28 +448,64 @@ export const PageHelmetModal = () => {
           />
         </section>
         <Wordpress>
-          <section className="flex flex-col gap-2 bg-surface-tertiary p-2 rounded-lg w-full">
-            <FitTitle className="capitalize">Template</FitTitle>
-            <Select
-              useLoader={
-                isPostHelmetLoading ||
-                isPostHelmetRefetching ||
-                loadingTemplates ||
-                isRefetchingTemplates
-              }
-              placeholder="Template"
-              value={helmet.template}
-              keywords={templates?.data.map((template) => template.slug)}
-              onAll={(value) => {
-                console.log("template value", value);
+          <ShowIf condition={currentPageHelmetFromStorage.type !== "template"}>
+            <section className="flex flex-col gap-2 bg-surface-tertiary p-2 rounded-lg w-full">
+              <FitTitle className="capitalize">Template</FitTitle>
+              <Select
+                useLoader={
+                  isPostHelmetLoading ||
+                  isPostHelmetRefetching ||
+                  loadingTemplates ||
+                  isRefetchingTemplates
+                }
+                placeholder="Template"
+                value={helmet.template}
+                keywords={templates?.data.map((template) => template.slug)}
+                onAll={(value) => {
+                  console.log("template value", value);
 
-                updatePageHelmet({
-                  key: "template",
-                  value: value,
-                });
-              }}
-            />
-          </section>
+                  updatePageHelmet({
+                    key: "template",
+                    value: value,
+                  });
+                }}
+              />
+            </section>
+          </ShowIf>
+
+          <ShowIf condition={currentPageHelmetFromStorage.type === "template"}>
+            <section className="flex flex-col gap-2 bg-surface-tertiary p-2 rounded-lg w-full">
+              <FitTitle className="capitalize">
+                Post for template preview
+              </FitTitle>
+              <Select
+                useLoader={
+                  isPostHelmetLoading ||
+                  isPostHelmetRefetching ||
+                  isWpMetaPostsLoading ||
+                  isWpMetaPostsRefetching
+                }
+                placeholder="Choose post for template preview"
+                value={helmet?.["preview_post_id"]}
+                keywords={wpMetaPosts
+                  ?.filter(
+                    (post) =>
+                      post.type !== "template" &&
+                     post.meta?.["inf_template_type"] && post.meta?.["inf_template_type"]?.toLocaleLowerCase?.() ===
+                        currentPageHelmetFromStorage?.name?.toLocaleLowerCase?.(),
+                  )
+                  ?.map((post) => ({title:post.slug , value:post.id}))}
+                onAll={(value) => {
+                  console.log("template value", value);
+
+                  updatePageHelmet({
+                    key: "preview_post_id",
+                    value: value,
+                  });
+                }}
+              />
+            </section>
+          </ShowIf>
         </Wordpress>
       </section>
       <section className=" flex flex-col gap-2 bg-surface-tertiary p-2 rounded-lg">

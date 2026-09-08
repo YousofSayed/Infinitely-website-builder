@@ -301,6 +301,9 @@ export const CodeEditor = ({
     monaco.languages.registerCompletionItemProvider("html", wpTokenProvider);
   };
 
+  /**
+   * @type {import("@monaco-editor/react").OnMount}
+   */
   const loadLibs = async (editor, monaco) => {
     console.log("condo : ", window.monacoLoaded, window.monacoNeedToLoad);
     if (!window.monacoTypesPathes) window.monacoTypesPathes = new Set();
@@ -319,6 +322,7 @@ export const CodeEditor = ({
           monaco.languages.typescript.ModuleResolutionKind.NodeJs,
         module: monaco.languages.typescript.ModuleKind.CommonJS,
         target: monaco.languages.typescript.ScriptTarget.ES2020,
+        // lib: ["es2020", "dom"],
       });
 
       const globalJs = await (
@@ -569,7 +573,7 @@ export const CodeEditor = ({
       inf-tokens-container="true"
     >
       <Editor
-        path={`file:///${fileName}.tsx`}
+        path={`file:///${fileName}.jsx`}
         theme="vs-dark"
         className="rounded-[inherit]"
         height={"100%"}

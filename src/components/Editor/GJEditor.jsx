@@ -20,6 +20,7 @@ import {
   isNormal,
   isWordpress,
 } from "@/helpers/functions";
+import { useSettingsHandler } from "@/hooks/useSettingsHandler";
 import { useShortcuts } from "@/hooks/useShortcuts";
 import { addDevices } from "@/plugins/addDevices";
 import { addNewBuiltinCommands } from "@/plugins/addNewBuiltinCommands.jsx";
@@ -231,6 +232,8 @@ export const GJEditor = ({ children }) => {
     });
   };
 
+  useSettingsHandler();
+
 
   return (
     <GjsEditor
@@ -314,7 +317,9 @@ export const GJEditor = ({ children }) => {
               []),
             // {src:`${jsToDataURL(`console.log('data js url.............@')`)}`}
           ],
-          styles: ["/styles/dev.css", "/styles/style.css"],
+          styles: [
+            // "/styles/dev.css", "/styles/style.css"
+          ], 
 
           customBadgeLabel:
             /**

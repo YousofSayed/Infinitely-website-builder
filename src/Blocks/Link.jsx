@@ -42,7 +42,7 @@ export const Link = async ({ editor }) => {
             label: `choose link`,
             placeholder: "Choose link or type custom",
             role: "attribute",
-            type: "select",
+            type: "select", 
             keywords: ({ projectData }) => {
               return isNormal()
                 ? doInNormal(() => {

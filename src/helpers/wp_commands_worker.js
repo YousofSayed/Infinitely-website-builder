@@ -59,6 +59,10 @@ import {
   wp_get_all_terms
 } from "@/Apps/wordpress/functions";
 import { writeFilesToOPFS } from "@/helpers/workerCommands";
+import { initMainAndGlobalFilesForWp } from "./bridge";
+
+
+
 
 export const wpCommands = {
   wp_get,
@@ -120,4 +124,5 @@ export const wpCommands = {
   wp_get_all_tags,
   wp_get_all_taxonomies,
   wp_get_all_terms,
+  initMainAndGlobalFilesForWp,
 };

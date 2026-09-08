@@ -985,4 +985,29 @@ function thrower (arg){
   return arg;
 }
 
+const isPlainObject = (value) =>
+  value !== null &&
+  typeof value === "object" &&
+  !Array.isArray(value);
+
+/**
+ * 
+ * @param {{
+ *  disrespectUserMotionPreference : boolean,
+ *  duration : number,
+ *  easing : string
+ * } | {
+ * add : CSSProperties, //imported in editor
+ * remove : CSSProperties, //imported in editor
+ * remain : CSSProperties, //imported in editor
+ * duration : number,
+ * easing : string,
+ * }} params 
+ * @returns 
+ */
+function useAutoAnimate(params) {
+  return params;
+}
+
+
 // ... 60 more interactions will follow in the same format ...

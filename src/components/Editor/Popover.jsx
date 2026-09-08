@@ -154,6 +154,7 @@ export const Popover = ({
           position: "fixed",
           inset: 0,
           pointerEvents: "none",
+          zIndex: zIndex ,
         }}
       >
         <Rnd
@@ -163,7 +164,7 @@ export const Popover = ({
           minHeight={150}
           bounds="window"
           dragHandleClassName="popover-drag-handle"
-          style={{ zIndex, position: "absolute", pointerEvents: "auto" }}
+          style={{ zIndex, position: "absolute", pointerEvents: "auto" ,  }}
           className={`bg-surface-secondary border border-border-default shadow-md shadow-slate-950 rounded-lg ${className ?? ""}`}
           // --- Drag: detach from target, take manual control ---
           onDragStart={() => {

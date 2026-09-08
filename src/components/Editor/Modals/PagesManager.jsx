@@ -572,7 +572,7 @@ export const PagesManager = () => {
                       });
 
                       doInWordpress(() => {
-                        sessionStorage.setItem(current_page_helmet, page.name);
+                        sessionStorage.setItem(current_page_helmet, JSON.stringify(page));
                         sessionStorage.setItem(
                           current_wp_page_helmet_id,
                           page.ID,

@@ -324,3 +324,9 @@ export const useCreateWpSinglePostMutation = () => {
     mutationFn: createWpMutationFn(fetcherWorker, "wp_create_single"),
   });
 };
+
+export const useUpdateWpScriptsMutation = () => {
+  return useMutation({
+    mutationFn: createWpMutationFn(fetcherWorker, "wp_update_main_global_files"),
+  });
+}

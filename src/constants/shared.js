@@ -41,9 +41,9 @@ export const inf_css_urls = `inf-css-urls`;
 export const inf_build_url = `inf-build-url`;
 export const inf_cmds_id = `inf-cmds-id`;
 export const inf_style_my_child = "inf-style-my-child";
-export const inf_tokens_container  = 'inf-tokens-container'
-export const inf_tokens_ignore  = 'inf-tokens-ignore'
-export const wp_token_vars = 'wp-token-vars';
+export const inf_tokens_container = "inf-tokens-container";
+export const inf_tokens_ignore = "inf-tokens-ignore";
+export const wp_token_vars = "wp-token-vars";
 export const data_disable_scripting = `data-disable-scripting`;
 export const motionId = "motion-id";
 export const mainMotionId = "main-motion-id";
@@ -148,9 +148,11 @@ export const mainScriptsForEditor = [
   "/scripts/p-vue.js",
   "/scripts/pvMount.js",
   // '/scripts/test.js',
+  //  "/scripts/previewHmr.dev.js", used only in buildPageData in bridge.js
 ];
 
 export const preivewScripts = [
+  ///Unused until now
   "/scripts/infinitely.js",
   "/scripts/dev.js",
 
@@ -326,255 +328,555 @@ export const makeCPTTemplates = (postTypes = []) =>
     },
   ]);
 
+// /**
+//  *
+//  * @param {{
+//  * projectSetting:import('@/helpers/types').ProjectSetting
+//  * disablePvue:boolean,
+//  * disableGsapCore:boolean,
+//  * disableGsapScrollTrigger:boolean,
+//  * inserts:{
+//  *  index:number,
+//  *  item:{
+//  *  name:string,
+//  *  content:string,
+//  *  localUrl:string,
+//  *  buildUrl:string,
+//  *  },
+//  *}[]
+//  * }} param0
+//  *
+//  * @returns {{name:string, localUrl:string , buildUrl?:string}[]}
+//  */
+// export const buildScripts = ({ projectSetting = {}, inserts = [] }) => {
+//   let scripts = [
+//     {
+//       name: "infinitely.js",
+//       localUrl: "/scripts/infinitely.js",
+//     },
+//     {
+//       name: "dev.js",
+//       localUrl: "/scripts/dev.js",
+//     },
+
+//     ...(projectSetting.enable_swiperjs
+//       ? [
+//         {
+//           name: "swiper.js",
+//           localUrl:
+//             "https://cdn.jsdelivr.net/npm/swiper@latest/swiper-bundle.min.js",
+//         },
+
+//         {
+//           name: "swiper-element.js",
+//           localUrl:
+//             "https://cdn.jsdelivr.net/npm/swiper@latest/swiper-element-bundle.min.js",
+//         },
+//       ]
+//       : []),
+//     ...(projectSetting.enable_spline_viewer
+//       ? [
+//         {
+//           name: "spline.js",
+//           localUrl:
+//             "https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js",
+//         },
+//       ]
+//       : []),
+
+//     ...((!projectSetting.disable_gsap_core && [
+//       {
+//         name: "gsap.min.js",
+//         localUrl: "/scripts/gsap.min.js",
+//       },
+//     ]) ||
+//       []),
+
+//     ...((!projectSetting.disable_gsap_scrollTrigger && [
+//       {
+//         name: "scrollTrigger.js",
+//         localUrl: "/scripts/scrollTrigger.min.js",
+//       },
+//     ]) ||
+//       []),
+
+//     ...((!projectSetting.disable_gsap_splitText && [
+//       {
+//         name: "splitText.js",
+//         localUrl: "/scripts/splitText.min.js",
+//       },
+//     ]) ||
+//       []),
+
+//     ...((!projectSetting.disable_petite_vue && [
+//       {
+//         name: "pVuePlugins.js",
+//         localUrl: `/scripts/pVuePlugins.js`,
+//       },
+//       {
+//         name: "p-vue.js",
+//         localUrl: "/scripts/p-vue.js",
+//       },
+//       { name: "initPVue.js", localUrl: "/scripts/initPVue.js" },
+//     ]) ||
+//       []),
+
+//     // {
+//     //   name: "infImportsBuild.js",
+//     //   localUrl: "/scripts/infImportsBuild.js",
+//     // },
+//   ];
+
+//   inserts.forEach(({ index, useLastIndex, item }) => {
+//     scripts.splice(useLastIndex ? scripts.length : index, 0, item);
+//   });
+
+//   return scripts;
+// };
+// /**
+//  *
+//  * @param {{
+//  * projectSetting:import('@/helpers/types').ProjectSetting
+//  * disablePvue:boolean,
+//  * disableGsapCore:boolean,
+//  * disableGsapScrollTrigger:boolean,
+//  * inserts:{
+//  *  index:number,
+//  *  item:{
+//  *  name:string,
+//  *  condition:boolean;
+//  *  content:string,
+//  *  localUrl:string,
+//  *  buildUrl:string,
+//  *  },
+//  *}[]
+//  * }} param0
+//  *
+//  * @returns {{name:string, localUrl:string , buildUrl?:string}[]}
+//  */
+// export const buildWpScripts = ({ projectSetting = {}, inserts = [] }) => {
+//   let scripts = [
+//     {
+//       name: "infinitely.js",
+//       localUrl: "/scripts/infinitely.js",
+//     },
+//     {
+//       name: "dev.js",
+//       localUrl: "/scripts/dev.js",
+//     },
+
+//     {
+//       name: "swiper.js",
+//       localUrl:
+//         "https://cdn.jsdelivr.net/npm/swiper@latest/swiper-bundle.min.js",
+//       condition: projectSetting.enable_swiperjs,
+//     },
+
+//     {
+//       name: "swiper-element.js",
+//       localUrl:
+//         "https://cdn.jsdelivr.net/npm/swiper@latest/swiper-element-bundle.min.js",
+//       condition: projectSetting.enable_swiperjs,
+//     },
+
+//     // {
+//     //   name: "spline.js",
+//     //   localUrl:
+//     //     "https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js",
+//     //   condition: projectSetting.enable_spline_viewer,
+//     // },
+//     {
+//       name: "gsap.min.js",
+//       localUrl: "/scripts/gsap.min.js",
+//       condition: !projectSetting.disable_gsap_core,
+//     },
+
+//     {
+//       name: "scrollTrigger.js",
+//       localUrl: "/scripts/scrollTrigger.min.js",
+//       condition: !projectSetting.disable_gsap_scrollTrigger,
+//     },
+
+//     {
+//       name: "splitText.js",
+//       localUrl: "/scripts/splitText.min.js",
+//       condition: !projectSetting.disable_gsap_splitText,
+//     },
+
+//     {
+//       name: "pVuePlugins.js",
+//       localUrl: `/scripts/pVuePlugins.js`,
+//       condition: !projectSetting.disable_petite_vue,
+//     },
+//     {
+//       name: "p-vue.js",
+//       localUrl: "/scripts/p-vue.js",
+//       condition: !projectSetting.disable_petite_vue,
+//     },
+//     {
+//       name: "initPVue.js",
+//       localUrl: "/scripts/initPVue.js",
+//       condition: !projectSetting.disable_petite_vue,
+//     },
+
+//     // {
+//     //   name: "infImportsBuild.js",
+//     //   localUrl: "/scripts/infImportsBuild.js",
+//     // },
+//   ];
+
+//   inserts.forEach(({ index, useLastIndex, item }) => {
+//     scripts.splice(useLastIndex ? scripts.length : index, 0, item);
+//   });
+
+//   return scripts;
+// };
+// /**
+//  *
+//  * @param {{
+//  * projectSetting:import('@/helpers/types').ProjectSetting
+//  * disablePvue:boolean,
+//  * disableGsapCore:boolean,
+//  * disableGsapScrollTrigger:boolean,
+//  * inserts:{
+//  *  index:number,
+//  *  item:{
+//  *  name:string,
+//  *  condition:boolean;
+//  *  content:string,
+//  *  localUrl:string,
+//  *  buildUrl:string,
+//  *  },
+//  *}[]
+//  * }} param0
+//  *
+//  * @returns {{name:string, localUrl:string , buildUrl?:string}[]}
+//  */
+// export const buildWpHeaderScripts = ({ projectSetting = {}, inserts = [] }) => {
+//   let scripts = [
+
+//     // {
+//     //   name: "spline.js",
+//     //   localUrl:
+//     //   // "https://cdn.jsdelivr.net/npm/@splinetool/viewer@1.12.56/build/spline-viewer.min.js"
+//     //     "https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js",
+//     //   condition: projectSetting.enable_spline_viewer,
+//     //   attributes: {
+//     //     type: "module"
+//     //   }
+//     // },
+
+//     // {
+//     //   name: "infImportsBuild.js",
+//     //   localUrl: "/scripts/infImportsBuild.js",
+//     // },
+//   ];
+
+//   inserts.forEach(({ index, useLastIndex, item }) => {
+//     scripts.splice(useLastIndex ? scripts.length : index, 0, item);
+//   });
+
+//   return scripts;
+// };
+
 /**
- *
+ * Central script definitions - single source of truth
+ */
+export const SCRIPT_DEFINITIONS = [
+  {
+    name: "infinitely.js",
+    localUrl: "/scripts/infinitely.js",
+  },
+  {
+    name: "dev.js",
+    localUrl: "/scripts/dev.js",
+  },
+  {
+    name: "swiper.js",
+    localUrl: "https://cdn.jsdelivr.net/npm/swiper@latest/swiper-bundle.min.js",
+    condition: (settings) => settings.enable_swiperjs,
+  },
+  {
+    name: "swiper-element.js",
+    localUrl:
+      "https://cdn.jsdelivr.net/npm/swiper@latest/swiper-element-bundle.min.js",
+    condition: (settings) => settings.enable_swiperjs,
+  },
+  {
+    name: "spline.js",
+    localUrl:
+      "https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js",
+    condition: (settings) => settings.enable_spline_viewer,
+    attributes: {
+      type: "module",
+    },
+  },
+  {
+    name: "gsap.min.js",
+    localUrl: "/scripts/gsap.min.js",
+    condition: (settings) => !settings.disable_gsap_core,
+  },
+  {
+    name: "scrollTrigger.js",
+    localUrl: "/scripts/scrollTrigger.min.js",
+    condition: (settings) => !settings.disable_gsap_scrollTrigger,
+  },
+  {
+    name: "splitText.js",
+    localUrl: "/scripts/splitText.min.js",
+    condition: (settings) => !settings.disable_gsap_splitText,
+  },
+  // {
+  //   name:'auto-animate.js',
+  //   localUrl: 'https://cdnjs.cloudflare.com/ajax/libs/auto-animate/0.10.0/index.min.js', //'/scripts/auto-animate.js',
+  //    attributes: {
+  //     type: "module",
+  //   },
+  // },
+{
+    name:'init-auto-animate.js',
+    localUrl: '/scripts/init-auto-animate.js', //'/scripts/auto-animate.js',
+     attributes: {
+      type: "module",
+    },
+  },
+  {
+    name: "petite-vue-animated.js",
+    localUrl: `/scripts/petite-vue-animated.js`,
+    condition: (settings) => !settings.disable_petite_vue,
+  },
+  {
+    name: "pVuePlugins.js",
+    localUrl: `/scripts/pVuePlugins.js`,
+    condition: (settings) => !settings.disable_petite_vue,
+  },
+  {
+    name: "p-vue.js",
+    localUrl: "/scripts/p-vue.js",
+    condition: (settings) => !settings.disable_petite_vue,
+  },
+  {
+    name: "initPVue.js",
+    localUrl: "/scripts/initPVue.js",
+    condition: (settings) => !settings.disable_petite_vue,
+    is_dev: false,
+  },
+];
+
+export const DEV_SCRIPT_DEFINITIONS = [
+  {
+    name: "willChange.js",
+    localUrl: "/scripts/willChange.js",
+    condition: (settings) => !settings.disable_will_change_in_editor,
+  },
+  {
+    name: "optimizeOutlines.js",
+    localUrl: "/scripts/optimizeOutlines.js",
+    condition: (settings) => settings.optimize_outlines,
+  },
+  {
+    name: "gsapRuner.dev.js",
+    localUrl: "/scripts/gsapRuner.dev.js",
+  },
+  
+  {
+    name: "pvMount.js",
+    localUrl: "/scripts/pvMount.js",
+    condition: (settings) => !settings.disable_petite_vue,
+  },
+];
+
+
+export const STYLE_DEFINITIONS = [
+  {
+    name: "global-rules.css",
+    localUrl: "/styles/global-rules.css",
+    condition: (settings) => !settings.enable_tailwind,
+  },
+  {
+    name: "style.css",
+    localUrl: "/styles/style.css",
+    condition: (settings) => settings.include_canvas_styles_in_build_file,
+  },
+  
+];
+
+export const DEV_STYLE_DEFINITIONS = [
+  {
+    name: "dev.css",
+    localUrl: "/styles/dev.css",
+  },
+];
+
+// export const STYLE_DEFINITIONS_EXCLUDES_IN_EDITOR = [
+//   {
+//     name: "style.css",
+//     is_wordpress: true,
+//   },
+// ];
+
+
+/**
+ * Helper to filter scripts based on conditions
+ */
+const filterScriptsByCondition = (scripts, projectSetting) => {
+  return scripts.filter((script) => {
+    // If no condition, include it
+    if (!script.condition) return true;
+    // If condition exists, evaluate it
+    return script.condition(projectSetting);
+  });
+};
+
+/**
+ * Helper to apply inserts to scripts array
+ */
+const applyInserts = (scripts, inserts) => {
+  const result = [...scripts];
+
+  inserts.forEach(({ index, useLastIndex, item }) => {
+    result.splice(useLastIndex ? result.length : index, 0, item);
+  });
+
+  return result;
+};
+
+/**
  * @param {{
- * projectSetting:import('@/helpers/types').ProjectSetting
- * disablePvue:boolean,
- * disableGsapCore:boolean,
- * disableGsapScrollTrigger:boolean,
- * inserts:{
- *  index:number,
- *  item:{
- *  name:string,
- *  content:string,
- *  localUrl:string,
- *  buildUrl:string,
- *  },
- *}[]
+ *  projectSetting: import('@/helpers/types').ProjectSetting,
+ *  disablePvue: boolean,
+ *  disableGsapCore: boolean,
+ *  disableGsapScrollTrigger: boolean,
+ *  inserts: {
+ *    index: number,
+ *    useLastIndex?: boolean,
+ *    item: {
+ *      name: string,
+ *      content: string,
+ *      localUrl: string,
+ *      buildUrl: string,
+ *    },
+ *  }[]
  * }} param0
  *
- * @returns {{name:string, localUrl:string , buildUrl?:string}[]}
+ * @returns {{name: string, localUrl: string, buildUrl?: string}[]}
  */
 export const buildScripts = ({ projectSetting = {}, inserts = [] }) => {
-  let scripts = [
-    {
-      name: "infinitely.js",
-      localUrl: "/scripts/infinitely.js",
-    },
-    {
-      name: "dev.js",
-      localUrl: "/scripts/dev.js",
-    },
+  // Filter scripts based on conditions
+  let scripts = filterScriptsByCondition(SCRIPT_DEFINITIONS, projectSetting);
 
-    ...(projectSetting.enable_swiperjs
-      ? [
-        {
-          name: "swiper.js",
-          localUrl:
-            "https://cdn.jsdelivr.net/npm/swiper@latest/swiper-bundle.min.js",
-        },
-
-        {
-          name: "swiper-element.js",
-          localUrl:
-            "https://cdn.jsdelivr.net/npm/swiper@latest/swiper-element-bundle.min.js",
-        },
-      ]
-      : []),
-    ...(projectSetting.enable_spline_viewer
-      ? [
-        {
-          name: "spline.js",
-          localUrl:
-            "https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js",
-        },
-      ]
-      : []),
-
-    ...((!projectSetting.disable_gsap_core && [
-      {
-        name: "gsap.min.js",
-        localUrl: "/scripts/gsap.min.js",
-      },
-    ]) ||
-      []),
-
-    ...((!projectSetting.disable_gsap_scrollTrigger && [
-      {
-        name: "scrollTrigger.js",
-        localUrl: "/scripts/scrollTrigger.min.js",
-      },
-    ]) ||
-      []),
-
-    ...((!projectSetting.disable_gsap_splitText && [
-      {
-        name: "splitText.js",
-        localUrl: "/scripts/splitText.min.js",
-      },
-    ]) ||
-      []),
-
-    ...((!projectSetting.disable_petite_vue && [
-      {
-        name: "pVuePlugins.js",
-        localUrl: `/scripts/pVuePlugins.js`,
-      },
-      {
-        name: "p-vue.js",
-        localUrl: "/scripts/p-vue.js",
-      },
-      { name: "initPVue.js", localUrl: "/scripts/initPVue.js" },
-    ]) ||
-      []),
-
-    // {
-    //   name: "infImportsBuild.js",
-    //   localUrl: "/scripts/infImportsBuild.js",
-    // },
-  ];
-
-  inserts.forEach(({ index, useLastIndex, item }) => {
-    scripts.splice(useLastIndex ? scripts.length : index, 0, item);
-  });
+  // Apply inserts
+  scripts = applyInserts(scripts, inserts);
 
   return scripts;
 };
+
 /**
- *
  * @param {{
- * projectSetting:import('@/helpers/types').ProjectSetting
- * disablePvue:boolean,
- * disableGsapCore:boolean,
- * disableGsapScrollTrigger:boolean,
- * inserts:{
- *  index:number,
- *  item:{
- *  name:string,
- *  condition:boolean;
- *  content:string,
- *  localUrl:string,
- *  buildUrl:string,
- *  },
- *}[]
+ *  projectSetting: import('@/helpers/types').ProjectSetting,
+ *  disablePvue: boolean,
+ *  disableGsapCore: boolean,
+ *  disableGsapScrollTrigger: boolean,
+ *  inserts: {
+ *    index: number,
+ *    useLastIndex?: boolean,
+ *    item: {
+ *      name: string,
+ *      condition: boolean,
+ *      content: string,
+ *      localUrl: string,
+ *      buildUrl: string,
+ *    },
+ *  }[]
  * }} param0
  *
- * @returns {{name:string, localUrl:string , buildUrl?:string}[]}
+ * @returns {{name: string, localUrl: string, buildUrl?: string}[]}
  */
 export const buildWpScripts = ({ projectSetting = {}, inserts = [] }) => {
-  let scripts = [
-    {
-      name: "infinitely.js",
-      localUrl: "/scripts/infinitely.js",
-    },
-    {
-      name: "dev.js",
-      localUrl: "/scripts/dev.js",
-    },
+  // Filter scripts based on conditions
+  let scripts = filterScriptsByCondition(SCRIPT_DEFINITIONS, projectSetting);
 
-    {
-      name: "swiper.js",
-      localUrl:
-        "https://cdn.jsdelivr.net/npm/swiper@latest/swiper-bundle.min.js",
-      condition: projectSetting.enable_swiperjs,
-    },
+  // For WP, you might want to keep the condition property in the output
+  // If so, map them back
+  scripts = scripts.map((script) => ({
+    ...script,
+    condition: script.condition ? script.condition(projectSetting) : undefined,
+  }));
 
-    {
-      name: "swiper-element.js",
-      localUrl:
-        "https://cdn.jsdelivr.net/npm/swiper@latest/swiper-element-bundle.min.js",
-      condition: projectSetting.enable_swiperjs,
-    },
-
-    // {
-    //   name: "spline.js",
-    //   localUrl:
-    //     "https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js",
-    //   condition: projectSetting.enable_spline_viewer,
-    // },
-    {
-      name: "gsap.min.js",
-      localUrl: "/scripts/gsap.min.js",
-      condition: !projectSetting.disable_gsap_core,
-    },
-
-    {
-      name: "scrollTrigger.js",
-      localUrl: "/scripts/scrollTrigger.min.js",
-      condition: !projectSetting.disable_gsap_scrollTrigger,
-    },
-
-    {
-      name: "splitText.js",
-      localUrl: "/scripts/splitText.min.js",
-      condition: !projectSetting.disable_gsap_splitText,
-    },
-
-    {
-      name: "pVuePlugins.js",
-      localUrl: `/scripts/pVuePlugins.js`,
-      condition: !projectSetting.disable_petite_vue,
-    },
-    {
-      name: "p-vue.js",
-      localUrl: "/scripts/p-vue.js",
-      condition: !projectSetting.disable_petite_vue,
-    },
-    {
-      name: "initPVue.js",
-      localUrl: "/scripts/initPVue.js",
-      condition: !projectSetting.disable_petite_vue,
-    },
-
-    // {
-    //   name: "infImportsBuild.js",
-    //   localUrl: "/scripts/infImportsBuild.js",
-    // },
-  ];
-
-  inserts.forEach(({ index, useLastIndex, item }) => {
-    scripts.splice(useLastIndex ? scripts.length : index, 0, item);
-  });
+  // Apply inserts
+  scripts = applyInserts(scripts, inserts);
 
   return scripts;
 };
+
 /**
- *
  * @param {{
- * projectSetting:import('@/helpers/types').ProjectSetting
- * disablePvue:boolean,
- * disableGsapCore:boolean,
- * disableGsapScrollTrigger:boolean,
- * inserts:{
- *  index:number,
- *  item:{
- *  name:string,
- *  condition:boolean;
- *  content:string,
- *  localUrl:string,
- *  buildUrl:string,
- *  },
- *}[]
+ *  projectSetting: import('@/helpers/types').ProjectSetting,
+ *  disablePvue: boolean,
+ *  disableGsapCore: boolean,
+ *  disableGsapScrollTrigger: boolean,
+ *  inserts: {
+ *    index: number,
+ *    useLastIndex?: boolean,
+ *    item: {
+ *      name: string,
+ *      condition: boolean,
+ *      content: string,
+ *      localUrl: string,
+ *      buildUrl: string,
+ *    },
+ *  }[]
  * }} param0
  *
- * @returns {{name:string, localUrl:string , buildUrl?:string}[]}
+ * @returns {{name: string, localUrl: string, buildUrl?: string}[]}
+ */
+export const buildWpStyles = ({ projectSetting = {}, inserts = [] }) => {
+  // Filter scripts based on conditions
+  let scripts = filterScriptsByCondition(STYLE_DEFINITIONS, projectSetting);
+
+  // For WP, you might want to keep the condition property in the output
+  // If so, map them back
+  scripts = scripts.map((script) => ({
+    ...script,
+    condition: script.condition ? script.condition(projectSetting) : undefined,
+  }));
+
+  // Apply inserts
+  scripts = applyInserts(scripts, inserts);
+
+  return scripts;
+};
+
+/**
+ * @param {{
+ *  projectSetting: import('@/helpers/types').ProjectSetting,
+ *  disablePvue: boolean,
+ *  disableGsapCore: boolean,
+ *  disableGsapScrollTrigger: boolean,
+ *  inserts: {
+ *    index: number,
+ *    useLastIndex?: boolean,
+ *    item: {
+ *      name: string,
+ *      condition: boolean,
+ *      content: string,
+ *      localUrl: string,
+ *      buildUrl: string,
+ *    },
+ *  }[]
+ * }} param0
+ *
+ * @returns {{name: string, localUrl: string, buildUrl?: string}[]}
  */
 export const buildWpHeaderScripts = ({ projectSetting = {}, inserts = [] }) => {
-  let scripts = [
+  // Start with empty or specific header scripts
+  let scripts = [];
 
+  // Optionally filter from main definitions if needed
+  // scripts = filterScriptsByCondition(SCRIPT_DEFINITIONS, projectSetting);
 
-    // {
-    //   name: "spline.js",
-    //   localUrl:
-    //   // "https://cdn.jsdelivr.net/npm/@splinetool/viewer@1.12.56/build/spline-viewer.min.js"
-    //     "https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js",
-    //   condition: projectSetting.enable_spline_viewer,
-    //   attributes: {
-    //     type: "module"
-    //   }
-    // },
-
-
-    // {
-    //   name: "infImportsBuild.js",
-    //   localUrl: "/scripts/infImportsBuild.js",
-    // },
-  ];
-
-  inserts.forEach(({ index, useLastIndex, item }) => {
-    scripts.splice(useLastIndex ? scripts.length : index, 0, item);
-  });
+  // Apply inserts
+  scripts = applyInserts(scripts, inserts);
 
   return scripts;
 };

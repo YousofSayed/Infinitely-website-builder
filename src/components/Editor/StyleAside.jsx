@@ -318,14 +318,16 @@ export const StyleAside = memo(({ className }) => {
     const settingGlobalRuleTitle = () => {
       let currentSelector = getCurrentSelector(selector, sle);
       const currentMedia = getCurrentMediaDevice(editor);
-      const mediaPx = editor.Devices.get(editor.getDevice()).attributes
+      const device = editor.Devices.get(editor.getDevice());
+      const mediaPx = device.attributes
         .widthMedia;
       // const mediaCond = editor.getConfig().mediaCondition;
       const selectorWithRule = `${currentSelector}${globalRule.ruleString}`;
-
-      let title = `${editor.getConfig().mediaCondition || mediaCond} ${
+      const mediaConditionTitle = `${editor.getConfig().mediaCondition || mediaCond} ${
         mediaPx && mediaCond ? `(${mediaPx})` : ""
-      } ${editor.config.mediaCondition ? ":" : ""} 
+      } ${editor.config.mediaCondition ? ":" : ""} `;
+
+      let title = ` ${device.getName()?.toLowerCase?.() === "desktop" ? "" : mediaConditionTitle}
     ${selectorWithRule}`;
 
       const edRule = editor.CssComposer.getRule(selectorWithRule.trim(), {

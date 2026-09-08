@@ -53,30 +53,19 @@ export const Projects = () => {
         } animate-go-to`}
     >
       {dbProjects?.length && (
-        // <VirtuosoGrid
-        //   components={GridComponents}
-        //   totalCount={Number(dbProjects.length)}
-        //   itemClassName="p-2"
-        //   itemContent={(i) => {
-        //     return <Project key={i} project={dbProjects[i]} />;
-        //   }}
-        // />
+       
 
-        <section className="h-full grid gap-2 p-1 overflow-auto grid-cols-[repeat(auto-fill,minmax(250px,1fr))]">
+        <section className="h-full max-h-full overflow-y-auto hideScrollBar  grid gap-2 p-1 overflow-auto grid-cols-[repeat(auto-fill,minmax(250px,1fr))] auto-rows-[320px]">
           <For each={dbProjects} memo={false}>
             {(project, i) => {
               return <Project key={project.id} project={project} />;
             }}
           </For>
 
-          {/* {dbProjects.map((project, i) => (
-            <Project key={project.id} project={project}  />
-          ))} */}
+        
         </section>
       )}
-      {/* {dbProjects?.map((project) => (
-          <Project key={project.id} project={project} />
-        ))} */}
+    
 
       {!dbProjects?.length && !showLoader && !dbProjects?.length && (
         <figure className="flex flex-col items-center justify-center gap-2">

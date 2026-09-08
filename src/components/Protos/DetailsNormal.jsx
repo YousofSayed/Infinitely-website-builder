@@ -57,7 +57,7 @@ export const DetailsNormal = memo(
 
     useEffect(() => {
       parentRef.current && autoAnimate(parentRef.current);
-      // childRef.current && autoAnimate(childRef.current);
+      childRef.current && autoAnimate(childRef.current);
     }, [parentRef, childRef]);
 
     useEffect(() => {
@@ -136,7 +136,7 @@ export const DetailsNormal = memo(
             </span>
           </div>
         </div>
-        {isOpen ? (
+        {/* {isOpen ? (
           <div
             // style={{ transition: "5s", transitionDelay: "0", opacity: 0 }}
             ref={childRef}
@@ -144,13 +144,13 @@ export const DetailsNormal = memo(
           >
             {children}
           </div>
-        ) : null}
-        {/* <div
+        ) : null} */}
+        <div
           // style={{ transition: "5s", transitionDelay: "0", opacity: 0 }}
           ref={childRef}
         >
           {isOpen ? children : null}
-        </div> */}
+        </div>
 
         {allowPopupLength && !!length && (
           <p className="w-[20px] h-[20px] bg-blue-500  text-white flex justify-center items-center font-semibold rounded-full absolute right-[-3px] top-[-7px]">

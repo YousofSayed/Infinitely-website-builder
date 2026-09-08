@@ -111,7 +111,7 @@ export const Select = ({
     selectRef.current && animatRef(selectRef.current);
     containerRef.current && animatRef(containerRef.current);
     if (selectRef.current && document.body.querySelector(`#main-modal`)) {
-      setZIndexValue(2000);
+      setZIndexValue(3000);
     }
   }, [selectRef, containerRef]);
 
@@ -180,6 +180,14 @@ export const Select = ({
   useEffect(() => {
     setValue(value);
   }, [value]);
+
+  // 🔥 Add this useEffect inside the Select component body
+  useEffect(() => {
+    const handleCloseAll = () => setMenu(false);
+    window.addEventListener("inf-close-all-popovers", handleCloseAll);
+    return () =>
+      window.removeEventListener("inf-close-all-popovers", handleCloseAll);
+  }, []);
 
   useEffect(() => {
     if (!popoverRef) return;

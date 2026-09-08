@@ -105,10 +105,7 @@ export const HomeHeader = () => {
   const [animatedRefForPublishBtn] = useAutoAnimate();
   const projectId = +localStorage.getItem(current_project_id);
 
-  // const [isAnimationsChanged, setAnimationsChanged] = useRecoilState(
-  //   isAnimationsChangedState
-  // );
-  // const [animations, setAnimations] = useRecoilState(animationsState);
+
   const [dimansions, setDimaonsion] = useState({
     width: "",
     height: "",
@@ -349,33 +346,7 @@ export const HomeHeader = () => {
       },
     );
 
-    // wpWorkerCallbackMaker(
-    //   pageBuilderWorker,
-    //   "wp_update_main_global_files",
-    //   {
-    //     data: {
-    //       id: projectId,
-    //       projectSetting: projectSettings,
-    //       projectData,
-    //       global: {
-    //         css: "",
-    //         js: "",
-    //       },
-    //     },
-    //   },
-    //   async (res) => {
-    //     if (res.done) {
-    //       await afterSave();
-    //       toast.success(<ToastMsgInfo msg={`Editor scripts updated 💙`} />);
-    //     } else {
-    //       toast.dismiss(tId);
-    //       toast.error(
-    //         <ToastMsgInfo msg={`Faild to update editor scripts 😡`} />,
-    //       );
-    //       throw new Error(`Editor scripts not updated 😡 , why?`);
-    //     }
-    //   },
-    // );
+   
   };
 
   useEffect(() => {
@@ -447,16 +418,7 @@ export const HomeHeader = () => {
 
     const newDetected = cloneDeep(detectedType);
 
-    //       {
-    //  *  id: string;
-    //  * rule: string;
-    //  * fullRule: string | null;
-    //  * styles: {};
-    //  * states: string | null;
-    //  * statesAsArray: never[] | RegExpMatchArray | null;
-    //  * atRuleType: string | null;
-    //  * atRuleParams: string | null;
-    //  * }[]
+   
     for (const rule of cmpRules) {
       console.log("full rule", rule);
       if (!rule.atRuleParams && rule.rule) {
@@ -529,7 +491,7 @@ export const HomeHeader = () => {
         {/* <UlContextProvider> */}
         <ul
           ref={sizeAutoAnimate}
-          className="flex items-center   h-full gap-2 justify-between shrink-0  bg-surface-tertiary shadow-2xl shadow-slate-950 rounded-lg w-[130px] p-1"
+          className="flex items-center w-[150px]  h-full gap-2 justify-between shrink-0  bg-surface-tertiary shadow-2xl shadow-slate-950 rounded-lg  p-1"
         >
           <Li
             title="Default size"
@@ -569,7 +531,7 @@ export const HomeHeader = () => {
 
           <Li
             title="max-width: 360px"
-            className="shrink-0"
+            className="shrink-0 relative"
             onClick={(ev) => {
               editor.setDevice("mobile");
               setMediaConditon("max-width");
@@ -586,7 +548,7 @@ export const HomeHeader = () => {
           />
           {Boolean(detectedMedia.others.length) && (
             <OptionsButton
-              className="hover:bg-brand-primary w-[30px!important] h-[30px]"
+              className="hover:bg-brand-primary w-[30px!important] h-[30px] shrink-0 "
               notify={Boolean(detectedMedia.others.length)}
             >
               {
@@ -724,8 +686,8 @@ export const HomeHeader = () => {
             }}
           />
 
-          <PagesSelector />
         </li>
+          <PagesSelector />
         {/* </ul> */}
       </ScrollableToolbar>
 

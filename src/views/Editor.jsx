@@ -419,38 +419,7 @@ export function Editor({ params }) {
                           className={`w-[5px] bg-brand-primary  opacity-0 hover:opacity-[1] transition-all`}
                         />
                       </ShowIf>
-                      {/* {(showAnimBuilder || showLayers || showStylesBuilder) &&
-                        !showPreview && (
-                          <>
-                            <Panel defaultSize={300} id="left-panel" order={1}>
-                              <section
-                                // ref={parentForPanelsGroup}
-                                className="h-full w-full"
-                              >
-                                {showLayers && (
-                                  <Aside dir="right">
-                                    <Layers />
-                                  </Aside>
-                                )}
-
-                                {showAnimBuilder && (
-                                  <Aside>
-                                    <AnimationsBuilder />
-                                  </Aside>
-                                )}
-
-                                {showStylesBuilder && (
-                                  <section className="h-full pl-2 pr-1 overflow-y-auto hideScrollBar">
-                                    <StyleAside />
-                                  </section>
-                                )}
-                              </section>
-                            </Panel>
-                            <PanelResizeHandle
-                              className={`w-[5px] bg-brand-primary  opacity-0 hover:opacity-[1] transition-all`}
-                            />
-                          </>
-                        )} */}
+                     
 
                       <Panel id="center" defaultSize={600} order={2}>
                         <Iframe />
@@ -458,7 +427,7 @@ export function Editor({ params }) {
 
                       <PanelResizeHandle className="w-[5px] bg-brand-primary opacity-0 hover:opacity-[1] transition-all" />
                       <Panel defaultSize={300} order={3} id="right-panel">
-                        <Aside>
+                        <Aside className="">
                           {pathname.pathname != "/add-blocks" && (
                             <AsideControllers />
                           )}

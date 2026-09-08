@@ -4,6 +4,7 @@ import { useRecoilState } from "recoil";
 import { ShowIf } from "../ShowIf";
 import { WpSettings } from "../Protos/wordpress/WpSettings";
 import { WpQueriesBuilder } from "../Protos/wordpress/WpQueriesBuilder";
+import { WpConditionsBuilder } from "../Protos/wordpress/WpConditionsBuilder";
 
 export const WordpressPanel = () => {
   const [showsComponents, setShowsComponents] = useRecoilState(
@@ -22,6 +23,15 @@ export const WordpressPanel = () => {
         condition={showsComponents.views.wordpress.panels.wpQueriesBuilder.show}
       >
         <WpQueriesBuilder />
+      </ShowIf>
+
+      <ShowIf
+        condition={
+          showsComponents.views.wordpress.panels.wpConditionsBuilder.show
+        }
+      >
+        
+        <WpConditionsBuilder />
       </ShowIf>
     </>
   );

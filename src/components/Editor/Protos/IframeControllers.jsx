@@ -126,9 +126,9 @@ const [showsComponents, setShowsComponents] = useRecoilState(
     const reloadRequiredCallback = (ev) => {
       const { state } = ev.detail;
       setReloadRequired(state);
-      doInWordpressAsync(() => {
-        wp_save_editor_scripts()
-      });
+      // doInWordpressAsync(() => {
+      //   wp_save_editor_scripts()
+      // });
       if (state) {
         toast.warn(<ToastMsgInfo msg={`Reload required`} />);
       }

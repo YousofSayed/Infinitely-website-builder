@@ -16,13 +16,17 @@ import {
   current_page_id,
   current_project_id,
   current_symbol_id,
+  DEV_SCRIPT_DEFINITIONS,
+  DEV_STYLE_DEFINITIONS,
   inf_symbol_Id_attribute,
   mainScriptsForEditor,
+  SCRIPT_DEFINITIONS,
   wp_page_config,
   wp_rest_base_edite,
   wp_token_vars,
 } from "@/constants/shared";
 import {
+  cleanUrl,
   defineRoot,
   fileNameToMediaSlug,
   html,
@@ -57,7 +61,14 @@ import { infinitelyWorker } from "@/helpers/infinitelyWorker";
 import { updateThumbnailTimeout } from "@/plugins/updateProjectThumbnail";
 import { queryClient } from "@/utils/queryClient";
 import { minify } from "csso";
-import { cloneDeep, isArray, isPlainObject, uniqueId } from "lodash";
+import {
+  cloneDeep,
+  isArray,
+  isBoolean,
+  isFunction,
+  isPlainObject,
+  uniqueId,
+} from "lodash";
 import { toast } from "react-toastify";
 
 let loadFooterScriptsCallback, loadHeadScriptsCallback, loadMainScriptsCallback;
@@ -205,12 +216,15 @@ export const wp_remote_storage = (editor) => {
         bodyAttributes: {},
         helmet: {},
       };
+
       const data =
         isPlainObject(before_save) &&
         Boolean(Object.keys(before_save || {}).length)
           ? before_save
           : saved || init_meta;
+
       let pageClone = cloneDeep(page);
+
       const save_state =
         isPlainObject(before_save) &&
         Boolean(Object.keys(before_save || {}).length)
@@ -231,6 +245,7 @@ export const wp_remote_storage = (editor) => {
           },
         });
       }
+
       delete pageClone["inf_meta"];
       delete pageClone["meta"];
       localStorage.setItem(wp_page_config, JSON.stringify(pageClone));
@@ -242,6 +257,7 @@ export const wp_remote_storage = (editor) => {
         save_state,
         projectId,
       });
+
       if (!header_footer.head || !header_footer.footer) {
         toast.error(
           <ToastMsgInfo msg={`Head or Footer content not founded 🤨`} />,
@@ -256,6 +272,7 @@ export const wp_remote_storage = (editor) => {
         footer_scripts = [],
         files = [],
         dev_scripts = [];
+
       const getAttributesAsObj = (el) =>
         !el
           ? {}
@@ -263,6 +280,7 @@ export const wp_remote_storage = (editor) => {
               [...el.attributes].map((attr) => [attr.name, attr.value]),
             );
       files.push({ path: defineRoot("local.js"), content: data?.["js"] ?? "" });
+
       const isGlobalCss =
         isPlainObject(projectData.globalCss) &&
         Boolean(Object.keys(projectData.globalCss).length);
@@ -270,32 +288,53 @@ export const wp_remote_storage = (editor) => {
         isPlainObject(projectData.globalJs) &&
         Boolean(Object.keys(projectData.globalJs).length);
 
+      const cleanAllUrlsFromElement = (
+        el = /** @type {HTMLElement} */ (null),
+      ) => {
+        if (!el) return;
+        el.querySelectorAll('script[src],link[rel="stylesheet"][href]').forEach(
+          (asset) => {
+            if (asset.src) {
+              asset.src = cleanUrl(asset.src);
+            } else if (asset.href) {
+              asset.href = cleanUrl(asset.href);
+            }
+          },
+        );
+      };
+
       if (header_footer.head) {
         const parsedHeadDom = new DOMParser().parseFromString(
           header_footer.head,
           "text/html",
         );
+        cleanAllUrlsFromElement(parsedHeadDom);
         addCacheBusterToAllAssets(parsedHeadDom);
         const symbols_styles_el =
           parsedHeadDom.querySelector(`#inf-symbol-styles`);
+
         const symbolsStyles = symbols_styles_el
           ? symbols_styles_el.innerHTML
           : "";
+
         data.css = minify(`${data.css || ""} ${symbolsStyles}`, {
           restructure: true,
         }).css;
+
         parsedHeadDom
           .querySelectorAll(`#inf-css , #inf-motions , #inf-tailwind`)
           .forEach((el) => el.remove());
-        parsedHeadDom
-          .querySelectorAll(`link[href]`)
-          .forEach((el) =>
-            editor.config.canvas.styles.push(
-              Object.fromEntries(
-                [...el.attributes].map((attr) => [attr.name, attr.value]),
-              ),
-            ),
-          );
+
+        // parsedHeadDom
+        //   .querySelectorAll(`link[href]`)
+        //   .forEach((el) =>
+        //     editor.config.canvas.styles.push(
+        //       Object.fromEntries(
+        //         [...el.attributes].map((attr) => [attr.name, attr.value]),
+        //       ),
+        //     ),
+        //   );
+
         parsedHeadDom.querySelectorAll("link,script,style").forEach((el) => {
           if (
             el.tagName === "LINK" &&
@@ -327,65 +366,101 @@ export const wp_remote_storage = (editor) => {
             }
           }
         });
+        if (projectSettings.enable_tailwind) {
+          editor.config.canvas.scripts.push({
+            src: "/scripts/tailwindcss.v4.js",
+            type: "text/javascript",
+          });
+        }
+
+        // Inject Dev Css
+        for (const styleDef of DEV_STYLE_DEFINITIONS) {
+          if (
+            isFunction(styleDef.condition) &&
+            !styleDef.condition(projectSettings)
+          )
+            continue;
+          editor.config.canvas.styles.push({
+            href: styleDef.localUrl,
+            rel: "stylesheet",
+            name: styleDef.name,
+          });
+        }
+
         headContent = parsedHeadDom.body.innerHTML;
       }
 
       const content = [
         ...(data?.html || []),
-        `<style id="inf-css">${data.css || ""}</style`,
+        `<style id="inf-css">${data.css || ""}</style>`,
       ];
-      
+
       localStorage.removeItem(wp_token_vars);
       editor.clearDirtyCount();
       const wrapper = editor.getWrapper();
       wrapper.addAttributes(data.bodyAttributes);
-      editor.clearDirtyCount();
-      editor.setComponents(content);
-      editor.render();
 
-      editor.on("canvas:frame:load:body", (ev) => {
+      // Rendering the footer scripts after the body has loaded to ensure that all elements are present before scripts execute
+      const bodyLoad = (ev) => {
         const body = ev.window.document.body;
         const parsedFooterDom = new DOMParser().parseFromString(
           `${header_footer.footer}\n`,
           "text/html",
         );
+        cleanAllUrlsFromElement(parsedFooterDom);
+
         let pVueId;
+
         const mainScripts = projectData.mainEditorScripts.footer
           .map((lib) => {
             lib.slug.toLowerCase() == fileNameToMediaSlug("p-vue.js") &&
               (pVueId = lib.id);
-            return `script[src="${lib.source_url || lib.url}"]`;
+            return `script[src="${cleanUrl(lib.source_url || lib.url)}"]`;
           })
           .join(",");
 
         parsedFooterDom
           .querySelectorAll(
-            `${mainScripts} ${pVueId ? `,#inf-footer-${pVueId}-js-before` : ""} ${isGlobalJs ? `,script[src="${projectData.globalJs.source_url || projectData.globalJs.url}"]` : ""}`,
+            `${mainScripts} ${pVueId ? `,#inf-footer-${pVueId}-js-before` : ""} ${isGlobalJs ? `,script[src="${cleanUrl(projectData.globalJs.source_url || projectData.globalJs.url)}"]` : ""}`,
           )
           .forEach((el) => el.remove());
 
-        dev_scripts = [
-          projectSettings.enable_tailwind
-            ? `<script src="/scripts/tailwindcss.v4.js"></script>`
-            : "",
-          projectSettings.optimize_outlines
-            ? `<script src="/scripts/optimizeOutlines.js"></script>`
-            : "",
-          !projectSettings.disable_will_change_in_editor
-            ? `<script src="/scripts/willChange.js"></script>`
-            : "",
-          projectSettings.enable_spline_viewer
-            ? `<script src"https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js"></script>`
-            : "",
-          projectSettings.enable_swiperjs
-            ? `<script src="https://cdn.jsdelivr.net/npm/swiper@latest/swiper-bundle.min.js"></script><script src="https://cdn.jsdelivr.net/npm/swiper@latest/swiper-element-bundle.min.js"></script>`
-            : "",
-          ...mainScriptsForEditor.map((src) =>
-            src.includes("p-vue.js")
-              ? `<script id="global-js" src="${projectData.globalJs.source_url || projectData.globalJs.url}"></script><script id="local-js">${data.js}</script><script src="${src}"></script>`
-              : `<script src="${src}"></script>`,
-          ),
-        ];
+        dev_scripts = cloneDeep(
+          SCRIPT_DEFINITIONS.concat(DEV_SCRIPT_DEFINITIONS).map((scriptDef) => {
+            if (
+              isFunction(scriptDef.condition) &&
+              !scriptDef.condition(projectSettings)
+            )
+              return null;
+            if (isBoolean(scriptDef.is_dev) && !scriptDef.is_dev) return null;
+            const attrs = objToAttributes(scriptDef.attributes || {});
+            return `<script src="${scriptDef.localUrl}" name="${scriptDef.name}" ${attrs}></script>`;
+          }),
+        ).filter(Boolean);
+
+        // [
+        //   projectSettings.enable_tailwind
+        //     ? `<script src="/scripts/tailwindcss.v4.js"></script>`
+        //     : "",
+        //   projectSettings.optimize_outlines
+        //     ? `<script src="/scripts/optimizeOutlines.js"></script>`
+        //     : "",
+        //   !projectSettings.disable_will_change_in_editor
+        //     ? `<script src="/scripts/willChange.js"></script>`
+        //     : "",
+        //   projectSettings.enable_spline_viewer
+        //     ? `<script src="https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js"></script>`
+        //     : "",
+        //   projectSettings.enable_swiperjs
+        //     ? `<script src="https://cdn.jsdelivr.net/npm/swiper@latest/swiper-bundle.min.js"></script><script src="https://cdn.jsdelivr.net/npm/swiper@latest/swiper-element-bundle.min.js"></script>`
+        //     : "",
+        //   ...mainScriptsForEditor.map((src) =>
+        //     src.includes("p-vue.js")
+        //       ? `<script id="global-js" src="${projectData.globalJs.source_url || projectData.globalJs.url}"></script><script id="local-js">${data.js}</script><script src="${src}"></script>`
+        //       : `<script src="${src}"></script>`,
+        //   ),
+        // ];
+
         parsedFooterDom.body.insertAdjacentHTML(
           "beforeend",
           dev_scripts.join("\n"),
@@ -423,8 +498,14 @@ export const wp_remote_storage = (editor) => {
           });
         };
         appendScript();
-      });
+        editor.off("canvas:frame:load:body", bodyLoad);
+      };
 
+      editor.on("canvas:frame:load:body", bodyLoad);
+
+      editor.clearDirtyCount();
+      editor.setComponents(content);
+      editor.render();
       const slugs = [projectData.globalJs.slug, projectData.globalCss.slug];
       wpWorkerCallbackMaker(
         pageBuilderWorker,
@@ -448,7 +529,7 @@ export const wp_remote_storage = (editor) => {
           } else {
             toast.error(
               <ToastMsgInfo
-                msg={`Faild to get & set global and local scripts and styles 😪`}
+                msg={`Failed to get & set global and local scripts and styles 😪`}
               />,
             );
           }

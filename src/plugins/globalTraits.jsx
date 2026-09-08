@@ -16,6 +16,8 @@ import { inf_for_traits } from "./traits/wordpress/inf-for";
 import { inf_query_traits } from "./traits/wordpress/inf-query";
 import { inf_ssr_traits } from "./traits/wordpress/inf-ssr";
 import { showCallback } from "./traits/wordpress/helpers";
+import { inf_if_traits } from "./traits/wordpress/inf-if";
+import { inf_pagination_traits } from "./traits/wordpress/inf-pagination";
 
 /**
  *
@@ -546,9 +548,11 @@ export const globalTraits = (editor) => {
 
   editor.on("component:create", (model) => {
     // const isLoop =
-    if (isWordpress()) {
+    const isWrapper = model.getType().toLowerCase() === "wrapper";
+    if (isWordpress() && !isWrapper) {
       model.setTraits([
         ...model.getTraits().map((tr) => tr.attributes),
+        
         ...inf_for_traits(editor).map((trait) => {
           if (trait.showCallback) {
             return trait;
@@ -557,6 +561,7 @@ export const globalTraits = (editor) => {
             model,
             values: inf_query_traits(editor)
               .concat(inf_ssr_traits(editor))
+              .concat(inf_pagination_traits(editor))
               .map((t) => t.name),
           });
           return trait;
@@ -569,6 +574,7 @@ export const globalTraits = (editor) => {
             model,
             values: inf_for_traits(editor)
               .concat(inf_ssr_traits(editor))
+              .concat(inf_pagination_traits(editor))
               .map((t) => t.name),
           });
           return trait;
@@ -581,10 +587,25 @@ export const globalTraits = (editor) => {
             model,
             values: inf_query_traits(editor)
               .concat(inf_for_traits(editor))
+              .concat(inf_pagination_traits(editor))
               .map((t) => t.name),
           });
           return trait;
         }),
+        ...inf_pagination_traits(editor).map((trait) => {
+          if (trait.showCallback) {
+            return trait;
+          }
+          trait.showCallback = showCallback({
+            model,
+            values: inf_query_traits(editor)
+              .concat(inf_for_traits(editor))
+              .concat(inf_ssr_traits(editor))
+              .map((t) => t.name),
+          });
+          return trait;
+        }),
+        ...inf_if_traits(editor),
       ]);
     }
   });

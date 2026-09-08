@@ -1,4 +1,8 @@
-import { buildWpHeaderScripts, buildWpScripts } from "@/constants/shared";
+import {
+  buildWpHeaderScripts,
+  buildWpScripts,
+  buildWpStyles,
+} from "@/constants/shared";
 import {
   fileNameToMediaSlug,
   functionFromString,
@@ -269,31 +273,38 @@ export async function wp_get_media_as_blob({
  * @throws {Error} If `projectId` is missing.
  */
 export async function wp_get_blob_media_by_slug({ media, projectId }) {
-  if (!projectId) {
-    throw new Error(`Project id missing`);
-  }
-  const mime = await (await import("mime")).default;
+  if (!projectId) throw new Error("Project id missing");
+
+  const mime = await import("mime");
   const projectData = await db.projects.get(+projectId);
   const wp_meta = projectData.wp_meta;
+
   const res = await fetch(
-    `${createWebsiteLink(
-      wp_meta,
-      `infinitely-api/v1/asset?slug=${media.slug}`,
-    )}`,
-    {
-      headers: {
-        Authorization: createWpToken(wp_meta),
-      },
-    },
+    `${createWebsiteLink(wp_meta, `infinitely-api/v1/asset?slug=${media.slug}`)}`,
+    { headers: { Authorization: createWpToken(wp_meta) } },
   );
-  // const json = await res.json();
-  // console.log('blob is ', json);
+
+  const json = await res.json();
+
+  if (!json.success) {
+    throw new Error(json.error || "Failed to fetch asset");
+  }
+
+  // 🔥 Decode base64 string back into a proper File/Blob
+  const binaryString = atob(json.data);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+
   const fileName = media.source_url.split("/").pop();
-  const resBlob = await res.blob();
-  const blob = new File([resBlob], fileName, {
-    type: mime.getType(media.source_url) || "application/octet-stream",
+  const blob = new File([bytes], fileName, {
+    type:
+      json.mime ||
+      mime.default.getType(media.source_url) ||
+      "application/octet-stream",
   });
-  // console.log("wp get blob : ", res, blob, await resBlob.text());
+
   return blob;
 }
 
@@ -1952,15 +1963,15 @@ export async function wp_clean_current_post_motions({ projectId, html = [] }) {
  *   app_type: string,
  *   global: {css: string, js: string},
  *   wp_meta: {website_url: string, username: string, password: string, app_password: string}
+ *   update_project_config: boolean
  * }} options.data
- * @returns {Promise<object>} Parsed JSON result from {@link wp_upload_multiple_files}.
  */
 export async function wp_update_main_global_files({ data }) {
   const id = data.id;
   const projecdData = await db.projects.get(+id);
   const projectSettingsFromDB = projecdData.projectSetting;
-  const files = [];
-
+  const allFiles = [];
+  const attributes = {};
   // if (
   //   JSON.stringify(projectSettingsFromDB) ===
   //   JSON.stringify(data.projectSetting)
@@ -1972,6 +1983,9 @@ export async function wp_update_main_global_files({ data }) {
     }).map(async (item) => {
       const blob = await (await fetch(item.localUrl)).blob();
       if (isBoolean(item.condition)) {
+        if (item.attributes) {
+          attributes[fileNameToMediaSlug(item.name)] = item.attributes;
+        }
         if (item.condition) {
           return new File([blob], item.name, { type: blob.type });
         } else {
@@ -1988,6 +2002,28 @@ export async function wp_update_main_global_files({ data }) {
     }).map(async (item) => {
       const blob = await (await fetch(item.localUrl)).blob();
       if (isBoolean(item.condition)) {
+        if (item.attributes) {
+          attributes[fileNameToMediaSlug(item.name)] = item.attributes;
+        }
+        if (item.condition) {
+          return new File([blob], item.name, { type: blob.type });
+        } else {
+          return new File([" "], item.name, { type: blob.type });
+        }
+      }
+      return new File([blob], item.name, { type: blob.type });
+    }),
+  );
+
+  const mainStyles = await Promise.all(
+    buildWpStyles({
+      projectSetting: data.projectSetting,
+    }).map(async (item) => {
+      const blob = await (await fetch(item.localUrl)).blob();
+      if (isBoolean(item.condition)) {
+        if (item.attributes) {
+          attributes[fileNameToMediaSlug(item.name)] = item.attributes;
+        }
         if (item.condition) {
           return new File([blob], item.name, { type: blob.type });
         } else {
@@ -2003,60 +2039,114 @@ export async function wp_update_main_global_files({ data }) {
   //   files.push(script);
   // }
 
-  files.push(...mainHeaderScripts, ...mainScripts);
+  allFiles.push(...mainHeaderScripts, ...mainScripts);
 
   const fontsCss = new File([getFonts(data.projectData) || " "], "fonts.css", {
     type: "text/css",
   });
 
-  const infinitelyStyles = new File(
-    [
-      data.projectSetting.include_canvas_styles_in_build_file
-        ? await (await fetch("/styles/style.css")).blob()
-        : " ",
-    ],
-    "infinitely.css",
-    { type: "text/css" },
-  );
-
-  const globalRules = new File(
-    [
-      !data.projectSetting.enable_tailwind
-        ? await (await fetch(`/styles/global-rules.css`)).blob()
-        : " ",
-    ],
-    "global-rules.css",
-    { type: "text/css" },
-  );
-
-  files.push(...[fontsCss, infinitelyStyles, globalRules]);
-
-  // const gCss = new File(
-  //   [data.global.css || " html{ --_init: 0} "],
-  //   "global.css",
-  //   {
-  //     type: "text/css",
-  //   },
-  // );
-  // const gJs = new File(
-  //   [data.global.js || "console.log('global.js')"],
-  //   "global.js",
-  //   {
-  //     type: "application/javascript",
-  //   },
+  // const infinitelyStyles = new File(
+  //   [
+  //     data.projectSetting.include_canvas_styles_in_build_file
+  //       ? await (await fetch("/styles/style.css")).blob()
+  //       : " ",
+  //   ],
+  //   "infinitely.css",
+  //   { type: "text/css" },
   // );
 
-  // files.push(...[gCss, gJs]);
+  // const globalRules = new File(
+  //   [
+  //     !data.projectSetting.enable_tailwind
+  //       ? await (await fetch(`/styles/global-rules.css`)).blob()
+  //       : " ",
+  //   ],
+  //   "global-rules.css",
+  //   { type: "text/css" },
+  // );
 
-  return await wp_upload_multiple_files({
+  allFiles.push(...[fontsCss, ...mainStyles]); //, infinitelyStyles, globalRules]);
+
+  const uploadRes = await wp_upload_multiple_files({
     projectId: data.id,
-    files,
+    files: allFiles,
   });
-  // return await wp_update_media_files({
-  //   projectId: data.id,
-  //   check_exist: true,
-  //   files,
-  // });
+
+  if (!uploadRes.success) {
+    throw new Error(
+      `Failed to upload media files: ${JSON.stringify(uploadRes)}`,
+    );
+  }
+
+  /**
+   * @type {{[slug: string]: import('@/helpers/types').InfinitelyWpMedia}}
+   */
+  const files = uploadRes.files;
+
+  /**
+   * @type {import('@/helpers/types').WpProject}
+   */
+  const newUpdatedConfig = {
+    mainEditorScripts: {
+      footer: [],
+      header: [],
+    },
+    mainEditorStyles: [],
+  };
+
+  // Map main scripts to footer
+  for (const script of mainScripts) {
+    const slug = fileNameToMediaSlug(script.name);
+    if (files[slug]) {
+      newUpdatedConfig.mainEditorScripts.footer.push({
+        ...files[slug],
+        attributes: attributes[slug],
+      });
+    }
+  }
+
+  // Map main header scripts to header
+  for (const script of mainHeaderScripts) {
+    const slug = fileNameToMediaSlug(script.name);
+    if (files[slug]) {
+      newUpdatedConfig.mainEditorScripts.header.push({
+        ...files[slug],
+        attributes: attributes[slug],
+      });
+    }
+  }
+
+  // Map main styles to mainEditorStyles
+  for (const style of mainStyles) {
+    const slug = fileNameToMediaSlug(style.name);
+    if (files[slug]) {
+      newUpdatedConfig.mainEditorStyles.push({
+        ...files[slug],
+        attributes: attributes[slug],
+      });
+    }
+  }
+
+  if (data.update_project_config) {
+    await db.projects.update(data.id, {
+      ...newUpdatedConfig,
+    });
+
+    const newProjectData = await db.projects.get(data.id);
+    newProjectData.currentEditingPage = {};
+    newProjectData.current_inf_meta = {};
+    await wp_update_option({
+      optionName: "inf_config",
+      projectId : data.id,
+      value: newProjectData,
+    });
+  }
+
+  return {
+    success: true,
+    files,
+    config: newUpdatedConfig,
+  };
 }
 
 /**
@@ -2789,8 +2879,8 @@ export async function wp_get_post_types({
   return response.json();
 }
 /**
- * 
- * @param {import("@/helpers/types").WpAuthorsParams & {projectId : number}} params 
+ *
+ * @param {import("@/helpers/types").WpAuthorsParams & {projectId : number}} params
  * @returns {import("@/helpers/types").WpAuthorsResponse}
  */
 export async function wp_get_authors(params) {
@@ -2885,9 +2975,9 @@ export async function wp_get_all_categoires(params) {
 }
 
 /**
- * 
+ *
  * @param {import("@/helpers/types").WpTagsAllParams & {projectId : number}} params
- * @returns {import("@/helpers/types").WpTagsAllResponse} 
+ * @returns {import("@/helpers/types").WpTagsAllResponse}
  */
 export async function wp_get_all_tags(params) {
   if (!params.projectId) {
@@ -2907,7 +2997,7 @@ export async function wp_get_all_tags(params) {
         "Content-Type": "application/json",
       },
     },
-  );  
+  );
 
   if (!response.ok) {
     throw new Error(`Request failed: ${response.status}`);
@@ -2917,7 +3007,7 @@ export async function wp_get_all_tags(params) {
 }
 
 /**
- * 
+ *
  * @param {import("@/helpers/types").WpTaxonomiesAllParams & {projectId : number}} params
  * @returns {import("@/helpers/types").WpTaxonomiesAllResponse}
  */
@@ -2949,8 +3039,8 @@ export async function wp_get_all_taxonomies(params) {
 }
 
 /**
- * 
- * @param {import("@/helpers/types").WpTermsAllParams} params 
+ *
+ * @param {import("@/helpers/types").WpTermsAllParams} params
  * @returns {import("@/helpers/types").WpTermsAllResponse}
  */
 export async function wp_get_all_terms(params) {

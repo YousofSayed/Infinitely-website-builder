@@ -47,6 +47,7 @@ import { toast } from "react-toastify";
 import { useRecoilState, useRecoilValue } from "recoil";
 import { useShortcuts } from "@/hooks/useShortcuts";
 import { useSetWpTokensQueryVars } from "@/hooks/useSetWpTokensQueryVars";
+import { useUpdateWpEditorScriptsInBackground } from "@/hooks/useUpdateWpEditorScriptsInBackground";
 
 export const Iframe = () => {
   const showLayers = useRecoilValue(showLayersState);
@@ -84,7 +85,7 @@ export const Iframe = () => {
   const [showPreviewLoader, setShowPreviewLoader] = useState(true);
   const editorWrapper = useRef(refType);
   const previewRef = useRef(refType);
-const [showsComponents, setShowsComponents] = useRecoilState(
+  const [showsComponents, setShowsComponents] = useRecoilState(
     showComponentsInLeftPanelState,
   );
   const saveAnimations = () => {
@@ -260,7 +261,7 @@ const [showsComponents, setShowsComponents] = useRecoilState(
     if (!editor) return;
 
     editor.Canvas.refresh();
-  }, [showAnimBuilder, showLayers, showsComponents,  editor]);
+  }, [showAnimBuilder, showLayers, showsComponents, editor]);
 
   useEffect(() => {
     if (!showPreview) {
@@ -271,10 +272,10 @@ const [showsComponents, setShowsComponents] = useRecoilState(
     setUrlPage();
   }, [showPreview]);
 
-  useEffect(()=>{
-    if(!previewRef.current)return;
+  useEffect(() => {
+    if (!previewRef.current) return;
     animatePreviewContainer(previewRef.current);
-  },[previewRef])
+  }, [previewRef]);
 
   const getReloadUrl = (url) => {
     if (!url) return url;
@@ -307,7 +308,8 @@ const [showsComponents, setShowsComponents] = useRecoilState(
 
   useShortcuts();
   useSetWpTokensQueryVars();
-
+  useUpdateWpEditorScriptsInBackground();
+  
   return (
     <section className="relative bg-[#aaa]    h-full" ref={autoAnimate}>
       {showsComponents.animationsBuilder && (
@@ -338,7 +340,7 @@ const [showsComponents, setShowsComponents] = useRecoilState(
                           ...prev,
                           animationsBuilder: false,
                         };
-                      })
+                      });
                     }
                   } else {
                     // setShowAnimBuilder(false);
@@ -347,7 +349,7 @@ const [showsComponents, setShowsComponents] = useRecoilState(
                         ...prev,
                         animationsBuilder: false,
                       };
-                    })
+                    });
                   }
                 }}
               >

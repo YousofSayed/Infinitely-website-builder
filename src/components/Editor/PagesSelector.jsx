@@ -166,7 +166,7 @@ export const PagesSelector = () => {
   };
 
   return (
-    <li className="shrink-0 grow-0 w-[180px]">
+    <li className=" grow-0 w-full">
       <Select
         icon={Icons.stNote()}
         className=" bg-surface-tertiary  "

@@ -130,6 +130,7 @@ export type InfinitelyTrait = {
     | "custom"
     | "object"
     | "add-props";
+    inputType ?: "text" | "url" | "email" | "number";
   // propsType: "text" | "code";
   //For add-props type
   addPropsInputType: "text" | "code";
@@ -156,7 +157,7 @@ export type InfinitelyTrait = {
   ext: string;
   keywords:
     | string[]
-    | (({ projectData }: { projectData: Project }) => string[]);
+    | (({ projectData }: { projectData: Project & WpProject }) => string[]);
   command: string;
   component: import("react").JSX.Element;
   textareaLanguage: string;
@@ -175,6 +176,7 @@ export type InfinitelyTrait = {
     model: Component;
     mediaBreakpoint: number;
   }) => void;
+  onTraitRender: (props: TraitCallProps) => void;
   onSwitch: (value: boolean) => void;
   buttonEvents: (
     handlers: TraitCallProps,
@@ -289,7 +291,7 @@ export interface Directive {
   directive: string;
   name: string;
   id: string;
-  type: "object" | "code" | "array" | "multi" | "select" | "check";
+  type: "object" | "code" | "array" | "multi" | "multi-once" | "select" | "check";
   // inputType: "object" | "code" | "array" | "multi" | "select";
   nestedInputType: "select" | "code" | "input";
   nestedCodeLang: "html" | "javascript" | "css";
@@ -1168,6 +1170,12 @@ export type WPPostStatus =
   | "any"
   | string;
 
+export type WpConditions = ({
+  var: string;
+  operator: string;
+  value: string;
+} & string)[];
+
 export interface WpProject {
   id: number;
   name: string;
@@ -1230,6 +1238,13 @@ export interface WpProject {
     [key: string]: WPQueryArgs & {
       inf_query_name: string;
       inf_query_id: string;
+    };
+  };
+  conditions?: {
+    [key: string]: {
+      inf_condition_id: string;
+      inf_condition_name: string;
+      conditions: WpConditions;
     };
   };
 }
@@ -1682,6 +1697,11 @@ export interface TokenQueryVar {
   data?: never;
 }
 
+export interface TokenPaginationVar {
+  name : string;
+  pagination_query_id: string;
+}
+
 /**
  * 2️⃣ Variable resolved from existing context token (inf-for)
  * Must be a token string like "{{ products }}" or "{{ post.meta.gallery_urls }}"
@@ -1725,7 +1745,13 @@ export interface TokenSSRVar {
 /**
  * Union type: A var MUST be exactly one of these three shapes
  */
-export type TokenScopeVar = TokenQueryVar | TokenSourceVar | TokenSSRVar | TokenDataVar;
+export type TokenScopeVar =
+  | TokenQueryVar
+  | TokenSourceVar
+  | TokenSSRVar
+  | TokenDataVar
+  | TokenPaginationVar
+  ;
 
 /**
  * The `vars` array sent to the /get-tokens endpoint

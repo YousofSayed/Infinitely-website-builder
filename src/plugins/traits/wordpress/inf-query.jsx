@@ -26,16 +26,25 @@ export const inf_query_traits = (editor) =>
       label: "Inf Query",
       placeholder: "Select Inf Query",
       role: "attribute",
+      keywords : ({projectData})=>{
+        console.log('projectData keywords: ', projectData);
+        
+        if(!projectData) return [];
+        return Object.values(projectData.queries).map((q) => ({
+          value: q.inf_query_id,
+          title: q.inf_query_name,
+        }));
+      },
       init({ editor, model, trait, mediaBreakpoint }) {
         // alert(`inf for : ${trait?.value} : model id ${model.getId()}`);
 
-        (async () => {
-          const projectData = await getProjectData();
-          trait.keywords = Object.values(projectData.queries).map((q) => ({
-            value: q.inf_query_id,
-            title: q.inf_query_name,
-          }));
-        })();
+        // (async () => {
+        //   const projectData = await getProjectData();
+        //   trait.keywords = Object.values(projectData.queries).map((q) => ({
+        //     value: q.inf_query_id,
+        //     title: q.inf_query_name,
+        //   }));
+        // })();
 
         if (!trait.value) return;
         const qv = getTokensQueryVar("_id", model.getId());

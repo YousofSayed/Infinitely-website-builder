@@ -93,7 +93,7 @@ export const Project = ({ project }) => {
   return (
     <article
       // ref={autoAminRef}
-      className="relative px-2 py-1 bg-surface-secondary  rounded-lg flex flex-col h-[320px] justify-evenly  gap-2 animate-go-to"
+      className="relative px-2 py-1 bg-surface-secondary  rounded-lg flex flex-col  justify-evenly  gap-2 animate-go-to"
     >
       <figure className="flex flex-col gap-2 h-[70%]  items-center ">
         <img
@@ -157,7 +157,7 @@ export const Project = ({ project }) => {
                 async onSuccess(res) {
                   res?.value?.id && delete res.value.id;
                   await db.projects.update(project.id, {
-                    ...(res.value || {}),
+                    ...(res.value || {}), 
                   });
                   setCurrentWpPageName("");
                   navigate("/wordpress/select");

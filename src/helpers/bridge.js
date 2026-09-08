@@ -12,6 +12,7 @@ import {
   buildScripts,
   buildWpHeaderScripts,
   buildWpScripts,
+  buildWpStyles,
   interactionId,
   interactionInstanceId,
   mainMotionId,
@@ -3042,25 +3043,44 @@ export async function initMainAndGlobalFilesForWp({ data }) {
     type: "text/css",
   });
 
-  const infinitelyStyles = new File(
-    [
-      data.projectSetting.include_canvas_styles_in_build_file
-        ? await (await fetch("/styles/style.css")).blob()
-        : " ",
-    ],
-    "infinitely.css",
-    { type: "text/css" },
+  const mainStyles = await Promise.all(
+    buildWpStyles({
+      projectSetting: data.projectSetting,
+    }).map(async (item) => {
+      const blob = await (await fetch(item.localUrl)).blob();
+      if (isBoolean(item.condition)) {
+        if (item.attributes) {
+          attributes[fileNameToMediaSlug(item.name)] = item.attributes;
+        }
+        if (item.condition) {
+          return new File([blob], item.name, { type: blob.type });
+        } else {
+          return new File([" "], item.name, { type: blob.type });
+        }
+      }
+      return new File([blob], item.name, { type: blob.type });
+    }),
   );
 
-  const globalRules = new File(
-    [
-      !data.projectSetting.enable_tailwind
-        ? await (await fetch(`/styles/global-rules.css`)).blob()
-        : " ",
-    ],
-    "global-rules.css",
-    { type: "text/css" },
-  );
+  // const infinitelyStyles = new File(
+  //   [
+  //     data.projectSetting.include_canvas_styles_in_build_file
+  //       ? await (await fetch("/styles/style.css")).blob()
+  //       : " ",
+  //   ],
+  //   "infinitely.css",
+  //   { type: "text/css" },
+  // );
+
+  // const globalRules = new File(
+  //   [
+  //     !data.projectSetting.enable_tailwind
+  //       ? await (await fetch(`/styles/global-rules.css`)).blob()
+  //       : " ",
+  //   ],
+  //   "global-rules.css",
+  //   { type: "text/css" },
+  // );
 
   // Build global files
   const gCss = new File([" html{ --_init: 0} "], "global.css", {
@@ -3080,8 +3100,9 @@ export async function initMainAndGlobalFilesForWp({ data }) {
     ...mainHeaderScripts,
     ...mainScripts,
     fontsCss,
-    infinitelyStyles,
-    globalRules,
+    ...mainStyles,
+    // infinitelyStyles,
+    // globalRules,
     ...globals,
   ];
 
@@ -3105,20 +3126,20 @@ export async function initMainAndGlobalFilesForWp({ data }) {
   const headerCDN = [
     ...(data.projectSetting.enable_spline_viewer
       ? [
-          {
-            source_url:
-              "https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js",
-            date: new Date(),
-            id: null,
-            link: "https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js",
-            slug: "spline-js",
-            modified: new Date(),
-            title: "spline.js",
-            caption: "spline js for 3d",
-            attributes: {
-              type: "module",
-            },
-          },
+          // {
+          //   source_url:
+          //     "https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js",
+          //   date: new Date(),
+          //   id: null,
+          //   link: "https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js",
+          //   slug: "spline-js",
+          //   modified: new Date(),
+          //   title: "spline.js",
+          //   caption: "spline js for 3d",
+          //   attributes: {
+          //     type: "module",
+          //   },
+          // },
         ]
       : []),
   ];
@@ -3157,7 +3178,7 @@ export async function initMainAndGlobalFilesForWp({ data }) {
   }
 
   // Map style files
-  const styleFiles = [fontsCss, infinitelyStyles, globalRules];
+  const styleFiles = [fontsCss, ...mainStyles]; //infinitelyStyles, globalRules];
   for (const file of styleFiles) {
     const slug = fileNameToMediaSlug(file.name);
     if (files[slug]) {
@@ -3304,4 +3325,8 @@ export const groupArrayAsObject = (groupArray = [], targetKey) =>
     if (!acc[curr[targetKey]]) acc[curr[targetKey]] = [];
     acc[curr[targetKey]].push(curr);
     return acc;
-  } , {});
+  }, {});
+
+export function cleanUrl(url) {
+  return url.split("?")[0];
+}

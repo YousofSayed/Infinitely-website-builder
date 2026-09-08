@@ -4,10 +4,14 @@ import { createRestartableAsync } from "@/helpers/bridge";
 import { db } from "@/helpers/db";
 import {
   getProjectData,
+  getProjectId,
   getProjectSettings,
   getWpPageConfig,
 } from "@/helpers/functions";
-import { wp_update_main_global_files, wp_update_option } from "@/Apps/wordpress/functions";
+import {
+  wp_update_main_global_files,
+  wp_update_option,
+} from "@/Apps/wordpress/functions";
 import { isFunction } from "lodash";
 import { toast } from "react-toastify";
 
@@ -39,7 +43,9 @@ export async function wp_toast_handler({
       toast.dismiss(tid);
       console.error(jsonRes.message);
 
-      toast.error(<ToastMsgInfo msg={jsonRes?.message ||  `Error while fetch deta 😔`} />);
+      toast.error(
+        <ToastMsgInfo msg={jsonRes?.message || `Error while fetch deta 😔`} />,
+      );
     }
   } catch (error) {
     toast.dismiss(tid);
@@ -59,13 +65,13 @@ export function wp_get_post_id() {
 }
 
 export const wp_save_editor_scripts = createRestartableAsync(async () => {
-  const projectId = +localStorage.getItem(current_project_id);
+  const projectId = getProjectId();
   const projectData = await getProjectData();
   const wp_post = getWpPageConfig();
   const { projectSettings } = getProjectSettings();
-  const isProjectSettingsChanged =
-    JSON.stringify(projectData.projectSetting) !==
-    JSON.stringify(projectSettings);
+  const isProjectSettingsChanged = true
+    // JSON.stringify(projectData.projectSetting) !==
+    // JSON.stringify(projectSettings);
 
   if (!window._r_wp_tid) {
     window._r_wp_tid = toast.loading(
@@ -75,7 +81,7 @@ export const wp_save_editor_scripts = createRestartableAsync(async () => {
 
   try {
     if (isProjectSettingsChanged) {
-      await wp_update_main_global_files({
+      const newConfig = await (await wp_update_main_global_files({
         data: {
           id: projectId,
           projectSetting: projectSettings,
@@ -85,15 +91,16 @@ export const wp_save_editor_scripts = createRestartableAsync(async () => {
             // js: "",
           },
         },
-      });
+      })).config;
 
       await db.projects.update(projectId, {
         scripts_need_to_publish: false,
         projectSetting: projectSettings,
         currentEditingPage: {
           ...projectData.currentEditingPage,
-          need_publish_to_wp: true,
+          // need_publish_to_wp: true,
         },
+        ...newConfig,
       });
 
       const newProjectData = await getProjectData();

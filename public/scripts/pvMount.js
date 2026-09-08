@@ -7,6 +7,10 @@ let app = PetiteVue.createApp({
 app.directive("view", vIntersection);
 app.directive("ref", vRef); 
 app.directive("gsap", vGsap); 
+//  window.autoAnimate(document.body);
+registerAutoAnimateDirective(app);
+
+
 
 let mountBroadCastChannel = new BroadcastChannel("pv:mount");
 mountBroadCastChannel.addEventListener("message", (ev) => {
@@ -31,9 +35,15 @@ mountBroadCastChannel.addEventListener("message", (ev) => {
       $delimiters: ["${", "}"],
     });
     app.directive("view", vIntersection);
+    app.directive("ref", vRef);
+    app.directive("gsap", vGsap);
+    registerAutoAnimateDirective(app);
     console.log("mounting : ", ev.data.el);
+    // window.autoAnimate(ev.data.el);
+    console.log('auto animate  : ' , window.autoAnimate , ev.data.el);
+    
     app.mount(ev.data.el);
-
+    // 2. Enable AutoAnimate on the list container — ONE LINE
     // _hyperscript.processNode(ev.detail.el);
   };
 });
@@ -84,7 +94,9 @@ function pvMount(
   app.directive("view", vIntersection);
   app.directive("ref", vRef);
   app.directive("gsap", vGsap);
+  registerAutoAnimateDirective(app);
   console.log("mounting : ", ev.detail.el);
+  // window.autoAnimate(ev.detail.el);
   app.mount(ev.detail.el);
 
   // _hyperscript.processNode(ev.detail.el);
@@ -97,7 +109,7 @@ function pvUnMount(
   ev
 ) {
   if (!ev.detail.el) {
-    console.error("Oh shit here we again : hs error no element founded");
+    console.error("Oh shit here we again :  error no element founded");
     // const el = document.querySelector(ev.detail.selector);
 
     return;

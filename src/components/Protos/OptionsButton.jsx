@@ -56,10 +56,10 @@ export const OptionsButton = ({
       }}
     >
       <SmallButton
-        className="relative w-full h-full flex justify-center items-center bg-transparent hover:bg-transparent border-none "
         onClick={handleClick}
         id={id.current}
         {...props}
+        className={`relative w-full h-full flex justify-center items-center bg-transparent hover:bg-transparent border-none  ${props.className || ""}`}
       >
         {icon ? icon : Icons.options({ fill: "#fff" })}
         {notify && (

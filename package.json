@@ -68,6 +68,7 @@
     "dexie-react-hooks": "^1.1.7",
     "downshift": "^9.4.0",
     "framer-motion": "^12.23.12",
+    "fuse.js": "^7.5.0",
     "grapesjs": "^0.22.13",
     "html2canvas-pro": "^1.5.8",
     "interactjs": "^1.10.27",

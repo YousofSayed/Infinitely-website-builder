@@ -64,6 +64,7 @@ import { toast } from "react-toastify";
 import { VirtuosoGrid } from "react-virtuoso";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { useWordpress } from "@/hooks/useWordpress";
+import { ShowIf } from "../ShowIf";
 
 export const TraitsAside = () => {
   const editor = useEditorMaybe();
@@ -80,7 +81,7 @@ export const TraitsAside = () => {
   const setAssetType = useSetRecoilState(assetTypeState);
   const selectedEl = useRecoilValue(currentElState);
   const [cmdsContext, setCmdsContext] = useCmdsContext();
-  const [projectData, setProjectData] = useState({});
+  const [projectData, setProjectData] = useState(null);
   const [traitsAnimate] = useAutoAnimate();
   const [notify, setNotify] = useRecoilState(asideControllersNotifiresState);
 
@@ -156,16 +157,22 @@ export const TraitsAside = () => {
       console.log("trait updated");
       getAndSetTraits();
     };
-    // const buildAttrUrlCallback = () => {
-    //   setFileName(selectedEl.getAttributes()[inf_build_url]);
-    // };
+
     editor.on("trait:value", callback);
-    // editor.on(InfinitelyEvents.attributes.buildUrl, buildAttrUrlCallback);
+
     return () => {
       editor.off("trait:value", callback);
-      // editor.off(InfinitelyEvents.attributes.buildUrl, buildAttrUrlCallback);
     };
   }, [editor, selectedEl]);
+
+  useEffect(() => {
+    if (!editor) return;
+    editor.trigger(InfinitelyEvents.traits.start);
+
+    return () => {
+      editor.trigger(InfinitelyEvents.traits.end);
+    };
+  }, [editor]);
 
   const getFilterdAttributes = () => {
     const sle = editor.getSelected();
@@ -410,6 +417,7 @@ export const TraitsAside = () => {
                     !codeSettings.enableTemplateEngine &&
                     codeSettings.defaultLanguage == "html"
                   ) {
+                    sle.set({content:''});
                     sle.components(`${value}`);
                     // setSelectedValue(value);
                     setCodeSettings({
@@ -425,6 +433,7 @@ export const TraitsAside = () => {
                       value.trim().endsWith("`")
                     ) {
                       const newValue = value.trim().slice(1, -1);
+                      sle.set({content:''});
                       sle.components(newValue);
                       setCodeSettings({
                         ...codeSettings,
@@ -465,19 +474,12 @@ export const TraitsAside = () => {
                         const selectedCmp = editor.getSelected();
 
                         selectedCmp.set(prop, value);
-                        // console.log(
-                        //   "switch after set: ",
-                        //   selectedCmp.get(prop),
-                        //   selectedCmp.props()
-                        // );
+
                         selectedCmp.view.render();
                         editor.trigger("component:update", selectedCmp);
 
-                        // editor.refresh({tools:true});
-                        // const newCmp = selectedCmp.clone();
                         initToolbar(editor, selectedCmp);
-                        // selectedCmp.replaceWith(newCmp);
-                        // preventSelectNavigation(editor, newCmp);
+
                         editor.trigger(InfinitelyEvents.layers.update);
                         editor.trigger(
                           InfinitelyEvents.component.update_content,
@@ -491,7 +493,7 @@ export const TraitsAside = () => {
           </ul>
         </AccordionItem>
 
-        {!!traits.length && (
+        <ShowIf condition={Object.values(projectData || {}).length && traits.length}>
           <AccordionItem title={"Traits"} notify={notify.traits}>
             <ul
               ref={traitsAnimate}
@@ -531,6 +533,10 @@ export const TraitsAside = () => {
                       ? Boolean(trait?.showCallback?.(trait))
                       : Boolean(parse(trait?.showCallback?.(trait)))
                     : true;
+
+                    trait.keywords  = isFunction(trait.keywords) 
+                            ? projectData ? trait.keywords({ projectData }) : []
+                            : trait.keywords || []
 
                 return isShow ? (
                   <li
@@ -604,9 +610,7 @@ export const TraitsAside = () => {
                       <Select
                         placeholder={trait.placeholder || trait.label}
                         keywords={
-                          isFunction(trait.keywords)
-                            ? trait.keywords({ projectData })
-                            : trait.keywords || []
+                          trait.keywords
                         }
                         onBlur={(ev) => {
                           trait?.onBlur?.({
@@ -700,12 +704,11 @@ export const TraitsAside = () => {
                               });
                             }}
                             onBlur={(ev) => {
-                            trait?.onBlur?.({
-                              ...mainCallbackProps,
-                              newValue: ev.target.value,
-                              
-                            })
-                          }}
+                              trait?.onBlur?.({
+                                ...mainCallbackProps,
+                                newValue: ev.target.value,
+                              });
+                            }}
                             onEnterPress={(value) => {
                               const newVal = stringify({
                                 ...parse(trait.value || {}),
@@ -1002,7 +1005,7 @@ export const TraitsAside = () => {
               })}
             </ul>
           </AccordionItem>
-        )}
+        </ShowIf>
 
         <AccordionItem title={"Attributes"} notify={notify.elementAttributes}>
           <section className="p-1 flex flex-col gap-2 bg-surface-secondary rounded-lg">

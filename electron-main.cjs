@@ -52,6 +52,10 @@ async function createWindow() {
     },
   });
 
+  app.commandLine.appendSwitch('enable-gpu-rasterization');
+app.commandLine.appendSwitch('enable-zero-copy');
+app.commandLine.appendSwitch('ignore-gpu-blacklist');
+
   if (!app.isPackaged) {
     win.webContents.on("before-input-event", (event, input) => {
       if (

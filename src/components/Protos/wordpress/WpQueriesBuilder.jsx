@@ -405,16 +405,16 @@ export const WpQueriesBuilder = () => {
           !Object.keys(queries ?? {}).length && !currentQueryId && !loading
         }
       >
-        <section className="flex flex-col items-center justify-center gap-4 h-full   rounded-lg animate-to-go">
+        <section className="flex flex-col items-center justify-center gap-4 h-full px-5  rounded-lg animate-to-go">
           <h1 className="text-2xl font-bold  animate-pulse text-slate-200">
             No queries found
           </h1>
-          <section className="flex gap-2">
+          <section className="flex gap-2 w-full">
             <Input
               placeholder="Query name"
               value={newQueryName}
               onInput={(e) => setNewQueryName(e.target.value)}
-              className="text-center bg-surface-tertiary w-[min(300px,90%)]"
+              className="text-center bg-surface-tertiary w-full"
             />
             <SmallButton onClick={() => inputRef.current.click()}>
               <Icons.upload width="20" height="20" strokeColor="white" />
@@ -423,7 +423,7 @@ export const WpQueriesBuilder = () => {
             <input type="file" hidden ref={inputRef} onChange={upload} />
           </section>
           <Button
-            className="text-white bg-surface-tertiary hover:bg-brand-primary transition-colors"
+            className="text-white justify-center font-semibold bg-surface-tertiary hover:bg-brand-primary transition-colors w-full"
             onClick={addNewQuery}
           >
             Add query

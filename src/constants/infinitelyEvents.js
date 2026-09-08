@@ -33,6 +33,10 @@ export const InfinitelyEvents = {
     de_select: "infinitely:symbol:deselect",
   },
 
+  traits:{
+      start : "infinitely:traits:start",
+      end : "infinitely:traits:end"
+  },
   layers: {
     update: "infinitely:layers:update",
   },

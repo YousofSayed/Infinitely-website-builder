@@ -202,7 +202,7 @@ export const inf_ssr_traits = (editor) =>
       },
       showCallback(trait) {
         const sle = editor.getSelected();
-        const inf_ssr_method = sle.getTrait("inf-ssr-method").attributes?.value;
+        const inf_ssr_method = sle?.getTrait?.("inf-ssr-method")?.attributes?.value;
         return httpSetterMethods.includes(inf_ssr_method);
       },
     },

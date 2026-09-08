@@ -274,6 +274,10 @@ export const showComponentsInLeftPanelState = atom({
             show: false,
             title: "WordPress Queries Builder",
           },
+          wpConditionsBuilder:{
+            show: false,
+            title: "WordPress Conditions Builder",
+          }
         },
       },
     },
@@ -464,6 +468,11 @@ export const showWpTokensPickerState = atom({
 export const wpQueryState = atom({
   key: "wpQueryState",
   default: /** @type {import("@/helpers/types").WPQueryArgs} */ ({}),
+});
+
+export const wpCurrentConditionIdState = atom({
+  key: "wpCurrentConditionIdState",
+  default: '',
 });
 
 export const wpCurrentQueryIdState = atom({

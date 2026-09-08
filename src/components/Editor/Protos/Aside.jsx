@@ -3,31 +3,19 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import React, { useEffect, useRef, useState } from "react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 
-export const Aside = ({ children, className = "", dir = "left" , style }) => {
+export const Aside = ({ children, className = "", dir = "left", style }) => {
   const [parent] = useAutoAnimate();
-
 
   return (
     <aside
-    id="main-aside"
-
-    style={style}
+      id="main-aside"
+      style={style}
       ref={parent}
-      className={`${className}  relative backdrop-blur-lg  h-full  bg-surface-secondary p-2 flex flex-col   overflow-y-auto hideScrollBar`}
+      className={`  relative   h-full  bg-surface-secondary p-2    overflow-y-auto hideScrollBar  ${className}`}
     >
-      {/* <section id="" className="h-full w-full  flex flex-col gap-3  overflow-y-auto hideScrollBar">
+      <section className="relative h-full w-full overflow-y-auto flex flex-col hideScrollBar">
         {children}
-      </section> */}
-
-      {children}
-
-      {/* {!showCustomModal && (
-        <PanelResizeHandle
-          className={`flex  items-center justify-center opacity-0  hover:opacity-[1] select-none transition-all absolute w-[5px] h-full  top-0 ${
-            dir == "left" ? "left-0" : "right-0"
-          } bg-brand-primary cursor-col-resize`}
-        />
-      )} */}
+      </section>
     </aside>
   );
 };

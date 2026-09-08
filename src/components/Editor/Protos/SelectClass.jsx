@@ -260,7 +260,7 @@ export const SelectClass = () => {
 
   return (
     <section className="mt-3 flex flex-col gap-3 p-1 bg-surface-secondary rounded-lg">
-      <section className="flex gap-2">
+      <section className="flex gap-2" inf-tokens-container="true">
         <Select
           value={value}
           closeAfterPressEnter={false}

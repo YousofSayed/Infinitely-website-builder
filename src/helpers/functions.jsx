@@ -83,6 +83,7 @@ import {
   uniqueId,
   random as _random,
   cloneDeep,
+  isBoolean,
 } from "lodash";
 import serializeJavascript from "serialize-javascript";
 import { toast } from "react-toastify";
@@ -1904,27 +1905,42 @@ export function getGlobalSettings() {
   };
 }
 
-export function setProjectSettings() {
-  const projectSettingsLS = localStorage.getItem(project_settings);
-  if (
-    Object.keys(JSON.parse(projectSettingsLS || "{}")).toString() ==
-    Object.keys(projectSettingsType).toString()
-  )
-    return;
+export function setProjectSettings(settings, usePreviousValue = true) {
+  const projectSettingsLS = settings || localStorage.getItem(project_settings);
+  // if (
+  //   Object.values(JSON.parse(projectSettingsLS || "{}")).toString() ==
+  //   Object.values(projectSettingsType).toString()
+  // )
+  //   return;
   const news = {};
   let isChange = false;
   for (const key in projectSettingsType) {
     // if (!(key in news)) {
     // }
+    const value =
+      usePreviousValue ? isBoolean(JSON.parse(projectSettingsLS || "{}")?.[key]) ? JSON.parse(projectSettingsLS || "{}")?.[key] : projectSettingsType[key] : false;
+      
 
-    news[key] =
-      JSON.parse(projectSettingsLS || "{}")?.[key] || projectSettingsType[key];
-    console.log(key, news[key], projectSettingsType[key]);
+    news[key] = value;
+    console.log(
+      `storage setted key`,
+      isBoolean(JSON.parse(projectSettingsLS || "{}")?.[key]),
+      JSON.parse(projectSettingsLS || "{}")?.[key],
+      key,
+      news[key],
+      projectSettingsType[key],
+      value,
+    );
     isChange = true;
   }
 
   if (isChange) {
-    console.log("No storage setted yet!");
+    console.log(
+      "No storage setted yet!",
+      news,
+      "settings passed is : ",
+      settings,
+    );
     localStorage.setItem(project_settings, JSON.stringify(news));
   }
 }
@@ -1933,7 +1949,7 @@ export function setProjectSettings() {
  *
  */
 export function getProjectSettings() {
-  setProjectSettings();
+  // setProjectSettings();
   /**
    * @type {import('@/helpers/types').ProjectSetting}
    */
@@ -3972,7 +3988,6 @@ export function setTokensQueryVars(params, setMode = false) {
   } else {
     localStorage.setItem(wp_token_vars, JSON.stringify([...vars, ...params]));
   }
-  
 }
 
 /**

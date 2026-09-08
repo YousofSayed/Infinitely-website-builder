@@ -1,11 +1,38 @@
+type AllHTMLElements = HTMLElementTagNameMap[keyof HTMLElementTagNameMap] &
+  HTMLElement &
+  Element &
+  HTMLObjectElement;
+var $el: AllHTMLElements;
+var $event: GlobalEventHandlersEventMap[keyof GlobalEventHandlersEventMap];
 
-type AllHTMLElements =  HTMLElementTagNameMap[keyof HTMLElementTagNameMap] & HTMLElement & Element  & HTMLObjectElement
-var $el:AllHTMLElements;
-var $event :   GlobalEventHandlersEventMap[keyof GlobalEventHandlersEventMap];
-// var $root : AllHTMLElements;
-// var $store : {};
-// var $watch : (value: string , callback : (value: string)=>void)=>void
-// var $dispatch : (event : string)=>void
-// var $nextTick : (callback : ()=>void)=>void
-// var $data : {}
-// var $id : (id:string)=>string
+
+type CSSProperties = {
+  [K in keyof CSSStyleDeclaration as CSSStyleDeclaration[K] extends Function
+    ? never
+    : K]?: string | number;
+} & {
+  [key: `--${string}`]: string | number | undefined;
+};
+
+
+interface ExplicitKeyframes {
+  from?: CSSProperties;
+  to?: CSSProperties;
+  duration?: string | number;
+  easing?: string;
+}
+
+
+interface InlineKeyframes extends CSSProperties {
+  to?: CSSProperties;
+  duration?: string | number;
+  easing?: string;
+}
+
+type AnimationObject = ExplicitKeyframes | InlineKeyframes;
+
+type AnimationValue = string | AnimationObject;
+
+
+/** @type {AnimationValue} */
+const lol = {};

@@ -36,19 +36,10 @@ import React, { memo, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { Tooltip } from "react-tooltip";
 import { useRecoilValue } from "recoil";
+import { ShowIf } from "../ShowIf";
 
-// 
-// 
-
-
-
-
-
-
-
-
-
-
+//
+//
 
 export const Commands = () => {
   const editor = useEditorMaybe();
@@ -79,13 +70,13 @@ export const Commands = () => {
     Object.entries(editor?.getSelected?.()?.getAttributes()).forEach(
       ([key, value]) => {
         key.startsWith("v-") && !value && sle.removeAttributes(key);
-      }
+      },
     );
     const selectedAttributes = editor?.getSelected?.()?.getAttributes() || {};
     setSelectedAttributes(selectedAttributes);
     setCustomDirectives({
       ...customDirevtives,
-      'v-if': selectedAttributes['v-if'],
+      "v-if": selectedAttributes["v-if"],
       "v-for": {
         ...(parseForDirective(selectedAttributes["v-for"]) || {}),
       },
@@ -101,7 +92,7 @@ export const Commands = () => {
       setSelectedAttributes(selectedAttributes);
       setCustomDirectives({
         ...customDirevtives,
-        'v-if': selectedAttributes['v-if'],
+        "v-if": selectedAttributes["v-if"],
         "v-for": {
           ...(parseForDirective(selectedAttributes["v-for"]) || {}),
         },
@@ -179,7 +170,7 @@ export const Commands = () => {
   const removeModifier = (modifier = "", i) => {
     const clone = cloneDeep(cmds);
     clone[i].selectedModifiers = clone[i].selectedModifiers.filter(
-      (key) => key.toLowerCase() != modifier
+      (key) => key.toLowerCase() != modifier,
     );
     setCmds(clone);
     return clone;
@@ -203,7 +194,7 @@ export const Commands = () => {
           {
             [directive]: value,
           },
-          { avoidStore: true }
+          { avoidStore: true },
         );
       }
       // editor.trigger(InfinitelyEvents.directives.update);
@@ -214,7 +205,7 @@ export const Commands = () => {
           `${InfinitelyEvents.symbols.update}:${symbolInfo.mainId}`,
           symbolInfo.mainId,
           sle,
-          JSON.stringify(symbolInfo.symbol)
+          JSON.stringify(symbolInfo.symbol),
         );
       }
       // editor.store();
@@ -236,7 +227,7 @@ export const Commands = () => {
     mEditor,
     suffixes,
     value = "",
-    isSetValue = true
+    isSetValue = true,
   ) => {
     console.log("suffixes from : ", suffixes);
     console.log("new Val before: ", value);
@@ -247,17 +238,18 @@ export const Commands = () => {
         if (value.startsWith("(")) value = value.slice(1);
         if (value.endsWith(")")) value = value.slice(0, -1);
       }
-
-      const newVal = `(${value?.replace(/\(|\)/gi, "") || `{\n\n}`})`;
+      //?.replace(/\(|\)/gi, "")
+      const newVal = `(${value || `{\n\n}`})`;
       isSetValue && mEditor.setValue(newVal);
       return newVal;
     } else if (suffixes?.includes?.("style")) {
       const newVal = `
                                   ${setType("CSSStyleDeclaration")}
-                                  ${isStartsAndEndsWithParens(value)
-          ? value
-          : (value && `(${value})`) || `({\n\n})`
-        }`;
+                                  ${
+                                    isStartsAndEndsWithParens(value)
+                                      ? value
+                                      : (value && `(${value})`) || `({\n\n})`
+                                  }`;
       isSetValue && mEditor.setValue(newVal);
       return newVal;
     } else {
@@ -275,7 +267,7 @@ export const Commands = () => {
       return;
     }
     const newArr = cmds.filter(
-      (cmd) => cmd.directive.includes(value) || cmd.name.includes(value)
+      (cmd) => cmd.directive.includes(value) || cmd.name.includes(value),
     );
     setCmds(newArr);
   };
@@ -336,7 +328,7 @@ export const Commands = () => {
                     language: "javascript",
                     onMount(mEditor) {
                       mEditor.setValue(
-                        js_beautify(customDirevtives["v-for"]?.array || "")
+                        js_beautify(customDirevtives["v-for"]?.array || ""),
                       );
                     },
                     onChange(value) {
@@ -353,7 +345,7 @@ export const Commands = () => {
                         !customDirevtives["v-for"].index
                       ) {
                         toast.warn(
-                          <ToastMsgInfo msg={`Fill all fields please`} />
+                          <ToastMsgInfo msg={`Fill all fields please`} />,
                         );
                         return;
                       }
@@ -372,11 +364,16 @@ export const Commands = () => {
                       //     "v-for"
                       //   );
                       // }
-                      console.log('update code v-for',`(${customDirevtives["v-for"].varName} , ${customDirevtives["v-for"].index}) in ${value}`.match(/^\(\s*(\w+)\s*,\s*(\w+)\s*\)\s+in\s+(.+)?$/));
-                      
+                      console.log(
+                        "update code v-for",
+                        `(${customDirevtives["v-for"].varName} , ${customDirevtives["v-for"].index}) in ${value}`.match(
+                          /^\(\s*(\w+)\s*,\s*(\w+)\s*\)\s+in\s+(.+)?$/,
+                        ),
+                      );
+
                       handleAddingAttributes(
                         `(${customDirevtives["v-for"].varName} , ${customDirevtives["v-for"].index}) in ${value}`,
-                        "v-for"
+                        "v-for",
                       );
                     },
                   }}
@@ -446,14 +443,15 @@ export const Commands = () => {
                 title={cmd.name}
                 notify={Boolean(
                   Object.keys(selectedAttributes).some((dv) =>
-                    dv.startsWith(cmd.directive)
-                  )
+                    dv.startsWith(cmd.directive),
+                  ),
                 )}
                 key={i}
-                className={`${Object.keys(selectedAttributes).includes(cmd.directive)
+                className={`${
+                  Object.keys(selectedAttributes).includes(cmd.directive)
                     ? "border-l-2 border-l-blue-600"
                     : ""
-                  }`}
+                }`}
               >
                 {cmd.type == "object" && (
                   <section className="flex gap-2 mt-2">
@@ -464,7 +462,7 @@ export const Commands = () => {
                       value={
                         getDirectiveContext(
                           selectedAttributes,
-                          cmd.directive
+                          cmd.directive,
                         )?.[cmd.directive]?.value
                       }
                       placeholder="Code..."
@@ -473,16 +471,17 @@ export const Commands = () => {
                         value: (() => {
                           const attrVal = getDirectiveContext(
                             selectedAttributes,
-                            cmd.directive
+                            cmd.directive,
                           )?.[cmd.directive]?.value;
 
                           const formatedVal = js_beautify(
-                            `(${attrVal && isStartsAndEndsWithParens(attrVal)
-                              ? attrVal
-                              : `{
+                            `(${
+                              attrVal && isStartsAndEndsWithParens(attrVal)
+                                ? attrVal
+                                : `{
                           
                           }`
-                            })`
+                            })`,
                           );
 
                           console.log(formatedVal);
@@ -498,9 +497,9 @@ export const Commands = () => {
                           // }, 300);
                           if (!value) {
                             cmd.callback({
-                              value: '',
+                              value: "",
                               editor,
-                            })
+                            });
                             return;
                           }
 
@@ -508,29 +507,31 @@ export const Commands = () => {
                             value: isStartsAndEndsWithParens(value)
                               ? objectSplitter(value)
                               : objectSplitter(
-                                js_beautify(
-                                  `(${value ||
-                                  `{
+                                  js_beautify(
+                                    `(${
+                                      value ||
+                                      `{
                           
                           }`
-                                  })`
-                                )
-                              ),
+                                    })`,
+                                  ),
+                                ),
                             editor,
                           });
                         },
                         onMount(monacEditor) {
                           monacEditor.setValue(
                             js_beautify(
-                              `(${getDirectiveContext(
-                                selectedAttributes,
-                                cmd.directive
-                              )?.[cmd.directive]?.value ||
-                              `{
+                              `(${
+                                getDirectiveContext(
+                                  selectedAttributes,
+                                  cmd.directive,
+                                )?.[cmd.directive]?.value ||
+                                `{
                           
                           }`
-                              })`
-                            )
+                              })`,
+                            ),
                           );
                           monacEditor.setPosition({
                             lineNumber: 3, // Line 3 (1-based: "`" is line 1, empty line is line 2, "here" is line 3)
@@ -559,15 +560,16 @@ export const Commands = () => {
                       value={
                         getDirectiveContext(
                           selectedAttributes,
-                          cmd.directive
+                          cmd.directive,
                         )?.[cmd.directive]?.value
                       }
                       codeProps={{
-                        value: `${getDirectiveContext(
-                          selectedAttributes,
-                          cmd.directive
-                        )?.[cmd.directive]?.value || ""
-                          }`,
+                        value: `${
+                          getDirectiveContext(
+                            selectedAttributes,
+                            cmd.directive,
+                          )?.[cmd.directive]?.value || ""
+                        }`,
                         language: cmd.codeLang ? cmd.codeLang : "javascript",
                         onChange(value) {
                           // typingTimeout.current &&
@@ -586,12 +588,13 @@ export const Commands = () => {
                         onMount(mEditor) {
                           mEditor.setValue(
                             js_beautify(
-                              `${getDirectiveContext(
-                                selectedAttributes,
-                                cmd.directive
-                              )?.[cmd.directive]?.value || ""
-                              }`
-                            )
+                              `${
+                                getDirectiveContext(
+                                  selectedAttributes,
+                                  cmd.directive,
+                                )?.[cmd.directive]?.value || ""
+                              }`,
+                            ),
                           );
                           mEditor.setPosition({
                             lineNumber: 3, // Line 3 (1-based: "`" is line 1, empty line is line 2, "here" is line 3)
@@ -616,8 +619,8 @@ export const Commands = () => {
                       defaultValue={parse(
                         getDirectiveContext(
                           selectedAttributes,
-                          cmd.directive
-                        )?.[cmd.directive]?.value
+                          cmd.directive,
+                        )?.[cmd.directive]?.value,
                       )}
                       onActive={() => {
                         cmd.callback({
@@ -635,43 +638,48 @@ export const Commands = () => {
                   </section>
                 )}
 
-                {cmd.type == "multi" && (
+                {(cmd.type == "multi" || cmd.type == "multi-once") && (
                   <section className="flex flex-col gap-2  p-1 bg-surface-secondary rounded-lg">
-                    <FitTitle>Suffix</FitTitle>
-                    <Select
-                      // label="Suffix"
-                      keywords={cmd.keywordsForMulti}
-                      placeholder={isRequired(
-                        "Add Suffix",
-                        cmd.isSuffixRequired
-                      )}
-                      value={cmd.suffixValue}
-                      onAll={(value) => {
-                        addSuffixValue(value, i);
-                      }}
-                    />
-                    <FitTitle>Modifiers</FitTitle>
-                    <section className="flex gap-2 ">
+                    <ShowIf condition={cmd.keywordsForMulti?.length}>
+                      <FitTitle>Suffix</FitTitle>
                       <Select
-                        // label="modifier"
-                        keywords={cmd.modifiers}
+                        // label="Suffix"
+                        keywords={cmd.keywordsForMulti}
                         placeholder={isRequired(
-                          "Add Modifier",
-                          cmd.isModifiersRequired
+                          "Add Suffix",
+                          cmd.isSuffixRequired,
                         )}
-                        value={cmd.modifierValue}
+                        value={cmd.suffixValue}
                         onAll={(value) => {
-                          addModifierValue(value, i);
+                          addSuffixValue(value, i);
                         }}
                       />
-                      <SmallButton
-                        onClick={(ev) => {
-                          addModifier(cmd.modifierValue, i);
-                        }}
-                      >
-                        {Icons.plus("white")}
-                      </SmallButton>
-                    </section>
+                    </ShowIf>
+
+                    <ShowIf condition={cmd.modifiers?.length}>
+                      <FitTitle>Modifiers</FitTitle>
+                      <section className="flex gap-2 ">
+                        <Select
+                          // label="modifier"
+                          keywords={cmd.modifiers}
+                          placeholder={isRequired(
+                            "Add Modifier",
+                            cmd.isModifiersRequired,
+                          )}
+                          value={cmd.modifierValue}
+                          onAll={(value) => {
+                            addModifierValue(value, i);
+                          }}
+                        />
+                        <SmallButton
+                          onClick={(ev) => {
+                            addModifier(cmd.modifierValue, i);
+                          }}
+                        >
+                          {Icons.plus("white")}
+                        </SmallButton>
+                      </section>
+                    </ShowIf>
 
                     {cmd?.selectedModifiers &&
                       !!cmd.selectedModifiers.length && (
@@ -688,7 +696,7 @@ export const Commands = () => {
                       <Input
                         placeholder={isRequired(
                           "Add Value",
-                          cmd.isValueRequired
+                          cmd.isValueRequired,
                         )}
                         className="bg-surface-tertiary py-3"
                         value={cmd.value}
@@ -706,7 +714,7 @@ export const Commands = () => {
                         allowRestAPIModelsContext
                         placeholder={isRequired(
                           "Add Value",
-                          cmd.isValueRequired
+                          cmd.isValueRequired,
                         )}
                         codeProps={{
                           value: cmd.value,
@@ -718,7 +726,7 @@ export const Commands = () => {
                             handleStyleAndClassAttributes(
                               mEditor,
                               cmd.suffixValue,
-                              cmd.value
+                              cmd.value,
                             );
                           },
                         }}
@@ -731,7 +739,7 @@ export const Commands = () => {
                         value={cmd.value}
                         placeholder={isRequired(
                           "Add Value",
-                          cmd.isValueRequired
+                          cmd.isValueRequired,
                         )}
                         onAll={(value) => {
                           addValue(value, i);
@@ -749,22 +757,42 @@ export const Commands = () => {
                           cmd.isModifiersRequired &&
                           !cmd.selectedModifiers &&
                           !cmd.selectedModifiers.length;
+
                         if (isValue || isSuffix || ismodifiers) {
                           toast.error(
                             <ToastMsgInfo
                               msg={`Please fill all required fields`}
-                            />
+                            />,
                           );
                           return;
                         }
                         console.log("suffix : ", cmd.suffixValue);
                         try {
+                          const obj = getDirectiveContext(
+                            selectedAttributes,
+                            cmd.directive,
+                          );
+                          if(cmd.type == "multi-once" && obj && Object.keys(obj).length){
+                            const clone = cloneDeep(cmds);
+                            clone[i].suffixValue = "";
+                            clone[i].selectedModifiers = [];
+                            clone[i].value = "";
+                            clone[i].modifierValue = "";
+                            setCmds(clone);
+                            toast.warn(
+                              <ToastMsgInfo
+                                msg={`This directive can be added only once`}
+                              />,
+                            );
+                            return;
+                          }
+
                           cmd.callback({
                             editor,
                             value:
                               cmd.nestedMaybeObjectModel &&
-                                (cmd.suffixValue == "class" ||
-                                  cmd.suffixValue == "style")
+                              (cmd.suffixValue == "class" ||
+                                cmd.suffixValue == "style")
                                 ? objectSplitter(cmd.value)
                                 : cmd.value,
                             suffix: cmd.suffixValue,
@@ -795,11 +823,11 @@ export const Commands = () => {
 
                     {/* childs  */}
                     {Object.keys(
-                      getDirectiveContext(selectedAttributes, cmd.directive)
+                      getDirectiveContext(selectedAttributes, cmd.directive),
                     ).map((key, x) => {
                       const obj = getDirectiveContext(
                         selectedAttributes,
-                        cmd.directive
+                        cmd.directive,
                       );
                       console.log("nested : ", cmd);
 
@@ -872,7 +900,7 @@ export const Commands = () => {
                                     undefined,
                                     obj?.[key]?.suffixes,
                                     obj?.[key]?.value,
-                                    false
+                                    false,
                                   ),
                                   language: cmd.nestedCodeLang || "text",
                                   onChange(value) {
@@ -882,40 +910,64 @@ export const Commands = () => {
                                     //   console.log("dsa", obj, key);
 
                                     // }, 50);
-                                    console.log("vaaaaaaaaaaaaaaaaalls", value);
+                                    console.log(
+                                      "vaaaaaaaaaaaaaaaaalls",
+                                      (() => {
+                                        const clearedValue =
+                                          clearCommnets(value);
+                                        console.log(
+                                          "valo : ",
+                                          value,
+                                          objectSplitter(value),
+                                        );
+
+                                        if (
+                                          clearedValue.startsWith(`(`) &&
+                                          clearedValue.endsWith(`)`)
+                                        ) {
+                                          return objectSplitter(value) || value;
+                                        } else {
+                                          return value;
+                                        }
+                                      })(),
+                                    );
                                     cmd.nestedCallback({
                                       editor,
                                       targetAttribute: key,
                                       value: cmd.nestedMaybeObjectModel
                                         ? (() => {
-                                          const clearedValue =
-                                            clearCommnets(value);
-                                          console.log("valo : ", value);
-
-                                          if (
-                                            clearedValue.startsWith(`(`) &&
-                                            clearedValue.endsWith(`)`)
-                                          ) {
-                                            return (
-                                              objectSplitter(value) || value
+                                            const clearedValue =
+                                              clearCommnets(value);
+                                            console.log(
+                                              "valo : ",
+                                              value,
+                                              objectSplitter(value),
                                             );
-                                          } else {
-                                            return value;
-                                          }
-                                        })()
+
+                                            if (
+                                              clearedValue.startsWith(`(`) &&
+                                              clearedValue.endsWith(`)`)
+                                            ) {
+                                              return (
+                                                objectSplitter(value) || value
+                                              );
+                                            } else {
+                                              return value;
+                                            }
+                                          })()
                                         : value,
                                     });
                                   },
                                   onMount(mEditor) {
                                     console.log(
                                       "obj[key].value",
-                                      obj[key].value
+                                      obj[key].value,
                                     );
 
                                     handleStyleAndClassAttributes(
                                       mEditor,
                                       obj?.[key]?.suffixes,
-                                      obj?.[key]?.value
+                                      obj?.[key]?.value,
                                     );
                                   },
                                 }}

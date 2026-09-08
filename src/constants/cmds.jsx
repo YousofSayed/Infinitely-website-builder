@@ -81,7 +81,7 @@ const defaultDirectiveCallback = async ({
 };
 
 /**
- * @type {import('@/helpers/types').Directive[]}
+ * @type {import('@/helpers/types').Directive[]} 
  */
 export const directives = [
   {
@@ -301,9 +301,25 @@ export const directives = [
     },
   },
 
-  // {
-  //   directive: "x-modelable",
-  //   name: "modelable",
+    {
+    directive: "v-auto-animate",
+    name: "in", // Fixed from "modelable"
+    id: uniqueID(),
+    type: "code",
+    preventDefault: false,
+    callback({ editor, value, callback }) {
+      defaultDirectiveCallback({
+        editor,
+        directive: this.directive,
+        value,
+        preventDefault: this.preventDefault,
+        callback,
+      });
+    },
+  },
+  //   {
+  //   directive: "v-gsap-in",
+  //   name: "in", // Fixed from "modelable"
   //   id: uniqueID(),
   //   type: "code",
   //   preventDefault: false,
@@ -317,47 +333,66 @@ export const directives = [
   //     });
   //   },
   // },
-
   // {
-  //   directive: "x-transition",
-  //   name: "transition",
-  //   type: "multi",
-  //   suffixes: alpineTransition,
-  //   modifiers: alpineTransitionModifiers,
-  //   valueInputType:'code',
-  //   codeLang:'text',
-  //   nestedInputType: "code",
-  //   nestedCodeLang: "text",
-  //   // isModifiersRequired:false,
-  //   // isSuffixRequired:false,
-  //   // isValueRequired:false,
-  //   // preventDefault:false,
-  //   callback({ editor, suffix, modifiers, value, callback }) {
+  //   directive: "v-gsap-out",
+  //   name: "out",
+  //   id: uniqueID(),
+  //   type: "code",
+  //   preventDefault: false,
+  //   callback({ editor, value, callback }) {
   //     defaultDirectiveCallback({
   //       editor,
   //       directive: this.directive,
   //       value,
-  //       suffix,
+  //       preventDefault: this.preventDefault,
+  //       callback,
+  //     });
+  //   },
+  // },
+  // {
+  //   directive: "v-animated-if",
+  //   name: "animated-if",
+  //   id: uniqueID(),
+  //   type: "multi-once",
+  //   modifiers: ["appear"], // Supports .appear modifier
+  //   preventDefault: false,
+  //   valueInputType: "code",
+  //   codeLang: "javascript",
+  //   nestedInputType: "code",
+  //   nestedCodeLang: "javascript",
+  //   callback({ editor, value, modifiers, callback }) {
+  //     defaultDirectiveCallback({
+  //       editor,
+  //       directive: this.directive,
+  //       value,
   //       modifiers,
   //       preventDefault: this.preventDefault,
   //       callback,
   //     });
   //   },
-  //   nestedCallback({ editor, targetAttribute, value, callback }) {
-  //     if (!this.preventNestedDefault) {
-  //       const sle = editor.getSelected();
-  //       sle.addAttributes({ [targetAttribute]: value });
-  //       editor.trigger(InfinitelyEvents.directives.update)
-  //     }
-  //     callback?.();
-  //   },
   // },
-
   // {
-  //   directive: "x-id",
-  //   name: "id",
+  //   directive: "v-animated-for",
+  //   name: "animated-for",
   //   id: uniqueID(),
   //   type: "code",
+  //   preventDefault: false,
+  //   callback({ editor, value, callback }) {
+  //     defaultDirectiveCallback({
+  //       editor,
+  //       directive: this.directive,
+  //       value,
+  //       preventDefault: this.preventDefault,
+  //       callback,
+  //     });
+  //   },
+  // },
+  // {
+  //   directive: "v-stagger",
+  //   name: "stagger",
+  //   id: uniqueID(),
+  //   type: "code", // Accepts numbers like 50, 100
+  //   preventDefault: false,
   //   callback({ editor, value, callback }) {
   //     defaultDirectiveCallback({
   //       editor,

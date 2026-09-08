@@ -7,8 +7,12 @@ import {
   current_symbol_id,
   current_symbol_rule,
   current_template_id,
+  DEV_SCRIPT_DEFINITIONS,
+  DEV_STYLE_DEFINITIONS,
   inf_symbol_Id_attribute,
   mainScriptsForEditor,
+  SCRIPT_DEFINITIONS,
+  STYLE_DEFINITIONS,
 } from "@/constants/shared";
 import { defineRoot, getPageURLException } from "@/helpers/bridge";
 import { changePageName } from "@/helpers/customEvents";
@@ -28,19 +32,14 @@ import { opfs } from "@/helpers/initOpfs";
 import { initDBAssetsSw } from "@/serviceWorkers/initDBAssets-sw";
 import { updateThumbnailTimeout } from "@/plugins/updateProjectThumbnail";
 import { minify } from "csso";
-import { isFunction } from "lodash";
+import { isBoolean, isFunction, isPlainObject } from "lodash";
 import { toast } from "react-toastify";
 
-// 
+//
 
-// 
+//
 
-
-
-
-
-
-// 
+//
 
 let loadFooterScriptsCallback, loadHeadScriptsCallback, loadMainScriptsCallback;
 let storeTimeout;
@@ -53,7 +52,7 @@ let currentPageName = localStorage.getItem(current_page_id);
  * @param {import('grapesjs').Editor} editor
  * @param {import('@/helpers/types').Project} projectData
  */
-const attrsCallback = (editor, projectData) => { 
+const attrsCallback = (editor, projectData) => {
   const { projectSettings } = getProjectSettings();
   editor.Storage.setAutosave(false);
 
@@ -64,20 +63,20 @@ const attrsCallback = (editor, projectData) => {
   // const body = ev.window.document.body;
   const currentPageId = localStorage.getItem(current_page_id);
   const attributesAsEntries = Object.entries(
-    projectData.pages[`${currentPageId}`].bodyAttributes || {}
+    projectData.pages[`${currentPageId}`].bodyAttributes || {},
   );
 
   const vAttributesFilterd = attributesAsEntries.filter(
-    ([key, value]) => key.startsWith("v-") && value
+    ([key, value]) => key.startsWith("v-") && value,
   );
 
   const otherAttributes = attributesAsEntries.filter(
-    ([key, value]) => !key.startsWith("v-")
+    ([key, value]) => !key.startsWith("v-"),
   );
 
   // editor.getWrapper().setClass("");
   const attributes = Object.fromEntries(
-    vAttributesFilterd.concat(otherAttributes)
+    vAttributesFilterd.concat(otherAttributes),
   );
   delete attributes["id"];
   if (projectSettings.stop_all_animation_on_page) {
@@ -128,8 +127,8 @@ async function getAllSymbolsStyles() {
         .filter((block) => block.pathes.style)
         .map(
           async (symbol) =>
-            await (await opfs.getFile(defineRoot(symbol.pathes.style))).text()
-        )
+            await (await opfs.getFile(defineRoot(symbol.pathes.style))).text(),
+        ),
     )
   ).join("\n");
 
@@ -143,7 +142,7 @@ async function getAllSymbolsStyles() {
  */
 export const loadElements = async (
   editor,
-  { justSendToWorker = false, onSend = (response = [], styles) => {} }
+  { justSendToWorker = false, onSend = (response = [], styles) => {} },
 ) => {
   editor.Components.clear({});
   editor.DomComponents.clear({});
@@ -187,7 +186,7 @@ export const loadElements = async (
       ${cssStyles}
       ${allSymbolsStyle}
         `,
-      { restructure: false }
+      { restructure: false },
     ).css;
     // editor.setStyle(cssCode);
     // console.log('style : ',editor.getCss());
@@ -203,7 +202,7 @@ export const loadElements = async (
           (props) => {
             props.response && res([...props.response]);
             !props.response && rej([]);
-          }
+          },
         );
 
         infinitelyWorker.postMessage({
@@ -248,10 +247,10 @@ export const loadElements = async (
             res(props);
             onSend(
               [renderCssStyles(editor, cssCode), ...props.response],
-              cssCode
+              cssCode,
             );
             editor.on("component:remove:before", editor.removerBeforeHandler);
-          }
+          },
         );
 
         infinitelyWorker.postMessage({
@@ -288,7 +287,7 @@ export const loadElements = async (
   };
 
   [current_symbol_rule, current_symbol_id, current_template_id].forEach(
-    (item) => sessionStorage.removeItem(item)
+    (item) => sessionStorage.removeItem(item),
   );
 
   return await loadCurrentPage();
@@ -299,8 +298,8 @@ export const loadElements = async (
  * @param {import('grapesjs').Editor} editor
  */
 export const IDB = (editor) => {
-  console.log('IDB.js Fired');
-  
+  console.log("IDB.js Fired");
+
   const projectID = localStorage.getItem(current_project_id);
   const mainCreateObjectURLMethod = URL.createObjectURL;
   const willRevokedURLs = new Map();
@@ -324,7 +323,7 @@ export const IDB = (editor) => {
       storeTimeout,
       appenderTimeout,
       screenshotTimout,
-      updateThumbnailTimeout
+      updateThumbnailTimeout,
     );
 
     initSymbolTimout && clearTimeout(initSymbolTimout);
@@ -351,7 +350,6 @@ export const IDB = (editor) => {
     }
   });
 
-
   editor.Storage.add("infinitely", {
     async load(options = {}) {
       console.log("loading options : ", options);
@@ -364,11 +362,11 @@ export const IDB = (editor) => {
         console.log(
           "loading state : ",
           editor.infLoading,
-          editor.getDirtyCount.toString()
+          editor.getDirtyCount.toString(),
         );
 
         const cnfrm = confirm(
-          `There is changes not saved and you lost it after reload , Are you want to save changes ? `
+          `There is changes not saved and you lost it after reload , Are you want to save changes ? `,
         );
 
         if (cnfrm) {
@@ -397,7 +395,7 @@ export const IDB = (editor) => {
       //   const css = editor.getCss({ avoidProtected: true });
       //   editor.setStyle(css); // Forces reordering
       // });
-      
+
       return;
     },
 
@@ -416,7 +414,7 @@ export const IDB = (editor) => {
           const runStore = async () => {
             // console.log(
             //   "prrrrrrrrrrrrops from store : ",
-            //   storeProps, 
+            //   storeProps,
             //   editor.infLoading
             // );
             const projectSettings = getProjectSettings().projectSettings;
@@ -506,8 +504,8 @@ export const IDB = (editor) => {
                   ...editor.Canvas.getDocument().head.querySelectorAll("style"),
                 ].find((style) =>
                   style.innerHTML.includes(
-                    "MIT License | https://tailwindcss.com"
-                  )
+                    "MIT License | https://tailwindcss.com",
+                  ),
                 );
                 tailwindcssStyle = tailwindStyle?.innerHTML || "";
               }
@@ -527,11 +525,11 @@ export const IDB = (editor) => {
                               .map((attrName) => [
                                 attrName,
                                 wrapperEl.getAttribute(attrName),
-                              ])
+                              ]),
                           )
                         : (() => {
                             alert(
-                              `There is problem when save wrapper attributes😩`
+                              `There is problem when save wrapper attributes😩`,
                             );
                             return {};
                           })(),
@@ -540,7 +538,7 @@ export const IDB = (editor) => {
                         .getWrapper()
                         .find(`[${inf_symbol_Id_attribute}]`) || []
                     ).map(
-                      (cmp) => cmp.getAttributes()[inf_symbol_Id_attribute]
+                      (cmp) => cmp.getAttributes()[inf_symbol_Id_attribute],
                     ),
                   },
                 },
@@ -557,7 +555,7 @@ export const IDB = (editor) => {
                 "from store",
                 currentPageName,
                 `editor/pages/${currentPageId}.html`,
-                editor.getWrapper().getInnerHTML({ withProps: true })
+                editor.getWrapper().getInnerHTML({ withProps: true }),
               );
 
               const propsData = {
@@ -601,7 +599,7 @@ export const IDB = (editor) => {
                 ) {
                   infinitelyWorker.removeEventListener(
                     "message",
-                    onWorkerMessage
+                    onWorkerMessage,
                   );
 
                   // if (currentSymbolId) {
@@ -628,7 +626,7 @@ export const IDB = (editor) => {
                   if (!projectSettings.enable_auto_save) {
                     toast.done(tId);
                     toast.success(
-                      <ToastMsgInfo msg={`Project saved successfully👍`} />
+                      <ToastMsgInfo msg={`Project saved successfully👍`} />,
                     );
                   }
 
@@ -671,7 +669,7 @@ export const IDB = (editor) => {
           // }
           runStore();
         },
-        getProjectSettings().projectSettings?.enable_auto_save ? 700 : 0
+        getProjectSettings().projectSettings?.enable_auto_save ? 700 : 0,
       );
       // });
 
@@ -703,6 +701,18 @@ export const renderCssStyles = (editor, cssCode) => {
 export const loadScripts = async (editor, projectData) => {
   const currentPageName = localStorage.getItem(current_page_id);
   const { projectSettings, set } = getProjectSettings();
+
+  // Inject editor styles
+  for (const styleDef of STYLE_DEFINITIONS.concat(DEV_STYLE_DEFINITIONS)) {
+    if (isFunction(styleDef.condition) && !styleDef.condition(projectSettings))
+      continue;
+    editor.config.canvas.styles.push({
+      name: styleDef.name,
+      href: styleDef.localUrl,
+      rel: "stylesheet",
+    });
+  }
+
   /**
    *
    * @param {{type:'styles' | 'scripts' , attributes:{name:string} , condition:boolean }} param0
@@ -711,7 +721,7 @@ export const loadScripts = async (editor, projectData) => {
   const appendToHeader = ({ type = "", attributes = {}, condition = true }) => {
     if (!type) return;
     const isExist = editor.config.canvas[type].findIndex(
-      (lib) => lib && typeof lib != "string" && lib?.name == attributes.name
+      (lib) => lib && typeof lib != "string" && lib?.name == attributes.name,
     );
     if (isExist == -1 && condition) {
       editor.config.canvas[type].push(attributes);
@@ -770,13 +780,6 @@ export const loadScripts = async (editor, projectData) => {
 
     jsHeaderLibs.forEach((lib) => {
       const libData = getJsLib(lib);
-      // head.appendChild(libData);
-
-      // const isExist = editor.config.canvas.scripts.filter(
-      //   (existLib) =>
-      //     existLib && existLib.name.toLowerCase() == libData.name.toLowerCase()
-      // ).length;
-      // !isExist && editor.config.canvas.scripts.push(libData);
 
       appendToHeader({
         type: "scripts",
@@ -790,16 +793,6 @@ export const loadScripts = async (editor, projectData) => {
         return lib;
       }
       const libData = getCssLib(lib);
-      // const isExist = editor.config.canvas.styles.find(
-      //   (lib) =>
-      //     typeof lib != "string" &&
-      //     lib.name.toLowerCase() == libData.libData.name.toLowerCase()
-      // );
-      // !isExist &&
-      //   editor.config.canvas.styles.push({
-      //     href: libData.url,
-      //     name: libData.libData.name,
-      //   });
 
       appendToHeader({
         type: "styles",
@@ -808,18 +801,7 @@ export const loadScripts = async (editor, projectData) => {
           name: libData.libData.name,
         },
       });
-      // console.log(`Libbbbbbbbbbbbbbb@@#: `, libData);
     });
-
-    //For Global Css
-    // const globalCss = editor.config.canvas.styles.find(
-    //   (lib) => lib && typeof lib != "string" && lib?.name == "global-css"
-    // );
-    // !globalCss &&
-    //   editor.config.canvas.styles.push({
-    //     href: `/global/global.css`,
-    //     name: "global-css",
-    //   });
 
     appendToHeader({
       type: "styles",
@@ -848,16 +830,6 @@ export const loadScripts = async (editor, projectData) => {
       },
       condition: !projectSetting.enable_tailwind,
     });
-
-    // appendToHeader({
-    //   type: "scripts",
-    //   attributes: {
-    //     src: `https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js`,
-    //     name: "spline-viewer.js",
-    //     type: "module",
-    //   },
-    //   condition: projectSetting.enable_spline_viewer,
-    // });
 
     appendToHeader({
       type: "styles",
@@ -916,7 +888,7 @@ export const loadScripts = async (editor, projectData) => {
     const appendScript = async (
       array = [],
       index = 0,
-      callback = (script, lib) => {}
+      callback = (script, lib) => {},
     ) => {
       if (index > array.length - 1) return true;
       const script = document.createElement("script");
@@ -960,7 +932,7 @@ export const loadScripts = async (editor, projectData) => {
       } catch (err) {
         console.error(
           `Unexpected error in appendScript for ${script.src}:`,
-          err
+          err,
         );
         return await appendScript(array, index + 1, callback); // Continue on error
       }
@@ -983,72 +955,95 @@ export const loadScripts = async (editor, projectData) => {
       script.src = lib;
     });
 
-    await appendScript(mainScriptsForEditor, 0, (script, lib) => {
-      script.src = lib;
-    });
+    for (const scriptDef of SCRIPT_DEFINITIONS) {
+      if (
+        isFunction(scriptDef.condition) &&
+        !scriptDef.condition(projectSettings)
+      )
+        continue;
+      if (isBoolean(scriptDef.is_dev) && !scriptDef.is_dev) continue;
 
-    projectSettings.enable_spline_viewer &&
-      (await appendScript(
-        [`https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js`],
-        0,
-        (script, lib) => {
-          script.src = lib;
-          script.type = "module";
-          script.setAttribute("name", "spline-viewer.js");
-        }
-      ));
-
-    projectSettings.enable_swiperjs &&
-      (await appendScript(
-        [
-          "https://cdn.jsdelivr.net/npm/swiper@latest/swiper-bundle.min.js",
-          "https://cdn.jsdelivr.net/npm/swiper@latest/swiper-element-bundle.min.js",
-        ],
-        0,
-        (script, lib) => {
-          script.src = lib;
-        }
-      ));
-
-      (await appendScript(
-        [
-          `${currentPageName === 'index' ? `./js/` : `../js/` }${currentPageName}.js`,
-        ],
-        0,
-        (script, lib) => {
-          script.src = lib;
-        }
-      ));
-
-    !projectSettings.disable_will_change_in_editor &&
-      (await appendScript(["/scripts/willChange.js"], 0, (script, lib) => {
+      await appendScript([scriptDef.localUrl], 0, (script, lib) => {
         script.src = lib;
-      }));
-
-    projectSettings.optimize_outlines &&
-      (await appendScript(
-        ["/scripts/optimizeOutlines.js"],
-        0,
-        (script, lib) => {
-          script.src = lib;
-          script.setAttribute("name", "optimize-outlines");
+        if (isPlainObject(scriptDef.attributes)) {
+          for (const attr in scriptDef.attributes) {
+            script.setAttribute(attr, scriptDef.attributes[attr]);
+          }
         }
-      ));
+        script.setAttribute("name", scriptDef.name);
+      });
+    }
 
-    // projectSettings.enable_tailwind &&
+    for (const scriptDef of DEV_SCRIPT_DEFINITIONS) {
+      if (
+        isFunction(scriptDef.condition) &&
+        !scriptDef.condition(projectSettings)
+      )
+        continue;
+
+      await appendScript([scriptDef.localUrl], 0, (script, lib) => {
+        script.src = lib;
+        if (isPlainObject(scriptDef.attributes)) {
+          for (const attr in scriptDef.attributes) {
+            script.setAttribute(attr, scriptDef.attributes[attr]);
+          }
+        }
+        script.setAttribute("name", scriptDef.name);
+      });
+    }
+
+    // await appendScript(mainScriptsForEditor, 0, (script, lib) => {
+    //   script.src = lib;
+    // });
+
+    // projectSettings.enable_spline_viewer &&
+    //   (await appendScript(
+    //     [`https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js`],
+    //     0,
+    //     (script, lib) => {
+    //       script.src = lib;
+    //       script.type = "module";
+    //       script.setAttribute("name", "spline-viewer.js");
+    //     },
+    //   ));
+
+    // projectSettings.enable_swiperjs &&
     //   (await appendScript(
     //     [
-    //      "/scripts/tailwindcss.v4.js"
+    //       "https://cdn.jsdelivr.net/npm/swiper@latest/swiper-bundle.min.js",
+    //       "https://cdn.jsdelivr.net/npm/swiper@latest/swiper-element-bundle.min.js",
     //     ],
     //     0,
     //     (script, lib) => {
     //       script.src = lib;
-    //     }
+    //     },
     //   ));
 
-    // loadMainScriptsCallback(body);
-    // loadFooterLibs(body);
-    // appendLocalPageAndGlobalCssAndJs(body);
+    // !projectSettings.disable_will_change_in_editor &&
+    //   (await appendScript(["/scripts/willChange.js"], 0, (script, lib) => {
+    //     script.src = lib;
+    //   }));
+
+    // projectSettings.optimize_outlines &&
+    //   (await appendScript(
+    //     ["/scripts/optimizeOutlines.js"],
+    //     0,
+    //     (script, lib) => {
+    //       script.src = lib;
+    //       script.setAttribute("name", "optimize-outlines");
+    //     },
+    //   ));
+
+    await appendScript(
+      [
+        `${currentPageName === "index" ? `./js/` : `../js/`}${currentPageName}.js`,
+      ],
+      0,
+      (script, lib) => {
+        script.src = lib;
+      },
+    );
+
     editor.off("canvas:frame:load:body", loadFooterScriptsCallback);
     loadFooterScriptsCallback = null;
     loadHeadScriptsCallback = null;
@@ -1056,16 +1051,6 @@ export const loadScripts = async (editor, projectData) => {
   };
 
   loadHeadScriptsCallback();
-  // ifIntervale({
-  //   condition: () => editor.Canvas.getBody(),
-  //   async callback() {
-  //     console.log('all done in footer scripts callback..');
 
-  //     attrsCallback(editor, projectData);
-  //     await loadFooterScriptsCallback(editor.Canvas.getBody());
-  //   },
-  // });
   editor.on("canvas:frame:load:body", loadFooterScriptsCallback);
-  // editor.on("canvas:frame:load:body", loadMainScriptsCallback);
-  // editor.on("canvas:frame:load:head", loadHeadScriptsCallback);
 };

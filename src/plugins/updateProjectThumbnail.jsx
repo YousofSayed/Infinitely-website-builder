@@ -7,6 +7,7 @@ import {
   getImgAsBlob,
   getProjectData,
   workerCallbackMaker,
+  workerCallbackMakerWithProps,
 } from "@/helpers/functions";
 import { infinitelyWorker } from "@/helpers/infinitelyWorker";
 import { opfs } from "@/helpers/initOpfs";
@@ -62,9 +63,42 @@ export const takeScreenShot = async (editor, calcDays = true, callback) => {
       
       console.log("blob : ", blob);
 
-       workerCallbackMaker(
+      //  workerCallbackMaker(
+      //   pageBuilderWorker,
+      //   "writeFilesToOPFS",
+      //   async ({ done }) => {
+      //     console.log('recived message from take screenshot' , done);
+          
+      //     if (!done) {
+      //       toast.dismiss(tId);
+      //       toast.error(<ToastMsgInfo msg={`Error taking screenshot`} />);
+      //       throw new Error(`Error when updating screenshot`);
+      //     } else {
+      //       await db.projects.update(+projectID, {
+      //         lastScreenshot: new Date(),
+      //       });
+
+      //       toast.done(tId);
+      //       toast.success(
+      //         <ToastMsgInfo msg={`Screenshot updated successfully👍`} />
+      //       ); 
+      //       isFunction(callback) && (await callback());
+      //       console.log("after all done");
+      //     }
+      //   }
+      // );
+
+      workerCallbackMakerWithProps(
         pageBuilderWorker,
         "writeFilesToOPFS",
+        {
+          files: [
+            {
+              path: defineRoot(`screenshot.webp`),
+              content: blob,
+            },
+          ],
+        },
         async ({ done }) => {
           console.log('recived message from take screenshot' , done);
           
@@ -80,24 +114,24 @@ export const takeScreenShot = async (editor, calcDays = true, callback) => {
             toast.done(tId);
             toast.success(
               <ToastMsgInfo msg={`Screenshot updated successfully👍`} />
-            );
+            ); 
             isFunction(callback) && (await callback());
             console.log("after all done");
           }
         }
       );
 
-      pageBuilderWorker.postMessage({
-        command: "writeFilesToOPFS",
-        props: {
-          files: [
-            {
-              path: defineRoot(`screenshot.webp`),
-              content: blob,
-            },
-          ],
-        },
-      });
+      // pageBuilderWorker.postMessage({
+      //   command: "writeFilesToOPFS",
+      //   props: {
+      //     files: [
+      //       {
+      //         path: defineRoot(`screenshot.webp`),
+      //         content: blob,
+      //       },
+      //     ],
+      //   },
+      // });
 
      
 

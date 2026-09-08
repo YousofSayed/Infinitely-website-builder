@@ -19,6 +19,7 @@ import {
   doInWordpressAsync,
   emitChange,
   getProjectData,
+  getProjectId,
   getProjectSettings,
   getWpPageConfig,
   isProjectSettingPropTrue,
@@ -43,79 +44,88 @@ import React, {
   useState,
 } from "react";
 import { toast } from "react-toastify";
+import { Wordpress } from "@/components/Protos/wordpress/Wordpress";
+import { useUpdateWpScriptsMutation } from "@/queries/wp.queries";
+import { useBusyCallback } from "@/hooks/useBusyCallback";
+import { wp_save_editor_scripts } from "@/Apps/wordpress/functions_ui";
 
 export const SettingsModal = () => {
   const editor = useEditorMaybe();
-  const projectId = +localStorage.getItem(current_project_id);
+  const projectId = getProjectId();
   const [projectSettings, setProjectSetting] = useProjectSettings();
   const timeout = useRef();
   const [searchValue, setSearchValue] = useState("");
   const [currentChange, setCurrentChange] = useState("");
   const [searchedSettings, setSearchedSettings] = useState();
+  const { mutateAsync: updateWpScripts, isPending: isUpdateWpScriptsPending } =
+    useUpdateWpScriptsMutation();
+  /**
+   *
+   * @param {keyof import('@/helpers/types').ProjectSetting} key
+   * @param {(key:keyof import('@/helpers/types').ProjectSetting)=>void} callback
+   */
+  const isCurrentChange = (key, callback = () => {}, currentChange) => {
+    if (key == currentChange) {
+      callback(key);
+    }
+  };
 
-  
-  const isCurrentChange = useCallback(
-    /**
-     *
-     * @param {keyof import('@/helpers/types').ProjectSetting} key
-     * @param {(key:keyof import('@/helpers/types').ProjectSetting)=>void} callback
-     */
+  const callback = (currentChange) => {
+    // console.log("dadsad");
 
-    (key, callback = () => {}) => {
-      if (key == currentChange) {
-        callback(key);
-      }
-    },
-    [currentChange],
-  );
+    //  timeout.current && timeout.current.close()
+    timeout.current && clearTimeout(timeout.current);
 
-  const callback = useCallback(
-    (ev) => {
-      // console.log("dadsad");
+    timeout.current = setTimeout(() => {
+      console.log("storaaaaaaaaaage", currentChange);
+      // return
+      const enableTailwind = () => {
+        classesFinderWorker.postMessage({
+          command: "getAllStyleSheetClasses",
+          props: {
+            projectId,
+            editorCss: editor.getCss({
+              clearStyles: false,
+              keepUnusedStyles: true,
+            }),
+            projectSettings: projectSettings,
+            inlineStylesInners: [
+              ...(editor?.Canvas?.getDocument?.()?.querySelectorAll?.(
+                "style",
+              ) || []),
+            ].map((styleEl) => styleEl.innerHTML),
+          },
+        });
+        // editor.load();
+        emitChange();
+      };
 
-      //  timeout.current && timeout.current.close()
-      timeout.current && clearTimeout(timeout.current);
-
-      timeout.current = setTimeout(() => {
-        console.log("storaaaaaaaaaage", currentChange);
-        // return
-        const enableTailwind = () => {
-          classesFinderWorker.postMessage({
-            command: "getAllStyleSheetClasses",
-            props: {
-              projectId,
-              editorCss: editor.getCss({
-                clearStyles: false,
-                keepUnusedStyles: true,
-              }),
-              projectSettings: projectSettings,
-              inlineStylesInners: [
-                ...(editor?.Canvas?.getDocument?.()?.querySelectorAll?.(
-                  "style",
-                ) || []),
-              ].map((styleEl) => styleEl.innerHTML),
-            },
-          });
-          // editor.load();
-          emitChange();
-        };
-
-        isCurrentChange("enable_tailwind", () => {
+      isCurrentChange(
+        "enable_tailwind",
+        () => {
           isProjectSettingPropTrue(
             "enable_tailwind",
             enableTailwind,
             enableTailwind,
           );
-        });
+        },
+        currentChange,
+      );
 
-        isCurrentChange("enable_spline_viewer", () => {
+      isCurrentChange(
+        "enable_spline_viewer",
+        () => {
           // console.log("lalalalalalaala");
 
           // editor.load();
           emitChange();
-        });
+        },
+        currentChange,
+      );
 
-        isCurrentChange("stop_all_animation_on_page", (key) => {
+      isCurrentChange(
+        "stop_all_animation_on_page",
+        (key) => {
           isProjectSettingPropTrue(
             "stop_all_animation_on_page",
             () => {
@@ -125,9 +135,13 @@ export const SettingsModal = () => {
               editor.getWrapper().removeClass(`inf-stop-all-animations`);
             },
           );
-        });
+        },
+        currentChange,
+      );
 
-        isCurrentChange("enable_auto_save", () => {
+      isCurrentChange(
+        "enable_auto_save",
+        () => {
           isProjectSettingPropTrue(
             "enable_auto_save",
             () => {
@@ -137,38 +151,63 @@ export const SettingsModal = () => {
               editor.StorageManager.setAutosave(false);
             },
           );
-        });
+        },
+        currentChange,
+      );
 
-        isCurrentChange("enable_swiperjs", () => {
+      isCurrentChange(
+        "enable_swiperjs",
+        () => {
           // editor.load();
           emitChange();
-        });
+        },
+        currentChange,
+      );
 
-        isCurrentChange("disable_will_change_in_editor", () => {
+      isCurrentChange(
+        "disable_will_change_in_editor",
+        () => {
           // editor.load();
           emitChange();
-        });
-        isCurrentChange("optimize_outlines", () => {
+        },
+        currentChange,
+      );
+      isCurrentChange(
+        "optimize_outlines",
+        () => {
           emitChange();
+        },
+        currentChange,
+      );
+
+      isCurrentChange("disable_gsap_core", emitChange, currentChange);
+      isCurrentChange("disable_gsap_scrollTrigger", emitChange, currentChange);
+      isCurrentChange("disable_gsap_splitText", emitChange, currentChange);
+    }, 100);
+  };
+
+  const [saveEditorScripts, { isLoading: isSaveEditorScriptsPending }] =
+    useBusyCallback(async (key, value) => {
+      await doInWordpressAsync(async () => {
+        await wp_save_editor_scripts();
+      });
+
+      const handler = async (ev) => {
+        callback(key);
+        console.log("local-storage is emited");
+        const { projectSettings } = getProjectSettings();
+        await db.projects.update(projectId, {
+          projectSetting: projectSettings,
         });
+        window.removeEventListener("local-storage", handler);
+      };
+      window.addEventListener("local-storage", handler);
 
-        isCurrentChange("disable_gsap_core", emitChange);
-        isCurrentChange("disable_gsap_scrollTrigger", emitChange);
-        isCurrentChange("disable_gsap_splitText", emitChange);
-      }, 100);
-    },
-    [currentChange],
-  );
-
-  useEffect(() => {
-    if (!editor) return;
-
-    window.addEventListener("local-storage", callback);
-    return () => {
-      window.removeEventListener("local-storage", callback);
-    };
-  }, [editor, currentChange]);
-
+      setCurrentChange(key);
+      setProjectSetting({ [key]: value });
+      // setTimeout(() => {
+      // });
+    });
 
   const search = (value = "") => {
     if (!value) {
@@ -182,7 +221,7 @@ export const SettingsModal = () => {
     const newObject = Object.fromEntries(
       filterdKeys.map((key) => [key, projectSettings[key]]),
     );
-  
+
     console.log(newObject);
 
     setSearchedSettings(newObject);
@@ -190,8 +229,7 @@ export const SettingsModal = () => {
 
   return (
     <section className="h-full w-full overflow-auto flex flex-col gap-2 pr-1">
-      <section className="flex flex-col gap-4 text-text-primary font-semibold">
-    
+      <section className="flex flex-col gap-4 text-text-primary font-semibold w-full h-full">
         <Input
           className="w-full bg-surface-tertiary"
           placeholder="Search..."
@@ -218,22 +256,25 @@ export const SettingsModal = () => {
                   {key.replaceAll("_", " ")}
                 </h1>
                 <SwitchButton
+                  disabled={isSaveEditorScriptsPending}
                   defaultValue={
                     searchedSettings?.[key]
                       ? searchedSettings?.[key]
                       : projectSettings[key]
                   }
-                  onActive={(ev) => {
-                    setCurrentChange(key);
-                    setTimeout(() => {
-                      setProjectSetting({ [key]: true });
-                    });
+                  onActive={async (ev) => {
+                    await saveEditorScripts(key, true);
+                    // setCurrentChange(key);
+                    // setTimeout(() => {
+                    //   setProjectSetting({ [key]: true });
+                    // });
                   }}
-                  onUnActive={(ev) => {
-                    setCurrentChange(key);
-                    setTimeout(() => {
-                      setProjectSetting({ [key]: false });
-                    });
+                  onUnActive={async (ev) => {
+                    await saveEditorScripts(key, false);
+                    // setCurrentChange(key);
+                    // setTimeout(() => {
+                    //   setProjectSetting({ [key]: false });
+                    // });
                   }}
                 />
               </article>
@@ -408,6 +449,43 @@ export const SettingsModal = () => {
           {Icons.image({ fill: "white" })}
           <h1>Take Screenshot</h1>
         </Button>
+
+        <Wordpress>
+          <Button
+            disabled={isUpdateWpScriptsPending}
+            style={{
+              justifyContent: "center",
+            }}
+            onClick={async (ev) => {
+              // addClickClass(ev.currentTarget, "click");
+              const tid = toast.loading(
+                <ToastMsgInfo msg="Updating wordpress scripts..." />,
+              );
+              try {
+                await updateWpScripts({
+                  data: {
+                    id: getProjectId(),
+                    update_project_config: true,
+                    projectSetting: projectSettings,
+                    projectData: await getProjectData(),
+                  },
+                });
+                toast.done(tid);
+                toast.success(
+                  <ToastMsgInfo msg="Wordpress scripts updated successfully" />,
+                );
+              } catch (error) {
+                toast.dismiss(tid);
+                toast.error(<ToastMsgInfo msg={error.message} />);
+                console.error(error.message);
+              } finally {
+                toast.done(tid);
+              }
+            }}
+          >
+            <h1>Update Wordpress Scripts</h1>
+          </Button>
+        </Wordpress>
       </footer>
     </section>
   );

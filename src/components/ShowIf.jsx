@@ -3,7 +3,7 @@ import React from "react";
 
 export const ShowIf = ({ condition, children }) => {
   if (!condition) return null;
-
+ 
   return typeof children === "function"
     ? children()
     : children;
