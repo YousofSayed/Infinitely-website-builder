@@ -311,7 +311,7 @@ export const Iframe = () => {
   useUpdateWpEditorScriptsInBackground();
   
   return (
-    <section className="relative bg-[#aaa]    h-full" ref={autoAnimate}>
+    <section className="relative bg-[#aaa]    h-full auto-animate" ref={autoAnimate}>
       {showsComponents.animationsBuilder && (
         <section className="grid place-items-center p-2 absolute top-0 left-0 z-20 bg-blue-900/40 backdrop-blur-sm w-full h-full">
           <section className="flex flex-col items-center justify-center self-center p-3 bg-surface-secondary shadow-2xl shadow-slate-950 rounded-lg gap-5">
@@ -389,6 +389,7 @@ export const Iframe = () => {
           height: "100%",
           overflow: "auto",
         }}
+        className="auto-animate"
       >
         <Canvas
           id="editor-canvas"

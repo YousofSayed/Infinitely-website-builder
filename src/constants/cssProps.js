@@ -790,3 +790,17 @@ export const pointerEventsValues = [
   'revert-layer',
   'unset'
 ];
+
+
+export const objectFitValues = [
+  "fill",
+  "contain",
+  "cover",
+  "none",
+  "scale-down",
+  "inherit",
+  "initial",
+  "revert",
+  "revert-layer",
+  "unset"
+];

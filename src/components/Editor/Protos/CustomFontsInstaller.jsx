@@ -24,6 +24,7 @@ import React, { useLayoutEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { Virtuoso } from "react-virtuoso";
 import { useRecoilState } from "recoil";
+import { VList } from "virtua";
 
 const CustomScroller = React.forwardRef(({ style, ...props }, ref) => (
   <div
@@ -267,7 +268,7 @@ export const CustomFontsInstaller = () => {
   };
 
   return (
-    <section className="h-full">
+    <section className="h-full auto-animate flex flex-col ">
       {!fontFiles.length && (
         <section className="h-full w-full flex  flex-col gap-2 justify-center items-center">
           <figure
@@ -300,8 +301,38 @@ export const CustomFontsInstaller = () => {
 
       {!!fontFiles.length && (
         <>
-          <section className="h-[87.5%]   flex flex-col gap-2">
-            <Virtuoso
+          <section className="h-full  flex flex-col gap-2 p-1 pb-2">
+            <VList className="hideScrollBar">
+              {fontFiles.map((file, i) => {
+                return (
+                  <section
+                    key={i}
+                    className={`flex items-center justify-between  gap-2 p-2 bg-surface-tertiary rounded-lg mt-2 animate-go-to`}
+                  >
+                    <Input
+                      placeholder="Font File Name"
+                      className="w-full bg-surface-secondary"
+                      value={file.name}
+                      onInput={(ev) => {
+                        changeFileName(ev.target.value, i);
+                      }}
+                    />
+                    <Button
+                      keepPadding
+                      className="hover:bg-[crimson] transition-all"
+                      onClick={(ev) => {
+                        removeFile(file.id);
+                      }}
+                    >
+                      {Icons.trash("white")}
+                      Delete
+                    </Button>
+                  </section>
+                )
+              })}
+            </VList>
+
+            {/* <Virtuoso
               // className="h-[100%!important] flex flex-col "
               // style={{
               //   padding: "10px 0",
@@ -342,10 +373,10 @@ export const CustomFontsInstaller = () => {
                   </section>
                 );
               }}
-            />
+            /> */}
           </section>
 
-          <footer className="h-[12.5%] flex items-center p-2 border-t-2 border-t-slate-600">
+          <footer className=" flex items-center p-2 border-t-2 border-t-slate-600">
             <Button
               className="shrink-0 px-10 py-2"
               onClick={(ev) => {

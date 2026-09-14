@@ -6,11 +6,12 @@ import { getProjectData, restartGSAPMotions } from "@/helpers/functions";
 export let editorObserver;
 
 /**
- * 
- * @param {import('grapesjs').Editor} editor 
+ *
+ * @param {import('grapesjs').Editor} editor
  */
 export const addDevices = (editor) => {
   let resizerObserver, mutationsObserver;
+  let manuallyZoomed = false;
   const deviceManager = editor.DeviceManager;
 
   let timeout;
@@ -81,15 +82,23 @@ export const addDevices = (editor) => {
 
   // Remove all predefined devices
   [
-    "desktop", "Desktop", "tablet", "Tablet", "mobile", "Mobile",
-    "mobilePortrait", "Mobile portrait", "mobileLandscape", "Mobile landscape",
+    "desktop",
+    "Desktop",
+    "tablet",
+    "Tablet",
+    "mobile",
+    "Mobile",
+    "mobilePortrait",
+    "Mobile portrait",
+    "mobileLandscape",
+    "Mobile landscape",
   ].forEach((device) => deviceManager.remove(device));
 
   // Add device presets
   deviceManager.add({
     id: "desktop",
     name: "desktop",
-    width: '',
+    width: "",
     widthMedia: window.outerWidth + "px", // 🔥 FIX 1: Empty means fluid/base. Do NOT lock to window.outerWidth!
     priority: 1,
   });
@@ -115,6 +124,9 @@ export const addDevices = (editor) => {
   });
 
   const zoomToFit = () => {
+    if (manuallyZoomed) return;
+    console.log('manuallyZoomed : ' , manuallyZoomed);
+    
     timeout && clearTimeout(timeout);
 
     const thisRun = ++runId;
@@ -187,13 +199,15 @@ export const addDevices = (editor) => {
         // Tablet/Mobile: scale down if wrapper is smaller than device width
         const scale = wrapperWidth / targetWidth;
         desiredZoom = scale;
-        desiredIframeWidth = `${targetWidth}px`; // Set exact device width so CSS media queries trigger correctly
+        desiredIframeWidth = `100%` //`${targetWidth}px`; // Set exact device width so CSS media queries trigger correctly
       } else {
         // Tablet/Mobile: wrapper is larger than device, center it with fixed width
         desiredZoom = 1;
         desiredIframeWidth = `${targetWidth}px`;
       }
 
+      console.log(`Zooming is ${desiredZoom} and width is ${desiredIframeWidth}`);
+      
       // Invalid state guard
       if (!isFinite(desiredZoom) || desiredZoom <= 0) return;
 
@@ -279,4 +293,9 @@ export const addDevices = (editor) => {
 
     zoomToFit();
   });
+
+  editor.on(InfinitelyEvents.devices.update_zoom, ({value}) => {
+    manuallyZoomed = value;
+  });
+  
 };

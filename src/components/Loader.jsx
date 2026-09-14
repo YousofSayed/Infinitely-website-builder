@@ -1,24 +1,31 @@
-import React, { useEffect } from "react";
+import React from "react";
 
-export const Loader = ({ width = 70, height = 70, zIndex , loaderClassName , className}) => {
-  useEffect(()=>{
-    console.log('Loader is in');
-    
-  })
+export const Loader = ({
+  width = 70,
+  height = 70,
+  zIndex,
+  loaderClassName,
+  className,
+  children,
+  isLoading = true,
+}) => {
   return (
     <section
       style={{ zIndex }}
       id="loader"
-      className={`w-full h-full flex justify-center items-center bg-transparent ${className} animate-go-to`}
+      className={`relative w-full h-full flex justify-center items-center bg-transparent ${className}`}
     >
-      <div
-        style={{
-          width,
-          height,
-          borderRightColor:"transparent"
-        }}
-        className={` rounded-full border-2 border-blue-600 border-r-transparent animate-spin ${loaderClassName}`}
-      ></div>
+      {isLoading && (
+        <div
+          style={{
+            width,
+            height,
+          }}
+          className={`absolute rounded-full border-2 border-blue-600 border-r-transparent animate-spin ${loaderClassName}`}
+        />
+      )}
+
+      {children}
     </section>
   );
 };

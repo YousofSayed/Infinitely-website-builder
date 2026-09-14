@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useMemo, useRef, useState } from "react";
 import { wp_get_post_id } from "@/Apps/wordpress/functions_ui";
 import { open_code_manager_modal } from "@/constants/InfinitelyCommands";
 import { InfinitelyEvents } from "@/constants/infinitelyEvents";
@@ -83,7 +83,7 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { Wordpress } from "../Protos/wordpress/Wordpress";
 
 // export const HomeHeader = () => <h1>helo</h1>
-export const HomeHeader = () => {
+export const HomeHeader = memo(() => {
   const editor = useEditorMaybe();
   const widthRef = useRef("");
   const heightRef = useRef("");
@@ -246,6 +246,7 @@ export const HomeHeader = () => {
       if (steps >= max_steps) {
         await db.projects.update(projectId, {
           scripts_need_to_publish: false,
+          scripts_need_arranged: false,
           projectSetting: projectSettings,
           save_state: "saved",
           current_inf_meta: {
@@ -349,7 +350,7 @@ export const HomeHeader = () => {
    
   };
 
-  useEffect(() => {
+  useMemo(() => {
     if (!editor) return;
     const saveStart = () => {
       setPublish(false);
@@ -369,7 +370,7 @@ export const HomeHeader = () => {
     };
   }, [editor]);
 
-  useEffect(() => {
+  useMemo(() => {
     if (!(editor && editor.getContainer())) return;
     // console.log('html editor : ' , editor.getWrapper().getInnerHTML({withProps:true , withScripts: true}));
     // getHtml({withProps:true , asDocument:false , })
@@ -405,7 +406,7 @@ export const HomeHeader = () => {
     };
   }, [editor]);
 
-  useEffect(() => {
+  useMemo(() => {
     if (!editor) return;
     if (!currentEl.currentEl) return;
     // if (!cmpRules.length) return;
@@ -445,7 +446,7 @@ export const HomeHeader = () => {
     console.log("ruules from header :", cmpRules);
   }, [currentEl, editor, cmpRules]);
 
-  useEffect(() => {
+  useMemo(() => {
     if (!editor) return;
     editorContainerInstance.on(
       InfinitelyEvents.editorContainer.update,
@@ -665,15 +666,27 @@ export const HomeHeader = () => {
             onInput={(ev) => {
               // transformToNumInput(ev.target);
               // editor.getContainer().style.zoom = ev.target.value / 100;
-
+              
+              // editor.trigger(InfinitelyEvents.devices.update_zoom , {value:true});
               const val = ev.target.value;
               const container = editor.getContainer();
 
               // ✅ 1. Add the "zooming" flag so the ResizeObserver ignores this manual change
-              container.setAttribute("zooming", "true");
+              // container.setAttribute("zooming", "true");
 
               // 2. Apply the manual zoom
               container.style.zoom = val / 100;
+               const parent = container.parentElement;
+              if (parent) {
+                parent.style.display = "flex";
+                parent.style.justifyContent = "center";
+                parent.style.alignItems = "center";
+                parent.style.width = "100%";
+                parent.style.height = "100%";
+                parent.style.overflow = "hidden"; // Prevents scrollbars from zoom
+              }
+              // editor.Canvas.setZoom(val / 100);
+              // editor.trigger(InfinitelyEvents.devices.update_zoom , {value:false});
 
               // 3. Keep the React state and Event Bus in sync (prevents UI flicker)
               setZoomValue(val);
@@ -840,6 +853,7 @@ export const HomeHeader = () => {
             />
           </>
         </section>
+
         <Wordpress>
           <section className=" max-w-[200px] w-[calc(100%+25px)] h-full py-2">
             <Button
@@ -848,13 +862,13 @@ export const HomeHeader = () => {
               onClick={(ev) => {
                 publishToWp();
               }}
-              className="font-bold capitalize flex items-center justify-center gap-2 w-full h-full"
+              className="font-bold capitalize flex items-center justify-center gap-1 w-full h-full"
             >
               {storeLoad && (
-                <section>
+                <section className="w-[15px] h-[15px]">
                   <Loader
-                    width={20}
-                    height={20}
+                    width={15}
+                    height={15}
                     loaderClassName={"border-white"}
                   />
                 </section>
@@ -868,4 +882,4 @@ export const HomeHeader = () => {
       {/* </ToolbarComponent> */}
     </header>
   );
-};
+});

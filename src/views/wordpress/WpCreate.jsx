@@ -264,7 +264,7 @@ export const CreateWpTemplate = () => {
 
   const createTemplate = async () => {
     // Updated check to account for typed values (tempVale)
-    if (!template.slug && !tempVale) {
+    if (!template?.slug && !tempVale) {
       toast.error(<ToastMsgInfo msg={`Template name is required 😒`} />);
       return;
     }
@@ -297,6 +297,7 @@ export const CreateWpTemplate = () => {
         onSuccess(res) {
           setDone(true); // Set done to true to trigger the Edit button animation
           setTemplate(res);
+          setTempVale("");
           toast.done(tid);
           toast.success(
             <ToastMsgInfo msg={`${res.results[0].slug} template created successfully`} />,

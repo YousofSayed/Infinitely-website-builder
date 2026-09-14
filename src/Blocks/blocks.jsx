@@ -280,6 +280,16 @@ export const blocks = [
   },
 
   {
+    id: "slide",
+    label: html`<p class="custom-font-size ">Slide</p>`,
+    media: reactToStringMarkup(
+      Icons.slider({ strokeColor: "white", width: 25, height: 25 })
+    ),
+    category: "fancy",
+    content: { type: "slide" },
+  },
+
+  {
     id: "looper",
     label: html`<p class="custom-font-size ">Looper</p>`,
     media: reactToStringMarkup(

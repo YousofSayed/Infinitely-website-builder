@@ -1982,10 +1982,10 @@ export async function wp_update_main_global_files({ data }) {
       projectSetting: data.projectSetting,
     }).map(async (item) => {
       const blob = await (await fetch(item.localUrl)).blob();
+      if (item.attributes) {
+        attributes[fileNameToMediaSlug(item.name)] = item.attributes;
+      }
       if (isBoolean(item.condition)) {
-        if (item.attributes) {
-          attributes[fileNameToMediaSlug(item.name)] = item.attributes;
-        }
         if (item.condition) {
           return new File([blob], item.name, { type: blob.type });
         } else {
@@ -2001,10 +2001,10 @@ export async function wp_update_main_global_files({ data }) {
       projectSetting: data.projectSetting,
     }).map(async (item) => {
       const blob = await (await fetch(item.localUrl)).blob();
+      if (item.attributes) {
+        attributes[fileNameToMediaSlug(item.name)] = item.attributes;
+      }
       if (isBoolean(item.condition)) {
-        if (item.attributes) {
-          attributes[fileNameToMediaSlug(item.name)] = item.attributes;
-        }
         if (item.condition) {
           return new File([blob], item.name, { type: blob.type });
         } else {
@@ -2020,10 +2020,10 @@ export async function wp_update_main_global_files({ data }) {
       projectSetting: data.projectSetting,
     }).map(async (item) => {
       const blob = await (await fetch(item.localUrl)).blob();
+      if (item.attributes) {
+        attributes[fileNameToMediaSlug(item.name)] = item.attributes;
+      }
       if (isBoolean(item.condition)) {
-        if (item.attributes) {
-          attributes[fileNameToMediaSlug(item.name)] = item.attributes;
-        }
         if (item.condition) {
           return new File([blob], item.name, { type: blob.type });
         } else {
@@ -2097,12 +2097,14 @@ export async function wp_update_main_global_files({ data }) {
   // Map main scripts to footer
   for (const script of mainScripts) {
     const slug = fileNameToMediaSlug(script.name);
+    
     if (files[slug]) {
       newUpdatedConfig.mainEditorScripts.footer.push({
         ...files[slug],
         attributes: attributes[slug],
       });
     }
+    console.log('file slug after update : ' , slug , script , files[slug] ,`---------------` ,attributes , attributes[slug] );
   }
 
   // Map main header scripts to header

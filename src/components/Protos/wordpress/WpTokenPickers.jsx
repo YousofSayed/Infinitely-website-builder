@@ -12,6 +12,7 @@ import { Icons } from "@/components/Icons/Icons";
 import { getParentNode, isWordpress } from "@/helpers/functions";
 import { inf_tokens_container, inf_tokens_ignore } from "@/constants/shared";
 import { Tooltip } from "react-tooltip";
+import Portal from "@/components/Editor/Portal";
 
 const supportedApps = [isWordpress()];
 
@@ -297,7 +298,9 @@ export const WpTokenPickers = () => {
           )}
         </div>
 
-        <Tooltip id="wp-token-tip" place="bottom-end" positionStrategy="fixed" opacity={1} className="font-semibold z-[9999999!important]" />
+        <Portal>
+          <Tooltip id="wp-token-tip" place="bottom-end" positionStrategy="fixed" opacity={1} className="font-semibold z-[9999999!important]" />
+        </Portal>
       </div>
     </FloatingPortal>
   );

@@ -31,6 +31,7 @@ export const CustomModals = () => {
         }}
         style={{ zIndex: 1000 }}
         className={`
+          auto-animate
           fixed ${window?.electron?.isDesktop ? 'top-[40px]' : 'top-0'} left-0 transition-all bg-blue-950/40 backdrop-blur-sm w-full h-full flex justify-center items-center
           animate-go-to`}
       >
@@ -39,14 +40,14 @@ export const CustomModals = () => {
           onClick={(ev) => {
             ev.stopPropagation();
           }}
-          className="container m-auto h-[75%] rounded-lg flex flex-col justify-between bg-surface-secondary shadow-md shadow-[#020617]"
+          className="auto-animate container m-auto h-[75%] rounded-lg flex flex-col justify-between bg-surface-secondary shadow-md shadow-[#020617]"
         >
           <header className="w-full flex items-center rounded-lg rounded-br-none h-[60px] border-b-2 bg-surface-secondary border-b-slate-600">
             <section className="w-full flex justify-between items-center p-2">
               <FitTitle className="flex items-center gap-2">
                 {modalData.title}
               </FitTitle>
-              <section className="flex items-center gap-2">
+              <section className="flex items-center gap-2 auto-animate">
                 {/* <button
                   className="cursor-pointer flex items-center justify-center w-[27px] h-[27px] bg-yellow-600 rounded-full"
                   onClick={(ev) => {
@@ -77,7 +78,7 @@ export const CustomModals = () => {
             </section>
           </header>
 
-          <section className="animate-go-to p-2 h-full max-h-full overflow-auto rounded-bl-lg rounded-br-lg bg-surface-secondary">
+          <section className="animate-go-to p-2 h-full max-h-full overflow-auto rounded-bl-lg rounded-br-lg bg-surface-secondary auto-animate">
             <BusyProvider>
               {modalData.JSXModal}
 

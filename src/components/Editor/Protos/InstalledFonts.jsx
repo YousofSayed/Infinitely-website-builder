@@ -189,7 +189,7 @@ export const InstalledFonts = () => {
   };
 
   return (
-    <section className="flex flex-col h-full gap-2 p-1">
+    <section className="flex flex-col h-full gap-2 p-1 overflow-hidden auto-animate">
       <header className="sticky top-0 flex justify-between gap-2 mb-2 bg-surface-secondary">
         {/* <h1 className="text-text-primary font-bold px-[60px] py-2   border-b-2 border-b-slate-600 w-fit shrink-0 ">
           Fonts : {Object.keys(fonts || {}).length || undefined}
@@ -227,7 +227,7 @@ export const InstalledFonts = () => {
         <Checkbox title="Select All" className="shrink-0 flex-grow-0" onChange={selectAll} checked={filesWillBeUninstalled.length === Object.keys(fonts).length && Object.keys(fonts).length > 0} />
       </header>
 
-      <main className="overflow-auto flex flex-col gap-2 h-[90%] rounded-lg pr-1">
+      <main className="overflow-y-auto hideScrollBar  flex flex-col gap-2 h-[90%] rounded-lg auto-animate">
         {fonts &&
           Object.keys(fonts)?.map((key, i) => {
             return (

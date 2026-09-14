@@ -3343,6 +3343,97 @@ export const Icons = {
       </g>
     </svg>
   ),
+  unselect: ({width = 48, height = 48 , fill = mainColor , stroke = mainColor}) => (
+    <svg viewBox="0 0 48 48" width={width} height={height} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+      <g
+        id="SVGRepo_tracerCarrier"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      ></g>
+      <g id="SVGRepo_iconCarrier">
+        {" "}
+        <rect
+          x="16"
+          y="16"
+          width="27"
+          height="27"
+          rx="2"
+          stroke={stroke}
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        ></rect>{" "}
+        <rect
+          x="5"
+          y="5"
+          width="27"
+          height="27"
+          rx="2"
+          stroke={stroke}
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        ></rect>{" "}
+        <path
+          d="M25 32L16 41"
+          stroke={stroke}
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        ></path>{" "}
+        <path
+          d="M41 16L32 25"
+          stroke={stroke}
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        ></path>{" "}
+        <path
+          d="M16 23L7 32"
+          stroke={stroke}
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        ></path>{" "}
+        <path
+          d="M32 7L23 16"
+          stroke={stroke}
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        ></path>{" "}
+        <path
+          d="M43 24L24 43"
+          stroke={stroke}
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        ></path>{" "}
+        <path
+          d="M24 5L5 24"
+          stroke={stroke}
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        ></path>{" "}
+        <path
+          d="M43 34L34 43"
+          stroke={stroke}
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        ></path>{" "}
+        <path
+          d="M14 5L5 14"
+          stroke={stroke}
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        ></path>{" "}
+      </g>
+    </svg>
+  ),
   diminsions: ({ width, height }) => (
     <svg
       width="101"

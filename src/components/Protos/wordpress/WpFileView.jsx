@@ -4,7 +4,14 @@ import {
 } from "@/Apps/wordpress/functions";
 import { current_project_id } from "@/constants/shared";
 import { assetsWorker, pageBuilderWorker } from "@/helpers/defineWorkers";
-import { wpWorkerCallbackMaker } from "@/helpers/functions";
+import {
+  callWorkerCommand,
+  doInNormalAsync,
+  doInWordpressAsync,
+  downloadFile,
+  getProjectId,
+  wpWorkerCallbackMaker,
+} from "@/helpers/functions";
 import { refType } from "@/helpers/jsDocs";
 import { useFileViewTitleResizer } from "@/hooks/useFileViewTitleResizer";
 import { FitTitle } from "@/components/Editor/Protos/FitTitle";
@@ -18,13 +25,24 @@ import { useEditorMaybe } from "@grapesjs/react";
 import { isArray, isFunction } from "lodash";
 import React, { useRef, useState } from "react";
 import mime from "mime";
-import { toMB } from "@/helpers/bridge";
+import { defineRoot, toMB } from "@/helpers/bridge";
 import { toast } from "react-toastify";
 import { Tooltip } from "react-tooltip";
+import { useBusyCallback, useTasksState } from "@/hooks/useBusyCallback";
+import {
+  File_View_keys,
+  Media_Manager_keys,
+} from "@/constants/globalTasksKeys";
+import { useQueryClient } from "@tanstack/react-query";
+import { useWpGetInfinite } from "@/queries/wp.queries";
+import { Wordpress } from "./Wordpress";
+import { Normal } from "../Normal";
+import { opfs } from "@/helpers/initOpfs";
 
 /**
  *
- * @param {{media : import('@/helpers/types').InfinitelyWpMedia,
+ * @param {{
+ * media : import('@/helpers/types').InfinitelyWpMedia & import("@/helpers/types").InfinitelyNormalMedia,
  *  showOptions : boolean,
  *  callback : (media : import('@/helpers/types').InfinitelyWpMedia , url : string)=>void,
  *  checked : boolean,
@@ -32,7 +50,6 @@ import { Tooltip } from "react-tooltip";
  *  allowCheckBox : boolean,
  *  setData : () => void,
  *  showOptions : boolean,
- *  media : import('@/helpers/types').InfinitelyWpMedia,
  *
  * }} param0
  * @returns
@@ -55,56 +72,176 @@ export const WpFileView = ({
   const editor = useEditorMaybe();
   const [showFilNameTooltib, setShowFileNameTooltib] = useState(false);
   const projectId = +localStorage.getItem(current_project_id);
+  const { isLoading: isMediaManagerBusy } = useTasksState(
+    Object.values(Media_Manager_keys),
+  );
+  const qc = useQueryClient();
+  const {
+    // data: mediaFilesData,
+    isLoading: mediaFilesLoading,
+    isRefetching: mediaFilesRefetching,
+    // fetchNextPage: mediaFilesFetchNextPage,
+    isFetchingNextPage: mediaFilesIsFetchingNextPage,
+    // hasNextPage: mediaFilesHasNextPage,
+  } = useWpGetInfinite("media");
+
   useFileViewTitleResizer(fileNameRef, setShowFileNameTooltib);
 
-  const onItemClicked = (ev, asset) => {
+  const onItemClicked = async(ev, asset) => {
     ev.stopPropagation();
-    runWithBusy(async () => {
-      await callback(asset, asset.source_url);
-    });
+    await callback(asset, asset.source_url);
   };
 
-  const deleteMedia = async (e) => {
-    e.stopPropagation();
-    runWithBusy(async () => {
-      const cnfrm = confirm(`Are you sure you want to delete ${media.slug} ?`);
-      if (!cnfrm) {
-        return;
-      }
+  const [deleteMedia, { isLoading: isDeleting }] = useBusyCallback(
+    async (e) => {
+      e.stopPropagation();
       const tid = toast.loading(
         <ToastMsgInfo msg={`Deleting ${media.slug}...`} />,
       );
-      try {
-        return new Promise((res, rej) => {
-          wpWorkerCallbackMaker(
+
+      await doInNormalAsync(async () => {
+        try {
+          await opfs.remove({
+            dirOrFile: await opfs.getFile(defineRoot(media.path)),
+          });
+          toast.done(tid);
+          toast.success(
+            <ToastMsgInfo msg={`${media.slug} deleted successfully`} />,
+          );
+        } catch (error) {
+          toast.dismiss(tid);
+          toast.error(<ToastMsgInfo msg={`Failed to delete ${media.slug}`} />);
+          console.error(error);
+          throw error;
+        }
+      });
+
+      await doInWordpressAsync(async () => {
+        const cnfrm = confirm(
+          `Are you sure you want to delete ${media.slug} ?`,
+        );
+        if (!cnfrm) {
+          return;
+        }
+
+        try {
+          const res = await callWorkerCommand(
             assetsWorker,
             "wp_delete_media_files_by_slugs",
             {
               projectId,
               slugs: [media.slug],
             },
-            (worker_res) => {
-              if (!worker_res.res.success) {
-                // toast.dismiss(tid);
-                // toast.error(<ToastMsgInfo msg={`Failed to delete ${media.slug}`} />);
-                rej(new Error(`Failed to delete ${media.slug} 😶`));
-                return;
-              }
-              isFunction(setData) && setData();
-              toast.done(tid);
-              toast.success(
-                <ToastMsgInfo msg={`${media.slug} deleted successfully`} />,
-              );
-              res(worker_res);
+          );
+
+          await qc.invalidateQueries({
+            queryKey: ["wp_get_infinite", "media", getProjectId()],
+            refetchType: "all",
+          });
+
+          if (!res.success) {
+            // toast.dismiss(tid);
+            // toast.error(<ToastMsgInfo msg={`Failed to delete ${media.slug}`} />);
+            throw new Error(`Failed to delete ${media.slug} 😶`);
+          }
+          toast.done(tid);
+          toast.success(
+            <ToastMsgInfo msg={`${media.slug} deleted successfully`} />,
+          );
+        } catch (error) {
+          toast.dismiss(tid);
+          toast.error(<ToastMsgInfo msg={`Failed to delete ${media.slug}`} />);
+          console.error(error);
+          throw error;
+        }
+      });
+
+      isFunction(setData) && setData(media);
+    },
+    { key: File_View_keys.delete },
+  );
+
+  const [downloadMedia, { isLoading: isDownloading }] = useBusyCallback(
+    async (e) => {
+      e.stopPropagation();
+      const tid = toast.loading(
+        <ToastMsgInfo msg={`Downloading ${media.slug}...`} />,
+      );
+
+      await doInNormalAsync(async () => {
+        try {
+          const file = await (
+            await opfs.getFile(defineRoot(media.path))
+          ).getOriginFile();
+
+          downloadFile({
+            filename: file.name,
+            content: file,
+            mimeType: file.type,
+          });
+
+          toast.dismiss(tid);
+          toast.success(
+            <ToastMsgInfo msg={`${media.slug} downloaded successfully`} />,
+          );
+        } catch (error) {
+          toast.dismiss(tid);
+          toast.error(
+            <ToastMsgInfo msg={`Failed to download ${media.slug}`} />,
+          );
+          throw error;
+        }
+      });
+
+      await doInWordpressAsync(async () => {
+        try {
+          const res = await callWorkerCommand(
+            assetsWorker,
+            "wp_get_blob_media_by_slug",
+            {
+              media,
+              projectId,
             },
           );
-        });
-      } catch (error) {
-        toast.dismiss(tid);
-        toast.error(<ToastMsgInfo msg={`Failed to delete ${media.slug}`} />);
-      }
-    });
-  };
+
+          if (!(res instanceof Blob)) {
+            toast.dismiss(tid);
+            toast.error(
+              <ToastMsgInfo msg={`Failed to download ${media.slug}`} />,
+            );
+            throw new Error(`Failed to download ${media.slug}`);
+          }
+
+          const blob = res;
+
+          await downloadFile({
+            filename: media.slug,
+            content: blob,
+            mimeType: blob.type,
+          });
+          // const url = URL.createObjectURL(blob);
+          // const link = document.createElement("a");
+          // link.href = url;
+          // const fileName = media.source_url.split("/").pop();
+          // link.download = fileName;
+          // document.body.appendChild(link);
+          // link.click();
+          // document.body.removeChild(link);
+          // URL.revokeObjectURL(url);
+          toast.dismiss(tid);
+          toast.success(
+            <ToastMsgInfo msg={`${media.slug} downloaded successfully`} />,
+          );
+        } catch (error) {
+          toast.dismiss(tid);
+          toast.error(
+            <ToastMsgInfo msg={`Failed to download ${media.slug}`} />,
+          );
+          throw error;
+        }
+      });
+    },
+  );
 
   const copyLink = async (e) => {
     e.stopPropagation();
@@ -112,71 +249,21 @@ export const WpFileView = ({
     toast.success(<ToastMsgInfo msg={`link coppied`} />);
   };
 
-  const downloadFile = async (e) => {
-    e.stopPropagation();
-    runWithBusy(async () => {
-      const tid = toast.loading(
-        <ToastMsgInfo msg={`Downloading ${media.slug}...`} />,
-      );
-
-      wpWorkerCallbackMaker(
-        assetsWorker,
-        "wp_get_blob_media_by_slug",
-        {
-          media,
-          projectId,
-        },
-        (res) => {
-          if (res.done) {
-            const blob = res.res;
-            try {
-              if (!(blob instanceof Blob)) {
-                console.error("blob is not a blob", blob);
-                toast.error(
-                  <ToastMsgInfo msg={`Failed to download ${media.slug}`} />,
-                );
-                rej(new Error(`Failed to download ${media.slug}`));
-                return;
-              }
-              console.log('file blob: ' , blob);
-              
-              const url = URL.createObjectURL(blob);
-              const link = document.createElement("a");
-              link.href = url;
-              const fileName = media.source_url.split("/").pop();
-              link.download = fileName;
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-              URL.revokeObjectURL(url);
-              toast.dismiss(tid);
-              toast.success(
-                <ToastMsgInfo msg={`${media.slug} downloaded successfully`} />,
-              );
-            } catch (error) {
-              console.error(error);
-              toast.dismiss(tid);
-              toast.error(
-                <ToastMsgInfo msg={`Failed to download ${media.slug}`} />,
-              );
-            }
-          } else {
-            toast.dismiss(tid);
-            toast.error(
-              <ToastMsgInfo msg={`Failed to download ${media.slug}`} />,
-            );
-          }
-        },
-      );
-    });
-  };
+  const isDisabled =
+    isDeleting ||
+    isMediaManagerBusy ||
+    isDownloading ||
+    mediaFilesIsFetchingNextPage ||
+    mediaFilesLoading ||
+    mediaFilesRefetching;
 
   return (
     <section
-      className={`group   relative rounded-lg p-3 bg-surface-tertiary  flex flex-col justify-center items-center gap-2`}
+      className={`group  animate-go-to relative rounded-lg p-3 bg-surface-tertiary  flex flex-col justify-center items-center gap-2`}
     >
       <FitTitle className="absolute left-0 top-0 z-[100] ">
-        {toMB(media.media_details.filesize, 3)}MB
+        <Normal>{toMB(media.size, 3)}MB</Normal>
+        <Wordpress>{toMB(media?.media_details?.filesize, 3)}MB</Wordpress>
       </FitTitle>
       {/* <button
                 onClick={(ev) => {
@@ -287,25 +374,29 @@ export const WpFileView = ({
       )}
 
       {showOptions && (
-        <section className="flex  gap-2 justify-between p-2  rounded-lg bg-surface-secondary w-full">
+        <section className="flex items-center  gap-6 justify-between p-2  rounded-lg bg-surface-secondary w-fit">
           <SmallButton
-            disabled={isBusy}
+            className="!w-[35px] !h-[35px] !bg-surface-tertiary"
+            // disabled={isDisabled}
             tooltipTitle="Copy link"
             onClick={copyLink}
           >
             {Icons.copy({ fill: "white" })}
           </SmallButton>
+
           <SmallButton
-            disabled={isBusy}
+            className="!w-[35px] !h-[35px] !bg-surface-tertiary"
+            disabled={isDisabled}
             tooltipTitle="Download file"
-            onClick={downloadFile}
+            onClick={downloadMedia}
           >
             {Icons.export("white")}
           </SmallButton>
+
           <SmallButton
-            disabled={isBusy}
+            className="!w-[35px] !h-[35px] !bg-surface-tertiary hover:bg-[crimson!important] "
+            disabled={isDisabled}
             tooltipTitle="Delete file"
-            className="hover:bg-[crimson!important] bg-surface-tertiary py-3"
             tooltipClassName="bg-[crimson!important]"
             onClick={deleteMedia}
           >

@@ -137,7 +137,7 @@ export class OPFS {
   >();
 
   #emitAllEvent = async (eventTargetName: OPFSEvents, currentRoot?: OTDir) => {
-    console.log("emitted");
+    // console.log("emitted");
     const event = {
       type: "all",
       mainRoot: await this.#root,
@@ -201,9 +201,9 @@ export class OPFS {
   ): () => void {
     const events = Array.isArray(event) ? event : [event];
     const handler = (ev: CustomEvent) => {
-      console.log("Registering EventTarget listener for:", event);
+      // console.log("Registering EventTarget listener for:", event);
       if (events.includes(ev.detail.type as T)) {
-        console.log("handler from event target");
+        // console.log("handler from event target");
         callback(ev.detail as Extract<OPFSEventData, { type: T }>);
       }
     };
@@ -508,11 +508,12 @@ export class OPFS {
       }
       return files;
     } catch (error) {
-      console.error("Error getting files:", error.message);
+      console.error("Error getting files:", error);
       return [];
     }
   }
 
+  
   async getAllFiles(
     path: string = "",
     options: {
@@ -594,7 +595,7 @@ export class OPFS {
         files.push(entry);
       } else if (entry.kind === "dir" && options.recursive) {
         const subFiles = await this.getAllFiles(entry.path, options);
-        console.log("sups  : ", subFiles);
+        // console.log("sups  : ", subFiles);
 
         files.push(...subFiles);
       }
@@ -605,7 +606,7 @@ export class OPFS {
 
   async removeAllFiles(path: string = "", recursive?: boolean) {
     try {
-      console.log("start removing");
+      // console.log("start removing");
       if (!path) {
         throw new Error("Path is not defined");
       }
@@ -637,7 +638,7 @@ export class OPFS {
       this.#eventTarget.dispatchEvent(
         new CustomEvent("opfs", { detail: event })
       );
-      console.log("Should be all removed");
+      // console.log("Should be all removed");
       await this.#emitAllEvent("entriesRemoved");
       return true;
     } catch (error) {
@@ -709,7 +710,7 @@ export class OPFS {
         const prevWriter = this.#openedWriters.get(file.path);
         prevWriter && await prevWriter.close();
         const writer = await file.createWriter();
-        console.log('prevWriter : ' , prevWriter , file.path);
+        // console.log('prevWriter : ' , prevWriter , file.path);
         // await write(file , bufferContent);
         this.#openedWriters.set(file.path, writer);
         await writer.truncate(0); // Clear old content
@@ -793,7 +794,7 @@ export class OPFS {
     } as EntriesRemoveEvent;
     this.#broadcast.postMessage(event);
     this.#eventTarget.dispatchEvent(new CustomEvent("opfs", { detail: event }));
-    console.log("Should be all removed");
+    // console.log("Should be all removed");
     await this.#emitAllEvent("entriesRemoved");
     return true;
   }

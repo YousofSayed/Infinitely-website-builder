@@ -84,7 +84,7 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 // tailwindClasses
 export function Editor({ params }) {
   const navigate = useNavigate();
-  const [currentEl, setCurrentEl] = useRecoilState(currentElState);
+  const setCurrentEl = useSetRecoilState(currentElState);
   const showLayers = useRecoilValue(showLayersState);
   const showAnimBuilder = useRecoilValue(showAnimationsBuilderState);
   const setModalData = useSetRecoilState(modalDataState);
@@ -286,7 +286,7 @@ export function Editor({ params }) {
     })();
   }, []);
 
-  useOfflineHandler();
+  useOfflineHandler(Object.values(allWorkersDone).every(Boolean));
   useWorkreFetch(offlineInstallerWorker);
   useWorkerToast();
 
@@ -303,7 +303,7 @@ export function Editor({ params }) {
           }
         >
           <BusyProvider>
-            <section className={`w-full h-full  relative`}>
+            <section className={`w-full h-full  relative auto-animate`}>
               <GJEditor key={reloader}>
                 {/* <WithEditor> */}
                 <main
@@ -341,7 +341,7 @@ export function Editor({ params }) {
                         <Panel defaultSize={300} id="left-panel" order={1}>
                           <section
                             // ref={parentForPanelsGroup}
-                            className="h-full w-full"
+                            className="h-full w-full auto-animate"
                           >
                             {/* {showLayers && (
                               <Aside dir="right">

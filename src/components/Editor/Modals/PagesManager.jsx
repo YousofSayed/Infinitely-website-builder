@@ -4,7 +4,12 @@ import {
   current_project_id,
   current_wp_page_helmet_id,
 } from "@/constants/shared";
-import { buildPage, defineRoot } from "@/helpers/bridge";
+import {
+  buildPage,
+  defineRoot,
+  replaceBlobs,
+  restoreBlobs,
+} from "@/helpers/bridge";
 import { uniqueID } from "@/helpers/cocktail";
 import { db } from "@/helpers/db";
 import { assetsWorker } from "@/helpers/defineWorkers";
@@ -32,7 +37,7 @@ import { SmallButton } from "@/components/Editor/Protos/SmallButton";
 import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useEditorMaybe } from "@grapesjs/react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { cloneDeep } from "lodash";
+import { cloneDeep, isPlainObject } from "lodash";
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { ShowIf } from "@/components/ShowIf";
@@ -53,6 +58,8 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { For } from "million/react";
 import { VirtuosoGrid } from "react-virtuoso";
 import { GridComponents } from "@/components/Protos/VirtusoGridComponent";
+import { useBusyCallback } from "@/hooks/useBusyCallback";
+import { Pages_manager_keys } from "@/constants/globalTasksKeys";
 
 // million-ignore
 export const PagesManager = () => {
@@ -118,245 +125,293 @@ export const PagesManager = () => {
     getPages();
   }, []);
 
-  const createPage = async (pageName = new String("")) => {
-    await doInNormalAsync(async () => {
-      if (!pageName.toString()) return;
-      const projectData = await getProjectData();
-      setSearchValue("");
-      const name = pageName.trim().toLowerCase();
-      const pathes = {
-        html: `editor/pages/${name}.html`,
-        css: `css/${name}.css`,
-        js: `js/${name}.js`,
-      };
+  const [createPage, { isLoading: isCreatingPage }] = useBusyCallback(
+    async (pageName = new String("")) => {
+      await doInNormalAsync(async () => {
+        if (!pageName.toString()) return;
+        const projectData = await getProjectData();
+        setSearchValue("");
+        const name = pageName.trim().toLowerCase();
+        const pathes = {
+          html: `editor/pages/${name}.html`,
+          css: `css/${name}.css`,
+          js: `js/${name}.js`,
+        };
 
-      await opfs.writeFiles(
-        Object.values(pathes).map((path) => ({
-          path: defineRoot(path),
-          content: "",
-        })),
-      );
-      await db.projects.update(projectId, {
-        pages: {
-          ...projectData.pages,
-          [`${name}`]: {
-            components: [],
-            pathes,
-            helmet: {
-              author: "",
-              description: "",
-              keywords: "",
-              customMetaTags: "",
-              title: "",
-              robots: "",
-            },
-            symbols: [],
-            bodyAttributes: {},
-            id: uniqueID(),
-            name: name,
-          },
-        },
-      });
-
-      setPageName(new String(""));
-      toast.success(<ToastMsgInfo msg={`Page created successfully 👍`} />);
-    });
-
-    await doInWordpressAsync(async () => {
-      navigate(`wordpress/create`, { viewTransition: true });
-    });
-  };
-
-  const deletePage = async (pageName) => {
-    await doInNormalAsync(async () => {
-      if (pageName?.toLowerCase?.() == "index") {
-        toast.error(<ToastMsgInfo msg={`Not allowed delete index page`} />);
-        return;
-      }
-
-      const toastId = toast.loading(<ToastMsgInfo msg={`Removing...`} />);
-      const projectData = await getProjectData();
-      const clone = structuredClone(await projectData.pages);
-      const page = clone[pageName];
-      await opfs.removeFiles(
-        Object.values(page.pathes).map((path) => defineRoot(path)),
-      );
-      delete clone[pageName];
-      await db.projects.update(projectId, {
-        pages: clone,
-      });
-
-      toast.done(toastId);
-      toast.success(<ToastMsgInfo msg={`Page removed successfully 👍`} />);
-    });
-
-    await doInWordpressAsync(async () => {
-      const wp_config = getWpPageConfig();
-      if (wp_config.id === pageName) {
-        toast.error(
-          <ToastMsgInfo msg={`Not allowed delete current editing page`} />,
+        await opfs.writeFiles(
+          Object.values(pathes).map((path) => ({
+            path: defineRoot(path),
+            content: "",
+          })),
         );
-        return;
-      }
-      const toastId = toast.loading(<ToastMsgInfo msg={`Removing...`} />);
-      await deletePosts({
-        projectId,
-        ids: [pageName],
+        await db.projects.update(projectId, {
+          pages: {
+            ...projectData.pages,
+            [`${name}`]: {
+              components: [],
+              pathes,
+              helmet: {
+                author: "",
+                description: "",
+                keywords: "",
+                customMetaTags: "",
+                title: "",
+                robots: "",
+              },
+              symbols: [],
+              bodyAttributes: {},
+              id: uniqueID(),
+              name: name,
+            },
+          },
+        });
+
+        setPageName(new String(""));
+        toast.success(<ToastMsgInfo msg={`Page created successfully 👍`} />);
       });
-      toast.done(toastId);
-      toast.success(<ToastMsgInfo msg={`Page removed successfully 👍`} />);
-    });
-    // setPages(await (await getProjectData()).pages);
-  };
+
+      await doInWordpressAsync(async () => {
+        navigate(`wordpress/create`, { viewTransition: true });
+      });
+    },
+    { key: Pages_manager_keys.create },
+  );
+
+  const [deletePage, { isLoading: isDeleting }] = useBusyCallback(
+    async (pageName = "") => {
+      const cnfrm = confirm(`Are you sure to delete ${pageName} page ? 🤔`);
+      if (!cnfrm) return;
+      await doInNormalAsync(async () => {
+        if (pageName?.toLowerCase?.()?.trim?.() == "index") {
+          toast.error(<ToastMsgInfo msg={`Not allowed delete index page`} />);
+          return;
+        }
+
+        const toastId = toast.loading(<ToastMsgInfo msg={`Removing...`} />);
+        const projectData = await getProjectData();
+        const clone = structuredClone(await projectData.pages);
+        const page = clone[pageName];
+        await opfs.removeFiles(
+          Object.values(page.pathes).map((path) => defineRoot(path)),
+        );
+        delete clone[pageName];
+        await db.projects.update(projectId, {
+          pages: clone,
+        });
+
+        toast.done(toastId);
+        toast.success(<ToastMsgInfo msg={`Page removed successfully 👍`} />);
+      });
+
+      await doInWordpressAsync(async () => {
+        const wp_config = getWpPageConfig();
+        if (wp_config.id === pageName) {
+          toast.error(
+            <ToastMsgInfo msg={`Not allowed delete current editing page`} />,
+          );
+          return;
+        }
+        const toastId = toast.loading(<ToastMsgInfo msg={`Removing...`} />);
+        await deletePosts({
+          projectId,
+          ids: [pageName],
+        });
+        toast.done(toastId);
+        toast.success(<ToastMsgInfo msg={`Page removed successfully 👍`} />);
+      });
+      // setPages(await (await getProjectData()).pages);
+    },
+    { key: Pages_manager_keys.delete },
+  );
 
   /**
    *
    * @param {import("react").ChangeEvent} ev
    */
-  const uploadPages = async (ev) => {
-    // ev.target.value = "";
-    /**
-     * @type {File[]}
-     */
-    const files = [...ev.target.files];
-    if (!files.length) return;
-    await doInNormalAsync(async () => {
-      const tId = toast.loading(<ToastMsgInfo msg={`Uploading...`} />);
-      const projectData = await getProjectData();
-      const mime = await (await import("mime")).default;
-      const htmlFiles = files.filter(
-        (file) => file.name.endsWith(".html") || file.name.endsWith(".htm"),
-      );
-      const cssFiles = files.filter((file) => file.name.endsWith(".css"));
-      const jsFiles = files.filter((file) => file.name.endsWith(".js"));
-      const otherFiles = files.filter(
-        (file) =>
-          !file.name.endsWith(".js") &&
-          !file.name.endsWith(".css") &&
-          !file.name.endsWith(".html") &&
-          !file.name.endsWith(".htm"),
-      );
-      console.log("files : ", htmlFiles);
+  const [uploadPages, { isLoading: isUploading }] = useBusyCallback(
+    async (ev) => {
+      // ev.target.value = "";
+      /**
+       * @type {File[]}
+       */
+      const files = [...ev.target.files];
+      if (!files.length) return;
+      ev.target.value = "";
 
-      const pagesUploaded = await Promise.all(
-        htmlFiles.map(async (file) =>
-          buildPage({
-            file,
-            pageName: file.name.replace(".html", "").replace(".htm", ""),
-          }),
-        ),
-      );
+      await doInNormalAsync(async () => {
+        const tId = toast.loading(<ToastMsgInfo msg={`Uploading...`} />);
+        try {
+          for (const file of files) {
+            const fileContent = await file.text();
+            const parsed =
+              /** @type {import("@/helpers/types").InfinitelyPage} */ (
+                restoreBlobs(JSON.parse(fileContent))
+              );
+            if (!isPlainObject(parsed)) {
+              toast.error(
+                <ToastMsgInfo
+                  msg={`File ${file.name} is not a valid file 🙂`}
+                />,
+              );
+              continue;
+            }
 
-      for (const page of pagesUploaded) {
-        // console.log('paaaaaaage : ' , page , await page.html.text());
-        if (page.html.size == 0) {
-          toast.warn(
-            <ToastMsgInfo msg={`File is empty , maybe it is corrupted!`} />,
-          );
+            if (!parsed.is_inf_downloaded || !parsed.name || !parsed.pathes) {
+              toast.error(
+                <ToastMsgInfo
+                  msg={`File ${file.name} is not a valid file 🙂`}
+                />,
+              );
+              continue;
+            }
+
+            const projectData = await getProjectData();
+            const pages = await projectData.pages;
+
+            if (pages[parsed.name]) {
+              toast.error(
+                <ToastMsgInfo msg={`Page ${parsed.name} already exist 🙂`} />,
+              );
+              continue;
+            }
+
+            // write files to opfs
+            await opfs.writeFiles([
+              {
+                path: defineRoot(parsed.pathes.html),
+                content: parsed.html,
+              },
+              {
+                path: defineRoot(parsed.pathes.css),
+                content: parsed.css,
+              },
+              {
+                path: defineRoot(parsed.pathes.js),
+                content: parsed.js,
+              },
+            ]);
+
+            // update db
+            await db.projects.update(projectId, {
+              pages: {
+                ...pages,
+                [parsed.name]: parsed,
+              },
+            });
+          }
+
+          toast.done(tId);
+          toast.success(<ToastMsgInfo msg={`Page uploaded successfully 👍`} />);
+        } catch (error) {
+          toast.dismiss(tId);
+          toast.error(<ToastMsgInfo msg={`Page uploaded failed! 😦`} />);
+          console.error(error);
+          throw error;
         }
-        if (projectData.pages[page.name]) {
-          const cnfrm = confirm(
-            `Page ${page.name} already exists, are you wanna to overwrite it ?`,
-          );
-          if (!cnfrm) continue;
-        }
-        await opfs.writeFiles([
+      });
+
+      await doInWordpressAsync(async () => {
+        const toastId = toast.loading(<ToastMsgInfo msg={`Uploading...`} />);
+        const filesAsJson = await (
+          await Promise.all(
+            files.map(async (file) => JSON.parse(await file.text())),
+          )
+        ).map((fileJson) => ({
+          post: {
+            post_type: fileJson.type,
+            post_title: fileJson.title,
+            post_content: fileJson.content,
+            post_name: fileJson.name,
+            post_status: "publish",
+          },
+          meta: fileJson.meta,
+        }));
+
+        await insertPosts(
           {
-            path: defineRoot(page.pathes.html),
-            content: page.html,
+            projectId: projectId,
+            posts: filesAsJson,
           },
           {
-            path: defineRoot(page.pathes.css),
-            content: page.css,
-          },
-          {
-            path: defineRoot(page.pathes.js),
-            content: page.js,
-          },
-        ]);
-
-        projectData.pages[page.name] = cloneDeep(page);
-      }
-
-      const assetsWorkerWillUpload = [];
-
-      for (const file of [...cssFiles, ...jsFiles, ...otherFiles]) {
-        const ext = mime.getExtension(file.type);
-        const fileName = file.name.replace(`.${ext}`, "");
-        const page = projectData.pages[fileName];
-        if (page) {
-          await opfs.writeFiles([
-            {
-              path: defineRoot(page.pathes[ext]),
-              content: file,
+            onSuccess: async () => {
+              toast.done(toastId);
+              toast.success(
+                <ToastMsgInfo msg={`Posts uploaded successfully 👍`} />,
+              );
             },
-          ]);
-        } else {
-          assetsWorkerWillUpload.push(file);
-        }
-        console.log("fileNAme = ", fileName);
-      }
-
-      assetsWorker.postMessage({
-        command: "uploadAssets",
-        props: {
-          projectId,
-          // toastId: id,
-          assets: assetsWorkerWillUpload,
-        },
+            onError: async () => {
+              toast.done(toastId);
+              toast.error(<ToastMsgInfo msg={`Posts uploaded failed! 😦`} />);
+            },
+          },
+        );
       });
 
-      for (const page of Object.values(projectData.pages)) {
-        ["html", "css", "js"].forEach((key) => {
-          delete page[key];
+      ev.target.value = "";
+    },
+    { key: Pages_manager_keys.upload },
+  );
+
+  const downloadPage = async (
+    page = /** @type {import("@/helpers/types").InfinitelyPage}*/ (null),
+  ) => {
+    const toastId = toast.loading(
+      <ToastMsgInfo msg={`Downloading ${page.name}...`} />,
+    );
+
+    await doInNormalAsync(async () => {
+      try {
+        const getFile = async (path) => {
+          return await (await opfs.getFile(defineRoot(path))).getOriginFile();
+        };
+        const fileObj =
+          /** @type {import("@/helpers/types").InfinitelyPage}*/ ({
+            ...page,
+            js: await getFile(page.pathes.js),
+            css: await getFile(page.pathes.css),
+            html: await getFile(page.pathes.html),
+            is_inf_downloaded: true,
+          });
+
+        downloadFile({
+          filename: `${page.name}.json`,
+          content: JSON.stringify(await replaceBlobs(fileObj)),
+          mimeType: "application/json",
         });
+        toast.done(toastId);
+        toast.success(
+          <ToastMsgInfo msg={`${page.name} downloaded successfully 🥰`} />,
+        );
+      } catch (error) {
+        console.error(error);
+        toast.dismiss(toastId);
+        toast.error(
+          <ToastMsgInfo msg={error?.message || `Failed to download 😥`} />,
+        );
+        throw error;
       }
-      await db.projects.update(projectId, {
-        pages: projectData.pages,
-      });
-      console.log("Files to upload: ", pagesUploaded);
-      toast.done(tId);
-      toast.success(<ToastMsgInfo msg={`Pages uploaded successfully 👍`} />);
     });
 
     await doInWordpressAsync(async () => {
-      const toastId = toast.loading(<ToastMsgInfo msg={`Uploading...`} />);
-      const filesAsJson = await (
-        await Promise.all(
-          files.map(async (file) => JSON.parse(await file.text())),
-        )
-      ).map((fileJson) => ({
-        post: {
-          post_type: fileJson.type,
-          post_title: fileJson.title,
-          post_content: fileJson.content,
-          post_name: fileJson.name,
-          post_status: "publish",
-        },
-        meta: fileJson.meta,
-      }));
-
-      await insertPosts(
-        {
-          projectId: projectId,
-          posts: filesAsJson,
-        },
-        {
-          onSuccess: async () => {
-            toast.done(toastId);
-            toast.success(
-              <ToastMsgInfo msg={`Posts uploaded successfully 👍`} />,
-            );
-          },
-          onError: async () => {
-            toast.done(toastId);
-            toast.error(<ToastMsgInfo msg={`Posts uploaded failed! 😦`} />);
-          },
-        },
-      );
+      try {
+        downloadFile({
+          filename: `${page.name}.json`,
+          content: JSON.stringify(page),
+          mimeType: "application/json",
+        });
+        toast.done(toastId);
+        toast.success(
+          <ToastMsgInfo msg={`${page.name} downloaded successfully 🥰`} />,
+        );
+      } catch (error) {
+        console.error(error);
+        toast.dismiss(toastId);
+        toast.error(
+          <ToastMsgInfo msg={error?.message || `Failed to download 😥`} />,
+        );
+        throw error;
+      }
     });
-
-    ev.target.value = "";
   };
 
   const search = (value) => {
@@ -391,24 +446,7 @@ export const PagesManager = () => {
     });
   };
 
-  const downloadPage = async (page) => {
-    await doInNormalAsync(async () => {});
-
-    await doInWordpressAsync(async () => {
-      const toastId = toast.loading(
-        <ToastMsgInfo msg={`Downloading ${page.name}...`} />,
-      );
-      await downloadFile({
-        filename: `${page.name}.json`,
-        content: JSON.stringify(page),
-        mimeType: "application/json",
-      });
-      toast.done(toastId);
-      toast.success(
-        <ToastMsgInfo msg={`${page.name} downloaded successfully 🥰`} />,
-      );
-    });
-  };
+  const isDisabled = isCreatingPage || isDeleting || isUploading;
 
   return (
     <section
@@ -434,7 +472,7 @@ export const PagesManager = () => {
         /> */}
         <SearchHeader
           search={search}
-          className={`!bg-surface-secondary ${isNormal() ? "w-full" : '!w-[calc(100%-55px)]'}`}
+          className={`!bg-surface-secondary ${isNormal() ? "w-full" : "!w-[calc(100%-55px)]"}`}
           inputProps={{
             className: "!bg-surface-secondary",
             value: searchValue,
@@ -463,6 +501,7 @@ export const PagesManager = () => {
             />
 
             <SmallButton
+              disabled={isDisabled}
               tooltipTitle="Create page"
               className="bg-brand-primary"
               onClick={(ev) => {
@@ -474,6 +513,7 @@ export const PagesManager = () => {
           </Normal>
 
           <SmallButton
+            disabled={isDisabled}
             tooltipTitle="Upload pages"
             className="bg-brand-primary"
             onClick={(ev) => {
@@ -487,7 +527,7 @@ export const PagesManager = () => {
             type="file"
             hidden
             multiple
-            accept="*"
+            accept=".json"
             onChange={uploadPages}
           />
           {/* <Button
@@ -513,9 +553,9 @@ export const PagesManager = () => {
             width: "100%",
           }}
           // className="h-full"
-          className="p-[unset] h-full w-full  animate-go-to"
+          className="p-[unset] h-full w-full hideScrollBar  animate-go-to"
           // itemClassName="p-[unset]"
-          listClassName={`${pages.length > 3 ? " pr-2" : ""}`}
+          // listClassName={`${pages.length > 3 ? " pr-2" : ""}`}
           itemContent={(index) => {
             const i = index,
               page = pages[index];
@@ -540,7 +580,7 @@ export const PagesManager = () => {
 
                 <section className="flex  gap-2 p-2 shrink-0   bg-surface-secondary rounded-lg">
                   <SmallButton
-                    disabled={isWordpress() && isDeletingPosts}
+                    disabled={isDisabled}
                     title={
                       (page.name.toLowerCase() == "index" &&
                         "Not Allowed To Delete Index Page") ||
@@ -572,7 +612,10 @@ export const PagesManager = () => {
                       });
 
                       doInWordpress(() => {
-                        sessionStorage.setItem(current_page_helmet, JSON.stringify(page));
+                        sessionStorage.setItem(
+                          current_page_helmet,
+                          JSON.stringify(page),
+                        );
                         sessionStorage.setItem(
                           current_wp_page_helmet_id,
                           page.ID,

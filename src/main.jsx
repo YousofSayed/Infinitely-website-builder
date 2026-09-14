@@ -17,8 +17,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import ElectronTitleBar from "./components/desktop/ElectronTitleBar";
 import Portal from "./components/Editor/Portal";
 import { queryClient } from "./utils/queryClient";
+import { animateApp } from "./observers/autoAnimateObserver";
 
 applyBrandConfig(config);
+setProjectSettings();
+animateApp(`#root`);
 
 const appStatus = {
   developer_creator: "Yousef Sayed Ahmed",
@@ -65,7 +68,6 @@ Error: ${event.error}
 
 console.log("configs:", configs);
 
-setProjectSettings();
 
 RecoilEnv.RECOIL_DUPLICATE_ATOM_KEY_CHECKING_ENABLED = false;
 

@@ -21,7 +21,7 @@ import {
   varType,
 } from "@/helpers/jsDocs";
 import React from "react";
-import { atom } from "recoil";
+import { atom, selector, selectorFamily } from "recoil";
 
 export const appTypeStt = atom({
   key: "appTypeStt",
@@ -105,7 +105,7 @@ export const searchWord = atom({
 });
 
 /**
- * @type {{[categoryName: string]: import('@/helpers/types').InfinitelyBlock[];}}
+ @type {{[categoryName: string]: import('@/helpers/types').InfinitelyBlock[];}}
  */
 export let editorBlocksType = {};
 
@@ -120,9 +120,10 @@ export const appInstallingState = atom({
 });
 
 /**
- * @type {Document}
+ @type {Document}
  */
 let initValTypeDocument;
+
 export const ifrDocument = atom({
   key: "iframeDocument",
   default: initValTypeDocument,
@@ -151,7 +152,7 @@ export const undoAndRedoStates = atom({
 });
 
 /**
- * @type {{iframe:HTMLIFrameElement , blocksStyle:HTMLStyleElement , [key:string]:HTMLElement}}
+ @type {{iframe:HTMLIFrameElement , blocksStyle:HTMLStyleElement , [key:string]:HTMLElement}}
  */
 let refsSttType = {};
 
@@ -166,8 +167,8 @@ export const showOverlayIframState = atom({
 });
 
 /**
- * @let
- * @type {{render:(children:React.ReactNode)=>void}}
+ @let
+ @type {{render:(children:React.ReactNode)=>void}}
  */
 let render;
 
@@ -177,24 +178,46 @@ export const iframeRoot = atom({
 });
 
 /**
- * @let
- * @type {{currentEl:import('grapesjs').Component | HTMLElement , addStyle:({[cssProp:string]:string})}}
+ @let
+ @type {{currentEl:import('grapesjs').Component | HTMLElement , addStyle:({[cssProp:string]:string})}}
  */
 let currentElType = {
   currentEl: null,
+  currentElId: "",
+  addStyle: null,
 };
+
+/**
+ * IMPORTANT:
+ * We keep currentElState as the main source of truth.
+ * We do NOT replace it.
+ */
 export const currentElState = atom({
   key: "currentEl",
   default: currentElType,
+  dangerouslyAllowMutability: true,
+});
+
+export const selectedComponentIdState = atom({
+  key: "selectedComponentIdState",
+  default: "",
+  dangerouslyAllowMutability: true,
+});
+
+export const selectedComponentVersionState = atom({
+  key: "selectedComponentVersionState",
+  default: 0,
+  dangerouslyAllowMutability: true,
 });
 
 export const accorddingState = atom({
   key: "accorddingState",
   default: 0,
+  dangerouslyAllowMutability: true,
 });
 
 /**
- * @type {import('grapesjs').Editor}
+ @type {import('grapesjs').Editor}
  */
 let editor;
 
@@ -260,7 +283,7 @@ export const showComponentsInLeftPanelState = atom({
   default: {
     layers: false,
     animationsBuilder: false,
-    viewPanel: false, //old was => wpSettings
+    viewPanel: false, // old was => wpSettings
     views: {
       viewKey: "",
       wordpress: {
@@ -274,10 +297,10 @@ export const showComponentsInLeftPanelState = atom({
             show: false,
             title: "WordPress Queries Builder",
           },
-          wpConditionsBuilder:{
+          wpConditionsBuilder: {
             show: false,
             title: "WordPress Conditions Builder",
-          }
+          },
         },
       },
     },
@@ -375,11 +398,6 @@ export const IDBState = atom({
   default: IDBType,
 });
 
-// export const globalSettingsState = atom({
-//   key: "globalSettingsState",
-//   default:getProjectSettings().projectSettings //getGlobalSettings().globalSettings,
-// });
-
 export const projectSettingsState = atom({
   key: "projectSettings",
   default: getProjectSettings().projectSettings,
@@ -432,6 +450,7 @@ export const projectState = atom({
   key: "searchResultsState",
   default: projectsType,
 });
+
 export const showCrtModalState = atom({
   key: "showCrtModalState",
   default: false,
@@ -472,10 +491,48 @@ export const wpQueryState = atom({
 
 export const wpCurrentConditionIdState = atom({
   key: "wpCurrentConditionIdState",
-  default: '',
+  default: "",
 });
 
 export const wpCurrentQueryIdState = atom({
   key: "wpCurrentQueryIdState",
   default: "",
+});
+
+/**
+ * PERFORMANCE FIX:
+ *
+ * We still keep currentElState.
+ * But Layers should not subscribe to the whole currentElState object.
+ *
+ * This selector reads only selected id.
+ */
+export const selectedComponentIdSelector = selector({
+  key: "selectedComponentIdSelector",
+  get: ({ get }) => {
+    const currentEl = get(currentElState);
+    return currentEl?.currentEl?.id ?? "";
+  },
+});
+
+/**
+ * PERFORMANCE FIX:
+ *
+ * Every Layer uses this selectorFamily.
+ *
+ * Why?
+ * If we use currentElState directly inside every Layer:
+ * one selection => every layer re-renders.
+ *
+ * With selectorFamily:
+ * only old selected layer + new selected layer receive changed boolean.
+ */
+export const isLayerSelectedSelector = selectorFamily({
+  key: "isLayerSelectedSelector",
+  get:
+    (layerId) =>
+    ({ get }) => {
+      const selectedId = get(selectedComponentIdSelector);
+      return Boolean(layerId) && selectedId === layerId;
+    },
 });

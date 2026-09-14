@@ -3,6 +3,7 @@ import {
   doActionAndPreventSaving,
   getInfinitelySymbolInfo,
   initToolbar,
+  renderToolbar,
 } from "@/helpers/functions";
 import React from "react";
 import { toast } from "react-toastify";
@@ -318,11 +319,7 @@ export const addNewTools = (editor) => {
     }
   );
 
-  // editor.on(
-  //   "component:clone",
-  //   handleCloneComponent
-  // );
-
+  
   editor.on("component:selected", (cmp) => {
     const sle = editor.getSelected();
     const sles = editor.getSelectedAll();
@@ -346,20 +343,31 @@ export const addNewTools = (editor) => {
       return;
     }
     initToolbar(editor, sle);
-    console.log("resizable sle :", sle.get("resizable"), sle.get("resizable"));
-    console.log("props sle :", sleProps);
+    // console.log("resizable sle :", sle.get("resizable"), sle.get("resizable"));
+    // console.log("props sle :", sleProps);
     editor.Canvas.getResizerEl() && editor.Canvas.getResizerEl().remove();
-    const isParentFlexOrGrid = () => {
-      const el = sle.parent().getEl();
-      const cmStyles = window.getComputedStyle(el);
-      const displayVal = cmStyles.display;
-      return {
-        isFlex: displayVal == "flex",
-        isGrid: displayVal == "grid",
-      };
-    };
+    // const isParentFlexOrGrid = () => {
+    //   const el = sle.parent().getEl();
+    //   const cmStyles = window.getComputedStyle(el);
+    //   const displayVal = cmStyles.display;
+    //   return {
+    //     isFlex: displayVal == "flex",
+    //     isGrid: displayVal == "grid",
+    //   };
+    // };
    
   });
+
+  // editor.onReady(()=>{
+  //   // editor.select(editor.getWrapper());
+  //   const toolbarEl = editor.Canvas.getToolbarEl();
+  //   toolbarEl.innerHTML='';
+  //   renderToolbar(editor);
+  //   console.log('inito');
+    
+  //   setTimeout(() => {
+  //   },10)
+  // })
 
   
 };

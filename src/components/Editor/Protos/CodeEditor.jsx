@@ -4,7 +4,8 @@ import {
   current_project_id,
   global_types,
 } from "@/constants/shared";
-import libSource from "@/helpers/alpineType?raw";
+import libSource from "@/types/code_editor/main?raw";
+import wp_query_args_types from "@/types/code_editor/wp_query_args?raw";
 import {
   defineRoot,
   doGlobalType,
@@ -15,7 +16,11 @@ import {
   wrapModule,
 } from "@/helpers/bridge";
 import { random, uniqueID } from "@/helpers/cocktail";
-import { getProjectData, isWordpress } from "@/helpers/functions";
+import {
+  doInWordpress,
+  getProjectData,
+  isWordpress,
+} from "@/helpers/functions";
 import { opfs } from "@/helpers/initOpfs";
 import { useCmdsContext } from "@/hooks/useCmdsContext";
 import { useWpTokens } from "@/queries/wp.queries";
@@ -75,118 +80,118 @@ export const CodeEditor = ({
   }, [tokensRes]);
 
   // 🔥 Add hover tooltip to Monaco suggestions
-//   useEffect(() => {
-//     const observer = new MutationObserver((mutations) => {
-//       for (const mutation of mutations) {
-//         for (const node of mutation.addedNodes) {
-//           if (node.nodeType !== 1) continue;
+  //   useEffect(() => {
+  //     const observer = new MutationObserver((mutations) => {
+  //       for (const mutation of mutations) {
+  //         for (const node of mutation.addedNodes) {
+  //           if (node.nodeType !== 1) continue;
 
-//           // Target Monaco's suggest widget rows
-//           const rows = node.querySelectorAll?.(".monaco-list-row");
-//           if (!rows?.length) continue;
+  //           // Target Monaco's suggest widget rows
+  //           const rows = node.querySelectorAll?.(".monaco-list-row");
+  //           if (!rows?.length) continue;
 
-//           rows.forEach((row) => {
-//             // Extract the full insert text from the row's data
-//             const index = row.getAttribute("data-index");
-//             if (index === null) return;
+  //           rows.forEach((row) => {
+  //             // Extract the full insert text from the row's data
+  //             const index = row.getAttribute("data-index");
+  //             if (index === null) return;
 
-//             // Get the suggestion item's text content
-//             const labelEl = row.querySelector(".label-name");
-//             const currentText = labelEl?.textContent || "";
+  //             // Get the suggestion item's text content
+  //             const labelEl = row.querySelector(".label-name");
+  //             const currentText = labelEl?.textContent || "";
 
-//             // Check if we already added a tooltip
-//             if (row.getAttribute("data-inf-tooltip")) return;
-//             row.setAttribute("data-inf-tooltip", "true");
+  //             // Check if we already added a tooltip
+  //             if (row.getAttribute("data-inf-tooltip")) return;
+  //             row.setAttribute("data-inf-tooltip", "true");
 
-//             // Find the full token from our global tokens list
-//             const fullToken = (window.__wpTokens || []).find(
-//               (t) =>
-//                 t.key.endsWith(currentText.replace("…", "")) ||
-//                 currentText.includes(t.key.split(".").pop()),
-//             );
+  //             // Find the full token from our global tokens list
+  //             const fullToken = (window.__wpTokens || []).find(
+  //               (t) =>
+  //                 t.key.endsWith(currentText.replace("…", "")) ||
+  //                 currentText.includes(t.key.split(".").pop()),
+  //             );
 
-//             if (fullToken) {
-//               // ✅ Native browser tooltip on hover
-//               row.setAttribute(
-//                 "title",
-//                 `${fullToken.key}\nType: ${fullToken.type}\nValue: ${fullToken.live_value ?? "null"}`,
-//               );
-//               row.style.whiteSpace = "normal";
-//             }
-//           });
-//         }
-//       }
-//     });
+  //             if (fullToken) {
+  //               // ✅ Native browser tooltip on hover
+  //               row.setAttribute(
+  //                 "title",
+  //                 `${fullToken.key}\nType: ${fullToken.type}\nValue: ${fullToken.live_value ?? "null"}`,
+  //               );
+  //               row.style.whiteSpace = "normal";
+  //             }
+  //           });
+  //         }
+  //       }
+  //     });
 
-//     // Observe the Monaco overflow container where suggestions render
-//     const checkContainer = () => {
-//       const container = window.__monacoOverflowContainer || document.body;
-//       observer.observe(container, { childList: true, subtree: true });
-//     };
+  //     // Observe the Monaco overflow container where suggestions render
+  //     const checkContainer = () => {
+  //       const container = window.__monacoOverflowContainer || document.body;
+  //       observer.observe(container, { childList: true, subtree: true });
+  //     };
 
-//     // Wait for Monaco to be ready
-//     if (window.__monacoOverflowContainer) {
-//       checkContainer();
-//     } else {
-//       setTimeout(checkContainer, 500);
-//     }
+  //     // Wait for Monaco to be ready
+  //     if (window.__monacoOverflowContainer) {
+  //       checkContainer();
+  //     } else {
+  //       setTimeout(checkContainer, 500);
+  //     }
 
-//     return () => observer.disconnect();
-//   }, []);
+  //     return () => observer.disconnect();
+  //   }, []);
 
-//   useEffect(() => {
-//   const styleId = 'inf-monaco-tooltip-styles';
-//   if (document.getElementById(styleId)) return;
+  //   useEffect(() => {
+  //   const styleId = 'inf-monaco-tooltip-styles';
+  //   if (document.getElementById(styleId)) return;
 
-//   const style = document.createElement('style');
-//   style.id = styleId;
-//   style.textContent = `
-//     /* Native tooltip styling */
-//     .monaco-editor .suggest-widget .monaco-list-row[title] {
-//       cursor: help !important;
-//     }
+  //   const style = document.createElement('style');
+  //   style.id = styleId;
+  //   style.textContent = `
+  //     /* Native tooltip styling */
+  //     .monaco-editor .suggest-widget .monaco-list-row[title] {
+  //       cursor: help !important;
+  //     }
 
-//     /* Make the suggest details panel (Ctrl+Space) wider and always visible */
-//     .monaco-editor .suggest-widget .suggest-details {
-//       min-width: 350px !important;
-//       max-width: 500px !important;
-//       max-height: 300px !important;
-//     }
+  //     /* Make the suggest details panel (Ctrl+Space) wider and always visible */
+  //     .monaco-editor .suggest-widget .suggest-details {
+  //       min-width: 350px !important;
+  //       max-width: 500px !important;
+  //       max-height: 300px !important;
+  //     }
 
-//     /* Make the main list wider */
-//     .monaco-editor .suggest-widget {
-//       min-width: 320px !important;
-//     }
+  //     /* Make the main list wider */
+  //     .monaco-editor .suggest-widget {
+  //       min-width: 320px !important;
+  //     }
 
-//     /* Allow label text to wrap if needed */
-//     .monaco-editor .suggest-widget .monaco-list-row .contents .main {
-//       overflow: visible !important;
-//     }
+  //     /* Allow label text to wrap if needed */
+  //     .monaco-editor .suggest-widget .monaco-list-row .contents .main {
+  //       overflow: visible !important;
+  //     }
 
-//     /* Style the preview ghost text */
-//     .monaco-editor .suggest-widget .monaco-list-row .suggest-preview {
-//       opacity: 0.5 !important;
-//       font-style: italic !important;
-//     }
+  //     /* Style the preview ghost text */
+  //     .monaco-editor .suggest-widget .monaco-list-row .suggest-preview {
+  //       opacity: 0.5 !important;
+  //       font-style: italic !important;
+  //     }
 
-//     /* Better details panel content */
-//     .monaco-editor .suggest-widget .suggest-details .markdown-docs {
-//       padding: 12px !important;
-//       font-size: 13px !important;
-//       line-height: 1.6 !important;
-//     }
+  //     /* Better details panel content */
+  //     .monaco-editor .suggest-widget .suggest-details .markdown-docs {
+  //       padding: 12px !important;
+  //       font-size: 13px !important;
+  //       line-height: 1.6 !important;
+  //     }
 
-//     .monaco-editor .suggest-widget .suggest-details .markdown-docs code {
-//       background: rgba(255,255,255,0.08) !important;
-//       padding: 2px 6px !important;
-//       border-radius: 4px !important;
-//       font-size: 12px !important;
-//       word-break: break-all !important;
-//     }
-//   `;
-//   document.head.appendChild(style);
-//   return () => document.getElementById(styleId)?.remove();
-// }, []);
+  //     .monaco-editor .suggest-widget .suggest-details .markdown-docs code {
+  //       background: rgba(255,255,255,0.08) !important;
+  //       padding: 2px 6px !important;
+  //       border-radius: 4px !important;
+  //       font-size: 12px !important;
+  //       word-break: break-all !important;
+  //     }
+  //   `;
+  //   document.head.appendChild(style);
+  //   return () => document.getElementById(styleId)?.remove();
+  // }, []);
 
   const registerWpTokenProvider = (monaco) => {
     if (window.__wpTokenProviderRegistered) return;
@@ -330,6 +335,7 @@ export const CodeEditor = ({
           defineRoot(isWordpress() ? "global.js" : `global/global.js`),
         )
       ).text();
+
       const localJs = await (
         await opfs.getFile(
           defineRoot(isWordpress() ? "local.js" : `js/${currentPageName}.js`),
@@ -500,6 +506,13 @@ export const CodeEditor = ({
         libSource,
         "global.d.ts",
       );
+
+      doInWordpress(() => {
+        monaco.languages.typescript.javascriptDefaults.addExtraLib(
+          wp_query_args_types,
+          "wp_query_args.d.ts",
+        );
+      });
 
       monaco.languages.registerCompletionItemProvider("javascript", {
         triggerCharacters: ["t", " "],

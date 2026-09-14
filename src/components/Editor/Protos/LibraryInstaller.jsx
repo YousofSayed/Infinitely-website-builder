@@ -5,52 +5,82 @@ import { Input } from "@/components/Editor/Protos/Input";
 import { JsLibrary } from "@/components/Editor/Protos/JsLibrary";
 import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { For } from "million/react";
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { Virtuoso } from "react-virtuoso";
+import { useCDNLibraries } from "@/queries/editor.queries";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { useLiveQuery } from "dexie-react-hooks";
+import { getProjectData } from "@/helpers/functions";
 
 //million-ignore
 export const LibraryInstaller = () => {
-  const [libraries, setLibraries] = useState(JSLibrariesType);
+  // const [libraries, setLibraries] = useState(JSLibrariesType);
   const [showLoader, setShowLoader] = useState(false);
   const timeout = useRef();
-  const searchOnlibrary = async (libraryName = "") => {
-    try {
-      if (!libraryName) {
-        setShowLoader(false);
-        setLibraries([]);
-        return;
-      }
-      setShowLoader(true);
-      const searchEndPoint = `https://api.cdnjs.com/libraries?search=${libraryName}&fields=filename,description,version,github`;
-      const response = (await fetch(searchEndPoint)).json();
-      /**
-       * @type {import('@/helpers/types').JSLibrary[]}
-       */
-      const results = await (await response).results;
-      console.log(results);
+  const [params, setParams] = useState({ search: "" });
+  const { data: dataCDNLibraries, isLoading: isLoadingCDNLibraries } =
+    useCDNLibraries(params);
+  const projectData = useLiveQuery(async () => {
+    return await getProjectData();
+  });
 
-      setLibraries(
-        results.filter(
-          (lib) =>
-            lib?.latest &&
-            (lib.latest.endsWith("js") || lib.latest.endsWith("css"))
-        )
-      );
-      setShowLoader(false);
-    } catch (error) {
-      toast.error(<ToastMsgInfo msg={"Faild To Get Library"} />);
-      setShowLoader(false);
-      setLibraries([]);
-      throw new Error(`From Library Installer : ${error}`);
+  const libraries = useMemo(() => {
+    if (isLoadingCDNLibraries) {
+      return [];
     }
-  };
+    return (
+      dataCDNLibraries?.results?.filter?.(
+        (lib) =>
+          lib?.latest &&
+          (lib.latest.endsWith("js") || lib.latest.endsWith("css")) &&
+          !projectData?.jsHeaderLibs?.find?.((dLib) => dLib.nameWithoutExt == lib.name) &&
+          !projectData?.jsFooterLibs?.find?.((dLib) => dLib.nameWithoutExt == lib.name) &&
+          !projectData?.cssLibs?.find?.((dLib) => dLib.nameWithoutExt == lib.name),
+      ) || []
+    );
+  }, [isLoadingCDNLibraries, dataCDNLibraries, projectData]);
+
+  const [animatedRef] = useAutoAnimate();
+
+  // const searchOnlibrary = async (libraryName = "") => {
+  //   try {
+  //     if (!libraryName) {
+  //       setShowLoader(false);
+  //       setLibraries([]);
+  //       return;
+  //     }
+  //     setShowLoader(true);
+  //     const searchEndPoint = `https://api.cdnjs.com/libraries?search=${libraryName}&fields=filename,description,version,github`;
+  //     const response = (await fetch(searchEndPoint)).json();
+  //     /**
+  //      * @type {import('@/helpers/types').JSLibrary[]}
+  //      */
+  //     const results = await (await response).results;
+  //     console.log(results);
+
+  //     setLibraries(
+  //       results.filter(
+  //         (lib) =>
+  //           lib?.latest &&
+  //           (lib.latest.endsWith("js") || lib.latest.endsWith("css")),
+  //       ),
+  //     );
+  //     setShowLoader(false);
+  //   } catch (error) {
+  //     toast.error(<ToastMsgInfo msg={"Faild To Get Library"} />);
+  //     setShowLoader(false);
+  //     setLibraries([]);
+  //     throw new Error(`From Library Installer : ${error}`);
+  //   }
+  // };
 
   const onInput = (value) => {
     timeout.current && clearTimeout(timeout.current);
     timeout.current = setTimeout(async () => {
-      await searchOnlibrary(value);
-    }, 700);
+      // await searchOnlibrary(value);
+      setParams({ search: value });
+    }, 300);
   };
 
   return (
@@ -61,7 +91,7 @@ export const LibraryInstaller = () => {
         </h1>
       </header> */}
 
-      <main className="flex flex-col gap-2 h-full">
+      <main className="flex flex-col gap-2 h-full" ref={animatedRef}>
         <div className=" sticky top-0 left-0">
           <Input
             id="search"
@@ -73,7 +103,7 @@ export const LibraryInstaller = () => {
             }}
           />
           <div className="absolute  inset-y-0 right-3 flex items-center gap-2">
-            {showLoader && <Loader width={15} height={15} />}
+            {isLoadingCDNLibraries && <Loader width={15} height={15} />}
             <svg
               width={27.5}
               height={27.5}
@@ -100,14 +130,19 @@ export const LibraryInstaller = () => {
         </section> */}
 
         {/* <section className="h-full overflow-auto  flex flex-col gap-2"> */}
-          <Virtuoso
-            totalCount={libraries.length}
-            itemContent={(i) => {
-              const lib = libraries[i];
-              return <JsLibrary key={i} library={lib} />;
-            }}
-            components={{ Item: VirtosuoVerticelWrapper  }}
-          />
+        <Virtuoso
+          className="overflow-y-auto hideScrollBar"
+          totalCount={libraries.length}
+          itemContent={(i) => {
+            const lib = libraries[i];
+            return <JsLibrary key={i} library={lib} />;
+          }}
+          components={{
+            Item: (props) => (
+              <div className="flex flex-col my-2 " {...props}></div>
+            ),
+          }}
+        />
         {/* </section> */}
       </main>
     </section>

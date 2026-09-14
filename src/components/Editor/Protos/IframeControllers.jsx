@@ -459,6 +459,7 @@ const [showsComponents, setShowsComponents] = useRecoilState(
             // location.replace(location.href);
             // reloadInfinitely();
             editor.load();
+            setReloadRequired(false);
           }, 0);
         }}
         title="Reload Canvas"

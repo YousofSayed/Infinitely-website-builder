@@ -14,7 +14,7 @@ import { MiniTitle } from "@/components/Editor/Protos/MiniTitle";
 export const inf_query_traits = (editor) =>
   defineTraits([
     {
-         name: "inf-query-handler", // 👈 ADD THIS
+      name: "inf-query-handler", // 👈 ADD THIS
       role: "handler",
       type: "custom",
       component: () => <MiniTitle>Inf Query</MiniTitle>,
@@ -26,10 +26,10 @@ export const inf_query_traits = (editor) =>
       label: "Inf Query",
       placeholder: "Select Inf Query",
       role: "attribute",
-      keywords : ({projectData})=>{
-        console.log('projectData keywords: ', projectData);
-        
-        if(!projectData) return [];
+      keywords ({ projectData })  {
+        console.log("projectData keywords: ", projectData);
+
+        if (!projectData) return [];
         return Object.values(projectData.queries).map((q) => ({
           value: q.inf_query_id,
           title: q.inf_query_name,

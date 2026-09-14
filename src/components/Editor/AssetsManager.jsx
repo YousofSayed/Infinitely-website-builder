@@ -54,7 +54,7 @@ import { useRecoilValue, useSetRecoilState } from "recoil";
  *
  * @param {{editor: import('grapesjs').Editor}} param0
  * @returns
- */
+ */ 
 export const AssetsManager = () => {
   /**
    * @type {import('@/helpers/types').InfinitelyAsset[]}

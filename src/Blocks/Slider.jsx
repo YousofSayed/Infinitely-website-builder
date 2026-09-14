@@ -41,7 +41,7 @@ export const Slider = ({ editor }) => {
           role: "attribute",
           bindToAttribute: true,
         };
-        
+
         if (!isPlainObject(val)) {
           trait.type = isArray(val)
             ? "select"
@@ -109,7 +109,6 @@ export const Slider = ({ editor }) => {
               const selected = editor.getSelected();
               if (!selected) return false;
               const currentTrait = selected.getTrait(trait.nestedKeys[0]);
-            
 
               if (!currentTrait) return false;
               const currentValue = currentTrait.get("value");
@@ -125,7 +124,7 @@ export const Slider = ({ editor }) => {
               if (!currentTrait) return;
               const currentValue = currentTrait.get("value");
               const parsedValue = parse(currentValue);
-             
+
               if (
                 parsedValue &&
                 isArray(trait.nestedKeys) &&
@@ -147,6 +146,7 @@ export const Slider = ({ editor }) => {
                 );
               }
             },
+
             init({ editor, model, trait }) {
               const parentTrait = model.getTrait(
                 trait.nestedKeys[0],
@@ -268,10 +268,10 @@ export const Slider = ({ editor }) => {
           }),
         ),
         components: [
-          { type: "slide" },
-          { type: "slide" },
-          { type: "slide" },
-          { type: "slide" },
+          // { type: "slide" },
+          // { type: "slide" },
+          // { type: "slide" },
+          // { type: "slide" },
         ],
         attributes: {
           autoplay: "false",
@@ -309,9 +309,21 @@ export const Slider = ({ editor }) => {
             },
 
             init({ editor, model, trait }) {
-              const childs = model.components().models;
-              trait.value = childs.length;
-              trait.default = childs.length;
+              // 🚀 Function to update the UI without triggering the callback
+              const updateValue = () => {
+                // const length = model.components().length;
+                const childs = model.components().models;
+                trait.value = childs.length;
+                trait.default = childs.length;
+              };
+
+              // Set initial value on render
+              updateValue();
+
+              // 🎯 Listen to when children (slides) are added, removed, or completely reset
+              const components = model.components();
+
+              model.listenTo(components, "add remove reset", updateValue);
             },
           },
         ])
@@ -386,7 +398,7 @@ export const Slider = ({ editor }) => {
             return trait;
           }),
         draggable: true,
-        droppable: true,
+        droppable: 'swiper-slide',
       },
     },
   });
@@ -407,8 +419,8 @@ export const Slider = ({ editor }) => {
           }),
         ),
         tagName: "swiper-slide",
-        draggable: false,
-        droppable: true,
+        // draggable: false,
+        // droppable: true,
       },
     },
   });

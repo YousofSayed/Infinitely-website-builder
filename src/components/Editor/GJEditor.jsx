@@ -1,4 +1,3 @@
-import gStyles from "../../../public/styles/style.css?raw";
 import { blocks } from "@/Blocks/blocks.jsx";
 import { InfinitelyEvents } from "@/constants/infinitelyEvents.js";
 import { current_symbol_id } from "@/constants/shared.js";
@@ -21,7 +20,6 @@ import {
   isWordpress,
 } from "@/helpers/functions";
 import { useSettingsHandler } from "@/hooks/useSettingsHandler";
-import { useShortcuts } from "@/hooks/useShortcuts";
 import { addDevices } from "@/plugins/addDevices";
 import { addNewBuiltinCommands } from "@/plugins/addNewBuiltinCommands.jsx";
 import { addNewTools } from "@/plugins/addNewTools.jsx";
@@ -39,42 +37,24 @@ import { updateProjectThumbnail } from "@/plugins/updateProjectThumbnail.jsx";
 import { wp_remote_storage } from "@/plugins/wp_remote_storage.jsx";
 import GjsEditor from "@grapesjs/react";
 import grapesjs from "grapesjs";
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useCallback, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useRecoilState, useSetRecoilState } from "recoil";
-
-const plugins = [
-  infProps,
-  customCmps,
-  addDevices,
-  customModal,
-  addNewTools,
-  addNewBuiltinCommands,
-  motionsAndInteractionsCloneHandler,
-  updateProjectThumbnail,
-  customInfinitelySymbols,
-  globalTraits,
-  initTraitsOnRender,
-  editorKeymaps,
-  ...(isNormal() ? [IDB] : isWordpress() ? [wp_remote_storage] : []),
-  updateEditorStyleAfterTemplateOrBlockAdded,
-  // customColors,
-  // updateDynamicTemplates,
-  // motionsRemoverHandler,
-  // handleComponentsOnCreate,
-  // selectionPreventer,
-  // muatationDomElements,
-];
 
 export const GJEditor = ({ children }) => {
   const setSelectedEl = useSetRecoilState(currentElState);
-  // const [cmdsContext, setCmdsContext] = useCmdsContext();
   const setSelector = useSetRecoilState(selectorState);
   const setRule = useSetRecoilState(ruleState);
   const navigate = useNavigate();
+
+  const location = useLocation();
+  const locationRef = useRef(location);
+  locationRef.current = location;
+
   const [reloader, setReloader] = useRecoilState(reloaderState);
   const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
   const [mediaCond, setMediaCond] = useRecoilState(mediaConditionState);
+
   const plugins = useRef([
     infProps,
     customCmps,
@@ -90,19 +70,35 @@ export const GJEditor = ({ children }) => {
     editorKeymaps,
     ...(isNormal() ? [IDB] : isWordpress() ? [wp_remote_storage] : []),
     updateEditorStyleAfterTemplateOrBlockAdded,
-    // customColors,
-    // updateDynamicTemplates,
-    // motionsRemoverHandler,
-    // handleComponentsOnCreate,
-    // selectionPreventer,
-    // muatationDomElements,
   ]);
 
-  // const currentDynamicTemplateId = useRecoilValue(
-  //   currentDynamicTemplateIdState
-  // );
-  // const dynamicTemplates = useRecoilValue(dynamicTemplatesState);
-  // const setStyle = useSetClassForCurrentEl();
+  /**
+   * PERFORMANCE FIX:
+   *
+   * We still update currentElState.
+   * But we avoid creating a new atom object if selected id did not change.
+   *
+   * This prevents useless Recoil updates.
+   */
+  const updateCurrentEl = useCallback(
+    (id) => {
+      setSelectedEl((prev) => {
+        const prevId = prev?.currentEl?.id ?? "";
+        const nextId = id || "";
+
+        if (prevId === nextId) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          currentEl: nextId ? { id: nextId } : undefined,
+          currentElId: nextId,
+        };
+      });
+    },
+    [setSelectedEl],
+  );
 
   /**
    *
@@ -110,15 +106,66 @@ export const GJEditor = ({ children }) => {
    */
   const onEditor = (ev) => {
     const editor = ev;
+    const idleCallback =
+      window.requestIdleCallback ||
+      function (cb) {
+        return setTimeout(cb, 1);
+      };
+
+    const cancelIdleCallback =
+      window.cancelIdleCallback ||
+      function (id) {
+        clearTimeout(id);
+      };
+
+    let rulesTimer = null;
+    let rulesIdle = null;
+
+    const scheduleRules = () => {
+      clearTimeout(rulesTimer);
+
+      if (rulesIdle) {
+        cancelIdleCallback(rulesIdle);
+        rulesIdle = null;
+      }
+
+      rulesTimer = setTimeout(() => {
+        rulesIdle = idleCallback(
+          () => {
+            const sle = editor.getSelected();
+
+            if (!sle) {
+              setCmpRules([]);
+              return;
+            }
+
+            const rules = getComponentRules({
+              editor,
+              cmp: sle,
+              cssCode: editor.getCss({
+                keepUnusedStyles: true,
+                avoidProtected: true,
+              }),
+            });
+
+            setCmpRules(rules.rules || []);
+          },
+          { timeout: 300 },
+        );
+      }, 120);
+    };
+
     ev.Blocks.categories.add({ id: "others", title: "Others" });
     setMediaCond(localStorage.getItem("media-condition") || "max-width");
     ev.runCommand("core:component-outline");
+
     isChrome(() => {
       editor.on("canvas:frame:load", ({ window, el }) => {
         /**
          * @type {HTMLIFrameElement}
          */
         const iframe = el;
+
         iframe.contentDocument.head.insertAdjacentHTML(
           `afterbegin`,
           `<meta name="viewport" content="width=device-width, initial-scale=1.0">`,
@@ -126,119 +173,147 @@ export const GJEditor = ({ children }) => {
 
         if (iframe.hasAttribute("src")) return;
 
-        // iframe.setAttribute("sandbox", "allow-scripts allow-same-origin");
-        // iframe.setAttribute("referrerpolicy", "same-origin unsafe-url");
         iframe.setAttribute("src", "about:srcdoc");
         console.log("iframe work: ", iframe);
       });
     });
-    //Go to SetClasses to complete ****
+
+    /**
+     * Deselection logic.
+     * Keep same behavior, but avoid duplicate atom writes.
+     */
     ev.on("component:deselected", () => {
-      setSelectedEl({ currentEl: undefined });
+      updateCurrentEl("");
       setCmpRules([]);
     });
 
     ev.on("component:selected", () => {
       const selectedEl = ev.getSelected();
+      if (!selectedEl) return;
+
+      const selectedId = selectedEl?.getId?.();
       const symbolInfo = getInfinitelySymbolInfo(selectedEl);
-      // selectedEl.set({ resizable: false });
-      setSelectedEl({ currentEl: JSON.parse(JSON.stringify(selectedEl)) }); //Fuck bug which make me like a crazy was fucken here , and it was because i set Dom Element in atom , old Code : selectedEl?.getEl()
+
+      /**
+       * Keep currentElState update.
+       */
+      updateCurrentEl(selectedId);
+
       setRule({ is: false, ruleString: "" });
-      const rules = getComponentRules({
-        editor,
-        // nested:true
-        cmp: selectedEl,
-        cssCode: editor.getCss({
-          keepUnusedStyles: true,
-          avoidProtected: true,
-        }),
-      });
-
-      setCmpRules(rules.rules || []);
-      // const location = window.location;
-
       setSelector("");
+
+      /**
+       * Rules are expensive.
+       * Keep them inside requestAnimationFrame so selection UI is not blocked.
+       */
+      // requestAnimationFrame(() => {
+      //   const rules = getComponentRules({
+      //     editor,
+      //     cmp: selectedEl,
+      //     cssCode: editor.getCss({
+      //       keepUnusedStyles: true,
+      //       avoidProtected: true,
+      //     }),
+      //   });
+
+      //   setCmpRules(rules.rules || []);
+      // });
+      scheduleRules();
+
       if (symbolInfo.isSymbol) {
         sessionStorage.setItem(current_symbol_id, symbolInfo.mainId);
       } else {
         sessionStorage.removeItem(current_symbol_id);
       }
+
       const projectSettings = getProjectSettings().projectSettings;
-      if (projectSettings.navigate_to_style_when_Select) {
+
+      /**
+       * PERFORMANCE FIX:
+       *
+       * Do not navigate if already inside styling route.
+       */
+      if (
+        projectSettings.navigate_to_style_when_Select &&
+        locationRef.current.pathname !== "/edite/styling"
+      ) {
         navigate("/edite/styling");
       }
     });
 
     editor.on(InfinitelyEvents.ruleTitle.update, () => {
-      const selectedEl = ev.getSelected();
-      const rules = getComponentRules({
-        editor,
-        // nested:true
-        cmp: selectedEl,
-        cssCode: editor.getCss({
-          keepUnusedStyles: true,
-          avoidProtected: true,
-        }),
-      });
+      // const selectedEl = ev.getSelected();
+      // if (!selectedEl) return;
 
-      setCmpRules(rules.rules || []);
+      // const rules = getComponentRules({
+      //   editor,
+      //   cmp: selectedEl,
+      //   cssCode: editor.getCss({
+      //     keepUnusedStyles: true,
+      //     avoidProtected: true,
+      //   }),
+      // });
+
+      // setCmpRules(rules.rules || []);
+      scheduleRules();
     });
 
-    ev.on("component:cmds:update", () => {
-      console.log("updateeeeeeeeeeeeeeeeeeeeeee 89");
-      const sle = ev.getSelected();
-      if (!sle) {
-        console.warn("No Selected Component");
-        return;
-      } else {
-        setCmdsContext(sle);
-      }
+    /**
+     * Keep undo/redo behavior.
+     * But avoid duplicate currentElState writes.
+     */
+    ev.on("redo", () => {
+      const sle = editor.getSelected();
+      updateCurrentEl(sle?.getId?.());
+
+      // if (!sle) {
+      //   setCmpRules([]);
+      //   return;
+      // }
+
+      // const rules = getComponentRules({
+      //   editor,
+      //   cmp: sle,
+      //   cssCode: editor.getCss({
+      //     keepUnusedStyles: true,
+      //     avoidProtected: true,
+      //   }),
+      // });
+
+      // setCmpRules(rules.rules || []);
+      scheduleRules();
     });
 
-    ev.on("redo", (args) => {
-      setSelectedEl({
-        currentEl: JSON.parse(JSON.stringify(editor.getSelected() || {})),
-      });
+    ev.on("undo", () => {
+      const sle = editor.getSelected();
+      updateCurrentEl(sle?.getId?.());
 
-      const rules = getComponentRules({
-        editor,
-        // nested:true
-        cmp: editor.getSelected(),
-        cssCode: editor.getCss({
-          keepUnusedStyles: true,
-          avoidProtected: true,
-        }),
-      });
+      // if (!sle) {
+      //   setCmpRules([]);
+      //   return;
+      // }
 
-      setCmpRules(rules.rules || []);
-    });
+      // const rules = getComponentRules({
+      //   editor,
+      //   cmp: sle,
+      //   cssCode: editor.getCss({
+      //     keepUnusedStyles: true,
+      //     avoidProtected: true,
+      //   }),
+      // });
 
-    ev.on("undo", (args) => {
-      setSelectedEl({
-        currentEl: JSON.parse(JSON.stringify(editor.getSelected() || {})),
-      });
-
-      const rules = getComponentRules({
-        editor,
-        // nested:true
-        cmp: editor.getSelected(),
-        cssCode: editor.getCss({
-          keepUnusedStyles: true,
-          avoidProtected: true,
-        }),
-      });
-
-      setCmpRules(rules.rules || []);
+      // setCmpRules(rules.rules || []);
+      scheduleRules();
     });
   };
 
   useSettingsHandler();
 
-
   return (
     <GjsEditor
       key={reloader}
       grapesjs={grapesjs}
+      className="auto-animate"
       options={{
         plugins: plugins.current,
         height: "100%",
@@ -250,41 +325,22 @@ export const GJEditor = ({ children }) => {
         clearStyles: false,
         keepEmptyTextNodes: true,
         avoidDefaults: true,
-        // log: true,
-        // fromElement: false,
         domComponents: { useFrameDoc: true },
         richTextEditor: {
           custom: true,
-          // adjustToolbar:
           toolbar: [],
         },
-        // baseCss:'body:{background:unset;}',
-
-        // optsHtml: {
-        //   withProps: true,
-
-        // },
         optsCss: {
           keepUnusedStyles: true,
           clearStyles: false,
           onlyMatched: false,
         },
-        // autorender: true,
-
         parser: {
-          // parserCss:(css)=>{
-          //  return parse(css , {}).stylesheet.rules
-          // },
-
           optionsHtml: {
-            // preParser(input){
-            //   return input
-            // },
             allowScripts: true,
             allowUnsafeAttr: true,
             allowUnsafeAttrValue: true,
             keepEmptyTextNodes: true,
-            // htmlType: "text/html",
           },
         },
         showOffsetsSelected: true,
@@ -300,27 +356,18 @@ export const GJEditor = ({ children }) => {
           custom: true,
         },
         telemetry: false,
-
         keymaps: {
-          defaults: {
-            // 'core:undo': '', // Unbind Ctrl+Z
-            // 'core:redo': '', // Unbind Ctrl+Y
-          },
+          defaults: {},
         },
         protectedCss: ``,
         canvas: {
           scripts: [
-            // {src:'/scripts/willChange.js' , name:'willChange.js'},
             ...((isChrome() && [
               { src: `/scripts/initSw.js`, name: "initSw.js" },
             ]) ||
               []),
-            // {src:`${jsToDataURL(`console.log('data js url.............@')`)}`}
           ],
-          styles: [
-            // "/styles/dev.css", "/styles/style.css"
-          ], 
-
+          styles: [],
           customBadgeLabel:
             /**
              *
@@ -328,22 +375,22 @@ export const GJEditor = ({ children }) => {
              */
             (cmp) => {
               const symbolInfo = getInfinitelySymbolInfo(cmp);
+
               return html`
                 <figure
                   id="inf-badge"
                   class="flex gap-2 items-center p-1 w-full ${symbolInfo.isSymbol
                     ? "bg-[var(--symbol-color-hover)]"
-                    : "bg-brand-primary"}  "
+                    : "bg-brand-primary"}"
                 >
                   ${cmp.getIcon()}
-                  <figcaption class="text-white font-semibold ">
+                  <figcaption class="text-white font-semibold">
                     ${cmp.getName()}
                   </figcaption>
                 </figure>
               `;
             },
         },
-        // jsInHtml: true,
       }}
       onEditor={onEditor}
     >

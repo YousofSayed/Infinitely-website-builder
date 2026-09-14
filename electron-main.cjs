@@ -18,7 +18,7 @@ async function installOPFS_Ext() {
       "Default",
       "Extensions",
       "odbpcdmkgeikdcmcdlfmdkbjiaeknnbd",
-      "0.1.3_0",
+      "0.2.0_0",
     );
 
     const ext = await session.defaultSession.loadExtension(extPath, {

@@ -5,7 +5,7 @@ import { current_page_id, current_project_id } from "@/constants/shared";
 import { defineRoot, getStringSizeBytes, mediaSlugToFileName, normalizeComponentsTree, toMB } from "@/helpers/bridge";
 import { wp_preview_bc } from "@/helpers/channels";
 import { random, uniqueID } from "@/helpers/cocktail";
-import { getProjectData, getWpPageConfig, reloadInfinitely, store, workerCallbackMaker } from "@/helpers/functions";
+import { doInNormal, doInNormalAsync, doInWordpress, doInWordpressAsync, getProjectData, getWpPageConfig, reloadInfinitely, store, workerCallbackMaker } from "@/helpers/functions";
 import { infinitelyWorker } from "@/helpers/infinitelyWorker";
 import { opfs } from "@/helpers/initOpfs";
 import { renderCssStyles } from "@/plugins/IDB";
@@ -20,6 +20,10 @@ import { css_beautify, html_beautify, js_beautify } from "js-beautify";
 import { isPlainObject, uniqueId } from "lodash";
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
+import { useWordpress } from "@/hooks/useWordpress";
+import { useNormal } from "@/hooks/useNormal";
+
+
 
 export const WpCodeManagerModal = () => {
   const timeoutRef = useRef();

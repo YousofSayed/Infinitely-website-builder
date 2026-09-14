@@ -59,7 +59,8 @@ export const InfinitelyEvents = {
     update: `infinitely:editor-container:update`,
   },
   devices:{
-    update:`infinitely:devices:update`
+    update:`infinitely:devices:update`,
+    update_zoom:`infinitely:devices:update-zoom`
   },
   storage: {
     storeStart: "infinitely:storage:store:start",

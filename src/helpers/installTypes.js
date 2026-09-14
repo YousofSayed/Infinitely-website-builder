@@ -37,6 +37,7 @@ export async function installTypes({ projectId, code, libConfig }) {
       logger: console,
       typescript: ts,
       delegate: {
+
         errorMessage: (userErrorMessage, error) => {
           workerSendToast({
             isNotMessage: true,
@@ -51,7 +52,7 @@ export async function installTypes({ projectId, code, libConfig }) {
             type: "error",
           });
 
-          rejectOnce(false);
+          rejectOnce(new Error(userErrorMessage || "Failed to install types"));
         },
 
         started: () => {
@@ -100,7 +101,35 @@ export async function installTypes({ projectId, code, libConfig }) {
     });
     console.log("from types installer : ", projectId, code, libConfig);
 
-    ata(code);
+    try {
+      // 1. Add 'await' here so the catch block can handle promise rejections
+      await ata(code);
+      
+      // 2. Fallback: If 'finished' wasn't called (e.g., no types needed downloading),
+      // we must resolve the promise manually so offlineInstaller doesn't hang.
+      resolveOnce(true);
+    } catch (error) {
+      console.error("Type Acquisition Error:", error);
+      
+      // Dismiss the loading toast if it was shown
+      workerSendToast({
+        isNotMessage: true,
+        msg: tId,
+        type: "dismiss",
+        dataProps: {
+          progressClassName: "bg-[crimson]",
+        },
+      });
+      
+      // Show error toast
+      workerSendToast({
+        msg: error?.message || "Failed to install types",
+        type: "error",
+      });
+
+      // Reject the promise to stop the current installation process
+      rejectOnce(error instanceof Error ? error : new Error(String(error)));
+    }
     // } catch (error) {
     //   workerSendToast({
     //     isNotMessage: true,

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-
-export const LazyList = ({ list = [], renderItem=(item,index)=>{}, count = 15, delay = 50 }) => {
+ 
+export const LazyList = ({ list = [], renderItem=(item,index)=>{}, count = 1, delay = 2290 }) => {
   const [lazyList, setLazyList] = useState([]);
   const [lazyListCount , setLazyListCount] = useState(count)
   const timeout = useRef();

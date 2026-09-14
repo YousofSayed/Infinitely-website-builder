@@ -1,156 +1,77 @@
 import { InfinitelyEvents } from "@/constants/infinitelyEvents";
-import { uniqueID } from "@/helpers/cocktail";
 import { layersType, refType } from "@/helpers/jsDocs";
-import { Icons } from "@/components/Icons/Icons";
-import { LazyList } from "@/components/Protos/LazyList";
-import { VirtosuoVerticelWrapper } from "@/components/Protos/VirtosuoVerticelWrapper";
 import { Layer } from "@/components/Editor/Protos/Layer";
-import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { useEditorMaybe } from "@grapesjs/react";
 import { For } from "million/react";
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
-import { Virtuoso } from "react-virtuoso";
+import React, { memo, useEffect, useRef, useState } from "react";
 
+// million-ignore
+
+/**
+ * PERFORMANCE NOTES:
+ *
+ * - We store layer ids, not component objects.
+ * - We do NOT pass the whole layers array into every Layer.
+ * - Layer is memoized and only receives stable props.
+ */
 export const Layers = memo(() => {
   const editor = useEditorMaybe();
+
   const layerSecRef = useRef(refType);
-  const [layers, setLayers] = useState(layersType);
-  const [autoAnimate] = useAutoAnimate();
   const layerstRef = useRef(refType);
-  useEffect(() => {
-    layerstRef.current && autoAnimate(layerstRef.current);
-  }, [layerstRef]);
+
+  const [layers, setLayers] = useState(layersType);
+const [tick, setTick] = useState(0);
+
+
   useEffect(() => {
     if (!editor) return;
-    console.log("layers");
+    let layerFrame = 0;
 
-    const newLayers = () =>
-      editor
-        .getWrapper()
-        .components()
-        .models.filter((lyr) => {
-          console.log(lyr.props());
-
-          return lyr.props().layerable && lyr.getName().toLowerCase() != "box";
-        });
-
-    // setLayers(newLayers());
-    setLayers([editor.getWrapper()]);
-
-    const evCallback = () => {
-      setLayers([editor.getWrapper()]);
-      console.log("layyersssssssssssssss  :");
+    const updateLayers = () => {
+      cancelAnimationFrame(layerFrame);
+      layerFrame = requestAnimationFrame(() => {
+        // alert("update layers");
+        setLayers([editor.getWrapper().getId()]);
+        setTick(tick => tick + 1);
+      });
     };
 
-    editor.on("component:add", evCallback);
-    editor.on("component:remove", evCallback);
-    editor.on("page:select", evCallback);
-    editor.on(InfinitelyEvents.layers.update, evCallback);
+    updateLayers();
+
+    editor.on("component:add", updateLayers);
+    editor.on("component:remove", updateLayers);
+    editor.on("page:select", updateLayers);
+    editor.on(InfinitelyEvents.layers.update, updateLayers);
+
     return () => {
-      editor.off("component:add", evCallback);
-      editor.off("component:remove", evCallback);
-      editor.off("page:select", evCallback);
-      editor.off(InfinitelyEvents.layers.update, evCallback);
+        cancelAnimationFrame(layerFrame);
+      editor.off("component:add", updateLayers);
+      editor.off("component:remove", updateLayers);
+      editor.off("page:select", updateLayers);
+      editor.off(InfinitelyEvents.layers.update, updateLayers);
     };
   }, [editor]);
 
-  const moveCmps = useCallback(
-    /**
-     *
-     * @param {{oldIndex:number , newIndex:number , wrapper:import('grapesjs').Components}} param0
-     */
-
-    ({ oldIndex, newIndex, wrapper }) => {
-      const oldCmp = wrapper.at(oldIndex);
-      wrapper.remove(oldCmp);
-      wrapper.add(oldCmp, { at: newIndex });
-    },
-    [editor]
-  );
-
-  // useEffect(()=>{
-  //    if(!showLayers || layerSecRef.current.children.length)return;
-
-  //     layerSecRef.current.appendChild(editor.Layers.render())
-  // })
-  //[&>:not(:last-child)]:mb-2
   return (
     <section id="layers" className="h-full hideScrollBar" ref={layerSecRef}>
-      <main id="layer-wrapper" className="h-full  ">
-        {/* <LazyList list={layers} renderItem={(item , i) => {
-            const layer = layers[i];
-
-            return layer.props().layerable ? (
-              <Layer
-                layers={layers}
-                setLayers={setLayers}
-                layer={layer}
-                layersRef={layerstRef}
-                index={i}
-                key={i}
-              />
-            ) : null;
-          }} /> */}
-
-        <For each={layers}>
+      <main id="layer-wrapper" className="h-full">
+        <For each={layers} >
           {(item, i) => {
-            const layer = layers[i];
+            const layerId = item;
 
-            return layer.props().layerable ? (
+            return (
               <Layer
-                layers={layers}
                 setLayers={setLayers}
-                layer={layer}
+                layerId={layerId}
                 layersRef={layerstRef}
                 index={i}
-                key={i}
+                key={layerId}
+                tick={tick}
               />
-            ) : null;
+            );
           }}
         </For>
-
-        {/* <Virtuoso
-          ref={layerstRef}
-          className="hideScrollBar "
-          totalCount={layers.length}
-          // components={VirtosuoVerticelWrapper}
-          itemContent={(i) => {
-            const layer = layers[i];
-
-            return layer.props().layerable ? (
-              <Layer
-                layers={layers}
-                setLayers={setLayers}
-                layer={layer}
-                layersRef={layerstRef}
-                index={i}
-                key={i}
-              />
-            ) : null;
-          }}
-        /> */}
-        {/* {layers.map((layer, i) => {
-          return (
-            // <section
-            //   key={layer.cid}
-            //   id={layer.id}
-            //   className="p-2 select-none rounded-lg flex items-center justify-between bg-surface-tertiary text-text-primary mb-2"
-            // >
-            //   {layer.components().models.length || ""}
-            //   <span>{layer.getName().toUpperCase()}</span>
-            //   {layer.components().models.length && (
-            //     <figure>{Icons.arrow()}</figure>
-            //   )}
-            //   <figure className="handle cursor-grab">{Icons.plus()}</figure>
-            // </section>
-            <Layer
-              layers={layers}
-              setLayers={setLayers}
-              layer={layer}
-              key={layer.getId()}
-            />
-          );
-        })} */}
       </main>
     </section>
   );

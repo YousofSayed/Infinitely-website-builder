@@ -605,7 +605,7 @@ export type InfinitelyFonts = {
   [key: string]: InfinitelyFont & InfinitelyWpMedia;
 };
 
-export type InfinitelyWpMedia = {
+export interface InfinitelyWpMedia  {
   id: number;
   date: string; // ISO date string
   date_gmt: string; // ISO date string
@@ -670,6 +670,21 @@ export type InfinitelyWpMedia = {
       href: string;
     }>;
   };
+
+};
+
+export interface InfinitelyNormalMedia {
+  file: File & {
+    path: string;
+  };
+  name: string;
+  slug: string;
+  path: string;
+  id: string;
+  type: string;
+  size: number;
+  link: string;
+  source_url: string;
 };
 
 export type GrapesJSComponent = {

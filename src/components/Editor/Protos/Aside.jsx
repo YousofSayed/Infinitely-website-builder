@@ -11,7 +11,7 @@ export const Aside = ({ children, className = "", dir = "left", style }) => {
       id="main-aside"
       style={style}
       ref={parent}
-      className={`  relative   h-full  bg-surface-secondary p-2    overflow-y-auto hideScrollBar  ${className}`}
+      className={`  relative   h-full  bg-surface-secondary p-2    overflow-y-auto hideScrollBar auto-animate animate-go-to  ${className}`}
     >
       <section className="relative h-full w-full overflow-y-auto flex flex-col hideScrollBar">
         {children}

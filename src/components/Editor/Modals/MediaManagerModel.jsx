@@ -43,6 +43,7 @@ import {
 import { useNormal } from "@/hooks/useNormal";
 import { opfs } from "@/helpers/initOpfs";
 import Fuse from "fuse.js";
+import { FileView } from "@/components/Protos/FileView";
 
 export const MediaManager = () => {
   /**
@@ -528,7 +529,7 @@ export const MediaManager = () => {
               // console.log("files from virtuso : ", media);
 
               return (
-                  <WpFileView
+                  <FileView
                     key={media.id}
                     media={media}
                     setData={deleteSelectedAfterSingleDelete}

@@ -1,9 +1,17 @@
-import { wp_delete_media_files_by_slugs, wp_update_option } from "@/Apps/wordpress/functions";
+import {
+  wp_delete_media_files_by_slugs,
+  wp_update_option,
+} from "@/Apps/wordpress/functions";
 import { InfinitelyEvents } from "@/constants/infinitelyEvents";
 import { reloadRequiredInstance } from "@/constants/InfinitelyInstances";
 import { current_page_id, current_project_id } from "@/constants/shared";
 import { db } from "@/helpers/db";
-import { doInNormal, doInNormalAsync, doInWordpressAsync, getProjectData } from "@/helpers/functions";
+import {
+  doInNormal,
+  doInNormalAsync,
+  doInWordpressAsync,
+  getProjectData,
+} from "@/helpers/functions";
 import { opfs } from "@/helpers/initOpfs";
 import { refType } from "@/helpers/jsDocs";
 import { Icons } from "@/components/Icons/Icons";
@@ -25,53 +33,40 @@ import { cloneDeep } from "lodash";
 import React, { memo, useEffect, useRef, useState } from "react";
 import { ReactSortable } from "react-sortablejs";
 import { toast } from "react-toastify";
-
-// 
-// 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+import { useBusyCallback } from "@/hooks/useBusyCallback";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 
 const ReactSortableComponent = memo(
-  ({ libraries = {}, prop = "", updateList = (newList, key) => { } }) => {
+  ({ libraries = {}, prop = "", updateList = (newList, key) => {} }) => {
     const [selected, setSelected] = useState([]);
     const [checkedAll, setCheckedAll] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
+    // const [isDeleting, setIsDeleting] = useState(false);
     const libs = libraries[prop].libs;
-    // const editor = useEditorMaybe();
+    const parentRef = useRef(/** @type {HTMLDivElement} */ (null));
 
-    const deleteLibraries = async () => {
+    const executeDeleteLibraries = async () => {
       const cnfrm = confirm(`Are you sure to delete selected libraries ? 🤔`);
       if (!cnfrm) return;
-      setIsDeleting(true);
-      const tid = toast.loading(<ToastMsgInfo msg={`Deleting selected libraries...`} />);
+      // setIsDeleting(true);
+      const tid = toast.loading(
+        <ToastMsgInfo msg={`Deleting selected libraries...`} />,
+      );
       try {
         const projectId = +localStorage.getItem(current_project_id);
         // const project = await await db.projects.get(projectId);
         // const data = project;
-        const newArr = libs.filter((lib) => !(selected.some(slLib => slLib.name === lib.name)));
-        console.log('new arr selected: ', newArr);
-        const libsPathes = selected.map(lib => lib.path);
-        const libsTypesPathes = selected.map(lib => lib.typesPath).filter(Boolean);
-        const slugs = selected.map(lib => lib.slug);
+        const newArr = libs.filter(
+          (lib) => !selected.some((slLib) => slLib.name === lib.name),
+        );
+        console.log("new arr selected: ", newArr);
+        const libsPathes = selected.map((lib) => lib.path);
+        const libsTypesPathes = selected
+          .map((lib) => lib.typesPath)
+          .filter(Boolean);
+        const slugs = selected.map((lib) => lib.slug);
 
         const deleteLibFromDB = async () => {
-          await opfs.removeFiles([
-            ...libsPathes,
-            ...libsTypesPathes,
-          ]);
+          await opfs.removeFiles([...libsPathes, ...libsTypesPathes]);
           await db.projects.update(projectId, {
             [prop]: newArr,
           });
@@ -79,11 +74,13 @@ const ReactSortableComponent = memo(
 
         await doInNormalAsync(async () => {
           await deleteLibFromDB();
-        })
+        });
 
         await doInWordpressAsync(async () => {
           const projecdData = await getProjectData();
-          const cnfrm = confirm(`Do you want to delete those libraries from media library too ? 🤔`);
+          const cnfrm = confirm(
+            `Do you want to delete those libraries from media library too ? 🤔`,
+          );
           if (cnfrm) {
             const wp_delete_file_res = await wp_delete_media_files_by_slugs({
               projectId,
@@ -99,7 +96,7 @@ const ReactSortableComponent = memo(
           projecdData[prop] = newArr;
           const wp_update_option_res = await wp_update_option({
             projectId,
-            optionName: 'inf_config',
+            optionName: "inf_config",
             value: projecdData,
           });
 
@@ -109,20 +106,25 @@ const ReactSortableComponent = memo(
           }
 
           await deleteLibFromDB();
-        })
+        });
 
         toast.done(tid);
         toast.success(<ToastMsgInfo msg={"Library Removed Successfully"} />);
-        reloadRequiredInstance.emit(InfinitelyEvents.editor.require, { state: true });
+        reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {
+          state: true,
+        });
       } catch (error) {
         toast.dismiss(tid);
         toast.error(<ToastMsgInfo msg={"Faild To Remove Library"} />);
         throw new Error(`Error From Installed Library Details Cmp ${error}`);
       } finally {
         setCheckedAll(false);
-        setIsDeleting(false);
+        // setIsDeleting(false);
       }
     };
+
+    const [deleteLibraries, { isLoading: isDeletingLibraries }] =
+      useBusyCallback(executeDeleteLibraries, { key: "delete-libraries" });
 
     const selectAll = () => {
       console.log(cloneDeep(libs));
@@ -131,45 +133,63 @@ const ReactSortableComponent = memo(
       } else {
         setSelected(cloneDeep(libs));
       }
-    }
+    };
 
     useEffect(() => {
       setCheckedAll(selected.length === libs.length);
-    }, [selected])
+    }, [selected]);
+
+    const [animatedRef] = useAutoAnimate();
 
     return (
-      <section className={`${isDeleting && 'cursor-not-allowed pointer-events-none'}`}>
-        {Boolean(libs.length) && <header className="flex items-center justify-between p-2 rounded-lg bg-surface-secondary">
-          <section className="flex items-center gap-2">
+      <section
+        ref={parentRef}
+        className={`${isDeletingLibraries && "cursor-not-allowed pointer-events-none"}`}
+      >
+        {Boolean(libs.length) && (
+          <header className="flex items-center justify-between p-2 rounded-lg bg-surface-secondary">
+            <section className="flex items-center gap-2">
+              <Checkbox
+                checked={checkedAll}
+                title="select all"
+                onChange={() => {
+                  selectAll();
+                }}
+              />
 
+              <FitTitle className="flex items-center gap-2 capitalize bg-surface-tertiary">
+                selected : {selected.length}
+              </FitTitle>
+            </section>
 
-            <Checkbox checked={checkedAll} title="select all" onChange={() => { selectAll() }} />
+            <section>
+              <Button
+                disabled={isDeletingLibraries}
+                className="bg-surface-tertiary hover:bg-[crimson] transition-colors font-semibold"
+                onClick={async () => {
+                  await deleteLibraries();
+                }}
+              >
+                {Icons.trash("white")}
+                Delete
+              </Button>
+            </section>
+          </header>
+        )}
 
-            <FitTitle className="flex items-center gap-2 capitalize bg-surface-tertiary">
-              selected : {selected.length}
-
-            </FitTitle>
+        {!Boolean(libs.length) && (
+          <section className="capitalize p-2 rounded-lg font-semibold text-2xl text-blue-300 flex justify-center items-center animate-pulse bg-surface-secondary">
+            Nothing here 😪
           </section>
-
-          <section>
-          </section>
-
-          <section>
-            <Button className="bg-surface-tertiary hover:bg-[crimson] transition-colors font-semibold"
-              onClick={async () => {
-                await deleteLibraries();
-              }}
-            >
-              {Icons.trash('white')}
-              Delete
-            </Button>
-          </section>
-        </header>}
-
-        {!Boolean(libs.length) && <section className="capitalize p-2 rounded-lg font-semibold text-2xl text-blue-300 flex justify-center items-center animate-pulse bg-surface-secondary">Nothing here 😪</section>}
+        )}
 
         <ReactSortable
+          ref={animatedRef}
           handle=".handle"
+          scroll={true}
+          scrollSensitivity={50} // Triggers scroll when within 50px of the container edge
+          scrollSpeed={15} // Adjust scroll speed (pixels per interval)
+          bubbleScroll={true} // Crucial: Allows scrolling of parent containers
           list={libraries[prop].libs}
           setList={(newList) => {
             if (!newList || !newList.length) return;
@@ -178,18 +198,25 @@ const ReactSortableComponent = memo(
           onUpdate={(ev) => {
             // editor.load();
             doInNormal(() => {
-              reloadRequiredInstance.emit(InfinitelyEvents.editor.require, { state: true });
-
-            })
+              reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {
+                state: true,
+              });
+            });
           }}
         >
           {libraries[prop]?.libs?.map((lib, x) => (
-            <InstalledLibraryDetails library={lib} key={x} dbKey={prop} selected={selected} setSelected={setSelected} />
+            <InstalledLibraryDetails
+              library={lib}
+              key={lib.id ?? lib.name}
+              dbKey={prop}
+              selected={selected}
+              setSelected={setSelected}
+            />
           ))}
         </ReactSortable>
       </section>
     );
-  }
+  },
 );
 
 export const InstalledLibraries = () => {
@@ -197,8 +224,6 @@ export const InstalledLibraries = () => {
   const [libraries, setLibraries] = useState({});
   const conatinerRef = useRef(refType);
   const [scriptsNeedToPublish, setScriptsNeedToPublish] = useState(false);
-  
-
 
   useLiveQuery(async () => {
     const data = await db.projects.get(projectId);
@@ -227,56 +252,125 @@ export const InstalledLibraries = () => {
     }
     console.log("new List : ", list);
 
-    // const data = await db.projects.get(projectId);
-    await doInNormalAsync(async () => {
-      await db.projects.update(projectId, {
-        [key]: [...list],
-      });
-    });
+    // 1. Instantly update local state for smooth, lag-free dragging UI
+    setLibraries((prev) => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        libs: [...list],
+      },
+    }));
 
-    await doInWordpressAsync(async () => {
-      const projecdData = await getProjectData();
-      const scripts_need_arranged = JSON.stringify(projecdData[key]) !== JSON.stringify(list);
-      await db.projects.update(projectId, {
-        [key]: [...list],
-        scripts_need_arranged ,
-      });
-    })
+    // 2. Mark that we have unsaved changes to show the "Save" button
+    setScriptsNeedToPublish(JSON.stringify(list) !== JSON.stringify(libraries[key]?.libs));
+
+    // const data = await db.projects.get(projectId);
+    // await doInNormalAsync(async () => {
+    //   await db.projects.update(projectId, {
+    //     [key]: [...list],
+    //   });
+    // });
+
+    // await doInWordpressAsync(async () => {
+    //   const projecdData = await getProjectData();
+    //   const scripts_need_arranged =
+    //     JSON.stringify(projecdData[key]) !== JSON.stringify(list);
+    //   await db.projects.update(projectId, {
+    //     [key]: [...list],
+    //     scripts_need_arranged,
+    //   });
+    // });
   };
 
-  const saveOrders = async () => {
-    const tid = toast.loading(<ToastMsgInfo msg={`Saving orders...`} />);
+  const [saveOrders, { isLoading: isSavingOrders }] = useBusyCallback(
+    async () => {
+      const tid = toast.loading(
+        <ToastMsgInfo msg={`Saving orders to database...`} />,
+      );
 
-    try {
-      const projectData = await getProjectData();
-      const wp_update_config_res = await wp_update_option({
-        projectId,
-        optionName: 'inf_config',
-        value: projectData
-      });
-      if (!wp_update_config_res?.success) {
-        throw new Error(`Faild to save orders 😥`);
+      try {
+        // Prepare the exact updates based on the current, up-to-date local state
+        const updates = {
+          jsHeaderLibs: libraries.jsHeaderLibs?.libs || [],
+          jsFooterLibs: libraries.jsFooterLibs?.libs || [],
+          cssLibs: libraries.cssLibs?.libs || [],
+          scripts_need_arranged: false,
+        };
+
+        // 1. Save to local DB (Dexie)
+        await doInNormalAsync(async () => {
+          await db.projects.update(projectId, updates);
+        });
+
+        // 2. Save to WordPress
+        await doInWordpressAsync(async () => {
+          const projectData = await getProjectData(); // Get fresh base data
+          const mergedData = { ...projectData, ...updates }; // Merge our new order
+
+          const wp_update_config_res = await wp_update_option({
+            projectId,
+            optionName: "inf_config",
+            value: mergedData,
+            merge: true,
+          });
+
+          await db.projects.update(projectId, updates);
+
+          if (!wp_update_config_res?.success) {
+            throw new Error(`Failed to save orders 😥`);
+          }
+        });
+
+        toast.done(tid);
+        toast.success(<ToastMsgInfo msg={`Orders saved successfully 😎`} />);
+
+        // Hide the button after successful save
+        // (useLiveQuery will also catch the DB change and set this to false automatically)
+        setScriptsNeedToPublish(false);
+      } catch (error) {
+        toast.dismiss(tid);
+        toast.error(
+          <ToastMsgInfo msg={error.message || "Failed to save orders"} />,
+        );
+        console.error("Error saving orders:", error);
       }
-       await db.projects.update(projectId, {
-        scripts_need_arranged : false,
-      });
-      toast.done(tid);
-      toast.success(<ToastMsgInfo msg={`Orders saved successfully 😎`} />);
-    } catch (error) {
-      toast.dismiss(tid);
-      toast.error(<ToastMsgInfo msg={error.message || 'Faild to save orders'} />);
-      throw new Error(error);
-    }
+    },
+    { key: `save-orders` },
+  );
 
-  }
+  // const saveOrders = async () => {
+  //   const tid = toast.loading(
+  //     <ToastMsgInfo msg={`Saving orders to database...`} />,
+  //   );
+
+  //   try {
+  //     const projectData = await getProjectData();
+  //     const wp_update_config_res = await wp_update_option({
+  //       projectId,
+  //       optionName: "inf_config",
+  //       value: projectData,
+  //     });
+  //     if (!wp_update_config_res?.success) {
+  //       throw new Error(`Faild to save orders 😥`);
+  //     }
+  //     await db.projects.update(projectId, {
+  //       scripts_need_arranged: false,
+  //     });
+  //     toast.done(tid);
+  //     toast.success(<ToastMsgInfo msg={`Orders saved successfully 😎`} />);
+  //   } catch (error) {
+  //     toast.dismiss(tid);
+  //     toast.error(
+  //       <ToastMsgInfo msg={error.message || "Faild to save orders"} />,
+  //     );
+  //     throw new Error(error);
+  //   }
+  // };
   // const [list, setList] = useState(["1", "2", "3", "4"]);
-
-
 
   return (
     <section className="relative flex flex-col gap-2 h-full w-full rounded-lg">
       <section className="relative overflow-y-auto overflow-x-hidden hideScrollBar px-1  py-2 flex flex-col gap-2 h-full ">
-
         <Accordion attributes={{ ref: conatinerRef }}>
           {libraries &&
             Object.keys(libraries)?.map((key, i) => {
@@ -290,14 +384,14 @@ export const InstalledLibraries = () => {
                   // className="bg-[var(--color-surface-tertiary)!important] relative"
                   // classNames={{ content: "bg-surface-tertiary p-[unset]" }}
                   length={libraries[key]?.libs.length}
-                  slotProps={{
-                    transition: {
-                      unmountOnExit: true,
-                      timeout: 10, // Duration of the animation in milliseconds
-                      // easing: 'ease-in-out',
-                      // properties: ['height', 'opacity'], // Properties to animate
-                    },
-                  }}
+                  // slotProps={{
+                  //   transition: {
+                  //     unmountOnExit: true,
+                  //     timeout: 10, // Duration of the animation in milliseconds
+                  //     // easing: 'ease-in-out',
+                  //     // properties: ['height', 'opacity'], // Properties to animate
+                  //   },
+                  // }}
                 >
                   <ReactSortableComponent
                     libraries={libraries}
@@ -308,11 +402,18 @@ export const InstalledLibraries = () => {
               );
             })}
         </Accordion>
-        {scriptsNeedToPublish && <Button className="w-fit sticky bottom-[0] right-[5px] font-semibold capitalize" onClick={async () => {
-          await saveOrders()
-        }}>Save orders</Button>}
+        {scriptsNeedToPublish && (
+          <Button
+            disabled={isSavingOrders}
+            className="w-fit sticky bottom-[0] right-[5px] font-semibold capitalize"
+            onClick={async () => {
+              await saveOrders();
+            }}
+          >
+            Save orders to database
+          </Button>
+        )}
       </section>
-
     </section>
   );
 };

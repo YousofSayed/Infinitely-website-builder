@@ -490,6 +490,11 @@ export async function blobToDataUrlAndClean(file) {
   });
 }
 
+/**
+ * 
+ * @param {Blob} input 
+ * @returns {Promise<any>}
+ */
 export async function replaceBlobs(input) {
   if (input instanceof Blob) {
     return {
@@ -2646,8 +2651,9 @@ export async function uploadProjectToTMP(props) {
 export function doGlobalType(libName, globalTypeName, isExportDefault = false) {
   if (!libName) throw new Error(`libName param is required`);
 
-  const importStatement = isExportDefault ? `` : ``;
-
+  const importStatement = isExportDefault
+    ? `import _lf from "${libName}";`
+    : `import * as _lf from "${libName}";`;
   //   const moduleDeclaration = `
   // declare module "${libName}" {
   //   ${isExportDefault ? "export default _lf;" : ""}

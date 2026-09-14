@@ -633,12 +633,19 @@ export const SCRIPT_DEFINITIONS = [
   //     type: "module",
   //   },
   // },
-{
-    name:'init-auto-animate.js',
-    localUrl: '/scripts/init-auto-animate.js', //'/scripts/auto-animate.js',
-     attributes: {
-      type: "module",
-    },
+  // {
+  //     name:'init-auto-animate.js',
+  //     localUrl: '/scripts/init-auto-animate.js', //'/scripts/auto-animate.js',
+  //      attributes: {
+  //       type: "module",
+  //     },
+  //   },
+  {
+    name: "auto-animate.js",
+    localUrl: "/scripts/auto-animate.js", //'/scripts/auto-animate.js',
+    // attributes: {
+    //   type: "module",
+    // },
   },
   {
     name: "petite-vue-animated.js",
@@ -678,14 +685,13 @@ export const DEV_SCRIPT_DEFINITIONS = [
     name: "gsapRuner.dev.js",
     localUrl: "/scripts/gsapRuner.dev.js",
   },
-  
+
   {
     name: "pvMount.js",
     localUrl: "/scripts/pvMount.js",
     condition: (settings) => !settings.disable_petite_vue,
   },
 ];
-
 
 export const STYLE_DEFINITIONS = [
   {
@@ -698,7 +704,6 @@ export const STYLE_DEFINITIONS = [
     localUrl: "/styles/style.css",
     condition: (settings) => settings.include_canvas_styles_in_build_file,
   },
-  
 ];
 
 export const DEV_STYLE_DEFINITIONS = [
@@ -714,7 +719,6 @@ export const DEV_STYLE_DEFINITIONS = [
 //     is_wordpress: true,
 //   },
 // ];
-
 
 /**
  * Helper to filter scripts based on conditions

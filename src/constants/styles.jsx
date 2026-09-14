@@ -27,6 +27,7 @@ import {
   fontWeights,
   isolationValues,
   mixBlendModeValues,
+  objectFitValues,
   overflowValues,
   pointerEventsValues,
   positionValues,
@@ -622,6 +623,12 @@ export const styles = {
       cssProp:'pointer-events',
       type:'select',
       keywords:pointerEventsValues
+    },
+    {
+      title:'Object fit',
+      cssProp:'object-fit',
+      type:'select',
+      keywords:objectFitValues
     }
   ],
 };

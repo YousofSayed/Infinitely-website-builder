@@ -45,8 +45,8 @@ body:has(#main-modal) {
 }
 
 button:disabled {
-  cursor: not-allowed;
-  opacity: .7;
+  cursor: not-allowed !important;
+  opacity: .7 !important;
 }
 
 
@@ -862,6 +862,10 @@ details[open] summary {
 
 .gjs-toolbar-items {
   @apply items-center gap-3 py-[5px] px-2 flex;
+}
+
+.gjs-toolbar-item{
+  width: fit-content !important;
 }
 
 .gjs-toolbar svg {

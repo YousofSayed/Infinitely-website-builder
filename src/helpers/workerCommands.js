@@ -35,6 +35,7 @@ import {
   getProjectRoot,
   handleFilesSize,
   initMainAndGlobalFilesForWp,
+  installFonts,
   // hasExportDefault,
   installRestModelsAPI,
   svgToDataURL,
@@ -765,6 +766,25 @@ export async function uploadAssets(props) {
   }
 }
 
+/**
+ *
+ * @param {{
+ *  path : string,
+ * options : {
+ *   chunks?: boolean | undefined;
+ *  chunksStart?: number | undefined;
+ *  chunksCount?: number | undefined;
+ * chunksDelay?: number | undefined;
+ * onChunk?: ((chunk: OTFile[]) => void) | undefined;
+ * recursive?: boolean;
+ *}
+ * }} props
+ * @returns
+ */
+export async function getALLOPFSFiles(props) {
+  return await await opfs.getAllFiles(props.path, props.options);
+}
+
 export function varsToServiceWorker(props = {}) {
   try {
     self.postMessage({
@@ -855,15 +875,21 @@ export async function offlineInstaller(props) {
     const projectData = await db.projects.get(props.projectId);
     const mime = (await import("mime")).default;
     let isTypesInstalled = false;
+    console.log("offline installer : start install rest models API");
     await installRestModelsAPI(projectData.restAPIModels);
+    console.log("offline installer : end install rest models API");
+
+    console.log("offline installer : start install js footer scripts API");
     await Promise.all(
       projectData.jsFooterLibs
         .concat(projectData.jsHeaderLibs)
         .concat(projectData.cssLibs)
         // .concat(Object.values(projectData.fonts))
         .map(async (lib) => {
-          if (!lib.isCDN) return lib;
-          if (lib.isInstallDone) return lib;
+          // if (!lib.isCDN) return lib;
+          const handle = await opfs.getFile(defineRoot(lib.path));
+          const isExist = await handle.exists();
+          if (isExist) return lib;
           const res = await fetch(lib.fileUrl);
           const blob = await res.blob();
           const ext = mime.getExtension(blob.type);
@@ -873,48 +899,91 @@ export async function offlineInstaller(props) {
             { type: blob.type },
           );
 
-          await opfs.writeFiles([
-            {
-              path: defineRoot(lib.path),
-              content: file,
-            },
-          ]);
+          console.log(
+            "offline installer root for libs: ",
+            defineRoot(lib.path),
+          );
+
+          await opfs.createFile(defineRoot(lib.path), file);
           lib.size = getFileSize(file).MB;
           lib.isInstallDone = true;
           return lib;
         }),
     );
+    console.log("offline installer : end install js footer scripts API");
 
+    // --- 1. Install Normal Types ---
+    console.log("offline installer : start install types ");
     if (!projectData?.installStates?.types) {
       for (const lib of [
         ...projectData.jsFooterLibs,
         ...projectData.jsHeaderLibs,
       ]) {
-        await installTypes({
-          projectId: projectData.id,
-          code: doGlobalType(lib.nameWithoutExt, lib.globalName),
-          libConfig: lib,
-        });
+        try {
+          await installTypes({
+            projectId: projectData.id,
+            code: doGlobalType(lib.nameWithoutExt, lib.globalName),
+            libConfig: lib,
+          });
+        } catch (err) {
+          console.warn(
+            `offline installer : Failed to install types for ${lib.nameWithoutExt}. Skipping...`,
+            err,
+          );
+        }
       }
-      // console.log("lib type after: ", defineRoot(lib.path), lib  ,await (await opfs.getFile(defineRoot(lib.path))).text());
       projectData.installStates.types = true;
     }
+    console.log("offline installer : end install types ");
 
+    // --- 2. Install Global Types ---
+    console.log("offline installer : start install global types ");
     if (!projectData?.installStates?.globalTypes) {
+      // ⬇️ YOU MISSED THIS FOR LOOP IN YOUR UPDATE!
       for (const lib of global_types) {
-        await installTypes({
-          projectId: projectData.id,
-          code: doGlobalType(lib.nameWithoutExt, lib.globalName),
-          libConfig: lib,
-        });
+        try {
+          await installTypes({
+            projectId: projectData.id,
+            code: doGlobalType(lib.nameWithoutExt, lib.globalName),
+            libConfig: lib,
+          });
+        } catch (err) {
+          console.warn(
+            `offline installer : Failed to install global types for ${lib.nameWithoutExt}. Skipping...`,
+            err,
+          );
+        }
       }
-
-      // console.log("lib type after: ", defineRoot(lib.path), lib  ,await (await opfs.getFile(defineRoot(lib.path))).text());
+      // ⬇️ FIX: types -> globalTypes
       projectData.installStates.globalTypes = true;
     }
+    console.log("offline installer : end install global types ");
+
+    console.log("offline installer : start install fonts ");
+    if (!projectData?.installStates?.fonts) {
+      for (const lib of Object.values(projectData.fonts)) {
+        const handle = await opfs.getFile(defineRoot(lib.path));
+        const isFileExist = await handle.exists();
+        if (isFileExist) continue;
+        // if (!lib.isCDN) continue;
+        const res = await fetch(lib.fileUrl);
+        const blob = await res.blob();
+        const ext = mime.getExtension(blob.type) || "ttf";
+        const file = new File(
+          [blob],
+          `${lib.name.replace(`.${ext}`, "")}.${ext}`,
+          { type: blob.type },
+        );
+        await opfs.createFile(defineRoot(lib.path), file);
+        lib.size = getFileSize(file).MB;
+      }
+      projectData.installStates.fonts = true;
+    }
+    console.log("offline installer : end install fonts ");
 
     await db.projects.update(props.projectId, {
       // fonts: projectData.fonts,
+      ...projectData,
       jsHeaderLibs: projectData.jsHeaderLibs,
       jsFooterLibs: projectData.jsFooterLibs,
       cssLibs: projectData.cssLibs,
@@ -922,20 +991,29 @@ export async function offlineInstaller(props) {
       installStates: projectData.installStates,
     });
 
+    const propsReturn = {
+      update: true,
+    };
+
     self.postMessage({
       command: "offlineInstaller",
-      props: {
-        update: true,
-      },
+      props: propsReturn,
     });
+
+    return propsReturn;
   } catch (error) {
-    console.error(`From offline installer worker : ${error.message}`);
-    self.postMessage({
-      command: "offlineInstaller",
-      props: {
-        update: false,
-      },
-    });
+    console.error(error);
+
+    throw new Error(error);
+    // const props = {
+    //   update: false,
+    // };
+
+    // self.postMessage({
+    //   command: "offlineInstaller",
+    //   props,
+    // });
+    // return props;
   }
 }
 
@@ -1373,7 +1451,7 @@ export async function createWpProject({ data }) {
         helmet: {},
         bodyAttributes: {},
       },
-   
+
       apps: undefined,
       installStates: {
         types: false,
@@ -1403,7 +1481,7 @@ export async function createWpProject({ data }) {
       name: data.name,
       description: data.description,
     });
-    
+
     workerSendToast({
       msg: `Uploading editor scripts and styles...`,
       type: "loading",
@@ -1888,24 +1966,41 @@ export async function getKeyFrames({
   return response;
 }
 
+/**
+ *
+ * @param {{
+ *  files : {
+ *  path: string;
+ *  content: string | BufferSource;
+ *  options?: {
+ *       at?: number;
+ *   };
+ * }[]
+ * }} param0
+ */
 export async function writeFilesToOPFS({ files }) {
   try {
     await opfs.writeFiles(files);
+    const response = {
+      done: true,
+      roots: files.map((file) => file.path),
+    };
     self.postMessage({
       command: "writeFilesToOPFS",
-      props: {
-        done: true,
-        roots: files.map((file) => file.path),
-      },
+      props: response,
     });
+
+    return response;
   } catch (error) {
+    const resposne = {
+      done: false,
+      msg: error.message,
+    };
     self.postMessage({
       command: "writeFilesToOPFS",
-      props: {
-        done: false,
-        msg: error.message,
-      },
+      props: resposne,
     });
+    return resposne;
   }
 }
 
@@ -2765,4 +2860,3 @@ export async function updateSymbolsStylesFiles({ symbols = {}, cssCode = "" }) {
     throw new Error(error);
   }
 }
-

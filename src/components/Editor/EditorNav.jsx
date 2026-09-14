@@ -103,27 +103,28 @@ export const HomeNav = () => {
   return (
     <nav className="h-full  w-[55px]  p-2 flex flex-col justify-between items-center bg-surface-secondary ">
       {/* <iframe ref={testRef} className="z-[15000] bg-white fixed top-0 left-0 w-full h-full border-2 border-border-default" ></iframe> */}
-      <div className="flex flex-col items-center gap-5">
-        <figure className="pb-[20px] pt-1 border-b-[1px] border-slate-400 ">
+      <div className="flex flex-col items-center gap-4">
+        <figure className="pb-[10px] pt-1 border-b-[1px] border-slate-400 ">
           {/* {Icons.logo({})} */}
           <button onClick={leave} className="cursor-pointer" viewTransition>
             <img src={config.logo} alt="logo" />
           </button>
         </figure>
 
-        <ul className="flex flex-col gap-5 items-center">
-          {/* <Li>{Icons.plus()}</Li> */}
-          <Li
-            title="Pages"
-            icon={Icons.stNote}
-            onClick={(ev) => {
-              // console.log(minify(``));
+        <section className="flex flex-col gap-2">
+          <ul className="flex flex-col gap-5 items-center p-2 bg-surface-tertiary rounded-lg">
+            {/* <Li>{Icons.plus()}</Li> */}
+            <Li
+              title="Pages"
+              icon={Icons.stNote}
+              onClick={(ev) => {
+                // console.log(minify(``));
 
-              // return;
-              editor.runCommand(open_pages_manager_modal);
-            }}
-          />
-          {/* <Li
+                // return;
+                editor.runCommand(open_pages_manager_modal);
+              }}
+            />
+            {/* <Li
             title="Dynamic Templates"
             onClick={() => {
               editor.runCommand(open_dynamic_templates_modal);
@@ -131,201 +132,200 @@ export const HomeNav = () => {
           >
             {Icons.dynamicTemp({})}
           </Li> */}
-          <Li
-            title="Sympols & Templates"
-            icon={Icons.components}
-            onClick={() => {
-              editor.runCommand(open_symbols_and_templates_manager_modal);
-            }}
-          />
-          <Li
-            title="Rest API Models"
-            icon={Icons.db}
-            onClick={() => {
-              editor.runCommand(open_rest_models_modal);
-            }}
-          />
-          <Li
-            title="Library Installer"
-            onClick={() => {
-              editor.runCommand(open_library_installer_modal);
-            }}
-          >
-            {Icons.installLibrary({ width: 25, height: 25 })}
-          </Li>
-
-          <Li
-            title="Fonts Installer"
-            onClick={() => {
-              editor.runCommand(open_custom_font_installer_modal);
-            }}
-          >
-            {Icons.fonts({ width: 22.5, height: 22.5 })}
-          </Li>
-
-          <Li
-            title="Files Manager"
-            icon={Icons.gallery}
-            onClick={() => {
-              editor.runCommand(open_files_manager_modal);
-            }}
-          />
-
-          {Boolean(checkDropBoxSignInState()) && (
-            <li className="group relative li-btn h-[30px] w-[30px]     rounded-lg cursor-pointer grid place-items-center transition-all hover:bg-brand-primary   [&_#dbx-svg]:hover:fill-white [&_#dbx-svg_g]:hover:fill-white ">
-              <OptionsButton icon={Icons.dropbox({})}>
-                <menu className="flex flex-col gap-2 min-w-[100px]">
-                  {projectData?.dropboxFileMeta?.path_lower && (
-                    <>
-                      <Button
-                        refForward={pushRef}
-                        // disabled={projectData.dbx_pull_requried}
-                        onClick={async (ev) => {
-                          // let tId = toast.loading(
-                          //   <ToastMsgInfo msg={`Pushing project...`} />
-                          // );
-                          pushRef.current.disabled = true;
-                          pullRef.current.disabled = true;
-
-                          try {
-                            addClickClass(ev.currentTarget, "click");
-                            const dataMeta =
-                              await uploadDbxFileWithToastProgress(
-                                projectData.dropboxFileMeta.path_lower,
-                                await getProject(),
-                                projectData.dropboxFileMeta.rev,
-                              );
-                            if (!dataMeta) {
-                              throw new Error(`No data meta founded`);
-                            }
-                            console.log("data meta : ", dataMeta);
-                            await db.projects.update(
-                              +localStorage.getItem(current_project_id),
-                              {
-                                dbx_pull_requried: false,
-                                dropboxFileMeta: dataMeta,
-                              },
-                            );
-                            // toast.done(tId);
-                          } catch (error) {
-                            // if(error.message.includes("conflict")){
-                            //   console.error('hahahahahahahahahah');
-
-                            // }
-                            // toast.dismiss(tId);
-                            throw new Error(error);
-                          } finally {
-                            pushRef.current.disabled = false;
-                            pullRef.current.disabled = false;
-                          }
-                        }}
-                      >
-                        {Icons.upload({ strokeColor: "white" })}
-                        <h1>Push</h1>
-                      </Button>
-                      <Button
-                        refForward={pullRef}
-                        // disabled={!projectData.dbx_pull_requried}
-                        onClick={async (ev) => {
-                          const cnfrm = confirm(
-                            `Are you sure you want to pull from dropbox? This will overwrite your local project files.`,
-                          );
-                          if (!cnfrm) return;
-                          console.log("refff : ", pushRef.current);
-                          const btn = ev.currentTarget;
-                          addClickClass(btn, "click");
-
-                          btn.disabled = true;
-                          pushRef.current.disabled = true;
-                          try {
-                            await pullProject(projectData);
-                            btn.disabled = true;
-                          } catch (error) {
-                            throw new Error(error);
-                          } finally {
-                            btn.disabled = null;
-                            // pushRef.current.disabled = null;
-                          }
-                        }}
-                        style={{
-                          backgroundColor: projectData.dbx_pull_requried
-                            ? "crimson"
-                            : null,
-                        }}
-                      >
-                        {Icons.export("white")}
-                        <h1>Pull</h1>
-                      </Button>
-                    </>
-                  )}
-
-                  {checkDropBoxSignInState() &&
-                    projectData?.apps != "Dropbox" &&
-                    !projectData?.dropboxFileMeta?.path_lower && (
-                      <Button
-                        onClick={async (ev) => {
-                          const trgBtn = ev.currentTarget;
-                          trgBtn.disabled = true;
-                          const dataMeta = await uploadDbxFileWithToastProgress(
-                            `/${projectData.name}.zip`,
-                            await getProject(),
-                            "",
-                          );
-                          if (!dataMeta) {
-                            throw new Error(`No data meta founded`);
-                          }
-                          console.log("data meta : ", dataMeta);
-                          await db.projects.update(
-                            +localStorage.getItem(current_project_id),
-                            {
-                              dbx_pull_requried: false,
-                              dropboxFileMeta: dataMeta,
-                            },
-                          );
-                          trgBtn.disabled = false;
-                        }}
-                      >
-                        {Icons.initial({ strokeColor: "white" })} Init Project
-                      </Button>
-                    )}
-                  {/* <Button
-                      onClick={async (ev) => {
-                        addClickClass(ev.currentTarget, "click");
-                        await shareLink(projectData);
-                      }}
-                    >
-                      {Icons.share({ strokeColor: "white" })}
-                      <span>Share</span>
-                    </Button> */}
-                </menu>
-              </OptionsButton>
-            </li>
-          )}
-          <Wordpress>
             <Li
-              title="Wordpress"
-              // icon={}
+              title="Sympols & Templates"
+              icon={Icons.components}
               onClick={() => {
-                setShowsComponents((old) => ({
-                  ...old,
-                  viewPanel: !old?.viewPanel,
-                  views:{
-                    ...old?.views,
-                    viewKey:'wordpress'
-                  }
-                }));
+                editor.runCommand(open_symbols_and_templates_manager_modal);
+              }}
+            />
+            <Li
+              title="Rest API Models"
+              icon={Icons.db}
+              onClick={() => {
+                editor.runCommand(open_rest_models_modal);
+              }}
+            />
+            <Li
+              title="Library Installer"
+              onClick={() => {
+                editor.runCommand(open_library_installer_modal);
               }}
             >
-              <Icons.wordpress />
+              {Icons.installLibrary({ width: 25, height: 25 })}
             </Li>
-          </Wordpress>
-          {/* <Li title="Github" icon={Icons.git} /> */}
-        </ul>
+
+            <Li
+              title="Fonts Installer"
+              onClick={() => {
+                editor.runCommand(open_custom_font_installer_modal);
+              }}
+            >
+              {Icons.fonts({ width: 22.5, height: 22.5 })}
+            </Li>
+
+            <Li
+              title="Files Manager"
+              icon={Icons.gallery}
+              onClick={() => {
+                editor.runCommand(open_files_manager_modal);
+              }}
+            />
+
+            {/* {Boolean(checkDropBoxSignInState()) && (
+              <li className="group relative li-btn h-[30px] w-[30px]     rounded-lg cursor-pointer grid place-items-center transition-all hover:bg-brand-primary   [&_#dbx-svg]:hover:fill-white [&_#dbx-svg_g]:hover:fill-white ">
+                <OptionsButton icon={Icons.dropbox({})}>
+                  <menu className="flex flex-col gap-2 min-w-[100px]">
+                    {projectData?.dropboxFileMeta?.path_lower && (
+                      <>
+                        <Button
+                          refForward={pushRef}
+                          // disabled={projectData.dbx_pull_requried}
+                          onClick={async (ev) => {
+                            // let tId = toast.loading(
+                            //   <ToastMsgInfo msg={`Pushing project...`} />
+                            // );
+                            pushRef.current.disabled = true;
+                            pullRef.current.disabled = true;
+
+                            try {
+                              addClickClass(ev.currentTarget, "click");
+                              const dataMeta =
+                                await uploadDbxFileWithToastProgress(
+                                  projectData.dropboxFileMeta.path_lower,
+                                  await getProject(),
+                                  projectData.dropboxFileMeta.rev,
+                                );
+                              if (!dataMeta) {
+                                throw new Error(`No data meta founded`);
+                              }
+                              console.log("data meta : ", dataMeta);
+                              await db.projects.update(
+                                +localStorage.getItem(current_project_id),
+                                {
+                                  dbx_pull_requried: false,
+                                  dropboxFileMeta: dataMeta,
+                                },
+                              );
+                              // toast.done(tId);
+                            } catch (error) {
+                              // if(error.message.includes("conflict")){
+                              //   console.error('hahahahahahahahahah');
+
+                              // }
+                              // toast.dismiss(tId);
+                              throw new Error(error);
+                            } finally {
+                              pushRef.current.disabled = false;
+                              pullRef.current.disabled = false;
+                            }
+                          }}
+                        >
+                          {Icons.upload({ strokeColor: "white" })}
+                          <h1>Push</h1>
+                        </Button>
+                        <Button
+                          refForward={pullRef}
+                          // disabled={!projectData.dbx_pull_requried}
+                          onClick={async (ev) => {
+                            const cnfrm = confirm(
+                              `Are you sure you want to pull from dropbox? This will overwrite your local project files.`,
+                            );
+                            if (!cnfrm) return;
+                            console.log("refff : ", pushRef.current);
+                            const btn = ev.currentTarget;
+                            addClickClass(btn, "click");
+
+                            btn.disabled = true;
+                            pushRef.current.disabled = true;
+                            try {
+                              await pullProject(projectData);
+                              btn.disabled = true;
+                            } catch (error) {
+                              throw new Error(error);
+                            } finally {
+                              btn.disabled = null;
+                              // pushRef.current.disabled = null;
+                            }
+                          }}
+                          style={{
+                            backgroundColor: projectData.dbx_pull_requried
+                              ? "crimson"
+                              : null,
+                          }}
+                        >
+                          {Icons.export("white")}
+                          <h1>Pull</h1>
+                        </Button>
+                      </>
+                    )}
+                  </menu>
+                </OptionsButton>
+              </li>
+            )} */}
+
+            {/* <Li title="Github" icon={Icons.git} /> */}
+          </ul>
+
+          <ul className="flex flex-col gap-5 items-center p-2 bg-surface-tertiary rounded-lg empty:hidden">
+            <Wordpress>
+              <Li
+                title="Wordpress"
+                // icon={}
+                onClick={() => {
+                  setShowsComponents((old) => ({
+                    ...old,
+                    animationsBuilder: false,
+                    layers: false,
+                    stylesBuilder: false,
+                    viewPanel: !old?.viewPanel,
+                    views: {
+                      ...old?.views,
+                      viewKey: "wordpress",
+                    },
+                  }));
+                }}
+              >
+                <Icons.wordpress />
+              </Li>
+            </Wordpress>
+            {/* <Li title="Github" icon={Icons.git} /> */}
+          </ul>
+        </section>
       </div>
 
       <div>
-        <ul className="flex flex-col gap-5 items-center">
-          {/* <Li>{Icons.headphone()}</Li> */}
+        <ul className="flex flex-col gap-5 items-center p-2 bg-surface-tertiary rounded-lg ">
+          {checkDropBoxSignInState() &&
+            projectData?.apps != "Dropbox" &&
+            !projectData?.dropboxFileMeta?.path_lower && (
+              <Button
+                onClick={async (ev) => {
+                  const trgBtn = ev.currentTarget;
+                  trgBtn.disabled = true;
+                  const dataMeta = await uploadDbxFileWithToastProgress(
+                    `/${projectData.name}.zip`,
+                    await getProject(),
+                    "",
+                  );
+                  if (!dataMeta) {
+                    throw new Error(`No data meta founded`);
+                  }
+                  console.log("data meta : ", dataMeta);
+                  await db.projects.update(
+                    +localStorage.getItem(current_project_id),
+                    {
+                      dbx_pull_requried: false,
+                      dropboxFileMeta: dataMeta,
+                    },
+                  );
+                  trgBtn.disabled = false;
+                }}
+              >
+                {Icons.initial({ strokeColor: "white" })} Init Project
+              </Button>
+            )}
+
           <Li
             title="Settings"
             icon={Icons.setting}

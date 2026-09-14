@@ -89,6 +89,8 @@ import serializeJavascript from "serialize-javascript";
 import { toast } from "react-toastify";
 import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { queryClient } from "@/utils/queryClient";
+import { titleTool } from "@/plugins/tools/titleTool";
+import { componentIconTool } from "@/plugins/tools/componentIconTool";
 
 export {
   replaceBlobs,
@@ -387,7 +389,12 @@ export function renderToolbar(editor) {
     return;
   }
 
-  if (!sle.getEl()) return;
+  // FIX: If the element isn't in the DOM yet, wait a tick and try again
+  if (!sle.getEl()) {
+    // setTimeout(() => renderToolbar(editor), 50);
+    return;
+  }
+
   const symbolInfo = getInfinitelySymbolInfo(sle);
   const toolbarItemsClass = `gjs-toolbar-items`;
   const toolbarItemClass = `gjs-toolbar-item`;
@@ -426,6 +433,16 @@ export function renderToolbar(editor) {
   toolbarEl.innerHTML = "";
   const newToolbarItemsEl = document.createElement("menu");
   newToolbarItemsEl.className = toolbarItemsClass;
+
+  //====================Append Component icon & title===========
+  // const cmpIconEl = document.createElement("li");
+  // cmpIconEl.innerHTML = sle.getIcon();
+
+  // const cmpTitleEl = document.createElement("li");
+  // cmpTitleEl.innerHTML = sle.getName();
+  // newToolbarItemsEl.appendChild(cmpIconEl);
+  // newToolbarItemsEl.appendChild(cmpTitleEl);
+
   //====================Append Tools===========
   cmpTools.forEach((tool) => {
     const toolEl = document.createElement("li");
@@ -501,6 +518,7 @@ export function initToolbar(editor, cmp) {
       draggable: true,
     },
   };
+
   const props = sle.props();
   const newTools = sle.toolbar
     .map((tool) => {
@@ -515,9 +533,41 @@ export function initToolbar(editor, cmp) {
     newTools.unshift(moveTool);
   }
 
+  // --- NEW: ADD ICON AND TITLE AS TOOLBAR ITEMS ---
+  // const iconTool = {
+  //   id: "icon-toolbar-item",
+  //   attributes: { class: "gjs-toolbar-item gjs-toolbar-title-icon" },
+  //   label: sle.getIcon() || "", // GrapesJS natively renders this HTML
+  //   command: "", // Empty command makes it display-only
+  // };
+
+  // const titleTool = {
+  //   id: "title-toolbar-item",
+  //   attributes: { class: "gjs-toolbar-item gjs-toolbar-title-text" },
+  //   label: `<span style="pointer-events: none; font-weight: bold;">${sle.getName() || "Component"}</span>`,
+  //   command: "",
+  // };
+
+  // const toolsAfterUpdate = newTools;
+
+  // const toolsAfterUpdateWithNews = [iconTool, titleTool, ...toolsAfterUpdate];
+
+  // const toolsAfterUpdateFilterd = [
+  //   ...new Map(
+  //     toolsAfterUpdateWithNews.map((tool) => [tool.id, tool]),
+  //   ).values(),
+  // ];
+
+  // sle.set({
+  //   toolbar: toolsAfterUpdateFilterd,
+  // });
+  
   sle.set({
     toolbar: newTools,
   });
+  
+  
+   
 
   symbolCodeEditor(editor);
 
@@ -530,6 +580,11 @@ export function initToolbar(editor, cmp) {
   createReusableCmpTool(editor);
   createSymbolTool(editor);
 
+   titleTool(editor);
+    componentIconTool(editor);
+
+  // requestAnimationFrame(() => {
+  // });
   renderToolbar(editor);
 }
 
@@ -1917,9 +1972,11 @@ export function setProjectSettings(settings, usePreviousValue = true) {
   for (const key in projectSettingsType) {
     // if (!(key in news)) {
     // }
-    const value =
-      usePreviousValue ? isBoolean(JSON.parse(projectSettingsLS || "{}")?.[key]) ? JSON.parse(projectSettingsLS || "{}")?.[key] : projectSettingsType[key] : false;
-      
+    const value = usePreviousValue
+      ? isBoolean(JSON.parse(projectSettingsLS || "{}")?.[key])
+        ? JSON.parse(projectSettingsLS || "{}")?.[key]
+        : projectSettingsType[key]
+      : false;
 
     news[key] = value;
     console.log(
@@ -3304,16 +3361,16 @@ export function workerCallbackMaker(
 /**
  * Source of truth: the exact object registered with the worker.
  * Adjust this import to wherever `export const wpCommands = {...}` actually lives.
- * @typedef {  typeof import('@/helpers/worker').commands  & typeof import('@/helpers/assetsWorker').commands &  typeof import('@/helpers/fetcherWorker').commands & typeof import('@/helpers/classesFinderWorker').commands & typeof import('@/helpers/keyframesGetterWorker').commands & typeof import('@/helpers/offlineInstallerWorker').commands & typeof import('@/helpers/pageBuilderWorker').commands & typeof import('@/helpers/refresherWorker').commands & typeof import('@/helpers/swRefresherWorker').commands} Commands
+ * @typedef {  typeof import('@/helpers/worker').commands  & typeof import('@/helpers/assetsWorker').commands &  typeof import('@/helpers/fetcherWorker').commands & typeof import('@/helpers/classesFinderWorker').commands & typeof import('@/helpers/keyframesGetterWorker').commands & typeof import('@/helpers/offlineInstallerWorker').commands & typeof import('@/helpers/pageBuilderWorker').commands & typeof import('@/helpers/refresherWorker').commands & typeof import('@/helpers/swRefresherWorker').commands} AllCommands
  */
 
 /**
- * @template {keyof Commands} K
+ * @template {keyof AllCommands} K
  * @param {Worker} worker
  * @param {K} commandCallback
- * @param {Parameters<Commands[K]>[0]} props
- * @param {(props: Parameters<Commands[K]>[0]) => (any | Promise<any>)} [resCallback]
- * @returns {Promise<Awaited<ReturnType<Commands[K]>>>}
+ * @param {Parameters<AllCommands[K]>[0]} props
+ * @param {(props: Parameters<AllCommands[K]>[0]) => (any | Promise<any>)} [resCallback]
+ * @returns {Promise<Awaited<ReturnType<AllCommands[K]>>>}
  */
 export function workerCallbackMakerWithProps(
   worker,
@@ -3357,12 +3414,12 @@ export function workerCallbackMakerWithProps(
 }
 
 /**
- * @template {keyof Commands} K
+ * @template {keyof AllCommands} K
  * @param {Worker} worker
  * @param {K} commandCallback
- * @param {Parameters<Commands[K]>[0]} props
- * @param {(props: Parameters<Commands[K]>[0]) => (any | Promise<any>)} [resCallback]
- * @returns {Promise<Awaited<ReturnType<Commands[K]>>>}
+ * @param {Parameters<AllCommands[K]>[0]} props
+ * @param {(props: Parameters<AllCommands[K]>[0]) => (any | Promise<any>)} [resCallback]
+ * @returns {Promise<Awaited<ReturnType<AllCommands[K]>>>}
  */
 export function wpWorkerCallbackMaker(
   worker,
@@ -3451,49 +3508,56 @@ export function wpWorkerCallbackListener(
 /**
  * Source of truth: the exact object registered with the worker.
  * Adjust this import to wherever `export const wpCommands = {...}` actually lives.
- * @typedef {typeof import("@/helpers/wp_commands_worker").wpCommands} WpCommands
+ * @typedef {AllCommands } Commands
  */
 
 /**
- * @template {keyof WpCommands} K
+ * @template {keyof Commands} K
  * @param {Worker} worker
  * @param {K} command
- * @param {Parameters<WpCommands[K]>[0]} props
- * @param {(props: Parameters<WpCommands[K]>[0]) => (any | Promise<any>)} [localFallback]
- * @returns {Promise<Awaited<ReturnType<WpCommands[K]>>>}
+ * @param {Parameters<Commands[K]>[0]} props
+ * @param {(props: Parameters<Commands[K]>[0]) => (any | Promise<any>)} [localFallback]
+ * @returns {Promise<Awaited<ReturnType<Commands[K]>>>}
  */
 export function callWorkerCommand(worker, command, props, localFallback) {
-  // if (isNormal()) {
-  //   if (!isFunction(localFallback)) {
-  //     return Promise.reject(
-  //       new Error(
-  //         `callWorkerCommand: "${command}" has no local fallback for normal mode`,
-  //       ),
-  //     );
-  //   }
-  //   return Promise.resolve().then(() => localFallback(props));
-  // }
-
-  return new Promise((resolve, reject) => {
-    wpWorkerCallbackMaker(worker, command, props, (resProps) => {
-      if (resProps?.done) {
-        resolve(resProps.res);
-      } else {
-        reject(
-          resProps?.error
-            ? Object.assign(new Error(resProps.error.message), resProps.error)
-            : new Error(`${command} failed with no error payload`),
-        );
-      }
+  if (isNormal()) {
+    return new Promise((resolve, reject) => {
+      workerCallbackMakerWithProps(worker, command, props, (resProps) => {
+        if (resProps?.done) {
+          resolve(resProps.res);
+        } else {
+          reject(
+            resProps?.error
+              ? Object.assign(new Error(resProps.error.message), resProps.error)
+              : new Error(`${command} failed with no error payload`),
+          );
+        }
+      });
     });
-  });
+  }
+
+  if (isWordpress()) {
+    return new Promise((resolve, reject) => {
+      wpWorkerCallbackMaker(worker, command, props, (resProps) => {
+        if (resProps?.done) {
+          resolve(resProps.res);
+        } else {
+          reject(
+            resProps?.error
+              ? Object.assign(new Error(resProps.error.message), resProps.error)
+              : new Error(`${command} failed with no error payload`),
+          );
+        }
+      });
+    });
+  }
 }
 
 /**
- * @template {keyof WpCommands} K
+ * @template {keyof Commands} K
  * @param {Worker} worker
  * @param {K} command
- * @returns {(props: Parameters<WpCommands[K]>[0]) => Promise<Awaited<ReturnType<WpCommands[K]>>>}
+ * @returns {(props: Parameters<Commands[K]>[0]) => Promise<Awaited<ReturnType<Commands[K]>>>}
  */
 export function createWpMutationFn(worker, command) {
   return (props) => callWorkerCommand(worker, command, props);
@@ -3892,7 +3956,28 @@ export function getWpRestBase() {
  * @param {boolean} keepWrapper
  */
 export function gjsComponentsToJSON(wrapper, keepWrapper = false) {
-  const components = keepWrapper ? [wrapper] : wrapper.components().models;
+  let components = keepWrapper ? [wrapper] : wrapper.components().models;
+
+  // 🔥 FIX: Filter out HTML comments and empty whitespace text nodes
+  components = components.filter((cmp) => {
+    const type = cmp.get("type");
+
+    // 1. Remove HTML comments (e.g., <!-- v-auto-animate goes HERE -->)
+    if (type === "comment" || cmp.tagName === "comment") {
+      return false;
+    }
+
+    // 2. Remove textnodes that only contain whitespace/newlines (e.g., "\n")
+    if (type === "textnode") {
+      const content = cmp.get("content") || "";
+      // If it's just whitespace/newlines, skip it
+      if (!content.trim()) {
+        return false;
+      }
+    }
+
+    return true;
+  });
 
   const result = components.map((cmp) => {
     const jsonCmp = JSON.parse(JSON.stringify(cmp));
@@ -3901,7 +3986,8 @@ export function gjsComponentsToJSON(wrapper, keepWrapper = false) {
       jsonCmp.tagName = cmp.tagName;
     }
 
-    if (cmp.components().models.length) {
+    // Added safety check for cmp.components just in case
+    if (cmp.components && cmp.components().models.length) {
       jsonCmp.components = gjsComponentsToJSON(cmp);
     }
 

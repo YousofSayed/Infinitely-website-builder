@@ -54,19 +54,21 @@ export const useWpGet = (endpoint, params = {}) => {
 // ✅ ADD THIS NEW HOOK FOR PAGINATION
 export const useWpGetInfinite = (endpoint, options = {}) => {
   return useInfiniteQuery({
-    queryKey: ["wp_get_infinite", endpoint],
+    queryKey: ["wp_get_infinite", endpoint , getProjectId() , options],
     queryFn: ({ pageParam = 1 }) =>
       callWorkerCommand(fetcherWorker, "wp_get", {
         projectId: getProjectId(),
         endpoint,
-        params: { per_page: 100, page: pageParam },
+        params: {...options, per_page: 100, page: pageParam },
       }),
+
     getNextPageParam: (lastPage, allPages) => {
       // If the last page has less than 100 items, we reached the end. Stop fetching!
       if (!lastPage || lastPage.length < 100) return undefined;
       return allPages.length + 1;
     },
     initialPageParam: 1,
+    // refetchOnMount: false,
     // Automatically disables if endpoint is empty (e.g. postType is "")
     enabled: Boolean(endpoint) && isWordpress(),
     ...options,
@@ -328,5 +330,11 @@ export const useCreateWpSinglePostMutation = () => {
 export const useUpdateWpScriptsMutation = () => {
   return useMutation({
     mutationFn: createWpMutationFn(fetcherWorker, "wp_update_main_global_files"),
+  });
+}
+
+export const useWpUploadMultiFilesMutation = () => {
+  return useMutation({
+    mutationFn: createWpMutationFn(fetcherWorker, "wp_upload_multiple_files"),
   });
 }

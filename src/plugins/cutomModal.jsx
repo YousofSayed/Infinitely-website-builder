@@ -1,10 +1,12 @@
 import { AssetsManager } from "@/components/Editor/AssetsManager";
 import { CodeManagerModal } from "@/components/Editor/Modals/CodeManagerModal";
+import { CodeManagerSharedModal } from "@/components/Editor/Modals/CodeManagerSharedModal";
 import { CustomFontsModal } from "@/components/Editor/Modals/CustomFontsModal";
 import { DynamicTemplatesManager } from "@/components/Editor/Modals/DynamicTemplatesManager";
 import { ErrorModal } from "@/components/Editor/Modals/ErrorModal";
 import { FileEditorModal } from "@/components/Editor/Modals/FileEditorModal";
 import { LibraryInstallerModal } from "@/components/Editor/Modals/LibraryInstallerModal";
+import { MediaManager } from "@/components/Editor/Modals/MediaManagerModel";
 import { PageHelmetModal } from "@/components/Editor/Modals/PageHelmetModal";
 import { PagesManager } from "@/components/Editor/Modals/PagesManager";
 import { RestAPIModels } from "@/components/Editor/Modals/RestAPIModels";
@@ -12,7 +14,7 @@ import { SettingsModal } from "@/components/Editor/Modals/SettingsModal";
 import { SymbolCodeEditor } from "@/components/Editor/Modals/SymbolCodeEditor";
 import { SymbolsAndTemplatesManager } from "@/components/Editor/Modals/SymbolsAndTemplatesManager";
 import { WpCodeManagerModal } from "@/components/Editor/Modals/wordpress/CodeManagerModal";
-import { MediaManager } from "@/components/Editor/Modals/wordpress/MediaManager";
+// import { MediaManager } from "@/components/Editor/Modals/wordpress/MediaManager";
 import { Icons } from "@/components/Icons/Icons";
 import {
   open_code_manager_modal,
@@ -68,7 +70,8 @@ export function customModal(editor) {
   editor.Commands.add(open_files_manager_modal, (editor, sender, options) => {
     editor.runCommand("open:custom:modal", {
       title: <ModalTitle icon={Icons.gallery('white')} title={"Media Manager"} />,
-      JSXModal: isWordpress() ? <MediaManager /> : <AssetsManager editor={editor} />,
+      JSXModal:<MediaManager />,
+      // JSXModal: isWordpress() ? <MediaManager /> : <AssetsManager editor={editor} />,
       height: '90%'
     });
   });
@@ -181,7 +184,8 @@ export function customModal(editor) {
           title={"Code Manager"}
         />
       ),
-      JSXModal: isWordpress() ? <WpCodeManagerModal /> : <CodeManagerModal />,
+      JSXModal: <CodeManagerSharedModal />,
+      // JSXModal: isWordpress() ? <WpCodeManagerModal /> : <CodeManagerModal />,
       width: "90%",
       height: "80%",
     });

@@ -11,7 +11,7 @@ const app = pVuew.createApp({
 app.directive("view", vIntersection);
 app.directive("ref", vRef);
 app.directive("gsap", vGsap);
-registerAnimatedDirectives(app);
+registerAutoAnimateDirective(app);
 
 const vScope = document.body.getAttribute('v-scope');
 const isVScope = Boolean(vScope);
