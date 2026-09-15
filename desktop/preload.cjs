@@ -1,4 +1,6 @@
+
 const { contextBridge, ipcRenderer } = require("electron");
+
 console.log("🔥 PRELOAD LOADED");
 const api = {
   isDesktop: true,

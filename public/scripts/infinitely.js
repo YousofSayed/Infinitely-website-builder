@@ -1009,5 +1009,28 @@ function useAutoAnimate(params) {
   return params;
 }
 
+/**
+ * 
+ * @param {ThemesNames} themeName 
+ */
+function setTheme(themeName=  ('')) {
+  // "themeName" should be the slugified name (e.g., "ocean", "dark", "brand-theme")
+  document.documentElement.setAttribute('data-theme', themeName);
+}
+
+/**
+ * 
+ * @param {ThemesModes} modeName 
+ */
+function setMode(modeName =  ('')) {
+  // "modeName" should be the slugified mode (e.g., "dim", "light", "high-contrast")
+  document.documentElement.setAttribute('data-mode', modeName);
+}
+
+// Remove a mode (fallback to base theme variables)
+function clearMode() {
+  document.documentElement.removeAttribute('data-mode');
+}
+
 
 // ... 60 more interactions will follow in the same format ...

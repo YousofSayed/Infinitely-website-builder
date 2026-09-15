@@ -130,7 +130,7 @@ export type InfinitelyTrait = {
     | "custom"
     | "object"
     | "add-props";
-    inputType ?: "text" | "url" | "email" | "number";
+  inputType?: "text" | "url" | "email" | "number";
   // propsType: "text" | "code";
   //For add-props type
   addPropsInputType: "text" | "code";
@@ -291,7 +291,14 @@ export interface Directive {
   directive: string;
   name: string;
   id: string;
-  type: "object" | "code" | "array" | "multi" | "multi-once" | "select" | "check";
+  type:
+    | "object"
+    | "code"
+    | "array"
+    | "multi"
+    | "multi-once"
+    | "select"
+    | "check";
   // inputType: "object" | "code" | "array" | "multi" | "select";
   nestedInputType: "select" | "code" | "input";
   nestedCodeLang: "html" | "javascript" | "css";
@@ -605,7 +612,7 @@ export type InfinitelyFonts = {
   [key: string]: InfinitelyFont & InfinitelyWpMedia;
 };
 
-export interface InfinitelyWpMedia  {
+export interface InfinitelyWpMedia {
   id: number;
   date: string; // ISO date string
   date_gmt: string; // ISO date string
@@ -670,8 +677,7 @@ export interface InfinitelyWpMedia  {
       href: string;
     }>;
   };
-
-};
+}
 
 export interface InfinitelyNormalMedia {
   file: File & {
@@ -685,7 +691,7 @@ export interface InfinitelyNormalMedia {
   size: number;
   link: string;
   source_url: string;
-};
+}
 
 export type GrapesJSComponent = {
   tagName: string;
@@ -713,6 +719,37 @@ export type Wp_Meta = {
   username: string;
   password: string;
   app_password: string;
+};
+
+export type ThemeCategory = {
+  name: string;
+  id: string;
+  vars: { [key: string]: string };
+};
+
+export type ThemeCategories = ThemeCategory[];
+
+export type ThemeConfig = {
+  id: string;
+  name: string;
+  description: string;
+  is_default: boolean;
+
+  modes: {
+    [key: string]: {
+      categories: ThemeCategories;
+      id: string;
+    };
+  };
+
+  root_categories: ThemeCategories;
+};
+
+export type Themes = {
+  root: ThemeConfig ;
+  config: ThemeConfig[];
+  path: string;
+  wp_media_config: InfinitelyWpMedia;
 };
 
 export interface Project {
@@ -759,6 +796,7 @@ export interface Project {
 
   devices: import("grapesjs").DeviceProperties[];
   lastScreenshot: Date | string;
+  themes: Themes;
 }
 
 export type WPQueryArgs = {
@@ -1262,6 +1300,7 @@ export interface WpProject {
       conditions: WpConditions;
     };
   };
+  themes: Themes;
 }
 
 export type GlobalSettings = {
@@ -1713,7 +1752,7 @@ export interface TokenQueryVar {
 }
 
 export interface TokenPaginationVar {
-  name : string;
+  name: string;
   pagination_query_id: string;
 }
 
@@ -1765,8 +1804,7 @@ export type TokenScopeVar =
   | TokenSourceVar
   | TokenSSRVar
   | TokenDataVar
-  | TokenPaginationVar
-  ;
+  | TokenPaginationVar;
 
 /**
  * The `vars` array sent to the /get-tokens endpoint

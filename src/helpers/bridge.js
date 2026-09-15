@@ -491,8 +491,8 @@ export async function blobToDataUrlAndClean(file) {
 }
 
 /**
- * 
- * @param {Blob} input 
+ *
+ * @param {Blob} input
  * @returns {Promise<any>}
  */
 export async function replaceBlobs(input) {
@@ -3336,3 +3336,162 @@ export const groupArrayAsObject = (groupArray = [], targetKey) =>
 export function cleanUrl(url) {
   return url.split("?")[0];
 }
+
+/**
+ * Builds a CSS string from the themes object.
+ * @param {import('@/helpers/types').Themes} themes
+ * @returns {string} The generated CSS text
+ */
+export const buildThemesCss = (themes) => {
+  if (!themes) return "";
+
+  const cssBlocks = [];
+
+  const slugify = (text) => {
+    return String(text || "")
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^\w-]+/g, "")
+      .replace(/--+/g, "-")
+      .replace(/^-+/, "")
+      .replace(/-+$/, "");
+  };
+
+  const formatCssVar = (key) => {
+    const cleanKey = String(key).trim();
+    return cleanKey.startsWith("--") ? cleanKey : `--${cleanKey}`;
+  };
+
+  const buildVariablesBlock = (categories, indent = "  ") => {
+    const lines = [];
+    for (const category of categories || []) {
+      if (!category.vars || typeof category.vars !== "object") continue;
+
+      // Get category name and slugify it to be CSS-safe
+      const categorySlug = slugify(category.name || category.id);
+
+      for (const [key, value] of Object.entries(category.vars)) {
+        if (
+          value !== undefined &&
+          value !== null &&
+          String(value).trim() !== ""
+        ) {
+          const keySlug = slugify(key);
+
+          // Combine category and key: e.g., "colors" + "primary" = "colors-primary"
+          const finalKey = categorySlug
+            ? `${categorySlug}-${keySlug}`
+            : keySlug;
+
+          if (finalKey) {
+            lines.push(`${indent}${formatCssVar(finalKey)}: ${value};`);
+          }
+        }
+      }
+    }
+    return lines.join("\n");
+  };
+
+  // ==========================================
+  // 1. ROOT THEME (Global Fallbacks)
+  // ==========================================
+  if (themes.root) {
+    if (
+      Array.isArray(themes.root.root_categories) &&
+      themes.root.root_categories.length > 0
+    ) {
+      const vars = buildVariablesBlock(themes.root.root_categories);
+      if (vars) {
+        cssBlocks.push(`/* Global Root Variables */\n:root {\n${vars}\n}`);
+      }
+    }
+
+    // Root Modes
+    if (themes.root.modes && typeof themes.root.modes === "object") {
+      for (const [modeName, mode] of Object.entries(themes.root.modes)) {
+        if (
+          !mode ||
+          !Array.isArray(mode.categories) ||
+          mode.categories.length === 0
+        )
+          continue;
+
+        const modeSlug = slugify(modeName);
+        const modeSelectors = [`:root[data-mode="${modeSlug}"]`];
+
+        const vars = buildVariablesBlock(mode.categories);
+        if (vars) {
+          cssBlocks.push(
+            `/* Root Mode: ${modeName} */\n${modeSelectors.join(",\n")} {\n${vars}\n}`,
+          );
+        }
+      }
+    }
+  }
+
+  // ==========================================
+  // 2. CONFIG THEMES
+  // ==========================================
+  if (Array.isArray(themes.config)) {
+    for (const theme of themes.config) {
+      const slug = slugify(theme.name || theme.id);
+
+      // Theme Base Selectors
+      const themeSelectors = [`[data-theme="${slug}"]`];
+      if (theme.is_default) {
+        themeSelectors.unshift(":root");
+      }
+
+      // Theme Base Variables
+      if (
+        Array.isArray(theme.root_categories) &&
+        theme.root_categories.length > 0
+      ) {
+        const vars = buildVariablesBlock(theme.root_categories);
+        if (vars) {
+          cssBlocks.push(
+            `/* Theme: ${theme.name} */\n${themeSelectors.join(",\n")} {\n${vars}\n}`,
+          );
+        }
+      }
+
+      // Theme Modes
+      if (theme.modes && typeof theme.modes === "object") {
+        for (const [modeName, mode] of Object.entries(theme.modes)) {
+          if (
+            !mode ||
+            !Array.isArray(mode.categories) ||
+            mode.categories.length === 0
+          )
+            continue;
+
+          const modeSlug = slugify(modeName);
+          const modeSelectors = [
+            `[data-theme="${slug}"][data-mode="${modeSlug}"]`,
+          ];
+
+          if (theme.is_default) {
+            modeSelectors.unshift(`:root[data-mode="${modeSlug}"]`);
+          }
+
+          // NEW: If this mode is the default mode, apply it to the base theme selector
+          if (mode.is_default) {
+            modeSelectors.unshift(`[data-theme="${slug}"]`);
+            if (theme.is_default) {
+              modeSelectors.unshift(`:root`);
+            }
+          }
+
+          const vars = buildVariablesBlock(mode.categories);
+          if (vars) {
+            cssBlocks.push(
+              `/* Theme: ${theme.name} | Mode: ${modeName} ${mode.is_default ? "(Default)" : ""} */\n${modeSelectors.join(",\n")} {\n${vars}\n}`,
+            );
+          }
+        }
+      }
+    }
+  }
+
+  return cssBlocks.join("\n\n");
+};

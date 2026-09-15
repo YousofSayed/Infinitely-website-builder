@@ -278,7 +278,7 @@ export const HomeNav = () => {
                     animationsBuilder: false,
                     layers: false,
                     stylesBuilder: false,
-                    viewPanel: !old?.viewPanel,
+                    viewPanel: showsComponents.views.viewKey === "wordpress" ?!old?.viewPanel: true ,
                     views: {
                       ...old?.views,
                       viewKey: "wordpress",
@@ -289,6 +289,53 @@ export const HomeNav = () => {
                 <Icons.wordpress />
               </Li>
             </Wordpress>
+
+            <Li
+              title="Infinitely AI"
+              // icon={}
+              onClick={() => {
+                setShowsComponents((old) => ({
+                  ...old,
+                  animationsBuilder: false,
+                  layers: false,
+                  stylesBuilder: false,
+                  viewPanel: !old?.viewPanel,
+                  views: {
+                    ...old?.views,
+                    viewKey: "ai",
+                  },
+                }));
+              }}
+            >
+              <i className="[&_path]:transition-all [&:hover_path]:fill-white  w-full h-full flex justify-center items-center">
+                <Icons.ai />
+              </i>
+            </Li>
+
+            <Li
+              title="themes"
+              // icon={}
+              onClick={() => {
+                setShowsComponents((old) => ({
+                  ...old,
+                  animationsBuilder: false,
+                  layers: false,
+                  stylesBuilder: false,
+                  viewPanel:
+                    showsComponents.views.viewKey === "themesBuilder"
+                      ? !old?.viewPanel
+                      : true ,
+                  views: {
+                    ...old?.views,
+                    viewKey: "themesBuilder",
+                  },
+                }));
+              }}
+            >
+              <i className="[&_path]:transition-all [&:hover_path]:fill-white [&:hover_path]:stroke-white  w-full h-full flex justify-center items-center">
+                <Icons.themes />
+              </i>
+            </Li>
             {/* <Li title="Github" icon={Icons.git} /> */}
           </ul>
         </section>

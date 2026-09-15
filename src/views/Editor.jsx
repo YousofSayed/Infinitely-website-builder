@@ -312,6 +312,7 @@ export function Editor({ params }) {
                 >
                   {/* {!showPreview && <HomeNav />} */}
                   <HomeNav />
+                  
                   <section
                     // ref={parent}
                     id="main-group"
@@ -445,8 +446,6 @@ export function Editor({ params }) {
                     <WpTokenPickers />
                   </Wordpress>
 
-                  {/* <CustomModals /> */}
-                  {/* <Popover /> */}
                 </main>
                 {/* </WithEditor> */}
               </GJEditor>

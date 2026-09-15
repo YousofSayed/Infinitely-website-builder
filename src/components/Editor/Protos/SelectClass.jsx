@@ -289,7 +289,7 @@ export const SelectClass = () => {
           onClick={(ev) => {
             addClass(value);
           }}
-        >
+        > 
           {Icons.plus("#fff")}
         </SmallButton>
       </section>

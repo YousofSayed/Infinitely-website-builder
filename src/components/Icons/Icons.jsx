@@ -565,10 +565,10 @@ export const Icons = {
       />
     </svg>
   ),
-  close: (strokeColor, strokeWidth, fill) => (
+  close: (strokeColor, strokeWidth, fill, width = 20, height = 20) => (
     <svg
-      width="20px"
-      height="20px"
+      width={width}
+      height={height}
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -1375,7 +1375,12 @@ export const Icons = {
   //     </g>
   //   </svg>
   // ),
-  trash: (strokeColor, strokeWidth, width = 20, height = 20) => (
+  trash: (
+    strokeColor = mainColor,
+    strokeWidth = 2,
+    width = 20,
+    height = 20,
+  ) => (
     <svg
       width={width}
       height={height}
@@ -3343,8 +3348,19 @@ export const Icons = {
       </g>
     </svg>
   ),
-  unselect: ({width = 48, height = 48 , fill = mainColor , stroke = mainColor}) => (
-    <svg viewBox="0 0 48 48" width={width} height={height} fill="none" xmlns="http://www.w3.org/2000/svg">
+  unselect: ({
+    width = 48,
+    height = 48,
+    fill = mainColor,
+    stroke = mainColor,
+  }) => (
+    <svg
+      viewBox="0 0 48 48"
+      width={width}
+      height={height}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
       <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
       <g
         id="SVGRepo_tracerCarrier"
@@ -3472,6 +3488,97 @@ export const Icons = {
         height="15.6558"
         fill="#334155"
       />
+    </svg>
+  ),
+  ai: ({ width = 20, height = 20, fill = mainColor, stroke = mainColor }) => (
+    <svg
+      width={width}
+      height={height}
+      viewBox="0 0 512 512"
+      version="1.1"
+      xmlns="http://www.w3.org/2000/svg"
+      xmlnsXlink="http://www.w3.org/1999/xlink"
+      fill={fill}
+    >
+      {" "}
+      <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>{" "}
+      <g
+        id="SVGRepo_tracerCarrier"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      ></g>{" "}
+      <g id="SVGRepo_iconCarrier">
+        {" "}
+        <title>ai</title>{" "}
+        <g
+          id="Page-1"
+          stroke="none"
+          strokeWidth="1"
+          fill="none"
+          fillRule="evenodd"
+        >
+          {" "}
+          <g id="icon" fill={fill} transform="translate(64.000000, 64.000000)">
+            {" "}
+            <path
+              d="M320,64 L320,320 L64,320 L64,64 L320,64 Z M171.749388,128 L146.817842,128 L99.4840387,256 L121.976629,256 L130.913039,230.977 L187.575039,230.977 L196.319607,256 L220.167172,256 L171.749388,128 Z M260.093778,128 L237.691519,128 L237.691519,256 L260.093778,256 L260.093778,128 Z M159.094727,149.47526 L181.409039,213.333 L137.135039,213.333 L159.094727,149.47526 Z M341.333333,256 L384,256 L384,298.666667 L341.333333,298.666667 L341.333333,256 Z M85.3333333,341.333333 L128,341.333333 L128,384 L85.3333333,384 L85.3333333,341.333333 Z M170.666667,341.333333 L213.333333,341.333333 L213.333333,384 L170.666667,384 L170.666667,341.333333 Z M85.3333333,0 L128,0 L128,42.6666667 L85.3333333,42.6666667 L85.3333333,0 Z M256,341.333333 L298.666667,341.333333 L298.666667,384 L256,384 L256,341.333333 Z M170.666667,0 L213.333333,0 L213.333333,42.6666667 L170.666667,42.6666667 L170.666667,0 Z M256,0 L298.666667,0 L298.666667,42.6666667 L256,42.6666667 L256,0 Z M341.333333,170.666667 L384,170.666667 L384,213.333333 L341.333333,213.333333 L341.333333,170.666667 Z M0,256 L42.6666667,256 L42.6666667,298.666667 L0,298.666667 L0,256 Z M341.333333,85.3333333 L384,85.3333333 L384,128 L341.333333,128 L341.333333,85.3333333 Z M0,170.666667 L42.6666667,170.666667 L42.6666667,213.333333 L0,213.333333 L0,170.666667 Z M0,85.3333333 L42.6666667,85.3333333 L42.6666667,128 L0,128 L0,85.3333333 Z"
+              id="Combined-Shape"
+              fill={fill}
+              stroke={stroke}
+            />{" "}
+          </g>{" "}
+        </g>{" "}
+      </g>{" "}
+    </svg>
+  ),
+  themes: ({
+    width = 23,
+    height = 23,
+    fill = mainColor,
+    stroke = mainColor,
+    stokeWidth = 3,
+  }) => (
+    <svg
+      width={width}
+      height={height}
+      viewBox="-4.8 -4.8 57.60 57.60"
+      xmlns="http://www.w3.org/2000/svg"
+      fill={fill}
+      stroke={stroke}
+      strokeWidth={stokeWidth}
+    >
+      {" "}
+      <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>{" "}
+      <g
+        id="SVGRepo_tracerCarrier"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      ></g>{" "}
+      <g id="SVGRepo_iconCarrier">
+        {" "}
+        <defs>
+          {" "}
+          <style>
+            {" "}
+            {`.a { fill: none; stroke: ${stroke}; stroke-linecap: round; stroke-linejoin: round; }`}{" "}
+          </style>{" "}
+        </defs>{" "}
+        <path
+          className="a"
+          d="M6.9657,14.615V6.04a25.1315,25.1315,0,0,0,11.343,2.7683C24.7905,8.8084,26.8835,5.5,34.108,5.5a22.9729,22.9729,0,0,1,6.9263,1.5071V14.615"
+        />{" "}
+        <path
+          className="a"
+          d="M41.0343,14.615V26.1606c0,3.3759-3.916,3.646-7.4945,3.646s-6.538,1.5079-6.538,4.895c0,1.5288,1.0015,1.8568,1.0015,4.22S26.7485,42.5,24,42.5s-4.0033-1.2153-4.0033-3.5785,1.0015-2.6911,1.0015-4.22c0-3.3871-2.96-4.895-6.538-4.895s-7.4945-.27-7.4945-3.646V14.615"
+        />{" "}
+        <line
+          className="a"
+          x1="6.9657"
+          y1="14.615"
+          x2="41.0343"
+          y2="14.615"
+        />{" "}
+      </g>{" "}
     </svg>
   ),
 };

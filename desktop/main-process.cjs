@@ -1,3 +1,4 @@
+const { LLM } = require("@themaximalist/llm.js");
 const { ipcMain, BrowserWindow } = require("electron");
 
 ipcMain.on("window:minimize", (event) => {
@@ -33,4 +34,8 @@ ipcMain.on('reload-electron-app', (event) => {
     // OR, if you want a HARD reload (clears cache):
     // win.webContents.reloadIgnoringCache(); 
   }
+});
+
+ipcMain.on('ai', (event) => {
+  return LLM
 });

@@ -303,6 +303,15 @@ export const showComponentsInLeftPanelState = atom({
           },
         },
       },
+      themesBuilder: {
+        // supportNav: true,
+        panels: {
+          themesBuilder: {
+            show: true,
+            title: "Themes Builder",
+          },
+        },
+      },
     },
     stylesBuilder: false,
   },
@@ -497,6 +506,16 @@ export const wpCurrentConditionIdState = atom({
 export const wpCurrentQueryIdState = atom({
   key: "wpCurrentQueryIdState",
   default: "",
+});
+
+export const themeIdState = atom({
+  key: "themeIdState",
+  default: "",
+});
+
+export const themesState = atom({
+  key: "themesState",
+  default: /** @type {import("@/helpers/types").Themes} */ ({}),
 });
 
 /**

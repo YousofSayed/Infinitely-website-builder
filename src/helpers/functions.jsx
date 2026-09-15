@@ -3893,6 +3893,7 @@ export async function doInWordpressAsync(callback = () => {}) {
     } catch (error) {
       console.error(error);
       toast.error(<ToastMsgInfo msg={error.message} />);
+      throw error;
     }
   }
 }

@@ -351,6 +351,20 @@ export const CodeEditor = ({
         )
       ).join("\n");
 
+      const themesNames = `type ThemesNames = ${projectData.themes.config.map((theme) => `"${theme.name}"`).join("|")}`;
+      const themesModes = `type ThemesModes = ${projectData.themes.config
+        .map((theme) => Object.keys(theme.modes).map((mode) => `"${mode}"`))
+        .flat()
+        .join("|")}`;
+        const themesTypes = `\n${themesNames};\n${themesModes};\n`;
+
+        console.log('themes types : ' , themesTypes , devLibs);
+        
+        monaco.languages.typescript.javascriptDefaults.addExtraLib(
+         themesTypes,
+          "ts:filename/infinitely-themes.d.ts",
+        );
+
       const restModelsContext = restAPIModels
         .map((model) => `var ${model.varName} = ${model.response}`)
         .join("\n");
@@ -367,7 +381,7 @@ export const CodeEditor = ({
       allowExtraLibs &&
         monaco.languages.typescript.javascriptDefaults.addExtraLib(
           finalLibs.join("\n\n"),
-          "ts:filename/infinitely.d.ts",
+          "ts:filename/infinitely.js",
         );
 
       setTimeout(async () => {
@@ -501,6 +515,9 @@ export const CodeEditor = ({
           }
         }
       }, 5);
+
+      
+
 
       monaco.languages.typescript.javascriptDefaults.addExtraLib(
         libSource,

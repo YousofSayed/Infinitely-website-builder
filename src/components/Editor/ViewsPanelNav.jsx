@@ -15,7 +15,7 @@ export const ViewsPanelNav = () => {
          <Button
          className="h-fit !p-3 font-medium bg-surface-tertiary hover:bg-brand-primary transition-colors flex items-center justify-between"
            onClick={() => {
-             setShowsComponents((prev) => ({
+             setShowsComponents((prev) => ({ 
                ...prev,
                views: {
                  ...prev.views,

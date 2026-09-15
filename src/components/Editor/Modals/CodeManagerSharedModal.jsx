@@ -40,6 +40,7 @@ import React, { useState, useRef } from "react";
 import { toast } from "react-toastify";
 import { useWordpress } from "@/hooks/useWordpress";
 import { useNormal } from "@/hooks/useNormal";
+import { Wordpress } from "@/components/Protos/wordpress/Wordpress";
 
 export const CodeManagerSharedModal = () => {
   const timeoutRef = useRef(null);
@@ -355,7 +356,7 @@ export const CodeManagerSharedModal = () => {
             infinitelyWorker,
             "writeFilesToOPFS",
             {
-              files: [{ path:root, content: filesData[key] }],
+              files: [{ path: root, content: filesData[key] }],
             },
           );
 
@@ -490,20 +491,21 @@ export const CodeManagerSharedModal = () => {
           },
         ]}
       />
-      <footer className="min-h-[8%] flex items-center gap-3 py-2 mt-2">
-        {isWordpress() && (
+      <footer className=" flex items-center gap-3 py-2 mt-2">
+        {/* <Wordpress>
           <Button
             disabled={disabled}
             className="flex-grow-0 flex-shrink bg-surface-tertiary hover:bg-brand-primary transition-colors"
             onClick={async () => await save("saved")}
           >
             {Icons.save("white", 0, "white")}
-            Publish
+             Publish
           </Button>
-        )}
+        </Wordpress> */}
+
         <Button
           disabled={disabled}
-          className="flex-grow-0 flex-shrink bg-surface-tertiary hover:bg-brand-primary transition-colors"
+          className="flex-grow-0 flex-shrink bg-surface-tertiary hover:bg-brand-primary transition-colors font-medium"
           onClick={async () =>
             await save(isWordpress() ? "before_save" : "saved")
           }
