@@ -339,7 +339,7 @@ export const Select = ({
         wrap && "flex-wrap gap-3 py-1 pl-2"
       }  gap-2  ${className ? className : "bg-surface-tertiary"} h-full flex ${
         label ? `p-1 flex-col` : `items-center p-1 `
-      }`}
+      }  animate-go-to auto-animate`}
     >
       {icon}
       {label ? (
@@ -354,7 +354,7 @@ export const Select = ({
           isRelative ? "relative" : ""
         }  flex items-center flex-nowrap justify-center    rounded-lg ${
           containerClassName ? containerClassName : "bg-surface-secondary"
-        }`}
+        }  animate-go-to auto-animate`}
         onClick={(ev) => {
           // selectRef.current.click();
           // !preventInput && inputRef.current.click();

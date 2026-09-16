@@ -14,6 +14,7 @@ import {
 } from "@/constants/shared";
 import {
   buildGsapMotionsScript,
+  buildThemesCss,
   chunkHtmlElements,
   cleanMotions,
   defineFontFace,
@@ -73,6 +74,10 @@ export async function buildProject(props) {
   const JSZip = (await import("jszip")).default;
   const mime = (await import("mime")).default;
   const zip = new JSZip();
+  const projectData = await db.projects.get(props.projectId);
+    await opfs.init(+props.projectId);
+
+
   await doInNormalAsyncInWorker(props.projectId, async () => {
     const pageBuildSettings = {
       grapStyles: props.projectSetting.grap_all_css_libs_in_single_file,
@@ -86,8 +91,7 @@ export async function buildProject(props) {
       isFooterGrapedAsync: props.projectSetting.is_async_graped_footer_script,
       disablePvue: props.projectSetting.disable_petite_vue,
     };
-    const projectData = await db.projects.get(props.projectId);
-    await opfs.init(+props.projectId);
+    
 
     /**
      *
@@ -409,7 +413,7 @@ export async function buildProject(props) {
     console.log(`End loading Globals`);
 
     !props.projectSetting.enable_tailwind &&
-      zip.file(`/global/global-rules.css`, globalRules);
+      zip.file(`global/global-rules.css`, globalRules);
 
     //Handling pages folder
     console.log(`Start loading pages`);
@@ -450,6 +454,7 @@ export async function buildProject(props) {
     const screenshot = await (
       await opfs.getFile(defineRoot(`screenshot.webp`))
     ).getOriginFile();
+
     zip.file("screenshot.webp", screenshot);
 
     //Handling Editor Data
@@ -529,7 +534,8 @@ export async function buildProject(props) {
       projectId: props.projectId,
     });
 
-    inf_config?.value?.wp_meta?.password && delete inf_config.value.wp_meta.password
+    inf_config?.value?.wp_meta?.password &&
+      delete inf_config.value.wp_meta.password;
 
     zip.file(
       `editor/infinitely.json`,
@@ -545,6 +551,16 @@ export async function buildProject(props) {
       inf_config,
     );
   });
+
+  //in all cases
+  //Include themes file
+  if (projectData?.themes) {
+    zip.file(
+      "css/infinitely-themes.css",
+      new Blob([buildThemesCss(projectData.themes)], { type: "text/css" }),
+    );
+  }
+
   return zip;
 }
 
@@ -692,6 +708,7 @@ async function buildPage({
       href="${projectData.logo ? `${urlDots}/${projectData.logo}` : ""}"
     />
     <link rel="stylesheet" href="${urlDots}/global/style.css" />
+    <link rel="stylesheet" href="${urlDots}/css/infinitely-themes.css" />
     <link rel="stylesheet" href="${urlDots}/global/infinitely.css" />
     <link rel="stylesheet" href="${urlDots}/global/global.css" />
     <link rel="stylesheet" href="${urlDots}/css/fonts.css" />
@@ -794,9 +811,16 @@ async function buildPage({
   //     });
   //   });
 
+  const themeName = projectData?.themes?.default_theme || "";
+  const themeMode = projectData?.themes?.default_mode || "";
+
   const pageRaw = html`
     <!DOCTYPE html>
-    <html lang="en">
+    <html
+      lang="en"
+      ${themeName ? `data-theme="${themeName}"` : ""}
+      ${themeMode ? `data-mode="${themeMode}"` : ""}
+    >
       <head>
         ${helmetRaw}
       </head>

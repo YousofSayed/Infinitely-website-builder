@@ -42,8 +42,28 @@ const vIntersection = (ctx) => {
   console.log("intersction plugin actaivated");
 
   return () => {
-    window["vIntersectionObserver"].unobserve(ctx.el);
+    window["vIntersectionObserver"].unobserve(ctx.el); 
     // cleanup if the element is unmounted
+  };
+};
+
+const vMount = (ctx) => {
+  const el = ctx.el;
+
+  queueMicrotask(() => {
+    el.dispatchEvent(
+      new CustomEvent("mount", {
+        detail: { el },
+      })
+    );
+  });
+
+  return () => {
+    el.dispatchEvent(
+      new CustomEvent("unmount", {
+        detail: { el },
+      })
+    );
   };
 };
 

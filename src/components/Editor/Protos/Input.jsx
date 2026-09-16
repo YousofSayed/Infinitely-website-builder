@@ -38,6 +38,7 @@ export const Input = ({
       {...props}
       // autoFocus={autoFocus}
       // type={type}
+      spellCheck={false}
       ref={inpRef}
       value={val}
       placeholder={placeholder}

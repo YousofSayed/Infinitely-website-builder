@@ -221,6 +221,17 @@ export const loadElements = async (
 
     //pov-1 await getElements();
 
+    editor.onReady(() => {
+      const iframeEl = editor.Canvas.getFrameEl();
+      const root = iframeEl.contentDocument.documentElement;
+      const themes = projectData.themes;
+      if (!themes) return;
+      console.log('root and themes' , themes , root);
+      
+      root.setAttribute("data-theme", themes.default_theme);
+      root.setAttribute("data-mode", themes.default_mode);
+    });
+
     editor.trigger(InfinitelyEvents.pages.select);
     editor.trigger(InfinitelyEvents.pages.update);
     editor.trigger(InfinitelyEvents.pages.all);
@@ -316,15 +327,15 @@ export const IDB = (editor) => {
     infinitelyWorker.postMessage({
       command: "clearTimeouts",
     });
-    console.log(
-      `Timeouts : `,
-      initSymbolTimout,
-      loadTimeout,
-      storeTimeout,
-      appenderTimeout,
-      screenshotTimout,
-      updateThumbnailTimeout,
-    );
+    // console.log(
+    //   `Timeouts : `,
+    //   initSymbolTimout,
+    //   loadTimeout,
+    //   storeTimeout,
+    //   appenderTimeout,
+    //   screenshotTimout,
+    //   updateThumbnailTimeout,
+    // );
 
     initSymbolTimout && clearTimeout(initSymbolTimout);
     loadTimeout && clearTimeout(loadTimeout);
@@ -809,6 +820,15 @@ export const loadScripts = async (editor, projectData) => {
         href: `/global/global.css`,
         name: "global-css",
       },
+    });
+
+    appendToHeader({
+      type: "styles",
+      attributes: {
+        href: `/css/infinitely-themes.css`,
+        name: "infinitely-themes-css",
+      },
+      condition: isPlainObject(projectData?.themes),
     });
 
     const projectSetting = getProjectSettings().projectSettings;

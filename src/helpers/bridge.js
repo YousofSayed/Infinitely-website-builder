@@ -1394,7 +1394,7 @@ export const buildFunctionsFromActions = (actions, id, isInstance = false) => {
                     isInstance ? interactionInstanceId : interactionId
                   }="${id}"]`,
                 )
-              : value;
+              : value || `undefined`;
           })
           .join(",")})`,
     )
@@ -2125,14 +2125,18 @@ export async function buildPageContentFromData({
   //         canvasCss: editorData.canvasCss,
   //         editorCss: editorData.editorCss,
   //       })}
+  const themeName = projectData?.themes?.default_theme;
+  const themeMode = projectData?.themes?.default_mode;
+
   const content = html`
     <!DOCTYPE html>
-    <html lang="en">
+    <html lang="en" data-theme="${themeName}" data-mode="${themeMode}">
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
         <link href="/styles/style.css" rel="stylesheet" />
+        <link href="${urlException}/css/infinitely-themes.css" rel="stylesheet" />
 
         ${isTailwindEnabled
           ? ` <link

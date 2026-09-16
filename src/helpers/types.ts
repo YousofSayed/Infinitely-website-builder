@@ -211,6 +211,8 @@ export interface Action {
   access: {
     [key: string]: {
       keyframes: boolean;
+      themesNames:String[],
+      themesModes:String[],
     };
   };
 }
@@ -739,6 +741,7 @@ export type ThemeConfig = {
     [key: string]: {
       categories: ThemeCategories;
       id: string;
+      is_default: boolean;
     };
   };
 
@@ -750,6 +753,8 @@ export type Themes = {
   config: ThemeConfig[];
   path: string;
   wp_media_config: InfinitelyWpMedia;
+  default_theme:string;
+  default_mode:string;
 };
 
 export interface Project {

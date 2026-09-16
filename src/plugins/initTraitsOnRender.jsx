@@ -36,11 +36,11 @@ export const initTraitsOnRender = (editor) => {
           });
           trait.attributes.value = attrs[trait.attributes.name];
         }
-        console.log(
-          "attr name : ",
-          attrs?.[trait?.attributes?.name],
-          trait?.attributes?.name,
-        );
+        // console.log(
+        //   "attr name : ",
+        //   attrs?.[trait?.attributes?.name],
+        //   trait?.attributes?.name,
+        // );
 
         if (trait.attributes.role == "hadnler") {
           trait.set("value", attrs[trait.attributes.name], {

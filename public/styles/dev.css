@@ -5,6 +5,9 @@
   contain: layout , paint , size , style , content ;
  } */
   
+ html{
+  cursor: url('/brands/infinitely/mainCursor.png'), auto;
+ }
 html body {
   transform: translateZ(0);
   backface-visibility: hidden;

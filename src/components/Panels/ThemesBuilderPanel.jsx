@@ -2,7 +2,7 @@ import { showComponentsInLeftPanelState } from "@/helpers/atoms";
 import React from "react";
 import { useRecoilState } from "recoil";
 import { ShowIf } from "@/components/ShowIf";
-import { ThemesBuilder } from "../Protos/ThemesBuilder";
+import { ThemesBuilder } from "../Editor/ThemesBuilder";
 
 export const ThemesBuilderPanel = () => {
   const [showsComponents, setShowsComponents] = useRecoilState(

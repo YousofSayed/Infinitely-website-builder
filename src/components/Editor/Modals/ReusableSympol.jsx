@@ -303,7 +303,7 @@ export const ReusableSympol = () => {
   // }, []);
 
   return (
-    <section className="w-full z-50 p-2 flex flex-col gap-2 overflow-auto bg-surface-tertiary rounded-lg ">
+    <section className="w-full z-50 p-2 flex flex-col gap-2 overflow-auto bg-surface-tertiary rounded-lg fit-modal auto-animate">
       <header className="p-2 z-50 rounded-lg flex gap-2 justify-between  bg-surface-secondary">
         <Input
           value={props.name}

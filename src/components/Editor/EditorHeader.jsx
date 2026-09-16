@@ -482,7 +482,7 @@ export const HomeHeader = memo(() => {
   useNotifiers();
 
   return (
-    <header className="w-full h-[55px]  zoom-80 px-2 bg-surface-secondary  border-b-[1.5px]  border-slate-400    flex items-center justify-between gap-2">
+    <header className="w-full h-[55px]  zoom-80 px-2 bg-surface-secondary  border-b-[1.5px]  border-slate-400    flex items-center justify-between gap-2 auto-animate animate-go-to">
       <ScrollableToolbar
         className="w-[37.5%] h-full flex shrink-0   max-w-[700px] py-2 "
         innerClassName="!justify-start"

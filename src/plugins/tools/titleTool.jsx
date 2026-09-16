@@ -18,7 +18,7 @@ export const titleTool = (editor) => {
 
   return addItemInToolBarForEditor({
     editor,
-    label: sle.getName(),
+    label: `<h1 class="font-bold text-lg">${sle.getName()}</h1>`,
     forAll: true,
     cond: true,
     commandName: "",

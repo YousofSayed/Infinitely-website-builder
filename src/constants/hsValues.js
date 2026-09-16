@@ -187,6 +187,10 @@ export const eventNames = [
     "messageerror",
     "rejectionhandled",
     "unhandledrejection",
+
+    //Mount & unmount
+    "mount",
+    "unmount",
   ]),
 ];
 

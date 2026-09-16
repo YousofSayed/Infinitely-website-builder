@@ -1,10 +1,16 @@
 {
   "compilerOptions": {
-    "jsx": "react",
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
-    }
+    },
+    "jsx": "react",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "target": "ESNext",
+    "allowJs": true,
+    "resolveJsonModule": true
   },
-  "include": ["src" ,  ".electron-types"]
+  "include": ["src", ".electron-types"],
+  "exclude": ["node_modules"]
 }

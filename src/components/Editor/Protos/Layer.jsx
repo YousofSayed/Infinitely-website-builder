@@ -314,14 +314,14 @@ export const Layer = memo(
               const blockComponentType =
                 draggedBlock?.attributes?.content?.type;
 
-              const blockComponentTagName = editor.DomComponents.getTypes(
-                blockComponentType,
-              ).some((t) =>
-                t.model.isComponent(
-                  document.createElement(layerProps.droppable),
-                  {},
-                ),
-              );
+              // const blockComponentTagName = editor.DomComponents.getTypes(
+              //   blockComponentType,
+              // ).some((t) =>
+              //   t.model.isComponent(
+              //     document.createElement(layerProps.droppable),
+              //     {},
+              //   ),
+              // );
 
               const allowedDropComponent = editor.DomComponents.getTypes()
                 .map((t) => ({
@@ -335,12 +335,12 @@ export const Layer = memo(
                 .find((t) => t?.tagName === layerProps.droppable);
 
               const blockComponentIsValidDroppable =
-                isString(layerProps.droppable) && allowedDropComponent;
+               allowedDropComponent
 
               console.log(
                 "blockComponentTagName",
                 draggedBlock,
-                blockComponentTagName,
+                // blockComponentTagName,
                 blockComponentType,
                 blockComponentIsValidDroppable,
                 editor.DomComponents.getTypes().filter(
@@ -357,6 +357,7 @@ export const Layer = memo(
                   ...(t.model?.getDefaults?.() || {}),
                   id: t.id,
                 })),
+                
                 editor.DomComponents.getTypes()
                 .map((t) => ({
                   ...(t.model?.getDefaults?.() || {}),
@@ -369,8 +370,8 @@ export const Layer = memo(
               );
               // return;
 
-              if (!blockComponentIsValidDroppable) {
-                toast.warn(<ToastMsgInfo msg={"Not allowed"} />);
+              if (!blockComponentIsValidDroppable  && !isBoolean(layerProps.droppable) ) {
+                toast.warn(<ToastMsgInfo msg={"Not allowed 1"} />);
                 return;
               }
 

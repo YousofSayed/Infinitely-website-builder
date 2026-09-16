@@ -7,6 +7,7 @@ import React, { memo, useEffect, useRef, useState } from "react";
 import { Link, useParams, useResolvedPath } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useRecoilValue, useSetRecoilState } from "recoil";
+import Portal from "@/components/Editor/Portal";
 
 //million-ignore
 export const Li = ({
@@ -211,7 +212,8 @@ export const Li = ({
         ></div>
       )}
       {showTooltip && title && (
-        <Tooltip
+       <Portal>
+         <Tooltip
           anchorSelect={`[tooltib-id="${uuid.current}"]`}
           place="bottom-start"
           positionStrategy="fixed"
@@ -219,6 +221,7 @@ export const Li = ({
         >
           {title}
         </Tooltip>
+       </Portal>
       )}
     </li>
   );

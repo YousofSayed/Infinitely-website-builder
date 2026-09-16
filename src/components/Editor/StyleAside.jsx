@@ -162,7 +162,10 @@ const StyleAccordion = () => {
         {([key, styles], i) => (
           <AccordionItem key={i} title={key} notify={notifires[key]}>
             <ErrorBoundary fallbackRender={SelectElementToStyle}>
-              <section className="flex flex-col gap-1 w-full  bg-surface-secondary rounded-lg">
+              <section
+                className="flex flex-col gap-1 w-full  bg-surface-secondary rounded-lg animate-go-to auto-animate"
+                inf-css-tokens-container="true"
+              >
                 <For each={styles}>
                   {(
                     {
@@ -319,8 +322,7 @@ export const StyleAside = memo(({ className }) => {
       let currentSelector = getCurrentSelector(selector, sle);
       const currentMedia = getCurrentMediaDevice(editor);
       const device = editor.Devices.get(editor.getDevice());
-      const mediaPx = device.attributes
-        .widthMedia;
+      const mediaPx = device.attributes.widthMedia;
       // const mediaCond = editor.getConfig().mediaCondition;
       const selectorWithRule = `${currentSelector}${globalRule.ruleString}`;
       const mediaConditionTitle = `${editor.getConfig().mediaCondition || mediaCond} ${
@@ -424,9 +426,13 @@ export const StyleAside = memo(({ className }) => {
     )?.toJSON()?.style;
 
     console.log("style output : ", outPut, JSON.stringify(outPut));
-    if(!outPut){
-      toast.warn(<ToastMsgInfo msg={`There is no styles to copy in ${currentSelector} 🥺`} />);
-      return
+    if (!outPut) {
+      toast.warn(
+        <ToastMsgInfo
+          msg={`There is no styles to copy in ${currentSelector} 🥺`}
+        />,
+      );
+      return;
     }
     await navigator.clipboard.writeText(JSON.stringify(outPut));
     toast.success(<ToastMsgInfo msg={`Styles copied successfully 👍`} />);
@@ -471,8 +477,8 @@ export const StyleAside = memo(({ className }) => {
   return (
     <section
       // key={key}
-      ref={animateRef}
-      className="flex flex-col w-full h-full gap-2 mt-2 "
+      // ref={animateRef}
+      className="flex flex-col w-full h-full gap-2 mt-2 animate-go-to will-change-[transform,opacity] auto-animate"
     >
       {!showsComponents.animationsBuilder && !showsComponents.stylesBuilder && (
         <section className="flex gap-2">
@@ -485,6 +491,18 @@ export const StyleAside = memo(({ className }) => {
           >
             {mediaCondTitle || "There is no rule yet"}
           </FitTitle>
+
+          <SmallButton
+            className="hover:bg-[crimson!important] bg-surface-tertiary"
+            showTooltip
+            tooltipTitle="Delete Current Rule"
+            onClick={() => {
+              removeCurrentMediaRule();
+            }}
+          >
+            {Icons.trash("white")}
+          </SmallButton>
+
           <OptionsButton className="w-[35p] h-full bg-surface-tertiary">
             <section className="flex flex-col items-center gap-3">
               <SmallButton
@@ -509,16 +527,6 @@ export const StyleAside = memo(({ className }) => {
               </SmallButton>
             </section>
           </OptionsButton>
-          <SmallButton
-            className="hover:bg-[crimson!important] bg-surface-tertiary"
-            showTooltip
-            tooltipTitle="Delete Current Rule"
-            onClick={() => {
-              removeCurrentMediaRule();
-            }}
-          >
-            {Icons.trash("white")}
-          </SmallButton>
         </section>
       )}
       {/* {!showAnimeBuilder && (
@@ -558,7 +566,7 @@ export const StyleAside = memo(({ className }) => {
         </InfAccordion>
       )} */}
 
-      <section className=" flex flex-col gap-2">
+      <section className=" flex flex-col gap-2 auto-animate animate-go-to">
         {!showsComponents.animationsBuilder &&
           !showsComponents.stylesBuilder && (
             <Accordion>

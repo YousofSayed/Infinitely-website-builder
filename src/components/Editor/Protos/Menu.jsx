@@ -110,7 +110,7 @@ export const Menu = ({
   ));
 
   return (
-    <section className="w-full h-full overflow-x-auto  " ref={menuRef}>
+    <section className="w-full h-full overflow-x-auto  animate-go-to auto-animate" ref={menuRef}>
       <Virtuoso
         ref={listRef}
         initialTopMostItemIndex={currentChoose < 0 ? 0 : currentChoose}

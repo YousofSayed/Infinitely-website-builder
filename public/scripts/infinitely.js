@@ -1010,27 +1010,62 @@ function useAutoAnimate(params) {
 }
 
 /**
- * 
- * @param {ThemesNames} themeName 
+ * Initializes the theme and mode on the frontend.
+ * Run this as early as possible on page load.
  */
-function setTheme(themeName=  ('')) {
-  // "themeName" should be the slugified name (e.g., "ocean", "dark", "brand-theme")
-  document.documentElement.setAttribute('data-theme', themeName);
-}
+ const initTheme = () => {
+  // 1. Check if the user has a saved preference in localStorage
+  const savedTheme = localStorage.getItem('inf_user_theme');
+  const savedMode = localStorage.getItem('inf_user_mode');
+
+  const root = document.documentElement;
+
+  // 2. Apply Theme Override
+  if (savedTheme) {
+    root.setAttribute('data-theme', savedTheme);
+  } 
+  // If no saved preference, it automatically keeps the PHP injected data-theme (is_default)
+
+  // 3. Apply Mode Override
+  if (savedMode) {
+    root.setAttribute('data-mode', savedMode);
+  } 
+  // If no saved preference, it keeps the PHP injected data-mode (is_default)
+
+  // 4. Optional: Auto-detect system dark/light mode if NO default was set in PHP and NO saved preference exists
+  // if (!savedMode && !root.hasAttribute('data-mode')) {
+  //   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  //   root.setAttribute('data-mode', prefersDark ? 'dark' : 'light');
+  // }
+};
 
 /**
  * 
- * @param {ThemesModes} modeName 
+ * @param {ThemesNames} themeSlug 
  */
-function setMode(modeName =  ('')) {
-  // "modeName" should be the slugified mode (e.g., "dim", "light", "high-contrast")
-  document.documentElement.setAttribute('data-mode', modeName);
-}
+ const setUserTheme = (themeSlug) => {
+  document.documentElement.setAttribute('data-theme', themeSlug);
+  localStorage.setItem('inf_user_theme', themeSlug);
+};
 
-// Remove a mode (fallback to base theme variables)
-function clearMode() {
+/**
+ * 
+ * @param {ThemesModes} modeSlug 
+ */
+ const setUserMode = (modeSlug) => {
+  document.documentElement.setAttribute('data-mode', modeSlug);
+  localStorage.setItem('inf_user_mode', modeSlug);
+};
+
+/**
+ * Clears the user's mode preference and falls back to the base theme variables.
+ */
+ const clearUserMode = () => {
+  // 1. Remove the saved preference so initTheme() doesn't reapply it on the next page load
+  localStorage.removeItem('inf_user_mode');
+  
+  // 2. Remove the attribute from the HTML tag so CSS falls back to the base theme
   document.documentElement.removeAttribute('data-mode');
-}
-
+};
 
 // ... 60 more interactions will follow in the same format ...

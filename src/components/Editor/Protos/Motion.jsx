@@ -1850,8 +1850,8 @@ export const Motion = () => {
         state={[motion, setMotion]}
       >
         <section
-          ref={autoAnimateRef}
-          className="flex flex-col gap-2 w-full relative mt-2"
+          // ref={autoAnimateRef}
+          className="flex flex-col gap-2 w-full relative mt-2 animate-go-to auto-animate"
         >
           <input
             ref={motionUploader}

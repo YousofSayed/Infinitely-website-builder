@@ -13,6 +13,7 @@ import { ViewsPanel } from "@/components/Editor/ViewsPanel";
 import { ViewsPanelNav } from "@/components/Editor/ViewsPanelNav";
 import { Loader } from "@/components/Loader";
 import { BusyProvider } from "@/components/Protos/BusyProvider";
+import { CssTokenPicker } from "@/components/Protos/CssTokenPicker";
 import { Wordpress } from "@/components/Protos/wordpress/Wordpress";
 import { WordpressViewPanel } from "@/components/Protos/wordpress/WordpressViewPanel";
 import { WordpressViewPanelNav } from "@/components/Protos/wordpress/WordpressViewPanelNav";
@@ -312,7 +313,7 @@ export function Editor({ params }) {
                 >
                   {/* {!showPreview && <HomeNav />} */}
                   <HomeNav />
-                  
+
                   <section
                     // ref={parent}
                     id="main-group"
@@ -408,10 +409,9 @@ export function Editor({ params }) {
                                   ).some((item) => item.show)
                                 }
                               >
-                                 <ViewsPanel
+                                <ViewsPanel
                                   viewKey={showsComponents.views.viewKey}
                                 />
-                              
                               </ShowIf>
                             </ShowIf>
                           </section>
@@ -420,7 +420,6 @@ export function Editor({ params }) {
                           className={`w-[5px] bg-brand-primary  opacity-0 hover:opacity-[1] transition-all`}
                         />
                       </ShowIf>
-                     
 
                       <Panel id="center" defaultSize={600} order={2}>
                         <Iframe />
@@ -446,6 +445,7 @@ export function Editor({ params }) {
                     <WpTokenPickers />
                   </Wordpress>
 
+                  <CssTokenPicker />
                 </main>
                 {/* </WithEditor> */}
               </GJEditor>

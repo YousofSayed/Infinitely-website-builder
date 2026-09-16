@@ -40,7 +40,7 @@ export const CustomModals = () => {
           onClick={(ev) => {
             ev.stopPropagation();
           }}
-          className="auto-animate container m-auto h-[75%] rounded-lg flex flex-col justify-between bg-surface-secondary shadow-md shadow-[#020617]"
+          className="auto-animate container m-auto [&:not(:has(.fit-modal))]:h-[75%] rounded-lg flex flex-col justify-between bg-surface-secondary shadow-md shadow-[#020617]"
         >
           <header className="w-full flex items-center rounded-lg rounded-br-none h-[60px] border-b-2 bg-surface-secondary border-b-slate-600">
             <section className="w-full flex justify-between items-center p-2">

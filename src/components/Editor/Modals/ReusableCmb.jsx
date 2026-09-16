@@ -224,7 +224,7 @@ export const ReusableCmb = () => {
   };
 
   return (
-    <main className="flex flex-col gap-3">
+    <main className="flex flex-col gap-3 fit-modal auto-animate">
       <header className="flex gap-2 justify-between">
         <Input
           // autoFocus={true}

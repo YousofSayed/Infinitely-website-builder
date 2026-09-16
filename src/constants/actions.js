@@ -1,4 +1,3 @@
-
 /**
  * @type {import('@/helpers/types').Action[]}
  */
@@ -32,14 +31,15 @@ export const actions = [
     function: "toggleElement",
   },
   {
-    name:'toggleAnimationClass',
-    label:'Toggle animation class',
-    placeholder:"Type selector and animation class, e.g., .selector , .animation-class",
-    params:{
-      selector:"",
-      animationClass:""
+    name: "toggleAnimationClass",
+    label: "Toggle animation class",
+    placeholder:
+      "Type selector and animation class, e.g., .selector , .animation-class",
+    params: {
+      selector: "",
+      animationClass: "",
     },
-    function:"toggleAnimationClass"
+    function: "toggleAnimationClass",
   },
   {
     name: "addClass",
@@ -963,13 +963,55 @@ export const actions = [
     },
   },
   {
-    name:'addClickClass',
-    function:'addClickClass',
-    placeholder:'Add Click Class',
-    label:'Add Click Class',
-    params:{
-      selector:"",
-      clickClass:"",
+    name: "addClickClass",
+    function: "addClickClass",
+    placeholder: "Add Click Class",
+    label: "Add Click Class",
+    params: {
+      selector: "",
+      clickClass: "",
+    },
+  },
+  {
+    name: "initTheme",
+    function: "initTheme",
+    placeholder: "Init Theme",
+    label: "Init Theme",
+    params: {},
+  },
+  {
+    name : 'setUserTheme',
+    function: "setUserTheme",
+    placeholder: "Set User Theme",
+    label: "Set User Theme",
+    params: {
+      themeSlug: "",
+    },
+    access:{
+      themeSlug : {
+        themesNames:true
+      }
     }
+  },
+  {
+    name: "setUserMode",
+    function: "setUserMode",
+    placeholder: "Set User Mode",
+    label: "Set User Mode",
+    params: {
+      modeSlug: "",
+    },
+    access: {
+      modeSlug: {
+        themesModes: true,
+      },
+    },
+  },
+  {
+    name: "clearUserMode",
+    function: "clearUserMode",
+    placeholder: "Clear User Mode",
+    label: "Clear User Mode",
+    params: {},
   }
 ];

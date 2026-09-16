@@ -156,6 +156,7 @@ export const Popover = ({
           pointerEvents: "none",
           zIndex: zIndex ,
         }}
+        className="animate-go-to auto-animate"
       >
         <Rnd
           position={{ x: pos.x, y: pos.y }}

@@ -501,7 +501,7 @@ const TraitItem = memo(({ trait, traits, mediaBreakpoint }) => {
   );
 });
 
-export const TraitsAside = () => {
+export const TraitsAside = memo(() => {
   const editor = useEditorMaybe();
 
   const [newAttributeName, setNewAttributeName] = useState("");
@@ -652,7 +652,7 @@ export const TraitsAside = () => {
    *
    * Keep same logic, but wrap heavy traits rendering in startTraitsTransition.
    */
-  useMemo(() => {
+  useEffect(() => {
     if (!editor || !editor.getSelected()) return;
 
     const handler = () => {
@@ -774,7 +774,7 @@ export const TraitsAside = () => {
 
   return (
     <section
-      className="flex flex-col gap-2 h-full mt-2"
+      className="flex flex-col gap-2 h-full mt-2 animate-go-to auto-animate"
       inf-tokens-container="true"
     >
       <Accordion>
@@ -1072,4 +1072,4 @@ export const TraitsAside = () => {
       </Accordion>
     </section>
   );
-};
+});

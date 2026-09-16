@@ -1,4 +1,5 @@
 import {
+  callWorkerCommand,
   doInNormalAsync,
   doInWordpressAsync,
   emitChange,
@@ -6,30 +7,32 @@ import {
   getProjectId,
 } from "@/helpers/functions";
 import React, { useEffect, useRef, useState } from "react";
-import { ShowIf } from "../ShowIf";
+import { ShowIf } from "@/components/ShowIf";
 import { cloneDeep, isArray, isPlainObject } from "lodash";
-import { Button } from "./Button";
-import { Icons } from "../Icons/Icons";
+import { Button } from "@/components/Protos/Button";
+import { Icons } from "@/components/Icons/Icons";
 import { useRecoilState } from "recoil";
 import { themeIdState, themesState } from "@/helpers/atoms";
-import { AccordionItem } from "./AccordionItem";
-import { Accordion } from "./Accordion";
+import { AccordionItem } from "@/components/Protos/AccordionItem";
+import { Accordion } from "@/components/Protos/Accordion";
 import { uniqueID } from "@/helpers/cocktail";
 import { db } from "@/helpers/db";
 import { toast } from "react-toastify";
-import { ToastMsgInfo } from "../Editor/Protos/ToastMsgInfo";
+import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import {
   wp_update_option,
   wp_upload_multiple_files,
 } from "@/Apps/wordpress/functions";
 import { useBusyCallback } from "@/hooks/useBusyCallback";
-import { SmallButton } from "../Editor/Protos/SmallButton";
-import { MiniTitle } from "../Editor/Protos/MiniTitle";
-import { Input } from "../Editor/Protos/Input";
-import { FitTitle } from "../Editor/Protos/FitTitle";
-import { Choices } from "../Editor/Protos/Choices";
-import { SwitchButton } from "./SwitchButton";
-import { buildThemesCss } from "@/helpers/bridge";
+import { SmallButton } from "@/components/Editor/Protos/SmallButton";
+import { MiniTitle } from "@/components/Editor/Protos/MiniTitle";
+import { Input } from "@/components/Editor/Protos/Input";
+import { FitTitle } from "@/components/Editor/Protos/FitTitle";
+import { Choices } from "@/components/Editor/Protos/Choices";
+import { SwitchButton } from "@/components/Protos/SwitchButton";
+import { buildThemesCss, defineRoot } from "@/helpers/bridge";
+import { opfs } from "@/helpers/initOpfs";
+import { infinitelyWorker } from "@/helpers/infinitelyWorker";
 
 const makeId = (prefix) => `${prefix}_${uniqueID()}_${Date.now()}`;
 
@@ -84,6 +87,8 @@ const normalizeThemes = (themes) => {
   return {
     path: safeThemes.path || "",
     wp_media_config: safeThemes.wp_media_config || {},
+    default_theme: safeThemes.default_theme || "",
+    default_mode: safeThemes.default_mode || "",
     root: normalizeTheme(safeThemes.root, "Root"),
     config: isArray(safeThemes.config)
       ? safeThemes.config.map((theme) => normalizeTheme(theme))
@@ -340,7 +345,8 @@ const ThemeConfigView = ({
                     externalActiveIndex={modeNames.indexOf(selectedMode)}
                     externalNotifiers={modeNames.reduce((acc, name) => {
                       acc[name] =
-                        (themeConfig?.modes?.[name]?.categories?.length || 0) > 0;
+                        (themeConfig?.modes?.[name]?.categories?.length || 0) >
+                        0;
                       return acc;
                     }, {})}
                     onSelect={(keyword) => setSelectedMode(keyword)}
@@ -367,7 +373,9 @@ const ThemeConfigView = ({
                           Set "{selectedMode}" as default mode
                         </MiniTitle>
                         <SwitchButton
-                          defaultValue={themeConfig?.modes?.[selectedMode]?.is_default}
+                          defaultValue={
+                            themeConfig?.modes?.[selectedMode]?.is_default
+                          }
                           value={themeConfig?.modes?.[selectedMode]?.is_default}
                           onSwitch={(value) => {
                             onSetDefaultMode({
@@ -454,7 +462,12 @@ const ThemeConfigView = ({
                                   className="flex flex-col gap-2 w-full"
                                 >
                                   <section className="flex w-full gap-2 h-full">
-                                    <section className="flex flex-col gap-2 w-full ">
+                                    <section className="flex flex-col gap-2 w-full " 
+                                     onClick={async(e)=>{
+                                      await navigator.clipboard.writeText(name);
+                                      toast.success(<ToastMsgInfo msg={`Key copied successfully`} />)
+                                     }}
+                                    >
                                       <FitTitle>Key</FitTitle>
 
                                       <h1 className="p-2 rounded-lg bg-surface-secondary h-full text-slate-200 w-full break-all">
@@ -663,7 +676,14 @@ export const ThemesBuilder = () => {
     if (!id) return;
 
     updateThemes((draft) => {
+      const wasDefault = draft.config.find((t) => t.id === id)?.is_default;
       draft.config = (draft.config || []).filter((theme) => theme.id !== id);
+
+      if (wasDefault) {
+        draft.default_theme = "";
+        draft.default_mode = "";
+      }
+
       return draft;
     });
 
@@ -728,7 +748,12 @@ export const ThemesBuilder = () => {
       );
 
       if (theme && theme.modes[modeName]) {
+        const wasDefaultMode = theme.modes[modeName].is_default;
         delete theme.modes[modeName];
+
+        if (wasDefaultMode && theme.is_default) {
+          draft.default_mode = "";
+        }
       }
 
       return draft;
@@ -741,45 +766,113 @@ export const ThemesBuilder = () => {
       return;
     }
 
-    updateThemes((draft) => {
-      for (const theme of draft.config || []) {
-        theme.is_default = false;
-      }
+    let autoSelectedModeName = "";
 
-      if (isDefault) {
-        const theme = (draft.config || []).find(
-          (item) => item.id === targetThemeId,
-        );
-        if (theme) {
+    updateThemes((draft) => {
+      let newDefaultTheme = "";
+      let newDefaultMode = "";
+
+      for (const theme of draft.config || []) {
+        if (theme.id === targetThemeId && isDefault) {
           theme.is_default = true;
+          newDefaultTheme = theme.name;
+
+          const modeKeys = theme.modes ? Object.keys(theme.modes) : [];
+          if (modeKeys.length > 0) {
+            let foundDefault = false;
+            for (const mName of modeKeys) {
+              if (theme.modes[mName].is_default) {
+                newDefaultMode = mName;
+                foundDefault = true;
+                break;
+              }
+            }
+
+            // If no default mode is found, automatically set the first one as default
+            if (!foundDefault) {
+              const firstModeName = modeKeys[0];
+              theme.modes[firstModeName].is_default = true;
+              newDefaultMode = firstModeName;
+              autoSelectedModeName = firstModeName;
+            }
+          }
+        } else {
+          theme.is_default = false;
         }
       }
 
+      draft.default_theme = newDefaultTheme;
+      draft.default_mode = newDefaultMode;
+
       return draft;
     });
+
+    if (isDefault && autoSelectedModeName) {
+      toast.info(
+        <ToastMsgInfo msg={`No default mode found. "${autoSelectedModeName}" was automatically set as default mode.`} />
+      );
+    }
   };
 
   const setDefaultMode = ({ themeId: targetThemeId, modeName, isDefault }) => {
     if (!targetThemeId || targetThemeId === "root") {
-      toast.error(<ToastMsgInfo msg="Root theme modes cannot be set as default" />);
+      toast.error(
+        <ToastMsgInfo msg="Root theme modes cannot be set as default" />,
+      );
       return;
     }
 
     updateThemes((draft) => {
-      const theme = (draft.config || []).find(
-        (item) => item.id === targetThemeId,
-      );
-
-      if (theme && theme.modes) {
-        // Reset all modes in this theme to false
-        for (const mName of Object.keys(theme.modes)) {
-          theme.modes[mName].is_default = false;
+      if (isDefault) {
+        // If turning ON: Clear all other themes and modes, set this theme and mode as default
+        for (const theme of draft.config || []) {
+          theme.is_default = false;
+          if (theme.modes) {
+            for (const m of Object.values(theme.modes)) {
+              m.is_default = false;
+            }
+          }
         }
 
-        // Set the selected one to true
-        if (isDefault && theme.modes[modeName]) {
-          theme.modes[modeName].is_default = true;
+        const theme = (draft.config || []).find(
+          (item) => item.id === targetThemeId,
+        );
+        if (theme) {
+          theme.is_default = true; // Automatically set parent theme as default
+          if (theme.modes && theme.modes[modeName]) {
+            theme.modes[modeName].is_default = true;
+          }
+          draft.default_theme = theme.name;
+          draft.default_mode = modeName;
         }
+      } else {
+        // If turning OFF: Just turn off this mode.
+        const theme = (draft.config || []).find(
+          (item) => item.id === targetThemeId,
+        );
+        if (theme && theme.modes && theme.modes[modeName]) {
+          theme.modes[modeName].is_default = false;
+        }
+
+        // Recalculate global defaults
+        let gTheme = "";
+        let gMode = "";
+        for (const t of draft.config || []) {
+          if (t.is_default) {
+            gTheme = t.name;
+            if (t.modes) {
+              for (const [mName, mData] of Object.entries(t.modes)) {
+                if (mData.is_default) {
+                  gMode = mName;
+                  break;
+                }
+              }
+            }
+            break;
+          }
+        }
+        draft.default_theme = gTheme;
+        draft.default_mode = gMode;
       }
 
       return draft;
@@ -959,23 +1052,31 @@ export const ThemesBuilder = () => {
         const themesCss = buildThemesCss(projectData.themes);
         console.log("projectData.themes", themesCss);
         const fileName = "infinitely-themes.css";
+        const file = new File([themesCss], fileName, { type: "text/css" });
+
         await doInNormalAsync(async () => {
+          const path = `css/${fileName}`;
           await db.projects.update(projectId, {
             themes: {
               ...nextThemes,
-              path: `css/${fileName}`,
+              path,
             },
+          });
+
+          await callWorkerCommand(infinitelyWorker, "writeFilesToOPFS", {
+            files: [
+              {
+                content: file,
+                path  : defineRoot(path),
+              },
+            ],
           });
         });
 
         await doInWordpressAsync(async () => {
           const uploadingRes = await wp_upload_multiple_files({
             projectId,
-            files: [
-              new File([themesCss], "infinitely-themes.css", {
-                type: "text/css",
-              }),
-            ],
+            files: [file],
           });
 
           const fileResponse = Object.values(uploadingRes?.files || {})?.[0];
@@ -1162,7 +1263,7 @@ export const ThemesBuilder = () => {
                     onSetDefaultMode={setDefaultMode}
                   />
                 ) : (
-                  <p className="text-slate-500 text-sm">Theme not found.</p>
+                  <p className= "  aspect-square bg-surface-tertiary rounded-lg flex items-center justify-center text-lg font-medium text-slate-400 ">Theme not found</p>
                 )
               }
             </ShowIf>

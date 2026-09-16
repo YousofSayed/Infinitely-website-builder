@@ -11,17 +11,6 @@ import { useLiveQuery } from "dexie-react-hooks";
 import React, { memo, useEffect, useRef, useState, useTransition } from "react";
 import { HexAlphaColorPicker } from "react-colorful";
 
-/** @jsxImportSource react */
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -111,18 +100,19 @@ export const ColorPicker = memo(
     };
 
     return (
-      <section ref={colorPickerContainerRef} className="relative ">
+      <section ref={colorPickerContainerRef} className="relative animate-go-to ">
         <button
           className={`w-[30px] h-[30px] shadow-md shadow-gray-950 rounded-lg border-[2.3px] border-border-default  bg-surface-secondary cursor-pointer`}
           onClick={(ev) => {
             ev.stopPropagation();
             colorPickerContainerRef.current.click();
-            setTransition(() => {
-              setShowHexColor(!showHexColor);
-            });
+            // setTransition(() => {
+            // });
+            setShowHexColor(!showHexColor);
           }}
           style={{ backgroundColor: color }}
         ></button>
+
         {showHexColor && (
           <section
             style={{
@@ -131,7 +121,7 @@ export const ColorPicker = memo(
             }}
             className={` max-w-[370px]  absolute left-[0] z-[60]  top-[calc(100%+5px)] flex flex-col ${
               Boolean(savedColors.length) && "h-[400px]"
-            }  shadow-md shadow-slate-950 `}
+            }  shadow-md shadow-slate-950  `}
             ref={hexColorRef}
           >
             <HexAlphaColorPicker
@@ -145,7 +135,7 @@ export const ColorPicker = memo(
                   // padding: "10px",
                 }
               }
-              className="relative bg-surface-tertiary "
+              className="relative bg-surface-tertiary z-[170]  animate-go-to"
               onClick={(ev) => {
                 ev.stopPropagation();
               }}
@@ -166,7 +156,8 @@ export const ColorPicker = memo(
               style={{
                 height: Boolean(savedColors.length) ? "250px" : "",
               }}
-              className="transition-all absolute flex flex-col gap-2 top-[195px] rounded-bl-lg rounded-br-lg p-2 pt-[13px] bg-surface-tertiary shadow-md shadow-slate-950  w-full z-[70] "
+              className="transition-all absolute flex flex-col gap-2 top-[195px] rounded-bl-lg rounded-br-lg p-2 pt-[13px]
+               bg-surface-tertiary shadow-md shadow-slate-950   w-full z-[170] animate-go-to "
             >
               <header className="flex justify-between gap-2 bg-surface-secondary p-2 rounded-lg">
                 <FitTitle className="w-full flex justify-center items-center">
@@ -199,8 +190,8 @@ export const ColorPicker = memo(
               </header>
 
               {Boolean(savedColors.length) && (
-                <main className=" p-2 h-full overflow-auto bg-surface-secondary rounded-lg  ">
-                  <div className="w-full grid grid-cols-[repeat(auto-fill,minmax(30px,1fr))] gap-2 h-fit">
+                <main className=" p-2 h-full overflow-auto bg-surface-secondary rounded-lg  animate-go-to auto-animate">
+                  <div className="w-full grid grid-cols-[repeat(auto-fill,minmax(30px,1fr))] gap-2 h-fit animate-go-to auto-animate ">
                     {savedColors.map((savedColor, i) => (
                       <button
                         key={i}

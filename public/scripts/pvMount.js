@@ -4,9 +4,14 @@ let app = PetiteVue.createApp({
   $delimiters: ["${", "}"],
 });
 
+const initPlugins = () => {
 app.directive("view", vIntersection);
 app.directive("ref", vRef); 
 app.directive("gsap", vGsap); 
+app.directive("mount", vMount); 
+};
+
+initPlugins();
 //  window.autoAnimate(document.body);
 registerAutoAnimateDirective(app);
 
@@ -34,9 +39,7 @@ mountBroadCastChannel.addEventListener("message", (ev) => {
     app = PetiteVue.createApp({
       $delimiters: ["${", "}"],
     });
-    app.directive("view", vIntersection);
-    app.directive("ref", vRef);
-    app.directive("gsap", vGsap);
+    initPlugins();
     registerAutoAnimateDirective(app);
     console.log("mounting : ", ev.data.el);
     // window.autoAnimate(ev.data.el);
@@ -91,9 +94,7 @@ function pvMount(
   app = PetiteVue.createApp({
     $delimiters: ["${", "}"],
   });
-  app.directive("view", vIntersection);
-  app.directive("ref", vRef);
-  app.directive("gsap", vGsap);
+  initPlugins();
   registerAutoAnimateDirective(app);
   console.log("mounting : ", ev.detail.el);
   // window.autoAnimate(ev.detail.el);

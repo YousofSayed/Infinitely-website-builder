@@ -101,7 +101,7 @@ export const HomeNav = () => {
   };
 
   return (
-    <nav className="h-full  w-[55px]  p-2 flex flex-col justify-between items-center bg-surface-secondary ">
+    <nav className="h-full  w-[55px]  p-2 flex flex-col justify-between items-center bg-surface-secondary auto-animate animate-go-to ">
       {/* <iframe ref={testRef} className="z-[15000] bg-white fixed top-0 left-0 w-full h-full border-2 border-border-default" ></iframe> */}
       <div className="flex flex-col items-center gap-4">
         <figure className="pb-[10px] pt-1 border-b-[1px] border-slate-400 ">

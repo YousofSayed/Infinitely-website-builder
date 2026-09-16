@@ -273,7 +273,7 @@ export const Commands = () => {
   };
 
   return (
-    <section className="flex flex-col gap-2 mt-2">
+    <section className="flex flex-col gap-2 mt-2 animate-go-to auto-animate">
       <SearchHeader search={search} />
       <Accordion>
         {/* {selectedType && (
@@ -388,7 +388,7 @@ export const Commands = () => {
               title={"if"}
               notify={Boolean(selectedAttributes["v-if"])}
             >
-              <section className="mt-2 ">
+              <section className="mt-2 animate-go-to auto-animate">
                 <Select
                   placeholder="Code"
                   isCode
@@ -639,7 +639,7 @@ export const Commands = () => {
                 )}
 
                 {(cmd.type == "multi" || cmd.type == "multi-once") && (
-                  <section className="flex flex-col gap-2  p-1 bg-surface-secondary rounded-lg">
+                  <section className="flex flex-col gap-2  p-1 bg-surface-secondary rounded-lg animate-go-to auto-animate">
                     <ShowIf condition={cmd.keywordsForMulti?.length}>
                       <FitTitle>Suffix</FitTitle>
                       <Select
@@ -833,7 +833,7 @@ export const Commands = () => {
 
                       return (
                         <section
-                          className="flex flex-col  gap-2 p-2 bg-surface-tertiary rounded-lg"
+                          className="flex flex-col  gap-2 p-2 bg-surface-tertiary rounded-lg animate-go-to auto-animate"
                           key={x}
                         >
                           <FitTitle
@@ -915,11 +915,11 @@ export const Commands = () => {
                                       (() => {
                                         const clearedValue =
                                           clearCommnets(value);
-                                        console.log(
-                                          "valo : ",
-                                          value,
-                                          objectSplitter(value),
-                                        );
+                                        // console.log(
+                                        //   "valo : ",
+                                        //   value,
+                                        //   objectSplitter(value),
+                                        // );
 
                                         if (
                                           clearedValue.startsWith(`(`) &&
