@@ -117,7 +117,6 @@ export default defineConfig({
       // treeshake:false,
       input: {
         main: "./index.html",
-        app: "./app.html",
       },
     },
     target: "es2022",

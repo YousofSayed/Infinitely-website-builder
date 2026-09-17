@@ -34,6 +34,10 @@ const keyframesGetterWorker = new Worker(new URL("./keyframesGetterWorker.js", i
   type: "module",
 });
 
+const AIWorker = new Worker(new URL("./aiWorker.js", import.meta.url), {
+  type: "module",
+});
+
 export {
   pageBuilderWorker,
   offlineInstallerWorker,
@@ -43,5 +47,6 @@ export {
   routerWorker,
   refresherWorker,
   keyframesGetterWorker,
+  AIWorker,
 };
  

@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "electron:dev": "concurrently \"npm run start\" \"wait-on https://localhost:5173 && electronmon --trace  .\"",
     "electron:build": "npm run build && electron-builder",
+    "electron:build:app" : "electron-builder",
     "electron": "electronmon --trace --js-flags=--expose-gc .",
     "lint": "eslint . src --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint src --ext .js,.ts,.jsx,.tsx --fix"

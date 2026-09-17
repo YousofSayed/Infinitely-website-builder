@@ -30,6 +30,7 @@ import {
 } from "@/helpers/cocktail";
 import { db } from "@/helpers/db";
 import {
+  AIWorker,
   fetcherWorker,
   offlineInstallerWorker,
   pageBuilderWorker,
@@ -37,6 +38,7 @@ import {
 import {
   buildGsapMotionsScript,
   buildScriptFromCmds,
+  callWorkerCommand,
   doInNormal,
   doInWordpress,
   doInWordpressAsync,
@@ -104,7 +106,6 @@ export const HomeHeader = memo(() => {
     useRecoilState(asideControllersNotifiresState);
   const [animatedRefForPublishBtn] = useAutoAnimate();
   const projectId = +localStorage.getItem(current_project_id);
-
 
   const [dimansions, setDimaonsion] = useState({
     width: "",
@@ -234,8 +235,7 @@ export const HomeHeader = memo(() => {
       })
       .filter(Boolean);
 
-      console.log('symbols before publish ' , symbols);
-      
+    console.log("symbols before publish ", symbols);
 
     let steps = 0;
     const max_steps = 2 + Number(Boolean(symbols.length));
@@ -274,25 +274,26 @@ export const HomeHeader = memo(() => {
     };
 
     // wp_update_symbols
-   symbols.length && wpWorkerCallbackMaker(
-      offlineInstallerWorker,
-      "wp_update_symbols",
-      {
-        symbols,
-        projectId,
-      },
-      async (res) => {
-        console.log("wp_update_symbols", res);
-        if (res.done) {
-          await afterSave();
-          toast.success(<ToastMsgInfo msg={`Symbols updated 💙`} />);
-        } else {
-          toast.dismiss(tId);
-          toast.error(<ToastMsgInfo msg={`Faild to update symbols 😡`} />);
-          throw new Error(`Faild to update symbols 😡 , why?`);
-        }
-      },
-    );
+    symbols.length &&
+      wpWorkerCallbackMaker(
+        offlineInstallerWorker,
+        "wp_update_symbols",
+        {
+          symbols,
+          projectId,
+        },
+        async (res) => {
+          console.log("wp_update_symbols", res);
+          if (res.done) {
+            await afterSave();
+            toast.success(<ToastMsgInfo msg={`Symbols updated 💙`} />);
+          } else {
+            toast.dismiss(tId);
+            toast.error(<ToastMsgInfo msg={`Faild to update symbols 😡`} />);
+            throw new Error(`Faild to update symbols 😡 , why?`);
+          }
+        },
+      );
 
     // wp_update_meta;
     wpWorkerCallbackMaker(
@@ -346,8 +347,6 @@ export const HomeHeader = memo(() => {
         }
       },
     );
-
-   
   };
 
   useMemo(() => {
@@ -419,7 +418,6 @@ export const HomeHeader = memo(() => {
 
     const newDetected = cloneDeep(detectedType);
 
-   
     for (const rule of cmpRules) {
       console.log("full rule", rule);
       if (!rule.atRuleParams && rule.rule) {
@@ -461,8 +459,8 @@ export const HomeHeader = memo(() => {
         ?.getWidthMedia?.()
         ?.match?.(/\d+/gi)?.[0];
 
-        // console.log('widthMedia : ' , widthMedia);
-        
+      // console.log('widthMedia : ' , widthMedia);
+
       setWidthMedia(+widthMedia);
     };
 
@@ -480,6 +478,663 @@ export const HomeHeader = memo(() => {
   }, [editor]);
 
   useNotifiers();
+
+  useEffect(() => {
+    (async () => {
+      const models = await callWorkerCommand(AIWorker, "getModels", {provider:'google'});
+      console.log('response is : chat' ,  models);
+      const id = await callWorkerCommand(AIWorker, "createLLM", {});
+      console.log('response is : chat' , id );
+      const response = await callWorkerCommand(AIWorker, "llmChat", {id , message:`
+        Create a premium, modern coffee e-commerce website for a specialty coffee brand called **“Roast & Ritual”**.
+
+The website should feel like a **high-end specialty coffee brand**, combining editorial luxury with modern e-commerce. It must look professionally designed by an experienced UI/UX designer — **not like a generic AI-generated template**.
+
+## 1. Overall Visual Direction
+
+Design language:
+
+* Premium specialty coffee
+* Warm, sophisticated, minimal
+* Editorial / luxury lifestyle aesthetic
+* Strong typography
+* Beautiful product photography
+* Generous whitespace
+* Subtle animations
+* Excellent visual hierarchy
+* Modern but timeless
+* Cozy without looking old-fashioned
+
+Use a warm neutral palette:
+
+* Background: \`#F7F3ED\`
+* Primary dark: \`#171412\`
+* Espresso brown: \`#3B2418\`
+* Coffee brown: \`#6A4632\`
+* Caramel: \`#B87945\`
+* Accent orange: \`#D88945\`
+* Cream:\`#FFFDF9\`
+* Muted text: \`#756B63\`
+
+Avoid excessive gradients, excessive rounded cards, glassmorphism, neon colors, or generic SaaS styling.
+
+The design should feel closer to a **premium fashion/lifestyle brand mixed with a specialty coffee shop** than a typical online store.
+
+## 2. Header
+
+Create a sophisticated responsive navigation bar.
+
+Desktop:
+
+* Logo: Roast & Ritual
+* Shop
+* Coffee
+* Subscriptions
+* Equipment
+* Our Story
+* Journal
+* Search icon
+* Account icon
+* Shopping bag/cart icon with item count
+
+Make the header elegant and compact.
+
+Add a subtle announcement bar above it:
+
+“Free shipping on orders over $50”
+
+The header should become sticky when scrolling.
+
+Mobile:
+
+* Hamburger menu
+* Centered logo
+* Search
+* Cart
+
+Create a smooth mobile navigation drawer.
+
+## 3. Homepage
+
+Create a visually impressive homepage.
+
+### Hero section
+
+Large editorial hero section with a premium coffee image.
+
+Headline:
+
+**“Coffee worth slowing down for.”**
+
+Supporting text:
+
+“Small-batch specialty coffee, roasted with intention and delivered at its peak.”
+
+Buttons:
+
+* Shop Coffee
+* Explore Our Story
+
+Use a large high-quality coffee image with warm natural lighting.
+
+The hero should immediately communicate:
+
+**premium + coffee + craftsmanship + lifestyle**
+
+Add subtle entrance animations.
+
+### Featured Products
+
+Heading:
+
+**“Your next favorite cup.”**
+
+Display 4 premium coffee products.
+
+Each product card should contain:
+
+* Large product image
+* Product name
+* Origin
+* Roast level
+* Flavor notes
+* Price
+* Add to Cart button
+* Wishlist icon
+
+Example products:
+
+1. Ethiopia Yirgacheffe
+
+   * Floral
+   * Bergamot
+   * Peach
+   * $22
+
+2. Colombia Huila
+
+   * Caramel
+   * Red Apple
+   * Chocolate
+   * $20
+
+3. Brazil Fazenda
+
+   * Hazelnut
+   * Cocoa
+   * Brown Sugar
+   * $19
+
+4. Kenya Kirinyaga
+
+   * Blackberry
+   * Citrus
+   * Honey
+   * $24
+
+## 4. Coffee Discovery Section
+
+Create an interactive section:
+
+**“Find your coffee.”**
+
+Allow customers to choose:
+
+* Roast level
+* Flavor profile
+* Brewing method
+* Caffeine preference
+
+Example:
+
+“I'm looking for…”
+
+☕ Light & fruity
+☕ Balanced & sweet
+☕ Dark & bold
+
+Then show recommended coffees.
+
+Make this feel like a premium coffee discovery experience rather than a boring form.
+
+## 5. Best Sellers
+
+Create a horizontal product carousel.
+
+Heading:
+
+**“Loved by coffee people.”**
+
+Show best-selling products with:
+
+* Product image
+* Rating
+* Reviews
+* Price
+* Quick add button
+
+Include smooth horizontal scrolling.
+
+## 6. Brand Story
+
+Create a large editorial split section.
+
+Image on one side.
+
+Text on the other:
+
+**“Good coffee starts long before the first sip.”**
+
+Explain that the company works with carefully selected coffee farms, focuses on responsible sourcing, small-batch roasting, and freshness.
+
+Add:
+
+**Discover our story →**
+
+Use elegant typography and plenty of whitespace.
+
+## 7. Subscription Section
+
+Create a premium subscription CTA.
+
+Headline:
+
+**“Never run out of great coffee.”**
+
+Supporting text:
+
+“Choose your coffee. Choose your schedule. We'll take care of the rest.”
+
+Options:
+
+* Every 2 weeks
+* Every 4 weeks
+* Every 6 weeks
+
+CTA:
+
+**Start a Subscription**
+
+Visually distinguish this section from the rest of the page.
+
+## 8. Brewing Equipment
+
+Create an equipment section featuring:
+
+* French Press
+* V60
+* AeroPress
+* Coffee Grinder
+* Digital Scale
+* Kettle
+
+Use large product imagery and minimal product information.
+
+Heading:
+
+**“Make better coffee at home.”**
+
+CTA:
+
+**Shop Equipment**
+
+## 9. Journal
+
+Create an editorial blog section.
+
+Heading:
+
+**“From the journal.”**
+
+Cards:
+
+* How to brew better pour-over coffee
+* Understanding coffee roast levels
+* Ethiopia vs Colombia: What's the difference?
+* The ultimate guide to grinding coffee
+* How to store coffee beans properly
+
+Each article should have:
+
+* Large image
+* Category
+* Title
+* Short description
+* Reading time
+
+## 10. Product Listing Page
+
+Create a complete shop page.
+
+Include:
+
+* Product grid
+* Search
+* Category filters
+* Roast filters
+* Origin filters
+* Flavor filters
+* Price filter
+* Sort by
+* Grid/list toggle
+
+Categories:
+
+* Coffee Beans
+* Ground Coffee
+* Capsules
+* Equipment
+* Accessories
+* Gifts
+
+Product cards should support:
+
+* Quick Add
+* Wishlist
+* Product preview
+* Sale badge
+* Rating
+* Price
+
+## 11. Product Details Page
+
+Create a premium product detail page.
+
+Left side:
+
+Large product image gallery.
+
+Right side:
+
+* Product name
+* Rating
+* Reviews
+* Price
+* Description
+* Origin
+* Roast level
+* Flavor notes
+* Processing method
+* Altitude
+* Weight selector
+* Whole Bean / Ground selector
+* Quantity selector
+* Add to Cart
+* Buy Now
+* Wishlist
+
+Add a coffee information visualization showing:
+
+**Roast**
+Light ─────●───── Dark
+
+**Acidity**
+Low ───●──────── High
+
+**Body**
+Light ───────●─── Full
+
+Also include:
+
+### Brewing recommendations
+
+* V60
+* Espresso
+* French Press
+* AeroPress
+
+Show recommended grind size and brewing ratio.
+
+## 12. Shopping Cart
+
+Create a beautiful slide-out cart.
+
+Show:
+
+* Product image
+* Product name
+* Variant
+* Quantity controls
+* Price
+* Remove
+
+Then:
+
+Subtotal
+
+Shipping estimate
+
+Total
+
+CTA:
+
+**Checkout**
+
+Add:
+
+“You're $12 away from free shipping.”
+
+with a progress indicator.
+
+## 13. Checkout
+
+Create a clean distraction-free checkout.
+
+Steps:
+
+1. Information
+2. Shipping
+3. Payment
+4. Confirmation
+
+Include:
+
+* Contact information
+* Shipping address
+* Delivery method
+* Payment method
+* Order summary
+
+Do not make checkout visually complicated.
+
+## 14. About Page
+
+Create a strong brand story page.
+
+Sections:
+
+* Our philosophy
+* Where our coffee comes from
+* How we roast
+* Sustainability
+* Meet the team
+
+Use large editorial photography.
+
+## 15. Responsive Design
+
+The website must be fully responsive.
+
+Desktop:
+
+* Large editorial layouts
+* Wide product grids
+* Large typography
+
+Tablet:
+
+* Adapt grid sizes
+* Maintain generous spacing
+
+Mobile:
+
+* Single-column product layouts
+* Touch-friendly buttons
+* Horizontal product carousels
+* Mobile navigation
+* Sticky cart button where appropriate
+* No horizontal overflow
+* Proper image cropping
+
+Do not simply shrink the desktop layout.
+
+Design the mobile experience intentionally.
+
+## 16. Animations
+
+Use subtle premium animations:
+
+* Fade-up on section entrance
+* Image reveal animations
+* Smooth hover transitions
+* Product image zoom on hover
+* Button micro-interactions
+* Smooth cart drawer animation
+* Navigation transitions
+* Scroll-based editorial effects
+
+Animations must be elegant and fast.
+
+Avoid excessive animation.
+
+## 17. UX Requirements
+
+Prioritize:
+
+* Fast shopping
+* Clear product information
+* Strong visual hierarchy
+* Accessible contrast
+* Large touch targets
+* Clear CTA buttons
+* Minimal checkout friction
+* Excellent empty states
+* Loading states
+* Error states
+* Product search
+* Filtering
+* Cart persistence
+
+Every interactive element should have an obvious purpose.
+
+## 18. Typography
+
+Use a sophisticated typography pairing.
+
+Use an elegant serif font for major editorial headlines and a clean modern sans-serif for UI/body text.
+
+Headlines should feel premium and confident.
+
+Example style:
+
+**Coffee worth slowing down for.**
+
+Large, dramatic, but not excessive.
+
+## 19. Photography
+
+Use realistic premium coffee photography:
+
+* Coffee beans
+* Espresso
+* Pour-over
+* Coffee farms
+* Coffee bags
+* Brewing equipment
+* Hands preparing coffee
+* Café atmosphere
+
+Photography should have:
+
+* Warm natural lighting
+* Cinematic composition
+* Rich coffee tones
+* Realistic textures
+* Professional commercial photography quality
+
+Do not use obvious stock-photo-looking images.
+
+Do not place text over busy images unless readability is excellent.
+
+## 20. Footer
+
+Create a large premium footer.
+
+Columns:
+
+### Shop
+
+Coffee
+Equipment
+Subscriptions
+Gifts
+
+### Company
+
+Our Story
+Journal
+Contact
+FAQ
+
+### Support
+
+Shipping
+Returns
+Privacy
+Terms
+
+Include:
+
+* Newsletter signup
+* Social icons
+* Payment icons
+* Copyright
+* Logo
+
+Newsletter headline:
+
+**“Good things are brewing.”**
+
+Supporting text:
+
+“Get brewing guides, new releases, and occasional coffee inspiration.”
+
+## 21. Important Design Rules
+
+Do NOT:
+
+* Create a generic template
+* Use excessive rounded cards
+* Use random gradients
+* Use neon colors
+* Use excessive shadows
+* Use huge unnecessary UI elements
+* Use placeholder lorem ipsum
+* Make every section look like a card
+* Overuse icons
+* Make the interface look like a SaaS dashboard
+
+DO:
+
+* Use strong editorial composition
+* Use asymmetrical layouts where appropriate
+* Use high-quality photography
+* Use typography as a major design element
+* Create clear visual rhythm
+* Maintain consistent spacing
+* Make products the visual focus
+* Make the website feel like a real established coffee brand
+
+## 22. Technical Quality
+
+Build the website as a production-quality e-commerce interface.
+
+Requirements:
+
+* Semantic HTML
+* Responsive CSS
+* Accessible controls
+* Keyboard navigation
+* Proper focus states
+* Optimized images
+* Lazy loading
+* Reusable components
+* Clean component architecture
+* No unnecessary dependencies
+* No broken interactions
+* No console errors
+* No placeholder functionality presented as working functionality
+
+All buttons and interactive elements should actually work.
+
+Use realistic mock product data where backend functionality is unavailable.
+
+The final result should look like a **real premium specialty coffee e-commerce brand ready to launch**, not a demo, wireframe, or AI template.
+
+Before finishing, review every page for:
+
+1. Visual consistency
+2. Responsive behavior
+3. Typography
+4. Spacing
+5. Accessibility
+6. Product usability
+7. Navigation
+8. Cart interactions
+9. Empty/loading/error states
+10. Overall premium visual quality
+
+Make the final website **beautiful, restrained, premium, fast, and conversion-focused**.
+
+        `});
+      console.log('response is : chat' ,  response );
+
+      
+      
+
+        
+    })();
+  }, []);
 
   return (
     <header className="w-full h-[55px]  zoom-80 px-2 bg-surface-secondary  border-b-[1.5px]  border-slate-400    flex items-center justify-between gap-2 auto-animate animate-go-to">
@@ -666,7 +1321,7 @@ export const HomeHeader = memo(() => {
             onInput={(ev) => {
               // transformToNumInput(ev.target);
               // editor.getContainer().style.zoom = ev.target.value / 100;
-              
+
               // editor.trigger(InfinitelyEvents.devices.update_zoom , {value:true});
               const val = ev.target.value;
               const container = editor.getContainer();
@@ -676,7 +1331,7 @@ export const HomeHeader = memo(() => {
 
               // 2. Apply the manual zoom
               container.style.zoom = val / 100;
-               const parent = container.parentElement;
+              const parent = container.parentElement;
               if (parent) {
                 parent.style.display = "flex";
                 parent.style.justifyContent = "center";
@@ -698,9 +1353,8 @@ export const HomeHeader = memo(() => {
               );
             }}
           />
-
         </li>
-          <PagesSelector />
+        <PagesSelector />
         {/* </ul> */}
       </ScrollableToolbar>
 

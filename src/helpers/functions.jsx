@@ -3361,7 +3361,7 @@ export function workerCallbackMaker(
 /**
  * Source of truth: the exact object registered with the worker.
  * Adjust this import to wherever `export const wpCommands = {...}` actually lives.
- * @typedef {  typeof import('@/helpers/worker').commands  & typeof import('@/helpers/assetsWorker').commands &  typeof import('@/helpers/fetcherWorker').commands & typeof import('@/helpers/classesFinderWorker').commands & typeof import('@/helpers/keyframesGetterWorker').commands & typeof import('@/helpers/offlineInstallerWorker').commands & typeof import('@/helpers/pageBuilderWorker').commands & typeof import('@/helpers/refresherWorker').commands & typeof import('@/helpers/swRefresherWorker').commands} AllCommands
+ * @typedef {  typeof import('@/helpers/worker').commands  & typeof import('@/helpers/assetsWorker').commands &  typeof import('@/helpers/fetcherWorker').commands & typeof import('@/helpers/classesFinderWorker').commands & typeof import('@/helpers/keyframesGetterWorker').commands & typeof import('@/helpers/offlineInstallerWorker').commands & typeof import('@/helpers/pageBuilderWorker').commands & typeof import('@/helpers/refresherWorker').commands & typeof import('@/helpers/swRefresherWorker').commands & typeof import('@/helpers/aiWorker').commands} AllCommands
  */
 
 /**
