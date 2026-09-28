@@ -115,11 +115,26 @@ const StyleAccordion = () => {
     ),
   );
 
-  function notifing(styles) {
-    let newNotf = {};
-    // styles = styles.framesStyles ? styles.framesStyles : styles;
-    console.log("frames : ", styles, styles.framesStyles);
+  // function notifing(styles) {
+  //   let newNotf = {};
+  //   // styles = styles.framesStyles ? styles.framesStyles : styles;
+  //   console.log("frames : ", styles, styles.framesStyles);
 
+  //   for (const key in styles) {
+  //     const kebabProp = toKebabCase(key);
+  //     for (const [ctg, props] of Object.entries(allCssProps.current)) {
+  //       if (styles[key] && props.includes(kebabProp)) {
+  //         newNotf[ctg] = true;
+  //       }
+  //     }
+  //   }
+  //   console.log("notifires : ", newNotf, styles);
+
+  //   setNotifires(newNotf);
+  // }
+
+    function notifing(styles) {
+    let newNotf = {};
     for (const key in styles) {
       const kebabProp = toKebabCase(key);
       for (const [ctg, props] of Object.entries(allCssProps.current)) {
@@ -128,9 +143,16 @@ const StyleAccordion = () => {
         }
       }
     }
-    console.log("notifires : ", newNotf, styles);
 
-    setNotifires(newNotf);
+    // 🚀 Only update state if notifications actually changed
+    setNotifires(prev => {
+      const prevKeys = Object.keys(prev).filter(k => prev[k]);
+      const newKeys = Object.keys(newNotf).filter(k => newNotf[k]);
+      if (prevKeys.length === newKeys.length && prevKeys.every(k => newNotf[k])) {
+        return prev;
+      }
+      return newNotf;
+    });
   }
 
   console.log("all css props : ", allCssProps.current);
@@ -263,7 +285,7 @@ const StyleAccordion = () => {
  * @param {{className:string}} param0
  * @returns
  */
-export const StyleAside = memo(({ className }) => {
+export const StyleAside = ({ className }) => {
   // const [currentEl, setCurrentEl] = useState();
   const editor = useEditorMaybe();
   const showAnimeBuilder = useRecoilValue(showAnimationsBuilderState);
@@ -336,25 +358,28 @@ export const StyleAside = memo(({ className }) => {
         ...currentMedia,
       });
 
-      const rulesOfCurrentSle = getComponentRules({
-        editor,
-        cmp: editor.getSelected(),
-        nested: true,
-      });
+      const rulesOfCurrentSle = cmpRules
+      //  getComponentRules({
+      //   editor,
+      //   cmp: editor.getSelected(),
+      //   nested: true,
+      // });
 
-      console.log(
-        "edRule",
-        edRule,
-        selectorWithRule,
-        rulesOfCurrentSle,
-        /(:|::)\w+/gi.test(selectorWithRule),
-      );
+      // console.log(
+      //   "edRule",
+      //   edRule,
+      //   selectorWithRule,
+      //   rulesOfCurrentSle,
+      //   /(:|::)\w+/gi.test(selectorWithRule),
+      // );
 
       if (
         !edRule &&
         !/(:|::)\w+/gi.test(selectorWithRule) &&
-        rulesOfCurrentSle.rules.length &&
-        rulesOfCurrentSle.rules[0].states
+        // rulesOfCurrentSle.rules.length &&
+        // rulesOfCurrentSle.rules[0].states
+        rulesOfCurrentSle.length &&
+        rulesOfCurrentSle[0].states
       ) {
         setMediaCondTitle(`There is styles in states for ${selectorWithRule}`);
       } else if (edRule) {
@@ -584,4 +609,4 @@ export const StyleAside = memo(({ className }) => {
       </section>
     </section>
   );
-});
+}

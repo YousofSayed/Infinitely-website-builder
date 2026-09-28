@@ -55,6 +55,7 @@ import {
   isWordpress,
   workerCallbackMakerWithProps,
 } from "@/helpers/functions";
+import GoToScope from "@/helpers/GoToAnimation";
 import {
   infinitelyWorker,
   reInitInfinitelyWorker,
@@ -303,7 +304,7 @@ export function Editor({ params }) {
             Object.values(allWorkersDone).every(Boolean) && currentPageName
           }
         >
-          <BusyProvider>
+          <>
             <section className={`w-full h-full  relative auto-animate`}>
               <GJEditor key={reloader}>
                 {/* <WithEditor> */}
@@ -317,11 +318,8 @@ export function Editor({ params }) {
                   <section
                     // ref={parent}
                     id="main-group"
-                    className={`${
-                      showPreview
-                        ? "w-full"
-                        : "w-[calc(100%-55px)] border-l-[1.5px] border-slate-400"
-                    } flex flex-col h-full `}
+                    className={`
+                     w-full flex flex-col h-full `}
                   >
                     {/* {!showPreview && <HomeHeader />} */}
                     <HomeHeader />
@@ -337,7 +335,7 @@ export function Editor({ params }) {
                         condition={
                           Object.values(showsComponents).some(
                             (item) => !isPlainObject(item) && Boolean(item),
-                          ) && !showPreview
+                          ) //&& !showPreview
                         }
                       >
                         <Panel defaultSize={300} id="left-panel" order={1}>
@@ -450,7 +448,7 @@ export function Editor({ params }) {
                 {/* </WithEditor> */}
               </GJEditor>
             </section>
-          </BusyProvider>
+          </>
         </ShowIf>
 
         <ShowIf

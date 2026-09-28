@@ -194,7 +194,7 @@ export let globalSettingsType = {
 };
 
 /**
- * @type {import('@/helpers/types').ProjectSetting}
+ * @type {import('@/helpers/types').ProjectSetting} 
  */
 export let projectSettingsType = {
   minify_Css: true,
@@ -220,7 +220,7 @@ export let projectSettingsType = {
   enable_tailwind: false,
   enable_spline_viewer: false,
   enable_swiperjs: false,
-  enable_editor_lazy_loading: false,
+  // enable_editor_lazy_loading: false,
   enable_auto_save: true,
   stop_all_animation_on_page: false,
   remove_gsap_markers_on_build: true,
@@ -229,6 +229,7 @@ export let projectSettingsType = {
   include_symbols_in_export: true,
   include_blocks_templates_in_export: true,
   include_wp_assets_in_export : true,
+  include_ai_chats_in_export: true,
 };
 
 /**

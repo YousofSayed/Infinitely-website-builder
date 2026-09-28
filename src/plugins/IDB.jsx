@@ -18,6 +18,7 @@ import { defineRoot, getPageURLException } from "@/helpers/bridge";
 import { changePageName } from "@/helpers/customEvents";
 import { db } from "@/helpers/db";
 import {
+  callWorkerCommand,
   getComponentRules,
   getInfinitelySymbolInfo,
   getProjectData,
@@ -34,6 +35,7 @@ import { updateThumbnailTimeout } from "@/plugins/updateProjectThumbnail";
 import { minify } from "csso";
 import { isBoolean, isFunction, isPlainObject } from "lodash";
 import { toast } from "react-toastify";
+import { fetcherWorker } from "@/helpers/defineWorkers";
 
 //
 
@@ -132,7 +134,9 @@ async function getAllSymbolsStyles() {
     )
   ).join("\n");
 
-  return minify(allSymbolsStyle).css;
+  return await callWorkerCommand(fetcherWorker, "minifyCss", {
+    css: allSymbolsStyle,
+  });
 }
 
 /**
@@ -167,8 +171,6 @@ export const loadElements = async (
   storageManager.setAutosave(false);
   let cssCode = "";
 
-  const loadCurrentStyle = async () => {};
-
   const loadCurrentPage = async () => {
     if (!localStorage.getItem(current_page_id)) {
       localStorage.setItem(current_page_id, "index");
@@ -181,13 +183,20 @@ export const loadElements = async (
     ).text();
     let allSymbolsStyle = await getAllSymbolsStyles();
 
-    cssCode = minify(
-      `
-      ${cssStyles}
-      ${allSymbolsStyle}
-        `,
-      { restructure: false },
-    ).css;
+    cssCode = await callWorkerCommand(fetcherWorker, "minifyCss", {
+      css: `${cssStyles} ${allSymbolsStyle}`,
+      options: {
+        restructure: false,
+      },
+    });
+
+    // minify(
+    //   `
+    //   ${cssStyles}
+    //   ${allSymbolsStyle}
+    //     `,
+    //   { restructure: false },
+    // ).css;
     // editor.setStyle(cssCode);
     // console.log('style : ',editor.getCss());
 
@@ -195,24 +204,36 @@ export const loadElements = async (
     cssStyles = null;
 
     const getElements = async () => {
-      let elements = await new Promise((res, rej) => {
-        workerCallbackMaker(
-          infinitelyWorker,
-          "parseHTMLAndRaplceSymbols",
-          (props) => {
-            props.response && res([...props.response]);
-            !props.response && rej([]);
-          },
-        );
+      let elements =
+        (
+          await callWorkerCommand(
+            infinitelyWorker,
+            "parseHTMLAndRaplceSymbols",
+            {
+              pageName: currentPageId,
+              projectId: +projectID,
+            },
+          )
+        ).response || [];
 
-        infinitelyWorker.postMessage({
-          command: "parseHTMLAndRaplceSymbols",
-          props: {
-            pageName: currentPageId,
-            projectId: +projectID,
-          },
-        });
-      });
+      // await new Promise((res, rej) => {
+      //   workerCallbackMaker(
+      //     infinitelyWorker,
+      //     "parseHTMLAndRaplceSymbols",
+      //     (props) => {
+      //       props.response && res([...props.response]);
+      //       !props.response && rej([]);
+      //     },
+      //   );
+
+      //   infinitelyWorker.postMessage({
+      //     command: "parseHTMLAndRaplceSymbols",
+      //     props: {
+      //       pageName: currentPageId,
+      //       projectId: +projectID,
+      //     },
+      //   });
+      // });
 
       console.log("elements : ", elements);
 
@@ -226,8 +247,8 @@ export const loadElements = async (
       const root = iframeEl.contentDocument.documentElement;
       const themes = projectData.themes;
       if (!themes) return;
-      console.log('root and themes' , themes , root);
-      
+      console.log("root and themes", themes, root);
+
       root.setAttribute("data-theme", themes.default_theme);
       root.setAttribute("data-mode", themes.default_mode);
     });
@@ -236,42 +257,46 @@ export const loadElements = async (
     editor.trigger(InfinitelyEvents.pages.update);
     editor.trigger(InfinitelyEvents.pages.all);
     window.dispatchEvent(changePageName({ pageName: currentPageId }));
-    // const parsed = editor.Parser.parseHtml(await getElements(), {
-    //   asDocument: false,
-    // });
-    // let content = isArray(parsed.html) ? [...parsed.html] : [parsed.html];
-    // console.log(content);
-    if (justSendToWorker) {
-      return await new Promise((res, rej) => {
-        workerCallbackMaker(
-          infinitelyWorker,
-          "parseHTMLAndRaplceSymbols",
-          async (props) => {
-            editor.select(null);
-            // editor.off("canvas:frame:load:body");
-            await loadScripts(editor, projectData);
-            // editor.on("canvas:frame:load:body", () => {
-            //   attrsCallback(editor, projectData);
-            // });
-            editor.clearDirtyCount();
-            console.log("parseHTMLAndRaplceSymbols props : ", props);
-            res(props);
-            onSend(
-              [renderCssStyles(editor, cssCode), ...props.response],
-              cssCode,
-            );
-            editor.on("component:remove:before", editor.removerBeforeHandler);
-          },
-        );
 
-        infinitelyWorker.postMessage({
-          command: "parseHTMLAndRaplceSymbols",
-          props: {
-            pageName: currentPageId,
-            projectId: +projectID,
-          },
-        });
-      });
+    if (justSendToWorker) {
+      const response = await getElements();
+      editor.select(null);
+      await loadScripts(editor, projectData);
+      editor.clearDirtyCount();
+      onSend([renderCssStyles(editor, cssCode), ...response], cssCode);
+      editor.on("component:remove:before", editor.removerBeforeHandler);
+      return;
+
+      // return await new Promise((res, rej) => {
+      //   workerCallbackMaker(
+      //     infinitelyWorker,
+      //     "parseHTMLAndRaplceSymbols",
+      //     async (props) => {
+      //       editor.select(null);
+      //       // editor.off("canvas:frame:load:body");
+      //       await loadScripts(editor, projectData);
+      //       // editor.on("canvas:frame:load:body", () => {
+      //       //   attrsCallback(editor, projectData);
+      //       // });
+      //       editor.clearDirtyCount();
+      //       console.log("parseHTMLAndRaplceSymbols props : ", props);
+      //       res(props);
+      //       onSend(
+      //         [renderCssStyles(editor, cssCode), ...props.response],
+      //         cssCode,
+      //       );
+      //       editor.on("component:remove:before", editor.removerBeforeHandler);
+      //     },
+      //   );
+
+      //   infinitelyWorker.postMessage({
+      //     command: "parseHTMLAndRaplceSymbols",
+      //     props: {
+      //       pageName: currentPageId,
+      //       projectId: +projectID,
+      //     },
+      //   });
+      // });
     } else {
       editor.select(null);
       // editor.off("canvas:frame:load");
@@ -312,13 +337,13 @@ export const IDB = (editor) => {
   console.log("IDB.js Fired");
 
   const projectID = localStorage.getItem(current_project_id);
-  const mainCreateObjectURLMethod = URL.createObjectURL;
-  const willRevokedURLs = new Map();
-  URL.createObjectURL = (obj) => {
-    const url = mainCreateObjectURLMethod(obj);
-    willRevokedURLs.set(url);
-    return url;
-  };
+  // const mainCreateObjectURLMethod = URL.createObjectURL;
+  // const willRevokedURLs = new Map();
+  // URL.createObjectURL = (obj) => {
+  //   const url = mainCreateObjectURLMethod(obj);
+  //   willRevokedURLs.set(url);
+  //   return url;
+  // };
 
   let tId;
   editor.infDirty = 0;

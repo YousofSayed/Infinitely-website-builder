@@ -28,6 +28,7 @@ export const types_not_allowed = [
   "wp_block",
   "nav_menu_item",
   "attachment",
+  "inf_snippets",
 ];
 
 //Attributes
@@ -125,13 +126,26 @@ export const headersProps = [
   "x-frame-options",
 ];
 
+export const LLM_PROVIDERS = [
+  "openai",
+  "google",
+  "anthropic",
+  "groq",
+  "ollama",
+  "xai",
+  "deepseek",
+];
+
 export const mainScripts = [
   "/scripts/infImport.js",
   "/scripts/alpine.js",
   "/scripts/test.js",
 ];
 
-export const codeEditorScripts = ["/scripts/infinitely.js"];
+export const codeEditorScripts = [
+  "/scripts/infinitely.js",
+  "/scripts/petite-router.js",
+];
 export const gsapScripts = [
   "/scripts/gsap.min.js",
   "/scripts/scrollTrigger.min.js",
@@ -654,16 +668,31 @@ export const SCRIPT_DEFINITIONS = [
     localUrl: `/scripts/petite-vue-animated.js`,
     condition: (settings) => !settings.disable_petite_vue,
   },
+
   {
     name: "pVuePlugins.js",
     localUrl: `/scripts/pVuePlugins.js`,
     condition: (settings) => !settings.disable_petite_vue,
   },
+
+  {
+    name: "vCatch.js",
+    localUrl: `/scripts/vCatch.js`,
+    condition: (settings) => !settings.disable_petite_vue,
+  },
+
   {
     name: "p-vue.js",
     localUrl: "/scripts/p-vue.js",
     condition: (settings) => !settings.disable_petite_vue,
   },
+
+  {
+    name: "petite-router.js",
+    localUrl: `/scripts/petite-router.js`,
+    condition: (settings) => !settings.disable_petite_vue,
+  },
+
   {
     name: "initPVue.js",
     localUrl: "/scripts/initPVue.js",
@@ -673,6 +702,11 @@ export const SCRIPT_DEFINITIONS = [
 ];
 
 export const DEV_SCRIPT_DEFINITIONS = [
+  {
+    name: "iframeLogs.js",
+    localUrl: "/scripts/iframeLogs.js?source=grapesjs",
+    // condition: (settings) => !settings.disable_will_change_in_editor,
+  },
   {
     name: "willChange.js",
     localUrl: "/scripts/willChange.js",
@@ -693,6 +727,14 @@ export const DEV_SCRIPT_DEFINITIONS = [
     localUrl: "/scripts/pvMount.js",
     condition: (settings) => !settings.disable_petite_vue,
   },
+];
+
+export const DEV_PREVIEW_SCRIPT_DEFINITIONS = [
+  {
+    name: "iframeLogs.js",
+    localUrl: "/scripts/iframeLogs.js?source=preview",
+  },
+  { localUrl: "/scripts/previewHmr.dev.js", name: "previewHmr.dev.js" },
 ];
 
 export const STYLE_DEFINITIONS = [

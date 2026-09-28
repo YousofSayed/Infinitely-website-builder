@@ -50,7 +50,14 @@ import { toast } from "react-toastify";
 import { ShowIf } from "../ShowIf";
 import { Wordpress } from "../Protos/wordpress/Wordpress";
 import { useRecoilState } from "recoil";
-import { showComponentsInLeftPanelState, viewsKeyState } from "@/helpers/atoms";
+import {
+  consoleLogsNotification,
+  isAnimationsChangedState,
+  showComponentsInLeftPanelState,
+  viewsKeyState,
+} from "@/helpers/atoms";
+import { animationsSavingMsg } from "@/constants/confirms";
+import { useBusyCallback } from "@/hooks/useBusyCallback";
 
 export const HomeNav = () => {
   const editor = useEditorMaybe();
@@ -63,7 +70,14 @@ export const HomeNav = () => {
   const [showsComponents, setShowsComponents] = useRecoilState(
     showComponentsInLeftPanelState,
   );
+  const [logsNotification, setLogsNotification] = useRecoilState(
+    consoleLogsNotification,
+  );
   const [viewsKey, setViewKey] = useRecoilState(viewsKeyState);
+
+  const [isAnimationsChanged, setAnimationsChanged] = useRecoilState(
+    isAnimationsChangedState,
+  );
 
   useEffect(() => {
     const callback = async ({ detail }) => {
@@ -83,6 +97,80 @@ export const HomeNav = () => {
     };
   }, [projectData]);
 
+  const [handleDBXInit, { isLoading: isDBXInitLoading }] = useBusyCallback(
+    async () => {
+      const tid = toast.loading(
+        <ToastMsgInfo msg={`Initializing dropbox project...`} />,
+      );
+      const dataMeta = await uploadDbxFileWithToastProgress(
+        `/${projectData.name}.zip`,
+        await getProject(),
+        "",
+      );
+      if (!dataMeta) {
+        throw new Error(`No data meta founded`);
+      }
+      console.log("data meta : ", dataMeta);
+      await db.projects.update(+localStorage.getItem(current_project_id), {
+        dbx_pull_requried: false,
+        dropboxFileMeta: dataMeta,
+      });
+      toast.dismiss(tid);
+      toast.success(<ToastMsgInfo msg={`Dropbox project initialized! 🎉`} />);
+    },
+  );
+
+  const [pushToDBX, { isLoading: isDBXPushLoading }] = useBusyCallback(
+    async () => {
+      const tid = toast.loading(
+        <ToastMsgInfo msg={`Pushing dropbox project...`} />,
+      );
+      const dataMeta = await uploadDbxFileWithToastProgress(
+        projectData.dropboxFileMeta.path_lower,
+        await getProject(),
+        projectData.dropboxFileMeta.rev,
+      );
+      if (!dataMeta) {
+        throw new Error(`No data meta founded`);
+      }
+      console.log("data meta : ", dataMeta);
+      await db.projects.update(+localStorage.getItem(current_project_id), {
+        dbx_pull_requried: false,
+        dropboxFileMeta: dataMeta,
+      });
+      toast.dismiss(tid);
+      toast.success(<ToastMsgInfo msg={`Dropbox project pushed! 🎉`} />);
+    },
+  );
+
+  const [pullFromDBX, { isLoading: isDBXPullLoading }] = useBusyCallback(async () => {
+    const tid = toast.loading(
+      <ToastMsgInfo msg={`Pulling dropbox project...`} />,
+    );
+    const cnfrm = confirm(
+      `Are you sure you want to pull from dropbox? This will overwrite your local project files.`,
+    );
+    if (!cnfrm) return;
+    console.log("refff : ", pushRef.current);
+    const btn = ev.currentTarget;
+    addClickClass(btn, "click");
+
+    btn.disabled = true;
+    pushRef.current.disabled = true;
+    try {
+      await pullProject(projectData);
+      btn.disabled = true;
+    } catch (error) {
+      throw new Error(error);
+    } finally {
+      btn.disabled = null;
+      // pushRef.current.disabled = null;
+    }
+
+    toast.dismiss(tid);
+    toast.success(<ToastMsgInfo msg={`Dropbox project pulled! 🎉`} />);
+  });
+
   const leave = () => {
     if (editor.getDirtyCount()) {
       const cnfrm = confirm(
@@ -101,10 +189,10 @@ export const HomeNav = () => {
   };
 
   return (
-    <nav className="h-full  w-[55px]  p-2 flex flex-col justify-between items-center bg-surface-secondary auto-animate animate-go-to ">
+    <nav className="disable-when-load h-full  w-[55px] [&_svg]:!w-[21px] [&_svg]:!aspect-square border-r border-r-slate-600  p-2 flex flex-col justify-between items-center bg-surface-secondary auto-animate animate-go-to ">
       {/* <iframe ref={testRef} className="z-[15000] bg-white fixed top-0 left-0 w-full h-full border-2 border-border-default" ></iframe> */}
       <div className="flex flex-col items-center gap-4">
-        <figure className="pb-[10px] pt-1 border-b-[1px] border-slate-400 ">
+        <figure className="pb-[10px] pt-1 border-b-[1px] border-slate-600 ">
           {/* {Icons.logo({})} */}
           <button onClick={leave} className="cursor-pointer" viewTransition>
             <img src={config.logo} alt="logo" />
@@ -112,7 +200,7 @@ export const HomeNav = () => {
         </figure>
 
         <section className="flex flex-col gap-2">
-          <ul className="flex flex-col gap-5 items-center p-2 bg-surface-tertiary rounded-lg">
+          <ul className="flex flex-col gap-5 items-center p-1.5 bg-surface-tertiary rounded-lg">
             {/* <Li>{Icons.plus()}</Li> */}
             <Li
               title="Pages"
@@ -267,7 +355,63 @@ export const HomeNav = () => {
             {/* <Li title="Github" icon={Icons.git} /> */}
           </ul>
 
-          <ul className="flex flex-col gap-5 items-center p-2 bg-surface-tertiary rounded-lg empty:hidden">
+          <ul className="flex flex-col  gap-5 items-center p-1.5 bg-surface-tertiary rounded-lg empty:hidden">
+            <Li
+              className="shrink-0"
+              icon={Icons.layers}
+              title="layers"
+              onClick={(ev) => {
+                // setShowLayers((old) => !old);
+                // setShowAnimBuilder(false);
+
+                setShowsComponents((old) => ({
+                  ...old,
+                  layers: !old.layers,
+                  animationsBuilder: false,
+                  viewPanel: false,
+                }));
+              }}
+            />
+
+            <Li
+              // linkClassName="flex items-center justify-center"
+              className="shrink-0"
+              title="Animation Builder"
+              onClick={(ev) => {
+                // console.log(showPreview, isAnimationsChanged);
+
+                if (isAnimationsChanged && showsComponents.animationsBuilder) {
+                  const cnfrm = confirm(animationsSavingMsg);
+                  if (cnfrm) {
+                    setAnimationsChanged(false);
+                    setAnimations([]);
+                    // setShowAnimBuilder(false);
+                    setShowsComponents((old) => ({
+                      ...old,
+                      layers: false,
+                      animationsBuilder: false,
+                      viewPanel: false,
+                    }));
+                  }
+                } else {
+                  // setShowAnimBuilder(!showAnimBuilder);
+                  // setShowLayers(false);
+                  setShowsComponents((old) => ({
+                    ...old,
+                    layers: false,
+                    animationsBuilder: !old.animationsBuilder,
+                    viewPanel: false, // old?.viewPanel,
+                  }));
+                  navigate("edite/styling");
+                }
+                // setShowAnimBuilder((old) => !old);
+              }}
+
+              // icon={Icons.animation}
+            >
+              {Icons.animation()}
+            </Li>
+
             <Wordpress>
               <Li
                 title="Wordpress"
@@ -278,7 +422,10 @@ export const HomeNav = () => {
                     animationsBuilder: false,
                     layers: false,
                     stylesBuilder: false,
-                    viewPanel: showsComponents.views.viewKey === "wordpress" ?!old?.viewPanel: true ,
+                    viewPanel: !old?.viewPanel,
+                    // showsComponents.views.viewKey === "wordpress"
+                    //   ? !old?.viewPanel
+                    //   : true,
                     views: {
                       ...old?.views,
                       viewKey: "wordpress",
@@ -302,7 +449,7 @@ export const HomeNav = () => {
                   viewPanel: !old?.viewPanel,
                   views: {
                     ...old?.views,
-                    viewKey: "ai",
+                    viewKey: "aiBuilder",
                   },
                 }));
               }}
@@ -324,7 +471,7 @@ export const HomeNav = () => {
                   viewPanel:
                     showsComponents.views.viewKey === "themesBuilder"
                       ? !old?.viewPanel
-                      : true ,
+                      : true,
                   views: {
                     ...old?.views,
                     viewKey: "themesBuilder",
@@ -336,42 +483,101 @@ export const HomeNav = () => {
                 <Icons.themes />
               </i>
             </Li>
+
+            <Li
+              title="console"
+              notify={logsNotification}
+              onClick={() => {
+                setShowsComponents((old) => ({
+                  ...old,
+                  animationsBuilder: false,
+                  layers: false,
+                  stylesBuilder: false,
+                  viewPanel:
+                    showsComponents.views.viewKey === "console"
+                      ? !old?.viewPanel
+                      : true,
+                  views: {
+                    ...old?.views,
+                    viewKey: "console",
+                  },
+                }));
+              }}
+            >
+              <i className="[&_path]:transition-all [&:hover_path]:fill-white [&:hover_path]:stroke-white  w-full h-full flex justify-center items-center">
+                <Icons.console />
+              </i>
+            </Li>
+
             {/* <Li title="Github" icon={Icons.git} /> */}
           </ul>
         </section>
       </div>
 
       <div>
-        <ul className="flex flex-col gap-5 items-center p-2 bg-surface-tertiary rounded-lg ">
-          {checkDropBoxSignInState() &&
-            projectData?.apps != "Dropbox" &&
-            !projectData?.dropboxFileMeta?.path_lower && (
-              <Button
-                onClick={async (ev) => {
-                  const trgBtn = ev.currentTarget;
-                  trgBtn.disabled = true;
-                  const dataMeta = await uploadDbxFileWithToastProgress(
-                    `/${projectData.name}.zip`,
-                    await getProject(),
-                    "",
-                  );
-                  if (!dataMeta) {
-                    throw new Error(`No data meta founded`);
-                  }
-                  console.log("data meta : ", dataMeta);
-                  await db.projects.update(
-                    +localStorage.getItem(current_project_id),
-                    {
-                      dbx_pull_requried: false,
-                      dropboxFileMeta: dataMeta,
-                    },
-                  );
-                  trgBtn.disabled = false;
-                }}
-              >
-                {Icons.initial({ strokeColor: "white" })} Init Project
-              </Button>
-            )}
+        <ul className="flex flex-col gap-5 items-center p-1.5 py-2 bg-surface-tertiary rounded-lg ">
+          {checkDropBoxSignInState() && (
+            <OptionsButton
+              icon={
+                <i
+                  className="
+              w-full h-full flex justify-center items-center
+              [&_path]:transition-all
+              [&:hover_path]:fill-white
+              "
+                >
+                  {Icons.dropbox({})}
+                </i>
+              }
+            >
+              <ShowIf condition={!projectData?.dropboxFileMeta?.path_lower}>
+                <Button
+                  disabled={isDBXInitLoading}
+                  onClick={async (ev) => {
+                    await handleDBXInit();
+                  }}
+                >
+                  {Icons.initial({ strokeColor: "white" })} Init Project
+                </Button>
+              </ShowIf>
+
+              <ShowIf condition={projectData?.dropboxFileMeta?.path_lower}>
+                <menu className="flex flex-col gap-2 min-w-[100px]">
+                  {projectData?.dropboxFileMeta?.path_lower && (
+                    <>
+                      <Button
+                        refForward={pushRef}
+                        disabled={isDBXPushLoading || isDBXPullLoading}
+                        onClick={async (ev) => {
+                          await pushToDBX();
+                        }}
+                      >
+                        {Icons.upload({ strokeColor: "white" })}
+                        <h1>Push</h1>
+                      </Button>
+
+                      <Button
+                        refForward={pullRef}
+                        // disabled={!projectData.dbx_pull_requried}
+                        disabled={isDBXPullLoading || isDBXPushLoading}
+                        onClick={async (ev) => {
+                          await pullFromDBX();
+                        }}
+                        style={{
+                          backgroundColor: projectData.dbx_pull_requried
+                            ? "crimson"
+                            : null,
+                        }}
+                      >
+                        {Icons.export("white")}
+                        <h1>Pull</h1>
+                      </Button>
+                    </>
+                  )}
+                </menu>
+              </ShowIf>
+            </OptionsButton>
+          )}
 
           <Li
             title="Settings"

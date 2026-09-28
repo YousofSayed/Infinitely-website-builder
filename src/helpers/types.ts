@@ -757,6 +757,44 @@ export type Themes = {
   default_mode:string;
 };
 
+export type Chat = {
+  id: string;
+  name: string;
+  description: string;
+  messages: { role: "user" | "assistant" | "system"; content: string }[];
+  provider: LLMProvider;
+  model: {
+    name:string,
+    model:string,
+    max_input_tokens: number,
+    max_output_tokens:number
+  };
+  date : string;
+  llm_id: string;
+  is_pinned: boolean;
+  mode : 'builder' | 'chat';
+}
+
+export type Chats = Chat[];
+
+export type LLMProvider =
+  | "openai"
+  | "google"
+  | "anthropic"
+  | "groq"
+  | "ollama"
+  | "xai"
+  | "deepseek";
+
+
+  export type AISettings = {
+      defaultProvider: LLMProvider;
+      max_tokens : number;
+      providers : {
+        [key : string] : string
+      }
+  }
+
 export interface Project {
   id: number;
   name: string;
@@ -802,6 +840,8 @@ export interface Project {
   devices: import("grapesjs").DeviceProperties[];
   lastScreenshot: Date | string;
   themes: Themes;
+  aiChats: Chats;
+  aiSettings : AISettings;
 }
 
 export type WPQueryArgs = {
@@ -1306,6 +1346,8 @@ export interface WpProject {
     };
   };
   themes: Themes;
+  aiChats: Chats;
+  aiSettings: AISettings;
 }
 
 export type GlobalSettings = {
@@ -1347,6 +1389,7 @@ export type ProjectSetting = {
   include_symbols_in_export: boolean;
   include_blocks_templates_in_export: boolean;
   include_wp_assets_in_export: boolean;
+  include_ai_chats_in_export: boolean;
 };
 
 export interface JSLibrary {
@@ -2256,3 +2299,38 @@ export interface WpTermsAllParams {
   orderby?: "name" | "slug" | "count" | "id";
   order?: "ASC" | "DESC";
 }
+
+
+export type ConsoleLogLevel =
+  | "log"
+  | "info"
+  | "warn"
+  | "error"
+  | "debug";
+
+export type ConsoleLogSource =
+  | "grapesjs"
+  | "preview";
+
+export interface ConsoleLogLocation {
+  url: string;
+  line: number;
+  column: number;
+}
+
+export interface ConsoleLogError {
+  name?: string;
+  message?: string;
+  stack?: string;
+}
+
+export interface ConsoleLog {
+  id: string;
+  level: ConsoleLogLevel;
+  source: ConsoleLogSource;
+  args: unknown[];
+  timestamp: number;
+  location: ConsoleLogLocation | null;
+  error?: ConsoleLogError;
+}
+export type ConsoleLogs = ConsoleLog[];

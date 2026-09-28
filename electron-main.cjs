@@ -44,7 +44,9 @@ async function createWindow() {
     //   symbolColor: "#ffffff",
     //   height: 39,
     // },
+  
     webPreferences: {
+      // webSecurity:false,
       preload: path.join(__dirname, "desktop/preload.cjs"),
       contextIsolation: true,
       nodeIntegration: false,

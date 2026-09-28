@@ -11,7 +11,7 @@ export default function  ElectronTitleBar() {
   const close = () => window.electron?.close();
 
   return (
-    <div className="animate-go-to fixed left-0 top-0 flex h-[40px!important] border-b-[1px] border-b-slate-400 w-full select-none bg-slate-900 text-white shrink-0 z-[100000000]">
+    <div className="animate-go-to fixed left-0 top-0 flex h-[40px!important] border-b-[1px] border-b-slate-600 w-full select-none bg-slate-900 text-white shrink-0 z-[100000000]">
       {/* App / title area */}
       <div
         className="

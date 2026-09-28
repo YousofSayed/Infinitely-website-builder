@@ -31,6 +31,7 @@ import { For } from "million/react";
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { useBusyCallback } from "@/hooks/useBusyCallback";
 
 export const Header = () => {
   const setShowCrtModal = useSetRecoilState(showCrtModalState);
@@ -41,21 +42,20 @@ export const Header = () => {
 
   useEffect(() => {
     dbxHandler();
-    
+
     // (async () => {
     //   console.log("files list");
     // })();
   }, []);
 
- 
-
   const dbxHandler = async () => {
     const isDropBoxInSignInState = Boolean(
-      sessionStorage.getItem(dbx_sign_in_state)
+      sessionStorage.getItem(dbx_sign_in_state),
     );
     if (isDropBoxInSignInState) {
-    const res =  await handleDropboxRedirect();
-     res && toast.success(<ToastMsgInfo msg={`Dropbox sign in successfully 💙`} />);
+      const res = await handleDropboxRedirect();
+      res &&
+        toast.success(<ToastMsgInfo msg={`Dropbox sign in successfully 💙`} />);
     }
   };
 
@@ -85,8 +85,17 @@ export const Header = () => {
     loadProject(file);
 
     ev.target.value = "";
-    
   };
+
+  const [loadDBXProject, { isLoading: isLoadingDBX }] = useBusyCallback(
+    async (ev, fileMeta) => {
+      addClickClass(ev.currentTarget, "click");
+      await loadDropBoxProject(fileMeta.path_lower, {
+        apps: "Dropbox",
+        dropboxFileMeta: fileMeta,
+      });
+    },
+  );
 
   // console.log(document.querySelectorAll('meta'));
 
@@ -112,12 +121,11 @@ export const Header = () => {
         </section>
 
         <section className="flex items-center gap-3">
-         
           <OptionsButton
             onClick={async (ev) => {
               if (!checkDropBoxSignInState()) {
                 toast.warn(
-                  <ToastMsgInfo msg={`You should sign in to dropbox`} />
+                  <ToastMsgInfo msg={`You should sign in to dropbox`} />,
                 );
                 return;
               }
@@ -128,7 +136,10 @@ export const Header = () => {
             }}
             icon={Icons.dropbox({ fill: "white" })}
           >
-            <menu style={{ width: 300, height: 300 }} className={`${dropboxFiles.length && `grid grid-cols-2 grid-rows-[135px] gap-2 overflow-hidden  overflow-y-auto [scrollbar-gutter:stable] rounded-lg   ${dropboxFiles.length > 4 && `pr-1`}`}`}>
+            <menu
+              style={{ width: 300, height: 300 }}
+              className={`${dropboxFiles.length && `grid grid-cols-2 grid-rows-[135px] gap-2 overflow-hidden  overflow-y-auto [scrollbar-gutter:stable] rounded-lg   ${dropboxFiles.length > 4 && `pr-1`}`}`}
+            >
               {Boolean(dropboxFiles.length) && checkDropBoxSignInState() ? (
                 <For each={dropboxFiles}>
                   {(fileMeta, i) => (
@@ -141,14 +152,16 @@ export const Header = () => {
                           {fileMeta.name}
                         </figcaption>
                         <SmallButton
+                          disabled={isLoadingDBX}
                           tooltipTitle={`Export : ${fileMeta.name}`}
                           className="h-[35px] bg-surface-tertiary"
                           onClick={async (ev) => {
-                            addClickClass(ev.currentTarget , 'click')
-                            await loadDropBoxProject(fileMeta.path_lower, {
-                              apps: "Dropbox",
-                              dropboxFileMeta: fileMeta,
-                            });
+                            addClickClass(ev.currentTarget, "click");
+                            // await loadDropBoxProject(fileMeta.path_lower, {
+                            //   apps: "Dropbox",
+                            //   dropboxFileMeta: fileMeta,
+                            // });
+                            await loadDBXProject(ev, fileMeta);
                           }}
                         >
                           {Icons.export("white")}
@@ -204,7 +217,7 @@ export const Header = () => {
                       logOutFromDropBox();
                       setUiRefresher(uniqueId(`${uniqueID()}-`));
                       toast.info(
-                        <ToastMsgInfo msg={`You signed out from dropbox 👍`} />
+                        <ToastMsgInfo msg={`You signed out from dropbox 👍`} />,
                       );
                     }}
                   >

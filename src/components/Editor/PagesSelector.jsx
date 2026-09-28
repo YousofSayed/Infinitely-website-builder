@@ -116,16 +116,13 @@ export const PagesSelector = () => {
     // }
     setPageName(value);
     return;
-    doInNormal(() => {
-    });
+    doInNormal(() => {});
 
     doInWordpress(() => {
       const exactTitle = `${value.slug} ${value?.["inf_meta"]?.["inf_template_type"] ? ` - (${value?.["inf_meta"]?.["inf_template_type"]})` : ""}`;
       setPageName(exactTitle);
     });
   };
-
-
 
   const onSelectPage = (value) => {
     // In Normal mode, value is a string (the page ID/slug)
@@ -141,12 +138,27 @@ export const PagesSelector = () => {
     }
 
     doInNormal(() => {
-      navigateToAnotherPage(
-        typeof value === "string" ? value.toLowerCase() : value.id,
-      );
+      // navigateToAnotherPage(
+      //   typeof value === "string" ? value.toLowerCase() : value.id,
+      // );
+      const pageId = typeof value === "string" ? value : value.id;
+      if (pageId == localStorage.getItem(current_page_id)) return;
+      if (!pageId) return;
+      if (editor.getDirtyCount()) {
+        const confirmChange = confirm(
+          "You have unsaved changes, are you sure you want to switch pages and lose those changes?",
+        );
+        if (!confirmChange) return;
+      }
+      console.log('page id :',pageId);
+      localStorage.setItem(current_page_id, pageId);
+      setPageName(pageId);
+      setTimeout(() => {
+        editor.load();
+      },200)
     });
 
-    console.log("value page : ", value );
+    console.log("value page : ", value);
 
     // return;
     // In WordPress mode, value is the full post object
@@ -161,8 +173,9 @@ export const PagesSelector = () => {
       // ✅ FIX 3: Now this will actually stick because the runaway useEffect is fixed!
       editor.trigger(InfinitelyEvents.storage.loadStart);
       editor.load();
+      setPageName(value.slug);
     });
-    setPageName(value.slug);
+    
   };
 
   return (
@@ -178,7 +191,9 @@ export const PagesSelector = () => {
         onEnterPress={onSelectPage}
         onItemClicked={onSelectPage}
         onBlur={() => {
-          setPageName(localStorage.getItem(current_page_id));
+          doInWordpress(() => {
+            setPageName(localStorage.getItem(current_page_id));
+          })
         }}
       />
     </li>

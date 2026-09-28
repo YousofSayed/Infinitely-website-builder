@@ -6,7 +6,7 @@ import {
   editorStorageInstance,
   reloadRequiredInstance,
 } from "@/constants/InfinitelyInstances";
-import { jsURLRgx } from "@/constants/rgxs";
+import { jsURLRgx, LETTER, RTL_SCRIPTS } from "@/constants/rgxs";
 import {
   app_type,
   current_page_id,
@@ -63,6 +63,7 @@ import {
 } from "@/helpers/customEvents";
 import { db } from "@/helpers/db";
 import {
+  AIWorker,
   fetcherWorker,
   keyframesGetterWorker,
   offlineInstallerWorker,
@@ -91,6 +92,8 @@ import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { queryClient } from "@/utils/queryClient";
 import { titleTool } from "@/plugins/tools/titleTool";
 import { componentIconTool } from "@/plugins/tools/componentIconTool";
+import { jsonrepair } from "jsonrepair";
+import { toJSON } from "linkedom";
 
 export {
   replaceBlobs,
@@ -561,13 +564,10 @@ export function initToolbar(editor, cmp) {
   // sle.set({
   //   toolbar: toolsAfterUpdateFilterd,
   // });
-  
+
   sle.set({
     toolbar: newTools,
   });
-  
-  
-   
 
   symbolCodeEditor(editor);
 
@@ -580,8 +580,8 @@ export function initToolbar(editor, cmp) {
   createReusableCmpTool(editor);
   createSymbolTool(editor);
 
-   titleTool(editor);
-    componentIconTool(editor);
+  titleTool(editor);
+  componentIconTool(editor);
 
   // requestAnimationFrame(() => {
   // });
@@ -2934,21 +2934,39 @@ export function exportProject() {
 export function getProject() {
   return new Promise((res, rej) => {
     const projectId = +localStorage.getItem(current_project_id);
-    workerCallbackMaker(infinitelyWorker, "getProject", ({ file }) => {
-      if (!file) {
-        rej(null);
-        throw new Error(`Faild to build project`);
-      }
-      res(file);
-    });
-
-    infinitelyWorker.postMessage({
-      command: "getProject",
-      props: {
-        projectSetting: getProjectSettings().projectSettings,
+    workerCallbackMakerWithProps(
+      infinitelyWorker,
+      "getProject",
+      {
         projectId,
+        projectSetting: getProjectSettings().projectSettings,
       },
-    });
+      (response) => {
+        if(!response.done) return rej(null);
+        const { file } = response.res;
+        if (!file) {
+          rej(null);
+          throw new Error(`Faild to build project`);
+        }
+        res(file);
+      },
+    );
+
+    // workerCallbackMaker(infinitelyWorker, "getProject", ({ file }) => {
+    //   if (!file) {
+    //     rej(null);
+    //     throw new Error(`Faild to build project`);
+    //   }
+    //   res(file);
+    // });
+
+    // infinitelyWorker.postMessage({
+    //   command: "getProject",
+    //   props: {
+    //     projectSetting: getProjectSettings().projectSettings,
+    //     projectId,
+    //   },
+    // });
   });
 }
 
@@ -3669,33 +3687,35 @@ export async function reloadEditor(editor) {
   const { projectSettings } = getProjectSettings();
   editor.off("component:remove:before");
   editor.Storage.setAutosave(false);
-  editor
-    .getWrapper()
-    .components()
-    .models.forEach((model) => {
-      model.destroy();
-      model.remove();
-    });
-  editor.Components.clear({});
-  editor.DomComponents.clear({});
-  editor.Css.clear({});
-  editor.CssComposer.clear({});
-  editor.setStyle("");
-  editor.setComponents("");
-  editor.UndoManager.stop();
-  editor.UndoManager.clear();
-  editor.getWrapper().removeClass(editor.getWrapper().getClasses());
+  // editor
+  //   .getWrapper()
+  //   .components()
+  //   .models.forEach((model) => {
+  //     model.destroy();
+  //     model.remove();
+  //   });
+  // editor.Components.clear({});
+  // editor.DomComponents.clear({});
+  // editor.Css.clear({});
+  // editor.CssComposer.clear({});
+  // editor.setStyle("");
+  // editor.setComponents("");
+  // editor.UndoManager.stop();
+  // editor.UndoManager.clear();
+  // editor.getWrapper().removeClass(editor.getWrapper().getClasses());
 
   reloaderTimeout && clearTimeout(reloaderTimeout);
   const response = await loadElements(editor, {
     justSendToWorker: true,
-    onSend(elements, styles) {
+   async onSend(elements, styles) {
       editorStorageInstance.emit(InfinitelyEvents.storage.loadStart);
+      editor.trigger(InfinitelyEvents.storage.loadStart);
       const render = (index) => {
         if (index >= elements.length) {
           editor.UndoManager.start();
           editor.Storage.setAutosave(projectSettings.enable_auto_save);
           editorStorageInstance.emit(InfinitelyEvents.storage.loadEnd);
+          editor.trigger(InfinitelyEvents.storage.loadEnd);
           return;
         }
 
@@ -3715,7 +3735,12 @@ export async function reloadEditor(editor) {
       };
       // editor.setComponents(elements.join('') , { avoidStore:true});
       console.log("componentd setted", elements);
+      // const components = await callWorkerCommand(fetcherWorker , 'htmlToGrapesjsComponents' , {
+      //   html : elements?.join('\n')
+      // });
 
+      // console.log('components json : ',elements);
+      
       if (projectSettings.enable_editor_lazy_loading) {
         editor.render();
         render(0);
@@ -3723,7 +3748,7 @@ export async function reloadEditor(editor) {
         editor.loadProjectData({
           components: elements,
           // styles
-        });
+        } , {clear:true });
         // editor.Css.addRules(styles)
         // Get the CSS Composer
       }
@@ -3748,6 +3773,7 @@ export async function reloadEditor(editor) {
 
       editor.infLoading = false;
       editorStorageInstance.emit(InfinitelyEvents.storage.loadEnd);
+      editor.trigger(InfinitelyEvents.storage.loadEnd);
       // editor.emit(InfinitelyEvents.storage.loadEnd);
     },
   });
@@ -4098,4 +4124,333 @@ export function removeTokensQueryVar(key, value) {
 
 export function clearTokensQueryVars() {
   localStorage.removeItem(wp_token_vars);
+}
+
+/**
+ *
+ * @param {{
+ *  provider : import("@/helpers/types").LLMProvider,
+ * api_key : string
+ * }} param0
+ */
+export function addAIProviderAPIKey({ provider, api_key }) {
+  localStorage.setItem(`${provider}-${getProjectId()}`, api_key);
+}
+
+/**
+ *
+ * @param {{
+ * provider : import("@/helpers/types").LLMProvider
+ * }} param0
+ * @returns
+ */
+export function getAIProviderAPIKey({ provider }) {
+  return localStorage.getItem(`${provider}-${getProjectId()}`);
+}
+
+export function extractText(input) {
+  if (typeof input === "string") {
+    // If content may contain HTML and you are in the browser
+    if (typeof DOMParser !== "undefined") {
+      const doc = new DOMParser().parseFromString(input, "text/html");
+      return doc.body.textContent || "";
+    }
+
+    // Simple fallback: remove tags
+    return input.replace(/<[^>]*>/g, " ");
+  }
+
+  // If input is a DOM element
+  return input?.textContent || "";
+}
+
+export function detectDir(content, fallback = "ltr") {
+  const text = extractText(content);
+
+  const firstLetter = text.match(LETTER)?.[0];
+
+  if (!firstLetter) {
+    return fallback;
+  }
+
+  return RTL_SCRIPTS.test(firstLetter) ? "rtl" : "ltr";
+}
+
+export async function createLLM({
+  chat = /** @type {import("@/helpers/types").Chat} */ (null),
+  modelVal,
+  think,
+  attachments,
+  previousMessages,
+  editedComponentContent = "",
+}) {
+  const projectData = await getProjectData();
+
+  const { id: llm_id, hasAttachments } = await callWorkerCommand(
+    AIWorker,
+    "createLLM",
+    {
+      id: chat.llm_id,
+      api_key: getAIProviderAPIKey({ provider: chat.provider }),
+      max_tokens: projectData?.aiSettings?.max_tokens || 5000,
+      provider: chat.provider || projectData?.aiSettings?.defaultProvider,
+      model: modelVal,
+      think: think,
+      attachments: attachments,
+      messages: previousMessages,
+      projectId: projectData.id,
+      currentPageName: localStorage.getItem(current_page_id),
+      wpPageConfig: getWpPageConfig(),
+      mode: chat.mode,
+      max_output_tokens: chat?.model?.max_output_tokens,
+      editedComponentContent,
+    },
+  );
+
+  return { id: llm_id, hasAttachments };
+}
+
+export async function LLMChat({ message, systemPropmpt, id, attachments }) {
+  const updatedMessages = await callWorkerCommand(AIWorker, "llmChat", {
+    id,
+    message,
+    systemPropmpt,
+    attachments,
+  });
+
+  return updatedMessages;
+}
+
+export async function chatWithLLM({
+  chat = /** @type {import("@/helpers/types").Chat} */ (null),
+  modelVal,
+  think,
+  attachments,
+  previousMessages,
+  message,
+  systemPropmpt,
+  editedComponentContent = "",
+}) {
+  const { id: llm_id, hasAttachments } = await createLLM({
+    chat,
+    modelVal,
+    think,
+    attachments,
+    previousMessages,
+    editedComponentContent,
+  });
+
+  const updatedMessages = await LLMChat({
+    message,
+    systemPropmpt,
+    id: llm_id,
+    attachments,
+  });
+
+  return {
+    llm_id,
+    updatedMessages,
+  };
+}
+
+export function safeParseLLMResponse(text) {
+  let cleaned = text.trim();
+
+  // 1. Strip markdown code fences if they exist
+  cleaned = cleaned
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "")
+    .trim();
+
+  // 2. 🚨 FIX LLM JS HALLUCINATIONS:
+  // Sometimes the AI "breaks character" and tries to concatenate JS variables
+  // e.g., "</div>\n" + original_html,
+  // JSON doesn't support this. We strip the "+ variable" part to make it valid JSON.
+  cleaned = cleaned.replace(/"(\s*\+\s*[a-zA-Z_][a-zA-Z0-9_]*)+/g, '"');
+
+  // 3. Try direct parse
+  try {
+    return JSON.parse(cleaned);
+  } catch (e) {
+    console.warn("Direct parse failed, attempting manual repair...", e);
+  }
+
+  // 4. Manual string repair for unescaped newlines/tabs inside strings
+  try {
+    // Matches content inside double quotes, respecting escaped quotes \"
+    const repairedJson = cleaned.replace(
+      /"([^"\\]*(?:\\.[^"\\]*)*)"/g,
+      (match, group) => {
+        const fixedGroup = group
+          .replace(/\n/g, "\\n")
+          .replace(/\r/g, "\\r")
+          .replace(/\t/g, "\\t");
+        return '"' + fixedGroup + '"';
+      },
+    );
+
+    // Fix trailing commas: ,} or ,]
+    const finalJson = repairedJson.replace(/,\s*([\]}])/g, "$1");
+
+    return JSON.parse(finalJson);
+  } catch (e) {
+    console.warn("Manual repair failed, trying jsonrepair...", e);
+  }
+
+  // 5. jsonrepair as a final heavy-duty fallback
+  try {
+    const repaired = jsonrepair(cleaned);
+    return JSON.parse(repaired);
+  } catch (e2) {
+    console.warn("jsonrepair failed, returning fallback", e2);
+  }
+
+  // 6. Last resort: return raw text so UI doesn't crash
+  return {
+    html: cleaned,
+    css: "",
+    js: "",
+    explaination:
+      "⚠️ AI returned severely malformed JSON. Raw output shown as HTML.",
+    faild: true,
+  };
+}
+
+// export function safeParseLLMResponse(text) {
+//   // 1. Strip markdown code fences if the AI adds them anyway
+//   let cleaned = text.trim();
+//   cleaned = cleaned.replace(/^```json\s*/i, "").replace(/```\s*$/, "");
+//   cleaned = cleaned.trim();
+
+//   // 2. Try direct parse
+//   try {
+//     return JSON.parse(cleaned);
+//   } catch (e) {
+//     // 3. Fallback: try to fix unescaped quotes inside values
+//     //    This is a best-effort repair
+//     console.warn("Direct JSON.parse failed, attempting repair...", e);
+//   }
+
+//   // 4. Try extracting JSON between first { and last }
+//   const start = cleaned.indexOf("{");
+//   const end = cleaned.lastIndexOf("}");
+//   if (start !== -1 && end !== -1) {
+//     const extracted = cleaned.slice(start, end + 1);
+//     try {
+//       return JSON.parse(extracted);
+//     } catch (e2) {
+//       console.warn("Extraction parse also failed", e2);
+//     }
+//   }
+
+//   // 5. Last resort: return raw text so UI doesn't crash
+//   return {
+//     html: cleaned,
+//     css: "",
+//     js: "",
+//     explaination: "⚠️ AI returned malformed JSON. Raw output shown as HTML.",
+//   };
+// }
+
+/**
+ * Validates, repairs, and parses an LLM response expected to be JSON (builder mode).
+ *
+ * @param {string|null|undefined} text - Raw text from the LLM
+ * @param {{ shapeCheck?: boolean }} [options]
+ * @returns {{
+ *   isValid: boolean,
+ *   data: { html?: string; css?: string; js?: string; explaination?: string } | null,
+ *   error: string | null,
+ *   repaired: boolean
+ * }}
+ */
+export function isJSONLLMResponse(text, options = {}) {
+  const { shapeCheck = true } = options;
+
+  const result = {
+    isValid: false,
+    data: null,
+    error: null,
+    repaired: false,
+  };
+
+  // 1. Handle empty / non-string input
+  if (!text || typeof text !== "string") {
+    result.error = "Input is empty or not a string";
+    return result;
+  }
+
+  // 2. Clean the string: trim + strip markdown fences
+  let cleaned = text.trim();
+  const fenceMatch = cleaned.match(/^```(?:json)?\s*([\s\S]*?)```\s*$/i);
+  if (fenceMatch) {
+    cleaned = fenceMatch[1].trim();
+    result.repaired = true;
+  }
+
+  // 3. Extract first { ... last } to ignore chatty AI pre/postamble
+  const firstBrace = cleaned.indexOf("{");
+  const lastBrace = cleaned.lastIndexOf("}");
+  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
+    result.error = "No JSON object found in response";
+    return result;
+  }
+  const jsonCandidate = cleaned.slice(firstBrace, lastBrace + 1);
+
+  // 4. Try direct parse
+  let parsed = null;
+  try {
+    parsed = JSON.parse(jsonCandidate);
+  } catch (e) {
+    // 5. Fallback: try to repair common LLM mistakes
+    try {
+      parsed = repairAndParseJSON(jsonCandidate);
+      result.repaired = true;
+    } catch (e2) {
+      result.error = `JSON parse failed: ${e.message}`;
+      return result;
+    }
+  }
+
+  // 6. Shape validation (must have at least html + explaination)
+  if (shapeCheck) {
+    if (typeof parsed !== "object" || parsed === null) {
+      result.error = "Parsed value is not an object";
+      return result;
+    }
+    const required = ["explaination"];
+    const missing = required.filter(
+      (k) => !(k in parsed) || typeof parsed[k] !== "string",
+    );
+    if (missing.length > 0) {
+      result.error = `Missing or invalid required keys: ${missing.join(", ")}`;
+      return result;
+    }
+    // Normalize missing optional keys
+    parsed.css = typeof parsed.css === "string" ? parsed.css : "";
+    parsed.js = typeof parsed.js === "string" ? parsed.js : "";
+  }
+
+  result.isValid = true;
+  result.data = parsed;
+  return result;
+}
+
+/**
+ * Internal helper: best-effort repair of broken JSON from LLMs.
+ * Fixes unescaped newlines, unescaped quotes inside strings, trailing commas.
+ */
+function repairAndParseJSON(broken) {
+  let s = broken;
+
+  // Fix unescaped newlines inside strings
+  s = s.replace(/(?<!\\)\n/g, "\\n");
+  s = s.replace(/(?<!\\)\r/g, "\\r");
+  s = s.replace(/(?<!\\)\t/g, "\\t");
+
+  // Remove trailing commas before } or ]
+  s = s.replace(/,\s*([}\]])/g, "$1");
+
+  // Try parsing — if still fails, throw so caller knows
+  return JSON.parse(s);
 }

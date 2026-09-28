@@ -13,6 +13,7 @@ import {
   buildWpHeaderScripts,
   buildWpScripts,
   buildWpStyles,
+  DEV_PREVIEW_SCRIPT_DEFINITIONS,
   interactionId,
   interactionInstanceId,
   mainMotionId,
@@ -1066,15 +1067,14 @@ export function buildGsapMotionsScript(
 
     const doMotion = () => {
       if (motion.isTimeLine) {
+        // FIX: Removed stray backtick and fixed parentheses to use a proper IIFE
         tween += `${motion.id}.${
           motion.timeLineName || `${uniqueId("timeline_")}${random(1, 9999)}`
         } = gsap.timeline(
-          
-          
-          ()=>(${serializeJavascript(compiledMotion.timeline, {
+          (()=>(${serializeJavascript(compiledMotion.timeline, {
             space: 2,
-          }).replaceAll("\\", "\\\\")})\`))
-          `;
+          }).replaceAll("\\", "\\\\")}))()
+        )`;
       }
 
       //  new Function( ${motion?.isLoop ? `'$el',` : ''} \`return (${serializeJavascript(
@@ -1971,57 +1971,56 @@ export const buildPageData = async (page = "", projectData, projectSetting) => {
 
   const cssLibs = getStyles(projectData.cssLibs, urlException);
 
-  const viewMainScripts = buildScripts({
-    projectSetting,
-    inserts: [
-      {
-        // index: (() => {
-        //   // Real base scripts before GSAP:
-        //   // 0 - infinitely.js
-        //   // 1 - dev.js
-        //   // 2+ - swiper.js (optional)
-        //   // 3+ - swiper-element.js (optional)
-        //   // then GSAP group
-        //   // then petite-vue group
+  const viewMainScripts = DEV_PREVIEW_SCRIPT_DEFINITIONS.concat(
+    buildScripts({
+      projectSetting,
+      inserts: [
+        {
+          // index: (() => {
+          //   // Real base scripts before GSAP:
+          //   // 0 - infinitely.js
+          //   // 1 - dev.js
+          //   // 2+ - swiper.js (optional)
+          //   // 3+ - swiper-element.js (optional)
+          //   // then GSAP group
+          //   // then petite-vue group
 
-        //   let index = 2; // infinitely.js + dev.js
+          //   let index = 2; // infinitely.js + dev.js
 
-        //   // swiper adds TWO scripts
-        //   if (projectSetting.enable_swiperjs) {
-        //     index += 2;
-        //   }
+          //   // swiper adds TWO scripts
+          //   if (projectSetting.enable_swiperjs) {
+          //     index += 2;
+          //   }
 
-        //   // GSAP core
-        //   if (!projectSetting.disable_gsap_core) index++;
+          //   // GSAP core
+          //   if (!projectSetting.disable_gsap_core) index++;
 
-        //   // ScrollTrigger
-        //   if (!projectSetting.disable_gsap_scrollTrigger) index++;
+          //   // ScrollTrigger
+          //   if (!projectSetting.disable_gsap_scrollTrigger) index++;
 
-        //   // SplitText
-        //   if (!projectSetting.disable_gsap_splitText) index++;
+          //   // SplitText
+          //   if (!projectSetting.disable_gsap_splitText) index++;
 
-        //   // insert AFTER GSAP group, BEFORE petite-vue
-        //   return index;
-        // })(),
-        useLastIndex: true,
-        item: {
-          name: `${page.name}.js`,
-          content: buildGsapMotionsScript(
-            filterMotionsByPage(
-              await cleanMotions(projectData.motions, projectData.pages),
+          //   // insert AFTER GSAP group, BEFORE petite-vue
+          //   return index;
+          // })(),
+          useLastIndex: true,
+          item: {
+            name: `${page.name}.js`,
+            content: buildGsapMotionsScript(
+              filterMotionsByPage(
+                await cleanMotions(projectData.motions, projectData.pages),
+                currentPageId,
+              ),
+              false,
+              projectSetting.remove_gsap_markers_on_build,
               currentPageId,
             ),
-            false,
-            projectSetting.remove_gsap_markers_on_build,
-            currentPageId,
-          ),
+          },
         },
-      },
-    ],
-  })
-    .concat([
-      { localUrl: "/scripts/previewHmr.dev.js", name: "previewHmr.dev.js" },
-    ])
+      ],
+    }),
+  )
     .map(
       (url) =>
         `<script ${url.localUrl ? `src="${url.localUrl || ""}"` : ""} ${
@@ -2136,7 +2135,10 @@ export async function buildPageContentFromData({
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
         <link href="/styles/style.css" rel="stylesheet" />
-        <link href="${urlException}/css/infinitely-themes.css" rel="stylesheet" />
+        <link
+          href="${urlException}/css/infinitely-themes.css"
+          rel="stylesheet"
+        />
 
         ${isTailwindEnabled
           ? ` <link
@@ -2168,6 +2170,7 @@ export async function buildPageContentFromData({
       </head>
 
       <body
+        v-catch="true"
         ${Object.keys(pageData.bodyAttributes || {})
           .filter((key) => Boolean(pageData.bodyAttributes[key]))
           .map((key) => `${key}="${pageData.bodyAttributes[key]}"`)
@@ -3322,7 +3325,12 @@ export async function doInNormalAsyncInWorker(
 
   const app = await db.projects.get(projectId);
   if (!app.app_type || app.app_type === "normal") {
-    await callack(app);
+    try {
+      await callack(app);
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   }
 }
 
@@ -3499,3 +3507,67 @@ export const buildThemesCss = (themes) => {
 
   return cssBlocks.join("\n\n");
 };
+
+
+
+export async function htmlToGrapesJS(html) {
+  const {parseHTML} = await import('linkedom');
+  
+  const { document } = parseHTML(`
+    <!doctype html>
+    <html>
+      <body>${html}</body>
+    </html>
+  `);
+
+  function parseNode(node) {
+    // Text
+    if (node.nodeType === 3) {
+      const content = node.textContent;
+
+      if (!content?.trim()) return null;
+
+      return {
+        type: "text",
+        content,
+      };
+    }
+
+    // Element
+    if (node.nodeType !== 1) {
+      return null;
+    }
+
+    const component = {
+      tagName: node.tagName.toLowerCase(),
+    };
+
+    // Attributes
+    if (node.attributes?.length) {
+      component.attributes = {};
+
+      for (const attr of node.attributes) {
+        component.attributes[attr.name] = attr.value;
+      }
+    }
+
+    // Children
+    const components = [];
+
+    for (const child of node.childNodes) {
+      const parsed = parseNode(child);
+
+      if (parsed) {
+        components.push(parsed);
+      }
+    }
+
+    if (components.length) {
+      component.components = components;
+    }
+
+    return component;
+  }
+
+  return Array.from(document.body.childNodes).map(parseNode).filter(Boolean);
+}

@@ -36,6 +36,10 @@ import {
   store,
   wpWorkerCallbackMaker,
 } from "@/helpers/functions";
+import {
+  getCachedComponentRules,
+  invalidateRulesCache,
+} from "@/helpers/rulesCache";
 import { useRemoveCssProp } from "@/hooks/useRemoveCssProp";
 import { queryClient } from "@/utils/queryClient";
 import { useEditorMaybe } from "@grapesjs/react";
@@ -181,12 +185,22 @@ export function useSetClassForCurrentEl() {
         },
       );
 
-      // reorderCss(editor);
-      const rulesParsed = getComponentRules({
+      // At the TOP of the setter function, BEFORE computing rules:
+      invalidateRulesCache();
+
+      // Then replace the call:
+      const rulesParsed = getCachedComponentRules({
         editor,
         cmp: editor.getSelected(),
-        nested:true
+        nested: true,
       });
+
+      
+      // const rulesParsed = getComponentRules({
+      //   editor,
+      //   cmp: editor.getSelected(),
+      //   nested:true
+      // });
 
       setCmpRules(rulesParsed.rules || []);
 
@@ -217,7 +231,7 @@ export function useSetClassForCurrentEl() {
               }),
             };
           });
-          editor.trigger(InfinitelyEvents.blocks.restore_wp_symbols)
+          editor.trigger(InfinitelyEvents.blocks.restore_wp_symbols);
           // wpWorkerCallbackMaker(
           //   pageBuilderWorker,
           //   "wp_update_symbol",

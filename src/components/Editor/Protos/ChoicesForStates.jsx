@@ -5,7 +5,7 @@ import { Icons } from "@/components/Icons/Icons";
 import { Choices } from "@/components/Editor/Protos/Choices";
 import { SmallButton } from "@/components/Editor/Protos/SmallButton";
 import { isArray } from "lodash";
-import React, { useEffect, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import { useRecoilValue } from "recoil";
 
 /**
@@ -13,7 +13,7 @@ import { useRecoilValue } from "recoil";
  * @param {{keywords : string[] ,stateRule:string, keywordsIndex : number ,atRuleType:string , atRuleParams:string ,currentStateIndex:number , onCloseClick : (ev : MouseEvent , keyword : string , index:number , keywordsIndex:number) => void , onDelete:(ev:MouseEvent , index:number)=>void , onSelect:(ev:MouseEvent , keywordsIndex:number)=>void}} param0
  * @returns
  */
-export const ChoicesForStates = ({
+export const ChoicesForStates = memo(({
   keywords,
   keywordsIndex,
   currentStateIndex,
@@ -101,4 +101,4 @@ export const ChoicesForStates = ({
       </SmallButton> */}
     </section>
   );
-};
+});

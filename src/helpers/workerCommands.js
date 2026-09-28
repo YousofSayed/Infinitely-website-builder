@@ -34,6 +34,7 @@ import {
   // getOPFSProjectDir,
   getProjectRoot,
   handleFilesSize,
+  htmlToGrapesJS,
   initMainAndGlobalFilesForWp,
   installFonts,
   // hasExportDefault,
@@ -1057,10 +1058,9 @@ export const getAllStyleSheetClasses = async (props) => {
       };
 
       await doInNormalAsyncInWorker(props.projectId, async () => {
-        for (const fHandle of await opfs.getAllFiles(defineRoot(`libs/css`), {
-          recursive: true,
-        })) {
-          const file = await fHandle.getFile();
+        const filesHandles = await opfs.getAllFiles(defineRoot(`libs/css`), {recursive: true});
+        for (const fHandle of filesHandles) {
+          const file = await fHandle.getOriginFile();
           const lastModified = file.lastModified;
           const cacheKey = fHandle.name;
 
@@ -2859,4 +2859,29 @@ export async function updateSymbolsStylesFiles({ symbols = {}, cssCode = "" }) {
     });
     throw new Error(error);
   }
+}
+
+/**
+ * 
+ * @param {{
+ * css:string , 
+ * options?: (import("csso").MinifyOptions & import("csso").CompressOptions)
+ * }} props 
+ */
+export function minifyCss(props) {
+  if(!props.css){
+    console.warn(`css not found in minifyCss`);
+    return "";
+  };
+  return minify(props.css , props.options || {}).css;
+}
+
+/**
+ * 
+ * @param {{
+ *  html : string
+ * }} props 
+ */
+export async function htmlToGrapesjsComponents(props) {
+    return await htmlToGrapesJS(props.html);
 }

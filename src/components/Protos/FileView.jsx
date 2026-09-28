@@ -64,8 +64,8 @@ export const FileView = ({
   onChange,
 }) => {
   const mediaType =
-    mime.getType(media.source_url) ||
-    media.media_type ||
+      mime.getType(media?.source_url) ||
+      media?.media_type ||
     "application/octet-stream";
   const fileNameRef = useRef(refType);
   const { isBusy, runWithBusy } = useBusy();
@@ -257,12 +257,15 @@ export const FileView = ({
     mediaFilesLoading ||
     mediaFilesRefetching;
 
+    console.log('file view'  , media);
+    
+
   return (
     <section
       className={`group  animate-go-to relative rounded-lg p-3 bg-surface-tertiary  flex flex-col justify-center items-center gap-2`}
     >
       <FitTitle className="absolute left-0 top-0 z-[100] ">
-        <Normal>{toMB(media.size, 3)}MB</Normal>
+        <Normal>{toMB(media?.size, 3)}MB</Normal>
         <Wordpress>{toMB(media?.media_details?.filesize, 3)}MB</Wordpress>
       </FitTitle>
       {/* <button
@@ -319,7 +322,7 @@ export const FileView = ({
               preload="auto"
               muted={true}
               poster=""
-              src={media.source_url}
+              src={media?.source_url}
             ></video>
           </section>
         )) ||
@@ -329,7 +332,7 @@ export const FileView = ({
               <audio
                 onClick={(ev) => onItemClicked(ev, media)}
                 className="w-full"
-                src={media.source_url}
+                src={media?.source_url}
                 controls={true}
               ></audio>
             </section>
@@ -346,7 +349,7 @@ export const FileView = ({
               // }}
               onClick={(ev) => onItemClicked(ev, media)}
               className="w-full h-full object-contain "
-              src={media.source_url}
+              src={media?.source_url}
             ></img>
           ))}
 
@@ -354,22 +357,22 @@ export const FileView = ({
           Icons.file({ fill: "white", width: 130, height: 130 })}
       </figure>
       <p
-        tooltib-id={media.slug}
+        tooltib-id={media?.slug}
         ref={fileNameRef}
-        title={media.slug}
+        title={media?.slug}
         className="text-text-primary p-2 bg-surface-secondary rounded-md text-ellipsis  max-w-full   text-nowrap overflow-hidden "
       >
-        {media.slug}
+        {media?.slug}
       </p>
       {showFilNameTooltib && (
         <Tooltip
-          anchorSelect={`[tooltib-id="${media.slug}"]`}
+          anchorSelect={`[tooltib-id="${media?.slug}"]`}
           place="bottom-end"
           opacity={1}
           className="shadow-sm shadow-slate-950 z-[1001]"
           positionStrategy="fixed"
         >
-          {media.slug}
+          {media?.slug}
         </Tooltip>
       )}
 

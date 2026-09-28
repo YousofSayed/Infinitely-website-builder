@@ -5,10 +5,14 @@ import { showComponentsInLeftPanelState } from "@/helpers/atoms";
 import { PanelTitle } from "./PanelTitle";
 import { ThemesBuilderPanel } from "../Panels/ThemesBuilderPanel";
 import { ShowIf } from "../ShowIf";
+import { AIBuilderPanel } from "@/components/Panels/AIBuilderPanel";
+import { ConsolePanel } from "@/components/Panels/ConsolePanel";
 
 const panels = {
   wordpress: WordpressPanel,
   themesBuilder: ThemesBuilderPanel,
+  aiBuilder: AIBuilderPanel,
+  console : ConsolePanel
 };
 
 export const ViewsPanel = () => {

@@ -2,16 +2,11 @@ import { addClickClass, uniqueID } from "@/helpers/cocktail";
 import { SmallButton } from "@/components/Editor/Protos/SmallButton";
 import { Icons } from "@/components/Icons/Icons";
 import { unwrap } from "million/react";
-import React, { useRef, useState, useTransition } from "react";
+import React, { isValidElement, useRef, useState, useTransition } from "react";
 import { Tooltip } from "react-tooltip";
+import Portal from "@/components/Editor/Portal";
 
 // million-ignore
-
-
-
-
-
-
 
 // million-ignore
 /**
@@ -25,6 +20,8 @@ export const OptionsButton = ({
   notify,
   icon,
   notifyBg = "bg-brand-primary",
+  noArrow = false,
+  arrowColor,
   ...props
 }) => {
   const [showTooltip, setShowTooltip] = useState(false);
@@ -40,13 +37,14 @@ export const OptionsButton = ({
   };
 
   const handleTooltipClick = (ev) => {
-    console.log("target : ", ev.target);
+    // console.log("target : ", ev.target);
     if (!(ev.target && ev.target.tagName == "INPUT")) {
       ev.preventDefault();
     }
     ev.stopPropagation();
   };
 
+  const Icon = ()=> icon;
   return (
     <div
       className="flex justify-center items-center w-fit h-full flex-shrink flex-grow-0"
@@ -61,7 +59,11 @@ export const OptionsButton = ({
         {...props}
         className={`relative w-full h-full flex justify-center items-center bg-transparent hover:bg-transparent border-none  ${props.className || ""}`}
       >
-        {icon ? icon : Icons.options({ fill: "#fff" })}
+        {isValidElement(icon) ? (
+          <Icon />
+        ) : (
+          Icons.options({ fill: "#fff", width: 15, height: 15 })
+        )}
         {notify && (
           <div
             className={`absolute w-[10px] h-[10px] ${notifyBg} rounded-full right-0 top-0`}
@@ -70,7 +72,10 @@ export const OptionsButton = ({
       </SmallButton>
 
       {Boolean(children) && (
-        <Tooltip
+       <Portal>
+         <Tooltip
+          // delayHide={10}
+          // delayShow={10}
           id={`tooltip-${id.current}`}
           className="w-fit p-[unset] z-[100] shadow-lg bg-surface-tertiary shadow-slate-950"
           style={{
@@ -78,6 +83,8 @@ export const OptionsButton = ({
             padding: "5px",
             backgroundColor: "#1e293b",
           }}
+          noArrow={noArrow}
+          arrowColor={arrowColor}
           positionStrategy="fixed"
           anchorSelect={`#${id.current}`}
           place={place}
@@ -105,6 +112,7 @@ export const OptionsButton = ({
         >
           <div onClick={handleTooltipClick}>{children}</div>
         </Tooltip>
+       </Portal>
       )}
     </div>
   );

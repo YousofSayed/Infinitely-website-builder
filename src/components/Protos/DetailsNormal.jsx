@@ -21,8 +21,7 @@ export const AccordionProvider = ({ children }) => {
   );
 };
 
-export const DetailsNormal = memo(
-  ({
+export const DetailsNormal =({
     children,
     label,
     className = "",
@@ -171,5 +170,4 @@ export const DetailsNormal = memo(
       //   {isOpen ? children : null}
       // </details>
     );
-  },
-);
+  }

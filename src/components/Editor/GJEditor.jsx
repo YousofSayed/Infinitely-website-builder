@@ -19,6 +19,8 @@ import {
   isNormal,
   isWordpress,
 } from "@/helpers/functions";
+import { getCachedComponentRules } from "@/helpers/rulesCache";
+// import { useConsoleLogs } from "@/hooks/useConsoleFeeds";
 import { useSettingsHandler } from "@/hooks/useSettingsHandler";
 import { addDevices } from "@/plugins/addDevices";
 import { addNewBuiltinCommands } from "@/plugins/addNewBuiltinCommands.jsx";
@@ -37,7 +39,7 @@ import { updateProjectThumbnail } from "@/plugins/updateProjectThumbnail.jsx";
 import { wp_remote_storage } from "@/plugins/wp_remote_storage.jsx";
 import GjsEditor from "@grapesjs/react";
 import grapesjs from "grapesjs";
-import React, { useCallback, useRef } from "react";
+import React, { startTransition, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useRecoilState, useSetRecoilState } from "recoil";
 
@@ -139,7 +141,7 @@ export const GJEditor = ({ children }) => {
               return;
             }
 
-            const rules = getComponentRules({
+            const rules = getCachedComponentRules({
               editor,
               cmp: sle,
               cssCode: editor.getCss({
@@ -147,8 +149,20 @@ export const GJEditor = ({ children }) => {
                 avoidProtected: true,
               }),
             });
+            // getComponentRules({
+            //   editor,
+            //   cmp: sle,
+            //   cssCode: editor.getCss({
+            //     keepUnusedStyles: true,
+            //     avoidProtected: true,
+            //   }),
+            // });
 
-            setCmpRules(rules.rules || []);
+            // setCmpRules(rules.rules || []);
+
+            startTransition(() => {
+              setCmpRules(rules.rules || []);
+            });
           },
           { timeout: 300 },
         );
@@ -308,6 +322,7 @@ export const GJEditor = ({ children }) => {
   };
 
   useSettingsHandler();
+  // useConsoleLogs();
 
   return (
     <GjsEditor

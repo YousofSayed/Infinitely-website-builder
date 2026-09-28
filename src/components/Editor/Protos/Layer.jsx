@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import { Tooltip } from "react-tooltip";
 import { useSetRecoilState, useRecoilValue, useRecoilCallback } from "recoil";
 import { isBoolean, isString } from "lodash";
+import { ShowIf } from "@/components/ShowIf";
 
 export const Layer = memo(
   ({
@@ -334,8 +335,7 @@ export const Layer = memo(
                 )
                 .find((t) => t?.tagName === layerProps.droppable);
 
-              const blockComponentIsValidDroppable =
-               allowedDropComponent
+              const blockComponentIsValidDroppable = allowedDropComponent;
 
               console.log(
                 "blockComponentTagName",
@@ -357,9 +357,8 @@ export const Layer = memo(
                   ...(t.model?.getDefaults?.() || {}),
                   id: t.id,
                 })),
-                
-                editor.DomComponents.getTypes()
-                .map((t) => ({
+
+                editor.DomComponents.getTypes().map((t) => ({
                   ...(t.model?.getDefaults?.() || {}),
                   id: t.id,
                   type: t.id,
@@ -370,7 +369,10 @@ export const Layer = memo(
               );
               // return;
 
-              if (!blockComponentIsValidDroppable  && !isBoolean(layerProps.droppable) ) {
+              if (
+                !blockComponentIsValidDroppable &&
+                !isBoolean(layerProps.droppable)
+              ) {
                 toast.warn(<ToastMsgInfo msg={"Not allowed 1"} />);
                 return;
               }
@@ -478,88 +480,93 @@ export const Layer = memo(
                 {Icons.hidden({ strokeColor: "white", width: 20 })}
               </i>
             )}
-            <a
-              id={`${layer.getId()}-tb`}
-              className="cursor-pointer w-[30px] h-full flex justify-center items-center [&:hover_svg]:fill-white"
-              onClick={(ev) => {
-                ev.stopPropagation();
-                ev.preventDefault();
-                addClickClass(ev.currentTarget, "click");
-                document.body.click();
-                // Use functional update to prevent race conditions with the window click listener
-                setIsOpen((prev) => !prev);
-                editor.Layers?.setLayerData?.(layer, { selected: true });
-                if (editor.getSelected() != layer) return;
-                initToolbar(editor, editor.getSelected());
-                const toolsWillSetted = editor
-                  .getSelected()
-                  .toolbar.filter((tlb) => tlb.command !== "tlb-move");
-                setTools(toolsWillSetted);
-              }}
-            >
-              {Icons.options({
-                fill: "#64748B",
-                ...(isSelected && { fill: "white" }),
-              })}
-            </a>
 
-            {/* 🚨 PERFORMANCE FIX 2: Conditionally render Tooltip. 
-               It only exists in DOM when open. This means you have exactly ONE tooltip 
-               in the DOM at any time, instead of hundreds of hidden tooltips. */}
-            {isOpen && !!tools.length && (
-              <Tooltip
-                isOpen={true}
-                opacity={1}
-                clickable
-                anchorSelect={`#${layer.getId()}-tb`}
-                className="bg-[var(--color-surface-main)!important] flex flex-col shadow-lg shadow-slate-900 border-[2px] rounded-[.5rem!important] border-border-default z-[5000]"
-                place="right-end"
-                closeEvents={{ click: true, blur: true, dblclick: true }}
-                globalCloseEvents={{
-                  clickOutsideAnchor: true,
-                  escape: true,
-                  scroll: true,
-                  resize: true,
+            <ShowIf
+              condition={layer?.getType?.()?.toLowerCase?.() !== "wrapper"}
+            >
+              <a
+                id={`${layer.getId()}-tb`}
+                className="cursor-pointer w-[30px] h-full flex justify-center items-center [&:hover_svg]:fill-white"
+                onClick={(ev) => {
+                  ev.stopPropagation();
+                  ev.preventDefault();
+                  addClickClass(ev.currentTarget, "click");
+                  document.body.click();
+                  // Use functional update to prevent race conditions with the window click listener
+                  setIsOpen((prev) => !prev);
+                  editor.Layers?.setLayerData?.(layer, { selected: true });
+                  if (editor.getSelected() != layer) return;
+                  initToolbar(editor, editor.getSelected());
+                  const toolsWillSetted = editor
+                    .getSelected()
+                    .toolbar.filter((tlb) => tlb.command !== "tlb-move");
+                  setTools(toolsWillSetted);
                 }}
               >
-                {tools.map((tool, i) => {
-                  return (
-                    <span
-                      key={i}
-                      onClick={(ev) => {
-                        ev.stopPropagation();
-                        addClickClass(ev.currentTarget, "click");
-                        typeof tool.command === "string"
-                          ? editor.runCommand(tool.command)
-                          : tool.command(editor);
-                      }}
-                      className="flex h-full items-center gap-2 cursor-pointer transition-colors hover:bg-blue-500 font-semibold p-2 rounded-lg"
-                    >
-                      <i
-                        className="w-[100%] [&_svg]:w-[20px] text-white flex justify-center items-center"
-                        dangerouslySetInnerHTML={{ __html: tool.label }}
-                      ></i>
-                    </span>
-                  );
+                {Icons.options({
+                  fill: "#64748B",
+                  ...(isSelected && { fill: "white" }),
                 })}
-              </Tooltip>
-            )}
+              </a>
 
-            <button
-              style={{
-                opacity:
-                  !layerProps.draggable && layerProps.type != "wrapper"
-                    ? 0.5
-                    : 1,
-                pointerEvents:
-                  !layerProps.draggable && layerProps.type != "wrapper"
-                    ? "none"
-                    : "auto",
-              }}
-              className="cursor-grab"
-            >
-              {Icons.drag({ fill: isSelected ? "white" : undefined })}
-            </button>
+              {/* 🚨 PERFORMANCE FIX 2: Conditionally render Tooltip. 
+               It only exists in DOM when open. This means you have exactly ONE tooltip 
+               in the DOM at any time, instead of hundreds of hidden tooltips. */}
+              {isOpen && !!tools.length && (
+                <Tooltip
+                  isOpen={true}
+                  opacity={1}
+                  clickable
+                  anchorSelect={`#${layer.getId()}-tb`}
+                  className="bg-[var(--color-surface-main)!important] flex flex-col shadow-lg shadow-slate-900 border-[2px] rounded-[.5rem!important] border-border-default z-[5000]"
+                  place="right-end"
+                  closeEvents={{ click: true, blur: true, dblclick: true }}
+                  globalCloseEvents={{
+                    clickOutsideAnchor: true,
+                    escape: true,
+                    scroll: true,
+                    resize: true,
+                  }}
+                >
+                  {tools.map((tool, i) => {
+                    return (
+                      <span
+                        key={i}
+                        onClick={(ev) => {
+                          ev.stopPropagation();
+                          addClickClass(ev.currentTarget, "click");
+                          typeof tool.command === "string"
+                            ? editor.runCommand(tool.command)
+                            : tool.command(editor);
+                        }}
+                        className="flex h-full items-center gap-2 cursor-pointer transition-colors hover:bg-blue-500 font-semibold p-2 rounded-lg"
+                      >
+                        <i
+                          className="w-[100%] [&_svg]:w-[20px] text-white flex justify-center items-center"
+                          dangerouslySetInnerHTML={{ __html: tool.label }}
+                        ></i>
+                      </span>
+                    );
+                  })}
+                </Tooltip>
+              )}
+
+              <button
+                style={{
+                  opacity:
+                    !layerProps.draggable && layerProps.type != "wrapper"
+                      ? 0.5
+                      : 1,
+                  pointerEvents:
+                    !layerProps.draggable && layerProps.type != "wrapper"
+                      ? "none"
+                      : "auto",
+                }}
+                className="cursor-grab"
+              >
+                {Icons.drag({ fill: isSelected ? "white" : undefined })}
+              </button>
+            </ShowIf>
           </section>
         </section>
 

@@ -312,6 +312,24 @@ export const showComponentsInLeftPanelState = atom({
           },
         },
       },
+      aiBuilder: {
+        // supportNav: true,
+        panels: {
+          aiBuilder: {
+            show: true,
+            title: "AI Builder",
+          },
+        },
+      },
+      console: {
+        // supportNav: true,
+        panels: {
+          console: {
+            show: true,
+            title: "Console",
+          },
+        },
+      },
     },
     stylesBuilder: false,
   },
@@ -516,6 +534,26 @@ export const themeIdState = atom({
 export const themesState = atom({
   key: "themesState",
   default: /** @type {import("@/helpers/types").Themes} */ ({}),
+});
+
+export const aiChatsState = atom({
+  key: "aiChatsState",
+  default: /** @type {import("@/helpers/types").Chats} */ ([]),
+});
+
+export const aiChatState = atom({
+  key: "aiChatState",
+  default: /** @type {import("@/helpers/types").Chat} */ (null),
+});
+
+export const consoleLogs = atom({
+  key: "consoleLogs",
+  default: [],
+});
+
+export const consoleLogsNotification = atom({
+  key: "consoleLogsNotification",
+  default: false,
 });
 
 /**

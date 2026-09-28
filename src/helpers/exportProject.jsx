@@ -75,8 +75,7 @@ export async function buildProject(props) {
   const mime = (await import("mime")).default;
   const zip = new JSZip();
   const projectData = await db.projects.get(props.projectId);
-    await opfs.init(+props.projectId);
-
+  await opfs.init(+props.projectId);
 
   await doInNormalAsyncInWorker(props.projectId, async () => {
     const pageBuildSettings = {
@@ -91,7 +90,6 @@ export async function buildProject(props) {
       isFooterGrapedAsync: props.projectSetting.is_async_graped_footer_script,
       disablePvue: props.projectSetting.disable_petite_vue,
     };
-    
 
     /**
      *
@@ -162,6 +160,7 @@ export async function buildProject(props) {
       projectData.motions,
       projectData.pages,
     );
+
     //Handling js folder
     for (const page of Object.values(projectData.pages)) {
       const jsHandle = await opfs.getFile(defineRoot(page.pathes.js));
@@ -207,7 +206,7 @@ export async function buildProject(props) {
           page.name,
         );
 
-        // console.log('filtered motions : ' , filterdMotions);
+        console.log('filtered motions : ' , filterdMotions , page.name);
 
         zip.file(
           `js/motions/${page.name}.js`,
@@ -561,6 +560,20 @@ export async function buildProject(props) {
     );
   }
 
+  if (props.projectSetting.include_ai_chats_in_export) {
+    const chats = await opfs.getAllFiles(defineRoot(`ai/chats`), {
+      recursive: true,
+    });
+    for (const handle of chats) {
+      const path = handle.path.replace(
+        `projects/project-${props.projectId}/`,
+        "",
+      );
+      const file = await handle.getOriginFile();
+      zip.file(path, file);
+    }
+  }
+
   return zip;
 }
 
@@ -572,17 +585,24 @@ export const getProject = async (props) => {
   const projectData = await db.projects.get(props.projectId);
 
   const project = await buildProject(props);
+  console.log("build file getProject:", props,projectData,project);
+  const file = await project.generateAsync({
+    type: "blob",
+    compression: "STORE",
+    streamFiles: true,
+  });
+
+  const response = {
+      file,
+      name: `${projectData.name}`,
+    }
+
   self.postMessage({
     command: "getProject",
-    props: {
-      file: await project.generateAsync({
-        type: "blob",
-        compression: "STORE",
-        streamFiles: true,
-      }),
-      name: `${projectData.name}`,
-    },
+    props: response,
   });
+
+  return response
 };
 
 /**

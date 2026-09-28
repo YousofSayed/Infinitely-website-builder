@@ -303,7 +303,7 @@ export const directives = [
 
     {
     directive: "v-auto-animate",
-    name: "in", // Fixed from "modelable"
+    name: "auto animate", // Fixed from "modelable"
     id: uniqueID(),
     type: "code",
     preventDefault: false,

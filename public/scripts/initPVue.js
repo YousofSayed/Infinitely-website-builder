@@ -2,16 +2,21 @@
  * @type {import('petite-vue')}
  */
 const pVuew = PetiteVue;
-
+// const { location: routerLocation, navigate } = PetiteRouter;
+const createApp = () =>
+  PetiteVue.createApp({
+    $delimiters: ["${", "}"],
+    // location:routerLocation,
+    // navigate,
+  });
 // FIX 1: Delimiters MUST be exactly two strings.
-const app = pVuew.createApp({
-  $delimiters: ["${", "}"],
-});
+const app = createApp();
 const initPlugins = () => {
   app.directive("view", vIntersection);
   app.directive("ref", vRef);
   app.directive("gsap", vGsap);
   app.directive("mount", vMount);
+  app.directive("catch", vCatch);
 };
 
 initPlugins();

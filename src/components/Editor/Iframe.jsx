@@ -8,6 +8,7 @@ import { current_page_id, current_project_id } from "@/constants/shared";
 import {
   animationsState,
   animationsWillRemoveState,
+  consoleLogs,
   isAnimationsChangedState,
   reloaderState,
   showAnimationsBuilderState,
@@ -15,6 +16,7 @@ import {
   showDragLayerState,
   showLayersState,
   showPreviewState,
+  zoomValueState,
 } from "@/helpers/atoms";
 import { defineRoot } from "@/helpers/bridge";
 import { addClickClass } from "@/helpers/cocktail";
@@ -48,6 +50,11 @@ import { useRecoilState, useRecoilValue } from "recoil";
 import { useShortcuts } from "@/hooks/useShortcuts";
 import { useSetWpTokensQueryVars } from "@/hooks/useSetWpTokensQueryVars";
 import { useUpdateWpEditorScriptsInBackground } from "@/hooks/useUpdateWpEditorScriptsInBackground";
+import { ShowIf } from "@/components/ShowIf";
+import { uniqueId } from "lodash";
+import { flushSync } from "react-dom";
+import { Input } from "@/components/Editor/Protos/Input";
+import { useConsoleFeed } from "@/hooks/useConsoleFeed";
 
 export const Iframe = () => {
   const showLayers = useRecoilValue(showLayersState);
@@ -74,6 +81,11 @@ export const Iframe = () => {
       : `../pages/${pageName}.html`;
   const [previewSrc, setPreviewSrc] = useState(urlSrc);
   const previewIframe = useRef(iframeType);
+
+  // ✅ FIXED: Replaced editorIframe with editorWindow and added previewWindow
+  const [previewWindow, setPreviewWindow] = useState(null);
+  const [editorWindow, setEditorWindow] = useState(null);
+
   const iframeContainer = useRef();
   const virtualBrowserWindow = useRef(iframeType);
   const editor = useEditorMaybe();
@@ -88,6 +100,48 @@ export const Iframe = () => {
   const [showsComponents, setShowsComponents] = useRecoilState(
     showComponentsInLeftPanelState,
   );
+  const [zoomValue, setZoomValue] = useRecoilState(zoomValueState);
+  const [previewIframeClient, setPreviewIframeClient] = useState({
+    width: null,
+    height: null,
+    zoom: null,
+  });
+
+  const [logs, setLogs] = useRecoilState(consoleLogs);
+
+  // ✅ FIXED: Pass the Window objects to the hook
+  doInNormal(() => {
+    useConsoleFeed(previewWindow, "preview");
+  });
+
+  useConsoleFeed(editorWindow, "editor");
+
+  // ✅ FIXED: Listen to GrapesJS events to grab the canvas window dynamically
+  useEffect(() => {
+    if (!editor) return;
+
+    const updateEditorWindow = () => {
+      const iframeEl = editor.Canvas.getFrameEl();
+      if (iframeEl && iframeEl?.contentWindow) {
+        setEditorWindow(iframeEl.contentWindow);
+      }
+    };
+
+    updateEditorWindow();
+    editor.on("canvas:frame:load", updateEditorWindow);
+    editor.on("canvas:ready", updateEditorWindow);
+
+    return () => {
+      editor.off("canvas:frame:load", updateEditorWindow);
+      editor.off("canvas:ready", updateEditorWindow);
+    };
+  }, [editor]);
+
+  // useEffect(()=>{
+  //   if(!previewIframe?.current?.contentWindow) return;
+  //   setPreviewWindow(previewIframe.current.contentWindow)
+  // },[previewIframe.current])
+
   const saveAnimations = () => {
     if (isAnimationsChanged) {
       setSaveLoad(true);
@@ -105,10 +159,6 @@ export const Iframe = () => {
             }),
           },
         });
-        /**
-         *
-         * @param {MessageEvent} ev
-         */
         const callback = (ev) => {
           const { command, props } = ev.data;
           if (command == "animationsRemoved" && props.done) {
@@ -148,10 +198,6 @@ export const Iframe = () => {
   useEffect(() => {
     if (!editor) return;
     if (!animations.length) return;
-    /**
-     *
-     * @param {MessageEvent} ev
-     */
     const callback = async (ev) => {
       const { command, props } = ev.data;
       if (command == "saveAnimations" && props.done) {
@@ -178,11 +224,6 @@ export const Iframe = () => {
     };
 
     setAnimationsChanged(animations.some((kf) => kf.changed));
-    console.log(
-      "changed :",
-      animations.some((kf) => kf.changed),
-      animations,
-    );
 
     keyframesGetterWorker.addEventListener("message", callback);
     return () => {
@@ -194,11 +235,7 @@ export const Iframe = () => {
     if (!editor) return;
 
     const infCallback = (ev) => {
-      // console.log("fire from inf instance");
-
       const { cssProp, value } = ev.detail;
-      // console.log("navigateCallback : ", cssProp, value);
-
       setStyle({
         cssProp,
         value,
@@ -218,13 +255,21 @@ export const Iframe = () => {
     };
 
     const loaderStartCallback = () => {
+      document.body.classList.add("disable-when-load");
       setShowLoader(true);
-      console.log("should start");
     };
 
     const loaderEndCallback = () => {
       setShowLoader(false);
-      console.log("should end");
+      setTimeout(() => {
+        document.body.classList.remove("disable-when-load");
+      }, 200);
+    };
+
+    const loaderStartCallbackStorage = () => {};
+
+    const loaderEndCallbackStorage = () => {
+      reloadPreview();
     };
 
     editorStorageInstance.on(
@@ -235,9 +280,33 @@ export const Iframe = () => {
       InfinitelyEvents.storage.loadEnd,
       loaderEndCallback,
     );
+
+    const selectComponentWhenDeviceChange = () => {
+      const sle = editor.getSelected();
+      if (!sle) return;
+      // alert("sle");
+      // editor.Canvas.scrollTo(sle, { behavior: "smooth",  });
+
+      const canvasFrameEl = editor.Canvas.getFrameEl();
+      const callback = () => {
+        // alert ('test');
+        sle.getEl().scrollIntoView({
+          behavior: "smooth",
+          inline: "center",
+          block: "center",
+        });
+        canvasFrameEl.removeEventListener("transitionend", callback);
+      };
+
+      canvasFrameEl.addEventListener("transitionend", callback);
+    };
+
     editor.on("canvas:frame:load:body", loadMonaco);
+    editor.on(InfinitelyEvents.storage.loadStart, loaderStartCallback);
     editor.on(InfinitelyEvents.storage.loadEnd, loaderEndCallback);
-    console.log("auto save : ", editor.Storage.config.autosave);
+    editor.on(InfinitelyEvents.storage.storeStart, loaderStartCallbackStorage);
+    editor.on(InfinitelyEvents.storage.storeEnd, loaderEndCallbackStorage);
+    editor.on("change:device", selectComponentWhenDeviceChange);
 
     return () => {
       styleInfInstance.off(InfinitelyEvents.style.set, infCallback);
@@ -250,12 +319,24 @@ export const Iframe = () => {
         InfinitelyEvents.storage.loadEnd,
         loaderEndCallback,
       );
+      editor.off(InfinitelyEvents.storage.loadStart, loaderStartCallback);
       editor.off(InfinitelyEvents.storage.loadEnd, loaderEndCallback);
-      // editor.off('storage:end:load', loaderEndCallback);
-      // window.removeEventListener("keydown", preventDefaultSave);
-      // window.removeEventListener("keydown", saveCallback);
+      editor.off(
+        InfinitelyEvents.storage.storeStart,
+        loaderStartCallbackStorage,
+      );
+      editor.off(InfinitelyEvents.storage.storeEnd, loaderEndCallbackStorage);
+      editor.off("change:device", selectComponentWhenDeviceChange);
     };
   }, [editor]);
+
+  useEffect(() => {
+    if (!editor) return;
+
+    editor.Canvas.refresh();
+    editor.Canvas.refreshSpots({ all: true, spots: true });
+    editor.refresh({ tools: true });
+  }, [editor, showPreview]);
 
   useEffect(() => {
     if (!editor) return;
@@ -277,13 +358,50 @@ export const Iframe = () => {
     animatePreviewContainer(previewRef.current);
   }, [previewRef]);
 
+  useEffect(() => {
+    if (!previewIframe.current || !previewRef.current) return;
+    const wrapperWidth = previewRef.current.offsetWidth;
+    previewIframe.current.style.height = previewIframeClient.height
+      ? `${previewIframeClient.height}px`
+      : "100%";
+
+    let zoomValue;
+
+    if (previewIframeClient.width > wrapperWidth) {
+      const zoom = wrapperWidth / previewIframeClient.width;
+      previewIframe.current.style.zoom = zoom;
+      zoomValue = zoom * 100;
+      previewIframe.current.style.width = `100%`;
+    } else {
+      previewIframe.current.style.zoom = `100%`;
+      zoomValue = 100;
+      previewIframe.current.style.width = previewIframeClient.width
+        ? `${previewIframeClient.width}px`
+        : `100%`;
+    }
+
+    setPreviewIframeClient({
+      ...previewIframeClient,
+      zoom: parseFloat(zoomValue.toFixed(2)),
+    });
+  }, [
+    previewRef,
+    previewIframe,
+    previewIframeClient.width,
+    previewIframeClient.height,
+  ]);
+
   const getReloadUrl = (url) => {
     if (!url) return url;
     return `${url}${url.includes("?") ? "&" : "?"}reload=${Date.now()}`;
   };
 
+  // ✅ FIXED: Extract the window object when the preview iframe loads
   const onPreviewLoad = () => {
     setShowPreviewLoader(false);
+    if (previewIframe.current && previewIframe.current.contentWindow) {
+      setPreviewWindow(previewIframe.current.contentWindow);
+    }
   };
 
   const setUrlPage = (forceReload = false) => {
@@ -303,25 +421,26 @@ export const Iframe = () => {
   };
 
   const reloadPreview = () => {
+    setShowPreviewLoader(true);
     setUrlPage(true);
   };
 
   useShortcuts();
   useSetWpTokensQueryVars();
   useUpdateWpEditorScriptsInBackground();
-  
+
   return (
-    <section className="relative bg-[#aaa]    h-full auto-animate" ref={autoAnimate}>
+    <section className="relative bg-[#aaa] h-full animate-go-to">
       {showsComponents.animationsBuilder && (
         <section className="grid place-items-center p-2 absolute top-0 left-0 z-20 bg-blue-900/40 backdrop-blur-sm w-full h-full">
           <section className="flex flex-col items-center justify-center self-center p-3 bg-surface-secondary shadow-2xl shadow-slate-950 rounded-lg gap-5">
-            <figure className="relative  w-fit ">
+            <figure className="relative w-fit">
               {Icons.animation(undefined, undefined, "#2563eb", 60, 60)}
             </figure>
-            <h1 className="font-bold text-center text-white text-2xl ">
-              <span className="text-blue-600 font-bold text-2xl ">" </span>
+            <h1 className="font-bold text-center text-white text-2xl">
+              <span className="text-blue-600 font-bold text-2xl"> </span>
               You Are In Animations Builder Mode
-              <span className="text-blue-600 font-bold text-2xl"> "</span>
+              <span className="text-blue-600 font-bold text-2xl"> </span>
             </h1>
 
             <section className="flex gap-2">
@@ -331,10 +450,8 @@ export const Iframe = () => {
                   if (isAnimationsChanged) {
                     const cnfrm = confirm(animationsSavingMsg);
                     if (cnfrm) {
-                      // setShowAnimBuilder(false);
                       setAnimationsChanged(false);
                       setAnimations([]);
-                      // setShowAnimBuilder(false);
                       setShowsComponents((prev) => {
                         return {
                           ...prev,
@@ -343,7 +460,6 @@ export const Iframe = () => {
                       });
                     }
                   } else {
-                    // setShowAnimBuilder(false);
                     setShowsComponents((prev) => {
                       return {
                         ...prev,
@@ -358,14 +474,7 @@ export const Iframe = () => {
 
               <Button
                 disabled={!isAnimationsChanged || saveLoad}
-                // className={`font-semibold ${
-                //   !Boolean(isAnimationsChanged)
-                //     ? `opacity-[.7] cursor-not-allowed `
-                //     : ""
-                // }`}
                 onClick={(ev) => {
-                  console.log("isAnimationsChanged: ", isAnimationsChanged);
-
                   if (!isAnimationsChanged) {
                     toast.info(
                       <ToastMsgInfo msg={`You did not do any change!`} />,
@@ -387,152 +496,120 @@ export const Iframe = () => {
         style={{
           width: "100%",
           height: "100%",
-          overflow: "auto",
+          overflow: "hidden",
         }}
-        className="auto-animate"
+        className="bg-surface-main animate-go-to"
       >
         <Canvas
           id="editor-canvas"
           label="Canvas"
           aria-label="Editor"
-          className="overflow-auto "
+          className="overflow-auto w-full h-full animate-go-to "
+          style={{
+            display: !showPreview || showLoader ? "block" : "none",
+            // opacity: !showPreview || showLoader ? "1" : "0",
+            isolation: "isolate",
+            willChange: "transform, opacity, height, width",
+          }}
         />
+
+        <ShowIf condition={showPreview}>
+          <main
+            id="preview-container"
+            className={`relative h-full w-full bg-surface-main animate-go-to`}
+            ref={iframeContainer}
+          >
+            <section ref={previewRef} className="h-full w-full flex flex-col">
+              <header className="w-full p-2 bg-surface-tertiary flex gap-2 border-b border-b-slate-600">
+                <section className="w-full flex gap-2">
+                  <Input
+                    type="number"
+                    placeholder="Width"
+                    value={previewIframeClient.width || ""}
+                    onInput={(e) => {
+                      setPreviewIframeClient({
+                        ...previewIframeClient,
+                        width: e.target.value,
+                      });
+                    }}
+                  />
+
+                  <Input
+                    type="number"
+                    placeholder="Height"
+                    value={previewIframeClient.height || ""}
+                    onInput={(e) => {
+                      setPreviewIframeClient({
+                        ...previewIframeClient,
+                        height: e.target.value,
+                      });
+                    }}
+                  />
+
+                  <Input
+                    type="number"
+                    placeholder="Zoom"
+                    value={previewIframeClient?.zoom}
+                    onInput={(e) => {
+                      if (e.target.value < 0) {
+                        setPreviewIframeClient({
+                          ...previewIframeClient,
+                          zoom: 0,
+                        });
+                        return;
+                      }
+
+                      setPreviewIframeClient({
+                        ...previewIframeClient,
+                        zoom: e.target.value,
+                      });
+                    }}
+                  />
+
+                  <h1 className="text-slate-200 font-medium p-2 rounded-lg bg-surface-secondary text-nowrap overflow-hidden text-ellipsis">
+                    {previewSrc}
+                  </h1>
+                </section>
+                <section className="w-full flex gap-2 items-center justify-end">
+                  <button onClick={reloadPreview}>
+                    {Icons.refresh({ width: 20, height: 20 })}
+                  </button>
+                </section>
+              </header>
+
+              {showPreviewLoader && (
+                <section className=" w-full h-full z-[1] bg-surface-secondary flex justify-center items-center animate-go-to">
+                  <Loader zIndex={1} />
+                </section>
+              )}
+
+              <iframe
+                className={`w-full h-full self-center transition-all`}
+                ref={previewIframe}
+                id="preview"
+                src={previewSrc}
+                allowFullScreen
+                onLoad={onPreviewLoad}
+                security="restricted"
+                about="target"
+                unselectable="on"
+                style={{
+                  zoom:
+                    previewIframeClient.zoom && `${previewIframeClient.zoom}%`,
+                  opacity: showPreviewLoader ? 0 : 1,
+                  display: showPreviewLoader ? "none" : "block",
+                }}
+              ></iframe>
+            </section>
+          </main>
+        </ShowIf>
       </section>
 
       {showLoader && (
-        <section className="absolute top-0 left-0 w-full h-full z-[1] bg-surface-secondary flex justify-center items-center">
+        <section className="absolute top-0 left-0 w-full h-full z-[1] bg-surface-secondary flex justify-center items-center animate-go-to">
           <Loader zIndex={1} />
         </section>
       )}
-
-      <section
-        ref={virtualBrowserWindow}
-        style={{
-          display: showPreview ? "block" : "none",
-          // contain: "layout , size , paint",
-        }}
-        className="w-full h-full rounded-xl overflow-hidden p-1 fixed left-0 top-0 z-[1000] "
-        // style={{ display: showPreview ? "block" : "none" }}
-      >
-        {showPreview && (
-          <>
-            <Portal>
-              <main
-                id="preview-container"
-                className={`fixed  left-0 ${window.electron?.isDesktop ? "top-[40px] h-[calc(100%-40px)]" : "top-0 h-full"}  w-full z-[1000000]`}
-                ref={iframeContainer}
-              >
-                {/* resizing elements */}
-                <div className="absolute top-0 left-[calc(50%-40px)] w-[80px] h-[5px] bg-brand-primary"></div>
-                {/* <div></div>
-                <div></div> */}
-                {/* resizing elements */}
-                {/* {showPreview && ( */}
-                <header className="w-full h-[60px] flex items-center justify-between p-2 rounded-tl-lg rounded-tr-lg  bg-surface-secondary">
-                  <section className="flex items-center  gap-5 w-[50%]">
-                    <FitTitle className=" w-[30%!important] h-full rounded-lg font-semibold capitalize text-xl text-center">
-                      {localStorage.getItem(current_page_id)}
-                    </FitTitle>
-
-                    <button
-                      onClick={(ev) => {
-                        addClickClass(ev.currentTarget, "click");
-                        reloadPreview();
-                      }}
-                    >
-                      {Icons.refresh({ width: 20, height: 20 })}
-                    </button>
-                  </section>
-                  <ul className="flex items-center gap-3 flex-wrap">
-                    {/* <li className="group w-[20px] h-[20px] bg-green-600 rounded-full overflow-hidden flex justify-center items-center cursor-pointer">
-                      <button
-                        className="opacity-0 group-hover:opacity-[1] text-white font-bold  scale-[.8]  transition-all  w-full h-full flex justify-center items-center"
-                        onClick={(ev) => {
-                          addClickClass(ev.currentTarget, "click");
-                          document.exitFullscreen();
-                        }}
-                      >
-                        {Icons.minimize({
-                          strokeColor: "white",
-                          strokWidth: 2,
-                        })}
-                      </button>
-                    </li>
-                    <li className="group w-[20px] h-[20px] bg-yellow-600 rounded-full flex justify-center items-center cursor-pointer">
-                      <button
-                        className="opacity-0 group-hover:opacity-[1] scale-[.7] transition-all text-sm w-full h-full flex justify-center items-center"
-                        onClick={(ev) => {
-                          addClickClass(ev.currentTarget, "click");
-                          virtualBrowserWindow.current.requestFullscreen();
-                        }}
-                      >
-                        {Icons.square("white")}
-                      </button>
-                    </li> */}
-                    <li
-                      className="group w-[20px] h-[20px] bg-red-600 rounded-full flex justify-center items-center cursor-pointer"
-                      onClick={(ev) => {
-                        addClickClass(ev.currentTarget, "click");
-                        setShowPreview(!showPreview);
-                        setTimeout(() => {
-                          editor.trigger(InfinitelyEvents.pages.all);
-                        }, 0);
-                        // window.dispatchEvent(
-                        //   changePageName({
-                        //     pageName: localStorage.getItem(current_page_id),
-                        //   })
-                        // );
-                        // editor.load();
-                      }}
-                    >
-                      <button className="opacity-0 group-hover:opacity-[1] transition-all text-sm w-full h-full flex justify-center items-center">
-                        {Icons.close("white")}
-                      </button>
-                    </li>
-                  </ul>
-                </header>
-
-                <section
-                  className="h-[calc(100%-60px)] w-full resize rounded-lg  border-2 border-blue-700"
-                  style={{
-                    contain: "layout paint",
-                    transform: "translateZ(0)",
-                  }}
-                >
-                  <section ref={previewRef} className="h-full w-full">
-                    {showPreviewLoader && (
-                      <section className="absolute top-0 left-0 w-full h-full z-[1] bg-surface-secondary flex justify-center items-center">
-                        <Loader zIndex={1} />
-                      </section>
-                    )}
-                    <iframe
-                      ref={previewIframe}
-                      id="preview"
-                      src={previewSrc || urlSrc}
-                      allowFullScreen
-                      onLoad={onPreviewLoad}
-                      security="restricted"
-                      about="target"
-                      allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
-                      unselectable="on"
-                      style={{
-                        willChange: "transform",
-                        contain: `strict`,
-                        transform: `translateZ(0)`,
-                      }}
-                      className={`bg-white w-full h-full   transition-all border-[5px] rounded-bl-lg rounded-br-lg border-slate-900`}
-                    ></iframe>
-                  </section>
-                </section>
-                {/* )} */}
-
-                {/* )} */}
-              </main>
-            </Portal>
-          </>
-        )}
-      </section>
-      {/* )} */}
     </section>
   );
 };

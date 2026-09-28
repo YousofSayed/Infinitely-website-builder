@@ -1,4 +1,4 @@
-import { exportProject , getProject } from "@/helpers/exportProject";
+import { exportProject, getProject } from "@/helpers/exportProject";
 import { loadProject } from "@/helpers/loadProject";
 import {
   clearTimeouts,
@@ -21,17 +21,17 @@ import {
   removeAttributesInAllPages,
   setAttributesInAllPages,
   createWpProject,
+  minifyCss,
+  htmlToGrapesjsComponents,
 } from "@/helpers/workerCommands";
 import { doWorkerPattern } from "@/helpers/workersPattern";
 import { wpCommands } from "@/helpers/wp_commands_worker";
 
-// 
-
+//
 
 console.log("🟢 WORKER SCRIPT FULLY LOADED", Date.now());
 
-
-// 
+//
 
 export const commands = {
   updateAllPages,
@@ -60,10 +60,9 @@ export const commands = {
   updateSymbolsStylesFiles,
   setAttributesInAllPages,
   getProject,
+  minifyCss,
+  htmlToGrapesjsComponents,
 };
-
-
-
 
 doWorkerPattern(commands);
 

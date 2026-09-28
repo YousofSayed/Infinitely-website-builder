@@ -12,6 +12,8 @@ export const MultiTab = ({
   style,
   preventViewScroll = false,
   onTabClick = (ev, i) => { },
+  navClassName = "",
+  ...props
 }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [animatRef] = useAutoAnimate();
@@ -19,8 +21,16 @@ export const MultiTab = ({
   return (
     <section
       ref={animatRef}
-      style={style}
-      className=" flex overflow-hidden  flex-col bg-surface-secondary rounded-lg h-full  text-text-primary border-[1.5px] border-border-default "
+      {...props}
+      style={{
+        ...(style || {}),
+        ...(props.style || {}),
+      }}
+      className={`flex overflow-hidden  flex-col bg-surface-secondary rounded-lg h-full  text-text-primary border-[1.5px] border-border-default 
+        ${
+          props.className || ""
+        }
+        `}
     >
       <nav
         style={
@@ -28,7 +38,10 @@ export const MultiTab = ({
             // background:generateBeautifulHexColor(true , .1),
           }
         }
-        className="group flex w-full   border-b backdrop-blur-md border-slate-800 rounded-tl-lg rounded-tr-lg overflow-hidden"
+        className={`
+          group flex w-full   border-b backdrop-blur-md border-slate-800 rounded-tl-lg rounded-tr-lg overflow-hidden 
+          ${navClassName}
+          `}
       >
         {tabs.map((tab, index) => (
           <button

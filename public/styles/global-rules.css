@@ -5,7 +5,7 @@
 
 .inf-container {
   width: 100%;
-  
+
   @media (width >= 40rem) {
     max-width: 40rem;
   }
@@ -21,4 +21,8 @@
   @media (width >= 96rem) {
     max-width: 96rem;
   }
+}
+
+[v-cloak] {
+  display: none !important;
 }

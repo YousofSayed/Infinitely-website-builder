@@ -209,7 +209,7 @@ function killAndRevert(motion, isSingle = true) {
       });
       obj[motion.id]?.revert && obj[motion.id].revert(); // Kill the timeline
       obj[motion.id]?.kill && obj[motion.id].kill(true); // Kill the timeline
-      console.log(obj, obj[motion.id]);
+      // console.log(obj, obj[motion.id]);
       isSingle && ScrollTrigger.refresh();
     } else if (obj[motion.id] && !motion.isTimeLine) {
       obj[motion.id]?.kill && obj[motion.id].kill(true);
@@ -344,7 +344,7 @@ function gsapRun(ev) {
       let isIncluedsKillOrRevert = false;
       methods.forEach((method) => {
         if (Array.isArray(gsapTween[motion.id])) {
-          console.log("tweens : ", gsapTween[motion.id]);
+          // console.log("tweens : ", gsapTween[motion.id]);
 
           gsapTween[motion.id].forEach((tween) => {
             tween[method](...props);
@@ -359,7 +359,7 @@ function gsapRun(ev) {
         } else if (gsapTween[motion.id]) {
           gsapTween[motion.id][method](...props);
         }
-        console.log("tween or timeline:", gsapTween[motion.id]);
+        // console.log("tween or timeline:", gsapTween[motion.id]);
 
         (method.includes("kill") || method.includes("revert")) &&
           (isIncluedsKillOrRevert = true) &&
@@ -367,7 +367,7 @@ function gsapRun(ev) {
       });
 
       if (isIncluedsKillOrRevert) {
-        console.log("Killed");
+        // console.log("Killed");
 
         gsapTween[motion.id] = null;
         gsapSplitTexts[motion.id] = null;
@@ -472,9 +472,9 @@ async function gsapKillAll(ev) {
       return true;
     }
     let motion = values[index];
-    console.log("motion killing - 1 : ", motion.id, motion);
-    // if (!gsapTween[motion.id]) return;
-    console.log("motion killing - 2 : ", motion.id, motion);
+    // console.log("motion killing - 1 : ", motion.id, motion);
+    // // if (!gsapTween[motion.id]) return;
+    // console.log("motion killing - 2 : ", motion.id, motion);
 
     gsapTween[motion.id] && killAndRevert(motion, false);
 

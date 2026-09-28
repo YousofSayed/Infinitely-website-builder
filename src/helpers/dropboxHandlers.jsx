@@ -1,4 +1,3 @@
-import { DropArea } from "@/blocks/DropArea";
 import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { authUrl } from "@/constants/dropbox";
 import { InfinitelyEvents } from "@/constants/infinitelyEvents";

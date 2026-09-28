@@ -211,19 +211,18 @@ export const loadProject = async (props) => {
         }
 
         if (path.startsWith("posts/")) {
-          
-          console.log( 'post before' , path);
+          console.log("post before", path);
           const post = JSON.parse(await zipHandle.async("text"));
-          console.log(post , 'post after' , path);
+          console.log(post, "post after", path);
           posts.push({
             post: {
               ID: post.ID,
               post_name: post.name,
               post_title: post.name,
-              post_content: post?.content ?? '',
+              post_content: post?.content ?? "",
               post_status: post.status,
               post_type: post.type,
-              post_author: post?.author ?? '',
+              post_author: post?.author ?? "",
               menu_order: post.menu_order,
               post_parent: post?.parent,
               post_excerpt: post?.excerpt,
@@ -232,7 +231,7 @@ export const loadProject = async (props) => {
           });
         }
 
-        console.log('Before assets');
+        console.log("Before assets");
         if (path.startsWith("assets/")) {
           files.push(
             new File(
@@ -244,22 +243,21 @@ export const loadProject = async (props) => {
         }
       }
 
-      console.log('After assets');
-      
+      console.log("After assets");
 
       dbJSONData = {
         ...appConfig,
         ...(props?.data || {}),
       };
 
-      console.log('Before isAppConfigExist');
-      
+      console.log("Before isAppConfigExist" , appConfig);
+
       const isAppConfigExist = await wp_get_option({
         optionName: "inf_config",
         wp_meta_data: appConfig.wp_meta,
       });
-      
-      console.log('After isAppConfigExist' , isAppConfigExist);
+
+      console.log("After isAppConfigExist", isAppConfigExist);
 
       const allDone = await Promise.all([
         await wp_insert_posts({
@@ -289,9 +287,37 @@ export const loadProject = async (props) => {
         };
       }
 
-      console.log('dbJSONData : ', dbJSONData , allDone);
-      
+      console.log("dbJSONData : ", dbJSONData, allDone);
     });
+
+    //******** Start AI ******** */
+    const ai_chats =( await Promise.all(
+      Object.keys(projectFiles)
+        .filter((path) => path.startsWith("ai/"))
+        .map(async (path) => {
+          const zipHandle = projectFiles[path];
+          if (zipHandle.dir) {
+            return null;
+          }
+
+          const file = new File([await zipHandle.async("arraybuffer")], path, {
+            type: mime.getType(zipHandle.name),
+          });
+
+          return {
+            path: path,
+            content: file,
+          };
+        })
+        
+    )).filter(Boolean);
+
+    console.log('ai chats ' , ai_chats);
+    
+
+    await opfs.writeFiles(ai_chats);
+
+    //******** end AI ******** */
 
     await db.projects.update(projectDBId, dbJSONData);
 
@@ -329,10 +355,13 @@ export const loadProject = async (props) => {
         },
       });
     });
+
     workerSendToast({
       type: "error",
       msg: `Error loading project: ${error.message}`,
     });
+
+    console.error("Error loading project:", error);
 
     throw new Error(error);
   }

@@ -42,237 +42,242 @@ import { isFunction } from "lodash";
  * }} param0
  * @returns
  */
-export const Choices = ({
-  keywords = [],
-  enableSelecting = false,
-  className = "",
-  keywordClassName = "",
-  onActive = (_ev, _keyword, _index) => {},
-  onUnActive = (_ev, _keyword, _index) => {},
-  onCloseClick = (_, _1, _2) => {},
-  onSelect = null,
-  externalActiveIndex = undefined,
-  externalNotifiers = undefined,
-  enableClose = true,
-}) => {
-  const isExternal =
-    externalActiveIndex !== undefined ||
-    externalNotifiers !== undefined ||
-    onSelect !== null;
+export const Choices = memo(
+  ({
+    keywords = [],
+    enableSelecting = false,
+    className = "",
+    keywordClassName = "",
+    onActive = (_ev, _keyword, _index) => {},
+    onUnActive = (_ev, _keyword, _index) => {},
+    onCloseClick = (_, _1, _2) => {},
+    onSelect = null,
+    externalActiveIndex = undefined,
+    externalNotifiers = undefined,
+    enableClose = true,
+  }) => {
+    const isExternal =
+      externalActiveIndex !== undefined ||
+      externalNotifiers !== undefined ||
+      onSelect !== null;
 
-  const sle = useRecoilValue(currentElState);
-  const [selector, setSelector] = useRecoilState(selectorState);
-  const editor = useEditorMaybe();
-  const [active, setActive] = useState(false);
-  const [keyword, setKeyword] = useState("");
-  const currentIndex = useRef(-1);
-  const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
-  const [notifiers, setNotifiers] = useState({});
-  const [rule, setRule] = useRecoilState(ruleState);
+    const sle = useRecoilValue(currentElState);
+    const [selector, setSelector] = useRecoilState(selectorState);
+    const editor = useEditorMaybe();
+    const [active, setActive] = useState(false);
+    const [keyword, setKeyword] = useState("");
+    const currentIndex = useRef(-1);
+    const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
+    const [notifiers, setNotifiers] = useState({});
+    const [rule, setRule] = useRecoilState(ruleState);
 
-  const selectingCallback = useCallback(() => {
-    if (isExternal) return;
-    const currentSelector = getCurrentSelector(selector, editor?.getSelected());
-
-    const index = keywords.findIndex((item) => {
-      return (
-        currentSelector.replace(".", "").toLowerCase() === item.toLowerCase()
+    const selectingCallback = useCallback(() => {
+      if (isExternal) return;
+      const currentSelector = getCurrentSelector(
+        selector,
+        editor?.getSelected(),
       );
-    });
 
-    currentIndex.current = index;
-    const isActive = index !== -1;
-    setActive(Boolean(isActive));
-    setKeyword(keywords[index] || "");
-  }, [selector, editor, keywords, isExternal]);
+      const index = keywords.findIndex((item) => {
+        return (
+          currentSelector.replace(".", "").toLowerCase() === item.toLowerCase()
+        );
+      });
 
-  useEffect(() => {
-    if (isExternal) return;
-    active
-      ? onActive({ keyword, index: currentIndex.current })
-      : onUnActive({ keyword, index: currentIndex.current });
-  }, [active, isExternal]);
+      currentIndex.current = index;
+      const isActive = index !== -1;
+      setActive(Boolean(isActive));
+      setKeyword(keywords[index] || "");
+    }, [selector, editor, keywords, isExternal]);
 
-  useEffect(() => {
-    if (isExternal) return;
-    if (!enableSelecting) return;
-    if (!editor) return;
-    selectingCallback();
-  }, [selectingCallback, sle, isExternal]);
+    useEffect(() => {
+      if (isExternal) return;
+      active
+        ? onActive({ keyword, index: currentIndex.current })
+        : onUnActive({ keyword, index: currentIndex.current });
+    }, [active, isExternal]);
 
-  const makeNotifiers = () => {
-    if (isExternal) return;
-    const newNotifiers = {};
-    const currentMedia = getCurrentMediaDevice(editor);
-
-    for (const rule of cmpRules) {
-      let keyword;
-
-      if (
-        rule.atRuleType &&
-        rule.atRuleParams == currentMedia.atRuleParams &&
-        keywords.some((item) => {
-          const className = rule.rule
-            .match(/\..+\{/gi)?.[0]
-            ?.replace?.(".", "")
-            ?.replace?.("{", "");
-
-          const cond = item == className || className.startsWith(`${item}:`);
-          cond && (keyword = item);
-          return cond;
-        })
-      ) {
-        newNotifiers[keyword] = true;
-      } else if (
-        !rule.atRuleType &&
-        Boolean(rule.atRuleParams) == Boolean(currentMedia.atRuleParams) &&
-        keywords.some((item) => {
-          const className = rule.rule
-            .match(/\..+\{/gi)?.[0]
-            ?.replace?.(".", "")
-            ?.replace?.("{", "");
-
-          const cond = item == className || className.startsWith(`${item}:`);
-          cond && (keyword = item);
-          return cond;
-        })
-      ) {
-        newNotifiers[keyword] = true;
-      }
-    }
-
-    setNotifiers(newNotifiers);
-  };
-
-  useEffect(() => {
-    if (isExternal) return;
-    if (!enableSelecting) return;
-    if (!(editor && cmpRules.length)) return;
-    makeNotifiers();
-    editor.on("device:change", makeNotifiers);
-    return () => {
-      editor.off("device:change", makeNotifiers);
-    };
-  }, [cmpRules, editor, sle, keywords, isExternal]);
-
-  useEffect(() => {
-    if (isExternal) return;
-    const selected = editor?.getSelected();
-    if (!selected) return;
-    if (enableSelecting) {
+    useEffect(() => {
+      if (isExternal) return;
+      if (!enableSelecting) return;
+      if (!editor) return;
       selectingCallback();
-      selected.on("change:attributes", selectingCallback);
-    }
+    }, [selectingCallback, sle, isExternal]);
 
-    return () => {
-      selected.off("change:attributes", selectingCallback);
+    const makeNotifiers = () => {
+      if (isExternal) return;
+      const newNotifiers = {};
+      const currentMedia = getCurrentMediaDevice(editor);
+
+      for (const rule of cmpRules) {
+        let keyword;
+
+        if (
+          rule.atRuleType &&
+          rule.atRuleParams == currentMedia.atRuleParams &&
+          keywords.some((item) => {
+            const className = rule.rule
+              .match(/\..+\{/gi)?.[0]
+              ?.replace?.(".", "")
+              ?.replace?.("{", "");
+
+            const cond = item == className || className.startsWith(`${item}:`);
+            cond && (keyword = item);
+            return cond;
+          })
+        ) {
+          newNotifiers[keyword] = true;
+        } else if (
+          !rule.atRuleType &&
+          Boolean(rule.atRuleParams) == Boolean(currentMedia.atRuleParams) &&
+          keywords.some((item) => {
+            const className = rule.rule
+              .match(/\..+\{/gi)?.[0]
+              ?.replace?.(".", "")
+              ?.replace?.("{", "");
+
+            const cond = item == className || className.startsWith(`${item}:`);
+            cond && (keyword = item);
+            return cond;
+          })
+        ) {
+          newNotifiers[keyword] = true;
+        }
+      }
+
+      setNotifiers(newNotifiers);
     };
-  }, [selector, active, sle, editor, keywords, isExternal]);
 
-  useEffect(() => {
-    if (isExternal) return;
-    if (!editor) return;
-    setCmpRules(
-      getComponentRules({
-        editor,
-        cmp: editor.getSelected(),
-        nested: true,
-      }).rules,
+    useEffect(() => {
+      if (isExternal) return;
+      if (!enableSelecting) return;
+      if (!(editor && cmpRules.length)) return;
+      makeNotifiers();
+      editor.on("device:change", makeNotifiers);
+      return () => {
+        editor.off("device:change", makeNotifiers);
+      };
+    }, [cmpRules, editor, sle, keywords, isExternal]);
+
+    useEffect(() => {
+      if (isExternal) return;
+      const selected = editor?.getSelected();
+      if (!selected) return;
+      if (enableSelecting) {
+        selectingCallback();
+        selected.on("change:attributes", selectingCallback);
+      }
+
+      return () => {
+        selected.off("change:attributes", selectingCallback);
+      };
+    }, [selector, active, sle, editor, keywords, isExternal]);
+
+    useEffect(() => {
+      if (isExternal) return;
+      if (!editor) return;
+      setCmpRules(
+        getComponentRules({
+          editor,
+          cmp: editor.getSelected(),
+          nested: true,
+        }).rules,
+      );
+    }, [editor, keywords, isExternal]);
+
+    const finalActiveIndex = isExternal
+      ? externalActiveIndex
+      : active
+        ? currentIndex.current
+        : -1;
+    const finalNotifiers = isExternal ? externalNotifiers || {} : notifiers;
+
+    return (
+      <section
+        className={`w-full gap-2 auto-animate flex items-center p-1 rounded-lg  ${
+          className ? className : "bg-surface-tertiary"
+        }`}
+      >
+        {Boolean(keywords.length) ? (
+          keywords.map((kw, i) => {
+            const isCurrentActive = finalActiveIndex === i;
+            const hasNotifier = Boolean(finalNotifiers[kw]);
+
+            let stateClasses = "";
+            if (isCurrentActive) {
+              stateClasses = "bg-brand-primary";
+            } else if (enableSelecting || isExternal) {
+              stateClasses = "bg-surface-secondary";
+            } else {
+              stateClasses = "bg-brand-primary";
+            }
+
+            const customClasses = isFunction(keywordClassName)
+              ? keywordClassName({ keyword: kw, index: i })
+              : keywordClassName || "";
+
+            return (
+              kw && (
+                <p
+                  onClick={(ev) => {
+                    ev.stopPropagation();
+                    ev.preventDefault();
+
+                    if (isExternal && onSelect) {
+                      onSelect(kw, i);
+                      return;
+                    }
+
+                    if (!enableSelecting) return;
+
+                    const valueWithoutDot = selector.startsWith(".")
+                      ? selector.replace(".", "").toLowerCase() ===
+                        kw.toLowerCase()
+                      : selector.toLowerCase() === kw.toLowerCase();
+
+                    setRule({
+                      is: false,
+                      ruleString: "",
+                      atRuleParams: null,
+                      atRuleType: null,
+                    });
+
+                    setSelector(valueWithoutDot ? "" : `.${kw}`);
+                  }}
+                  key={i}
+                  className={`text-nowrap break-all relative custom-font-size group px-[20px] w-fit cursor-pointer select-none shrink-0 py-2 text-white ${stateClasses} transition-all rounded-lg font-semibold ${customClasses}`}
+                >
+                  {kw}
+
+                  {enableClose && (
+                    <i
+                      onClick={(ev) => {
+                        ev.stopPropagation();
+                        ev.preventDefault();
+                        onCloseClick(ev, kw, i);
+                      }}
+                      className="close transition-all opacity-0 group-hover:opacity-100 absolute -top-[2px] -right-[2px] w-[16.5px] h-[16.5px] rounded-lg bg-[crimson] flex items-center justify-center"
+                    >
+                      {Icons.close("white", 2, undefined, 11, 11)}
+                    </i>
+                  )}
+
+                  {hasNotifier && (
+                    <i className="absolute -top-[2px] -left-[2px] w-[16.5px] h-[16.5px] rounded-full bg-brand-primary border-2 border-surface-tertiary shadow-sm"></i>
+                  )}
+                </p>
+              )
+            );
+          })
+        ) : (
+          <h1 className="text-text-primary animate-pulse w-full flex justify-center items-center">
+            No thing here{" "}
+          </h1>
+        )}
+      </section>
     );
-  }, [editor, keywords, isExternal]);
-
-  const finalActiveIndex = isExternal
-    ? externalActiveIndex
-    : active
-      ? currentIndex.current
-      : -1;
-  const finalNotifiers = isExternal ? externalNotifiers || {} : notifiers;
-
-  return (
-    <section
-      className={`w-full gap-2 auto-animate flex items-center p-1 rounded-lg  ${
-        className ? className : "bg-surface-tertiary"
-      }`}
-    >
-      {Boolean(keywords.length) ? (
-        keywords.map((kw, i) => {
-          const isCurrentActive = finalActiveIndex === i;
-          const hasNotifier = Boolean(finalNotifiers[kw]);
-
-          let stateClasses = "";
-          if (isCurrentActive) {
-            stateClasses = "bg-brand-primary";
-          } else if (enableSelecting || isExternal) {
-            stateClasses = "bg-surface-secondary";
-          } else {
-            stateClasses = "bg-brand-primary";
-          }
-
-          const customClasses = isFunction(keywordClassName)
-            ? keywordClassName({ keyword: kw, index: i })
-            : keywordClassName || "";
-
-          return (
-            kw && (
-              <p
-                onClick={(ev) => {
-                  ev.stopPropagation();
-                  ev.preventDefault();
-
-                  if (isExternal && onSelect) {
-                    onSelect(kw, i);
-                    return;
-                  }
-
-                  if (!enableSelecting) return;
-
-                  const valueWithoutDot = selector.startsWith(".")
-                    ? selector.replace(".", "").toLowerCase() ===
-                      kw.toLowerCase()
-                    : selector.toLowerCase() === kw.toLowerCase();
-
-                  setRule({
-                    is: false,
-                    ruleString: "",
-                    atRuleParams: null,
-                    atRuleType: null,
-                  });
-
-                  setSelector(valueWithoutDot ? "" : `.${kw}`);
-                }}
-                key={i}
-                className={`text-nowrap break-all relative custom-font-size group px-[20px] w-fit cursor-pointer select-none shrink-0 py-2 text-white ${stateClasses} transition-all rounded-lg font-semibold ${customClasses}`}
-              >
-                {kw}
-
-                {enableClose && (
-                  <i
-                    onClick={(ev) => {
-                      ev.stopPropagation();
-                      ev.preventDefault();
-                      onCloseClick(ev, kw, i);
-                    }}
-                    className="close transition-all opacity-0 group-hover:opacity-100 absolute -top-[2px] -right-[2px] w-[16.5px] h-[16.5px] rounded-lg bg-[crimson] flex items-center justify-center"
-                  >
-                    {Icons.close("white", 2, undefined, 11, 11)}
-                  </i>
-                )}
-
-                {hasNotifier && (
-                  <i className="absolute -top-[2px] -left-[2px] w-[16.5px] h-[16.5px] rounded-full bg-brand-primary border-2 border-surface-tertiary shadow-sm"></i>
-                )}
-              </p>
-            )
-          );
-        })
-      ) : (
-        <h1 className="text-text-primary animate-pulse w-full flex justify-center items-center">
-          No thing here{" "}
-        </h1>
-      )}
-    </section>
-  );
-};
+  },
+);
 // import { inf_class_name } from "@/constants/shared";
 // import {
 //   cmpRulesState,

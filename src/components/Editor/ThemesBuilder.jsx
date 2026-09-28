@@ -264,6 +264,7 @@ const ThemeConfigView = ({
     onAddMode({
       themeId: themeConfig?.id,
       modeName: cleanModeName,
+      fromMode: selectedMode,
     });
 
     setModeName("");
@@ -658,7 +659,28 @@ export const ThemesBuilder = () => {
       return;
     }
 
+    // Find blueprint to extend from (Root theme, or first available theme)
+    let blueprint = null;
+    if (currentThemes.root && (currentThemes.root.root_categories.length > 0 || Object.keys(currentThemes.root.modes).length > 0)) {
+      blueprint = currentThemes.root;
+    } else if (currentThemes.config.length > 0) {
+      blueprint = currentThemes.config[0];
+    }
+
     const newTheme = createEmptyTheme(cleanName);
+    
+    if (blueprint) {
+      newTheme.root_categories = cloneDeep(blueprint.root_categories || []);
+      if (blueprint.modes) {
+        for (const [mName, mData] of Object.entries(blueprint.modes)) {
+          newTheme.modes[mName] = {
+            id: makeId("mode"),
+            is_default: false,
+            categories: cloneDeep(mData.categories || [])
+          };
+        }
+      }
+    }
 
     updateThemes((draft) => {
       draft.config.push(newTheme);
@@ -692,7 +714,7 @@ export const ThemesBuilder = () => {
     }
   };
 
-  const addMode = ({ themeId: targetThemeId, modeName }) => {
+  const addMode = ({ themeId: targetThemeId, modeName, fromMode }) => {
     const cleanModeName = (modeName || "").trim();
 
     if (!targetThemeId || targetThemeId === "root") {
@@ -720,10 +742,13 @@ export const ThemesBuilder = () => {
       );
 
       if (theme) {
+        // Extend from currently selected mode, or first available mode
+        const blueprintMode = theme.modes[fromMode] || theme.modes[Object.keys(theme.modes)[0]];
+        
         theme.modes[cleanModeName] = {
           id: makeId("mode"),
           is_default: false,
-          categories: [],
+          categories: blueprintMode ? cloneDeep(blueprintMode.categories) : [],
         };
       }
 
@@ -919,18 +944,22 @@ export const ThemesBuilder = () => {
       const newCategory = createEmptyCategory(cleanName);
 
       if (targetThemeId === "root") {
-        draft.root.root_categories.push(newCategory);
-        return draft;
-      }
+        // Add to root and all themes' root_categories
+        draft.root.root_categories.push(cloneDeep(newCategory));
+        for (const t of draft.config || []) {
+          t.root_categories.push(cloneDeep(newCategory));
+        }
+      } else {
+        // Add to all modes in the target theme
+        const theme = (draft.config || []).find(
+          (item) => item.id === targetThemeId,
+        );
 
-      const theme = (draft.config || []).find(
-        (item) => item.id === targetThemeId,
-      );
-
-      const mode = theme?.modes?.[modeName];
-
-      if (mode) {
-        mode.categories.push(newCategory);
+        if (theme && theme.modes) {
+          for (const m of Object.values(theme.modes)) {
+            m.categories.push(cloneDeep(newCategory));
+          }
+        }
       }
 
       return draft;
@@ -945,20 +974,21 @@ export const ThemesBuilder = () => {
         draft.root.root_categories = (draft.root.root_categories || []).filter(
           (category) => category.id !== categoryId,
         );
-
-        return draft;
-      }
-
-      const theme = (draft.config || []).find(
-        (item) => item.id === targetThemeId,
-      );
-
-      const mode = theme?.modes?.[modeName];
-
-      if (mode) {
-        mode.categories = (mode.categories || []).filter(
-          (category) => category.id !== categoryId,
+        // Remove from all themes' root_categories
+        for (const t of draft.config || []) {
+          t.root_categories = (t.root_categories || []).filter(c => c.id !== categoryId);
+        }
+      } else {
+        const theme = (draft.config || []).find(
+          (item) => item.id === targetThemeId,
         );
+
+        if (theme && theme.modes) {
+          // Remove from all modes in the theme
+          for (const m of Object.values(theme.modes)) {
+            m.categories = (m.categories || []).filter(c => c.id !== categoryId);
+          }
+        }
       }
 
       return draft;
@@ -980,10 +1010,27 @@ export const ThemesBuilder = () => {
     }
 
     updateThemes((draft) => {
-      const category = findCategory(draft, targetThemeId, modeName, categoryId);
-
-      if (category) {
-        category.vars[cleanKey] = value ?? "";
+      if (targetThemeId === "root") {
+        const rootCat = draft.root.root_categories.find(c => c.id === categoryId);
+        if (rootCat) rootCat.vars[cleanKey] = value ?? "";
+        
+        // Add to all themes' root_categories (empty value so they can define it per theme)
+        for (const t of draft.config || []) {
+          const cat = t.root_categories.find(c => c.id === categoryId);
+          if (cat) cat.vars[cleanKey] = ""; 
+        }
+      } else {
+        const theme = (draft.config || []).find(item => item.id === targetThemeId);
+        if (theme && theme.modes) {
+          // Add to all modes in the theme
+          for (const [mName, mData] of Object.entries(theme.modes)) {
+            const cat = mData.categories.find(c => c.id === categoryId);
+            if (cat) {
+              // Populate value for current mode, leave empty for others
+              cat.vars[cleanKey] = (mName === modeName) ? (value ?? "") : "";
+            }
+          }
+        }
       }
 
       return draft;
@@ -1019,10 +1066,22 @@ export const ThemesBuilder = () => {
     if (!key) return;
 
     updateThemes((draft) => {
-      const category = findCategory(draft, targetThemeId, modeName, categoryId);
-
-      if (category) {
-        delete category.vars[key];
+      if (targetThemeId === "root") {
+        const rootCat = draft.root.root_categories.find(c => c.id === categoryId);
+        if (rootCat) delete rootCat.vars[key];
+        
+        for (const t of draft.config || []) {
+          const cat = t.root_categories.find(c => c.id === categoryId);
+          if (cat) delete cat.vars[key];
+        }
+      } else {
+        const theme = (draft.config || []).find(item => item.id === targetThemeId);
+        if (theme && theme.modes) {
+          for (const m of Object.values(theme.modes)) {
+            const cat = m.categories.find(c => c.id === categoryId);
+            if (cat) delete cat.vars[key];
+          }
+        }
       }
 
       return draft;

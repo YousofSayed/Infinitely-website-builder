@@ -352,7 +352,7 @@ export const Select = ({
         ref={containerRef}
         className={` h-full w-full ${
           isRelative ? "relative" : ""
-        }  flex items-center flex-nowrap justify-center    rounded-lg ${
+        }  flex items-center flex-nowrap justify-center  overflow-hidden  rounded-lg ${
           containerClassName ? containerClassName : "bg-surface-secondary"
         }  animate-go-to auto-animate`}
         onClick={(ev) => {
@@ -382,8 +382,8 @@ export const Select = ({
           type="text"
           placeholder={placeholder || label}
           onClick={(ev) => {
-            // ev.stopPropagation();
-            // selectRef.current.click();
+            ev.stopPropagation();
+            // !preventInput && selectRef.current.click();
 
             // ✅ FIX 3: If clicking to open, show ALL keywords instead of filtering by the selected value
             if (ev.target.value === displayValue) {
@@ -405,7 +405,10 @@ export const Select = ({
             onAll(ev.target.value);
             filterKeywords(ev.target.value.trim(), true);
           }}
-          onBlur={onBlur}
+          onBlur={(e)=>{
+           !isCode && setMenu(false);
+            onBlur?.(e);
+          }}
           onKeyDown={(ev) => {
             handleChooses(ev);
           }}
@@ -415,12 +418,10 @@ export const Select = ({
           title="Type Dynamic Content"
           data-ignore-popover
           ref={btnRef}
-          className={`group absolute right-2 top-1/2 transform -translate-y-1/2   ${
-            showMenu ? "rotate-180" : "rotate-0"
-          } transition-all cursor-pointer flex-grow-0`}
+          className={`group absolute right-0 top-1/2 transform -translate-y-1/2 overflow-hidden    transition-all cursor-pointer flex-grow-0 backdrop-blur-md  py-1.5 px-1`}
           onClick={(ev) => {
-            // ev.stopPropagation();
-            // ev.preventDefault();
+            ev.stopPropagation();
+            ev.preventDefault();
             // selectRef.current.click();
 
             // ✅ FIX 4: Show ALL keywords when clicking the arrow button
@@ -434,7 +435,11 @@ export const Select = ({
             showMenuCallback();
           }}
         >
-          <div className="pointer-events-none">
+          <div
+            className={`pointer-events-none transition-all ${
+              showMenu ? "rotate-180" : "rotate-0"
+            }`}
+          >
             {!isTextarea && !isCode && Icons.arrow()}
             {isCode && Icons.code({ width: 25, strokWidth: 3 })}
             {isTextarea && Icons.edite({ width: 25 })}
@@ -512,6 +517,7 @@ export const Select = ({
                   }}
                   onItemClicked={(ev, keyword, i) => {
                     ev.stopPropagation();
+                    ev.preventDefault();
                     const kLabel = getLabel(keyword);
                     const kValue = getValue(keyword);
                     console.log("kValue", kValue);

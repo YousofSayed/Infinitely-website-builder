@@ -4,16 +4,6 @@
 /* html , body , body *{
   contain: layout , paint , size , style , content ;
  } */
-  
- html{
-  cursor: url('/brands/infinitely/mainCursor.png'), auto;
- }
-html body {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
-
-
 
 img,
 video {
@@ -24,9 +14,20 @@ video {
 all: unset ;
 } */
 @layer base {
+   html {
+    cursor: url("/brands/infinitely/mainCursor.png"), auto;
+  }
+
+  html body {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+  
   body {
     background-color: white;
   }
+
+ 
 }
 
 .preventWhenScroll,
@@ -56,7 +57,7 @@ all: unset ;
   display: block;
 }
 
-[data-gjs-type="media"]>* {
+[data-gjs-type="media"] > * {
   left: 0;
   top: 0;
   width: 100%;
@@ -96,7 +97,7 @@ infinitely-svg svg {
     font-weight: 500;
   }
 
-  .drop-area>* {
+  .drop-area > * {
     pointer-events: none;
 
     display: flex;
@@ -109,8 +110,8 @@ infinitely-svg svg {
     min-height: 70px;
     height: 70px;
     position: relative;
-    color: black ;
-    font-weight: bold ;
+    color: black;
+    font-weight: bold;
   }
 
   .drop::before {
@@ -130,9 +131,8 @@ infinitely-svg svg {
   swiper-slide.drop {
     height: 500px;
   }
-
 }
-[hide="true"]{
+[hide="true"] {
   display: none !important;
 }
 
@@ -164,12 +164,12 @@ spline-viewer.drop {
   height: 150px !important;
   width: 100% !important;
   display: block !important;
-  border: #E0E0E0 2px dotted !important;
+  border: #e0e0e0 2px dotted !important;
 }
 
 .enable-swiper::after,
 .enable-spline::after {
-  content: '';
+  content: "";
   position: absolute !important;
   left: 0 !important;
   height: 0 !important;
@@ -197,19 +197,17 @@ spline-viewer.drop {
 }
 
 .enable-swiper::before {
-  content: 'Please Enable Swiper To Access This component';
+  content: "Please Enable Swiper To Access This component";
 }
 
 .enable-spline::before {
-  content: 'Please Enable Spline Viewer To Access This component';
-
+  content: "Please Enable Spline Viewer To Access This component";
 }
-
 
 @keyframes scale {
   from {
     /* transform: scale(0); */
-    opacity: .7;
+    opacity: 0.7;
   }
 
   to {
@@ -217,8 +215,3 @@ spline-viewer.drop {
     /* transform: scale(1); */
   }
 }
-
-
-
-
-

@@ -16,6 +16,43 @@ function tryCatch(callack = () => {}) {
 }
 
 /**
+ * 
+ * @param {()=>any} callback 
+ * @param {any} fallback 
+ * @param {{
+ *   el: HTMLElement
+ * }} options 
+ * @returns 
+ */
+function catchError (
+  callback,
+  fallback = undefined,
+  options = {}
+) {
+  try {
+    return callback();
+  } catch (error) {
+    const info = {
+      error,
+      message: error?.message || String(error),
+      name: error?.name || "Error",
+      stack: error?.stack || "",
+      el: options.el || this.$el,
+      // directive: options.directive || null,
+      // expression: options.expression || null,
+    };
+
+   
+    console.error("Element:", info.el || `You didn't pass an element`);
+
+
+    console.error("Infinitely Studio Error:", error.message || JSON.stringify(error , null, 2) );
+
+    return fallback;
+  }
+};
+
+/**
  * It handle click class that you created by css
  * @param {selector} string
  * @param {string} clickClass

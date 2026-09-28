@@ -180,6 +180,7 @@ export const Project = ({ project }) => {
 
         <Li
           onClick={async () => {
+             if (!project.inited) return;
             //  await wp_update_option({
             //     optionName:'inf_config',
             //     projectId:project.id,

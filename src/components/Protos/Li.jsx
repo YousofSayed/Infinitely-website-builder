@@ -78,7 +78,7 @@ export const Li = ({
       style={{
         backgroundColor:selected ? 'var(--main-bg)' : ''
       }}
-      className={`group relative li-btn h-[30px] w-[30px]     rounded-lg cursor-pointer grid place-items-center transition-all ${
+      className={`group relative li-btn aspect-square w-9     rounded-lg cursor-pointer flex items-center justify-center transition-all ${
         to && path.pathname?.match(to)?.filter((link) => link)?.length
           ? "bg-brand-primary"
           : ""
@@ -96,9 +96,9 @@ export const Li = ({
           className={`w-full h-full   
           ${linkClassName ? linkClassName : "flex justify-center items-center"}
 
-          ${fillObjectIconOnHover && "[&_path]:hover:fill-[white!important]"}
+          ${fillObjectIconOnHover && "[&:hover_path]:fill-[white!important]"}
 
-          ${fillStrokeIcon && "[&_path]:hover:stroke-white"}
+          ${fillStrokeIcon && "[&:hover_path]:stroke-white"}
           
           ${
             fillObjectIconOnHover &&
@@ -144,9 +144,9 @@ export const Li = ({
           // title={title}
           className={`w-full h-full  flex justify-center items-center 
           
-          ${fillIcon && "[&_path]:hover:fill-white"}
+          ${fillIcon && "[&:hover_path]:fill-white"}
           
-          ${fillStrokeIcon && "[&_path]:hover:stroke-white"}
+          ${fillStrokeIcon && "[&:hover_path]:stroke-white"}
           
           ${fillIcon && selected && "[&_path]:fill-white"}
 
@@ -166,22 +166,6 @@ export const Li = ({
             addClickClass(ev.currentTarget, "click");
             onClick(ev);
 
-            // if(justHover)return;
-            // [...$a(".clicked")]
-            //   .filter((el) => el != ev.currentTarget)
-            //   .forEach((el) => el.classList.remove("clicked"));
-            // setMyName("");
-            // const is = ev.currentTarget.classList.contains("clicked");
-            // setRemoveActives(title);
-
-            // if (is) {
-            //   setIsClicked(false);
-
-            //   ev.currentTarget.classList.remove("clicked");
-            // } else {
-            //   setIsClicked(true);
-            //   ev.currentTarget.classList.add("clicked");
-            // }
           }}
         >
           {isObjectParamsIcon

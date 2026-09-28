@@ -239,21 +239,7 @@ const [showsComponents, setShowsComponents] = useRecoilState(
         className="shrink-0"
         onClick={() => {
           emitZoomValue();
-          // editor.Canvas.setZoom(editor.Canvas.getZoom() + 1, {
-          //   avoidStore: true,
-          // });
-          // editor.getWrapper().getEl()
-          //   .querySelectorAll("*")
-          //   .forEach((el) => {
-          //     const bodyScale =
-          //       Number(el.style.scale) ||
-          //       1;
-          //     el.style.scale = bodyScale + 0.1;
-          //   });
-          //  editor.getWrapper().setStyle({
-          //   width: `100%`,
-          //   height: `100%`,
-          // })
+       
         }}
         title="zoom in"
         // isObjectParamsIcon
@@ -271,22 +257,7 @@ const [showsComponents, setShowsComponents] = useRecoilState(
         className="shrink-0"
         onClick={() => {
           emitZoomValue(true);
-          // editor.Canvas.setZoom(editor.Canvas.getZoom() - 1, {
-          //   avoidStore: true,
-          // });
-
-          // editor.getWrapper().getEl()
-          //   .querySelectorAll("*")
-          //   .forEach((el) => {
-          //     const bodyScale =
-          //       Number(el.style.scale) ||
-          //       1;
-          //     el.style.scale = bodyScale - 0.1;
-          //   });
-          // editor.getWrapper().setStyle({
-          //   width: `100%`,
-          //   height: `100%`,
-          // })
+          
         }}
         title="zoom out"
         // isObjectParamsIcon
@@ -413,7 +384,8 @@ const [showsComponents, setShowsComponents] = useRecoilState(
         icon={Icons.square}
         justHover={true}
       />
-      <Li
+
+      {/* <Li
         onClick={(ev) => {
           // setShowLayers((old) => !old);
           // setShowAnimBuilder(false);
@@ -423,8 +395,9 @@ const [showsComponents, setShowsComponents] = useRecoilState(
         className="shrink-0"
         icon={Icons.layers}
         title="layers"
-      />
-      <Li
+      /> */}
+
+      {/* <Li
         onClick={(ev) => {
           // console.log(showPreview, isAnimationsChanged);
 
@@ -447,7 +420,8 @@ const [showsComponents, setShowsComponents] = useRecoilState(
         className="shrink-0"
         title="Animation Builder"
         icon={Icons.animation}
-      />
+      /> */}
+
       <Li
         className="shrink-0"
         onClick={async (ev) => {
@@ -455,12 +429,13 @@ const [showsComponents, setShowsComponents] = useRecoilState(
           // editor.off();
           // editor.load();
           // editor.destroy();
+          editor.trigger(InfinitelyEvents.storage.loadStart);
           setTimeout(() => {
             // location.replace(location.href);
             // reloadInfinitely();
             editor.load();
             setReloadRequired(false);
-          }, 0);
+          }, 260);
         }}
         title="Reload Canvas"
         notify={reloadRequired}

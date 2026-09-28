@@ -110,7 +110,7 @@ export const Menu = ({
   ));
 
   return (
-    <section className="w-full h-full overflow-x-auto  animate-go-to auto-animate" ref={menuRef}>
+    <section data-ignore-popover className="w-full h-full overflow-x-auto  animate-go-to auto-animate" ref={menuRef}>
       <Virtuoso
         ref={listRef}
         initialTopMostItemIndex={currentChoose < 0 ? 0 : currentChoose}
@@ -135,11 +135,17 @@ export const Menu = ({
           const item = safeKeywords[index];
           return (
             <>
-              <li
+              <li 
                 key={index}
+                data-ignore-popover
                 id={`list-item-${index}`}
                 ref={(el) => (refs.current[index] = el)}
+                onMouseDown={(e)=>{
+                  e.preventDefault();
+                }}
                 onClick={(ev) => {
+                  console.log('item clicked');
+                  
                   onItemClicked(ev, item, index, keywords.length);
                 }}
                 className={`flex items-center text-nowrap w-full overflow-x-auto transition-all cursor-pointer text-text-primary text-[16px] font-semibold`}

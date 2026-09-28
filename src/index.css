@@ -7,7 +7,7 @@
   scroll-behavior: smooth;
   font-size: 14px;
   outline: none;
- /* animation: go-to 0.35s ease-in-out forwards ; */
+  /* animation: go-to 0.35s ease-in-out forwards ; */
 }
 
 .gjs-cv-canvas,
@@ -29,7 +29,7 @@
   /* height: 100%; */
 }
 
-body:has(#main-modal) #editor-container {
+/* body:has(#main-modal) #editor-container {
   display: none !important;
 }
 
@@ -42,13 +42,12 @@ body:has(#main-modal) {
   #editor-container {
     display: none;
   }
-}
+} */
 
 button:disabled {
   cursor: not-allowed !important;
-  opacity: .7 !important;
+  opacity: 0.7 !important;
 }
-
 
 /* .will-change-for-all,
 .will-change-for-all * {
@@ -78,13 +77,40 @@ li {
 body {
   cursor: url("./assets/images/mainCursor.png"), auto;
   font-family: system-ui, "roboto", "poppins";
+  overflow: hidden;
+}
+
+body.disable-when-load {
+  opacity: 0.7 !important;
+  /* pointer-events: none !important; */
+  user-select: none !important;
+}
+
+body.disable-when-load .disable-when-load {
+  position: relative;
+}
+
+body.disable-when-load .disable-when-load::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 99999999;
+  /* background-color: red; */
+  cursor: not-allowed !important;
+}
+
+#root {
+  overflow: hidden;
 }
 
 [data-slot="indicator"] {
   transition: 0.2s;
 }
 
-[data-open="true"]>[data-slot="indicator"] {
+[data-open="true"] > [data-slot="indicator"] {
   transform: rotate(90deg);
 }
 
@@ -146,7 +172,6 @@ body {
   will-change: transform;
 }
 
-
 /* =========================================================
    TOP / LEFT AMBIENT LIGHT
    ========================================================= */
@@ -157,32 +182,18 @@ body {
 
   transform: scale(1.5);
 
-  background:
-    radial-gradient(
-      ellipse 55% 45% at 25% 25%,
-      var(--color-brand-primary) 0%,
-      color-mix(
-        in srgb,
-        var(--color-brand-primary) 65%,
-        transparent
-      ) 20%,
-      color-mix(
-        in srgb,
-        var(--color-brand-primary) 30%,
-        transparent
-      ) 40%,
-      transparent 72%
-    );
+  background: radial-gradient(
+    ellipse 55% 45% at 25% 25%,
+    var(--color-brand-primary) 0%,
+    color-mix(in srgb, var(--color-brand-primary) 65%, transparent) 20%,
+    color-mix(in srgb, var(--color-brand-primary) 30%, transparent) 40%,
+    transparent 72%
+  );
 
   filter: blur(45px);
 
-  animation:
-    inf-shadow-1
-    20s
-    cubic-bezier(0.45, 0, 0.55, 1)
-    infinite alternate;
+  animation: inf-shadow-1 20s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
 }
-
 
 /* =========================================================
    BOTTOM / RIGHT AMBIENT LIGHT
@@ -194,32 +205,18 @@ body {
 
   transform: scale(1.5);
 
-  background:
-    radial-gradient(
-      ellipse 60% 50% at 75% 75%,
-      var(--color-brand-primary) 0%,
-      color-mix(
-        in srgb,
-        var(--color-brand-primary) 65%,
-        transparent
-      ) 20%,
-      color-mix(
-        in srgb,
-        var(--color-brand-primary) 30%,
-        transparent
-      ) 40%,
-      transparent 75%
-    );
+  background: radial-gradient(
+    ellipse 60% 50% at 75% 75%,
+    var(--color-brand-primary) 0%,
+    color-mix(in srgb, var(--color-brand-primary) 65%, transparent) 20%,
+    color-mix(in srgb, var(--color-brand-primary) 30%, transparent) 40%,
+    transparent 75%
+  );
 
   filter: blur(50px);
 
-  animation:
-    inf-shadow-2
-    23s
-    cubic-bezier(0.45, 0, 0.55, 1)
-    infinite alternate;
+  animation: inf-shadow-2 23s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
 }
-
 
 /* =========================================================
    MOVEMENT 1
@@ -227,36 +224,25 @@ body {
 
 @keyframes inf-shadow-1 {
   0% {
-    transform:
-      scale(1.5)
-      translate3d(0, 0, 0);
+    transform: scale(1.5) translate3d(0, 0, 0);
   }
 
   25% {
-    transform:
-      scale(1.65)
-      translate3d(8%, 5%, 0);
+    transform: scale(1.65) translate3d(8%, 5%, 0);
   }
 
   50% {
-    transform:
-      scale(1.45)
-      translate3d(15%, 12%, 0);
+    transform: scale(1.45) translate3d(15%, 12%, 0);
   }
 
   75% {
-    transform:
-      scale(1.7)
-      translate3d(5%, 18%, 0);
+    transform: scale(1.7) translate3d(5%, 18%, 0);
   }
 
   100% {
-    transform:
-      scale(1.55)
-      translate3d(12%, 8%, 0);
+    transform: scale(1.55) translate3d(12%, 8%, 0);
   }
 }
-
 
 /* =========================================================
    MOVEMENT 2
@@ -264,36 +250,25 @@ body {
 
 @keyframes inf-shadow-2 {
   0% {
-    transform:
-      scale(1.5)
-      translate3d(0, 0, 0);
+    transform: scale(1.5) translate3d(0, 0, 0);
   }
 
   25% {
-    transform:
-      scale(1.65)
-      translate3d(-8%, -5%, 0);
+    transform: scale(1.65) translate3d(-8%, -5%, 0);
   }
 
   50% {
-    transform:
-      scale(1.45)
-      translate3d(-15%, -12%, 0);
+    transform: scale(1.45) translate3d(-15%, -12%, 0);
   }
 
   75% {
-    transform:
-      scale(1.7)
-      translate3d(-5%, -18%, 0);
+    transform: scale(1.7) translate3d(-5%, -18%, 0);
   }
 
   100% {
-    transform:
-      scale(1.55)
-      translate3d(-12%, -8%, 0);
+    transform: scale(1.55) translate3d(-12%, -8%, 0);
   }
 }
-
 
 /* =========================================================
    SMALL SCREENS
@@ -311,7 +286,6 @@ body {
   }
 }
 
-
 /* =========================================================
    REDUCED MOTION
    ========================================================= */
@@ -323,7 +297,7 @@ body {
   }
 }
 
-.gjs-blocks-c:has([inf-symbol-id][current-symbol-loading]){
+.gjs-blocks-c:has([inf-symbol-id][current-symbol-loading]) {
   /* background-color: red !important;
   color:aqua !important; */
 
@@ -331,13 +305,13 @@ body {
   pointer-events: none;
 }
 
-.gjs-blocks-c:has([inf-symbol-id][current-symbol-loading]) [inf-symbol-id] *{
- opacity: 0 !important;
- transition: .3s;
+.gjs-blocks-c:has([inf-symbol-id][current-symbol-loading]) [inf-symbol-id] * {
+  opacity: 0 !important;
+  transition: 0.3s;
 }
 
 .gjs-blocks-c:has([inf-symbol-id][current-symbol-loading])::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 50%;
   top: 50%;
@@ -355,9 +329,9 @@ body {
 
   z-index: 10;
   pointer-events: none;
-  transition: .3s;
+  transition: 0.3s;
   opacity: 1;
-  @starting-style{
+  @starting-style {
     opacity: 0;
   }
 }
@@ -389,7 +363,6 @@ body {
   backface-visibility: hidden;
   contain: layout paint size; */
 }
-
 
 /* .gjs-placeholder{
   border: unset !important;
@@ -431,17 +404,16 @@ body {
 } */
 
 /* For Chrome, Safari, Edge, and Opera */
-input[type=number]::-webkit-inner-spin-button,
-input[type=number]::-webkit-outer-spin-button {
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
 /* For Firefox */
-input[type=number] {
+input[type="number"] {
   -moz-appearance: textfield;
 }
-
 
 nav ul svg {
   width: 22.5px !important;
@@ -462,7 +434,9 @@ textarea,
 
 @font-face {
   font-family: "poppins";
-  src: url("./assets/fonts/Poppins-Light.ttf") format("ttf"), local("poppins");
+  src:
+    url("./assets/fonts/Poppins-Light.ttf") format("ttf"),
+    local("poppins");
   overflow: initial;
 }
 
@@ -482,7 +456,6 @@ textarea,
 /* .gjs-highlighter {
   display: none !important;
 } */
-
 
 .monaco-editor .monaco-hover {
   position: fixed !important;
@@ -611,13 +584,11 @@ button.clicked svg path {
 } */
 .gutter {
   scrollbar-gutter: space;
-
 }
 
 .custom-font-size {
   font-size: clamp(5px, 0.9vw, 50px);
   text-wrap: nowrap;
-
 }
 
 .minion::before {
@@ -705,20 +676,54 @@ details summary::before {
   right: 0;
   transition: transform 0.3s ease;
 } */
-@keyframes go-to{
-  from{
+@keyframes go-to {
+  from {
     opacity: 0;
   }
-  to{
+  to {
     opacity: 1;
   }
 }
-
-.animate-go-to{
-  animation: go-to 0.17s ease-in-out forwards ;
+.react-colorful__pointer.react-colorful__alpha-pointer {
+  z-index: 100 !important;
+}
+.accordion-content {
+  overflow: hidden;
 }
 
+.accordion-content[data-state="open"] {
+  animation: accordion-down 200ms ease-out;
+}
 
+.accordion-content[data-state="closed"] {
+  animation: accordion-up 200ms ease-out;
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+.animate-go-to {
+  animation: go-to 0.17s ease-in-out forwards;
+}
+/* 
+[data-method="error"]{
+  display: flex !important;
+  flex-direction: column !important;
+} */
 
 details::marker {
   color: aliceblue;
@@ -735,7 +740,6 @@ details[open] summary {
 [data-accordion-key] {
   position: relative !important;
 }
-
 
 #gjs {
   border: none !important;
@@ -781,7 +785,7 @@ details[open] summary {
 
 .gjs-block-label {
   font-size: clamp(10px, 13.5px, 1.5vw, 20px) !important;
-  @apply  capitalize w-full;
+  @apply capitalize w-full;
 }
 
 .gjs-badge {
@@ -864,7 +868,7 @@ details[open] summary {
   @apply items-center gap-3 py-[5px] px-2 flex;
 }
 
-.gjs-toolbar-item{
+.gjs-toolbar-item {
   width: fit-content !important;
 }
 
@@ -912,7 +916,7 @@ details[open] summary {
   @apply hidden !important;
 }
 
-#gjs-mdl-c .modal-content.gjs-sm-properties>div>div:nth-child(3) {
+#gjs-mdl-c .modal-content.gjs-sm-properties > div > div:nth-child(3) {
   @apply flex gap-[10px] items-center;
 }
 

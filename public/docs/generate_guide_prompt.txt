@@ -1,0 +1,8 @@
+this is my website builder project and wordpress plugin , so read it very well and understand it and analyze it good .
+then give me md file for (my end users and ai agent) i wanna examples and use cases and code blocks to view blocks and how to use and steps by steps .
+i wanna md file includes everything .
+
+you already give me Infinitely guide but i think it missing many things one of them is petite-vue implmentation  so discover it and search for libraries that is use in my canvas and read its docs very well take your time dont be fast and think deeply and good.
+
+read all good and give me full markdown code block contain my guide file 
+

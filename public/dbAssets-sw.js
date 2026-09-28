@@ -30,7 +30,7 @@ self.addEventListener("message", (ev) => {
       props?.obj?.pageUrl,
       "vars is :",
       props.obj.previewPage,
-      vars
+      vars,
     );
 
     return;
@@ -68,10 +68,125 @@ const folders = [
 // Reuse a single BroadcastChannel for all OPFS requests
 const opfsBroadcastChannel = new BroadcastChannel("opfs");
 
+async function handleWpPreview(request) {
+  const requestUrl = new URL(request.url);
+
+  const target = requestUrl.searchParams.get("url");
+
+  if (!target) {
+    return new Response("Missing ?url=", {
+      status: 400,
+      headers: {
+        "Content-Type": "text/plain",
+      },
+    });
+  }
+
+  let targetUrl;
+
+  try {
+    targetUrl = new URL(target);
+  } catch {
+    return new Response("Invalid preview URL", {
+      status: 400,
+      headers: {
+        "Content-Type": "text/plain",
+      },
+    });
+  }
+
+  if (targetUrl.protocol !== "https:") {
+    return new Response("Only HTTPS URLs are allowed", {
+      status: 400,
+      headers: {
+        "Content-Type": "text/plain",
+      },
+    });
+  }
+
+  try {
+    // WordPress performs the actual server-side request.
+    const proxyUrl = new URL(
+      "https://infinitely.test/wp-json/infinitely-api/v1/proxy"
+    );
+
+    proxyUrl.searchParams.set("url", targetUrl.href);
+
+    console.log("🔥 WP REST PROXY:", proxyUrl.href);
+
+    const response = await fetch(proxyUrl.href, {
+      method: "GET",
+      mode: "cors",
+      credentials: "omit",
+      redirect: "follow",
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+
+      console.error(
+        "🔥 WP proxy returned:",
+        response.status,
+        errorText
+      );
+
+      return new Response(errorText || `WP proxy returned ${response.status}`, {
+        status: response.status,
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+        },
+      });
+    }
+
+    const headers = new Headers(response.headers);
+
+    // This response becomes the iframe document on localhost.
+    headers.delete("content-security-policy");
+    headers.delete("content-security-policy-report-only");
+    headers.delete("x-frame-options");
+    headers.delete("content-encoding");
+    headers.delete("content-length");
+
+    headers.set(
+      "Content-Type",
+      "text/html; charset=utf-8"
+    );
+
+    headers.set(
+      "Cache-Control",
+      "no-store"
+    );
+
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+
+  } catch (error) {
+    console.error("🔥 WP preview proxy failed:", error);
+
+    return new Response(
+      `Preview failed: ${error.message}`,
+      {
+        status: 502,
+        headers: {
+          "Content-Type": "text/plain",
+        },
+      }
+    );
+  }
+}
+
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   const req = event.request;
 
+  if (event.request.mode === "navigate" && url.pathname === "/wp-preview") {
+    console.log("🔥 WP PREVIEW INTERCEPTED");
+    event.respondWith(handleWpPreview(event.request));
+    return;
+  }
   // if (
   //   (req.destination === "iframe" || req.destination === "frame") &&
   //   !req.url.startsWith(self.location.origin)
@@ -79,7 +194,6 @@ self.addEventListener("fetch", (event) => {
   //   event.respondWith(fetch(req));
   //   return;
   // }
-
 
   let pathname = parseTextToURI(url.pathname);
 
@@ -146,7 +260,7 @@ self.addEventListener("fetch", (event) => {
 
             if (fileName !== returnedName) {
               reject(
-                `File name mismatch: expected ${fileName}, got ${returnedName}`
+                `File name mismatch: expected ${fileName}, got ${returnedName}`,
               );
               return;
             }
@@ -185,6 +299,6 @@ self.addEventListener("fetch", (event) => {
       } finally {
         fileBraodCastChannel.close();
       }
-    })()
+    })(),
   );
 });

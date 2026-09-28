@@ -42,6 +42,7 @@ import {
   pageBuilderWorker,
 } from "@/helpers/defineWorkers";
 import {
+  callWorkerCommand,
   cssToDataURL,
   getComponentRules,
   getInfinitelySymbolInfo,
@@ -317,9 +318,16 @@ export const wp_remote_storage = (editor) => {
           ? symbols_styles_el.innerHTML
           : "";
 
-        data.css = minify(`${data.css || ""} ${symbolsStyles}`, {
-          restructure: true,
-        }).css;
+        data.css = await callWorkerCommand(fetcherWorker, "minifyCss", {
+          css:`${data.css || ""} ${symbolsStyles}`,
+          options:{
+            restructure: true
+          }
+        })
+        
+        // minify(`${data.css || ""} ${symbolsStyles}`, {
+        //   restructure: true,
+        // }).css;
 
         parsedHeadDom
           .querySelectorAll(`#inf-css , #inf-motions , #inf-tailwind`)

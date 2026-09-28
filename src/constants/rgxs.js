@@ -12,3 +12,7 @@ export const DoubleBracePlaceholderRgx =
 export const styleRgx = /\{(?:(?!\s*--_init\s*:\s*[^;]+;\s*\}).)+:[^;]+/i;
 
 export const urlRgx = /^https:\/\/(?:www\.)?[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z]{2,})+(?::\d{1,5})?(?:[/?#][^\s]*)?$/ig;
+
+
+export const RTL_SCRIPTS = /[\p{Script=Arabic}\p{Script=Hebrew}\p{Script=Syriac}\p{Script=Thaana}\p{Script=Nko}\p{Script=Samaritan}\p{Script=Mandaic}\p{Script=Adlam}]/u;
+export const LETTER = /\p{L}/u;

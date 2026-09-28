@@ -1,21 +1,24 @@
 console.log("I work p-v");
 // const app = PetiteVue.createApp()
-let app = PetiteVue.createApp({
-  $delimiters: ["${", "}"],
-});
+// const { location: routerLocation, navigate } = PetiteRouter;
+const createApp = () =>
+  PetiteVue.createApp({
+    $delimiters: ["${", "}"],
+    // location:routerLocation,
+    // navigate,
+  });
+let app = createApp();
 
 const initPlugins = () => {
-app.directive("view", vIntersection);
-app.directive("ref", vRef); 
-app.directive("gsap", vGsap); 
-app.directive("mount", vMount); 
+  app.directive("view", vIntersection);
+  app.directive("ref", vRef);
+  app.directive("gsap", vGsap);
+  app.directive("mount", vMount);
 };
 
 initPlugins();
 //  window.autoAnimate(document.body);
 registerAutoAnimateDirective(app);
-
-
 
 let mountBroadCastChannel = new BroadcastChannel("pv:mount");
 mountBroadCastChannel.addEventListener("message", (ev) => {
@@ -23,7 +26,7 @@ mountBroadCastChannel.addEventListener("message", (ev) => {
     /**
      * @type {MessageEvent}
      */
-    ev
+    ev,
   ) => {
     if (!ev.data.el) {
       console.error("Oh shit here we again : hs error no element founded");
@@ -36,15 +39,13 @@ mountBroadCastChannel.addEventListener("message", (ev) => {
     //   }));
     // app.mount(ev.detail.el);
 
-    app = PetiteVue.createApp({
-      $delimiters: ["${", "}"],
-    });
+    app = createApp();
     initPlugins();
     registerAutoAnimateDirective(app);
     console.log("mounting : ", ev.data.el);
     // window.autoAnimate(ev.data.el);
-    console.log('auto animate  : ' , window.autoAnimate , ev.data.el);
-    
+    console.log("auto animate  : ", window.autoAnimate, ev.data.el);
+
     app.mount(ev.data.el);
     // 2. Enable AutoAnimate on the list container — ONE LINE
     // _hyperscript.processNode(ev.detail.el);
@@ -57,7 +58,7 @@ unMountBraodCastChannel.addEventListener("message", (ev) => {
     /**
      * @type {MessageEvent}
      */
-    ev
+    ev,
   ) => {
     if (!ev.data.el) {
       console.error("Oh shit here we again : hs error no element founded");
@@ -76,7 +77,7 @@ function pvMount(
   /**
    * @type {CustomEvent}
    */
-  ev
+  ev,
 ) {
   if (!ev.detail.el) {
     console.error("Oh shit here we again : hs error no element founded");
@@ -91,9 +92,7 @@ function pvMount(
   //   }));
   // app.mount(ev.detail.el);
 
-  app = PetiteVue.createApp({
-    $delimiters: ["${", "}"],
-  });
+  app = createApp();
   initPlugins();
   registerAutoAnimateDirective(app);
   console.log("mounting : ", ev.detail.el);
@@ -107,7 +106,7 @@ function pvUnMount(
   /**
    * @type {CustomEvent}
    */
-  ev
+  ev,
 ) {
   if (!ev.detail.el) {
     console.error("Oh shit here we again :  error no element founded");
@@ -143,5 +142,3 @@ window.parent.addEventListener("pv:mount", pvMount);
 window.parent.addEventListener("pv:unmount", pvUnMount);
 
 window.parent.addEventListener("clear:script", clearPvScript);
-
-
