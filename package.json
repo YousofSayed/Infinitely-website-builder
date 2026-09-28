@@ -33,7 +33,7 @@
     "files": [
       "dist/**/*",
       "electron-main.cjs",
-      "desktop/preload.cjs"
+      "desktop/**/*"
     ],
     "directories": {
       "output": "release"
