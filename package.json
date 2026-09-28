@@ -39,10 +39,10 @@
       "output": "release"
     },
     "win": {
-      "icon": "public/logo.svg"
+      "icon": "public/favicon.ico"
     },
     "mac": {
-      "icon": "public/logo.svg"
+      "icon": "public/favicon.icns"
     },
     "linux": {
       "icon": "public/logo.svg",
