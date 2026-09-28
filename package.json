@@ -45,7 +45,8 @@
       "icon": "public/favicon.icns"
     },
     "linux": {
-      "icon": "public/icons"
+      "icon": "public/favicon.ico",
+      "category": "Utility"
     }
   },
   "dependencies": {
