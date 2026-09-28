@@ -481,7 +481,7 @@ export const HomeHeader = memo(() => {
 
 
   return (
-    <header className="disable-when-load w-full h-[55px] z-[99999999] zoom-80 px-2 bg-surface-secondary  border-b-[1.5px]  border-slate-600    flex items-center justify-between gap-2 auto-animate animate-go-to">
+    <header className="disable-when-load w-full h-[55px] z-[999] zoom-80 px-2 bg-surface-secondary  border-b-[1.5px]  border-slate-600    flex items-center justify-between gap-2 auto-animate animate-go-to">
       <ScrollableToolbar
         className="w-[37.5%] h-full flex shrink-0   max-w-[700px] py-2 "
         innerClassName="!justify-start"

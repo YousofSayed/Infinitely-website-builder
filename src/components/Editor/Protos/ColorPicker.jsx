@@ -116,7 +116,7 @@ export const ColorPicker = memo(
             <section
               style={{ 
                 ...floatingStyles, 
-                zIndex: 99999, 
+                zIndex: 998, 
                 width: 'min(300px, 100vw - 20px)',
                 willChange: 'transform' // FIX 3: Forces GPU acceleration, prevents full-page repaints during drag
               }}

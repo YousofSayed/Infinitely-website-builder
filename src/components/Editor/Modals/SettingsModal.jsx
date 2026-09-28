@@ -228,7 +228,7 @@ export const SettingsModal = () => {
   };
 
   return (
-    <section className="h-full w-full overflow-auto flex flex-col gap-2 pr-1">
+    <section className="h-full w-full overflow-auto hideScrollBar flex flex-col gap-2 ">
       <section className="flex flex-col gap-4 text-text-primary font-semibold w-full h-full">
         <Input
           className="w-full bg-surface-tertiary"
