@@ -3,6 +3,7 @@
   const trackedElements = new Set();
   const pending = new Map();
   let rafId = null;
+  // let on = true;
 
   const isOutlineEnabled = () => document.body.classList.contains("gjs-dashed");
 

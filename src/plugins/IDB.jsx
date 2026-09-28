@@ -441,6 +441,10 @@ export const IDB = (editor) => {
       if (storeTimeout) clearTimeout(storeTimeout);
       if (pageBuilderTimeout) clearTimeout(pageBuilderTimeout);
       if (editor.getDirtyCount() < 0) return;
+      if(editor.infLoadComponents) {
+        editor.needToStore = true;
+        return;
+      };
 
       // editor.UndoManager.stop();
 

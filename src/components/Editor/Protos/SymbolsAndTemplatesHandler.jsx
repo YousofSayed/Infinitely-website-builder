@@ -76,7 +76,7 @@ export const SymbolsAndTemplatesHandler = ({
     type === "symbol" ? "inf_symbols" : type === "template" ? "inf_blocks" : "";
   const {
     data: symbolsOrTemplates,
-    isPending: isSymbolsOrTemplatesLoading,
+    isLoading: isSymbolsOrTemplatesLoading,
     isFetching: isSymbolsOrTemplatesRefetching,
   } = usePosts(wp_type);
 

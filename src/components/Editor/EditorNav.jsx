@@ -151,24 +151,20 @@ export const HomeNav = () => {
       `Are you sure you want to pull from dropbox? This will overwrite your local project files.`,
     );
     if (!cnfrm) return;
-    console.log("refff : ", pushRef.current);
-    const btn = ev.currentTarget;
-    addClickClass(btn, "click");
+    
 
-    btn.disabled = true;
-    pushRef.current.disabled = true;
     try {
       await pullProject(projectData);
-      btn.disabled = true;
+      toast.success(<ToastMsgInfo msg={`Dropbox project pulled! 🎉`} />);
     } catch (error) {
+      toast.error(<ToastMsgInfo msg={`Failed to pull from dropbox 😩`} />);
       throw new Error(error);
+
     } finally {
-      btn.disabled = null;
-      // pushRef.current.disabled = null;
+      toast.dismiss(tid);
+      
     }
 
-    toast.dismiss(tid);
-    toast.success(<ToastMsgInfo msg={`Dropbox project pulled! 🎉`} />);
   });
 
   const leave = () => {

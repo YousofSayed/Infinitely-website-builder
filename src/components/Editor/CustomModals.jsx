@@ -10,8 +10,10 @@ import { FitTitle } from "@/components/Editor/Protos/FitTitle";
 import { LibraryInstaller } from "@/components/Editor/Protos/LibraryInstaller";
 import Portal from "@/components/Editor/Portal";
 import { useEditorMaybe } from "@grapesjs/react";
-import React, { memo, useEffect, useState } from "react";
+import React, { memo, useEffect, useLayoutEffect, useState } from "react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
+import { getProjectSettings } from "@/helpers/functions";
+import { useProjectSettings } from "@/hooks/useProjectSettings";
 
 export const CustomModals = () => {
   const editor = useEditorMaybe();
@@ -19,6 +21,28 @@ export const CustomModals = () => {
   const setModalData = useSetRecoilState(modalDataState);
   const [isClose, setClose] = useState(false);
   const [modalProps, setModalProps] = useState({});
+  const [projectSettings, setProjectSetting] = useProjectSettings();
+
+  useLayoutEffect(() => {
+    if (!editor) return;
+    const oldPreventAnimationsValue =
+      projectSettings.stop_all_animation_on_page;
+
+    const wrapper = editor.getWrapper();
+    const body = editor.Canvas.getBody();
+    const isOutLine = body.classList.contains("gjs-dashed");
+
+    wrapper.addClass(`inf-stop-all-animations`);
+    isOutLine && body.classList.remove("gjs-dashed");
+
+    return () => {
+      oldPreventAnimationsValue
+        ? wrapper.addClass(`inf-stop-all-animations`)
+        : wrapper.removeClass(`inf-stop-all-animations`);
+
+      isOutLine && body.classList.add("gjs-dashed");
+    };
+  }, [editor, projectSettings]);
 
   return (
     <Portal container={document.querySelector("#root")}>
@@ -32,7 +56,7 @@ export const CustomModals = () => {
         style={{ zIndex: 1000 }}
         className={`
           auto-animate
-          fixed ${window?.electron?.isDesktop ? 'top-[40px]' : 'top-0'} left-0 transition-all bg-blue-950/40 backdrop-blur-sm w-full h-full flex justify-center items-center
+          fixed ${window?.electron?.isDesktop ? "top-[40px]" : "top-0"} left-0 transition-all bg-blue-950/40 backdrop-blur-sm w-full h-full flex justify-center items-center
           animate-go-to`}
       >
         <main
@@ -79,10 +103,7 @@ export const CustomModals = () => {
           </header>
 
           <section className="animate-go-to p-2 h-full max-h-full overflow-auto rounded-bl-lg rounded-br-lg bg-surface-secondary auto-animate">
-            <BusyProvider>
-              {modalData.JSXModal}
-
-            </BusyProvider>
+            <BusyProvider>{modalData.JSXModal}</BusyProvider>
           </section>
         </main>
       </section>

@@ -250,7 +250,7 @@ export const loadProject = async (props) => {
         ...(props?.data || {}),
       };
 
-      console.log("Before isAppConfigExist" , appConfig);
+      console.log("Before isAppConfigExist", appConfig);
 
       const isAppConfigExist = await wp_get_option({
         optionName: "inf_config",
@@ -291,29 +291,33 @@ export const loadProject = async (props) => {
     });
 
     //******** Start AI ******** */
-    const ai_chats =( await Promise.all(
-      Object.keys(projectFiles)
-        .filter((path) => path.startsWith("ai/"))
-        .map(async (path) => {
-          const zipHandle = projectFiles[path];
-          if (zipHandle.dir) {
-            return null;
-          }
+    const ai_chats = (
+      await Promise.all(
+        Object.keys(projectFiles)
+          .filter((path) => path.startsWith("ai/"))
+          .map(async (path) => {
+            const zipHandle = projectFiles[path];
+            if (zipHandle.dir) {
+              return null;
+            }
 
-          const file = new File([await zipHandle.async("arraybuffer")], path, {
-            type: mime.getType(zipHandle.name),
-          });
+            const file = new File(
+              [await zipHandle.async("arraybuffer")],
+              path,
+              {
+                type: mime.getType(zipHandle.name),
+              },
+            );
 
-          return {
-            path: path,
-            content: file,
-          };
-        })
-        
-    )).filter(Boolean);
+            return {
+              path: path,
+              content: file,
+            };
+          }),
+      )
+    ).filter(Boolean);
 
-    console.log('ai chats ' , ai_chats);
-    
+    console.log("ai chats ", ai_chats);
 
     await opfs.writeFiles(ai_chats);
 
@@ -334,16 +338,18 @@ export const loadProject = async (props) => {
 
     props.opfsRoot && (self.opfsRoot = props.opfsRoot); //For share view
 
+    const response = {
+      done: true,
+      projectId: projectDBId,
+      projectData: dbJSONData,
+    };
+
     self.postMessage({
       command: "project-loaded",
-      props: {
-        done: true,
-        projectId: projectDBId,
-        projectData: dbJSONData,
-      },
+      props: response,
     });
 
-    return true;
+    return response;
   } catch (error) {
     toastIds.forEach((id) => {
       workerSendToast({

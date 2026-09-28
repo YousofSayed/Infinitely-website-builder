@@ -2942,7 +2942,7 @@ export function getProject() {
         projectSetting: getProjectSettings().projectSettings,
       },
       (response) => {
-        if(!response.done) return rej(null);
+        if (!response.done) return rej(null);
         const { file } = response.res;
         if (!file) {
           rej(null);
@@ -3677,6 +3677,82 @@ export function createGJSComponent(editor, html = "") {
   return cmp;
 }
 
+export function chunk(array, size) {
+  const result = [];
+
+  for (let i = 0; i < array.length; i += size) {
+    result.push(array.slice(i, i + size));
+  }
+
+  return result;
+}
+
+/**
+ * 
+ * @param {import('grapesjs').Editor} editor 
+ * @param {string[]} elements 
+ * @param {number} chunkSize 
+ * @returns 
+ */
+export const lazyLoadComponents = (editor, elements, chunkSize = 1) => {
+  editor.infLoadComponents = true;
+
+  let index = 0;
+  let cancelled = false;
+
+  const nextFrame = () =>
+    new Promise(resolve => {
+      requestAnimationFrame(() => {
+        setTimeout(resolve, 0);
+      });
+    });
+
+  const finish = async () => {
+    // Let everything queued by the LAST addComponents finish rendering.
+    await nextFrame();
+    await nextFrame();
+
+    editor.infLoadComponents = false;
+    editor.infLoading = false;
+
+    editorStorageInstance.emit(InfinitelyEvents.storage.loadEnd);
+    editor.trigger(InfinitelyEvents.storage.loadEnd);
+  };
+
+  const load = async () => {
+    while (!cancelled && index < elements.length) {
+      const end = Math.min(index + chunkSize, elements.length);
+
+      editor.addComponents(
+        elements.slice(index, end),
+        {
+          avoidStore: true,
+        }
+      );
+
+      editor.clearDirtyCount();
+
+      index = end;
+
+      // DON'T start the next chunk until browser had a chance
+      // to process/render this chunk.
+      if (index < elements.length) {
+        await nextFrame();
+      }
+    }
+
+    await finish();
+  };
+
+  // Don't block the initial editor render.
+  nextFrame().then(load);
+
+  return {
+    cancel() {
+      cancelled = true;
+    },
+  };
+};
 export let reloaderTimeout;
 /**
  *
@@ -3687,27 +3763,11 @@ export async function reloadEditor(editor) {
   const { projectSettings } = getProjectSettings();
   editor.off("component:remove:before");
   editor.Storage.setAutosave(false);
-  // editor
-  //   .getWrapper()
-  //   .components()
-  //   .models.forEach((model) => {
-  //     model.destroy();
-  //     model.remove();
-  //   });
-  // editor.Components.clear({});
-  // editor.DomComponents.clear({});
-  // editor.Css.clear({});
-  // editor.CssComposer.clear({});
-  // editor.setStyle("");
-  // editor.setComponents("");
-  // editor.UndoManager.stop();
-  // editor.UndoManager.clear();
-  // editor.getWrapper().removeClass(editor.getWrapper().getClasses());
 
   reloaderTimeout && clearTimeout(reloaderTimeout);
   const response = await loadElements(editor, {
     justSendToWorker: true,
-   async onSend(elements, styles) {
+    async onSend(elements, styles) {
       editorStorageInstance.emit(InfinitelyEvents.storage.loadStart);
       editor.trigger(InfinitelyEvents.storage.loadStart);
       const render = (index) => {
@@ -3735,16 +3795,15 @@ export async function reloadEditor(editor) {
       };
       // editor.setComponents(elements.join('') , { avoidStore:true});
       console.log("componentd setted", elements);
-      // const components = await callWorkerCommand(fetcherWorker , 'htmlToGrapesjsComponents' , {
-      //   html : elements?.join('\n')
-      // });
 
-      // console.log('components json : ',elements);
-      
       if (projectSettings.enable_editor_lazy_loading) {
         editor.render();
         render(0);
       } else {
+        // editor.render();
+
+        // const loader = lazyLoadComponents(editor, elements, 1);
+
         editor.loadProjectData({
           components: elements,
           // styles
@@ -3774,7 +3833,7 @@ export async function reloadEditor(editor) {
       editor.infLoading = false;
       editorStorageInstance.emit(InfinitelyEvents.storage.loadEnd);
       editor.trigger(InfinitelyEvents.storage.loadEnd);
-      // editor.emit(InfinitelyEvents.storage.loadEnd);
+
     },
   });
   // workerCallbackMaker(infinitelyWorker , 'project-loaded' , (props)=>{
