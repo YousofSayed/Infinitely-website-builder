@@ -1,0 +1,68 @@
+name: Build Infinitely Studio
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os:
+          - windows-latest
+          - macos-latest
+          - ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Vite
+        run: npm run build
+
+      - name: Build Electron
+        run: npx electron-builder --publish never
+
+      - name: Upload Windows
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Infinitely-Studio-Windows
+          path: |
+            release/*.exe
+            release/*.zip
+
+      - name: Upload macOS
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Infinitely-Studio-macOS
+          path: |
+            release/*.dmg
+            release/*.zip
+
+      - name: Upload Linux
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Infinitely-Studio-Linux
+          path: |
+            release/*.AppImage
+            release/*.deb

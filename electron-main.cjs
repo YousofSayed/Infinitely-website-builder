@@ -1,9 +1,11 @@
 const { app, BrowserWindow, session, Menu } = require("electron");
 const path = require("path");
-const fs = require("fs");
-// const { logMemory, forceGC } = require("./desktop/utils/memory");
 
 require("./desktop/main-process.cjs");
+
+// GPU settings must be configured before app is ready
+app.commandLine.appendSwitch("enable-gpu-rasterization");
+app.commandLine.appendSwitch("enable-zero-copy");
 
 async function installOPFS_Ext() {
   if (app.isPackaged) return;
@@ -13,12 +15,11 @@ async function installOPFS_Ext() {
       process.env.LOCALAPPDATA,
       "Microsoft",
       "Edge",
-
       "User Data",
       "Default",
       "Extensions",
       "odbpcdmkgeikdcmcdlfmdkbjiaeknnbd",
-      "0.2.0_0",
+      "0.2.0_0"
     );
 
     const ext = await session.defaultSession.loadExtension(extPath, {
@@ -27,7 +28,7 @@ async function installOPFS_Ext() {
 
     console.log("Loaded:", ext.name);
   } catch (err) {
-    console.error(err);
+    console.error("Failed to load OPFS extension:", err);
   }
 }
 
@@ -38,40 +39,33 @@ async function createWindow() {
     show: true,
     backgroundColor: "#020617",
     icon: path.join(__dirname, "public", "favicon.ico"),
+
     titleBarStyle: "hidden",
-    // titleBarOverlay: {
-    //   color: "#0f172a", // matches your bg-slate-900
-    //   symbolColor: "#ffffff",
-    //   height: 39,
-    // },
-  
+
     webPreferences: {
-      // webSecurity:false,
-      preload: path.join(__dirname, "desktop/preload.cjs"),
+      preload: path.join(__dirname, "desktop", "preload.cjs"),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
     },
   });
 
-  app.commandLine.appendSwitch('enable-gpu-rasterization');
-app.commandLine.appendSwitch('enable-zero-copy');
-app.commandLine.appendSwitch('ignore-gpu-blacklist');
-
   if (!app.isPackaged) {
     win.webContents.on("before-input-event", (event, input) => {
       if (
-        // input.type === "keyDown" &&
+        input.type === "keyDown" &&
         input.control &&
         input.key.toLowerCase() === "r"
       ) {
         win.reload();
         event.preventDefault();
+        return;
       }
 
       if (input.type === "keyDown" && input.key === "F12") {
         win.webContents.toggleDevTools();
         event.preventDefault();
+        return;
       }
 
       if (
@@ -86,38 +80,36 @@ app.commandLine.appendSwitch('ignore-gpu-blacklist');
     });
   }
 
-  // logMemory("Before");
-
-  // setTimeout(() => {
-  //   logMemory("Before GC");
-
-  //   forceGC();
-
-  //   setTimeout(() => {
-  //     logMemory("After GC");
-  //   }, 500);
-  // }, 2000);
-
-  await win.loadFile(path.join(__dirname, "desktop/splash.html"));
+  // Splash
+  await win.loadFile(
+    path.join(__dirname, "desktop", "splash.html")
+  );
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
+  // App
   if (!app.isPackaged) {
-    await win.loadURL("https://localhost:5173/add-blocks");
+    await win.loadURL(
+      "https://localhost:5173/add-blocks"
+    );
   } else {
-    // await win.loadFile(path.join(__dirname, "dist", "index.html"));
-    await win.loadURL("https://infinitely.pages.dev/add-blocks");
+    await win.loadURL(
+      "https://infinitely.pages.dev/add-blocks"
+    );
   }
+
+  return win;
 }
 
 app.whenReady().then(async () => {
   Menu.setApplicationMenu(null);
+
   await installOPFS_Ext();
   await createWindow();
 
-  app.on("activate", () => {
+  app.on("activate", async () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
+      await createWindow();
     }
   });
 });
