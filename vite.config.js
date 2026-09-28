@@ -120,7 +120,7 @@ export default defineConfig({
       },
     },
     target: "es2022",
-    sourcemap: true,
+    sourcemap: false,
     minify: "esbuild",
     chunkSizeWarningLimit: "5000",
     assetsDir: "static",
