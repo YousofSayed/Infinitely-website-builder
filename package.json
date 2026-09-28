@@ -45,7 +45,10 @@
         "zip"
       ],
       "publish": [
-        "github"
+        {
+          "provider": "github",
+          "releaseType": "release"
+        }
       ]
     },
     "mac": {
@@ -55,7 +58,10 @@
         "zip"
       ],
       "publish": [
-        "github"
+        {
+          "provider": "github",
+          "releaseType": "release"
+        }
       ]
     },
     "linux": {
@@ -67,7 +73,10 @@
       "category": "Utility",
       "maintainer": "Infinitely Studio <infinitely.studio.dev@gmail.com>",
       "publish": [
-        "github"
+        {
+          "provider": "github",
+          "releaseType": "release"
+        }
       ]
     }
   },
