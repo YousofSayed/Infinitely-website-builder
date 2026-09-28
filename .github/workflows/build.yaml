@@ -1,19 +1,17 @@
-name: Build Infinitely Studio
+name: Build and Release Infinitely Studio
 
 on:
   workflow_dispatch:
   push:
     tags:
-      - "v*"
-
-# Prevent duplicate runs of the same tag/workflow from replacing
-# each other while a build is running.
-concurrency:
-  group: infinitely-studio-${{ github.ref }}
-  cancel-in-progress: false
+      - "v*.*.*"
 
 permissions:
   contents: write
+
+concurrency:
+  group: infinitely-studio-release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -54,38 +52,7 @@ jobs:
       - name: Build Vite
         run: npm run build
 
-      - name: Build Electron
-        run: npx electron-builder --publish never
-
-      - name: Upload Windows
-        if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: Infinitely-Studio-Windows
-          path: |
-            release/*.exe
-            release/*.zip
-          if-no-files-found: error
-          retention-days: 30
-
-      - name: Upload macOS
-        if: matrix.os == 'macos-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: Infinitely-Studio-macOS
-          path: |
-            release/*.dmg
-            release/*.zip
-          if-no-files-found: error
-          retention-days: 30
-
-      - name: Upload Linux
-        if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: Infinitely-Studio-Linux
-          path: |
-            release/*.AppImage
-            release/*.deb
-          if-no-files-found: error
-          retention-days: 30
+      - name: Build and publish
+        run: npx electron-builder --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
