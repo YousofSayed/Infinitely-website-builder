@@ -39,14 +39,35 @@
       "output": "release"
     },
     "win": {
-      "icon": "public/favicon.ico"
+      "icon": "public/favicon.ico",
+      "target": [
+        "nsis",
+        "zip"
+      ],
+      "publish": [
+        "github"
+      ]
     },
     "mac": {
-      "icon": "public/favicon.icns"
+      "icon": "public/favicon.icns",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "publish": [
+        "github"
+      ]
     },
     "linux": {
       "icon": "public/logo.svg",
-      "category": "Utility"
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Utility",
+      "publish": [
+        "github"
+      ]
     }
   },
   "dependencies": {
