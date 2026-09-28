@@ -39,13 +39,13 @@
       "output": "release"
     },
     "win": {
-      "icon": "public/favicon.ico"
+      "icon": "public/logo.svg"
     },
     "mac": {
-      "icon": "public/favicon.icns"
+      "icon": "public/logo.svg"
     },
     "linux": {
-      "icon": "public/favicon.ico",
+      "icon": "public/logo.svg",
       "category": "Utility"
     }
   },
