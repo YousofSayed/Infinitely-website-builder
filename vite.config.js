@@ -1,106 +1,76 @@
-// vite.config.js
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 import icons from "./public/icons/icons.json" with { type: "json" };
-// import million from "million/compiler";
 import mkcert from "vite-plugin-mkcert";
 import path from "path";
-import MagicString from "magic-string"; // Crucial for preserving sourcemaps between plugins!
+import MagicString from "magic-string";
 
-// --- THE FIXED WORKER PLUGIN (Preserves sourcemaps for Million!) ---
-const forceWorkerSharingPlugin = () => {
-  return {
-    name: "force-worker-sharing",
-    enforce: "pre",
-    apply: "build",
-    async transform(code, id) {
-      if (!code.includes("new Worker(new URL(")) return null;
-
-      const regex =
-        /new\s+Worker\(\s*new\s+URL\(\s*["']([^"']+)["']\s*,\s*import\.meta\.url\s*\)\s*,\s*\{[^}]*type:\s*["']module["'][^}]*\}\s*\)/g;
-      const matches = [...code.matchAll(regex)];
-      if (matches.length === 0) return null;
-
-      // MagicString preserves the AST/sourcemap chain so Million.js doesn't crash!
-      const s = new MagicString(code);
-
-      for (let i = matches.length - 1; i >= 0; i--) {
-        const match = matches[i];
-        const fullMatch = match[0];
-        const workerPath = match[1];
-        const resolved = await this.resolve(workerPath, id);
-        if (!resolved || !resolved.id) continue;
-
-        const referenceId = this.emitFile({ type: "chunk", id: resolved.id });
-        const replacement = `new Worker(import.meta.ROLLUP_FILE_URL_${referenceId}, { type: "module" })`;
-
-        s.overwrite(match.index, match.index + fullMatch.length, replacement);
-      }
-
-      return {
-        code: s.toString(),
-        map: s.generateMap({ hires: true }),
-      };
-    },
-  };
-};
-
-// --- WEBSITE BUILDER CHUNKING STRATEGY ---
-const manualChunks = (id) => {
+// Main app chunks - aggressive splitting for optimal caching
+const mainAppChunks = (id) => {
   if (typeof id !== "string") return;
-  if (
-    id.includes("node_modules/typescript") ||
-    id.includes("@babel/standalone") ||
-    id.includes("@typescript/ata")
-  )
-    return "vendor-compilers";
-  if (id.includes("grapesjs") || id.includes("@grapesjs"))
-    return "vendor-grapesjs";
-  if (
-    id.includes("linkedom") ||
-    id.includes("jszip") ||
-    id.includes("css-tree") ||
-    id.includes("csso") ||
-    id.includes("html2canvas-pro") ||
-    id.includes("js-beautify")
-  )
-    return "vendor-export-tools";
-  if (
-    id.includes("node_modules/react") ||
-    id.includes("node_modules/react-dom") ||
-    id.includes("framer-motion") ||
-    id.includes("recoil")
-  )
-    return "vendor-ui";
+  if (id.includes("node_modules/typescript") || id.includes("@babel/standalone") || id.includes("@typescript/ata")) return "vendor-compilers";
+  if (id.includes("grapesjs") || id.includes("@grapesjs")) return "vendor-grapesjs";
+  if (id.includes("linkedom") || id.includes("jszip") || id.includes("css-tree") || id.includes("csso") || id.includes("html2canvas-pro") || id.includes("js-beautify")) return "vendor-export-tools";
+  if (id.includes("node_modules/react") || id.includes("node_modules/react-dom") || id.includes("framer-motion") || id.includes("recoil")) return "vendor-ui";
   if (id.includes("node_modules")) return "vendor";
 };
+
+// Worker chunks - ONLY share safe libraries (no React/UI that access document)
+const workerChunks = (id) => {
+  if (typeof id !== "string") return;
+  if (id.includes("node_modules/typescript") || id.includes("@babel/standalone") || id.includes("@typescript/ata")) return "worker-compilers";
+  if (id.includes("node_modules/lodash") || id.includes("node_modules/jszip") || id.includes("node_modules/linkedom")) return "worker-utils";
+  // Everything else bundles into the worker itself (safe but larger)
+  return undefined;
+};
+
+// Modified plugin that applies different chunking to workers
+const safeWorkerSharingPlugin = () => ({
+  name: "safe-worker-sharing",
+  enforce: "pre",
+  apply: "build",
+  async transform(code, id) {
+    if (!code.includes("new Worker(new URL(")) return null;
+    const regex = /new\s+Worker\(\s*new\s+URL\(\s*["']([^"']+)["']\s*,\s*import\.meta\.url\s*\)\s*,\s*\{[^}]*type:\s*["']module["'][^}]*\}\s*\)/g;
+    const matches = [...code.matchAll(regex)];
+    if (matches.length === 0) return null;
+
+    const s = new MagicString(code);
+    for (let i = matches.length - 1; i >= 0; i--) {
+      const match = matches[i];
+      const workerPath = match[1];
+      const resolved = await this.resolve(workerPath, id);
+      if (!resolved || !resolved.id) continue;
+      
+      // Emit worker as a chunk in the main build
+      const referenceId = this.emitFile({ type: "chunk", id: resolved.id });
+      s.overwrite(match.index, match.index + match[0].length, 
+        `new Worker(import.meta.ROLLUP_FILE_URL_${referenceId}, { type: "module" })`);
+    }
+    return { code: s.toString(), map: s.generateMap({ hires: true }) };
+  },
+});
 
 export default defineConfig({
   base: "/",
   define: { global: "globalThis" },
   server: { https: true, port: 5173, strictPort: true },
   optimizeDeps: {
-    exclude: ["@grapesjs/react", "grapesjs"], // ← ADD THIS LINE
+    exclude: ["@grapesjs/react", "grapesjs"],
     rolldownOptions: { define: { global: "globalThis" } },
   },
   resolve: {
+    dedupe: ["react", "react-dom"],
     alias: [
-      {
-        find: "@welldone-software/why-did-you-render",
-        replacement: path.resolve(
-          import.meta.dirname,
-          "node_modules/vite/dist/client/env.mjs",
-        ),
-      },
+      { find: "@welldone-software/why-did-you-render", replacement: path.resolve(import.meta.dirname, "node_modules/vite/dist/client/env.mjs") },
       { find: "global", replacement: "global-this" },
       { find: "@", replacement: path.resolve(import.meta.dirname, "./src") },
     ],
   },
   plugins: [
-    forceWorkerSharingPlugin(),
+    safeWorkerSharingPlugin(),
     mkcert(),
-    // million.vite({ auto: true }), // RESTORED! It will now work perfectly.
     react(),
     VitePWA({
       registerType: "autoUpdate",
@@ -120,38 +90,118 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,ttf,webp}"],
         maximumFileSizeToCacheInBytes: 15728640,
         runtimeCaching: [
-          {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|webp)$/,
-            handler: "CacheFirst",
-            options: { cacheName: "images" },
-          },
-          {
-            urlPattern: /^https?.*/,
-            handler: "NetworkFirst",
-            options: { cacheName: "api" },
-          },
+          { urlPattern: /\.(?:png|jpg|jpeg|svg|webp)$/, handler: "CacheFirst", options: { cacheName: "images" } },
+          { urlPattern: /^https?.*/, handler: "NetworkFirst", options: { cacheName: "api" } },
         ],
         importScripts: ["/dbAssets-sw.js"],
       },
     }),
   ],
+  worker: {
+    format: "es",
+    rollupOptions: {
+      output: {
+        // Workers use SAFE chunks (no React/UI)
+        manualChunks: workerChunks,
+      },
+    },
+  },
   build: {
     rollupOptions: {
       input: { main: "./index.html" },
-      output: { manualChunks },
+      output: { 
+        // Main app uses aggressive chunks
+        manualChunks: mainAppChunks,
+      },
     },
     target: "es2022",
     sourcemap: false,
-
-    // FIX: Use esbuild. Vite 8's native Oxc minifier sometimes aggressively minifies away
-    // the specific global markers that Million.js relies on to verify the compiler ran.
     minify: "esbuild",
-
     chunkSizeWarningLimit: 10000,
     assetsDir: "static",
     outDir: "dist",
   },
 });
+
+// import { defineConfig } from "vite";
+// import react from "@vitejs/plugin-react";
+// import { VitePWA } from "vite-plugin-pwa";
+// import icons from "./public/icons/icons.json" with { type: "json" };
+// import mkcert from "vite-plugin-mkcert";
+// import path from "path";
+
+// const manualChunks = (id) => {
+//   if (typeof id !== "string") return;
+//   if (id.includes("node_modules/typescript") || id.includes("@babel/standalone") || id.includes("@typescript/ata")) return "vendor-compilers";
+//   if (id.includes("grapesjs") || id.includes("@grapesjs")) return "vendor-grapesjs";
+//   if (id.includes("linkedom") || id.includes("jszip") || id.includes("css-tree") || id.includes("csso") || id.includes("html2canvas-pro") || id.includes("js-beautify")) return "vendor-export-tools";
+//   if (id.includes("node_modules/react") || id.includes("node_modules/react-dom") || id.includes("framer-motion") || id.includes("recoil")) return "vendor-ui";
+//   if (id.includes("node_modules")) return "vendor";
+// };
+
+// export default defineConfig({
+//   base: "/",
+//   define: { global: "globalThis" },
+//   server: { https: true, port: 5173, strictPort: true },
+//   optimizeDeps: {
+//     exclude: ["@grapesjs/react", "grapesjs"],
+//     rolldownOptions: { define: { global: "globalThis" } },
+//   },
+//   resolve: {
+//     // CRITICAL: Prevents multiple React copies that cause error #31
+//     dedupe: ["react", "react-dom"],
+//     alias: [
+//       { find: "@welldone-software/why-did-you-render", replacement: path.resolve(import.meta.dirname, "node_modules/vite/dist/client/env.mjs") },
+//       { find: "global", replacement: "global-this" },
+//       { find: "@", replacement: path.resolve(import.meta.dirname, "./src") },
+//     ],
+//   },
+//   plugins: [
+//     mkcert(),
+//     react(),
+//     VitePWA({
+//       registerType: "autoUpdate",
+//       minify: true,
+//       devOptions: { enabled: false },
+//       strategies: "generateSW",
+//       manifest: {
+//         name: "Infinitely Studio",
+//         short_name: "Infinitely Studio",
+//         theme_color: "#1e293b",
+//         background_color: "#1e293b",
+//         display: "standalone",
+//         start_url: "/",
+//         ...icons,
+//       },
+//       workbox: {
+//         globPatterns: ["**/*.{js,css,html,ico,png,svg,ttf,webp}"],
+//         maximumFileSizeToCacheInBytes: 15728640,
+//         runtimeCaching: [
+//           { urlPattern: /\.(?:png|jpg|jpeg|svg|webp)$/, handler: "CacheFirst", options: { cacheName: "images" } },
+//           { urlPattern: /^https?.*/, handler: "NetworkFirst", options: { cacheName: "api" } },
+//         ],
+//         importScripts: ["/dbAssets-sw.js"],
+//       },
+//     }),
+//   ],
+//   worker: {
+//     format: "es",
+//   },
+//   build: {
+//     rollupOptions: {
+//       input: { main: "./index.html" },
+//       output: { manualChunks },
+//     },
+//     target: "es2022",
+//     sourcemap: false,
+//     minify: "esbuild",
+//     chunkSizeWarningLimit: 10000,
+//     assetsDir: "static",
+//     outDir: "dist",
+//   },
+// });
+
+
 // // vite.config.js
 // import { defineConfig } from "vite";
 // import react from "@vitejs/plugin-react";
