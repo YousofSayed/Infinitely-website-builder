@@ -473,7 +473,7 @@ export const Blocks = () => {
   };
 
   return (
-    <section ref={animatedRef} className="flex flex-col gap-2 h-full w-full ">
+    <section ref={animatedRef} className="flex flex-col gap-2 h-full w-full animate-go-to auto-animate">
       <header className="w-full relative" ref={animatedRefForHeader}>
         <SearchHeader
           search={search}

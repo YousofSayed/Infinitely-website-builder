@@ -33,7 +33,7 @@ export const ChoicesForStates = memo(({
 
   return (
     <section
-      className={`flex flex-col gap-1 transition-all border-2 p-1 rounded-lg w-full relative ${
+      className={`flex flex-col gap-1 transition-all border-2 p-1 rounded-lg w-full relative auto-animate ${
         currentStateIndex == keywordsIndex && rule.is
           ? " border-blue-500 "
           : "border-border-default"

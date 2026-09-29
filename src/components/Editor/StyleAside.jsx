@@ -12,7 +12,7 @@ import {
   showComponentsInLeftPanelState,
   showStylesBuilderForMotionBuilderState,
 } from "@/helpers/atoms";
-import { parse } from "@/helpers/cocktail";
+import { parse, uniqueID } from "@/helpers/cocktail";
 import {
   getComponentRules,
   getCurrentMediaDevice,
@@ -60,6 +60,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "react-toastify";
 import { useRecoilState, useRecoilValue } from "recoil";
 import { Icons } from "@/components/Icons/Icons";
+import { inf_class_name } from "@/constants/shared";
 
 const SelectElementToStyle = () => (
   <h1 className="text-slate-400 custom-font-size text-center animate-pulse capitalize font-semibold bg-surface-secondary rounded-lg p-2">
@@ -360,7 +361,6 @@ const StyleAccordion = () => {
                   </section>
                 ),
               )}
-
             </section>
           </ErrorBoundary>
         </AccordionItem>
@@ -440,8 +440,9 @@ export const StyleAside = ({ className }) => {
         mediaPx && mediaCond ? `(${mediaPx})` : ""
       } ${editor.config.mediaCondition ? ":" : ""} `;
 
-      let title = ` ${device.getName()?.toLowerCase?.() === "desktop" ? "" : mediaConditionTitle}
-    ${selectorWithRule}`;
+      let title =
+        ` ${device.getName()?.toLowerCase?.() === "desktop" ? "" : mediaConditionTitle}
+    ${selectorWithRule}`.trim();
 
       const edRule = editor.CssComposer.getRule(selectorWithRule.trim(), {
         ...currentMedia,
@@ -476,7 +477,7 @@ export const StyleAside = ({ className }) => {
       } else {
         setMediaCondTitle("");
       }
-      console.log(`From settingGlobalRuleTitle`);
+      console.log(`From settingGlobalRuleTitle`, title || "undefined");
     };
 
     settingGlobalRuleTitle();
@@ -563,7 +564,18 @@ export const StyleAside = ({ className }) => {
     if (!cnfrm) return;
     const slEL = editor?.getSelected();
     const Media = getCurrentMediaDevice(editor);
-    const currentSelector = getCurrentSelector(selector, slEL);
+    const newClassName = uniqueId(`infcls-${uniqueID()}-${random(100, 9999)}-`);
+    let currentSelector = getCurrentSelector(selector, slEL).trim();
+    const ruleSelector = `${currentSelector}${globalRule.ruleString}`;
+    console.log("ruleSelector", ruleSelector || "undefined");
+    const classes = [...slEL.getClasses()];
+    const infClassName = slEL.getAttributes()[inf_class_name] || "";
+    
+    if(!classes.includes(infClassName) && !classes.includes(newClassName) && !currentSelector){
+      slEL.addClass(newClassName);
+      slEL.setAttributes({ [inf_class_name]: newClassName });
+      currentSelector = `.${newClassName}`;
+    }
 
     const rule = editor.Css.getRule(
       `${currentSelector}${globalRule.ruleString}`,
@@ -610,6 +622,7 @@ export const StyleAside = ({ className }) => {
             className="hover:bg-[crimson!important] bg-surface-tertiary"
             showTooltip
             tooltipTitle="Delete Current Rule"
+            tooltipClassName="!bg-[crimson]"
             onClick={() => {
               removeCurrentMediaRule();
             }}
@@ -643,42 +656,6 @@ export const StyleAside = ({ className }) => {
           </OptionsButton>
         </section>
       )}
-      {/* {!showAnimeBuilder && (
-        <>
-          <DetailsNormal className="bg-surface-main " label={"Classes"}>
-            <SelectClass />
-          </DetailsNormal>
-
-          <DetailsNormal label={"States"} className="bg-surface-main">
-            <SelectState />
-          </DetailsNormal>
-        </>
-      )}
-
-       <DetailsNormal
-          label={"layout"}
-        >
-          <Layout />
-        </DetailsNormal> */}
-
-      {/* {!showAnimeBuilder && (
-        <InfAccordion>
-          <AccordionItem
-            title={"classes"}
-            slotProps={{ transition: { unmountOnExit: true } }}
-          >
-            {showClasses ? <SelectClass /> : null}
-          </AccordionItem>
-
-          <AccordionItem
-            key={2}
-            title={"states"}
-            slotProps={{ transition: { unmountOnExit: true } }}
-          >
-            <SelectState />
-          </AccordionItem>
-        </InfAccordion>
-      )} */}
 
       <section className=" flex flex-col gap-2 auto-animate animate-go-to">
         {!showsComponents.animationsBuilder &&

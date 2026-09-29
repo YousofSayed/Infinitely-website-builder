@@ -152,7 +152,7 @@ export const SelectClass = memo(() => {
   }, [selectedEl, editor]);
 
   return (
-    <section className="mt-3 flex flex-col gap-3 p-1 bg-surface-secondary rounded-lg">
+    <section className="mt-3 flex flex-col gap-3 p-1 bg-surface-secondary rounded-lg ">
       <section className="flex gap-2" inf-tokens-container="true">
         <Select
           value={value}
@@ -174,7 +174,7 @@ export const SelectClass = memo(() => {
       </section>
 
       {classesKeywrods?.[0] ? (
-        <section>
+        <section className="overflow-hidden">
           <Choices
             keywords={classesKeywrods}
             className="flex-wrap flex-center bg-surface-tertiary"

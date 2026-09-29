@@ -133,7 +133,7 @@ export function useSetClassForCurrentEl() {
       console.log("from set style current selector is : ", currentSelector);
       const classes = [...sle.getClasses()];
       const isCurrentSelectorAdded = classes.some(
-        (cls) => cls === currentSelector,
+        (cls) => cls === currentSelector, 
       );
 
       if (!currentSelector) {
