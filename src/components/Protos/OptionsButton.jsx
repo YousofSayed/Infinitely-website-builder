@@ -77,14 +77,14 @@ export const OptionsButton = ({
           // delayHide={10}
           // delayShow={10}
           id={`tooltip-${id.current}`}
-          className="w-fit p-[unset] z-[100] shadow-lg bg-surface-tertiary shadow-slate-950"
+          className="w-fit !p-[unset] [&_>div]:!p-2 z-[100] shadow-lg bg-surface-tertiary shadow-slate-950"
           style={{
             boxShadow: "0px 0px 10px 1px #020617",
-            padding: "5px",
+            padding: "5px !important",
             backgroundColor: "#1e293b",
           }}
-          noArrow={noArrow}
-          arrowColor={arrowColor}
+          // noArrow={noArrow}
+          // arrowColor={arrowColor}
           positionStrategy="fixed"
           anchorSelect={`#${id.current}`}
           place={place}
@@ -110,7 +110,7 @@ export const OptionsButton = ({
             mouseleave: false,
           }}
         >
-          <div onClick={handleTooltipClick}>{children}</div>
+          <div  onClick={handleTooltipClick}>{children}</div>
         </Tooltip>
        </Portal>
       )}

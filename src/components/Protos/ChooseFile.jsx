@@ -198,7 +198,8 @@ const MediaPopoverContent = memo(
           <VirtuosoGrid
             components={GridComponents}
             totalCount={mediaForPopover?.length}
-            listClassName="px-2"
+            listClassName="px-2 "
+            className="hideScrollBar"
             endReached={onScrollEnd}
             itemContent={(i) => {
               const asset = mediaForPopover[i];
@@ -328,7 +329,7 @@ export const ChooseFile = ({
   }, []);
 
   return (
-    <section ref={mediaRef} className="flex gap-2 w-full auto-animate">
+    <section ref={mediaRef} className="flex items-center gap-2 w-full auto-animate">
       <ShowIf condition={!hideInput}>
         <Input
           placeholder={placeholder}
@@ -348,7 +349,7 @@ export const ChooseFile = ({
 
       <OptionsButton
         className="!bg-surface-tertiary aspect-square"
-        icon={() => <Icons.attachment fill="white" />}
+        icon={<Icons.attachment fill="white" /> }
         onClick={handleOpenPopover}
       >
         {isPopoverMounted && (

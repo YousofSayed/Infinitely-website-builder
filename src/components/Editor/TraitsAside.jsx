@@ -653,11 +653,17 @@ export const TraitsAside = memo(() => {
    * Keep same logic, but wrap heavy traits rendering in startTraitsTransition.
    */
   useEffect(() => {
-    if (!editor || !editor.getSelected()) return;
+    if (!editor || !editor.getSelected()) {
+      setSelectedCmp(null);
+      return;
+    }
 
     const handler = () => {
       const selectedEl = editor.getSelected();
-      if (!selectedEl) return;
+      if (!selectedEl) {
+        setSelectedCmp(null);
+        return;
+      }
 
       const buildFileName = selectedEl.getAttributes()[inf_build_url];
       const contentLangType =
@@ -905,44 +911,48 @@ export const TraitsAside = memo(() => {
           </section>
         </AccordionItem>
 
-        <AccordionItem title={"Props (Advanced)"}>
-          <ul className="flex flex-col gap-2 p-1 bg-surface-secondary rounded-lg">
-            {editorComponentProps
-              .map((prop) =>
-                selectedCmp ? [prop, selectedCmp?.props()[prop]] : null,
-              )
-              .filter(Boolean)
-              .map(([prop, val], i) => {
-                return (
-                  <li
-                    key={i}
-                    className="p-1 bg-surface-tertiary rounded-lg flex items-center justify-between gap-2"
-                  >
-                    <FitTitle className="custom-font-size">{prop}</FitTitle>
+        <ShowIf condition={selectedCmp}>
+          {() => (
+            <AccordionItem title={"Props (Advanced)"}>
+              <ul className="flex flex-col gap-2 p-1 bg-surface-secondary rounded-lg">
+                {editorComponentProps
+                  .map((prop) =>
+                    selectedCmp ? [prop, selectedCmp?.props()[prop]] : null,
+                  )
+                  .filter(Boolean)
+                  .map(([prop, val], i) => {
+                    return (
+                      <li
+                        key={i}
+                        className="p-1 bg-surface-tertiary rounded-lg flex items-center justify-between gap-2"
+                      >
+                        <FitTitle className="custom-font-size">{prop}</FitTitle>
 
-                    <SwitchButton
-                      defaultValue={val}
-                      onSwitch={(value) => {
-                        const selectedCmp = editor.getSelected();
-                        if (!selectedCmp) return;
+                        <SwitchButton
+                          defaultValue={val}
+                          onSwitch={(value) => {
+                            const selectedCmp = editor.getSelected();
+                            if (!selectedCmp) return;
 
-                        selectedCmp.set(prop, value);
-                        selectedCmp.view?.render?.();
+                            selectedCmp.set(prop, value);
+                            selectedCmp.view?.render?.();
 
-                        editor.trigger("component:update", selectedCmp);
-                        initToolbar(editor, selectedCmp);
-                        editor.trigger(InfinitelyEvents.layers.update);
-                        editor.trigger(
-                          InfinitelyEvents.component.update_content,
-                        );
-                        triggerSymbolEvent(editor, selectedCmp);
-                      }}
-                    />
-                  </li>
-                );
-              })}
-          </ul>
-        </AccordionItem>
+                            editor.trigger("component:update", selectedCmp);
+                            initToolbar(editor, selectedCmp);
+                            editor.trigger(InfinitelyEvents.layers.update);
+                            editor.trigger(
+                              InfinitelyEvents.component.update_content,
+                            );
+                            triggerSymbolEvent(editor, selectedCmp);
+                          }}
+                        />
+                      </li>
+                    );
+                  })}
+              </ul>
+            </AccordionItem>
+          )}
+        </ShowIf>
 
         <ShowIf
           condition={Boolean(
@@ -994,7 +1004,10 @@ export const TraitsAside = memo(() => {
                     height:
                       visibleTraits.length > 3
                         ? "calc(100vh - 400px)"
-                        : `${visibleTraits.length * 55}px`,
+                        : `${visibleTraits.map((tr) => {
+                            if (tr.type !== "switch") return 95;
+                            return 50;
+                          }).reduce((a, b) => a + b, 0 )}px`,
                   }}
                   overscan={6}
                   className="hideScrollBar flex !flex-col !gap-2 "

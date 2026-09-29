@@ -225,7 +225,7 @@ export const CreateProjectModal = ({
       workerCallbackMakerWithProps(
         infinitelyWorker,
         "createProject",
-        {data},
+        { data },
         (props) => {
           if (props?.done) {
             setShowCrtModal(false);
@@ -251,11 +251,9 @@ export const CreateProjectModal = ({
           onClick={(ev) => {
             setShowCrtModal(false);
           }}
-          className={
-            `
+          className={`
             fixed ${window?.electron?.isDesktop ? "top-[40px]" : "top-0"} left-0 w-full h-full bg-blue-950/40 backdrop-blur-sm flex items-center justify-center z-50
-            `
-          }
+            `}
           id="createProjectModal"
         >
           <section
@@ -266,7 +264,7 @@ export const CreateProjectModal = ({
 
               ev.preventDefault();
             }}
-            className="bg-surface-main text-text-primary rounded-lg shadow-lg shadow-slate-950 max-w-lg w-full p-6"
+            className="bg-surface-main z-10 text-text-primary rounded-lg shadow-lg shadow-slate-950 max-w-lg w-full p-6"
           >
             <div className="flex justify-between items-center border-b border-slate-800 pb-3">
               <h2 className="text-lg font-semibold">Create New Project</h2>
@@ -284,7 +282,13 @@ export const CreateProjectModal = ({
               </button>
             </div>
             <div className="mt-4">
-              <form id="createProjectForm" ref={animatedRed}>
+              <form
+                id="createProjectForm"
+                ref={animatedRed}
+                onSubmit={(ev) => {
+                  ev.preventDefault();
+                }}
+              >
                 <div className="mb-4">
                   <label
                     htmlFor="projectName"
@@ -294,6 +298,7 @@ export const CreateProjectModal = ({
                   </label>
                   <input
                     onInput={(ev) => {
+                      ev.stopPropagation();
                       onInput(ev.target.value);
                       setData({ ...data, name: ev.target.value });
                     }}
@@ -314,6 +319,7 @@ export const CreateProjectModal = ({
                   </label>
                   <textarea
                     onInput={(ev) => {
+                      ev.stopPropagation();
                       onInputTextarea(ev.target.value);
                       setData({ ...data, description: ev.target.value });
                     }}
@@ -333,6 +339,7 @@ export const CreateProjectModal = ({
                     App type
                   </label>
                   <Select
+                    zIndex={9999999}
                     id="projectDescription"
                     name="projectDescription"
                     placeholder="Enter app type"

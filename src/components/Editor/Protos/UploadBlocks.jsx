@@ -20,7 +20,7 @@ import { SmallButton } from "@/components/Editor/Protos/SmallButton";
 import { SymbolsAndTemplatesHandler } from "@/components/Editor/Protos/SymbolsAndTemplatesHandler";
 import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useEditorMaybe } from "@grapesjs/react";
-import { For } from "million/react";
+// import { For } from "million/react";
 import React, { useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { VirtuosoGrid } from "react-virtuoso";
@@ -271,7 +271,7 @@ export const UploadBlocks = () => {
               scrollbarGutter: "stable",
             }}
           >
-            <For each={uploadedBlocks}>
+            {/* <For each={uploadedBlocks}>
               {(symbol, i) => (
                 <section
                   key={i}
@@ -304,7 +304,40 @@ export const UploadBlocks = () => {
                   </section>
                 </section>
               )}
-            </For>
+            </For> */}
+
+            {uploadedBlocks.map((symbol, i) => (
+                <section
+                  key={i}
+                  className="p-2 pl-[2px!important] bg-surface-tertiary h-[50px] rounded-lg flex justify-between items-center  gap-2"
+                >
+                  <FitTitle className="flex items-center gap-2 w-full justify-center ">
+                    <figure
+                      className=" h-full py-2 flex justify-center items-center rounded-lg"
+                      dangerouslySetInnerHTML={{ __html: symbol.media }}
+                    ></figure>
+                    <span
+                      style={{ textWrap: "wrap" }}
+                      className="font-semibold custom-font-size  capitalize text-text-primary text-[14px]"
+                    >
+                      {symbol.name}
+                    </span>
+                  </FitTitle>
+
+                  <section className="flex h-full gap-2">
+                    <SmallButton
+                      title={"delete"}
+                      className="p-2 bg-surface-secondary  hover:bg-[crimson!important] transition-all"
+                      tooltipClassName="bg-[crimson!important]"
+                      onClick={() => {
+                        deleteUploadedBlock(symbol.id);
+                      }}
+                    >
+                      {Icons.trash("white")}
+                    </SmallButton>
+                  </section>
+                </section>
+            ))}
           </section>
         </section>
       )}

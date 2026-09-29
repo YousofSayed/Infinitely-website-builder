@@ -56,11 +56,15 @@ export const Projects = () => {
        
 
         <section className="h-full max-h-full overflow-y-auto hideScrollBar  grid gap-2 p-1 overflow-auto grid-cols-[repeat(auto-fill,minmax(250px,1fr))] auto-rows-[320px]">
-          <For each={dbProjects?.filter(pr=>pr.inited)} memo={false}>
+          {/* <For each={dbProjects?.filter(pr=>pr.inited)} memo={false}>
             {(project, i) => {
               return <Project key={project.id} project={project} />;
             }}
-          </For>
+          </For> */}
+
+          {dbProjects?.filter(pr=>pr.inited)?.map((project, i) => {
+            return <Project key={project.id} project={project} />;
+          })}
 
         
         </section>

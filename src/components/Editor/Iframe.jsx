@@ -430,9 +430,9 @@ export const Iframe = () => {
   useUpdateWpEditorScriptsInBackground();
 
   return (
-    <section className="relative bg-[#aaa] h-full animate-go-to">
+    <section className="relative bg-[#aaa] h-full animate-go-to auto-animate">
       {showsComponents.animationsBuilder && (
-        <section className="grid place-items-center p-2 absolute top-0 left-0 z-20 bg-blue-900/40 backdrop-blur-sm w-full h-full">
+        <section className="grid place-items-center p-2 absolute top-0 left-0 z-[120] bg-blue-900/40  isolate w-full h-full">
           <section className="flex flex-col items-center justify-center self-center p-3 bg-surface-secondary shadow-2xl shadow-slate-950 rounded-lg gap-5">
             <figure className="relative w-fit">
               {Icons.animation(undefined, undefined, "#2563eb", 60, 60)}

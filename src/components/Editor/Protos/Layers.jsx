@@ -2,7 +2,7 @@ import { InfinitelyEvents } from "@/constants/infinitelyEvents";
 import { layersType, refType } from "@/helpers/jsDocs";
 import { Layer } from "@/components/Editor/Protos/Layer";
 import { useEditorMaybe } from "@grapesjs/react";
-import { For } from "million/react";
+// import { For } from "million/react";
 import React, { memo, useEffect, useRef, useState } from "react";
 
 // million-ignore
@@ -21,8 +21,7 @@ export const Layers = memo(() => {
   const layerstRef = useRef(refType);
 
   const [layers, setLayers] = useState(layersType);
-const [tick, setTick] = useState(0);
-
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     if (!editor) return;
@@ -33,7 +32,7 @@ const [tick, setTick] = useState(0);
       layerFrame = requestAnimationFrame(() => {
         // alert("update layers");
         setLayers([editor.getWrapper().getId()]);
-        setTick(tick => tick + 1);
+        setTick((tick) => tick + 1);
       });
     };
 
@@ -45,7 +44,7 @@ const [tick, setTick] = useState(0);
     editor.on(InfinitelyEvents.layers.update, updateLayers);
 
     return () => {
-        cancelAnimationFrame(layerFrame);
+      cancelAnimationFrame(layerFrame);
       editor.off("component:add", updateLayers);
       editor.off("component:remove", updateLayers);
       editor.off("page:select", updateLayers);
@@ -56,7 +55,7 @@ const [tick, setTick] = useState(0);
   return (
     <section id="layers" className="h-full hideScrollBar" ref={layerSecRef}>
       <main id="layer-wrapper" className="h-full">
-        <For each={layers} >
+        {/* <For each={layers}>
           {(item, i) => {
             const layerId = item;
 
@@ -71,7 +70,18 @@ const [tick, setTick] = useState(0);
               />
             );
           }}
-        </For>
+        </For> */}
+
+        {layers.map((layerId, i) => (
+          <Layer
+            setLayers={setLayers}
+            layerId={layerId}
+            layersRef={layerstRef}
+            index={i}
+            key={layerId}
+            tick={tick}
+          />
+        ))}
       </main>
     </section>
   );

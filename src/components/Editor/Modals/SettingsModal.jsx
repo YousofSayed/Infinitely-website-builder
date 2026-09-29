@@ -35,7 +35,7 @@ import { Input } from "@/components/Editor/Protos/Input";
 import { MiniTitle } from "@/components/Editor/Protos/MiniTitle";
 import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useEditorMaybe } from "@grapesjs/react";
-import { For } from "million/react";
+// import { For } from "million/react";
 import React, {
   useCallback,
   useEffect,
@@ -241,7 +241,7 @@ export const SettingsModal = () => {
         />
 
         <section className="grid grid-cols-3 gap-2">
-          <For
+          {/* <For
             each={Object.entries(
               searchedSettings ? searchedSettings : projectSettings,
             )}
@@ -279,7 +279,43 @@ export const SettingsModal = () => {
                 />
               </article>
             )}
-          </For>
+          </For> */}
+
+          {Object.entries(
+            searchedSettings ? searchedSettings : projectSettings,
+          ).map(([key, value], i) => (
+            <article
+              key={key}
+              title={key}
+              className="flex justify-between  gap-2 items-center px-2 py-3 rounded-lg bg-surface-tertiary"
+            >
+              <h1 className="custom-font-size overflow-hidden text-ellipsis  flex-shrink capitalize">
+                {key.replaceAll("_", " ")}
+              </h1>
+              <SwitchButton
+                disabled={isSaveEditorScriptsPending}
+                defaultValue={
+                  searchedSettings?.[key]
+                    ? searchedSettings?.[key]
+                    : projectSettings[key]
+                }
+                onActive={async (ev) => {
+                  await saveEditorScripts(key, true);
+                  // setCurrentChange(key);
+                  // setTimeout(() => {
+                  //   setProjectSetting({ [key]: true });
+                  // });
+                }}
+                onUnActive={async (ev) => {
+                  await saveEditorScripts(key, false);
+                  // setCurrentChange(key);
+                  // setTimeout(() => {
+                  //   setProjectSetting({ [key]: false });
+                  // });
+                }}
+              />
+            </article>
+          ))}
         </section>
       </section>
 

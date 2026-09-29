@@ -34,7 +34,7 @@ import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { useEditorMaybe } from "@grapesjs/react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { For } from "million/react";
+// import { For } from "million/react";
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { VirtuosoGrid } from "react-virtuoso";
@@ -313,9 +313,61 @@ export const WpSymbolsAndTemplatesHandler = ({
 
       <ShowIf condition={Boolean(symbols?.length)}>
         <section className="w-full  grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] overflow-y-auto hideScrollBar  gap-2">
-          <For each={symbols}>
+          {/* <For each={symbols}>
             {(symbol, i) => (
               <section
+                key={i}
+                className="p-1  bg-surface-tertiary h-[50px] rounded-lg flex justify-between items-center  gap-3"
+              >
+                <FitTitle className="flex gap-2 items-center h-full  w-[calc(100%-115px)] overflow-hidden">
+                  <figure
+                    className=" h-full py-1 w-[35px]  bg-surface-secondary flex justify-center items-center rounded-lg"
+                    dangerouslySetInnerHTML={{ __html: symbol.media }}
+                  >
+
+                  </figure>
+                  <span
+                    title={symbol.slug}
+                    className="font-semibold shrink-0 custom-font-size capitalize text-ellipsis overflow-hidden  text-text-primary text-[14px] "
+                  >
+                    {symbol.slug}
+                  </span>
+                </FitTitle>
+
+                <section className="flex gap-2">
+                  {showDeleteBtn && (
+                    <SmallButton
+                      title={"delete"}
+                      className="p-1 bg-surface-secondary hover:bg-brand-primary transition-all"
+                      onClick={() => {
+                        deleteSymbol(symbol.id, symbol.name);
+                      }}
+                    >
+                      {Icons.trash("white")}
+                    </SmallButton>
+                  )}
+
+                  {showDownloadBtn && (
+                    <SmallButton
+                      title={"export as json"}
+                      className="p-1 bg-surface-secondary hover:bg-brand-primary transition-all"
+                      onClick={() => {
+                        exportSymbol(symbol);
+                      }}
+                    >
+                      {Icons.export("white")}
+                    </SmallButton>
+                  )}
+
+                  {children}
+                  {btns({ id: symbol.id, name: symbol.name })}
+                </section>
+              </section>
+            )}
+          </For> */}
+
+          {symbols.map((symbol, i) => (
+            <section
                 key={i}
                 className="p-1  bg-surface-tertiary h-[50px] rounded-lg flex justify-between items-center  gap-3"
               >
@@ -363,8 +415,7 @@ export const WpSymbolsAndTemplatesHandler = ({
                   {btns({ id: symbol.id, name: symbol.name })}
                 </section>
               </section>
-            )}
-          </For>
+          ))}
         </section>
       </ShowIf>
 

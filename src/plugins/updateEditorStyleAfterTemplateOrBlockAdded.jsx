@@ -22,7 +22,7 @@ export const updateEditorStyleAfterTemplateOrBlockAdded = (editor) => {
      * @returns
      */
     async (cmp) => {
-      console.log("component:add : ", cmp);
+      // console.log("component:add : ", cmp);
       if (!cmp) return;
       const symbolInf = getInfinitelySymbolInfo(cmp);
       symbolInf.isSymbol &&
@@ -39,7 +39,7 @@ export const updateEditorStyleAfterTemplateOrBlockAdded = (editor) => {
           
           if (!style_file) return;
           const style_file_content = await style_file.text();
-          console.log('style_file : ' , style_file , style_file_content || undefined  , symbolInf.mainId);
+          // console.log('style_file : ' , style_file , style_file_content || undefined  , symbolInf.mainId);
           // sessionStorage.removeItem(current_symbol_id)/;
           reorderCss(editor, `${style_file_content} ${editor.getCss()} `, true);
           // editor.addComponents(`<style>${style_file_content}</style>`);

@@ -23,7 +23,7 @@ import { Checkbox } from "@/components/Protos/Checkbox";
 import { OptionsButton } from "@/components/Protos/OptionsButton";
 import { useEditorMaybe } from "@grapesjs/react";
 import { isArray, isFunction } from "lodash";
-import React, { useRef, useState } from "react";
+import React, { memo, useRef, useState } from "react";
 import mime from "mime";
 import { defineRoot, toMB } from "@/helpers/bridge";
 import { toast } from "react-toastify";
@@ -54,7 +54,7 @@ import { opfs } from "@/helpers/initOpfs";
  * }} param0
  * @returns
  */
-export const FileView = ({
+export const FileView = memo(({
   media,
   showOptions = true,
   callback,
@@ -68,7 +68,7 @@ export const FileView = ({
       media?.media_type ||
     "application/octet-stream";
   const fileNameRef = useRef(refType);
-  const { isBusy, runWithBusy } = useBusy();
+
   const editor = useEditorMaybe();
   const [showFilNameTooltib, setShowFileNameTooltib] = useState(false);
   const projectId = +localStorage.getItem(current_project_id);
@@ -164,6 +164,7 @@ export const FileView = ({
   const [downloadMedia, { isLoading: isDownloading }] = useBusyCallback(
     async (e) => {
       e.stopPropagation();
+      e.preventDefault();
       const tid = toast.loading(
         <ToastMsgInfo msg={`Downloading ${media.slug}...`} />,
       );
@@ -287,6 +288,7 @@ export const FileView = ({
       <figure
         onDoubleClick={(ev) => {
           ev.stopPropagation();
+          ev.preventDefault();
           onItemClicked(ev, media);
         }}
         className=" p-2 h-[150px]  cursor-pointer rounded-lg  bg-surface-tertiary"
@@ -409,7 +411,7 @@ export const FileView = ({
       )}
     </section>
   );
-};
+});
 
 // import {
 //   current_page_id,

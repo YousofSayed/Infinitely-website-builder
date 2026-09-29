@@ -147,6 +147,10 @@ body.disable-when-load .disable-when-load::before {
   z-index: 1;
 }
 
+/* .react-tooltip-content-wrapper {
+  padding: 0 !important;
+} */
+
 /* =========================================================
    AMBIENT SHADOWS
    ========================================================= */

@@ -12,7 +12,7 @@ export const infProps = (editor) => {
        * @returns
     */
         (cmp) => {
-            console.log('compo update : ', cmp);
+            // console.log('compo update : ', cmp);
             const attrs = cmp.getAttributes();
             
         });

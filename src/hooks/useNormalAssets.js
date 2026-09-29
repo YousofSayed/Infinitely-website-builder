@@ -5,11 +5,16 @@ import { useNormal } from "@/hooks/useNormal";
 import { isFunction, uniqueId } from "lodash";
 import React, { useState } from "react";
 
-export const useNormalAssets = ({ callback = async (files = []) => {}  , deps = []} ) => {
+export const useNormalAssets = ({
+  callback = async (files = []) => {},
+  deps = [],
+}) => {
   const [loading, setLoading] = useState(true);
 
   useNormal(async () => {
-    const getAndSet = async () => {
+    const getAndSet = async (data) => {
+      console.log("data from assetes", data);
+
       setLoading(true);
       const currentPageName = getCurrentPageName();
 
@@ -43,7 +48,7 @@ export const useNormalAssets = ({ callback = async (files = []) => {}  , deps = 
       console.log("normal mode files", files);
 
       if (isFunction(callback)) {
-       await callback(files);
+        await callback(files);
       }
       // unSelectAll();
       // setMediaFiles((old) => [...files]);
@@ -54,14 +59,35 @@ export const useNormalAssets = ({ callback = async (files = []) => {}  , deps = 
 
     await getAndSet();
 
-    const evCleaner = opfs.on("all", getAndSet);
-    const brCleaner = opfs.onBroadcast("all", getAndSet);
+    const evCleaner = opfs.on(
+      [
+        "fileCreated",
+        "filesCreated",
+        "folderCreated",
+        "foldersCreated",
+        "entryRemoved",
+        "entriesRemoved",
+      ],
+      getAndSet,
+    );
+
+    const brCleaner = opfs.onBroadcast(
+      [
+        "fileCreated",
+        "filesCreated",
+        "folderCreated",
+        "foldersCreated",
+        "entryRemoved",
+        "entriesRemoved",
+      ],
+      getAndSet,
+    );
 
     return () => {
       evCleaner();
       brCleaner();
     };
-  }, [ ...deps ]);
+  }, [...deps]);
 
   return { loading };
 };

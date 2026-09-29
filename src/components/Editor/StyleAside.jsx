@@ -47,7 +47,7 @@ import {
   random,
   uniqueId,
 } from "lodash";
-import { For } from "million/react";
+// import { For } from "million/react";
 import React, {
   memo,
   useEffect,
@@ -133,7 +133,7 @@ const StyleAccordion = () => {
   //   setNotifires(newNotf);
   // }
 
-    function notifing(styles) {
+  function notifing(styles) {
     let newNotf = {};
     for (const key in styles) {
       const kebabProp = toKebabCase(key);
@@ -145,10 +145,13 @@ const StyleAccordion = () => {
     }
 
     // 🚀 Only update state if notifications actually changed
-    setNotifires(prev => {
-      const prevKeys = Object.keys(prev).filter(k => prev[k]);
-      const newKeys = Object.keys(newNotf).filter(k => newNotf[k]);
-      if (prevKeys.length === newKeys.length && prevKeys.every(k => newNotf[k])) {
+    setNotifires((prev) => {
+      const prevKeys = Object.keys(prev).filter((k) => prev[k]);
+      const newKeys = Object.keys(newNotf).filter((k) => newNotf[k]);
+      if (
+        prevKeys.length === newKeys.length &&
+        prevKeys.every((k) => newNotf[k])
+      ) {
         return prev;
       }
       return newNotf;
@@ -180,15 +183,15 @@ const StyleAccordion = () => {
 
   return (
     <Accordion>
-      <For each={Object.entries(filteredStyles)}>
-        {([key, styles], i) => (
-          <AccordionItem key={i} title={key} notify={notifires[key]}>
-            <ErrorBoundary fallbackRender={SelectElementToStyle}>
-              <section
-                className="flex flex-col gap-1 w-full  bg-surface-secondary rounded-lg animate-go-to auto-animate"
-                inf-css-tokens-container="true"
-              >
-                <For each={styles}>
+      {/* <For each={Object.entries(filteredStyles)}> */}
+      {Object.entries(filteredStyles).map(([key, styles], i) => (
+        <AccordionItem key={i} title={key} notify={notifires[key]}>
+          <ErrorBoundary fallbackRender={SelectElementToStyle}>
+            <section
+              className="flex flex-col gap-1 w-full  bg-surface-secondary rounded-lg animate-go-to auto-animate"
+              inf-css-tokens-container="true"
+            >
+              {/* <For each={styles}>
                   {(
                     {
                       cssProp,
@@ -271,12 +274,98 @@ const StyleAccordion = () => {
                       {type == "custom" && <Component />}
                     </section>
                   )}
-                </For>
-              </section>
-            </ErrorBoundary>
-          </AccordionItem>
-        )}
-      </For>
+                </For> */}
+
+              {styles.map(
+                (
+                  {
+                    cssProp,
+                    type,
+                    title,
+                    separator,
+                    keywords,
+                    directions,
+                    choices,
+                    placeholder,
+                    splitHyphen,
+                    Component,
+                    special,
+                    units,
+                  },
+                  i,
+                ) => (
+                  <section
+                    title={cssProp}
+                    key={i}
+                    className="flex flex-col gap-1 w-full p-1 bg-surface-secondary rounded-lg"
+                  >
+                    {type == "title" && <MiniTitle>{title}</MiniTitle>}
+                    {type == "property" && (
+                      <Property
+                        cssProp={cssProp}
+                        label={title}
+                        placeholder={placeholder || title}
+                        special={special}
+                      />
+                    )}
+                    {type == "select" && (
+                      <SelectStyle
+                        cssProp={cssProp}
+                        label={title}
+                        placeholder={placeholder || title}
+                        keywords={keywords}
+                        splitHyphen={splitHyphen}
+                      />
+                    )}
+                    {type == "color" && (
+                      <Color
+                        label={title}
+                        cssProp={cssProp}
+                        placeholder={placeholder || title}
+                      />
+                    )}
+                    {type == "directions" && (
+                      <DirectionsModel
+                        tProp={directions.tProp}
+                        rProp={directions.rProp}
+                        bProp={directions.bProp}
+                        lProp={directions.lProp}
+                      />
+                    )}
+                    {type == "multi-choice" && (
+                      <MultiChoice
+                        cssProp={cssProp}
+                        choices={choices}
+                        label={title}
+                      />
+                    )}
+                    {type == "multi-function-prop" && (
+                      <MultiFunctionProp
+                        cssProp={cssProp}
+                        placeholder={placeholder || title}
+                        keywords={keywords}
+                        units={units}
+                      />
+                    )}
+                    {type == "multi-values-for-single-prop" && (
+                      <AddMultiValuestoSingleProp
+                        cssProp={cssProp}
+                        label={title}
+                        keywords={keywords}
+                        placeholder={placeholder || title}
+                        separator={separator}
+                      />
+                    )}
+                    {type == "custom" && <Component />}
+                  </section>
+                ),
+              )}
+
+            </section>
+          </ErrorBoundary>
+        </AccordionItem>
+      ))}
+      {/* </For> */}
     </Accordion>
   );
 };
@@ -358,7 +447,7 @@ export const StyleAside = ({ className }) => {
         ...currentMedia,
       });
 
-      const rulesOfCurrentSle = cmpRules
+      const rulesOfCurrentSle = cmpRules;
       //  getComponentRules({
       //   editor,
       //   cmp: editor.getSelected(),
@@ -609,4 +698,4 @@ export const StyleAside = ({ className }) => {
       </section>
     </section>
   );
-}
+};

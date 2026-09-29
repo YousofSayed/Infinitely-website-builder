@@ -141,9 +141,38 @@ export const Header = () => {
               className={`${dropboxFiles.length && `grid grid-cols-2 grid-rows-[135px] gap-2 overflow-hidden  overflow-y-auto [scrollbar-gutter:stable] rounded-lg   ${dropboxFiles.length > 4 && `pr-1`}`}`}
             >
               {Boolean(dropboxFiles.length) && checkDropBoxSignInState() ? (
-                <For each={dropboxFiles}>
-                  {(fileMeta, i) => (
-                    <li key={i} className=" h-[135px]">
+                // <For each={dropboxFiles}>
+                //   {(fileMeta, i) => (
+                //     <li key={i} className=" h-[135px]">
+                //       <figure className="p-2 h-full rounded-lg bg-surface-secondary flex flex-col items-center gap-3 w-full">
+                //         <i>
+                //           {Icons.file({ fill: "white", width: 30, height: 30 })}
+                //         </i>
+                //         <figcaption className="p-2 max-w-full bg-surface-tertiary rounded-md custom-font-size text-nowrap  overflow-hidden text-ellipsis">
+                //           {fileMeta.name}
+                //         </figcaption>
+                //         <SmallButton
+                //           disabled={isLoadingDBX}
+                //           tooltipTitle={`Export : ${fileMeta.name}`}
+                //           className="h-[35px] bg-surface-tertiary"
+                //           onClick={async (ev) => {
+                //             addClickClass(ev.currentTarget, "click");
+                //             // await loadDropBoxProject(fileMeta.path_lower, {
+                //             //   apps: "Dropbox",
+                //             //   dropboxFileMeta: fileMeta,
+                //             // });
+                //             await loadDBXProject(ev, fileMeta);
+                //           }}
+                //         >
+                //           {Icons.export("white")}
+                //         </SmallButton>
+                //       </figure>
+                //     </li>
+                //   )}
+                // </For>
+
+                dropboxFiles.map((fileMeta, i) => (
+                  <li key={i} className=" h-[135px]">
                       <figure className="p-2 h-full rounded-lg bg-surface-secondary flex flex-col items-center gap-3 w-full">
                         <i>
                           {Icons.file({ fill: "white", width: 30, height: 30 })}
@@ -168,8 +197,7 @@ export const Header = () => {
                         </SmallButton>
                       </figure>
                     </li>
-                  )}
-                </For>
+                ))
               ) : (
                 <section className="w-full h-full">
                   <Loader />
