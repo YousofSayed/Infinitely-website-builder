@@ -94,24 +94,47 @@ function App() {
       command: "refreshSW",
     });
 
+    // (async () => {
+    //   const prevRegs = await navigator.serviceWorker.getRegistrations();
+    //   if (!(prevRegs.length && navigator.serviceWorker.controller)) {
+    //     setAppInstalling(true);
+    //     localStorage.setItem("installed", "false");
+    //     await initDBAssetsSw(() => {
+    //       setAppInstalling(false);
+    //       localStorage.setItem("installed", "true");
+    //     });
+    //   } else {
+    //     localStorage.setItem("installed", "true");
+    //     setAppInstalling(false);
+    //   }
+    //   console.log(
+    //     "Previous registrations:",
+    //     prevRegs,
+    //     navigator.serviceWorker.controller,
+    //   );
+    // })();
+
     (async () => {
-      const prevRegs = await navigator.serviceWorker.getRegistrations();
-      if (!(prevRegs.length && navigator.serviceWorker.controller)) {
-        setAppInstalling(true);
+      try {
+        !Boolean(localStorage.getItem('installed')) && setAppInstalling(true);
+
         localStorage.setItem("installed", "false");
-        await initDBAssetsSw(() => {
-          setAppInstalling(false);
+
+        const result = await initDBAssetsSw();
+
+        if (result?.installed) {
           localStorage.setItem("installed", "true");
-        });
-      } else {
-        localStorage.setItem("installed", "true");
+          setAppInstalling(false);
+        } else {
+          localStorage.setItem("installed", "false");
+          setAppInstalling(false);
+        }
+      } catch (error) {
+        console.error("PWA installation failed:", error);
+
+        localStorage.setItem("installed", "false");
         setAppInstalling(false);
       }
-      console.log(
-        "Previous registrations:",
-        prevRegs,
-        navigator.serviceWorker.controller,
-      );
     })();
 
     /**
@@ -152,53 +175,53 @@ function App() {
   console.log("is desktop:", window.electron?.isDesktop);
 
   return (
-     <>
-        <ShowIf condition={appInstalling}>
-          <AppInstalling />
-        </ShowIf>
+    <>
+      <ShowIf condition={appInstalling}>
+        <AppInstalling />
+      </ShowIf>
 
-        <ShowIf condition={!appInstalling}>
-          <Routes>
-            <Route
-              path="/"
-              element={<Editor />}
-              action={
-                Boolean(+localStorage.getItem(current_project_id))
-                  ? null
-                  : () => navigate("/workspace")
-              }
-            >
-              <Route path="add-blocks" element={<Blocks />} />
-              <Route path="edite">
-                <Route path="styling" element={<StyleAside />} />
-                <Route path="traits" element={<TraitsAside />} />
-                <Route path="commands" element={<Commands />} />
-                <Route path="interactions" element={<Interactions />} />
-                <Route path="motion" element={<Motion />} />
-                {/* <Route path="choose-and-write-model" element={<ChooseModel />}>
+      <ShowIf condition={!appInstalling}>
+        <Routes>
+          <Route
+            path="/"
+            element={<Editor />}
+            action={
+              Boolean(+localStorage.getItem(current_project_id))
+                ? null
+                : () => navigate("/workspace")
+            }
+          >
+            <Route path="add-blocks" element={<Blocks />} />
+            <Route path="edite">
+              <Route path="styling" element={<StyleAside />} />
+              <Route path="traits" element={<TraitsAside />} />
+              <Route path="commands" element={<Commands />} />
+              <Route path="interactions" element={<Interactions />} />
+              <Route path="motion" element={<Motion />} />
+              {/* <Route path="choose-and-write-model" element={<ChooseModel />}>
               <Route path="dynamic-content" element={<DynamicContent />} />
               <Route
                 path="dynamic-attributes"
                 element={<DynamicAttributes />}
               />
             </Route> */}
-              </Route>
             </Route>
+          </Route>
 
-            <Route path="/preview" element={<Preview />} />
+          <Route path="/preview" element={<Preview />} />
 
-            <Route path="/workspace" element={<Workspace />}></Route>
-            <Route path="wordpress/create" element={<WpCreate />}></Route>
-            <Route path="wordpress/select" element={<WpSelect />}></Route>
-            <Route path="wordpress/preview" element={<Preview />}></Route>
+          <Route path="/workspace" element={<Workspace />}></Route>
+          <Route path="wordpress/create" element={<WpCreate />}></Route>
+          <Route path="wordpress/select" element={<WpSelect />}></Route>
+          <Route path="wordpress/preview" element={<Preview />}></Route>
 
-            {/* <Route path="/share" element={<Share />}></Route> */}
+          {/* <Route path="/share" element={<Share />}></Route> */}
 
-            {isDevMode() && <Route path="opfs-dev" element={<Opfs />} />}
-          </Routes>
-        </ShowIf>
-        <Portal container={document.querySelector(`#root`)}>
-          <ToastContainer
+          {isDevMode() && <Route path="opfs-dev" element={<Opfs />} />}
+        </Routes>
+      </ShowIf>
+      <Portal container={document.querySelector(`#root`)}>
+        <ToastContainer
           autoClose={3000}
           draggable={true}
           theme="dark"
@@ -209,8 +232,8 @@ function App() {
           className="z-[1000000]"
           style={{ top: window.electron?.isDesktop ? "40px" : "1rem" }}
         />
-        </Portal>
-      </>
+      </Portal>
+    </>
     // <Suspense fallback={<Loader />}>
     // <main className="w-full h-full flex flex-col  relative">
     //   {window.electron?.isDesktop && <ElectronTitleBar />}
@@ -256,7 +279,7 @@ function App() {
     //       {isDevMode() && <Route path="opfs-dev" element={<Opfs />} />}
     //     </Routes>
     //   )}
-     
+
     // </main>
     // </Suspense>
   );

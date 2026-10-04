@@ -77,6 +77,7 @@ async function createWindow() {
       nodeIntegration: false,
       sandbox: false,
       focusOnNavigation: false,
+      partition: "persist:infinitely",
     },
   });
 
@@ -89,7 +90,7 @@ async function createWindow() {
   // });
 
   // Development shortcuts
-  if (!app.isPackaged) {
+  // if (!app.isPackaged) {
     win.webContents.on("before-input-event", (event, input) => {
       if (
         input.type === "keyDown" &&
@@ -117,13 +118,12 @@ async function createWindow() {
         event.preventDefault();
       }
     });
-  }
+  // }
 
   // Splash
   await win.loadFile(path.join(__dirname, "desktop", "splash.html"));
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
-
 
   // App
   await win.loadURL(
