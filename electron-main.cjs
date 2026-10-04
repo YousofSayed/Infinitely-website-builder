@@ -1,11 +1,36 @@
-const { app, BrowserWindow, session, Menu } = require("electron");
+const { app, BrowserWindow, session, Menu, ipcMain } = require("electron");
+
 const path = require("path");
 
 require("./desktop/main-process.cjs");
 
-// GPU settings must be configured before app is ready
+const {
+  setupUpdater,
+  checkForUpdates,
+  downloadUpdate,
+  installUpdate,
+} = require("./desktop/utils/updater.cjs");
+
+// ============================================================
+// UPDATER IPC
+// ============================================================
+
+ipcMain.handle("update:check", checkForUpdates);
+ipcMain.handle("update:download", downloadUpdate);
+ipcMain.handle("update:install", installUpdate);
+
+// ============================================================
+// GPU
+// ============================================================
+
 app.commandLine.appendSwitch("enable-gpu-rasterization");
 app.commandLine.appendSwitch("enable-zero-copy");
+
+let mainWindow = null;
+
+// ============================================================
+// OPFS EXTENSION
+// ============================================================
 
 async function installOPFS_Ext() {
   if (app.isPackaged) return;
@@ -19,10 +44,10 @@ async function installOPFS_Ext() {
       "Default",
       "Extensions",
       "odbpcdmkgeikdcmcdlfmdkbjiaeknnbd",
-      "0.2.0_0"
+      "0.2.0_0",
     );
 
-    const ext = await session.defaultSession.loadExtension(extPath, {
+    const ext = await session.defaultSession.extensions.loadExtension(extPath, {
       allowFileAccess: true,
     });
 
@@ -31,6 +56,10 @@ async function installOPFS_Ext() {
     console.error("Failed to load OPFS extension:", err);
   }
 }
+
+// ============================================================
+// WINDOW
+// ============================================================
 
 async function createWindow() {
   const win = new BrowserWindow({
@@ -47,9 +76,19 @@ async function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
+      focusOnNavigation: false,
     },
   });
 
+  mainWindow = win;
+
+  // win.on("focus", () => {
+  //   if (!win.isDestroyed()) {
+  //     win.webContents.focus();
+  //   }
+  // });
+
+  // Development shortcuts
   if (!app.isPackaged) {
     win.webContents.on("before-input-event", (event, input) => {
       if (
@@ -81,38 +120,53 @@ async function createWindow() {
   }
 
   // Splash
-  await win.loadFile(
-    path.join(__dirname, "desktop", "splash.html")
-  );
+  await win.loadFile(path.join(__dirname, "desktop", "splash.html"));
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
+
   // App
-  if (!app.isPackaged) {
-    await win.loadURL(
-      "https://localhost:5173/add-blocks"
-    );
-  } else {
-    await win.loadURL(
-      "https://infinitely.pages.dev/add-blocks"
-    );
-  }
+  await win.loadURL(
+    app.isPackaged
+      ? "https://infinitely.pages.dev/add-blocks"
+      : "https://localhost:5173/add-blocks",
+  );
+
+  // win.show();
+  // win.focus();
 
   return win;
 }
+// ============================================================
+// APP READY
+// ============================================================
 
 app.whenReady().then(async () => {
   Menu.setApplicationMenu(null);
 
   await installOPFS_Ext();
-  await createWindow();
+
+  const win = await createWindow();
+
+  // Setup updater AFTER BrowserWindow exists
+  setupUpdater(win);
+
+  // ----------------------------------------------------------
+  // macOS
+  // ----------------------------------------------------------
 
   app.on("activate", async () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      await createWindow();
+      const newWindow = await createWindow();
+
+      setupUpdater(newWindow);
     }
   });
 });
+
+// ============================================================
+// WINDOWS CLOSED
+// ============================================================
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {

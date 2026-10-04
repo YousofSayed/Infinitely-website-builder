@@ -103,6 +103,44 @@ window.fetch = async (input, init) => {
   }
 };
 
+// setTimeout( () => {
+  
+// },10000)
+
+// window.addEventListener('click',()=>{
+//   if(window.done){
+//     return
+//   }
+//   confirm('helooooooooooooooooo')
+//   window.done = true;
+// });
+
+// -----------------------------------------------------------------------------
+// Desktop handling
+// -----------------------------------------------------------------------------
+// if (window.electron?.isDesktop) {
+//   const nativeAlert = window.alert;
+//   const nativeConfirm = window.confirm;
+
+//   window.alert = function (...args) {
+//     const result = nativeAlert.apply(window, args);
+
+//     // Tell Electron the native dialog has closed
+//     window.electron?.dialogClosed?.();
+
+//     return result;
+//   };
+
+//   window.confirm = function (...args) {
+//     const result = nativeConfirm.apply(window, args);
+
+//     // Tell Electron the native dialog has closed
+//     window.electron?.dialogClosed?.();
+
+//     return result;
+//   };
+// }
+
 // -----------------------------------------------------------------------------
 // React
 // -----------------------------------------------------------------------------

@@ -37,7 +37,7 @@ import { Select } from "@/components/Editor/Protos/Select";
 import { SmallButton } from "@/components/Editor/Protos/SmallButton";
 import { useEditorMaybe } from "@grapesjs/react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { cloneDeep, isNumber } from "lodash";
+import { cloneDeep, isNumber, uniqueId } from "lodash";
 // import { For } from "million/react";
 import React, { memo, useEffect, useRef, useState } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
@@ -260,7 +260,10 @@ export const AnimationsBuilder = () => {
     // if(!animationIndex)return;
     const clone = structuredClone(animations);
     clone[animationIndex].keyframes.splice(keyframeIndex, 1);
-
+    setIndexes({
+      keyframeIndex: null,
+      animationIndex: animationIndex,
+    });
     setAnimations(clone);
   };
 
@@ -654,6 +657,7 @@ export const AnimationsBuilder = () => {
                                       className="shrink-0 bg-surface-tertiary"
                                       onClick={() => {
                                         removeKeyframe(i, x);
+                                        setFramesStyles({});
                                       }}
                                     >
                                       {Icons.trash("white")}

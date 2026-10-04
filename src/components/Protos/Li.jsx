@@ -31,6 +31,7 @@ export const Li = ({
   notifyBg = "bg-brand-primary",
   mode,
   id ,
+  disabled = false,
   enableSelecting = false,
   icon = (strokeColor, strokeWidth) => {},
 }) => {
@@ -78,7 +79,7 @@ export const Li = ({
       style={{
         backgroundColor:selected ? 'var(--main-bg)' : ''
       }}
-      className={`group relative li-btn aspect-square w-9     rounded-lg cursor-pointer flex items-center justify-center transition-all ${
+      className={`group relative li-btn aspect-square w-9   rounded-lg cursor-pointer flex items-center justify-center transition-all ${
         to && path.pathname?.match(to)?.filter((link) => link)?.length
           ? "bg-brand-primary"
           : ""
@@ -139,6 +140,7 @@ export const Li = ({
         </Link>
       ) : (
         <button
+          disabled={disabled}
           ref={refForward}
           aria-label={title}
           // title={title}
@@ -201,7 +203,7 @@ export const Li = ({
           anchorSelect={`[tooltib-id="${uuid.current}"]`}
           place="bottom-start"
           positionStrategy="fixed"
-          className="z-[100] capitalize font-semibold"
+          className="z-[99999] capitalize font-semibold"
         >
           {title}
         </Tooltip>

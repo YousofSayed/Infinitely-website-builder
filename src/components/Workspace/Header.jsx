@@ -32,6 +32,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { useBusyCallback } from "@/hooks/useBusyCallback";
+import { ShowIf } from "@/components/ShowIf";
+import { NoItemsHere } from "@/components/Protos/NoItemsHere";
+import { InfinitelyEvents } from "@/constants/infinitelyEvents";
 
 export const Header = () => {
   const setShowCrtModal = useSetRecoilState(showCrtModalState);
@@ -43,6 +46,15 @@ export const Header = () => {
   useEffect(() => {
     dbxHandler();
 
+    const callback = ()=>{
+      setUiRefresher(uniqueId(`${uniqueID()}-`));
+      toast.success(<ToastMsgInfo msg={`Dropbox sign in successfully 💙`} />);
+    }
+
+    window.addEventListener(InfinitelyEvents.electronApp.updateDropBoxSignInState, callback);
+    return () => {
+      window.removeEventListener(InfinitelyEvents.electronApp.updateDropBoxSignInState, callback);
+    };
     // (async () => {
     //   console.log("files list");
     // })();
@@ -97,6 +109,21 @@ export const Header = () => {
     },
   );
 
+  const [getDropBoxFiles, { isLoading: isLoadingFiles }] = useBusyCallback(
+    async (ev) => {
+      // if (!checkDropBoxSignInState()) {
+      //   toast.warn(<ToastMsgInfo msg={`You should sign in to dropbox`} />);
+      //   return;
+      // }
+      const filesMeta = await listDropboxFiles("", true);
+      console.log("files meta : ", filesMeta);
+
+      setDropBoxFiles(filesMeta || []);
+    },
+  );
+
+
+
   // console.log(document.querySelectorAll('meta'));
 
   return (
@@ -122,87 +149,74 @@ export const Header = () => {
 
         <section className="flex items-center gap-3">
           <OptionsButton
-            onClick={async (ev) => {
-              if (!checkDropBoxSignInState()) {
-                toast.warn(
-                  <ToastMsgInfo msg={`You should sign in to dropbox`} />,
-                );
-                return;
-              }
-              const filesMeta = await listDropboxFiles("", true);
-              console.log("files meta : ", filesMeta);
-
-              setDropBoxFiles(filesMeta);
-            }}
+            onClick={getDropBoxFiles}
             icon={Icons.dropbox({ fill: "white" })}
           >
             <menu
               style={{ width: 300, height: 300 }}
-              className={`${dropboxFiles.length && `grid grid-cols-2 grid-rows-[135px] gap-2 overflow-hidden  overflow-y-auto [scrollbar-gutter:stable] rounded-lg   ${dropboxFiles.length > 4 && `pr-1`}`}`}
+              className={`overflow-hidden ${dropboxFiles.length && `grid grid-cols-2 grid-rows-[135px] gap-2 !overflow-hidden  overflow-y-auto [scrollbar-gutter:stable] rounded-lg   ${dropboxFiles.length > 4 && `pr-1`}`}`}
             >
-              {Boolean(dropboxFiles.length) && checkDropBoxSignInState() ? (
-                // <For each={dropboxFiles}>
-                //   {(fileMeta, i) => (
-                //     <li key={i} className=" h-[135px]">
-                //       <figure className="p-2 h-full rounded-lg bg-surface-secondary flex flex-col items-center gap-3 w-full">
-                //         <i>
-                //           {Icons.file({ fill: "white", width: 30, height: 30 })}
-                //         </i>
-                //         <figcaption className="p-2 max-w-full bg-surface-tertiary rounded-md custom-font-size text-nowrap  overflow-hidden text-ellipsis">
-                //           {fileMeta.name}
-                //         </figcaption>
-                //         <SmallButton
-                //           disabled={isLoadingDBX}
-                //           tooltipTitle={`Export : ${fileMeta.name}`}
-                //           className="h-[35px] bg-surface-tertiary"
-                //           onClick={async (ev) => {
-                //             addClickClass(ev.currentTarget, "click");
-                //             // await loadDropBoxProject(fileMeta.path_lower, {
-                //             //   apps: "Dropbox",
-                //             //   dropboxFileMeta: fileMeta,
-                //             // });
-                //             await loadDBXProject(ev, fileMeta);
-                //           }}
-                //         >
-                //           {Icons.export("white")}
-                //         </SmallButton>
-                //       </figure>
-                //     </li>
-                //   )}
-                // </For>
-
-                dropboxFiles.map((fileMeta, i) => (
+              <ShowIf
+                condition={
+                  Boolean(dropboxFiles.length) && checkDropBoxSignInState()
+                }
+              >
+                {dropboxFiles.map((fileMeta, i) => (
                   <li key={i} className=" h-[135px]">
-                      <figure className="p-2 h-full rounded-lg bg-surface-secondary flex flex-col items-center gap-3 w-full">
-                        <i>
-                          {Icons.file({ fill: "white", width: 30, height: 30 })}
-                        </i>
-                        <figcaption className="p-2 max-w-full bg-surface-tertiary rounded-md custom-font-size text-nowrap  overflow-hidden text-ellipsis">
-                          {fileMeta.name}
-                        </figcaption>
-                        <SmallButton
-                          disabled={isLoadingDBX}
-                          tooltipTitle={`Export : ${fileMeta.name}`}
-                          className="h-[35px] bg-surface-tertiary"
-                          onClick={async (ev) => {
-                            addClickClass(ev.currentTarget, "click");
-                            // await loadDropBoxProject(fileMeta.path_lower, {
-                            //   apps: "Dropbox",
-                            //   dropboxFileMeta: fileMeta,
-                            // });
-                            await loadDBXProject(ev, fileMeta);
-                          }}
-                        >
-                          {Icons.export("white")}
-                        </SmallButton>
-                      </figure>
-                    </li>
-                ))
-              ) : (
+                    <figure className="p-2 h-full rounded-lg bg-surface-secondary flex flex-col items-center gap-3 w-full">
+                      <i>
+                        {Icons.file({ fill: "white", width: 30, height: 30 })}
+                      </i>
+                      <figcaption className="p-2 max-w-full bg-surface-tertiary rounded-md custom-font-size text-nowrap  overflow-hidden text-ellipsis">
+                        {fileMeta.name}
+                      </figcaption>
+                      <SmallButton
+                        disabled={isLoadingDBX}
+                        tooltipTitle={`Export : ${fileMeta.name}`}
+                        className="h-[35px] bg-surface-tertiary"
+                        onClick={async (ev) => {
+                          addClickClass(ev.currentTarget, "click");
+                          // await loadDropBoxProject(fileMeta.path_lower, {
+                          //   apps: "Dropbox",
+                          //   dropboxFileMeta: fileMeta,
+                          // });
+                          await loadDBXProject(ev, fileMeta);
+                        }}
+                      >
+                        {Icons.export("white")}
+                      </SmallButton>
+                    </figure>
+                  </li>
+                ))}
+              </ShowIf>
+
+              <ShowIf condition={isLoadingFiles && !checkDropBoxSignInState() && !dropboxFiles.length}>
                 <section className="w-full h-full">
                   <Loader />
                 </section>
-              )}
+              </ShowIf>
+
+              <ShowIf
+                condition={
+                   !checkDropBoxSignInState()
+                }
+              >
+               <section className="w-full h-full flex items-center justify-center">
+                 <NoItemsHere
+                  title={`You should to sign in to dropbox account`}
+                />
+               </section>
+              </ShowIf>
+
+              <ShowIf
+                condition={
+                  !Boolean(dropboxFiles.length) && checkDropBoxSignInState()
+                }
+              >
+                <NoItemsHere title={`No Files Founded..!`} />
+              </ShowIf>
+
+             
             </menu>
           </OptionsButton>
           {/* </SmallButton> */}
@@ -221,6 +235,7 @@ export const Header = () => {
           >
             {Icons.upload({ strokeColor: "white" })} Load site
           </Button>
+
           <OptionsButton key={uiRefresher}>
             <menu>
               <li>
@@ -250,7 +265,9 @@ export const Header = () => {
                     }}
                   >
                     <i>{Icons.dropbox({ fill: "white" })}</i>
-                    <h1 className="capitalize">Log out from dropbox</h1>
+                    <h1 className="capitalize font-medium">
+                      Log out from dropbox
+                    </h1>
                   </Button>
                 )}
               </li>

@@ -54,17 +54,17 @@ export const Console = () => {
 
   return (
     <main className="h-full w-full flex flex-col bg-surface-secondary rounded-lg overflow-hidden border border-surface-tertiary shadow-xl">
-      <header className="flex items-center justify-between gap-2 p-2 border-b border-surface-tertiary bg-surface-tertiary/40 backdrop-blur-sm">
+      <header className="flex  justify-between gap-2 p-2 border-b border-surface-tertiary bg-surface-tertiary/40 backdrop-blur-sm">
         <div className="flex items-center gap-2 pl-1">
           <div className="w-2 h-2 rounded-full bg-brand-primary animate-pulse"></div>
           <MiniTitle className="!m-0 text-sm">Console</MiniTitle>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex items-center bg-surface-secondary rounded-lg p-0.5 border border-surface-tertiary">
+        <div className="flex h-full gap-2">
+          <div className="flex  bg-surface-secondary rounded-lg  border border-surface-tertiary">
             <button
               type="button"
-              className={`px-2 py-1 text-[11px] rounded-md transition-all font-medium ${
+              className={` px-2 py-1 text-[11px] rounded-md transition-all font-medium ${
                 filterSource === "all"
                   ? "bg-brand-primary text-white shadow-sm"
                   : "text-slate-400 hover:text-slate-200"
@@ -75,7 +75,7 @@ export const Console = () => {
             </button>
             <button
               type="button"
-              className={`px-2 py-1 text-[11px] rounded-md transition-all font-medium ${
+              className={` px-2 py-1 text-[11px] rounded-md transition-all font-medium ${
                 filterSource === "editor"
                   ? "bg-purple-600 text-white shadow-sm"
                   : "text-slate-400 hover:text-slate-200"
@@ -86,7 +86,7 @@ export const Console = () => {
             </button>
             <button
               type="button"
-              className={`px-2 py-1 text-[11px] rounded-md transition-all font-medium ${
+              className={` px-2 py-1 text-[11px] rounded-md transition-all font-medium ${
                 filterSource === "preview"
                   ? "bg-green-600 text-white shadow-sm"
                   : "text-slate-400 hover:text-slate-200"

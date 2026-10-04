@@ -556,6 +556,11 @@ export const consoleLogsNotification = atom({
   default: false,
 });
 
+export const showUpdateDialogState = atom({
+  key: "showDialogState",
+  default: false,
+});
+
 /**
  * PERFORMANCE FIX:
  *

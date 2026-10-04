@@ -15,6 +15,8 @@ import {
 } from "@/helpers/defineWorkers";
 import {
   advancedSearchSuggestions,
+  callWorkerCommand,
+  doInNormal,
   doInNormalAsync,
   doInWordpressAsync,
   emitChange,
@@ -48,6 +50,7 @@ import { Wordpress } from "@/components/Protos/wordpress/Wordpress";
 import { useUpdateWpScriptsMutation } from "@/queries/wp.queries";
 import { useBusyCallback } from "@/hooks/useBusyCallback";
 import { wp_save_editor_scripts } from "@/Apps/wordpress/functions_ui";
+import { isArray, isPlainObject } from "lodash";
 
 export const SettingsModal = () => {
   const editor = useEditorMaybe();
@@ -172,6 +175,7 @@ export const SettingsModal = () => {
         },
         currentChange,
       );
+
       isCurrentChange(
         "optimize_outlines",
         () => {
@@ -187,27 +191,301 @@ export const SettingsModal = () => {
   };
 
   const [saveEditorScripts, { isLoading: isSaveEditorScriptsPending }] =
-    useBusyCallback(async (key, value) => {
-      await doInWordpressAsync(async () => {
-        await wp_save_editor_scripts();
-      });
+    useBusyCallback(
+      async (key, value) => {
+        const emitChange = (value, notify) => {
+          const handler = async (ev) => {
+            notify && callback(key);
+            console.log("local-storage is emited");
+            const { projectSettings } = getProjectSettings();
+            await db.projects.update(projectId, {
+              projectSetting: projectSettings,
+            });
+            window.removeEventListener("local-storage", handler);
+          };
+          window.addEventListener("local-storage", handler);
 
-      const handler = async (ev) => {
-        callback(key);
-        console.log("local-storage is emited");
-        const { projectSettings } = getProjectSettings();
-        await db.projects.update(projectId, {
-          projectSetting: projectSettings,
+          setCurrentChange(key);
+          setProjectSetting({ [key]: value });
+        };
+
+        try {
+          doInNormal(() => emitChange(value , true));
+          await doInWordpressAsync(async () => {
+           const res = await wp_save_editor_scripts();
+           console.log("wp_save_editor_scripts res: ", res);
+           emitChange(value , res);
+          });
+        } catch (error) {
+          emitChange(!value);
+          console.error("Error saving editor scripts:", error);
+          throw error; // Re-throw the error to be handled by the caller if needed
+        }
+
+        // setTimeout(() => {
+        // });
+      },
+      { key: "settings-modal-save-editor-scripts" },
+    );
+
+  const [cleanMotions, { isLoading: isCleanMotionsPending }] = useBusyCallback(
+    async (ev) => {
+      // addClickClass(ev.currentTarget , 'click')
+      const tId = toast.loading(<ToastMsgInfo msg={`Process cleaning...`} />);
+      try {
+        await doInNormalAsync(async () => {
+          const projectData = await getProjectData();
+          const cleanedMotions = await cleanMotions(
+            projectData.motions,
+            projectData.pages,
+          );
+
+          console.log("cleaned motions: ", cleanedMotions);
+
+          await db.projects.update(projectId, {
+            motions: cleanedMotions,
+          });
+
+          toast.done(tId);
+          toast.success(<ToastMsgInfo msg={`Motions cleared successfully`} />);
         });
-        window.removeEventListener("local-storage", handler);
-      };
-      window.addEventListener("local-storage", handler);
 
-      setCurrentChange(key);
-      setProjectSetting({ [key]: value });
-      // setTimeout(() => {
-      // });
-    });
+        await doInWordpressAsync(async () => {
+          // const projectData = await getProjectData();
+          const wp_post = getWpPageConfig();
+          // editor.trigger(InfinitelyEvents.storage.storeStart);
+          const res = await callWorkerCommand(
+            fetcherWorker,
+            "wp_clean_motions",
+            {
+              projectId,
+            },
+          );
+
+          console.log("res motions:", res);
+
+          if (isArray(res)) {
+            await db.projects.update(projectId, {
+              motions: res,
+            });
+
+            const projectData = await getProjectData();
+            projectData.current_inf_meta = {};
+            projectData.currentEditingPage = {};
+            delete projectData.wp_meta.password;
+            // delete projectData.wp_meta.app_password;
+            await callWorkerCommand(fetcherWorker, "wp_update_option", {
+              optionName: "inf_config",
+              value: projectData,
+              merge: true,
+              projectId,
+            });
+
+            // await wp_update_option({
+            //   optionName: "inf_config",
+            //   value: projectData,
+            //   merge: true,
+            //   projectId,
+            // });
+            toast.done(tId);
+            toast.success(
+              <ToastMsgInfo msg={`Motions cleared successfully`} />,
+            );
+            // editor.trigger(InfinitelyEvents.storage.storeEnd);
+          } else {
+            throw new Error(`Motions is not valid array`);
+          }
+
+          // wpWorkerCallbackMaker(
+          //   fetcherWorker,
+          //   "wp_clean_motions",
+          //   {
+          //     projectId,
+          //   },
+          //   async (res) => {
+          //     console.log("res : ", res);
+          //     if (res.done) {
+          //       await db.projects.update(projectId, {
+          //         motions: res.res,
+          //       });
+          //       const projectData = await getProjectData();
+          //       projectData.current_inf_meta = {};
+          //       projectData.currentEditingPage = {};
+          //       delete projectData.wp_meta.password;
+          //       delete projectData.wp_meta.app_password;
+          //       await wp_update_option({
+          //         optionName: "inf_config",
+          //         value: projectData,
+          //         merge: true,
+          //         projectId,
+          //       });
+          //       toast.done(tId);
+          //       toast.success(
+          //         <ToastMsgInfo msg={`Motions cleared successfully`} />,
+          //       );
+          //       editor.trigger(InfinitelyEvents.storage.storeEnd);
+          //     } else {
+          //       throw new Error(`Faild to clear motions`);
+          //     }
+          //   },
+          // );
+        });
+      } catch (error) {
+        toast.dismiss(tId);
+        toast.error(<ToastMsgInfo msg={error.message} />);
+      }
+    },
+  );
+
+  const [
+    cleanUnusedInteractions,
+    { isLoading: isCleanUnusedInteractionsPending },
+  ] = useBusyCallback(
+    async (ev) => {
+      // addClickClass(ev.currentTarget , 'click')
+      const tId = toast.loading(<ToastMsgInfo msg={`Process cleaning...`} />);
+      try {
+        await doInNormalAsync(async () => {
+          const projectData = await getProjectData();
+          const cleanedInteractions = await cleanInteractions(
+            projectData.interactions,
+            projectData.pages,
+          );
+          console.log("cleand interactions : ", cleanedInteractions);
+
+          await db.projects.update(projectId, {
+            interactions: cleanedInteractions,
+          });
+          toast.done(tId);
+          toast.success(
+            <ToastMsgInfo msg={`Interactions cleared successfully`} />,
+          );
+        });
+
+        await doInWordpressAsync(async () => {
+          const wp_post = getWpPageConfig();
+          editor.trigger(InfinitelyEvents.storage.storeStart);
+          const res = await callWorkerCommand(
+            pageBuilderWorker,
+            "wp_clean_interactions",
+            {
+              projectId,
+            },
+          );
+
+          console.log("res : ", res);
+
+          if (isPlainObject(res)) {
+            await db.projects.update(projectId, {
+              interactions: res,
+            });
+
+            const projectData = await getProjectData();
+            projectData.current_inf_meta = {};
+            projectData.currentEditingPage = {};
+            delete projectData.wp_meta.password;
+            // delete projectData.wp_meta.app_password;
+
+            await callWorkerCommand(fetcherWorker, "wp_update_option", {
+              optionName: "inf_config",
+              value: projectData,
+              merge: true,
+              projectId,
+            });
+
+            // await wp_update_option({
+            //   optionName: "inf_config",
+            //   value: projectData,
+            //   merge: true,
+            //   projectId,
+            // });
+            toast.done(tId);
+            toast.success(
+              <ToastMsgInfo msg={`Interactions cleared successfully`} />,
+            );
+            editor.trigger(InfinitelyEvents.storage.storeEnd);
+          } else {
+            throw new Error(`Faild to clean interactions`);
+          }
+        });
+
+        // wpWorkerCallbackMaker(
+        //   pageBuilderWorker,
+        //   "wp_clean_interactions",
+        //   { projectId },
+        //   async (props) => {
+        //     if (props.done) {
+        //       console.log("interactions props : ", props);
+        //   await db.projects.update(projectId, {
+        //     interactions: props.res,
+        //   });
+        //   const projectData = await getProjectData();
+        //   projectData.current_inf_meta = {};
+        //   projectData.currentEditingPage = {};
+        //   delete projectData.wp_meta.password;
+        //   delete projectData.wp_meta.app_password;
+        //   await wp_update_option({
+        //     optionName: "inf_config",
+        //     value: projectData,
+        //     merge: true,
+        //     projectId,
+        //   });
+        //   toast.done(tId);
+        //   toast.success(
+        //     <ToastMsgInfo msg={`Interactions cleared successfully`} />,
+        //   );
+        //   editor.trigger(InfinitelyEvents.storage.storeEnd);
+        // } else {
+        //   throw new Error(`Faild to clean interactions`);
+        // }
+        //   },
+        // );
+        // });
+      } catch (error) {
+        toast.dismiss(tId);
+        toast.success(<ToastMsgInfo msg={error.message} />);
+      }
+
+      // console.log(projectData.interactions ,await cleanInteractions(projectData.interactions , projectData.pages));
+    },
+    { key: "settings-modal-clean-unused-interactions" },
+  );
+
+  const [
+    updateWpScriptsCallback,
+    { isLoading: isUpdateWpScriptsCallbackPending },
+  ] = useBusyCallback(async (ev) => {
+    // addClickClass(ev.currentTarget, "click");
+    const tid = toast.loading(
+      <ToastMsgInfo msg="Updating wordpress scripts..." />,
+    );
+    try {
+      await updateWpScripts({
+        data: {
+          id: getProjectId(),
+          update_project_config: true,
+          projectSetting: projectSettings,
+          projectData: await getProjectData(),
+        },
+      });
+      toast.done(tid);
+      toast.success(
+        <ToastMsgInfo msg="Wordpress scripts updated successfully" />,
+      );
+    } catch (error) {
+      toast.dismiss(tid);
+      toast.error(<ToastMsgInfo msg={error.message} />);
+      console.error(error.message);
+    } finally {
+      toast.done(tid);
+    }
+  });
+
+  const isDisabled =
+    isCleanMotionsPending ||
+    isSaveEditorScriptsPending ||
+    isUpdateWpScriptsPending ||
+    isCleanUnusedInteractionsPending;
 
   const search = (value = "") => {
     if (!value) {
@@ -299,20 +577,25 @@ export const SettingsModal = () => {
                     ? searchedSettings?.[key]
                     : projectSettings[key]
                 }
-                onActive={async (ev) => {
-                  await saveEditorScripts(key, true);
-                  // setCurrentChange(key);
-                  // setTimeout(() => {
-                  //   setProjectSetting({ [key]: true });
-                  // });
+                onSwitch={(value) => {
+                  setTimeout(async () => {
+                    await saveEditorScripts(key, value);
+                  }, 150);
                 }}
-                onUnActive={async (ev) => {
-                  await saveEditorScripts(key, false);
-                  // setCurrentChange(key);
-                  // setTimeout(() => {
-                  //   setProjectSetting({ [key]: false });
-                  // });
-                }}
+                // onActive={async (ev) => {
+                //   await saveEditorScripts(key, true);
+                //   // setCurrentChange(key);
+                //   // setTimeout(() => {
+                //   //   setProjectSetting({ [key]: true });
+                //   // });
+                // }}
+                // onUnActive={async (ev) => {
+                //   await saveEditorScripts(key, false);
+                //   // setCurrentChange(key);
+                //   // setTimeout(() => {
+                //   //   setProjectSetting({ [key]: false });
+                //   // });
+                // }}
               />
             </article>
           ))}
@@ -326,74 +609,8 @@ export const SettingsModal = () => {
           style={{
             justifyContent: "center",
           }}
-          onClick={async (ev) => {
-            // addClickClass(ev.currentTarget , 'click')
-            const tId = toast.loading(
-              <ToastMsgInfo msg={`Process cleaning...`} />,
-            );
-            try {
-              await doInNormalAsync(async () => {
-                const projectData = await getProjectData();
-                const cleanedMotions = await cleanMotions(
-                  projectData.motions,
-                  projectData.pages,
-                );
-
-                console.log("cleaned motions: ", cleanedMotions);
-
-                await db.projects.update(projectId, {
-                  motions: cleanedMotions,
-                });
-
-                toast.done(tId);
-                toast.success(
-                  <ToastMsgInfo msg={`Motions cleared successfully`} />,
-                );
-              });
-
-              await doInWordpressAsync(async () => {
-                // const projectData = await getProjectData();
-                const wp_post = getWpPageConfig();
-                editor.trigger(InfinitelyEvents.storage.storeStart);
-                wpWorkerCallbackMaker(
-                  fetcherWorker,
-                  "wp_clean_motions",
-                  {
-                    projectId,
-                  },
-                  async (res) => {
-                    console.log("res : ", res);
-                    if (res.done) {
-                      await db.projects.update(projectId, {
-                        motions: res.res,
-                      });
-                      const projectData = await getProjectData();
-                      projectData.current_inf_meta = {};
-                      projectData.currentEditingPage = {};
-                      delete projectData.wp_meta.password;
-                      delete projectData.wp_meta.app_password;
-                      await wp_update_option({
-                        optionName: "inf_config",
-                        value: projectData,
-                        merge: true,
-                        projectId,
-                      });
-                      toast.done(tId);
-                      toast.success(
-                        <ToastMsgInfo msg={`Motions cleared successfully`} />,
-                      );
-                      editor.trigger(InfinitelyEvents.storage.storeEnd);
-                    } else {
-                      throw new Error(`Faild to clear motions`);
-                    }
-                  },
-                );
-              });
-            } catch (error) {
-              toast.dismiss(tId);
-              toast.success(<ToastMsgInfo msg={error.message} />);
-            }
-          }}
+          onClick={cleanMotions}
+          disabled={isCleanMotionsPending}
         >
           Clean unused motions
         </Button>
@@ -402,73 +619,8 @@ export const SettingsModal = () => {
           style={{
             justifyContent: "center",
           }}
-          onClick={async (ev) => {
-            // addClickClass(ev.currentTarget , 'click')
-            const tId = toast.loading(
-              <ToastMsgInfo msg={`Process cleaning...`} />,
-            );
-            try {
-              await doInNormalAsync(async () => {
-                const projectData = await getProjectData();
-                const cleanedInteractions = await cleanInteractions(
-                  projectData.interactions,
-                  projectData.pages,
-                );
-                console.log("cleand interactions : ", cleanedInteractions);
-
-                await db.projects.update(projectId, {
-                  interactions: cleanedInteractions,
-                });
-                toast.done(tId);
-                toast.success(
-                  <ToastMsgInfo msg={`Interactions cleared successfully`} />,
-                );
-              });
-
-              await doInWordpressAsync(async () => {
-                const wp_post = getWpPageConfig();
-                editor.trigger(InfinitelyEvents.storage.storeStart);
-                wpWorkerCallbackMaker(
-                  pageBuilderWorker,
-                  "wp_clean_interactions",
-                  { projectId },
-                  async (props) => {
-                    if (props.done) {
-                      console.log("interactions props : ", props);
-                      await db.projects.update(projectId, {
-                        interactions: props.res,
-                      });
-                      const projectData = await getProjectData();
-                      projectData.current_inf_meta = {};
-                      projectData.currentEditingPage = {};
-                      delete projectData.wp_meta.password;
-                      delete projectData.wp_meta.app_password;
-                      await wp_update_option({
-                        optionName: "inf_config",
-                        value: projectData,
-                        merge: true,
-                        projectId,
-                      });
-                      toast.done(tId);
-                      toast.success(
-                        <ToastMsgInfo
-                          msg={`Interactions cleared successfully`}
-                        />,
-                      );
-                      editor.trigger(InfinitelyEvents.storage.storeEnd);
-                    } else {
-                      throw new Error(`Faild to clean interactions`);
-                    }
-                  },
-                );
-              });
-            } catch (error) {
-              toast.dismiss(tId);
-              toast.success(<ToastMsgInfo msg={error.message} />);
-            }
-
-            // console.log(projectData.interactions ,await cleanInteractions(projectData.interactions , projectData.pages));
-          }}
+          onClick={cleanUnusedInteractions}
+          disabled={isCleanUnusedInteractionsPending}
         >
           Clean unused interactions
         </Button>
@@ -488,36 +640,11 @@ export const SettingsModal = () => {
 
         <Wordpress>
           <Button
-            disabled={isUpdateWpScriptsPending}
+            disabled={isUpdateWpScriptsCallbackPending}
             style={{
               justifyContent: "center",
             }}
-            onClick={async (ev) => {
-              // addClickClass(ev.currentTarget, "click");
-              const tid = toast.loading(
-                <ToastMsgInfo msg="Updating wordpress scripts..." />,
-              );
-              try {
-                await updateWpScripts({
-                  data: {
-                    id: getProjectId(),
-                    update_project_config: true,
-                    projectSetting: projectSettings,
-                    projectData: await getProjectData(),
-                  },
-                });
-                toast.done(tid);
-                toast.success(
-                  <ToastMsgInfo msg="Wordpress scripts updated successfully" />,
-                );
-              } catch (error) {
-                toast.dismiss(tid);
-                toast.error(<ToastMsgInfo msg={error.message} />);
-                console.error(error.message);
-              } finally {
-                toast.done(tid);
-              }
-            }}
+            onClick={updateWpScriptsCallback}
           >
             <h1>Update Wordpress Scripts</h1>
           </Button>

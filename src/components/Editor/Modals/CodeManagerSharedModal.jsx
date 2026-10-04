@@ -41,6 +41,7 @@ import { toast } from "react-toastify";
 import { useWordpress } from "@/hooks/useWordpress";
 import { useNormal } from "@/hooks/useNormal";
 import { Wordpress } from "@/components/Protos/wordpress/Wordpress";
+import { db } from "@/helpers/db";
 
 export const CodeManagerSharedModal = () => {
   const timeoutRef = useRef(null);
@@ -162,13 +163,15 @@ export const CodeManagerSharedModal = () => {
 
     const projectData = await getProjectData();
     const slugs = [
-      projectData.globalJs.slug,
-      projectData.globalCss.slug,
+      // projectData.globalJs.slug,
+      // projectData.globalCss.slug,
+      "global.css",
+      "global.js",
       "local.js",
     ];
 
     const filesHandle = await opfs.getFiles(
-      slugs.map((key) => ({ path: defineRoot(mediaSlugToFileName(key)) })),
+      slugs.map((key) => ({ path: defineRoot(key) })),
     );
 
     const filesWithContent = Object.fromEntries(
@@ -177,9 +180,9 @@ export const CodeManagerSharedModal = () => {
           const text = await (await handle.getOriginFile()).text();
           const beautified = beautifyContent(handle.path, text);
 
-          if (handle.path.includes(projectData.globalCss.slug))
+          if (handle.path.includes("global.css"))
             return ["globalCss", beautified];
-          if (handle.path.includes(projectData.globalJs.slug))
+          if (handle.path.includes("global.js"))
             return ["globalJs", beautified];
           if (handle.path.includes("local.js") || handle.path.endsWith(".js"))
             return ["js", beautified];
@@ -235,8 +238,7 @@ export const CodeManagerSharedModal = () => {
         }
 
         const wp_post = getWpPageConfig();
-
-        const res = await wp_save_code({
+        const objWillBeSaved = {
           projectId,
           post_id: wp_post.id,
           meta: {
@@ -249,10 +251,58 @@ export const CodeManagerSharedModal = () => {
             css: filesData.globalCss,
           },
           save_state,
+        };
+
+        console.log("objWillBeSaved: ", objWillBeSaved);
+
+        // return;
+
+        const res = await wp_save_code(objWillBeSaved);
+        const files = [
+          changed.globalJs && {
+            path: defineRoot(`global.js`),
+            content: filesData.globalJs,
+          },
+          changed.globalCss && {
+            path: defineRoot(`global.css`),
+            content: filesData.globalCss,
+          },
+          changed.js && {
+            path: defineRoot(`local.js`),
+            content: clone.js,
+          },
+        ].filter(Boolean);
+        const projectData = await getProjectData();
+        projectData.current_inf_meta[projectData.save_state] = {
+          ...projectData.current_inf_meta[projectData.save_state],
+          html: clone.html,
+          css: clone.css,
+          js: clone.js,
+        };
+
+        projectData.currentEditingPage = {
+          ...projectData.currentEditingPage,
+          html: clone.html,
+          css: clone.css,
+          js: clone.js,
+        };
+
+        await db.projects.update(projectId, {
+          current_inf_meta: projectData.current_inf_meta,
+          currentEditingPage: projectData.currentEditingPage,
+          save_state,
         });
 
-        console.log("res from save code: ", res);
+        const opfsRes = await callWorkerCommand(
+          infinitelyWorker,
+          "writeFilesToOPFS",
+          {
+            files,
+          },
+        );
 
+        console.log("res from save code: ", res);
+        console.log("res from OPFS: ", opfsRes, files);
         wp_preview_bc.postMessage({
           props: {
             url: wp_post.link,
@@ -506,9 +556,10 @@ export const CodeManagerSharedModal = () => {
         <Button
           disabled={disabled}
           className="flex-grow-0 flex-shrink bg-surface-tertiary hover:bg-brand-primary transition-colors font-medium"
-          onClick={async () =>
-            await save(isWordpress() ? "before_save" : "saved")
-          }
+          onClick={async () => {
+            const projectData = await getProjectData();
+            await save(isWordpress() ? projectData.save_state : "saved");
+          }}
         >
           {Icons.save("white", 0, "white")}
           Save

@@ -44,6 +44,8 @@ import { useNormal } from "@/hooks/useNormal";
 import { opfs } from "@/helpers/initOpfs";
 import Fuse from "fuse.js";
 import { FileView } from "@/components/Protos/FileView";
+import { useWordpressAssets } from "@/hooks/useWordpressAssets";
+import { useNormalAssets } from "@/hooks/useNormalAssets";
 
 export const MediaManager = () => {
   /**
@@ -54,30 +56,9 @@ export const MediaManager = () => {
    * @type {[import('@/helpers/types').InfinitelyWpMedia[] , React.Dispatch<React.SetStateAction<import('@/helpers/types').InfinitelyWpMedia[]>>]}
    */
   const [mediaSelected, setMediaSelected] = useState([]);
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
   const { isBusy, runWithBusy } = useBusy();
   const [animateRef] = useAutoAnimate();
-  const [queryParams, setQueryParams] = useState({
-    // page: 1,
-    // per_page: 100,
-    search: "",
-    mime_type: "",
-    orderby: "date",
-    order: "desc",
-  });
-
-  const {
-    data: mediaFilesData,
-    isLoading: mediaFilesLoading,
-    isRefetching: mediaFilesRefetching,
-    fetchNextPage: mediaFilesFetchNextPage,
-    isFetchingNextPage: mediaFilesIsFetchingNextPage,
-    hasNextPage: mediaFilesHasNextPage,
-  } = useWpGetInfinite("media", queryParams);
-
-  const { isLoading: isFileViewBusy } = useTasksState(
-    Object.values(File_View_keys),
-  );
   const [mediaFilesInitialized, setMediaFilesInitialized] = useState(false);
 
   const qc = useQueryClient();
@@ -91,95 +72,148 @@ export const MediaManager = () => {
   const allMediaRef = useRef(); //for normal mode
 
   const projectId = getProjectId();
+  const [queryParams, setQueryParams] = useState({
+    // page: 1,
+    // per_page: 100,
+    search: "",
+    mime_type: "",
+    orderby: "date",
+    order: "desc",
+  });
 
-  useWordpress(async () => {
-    // if (
-    //   mediaFilesIsFetchingNextPage ||
-    //   mediaFilesRefetching ||
-    //   mediaFilesLoading
-    // )
-    //   return;
-    if (!mediaFilesData?.pages?.length) return;
-    const projectData = await getProjectData(projectId);
-    const excludes = projectData.mainEditorScripts.footer
-      .concat(projectData.mainEditorScripts.header)
-      .concat(projectData.jsHeaderLibs)
-      .concat(projectData.jsFooterLibs)
-      .concat(projectData.cssLibs)
-      .concat(projectData.globalCss)
-      .concat(projectData.globalJs)
-      .concat(projectData.mainEditorStyles);
-
-    const mFilesDataFlat = mediaFilesData.pages.flat();
-
-    if (isArray(mediaFilesData.pages)) {
-      const willBe = mFilesDataFlat
-        .flat()
-        .filter((item) => !excludes.some((ex) => ex.id === item.id));
-
-      console.log("files is :", willBe, excludes);
-
-      setMediaFiles((old) => [...willBe]);
-      setMediaFilesInitialized(true);
-    }
-  }, [
+  const {
     mediaFilesData,
-    mediaFilesLoading,
-    mediaFilesRefetching,
+    mediaFilesFetchNextPage,
     mediaFilesIsFetchingNextPage,
-  ]);
-
-  useNormal(async () => {
-    const getAndSet = async () => {
-      setLoading(true);
-      const currentPageName = getCurrentPageName();
-
-      const filesHandlers = await opfs.getAllFiles(defineRoot(`/assets`));
-
-      console.log("filesHandlers", filesHandlers);
-
-      const files = await Promise.all(
-        filesHandlers.map(async (handle) => {
-          const file = await handle.getOriginFile();
-          const link = currentPageName.includes(`index.html`)
-            ? `./assets/${file.name}`
-            : `../assets/${file.name}`;
-
-          const output =
-            /** @type {import('@/helpers/types').InfinitelyNormalMedia} */ ({
-              file,
-              name: file.name,
-              slug: file.name,
-              path: handle.path,
-              id: uniqueId(`${file.name}-${file.path}-`),
-              type: file.type,
-              size: file.size,
-              link,
-              source_url: link,
-            });
-          return output;
-        }),
-      );
-
-      console.log("normal mode files", files);
-
-      unSelectAll();
-      setMediaFiles((old) => [...files]);
+    mediaFilesLoading,
+    mediaFilesHasNextPage,
+    mediaFilesRefetching,
+  } = useWordpressAssets({
+    params: queryParams,
+    callback: (files) => {
+      if (!files?.length) return;
       setMediaFilesInitialized(true);
+      setMediaFiles(files);
+    },
+    deps: [queryParams],
+  });
+
+  // const {
+  //   data: mediaFilesData,
+  //   isLoading: mediaFilesLoading,
+  //   isRefetching: mediaFilesRefetching,
+  //   fetchNextPage: mediaFilesFetchNextPage,
+  //   isFetchingNextPage: mediaFilesIsFetchingNextPage,
+  //   hasNextPage: mediaFilesHasNextPage,
+  // } = useWpGetInfinite("media", queryParams);
+
+  const { isLoading: isFileViewBusy } = useTasksState(
+    Object.values(File_View_keys),
+  );
+
+  // useWordpress(async () => {
+  //   // if (
+  //   //   mediaFilesIsFetchingNextPage ||
+  //   //   mediaFilesRefetching ||
+  //   //   mediaFilesLoading
+  //   // )
+  //   //   return;
+  //   if (!mediaFilesData?.pages?.length) return;
+  //   const projectData = await getProjectData(projectId);
+  //   const excludes = projectData.mainEditorScripts.footer
+  //     .concat(projectData.mainEditorScripts.header)
+  //     .concat(projectData.jsHeaderLibs)
+  //     .concat(projectData.jsFooterLibs)
+  //     .concat(projectData.cssLibs)
+  //     .concat(projectData.globalCss)
+  //     .concat(projectData.globalJs)
+  //     .concat(projectData.mainEditorStyles);
+
+  //   const mFilesDataFlat = mediaFilesData.pages.flat();
+
+  //   if (isArray(mediaFilesData.pages)) {
+  //     const willBe = mFilesDataFlat
+  //       .flat()
+  //       .filter((item) => !excludes.some((ex) => ex.id === item.id));
+
+  //     console.log("files is :", willBe, excludes);
+
+  //     setMediaFiles((old) => [...willBe]);
+  //     setMediaFilesInitialized(true);
+  //   }
+  // }, [
+  //   mediaFilesData,
+  //   mediaFilesLoading,
+  //   mediaFilesRefetching,
+  //   mediaFilesIsFetchingNextPage,
+  // ]);
+
+  const { loading } = useNormalAssets({
+    callback: (files) => {
+      if (!files?.length) {
+        setMediaFilesInitialized(true);
+        setMediaFiles([]);
+        return;
+      }
+      unSelectAll();
+      setMediaFilesInitialized(true);
+      setMediaFiles(files);
       allMediaRef.current = files;
-      setLoading(false);
-    };
+    },
+    // deps: [],
+  });
 
-    await getAndSet();
+  // useNormal(async () => {
+  //   const getAndSet = async () => {
+  //     setLoading(true);
+  //     const currentPageName = getCurrentPageName();
 
-    const evCleaner = opfs.on("all", getAndSet);
-    const brCleaner = opfs.onBroadcast("all", getAndSet);
+  //     const filesHandlers = await opfs.getAllFiles(defineRoot(`/assets`));
 
-    return () => {
-      evCleaner();
-      brCleaner();
-    };
-  }, []);
+  //     console.log("filesHandlers", filesHandlers);
+
+  //     const files = await Promise.all(
+  //       filesHandlers.map(async (handle) => {
+  //         const file = await handle.getOriginFile();
+  //         const link = currentPageName.includes(`index.html`)
+  //           ? `./assets/${file.name}`
+  //           : `../assets/${file.name}`;
+
+  //         const output =
+  //           /** @type {import('@/helpers/types').InfinitelyNormalMedia} */ ({
+  //             file,
+  //             name: file.name,
+  //             slug: file.name,
+  //             path: handle.path,
+  //             id: uniqueId(`${file.name}-${file.path}-`),
+  //             type: file.type,
+  //             size: file.size,
+  //             link,
+  //             source_url: link,
+  //           });
+  //         return output;
+  //       }),
+  //     );
+
+  //     console.log("normal mode files", files);
+
+  //     unSelectAll();
+  //     setMediaFiles((old) => [...files]);
+  //     setMediaFilesInitialized(true);
+  //     allMediaRef.current = files;
+  //     setLoading(false);
+  //   };
+
+  //   await getAndSet();
+
+  //   const evCleaner = opfs.on("all", getAndSet);
+  //   const brCleaner = opfs.onBroadcast("all", getAndSet);
+
+  //   return () => {
+  //     evCleaner();
+  //     brCleaner();
+  //   };
+  // }, []);
 
   const isLoading = loading || mediaFilesLoading; //|| mediaFilesRefetching;
   const isRefetching = mediaFilesRefetching || mediaFilesIsFetchingNextPage;
@@ -370,7 +404,7 @@ export const MediaManager = () => {
             "wp_delete_media_files_by_slugs",
             {
               projectId,
-              slugs:willRemoved,
+              slugs: willRemoved,
             },
           );
 
@@ -378,12 +412,13 @@ export const MediaManager = () => {
             throw new Error(`Failed to delete files 😑`);
           }
 
-          
           await qc.invalidateQueries({
             queryKey: ["wp_get_infinite", "media", projectId],
             refetchType: "all",
           });
-          setMediaSelected(mediaSelected.filter((file) => !willRemoved.includes(file.slug)));
+          setMediaSelected(
+            mediaSelected.filter((file) => !willRemoved.includes(file.slug)),
+          );
           // setLoading(false);
           toast.dismiss(tid);
           toast.success(<ToastMsgInfo msg="Files deleted successfully 🎉" />);
@@ -475,7 +510,7 @@ export const MediaManager = () => {
           className="h-full shrink-0 bg-surface-secondary hover:bg-[crimson!important]"
           tooltipClassName="!bg-[crimson]"
           onClick={async () => {
-          mediaSelected.length ? await deleteSelected() :  await deleteAll();
+            mediaSelected.length ? await deleteSelected() : await deleteAll();
           }}
         >
           {Icons.trash("white")}
@@ -529,16 +564,16 @@ export const MediaManager = () => {
               // console.log("files from virtuso : ", media);
 
               return (
-                  <FileView
-                    key={media.id}
-                    media={media}
-                    setData={deleteSelectedAfterSingleDelete}
-                    allowCheckBox
-                    checked={mediaSelected.some((item) => item.id === media.id)}
-                    onChange={() => {
-                      selectMedia(media);
-                    }}
-                  />
+                <FileView
+                  key={media.id}
+                  media={media}
+                  setData={deleteSelectedAfterSingleDelete}
+                  allowCheckBox
+                  checked={mediaSelected.some((item) => item.id === media.id)}
+                  onChange={() => {
+                    selectMedia(media);
+                  }}
+                />
               );
             }}
           />

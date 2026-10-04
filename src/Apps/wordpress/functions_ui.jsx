@@ -3,6 +3,7 @@ import { current_project_id } from "@/constants/shared";
 import { createRestartableAsync } from "@/helpers/bridge";
 import { db } from "@/helpers/db";
 import {
+  callWorkerCommand,
   getProjectData,
   getProjectId,
   getProjectSettings,
@@ -14,6 +15,7 @@ import {
 } from "@/Apps/wordpress/functions";
 import { isFunction } from "lodash";
 import { toast } from "react-toastify";
+import { fetcherWorker } from "@/helpers/defineWorkers";
 
 export async function wp_toast_handler({
   returnCallback = () => {},
@@ -64,14 +66,15 @@ export function wp_get_post_id() {
   return wp_post.type === "wp_template" ? wp_post.wp_id : wp_post.id;
 }
 
-export const wp_save_editor_scripts = createRestartableAsync(async () => {
+//createRestartableAsync
+export const wp_save_editor_scripts = async () => {
   const projectId = getProjectId();
   const projectData = await getProjectData();
   const wp_post = getWpPageConfig();
   const { projectSettings } = getProjectSettings();
-  const isProjectSettingsChanged = true
-    // JSON.stringify(projectData.projectSetting) !==
-    // JSON.stringify(projectSettings);
+  const isProjectSettingsChanged = true;
+  // JSON.stringify(projectData.projectSetting) !==
+  // JSON.stringify(projectSettings);
 
   if (!window._r_wp_tid) {
     window._r_wp_tid = toast.loading(
@@ -81,17 +84,33 @@ export const wp_save_editor_scripts = createRestartableAsync(async () => {
 
   try {
     if (isProjectSettingsChanged) {
-      const newConfig = await (await wp_update_main_global_files({
-        data: {
-          id: projectId,
-          projectSetting: projectSettings,
-          projectData,
-          global: {
-            // css: "",
-            // js: "",
+      const newConfig = (
+        await callWorkerCommand(fetcherWorker, "wp_update_main_global_files", {
+          data: {
+            id: projectId,
+            projectSetting: projectSettings,
+            projectData,
+            global: {
+              // css: "",
+              // js: "",
+            },
           },
-        },
-      })).config;
+        })
+      ).config;
+
+      // await (
+      //   await wp_update_main_global_files({
+      //     data: {
+      //       id: projectId,
+      //       projectSetting: projectSettings,
+      //       projectData,
+      //       global: {
+      //         // css: "",
+      //         // js: "",
+      //       },
+      //     },
+      //   })
+      // ).config;
 
       await db.projects.update(projectId, {
         scripts_need_to_publish: false,
@@ -106,19 +125,27 @@ export const wp_save_editor_scripts = createRestartableAsync(async () => {
       const newProjectData = await getProjectData();
       newProjectData.currentEditingPage = {};
       newProjectData.current_inf_meta = {};
-      await wp_update_option({
+      await callWorkerCommand(fetcherWorker, "wp_update_option", {
         optionName: "inf_config",
         projectId,
         value: newProjectData,
       });
+
+      // await wp_update_option({
+      //   optionName: "inf_config",
+      //   projectId,
+      //   value: newProjectData,
+      // });
     }
     toast.done(window._r_wp_tid);
     toast.success(<ToastMsgInfo msg={`Editor scripts updated 💙`} />);
     window._r_wp_tid = null;
+    return true;
   } catch (error) {
     toast.dismiss(window._r_wp_tid);
     toast.error(<ToastMsgInfo msg={`Faild to update editor scripts 😡`} />);
     window._r_wp_tid = null;
-    throw new Error(error);
+    console.error(error);
+    return false;
   }
-});
+};

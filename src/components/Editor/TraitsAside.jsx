@@ -496,7 +496,7 @@ const TraitItem = memo(({ trait, traits, mediaBreakpoint }) => {
         />
       )}
 
-      {traitType == "custom" && trait.component ? <trait.component /> : null}
+      {traitType == "custom" && trait.component ? <trait.component  {...mainCallbackProps}/> : null}
     </li>
   );
 });
@@ -539,9 +539,11 @@ export const TraitsAside = memo(() => {
     templateEngineValueState: "",
   });
 
-  useLiveQuery(async () => {
-    const projectData = await getProjectData();
-    setProjectData(projectData);
+  useEffect( () => {
+    (async () => {
+      const projectData = await getProjectData();
+      setProjectData(projectData);
+    })();
   }, []);
 
   /**
@@ -956,7 +958,9 @@ export const TraitsAside = memo(() => {
 
         <ShowIf
           condition={Boolean(
-            Object.values(projectData || {}).length && visibleTraits.length,
+            projectData != null &&
+            Object.values(projectData || {}).length &&
+            visibleTraits.length,
           )}
         >
           <AccordionItem title={"Traits"} notify={notify.traits}>
@@ -1004,10 +1008,12 @@ export const TraitsAside = memo(() => {
                     height:
                       visibleTraits.length > 3
                         ? "calc(100vh - 400px)"
-                        : `${visibleTraits.map((tr) => {
-                            if (tr.type !== "switch") return 95;
-                            return 50;
-                          }).reduce((a, b) => a + b, 0 )}px`,
+                        : `${visibleTraits
+                            .map((tr) => {
+                              if (tr.type !== "switch") return 95;
+                              return 50;
+                            })
+                            .reduce((a, b) => a + b, 0)}px`,
                   }}
                   overscan={6}
                   className="hideScrollBar flex !flex-col !gap-2 "

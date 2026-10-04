@@ -80,7 +80,7 @@ const MediaPopoverContent = memo(
       setWpQueryParams((old) => ({
         ...old,
         mime_type: mediaType,
-      }));
+      })); 
     }, [mediaType]);
 
     const {

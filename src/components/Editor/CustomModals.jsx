@@ -28,19 +28,25 @@ export const CustomModals = () => {
     const oldPreventAnimationsValue =
       projectSettings.stop_all_animation_on_page;
 
+    editor.Storage.setAutosave(false);
     const wrapper = editor.getWrapper();
     const body = editor.Canvas.getBody();
     const isOutLine = body.classList.contains("gjs-dashed");
 
-    wrapper.addClass(`inf-stop-all-animations`);
+    wrapper.getEl().classList.add(`inf-stop-all-animations`);
     isOutLine && body.classList.remove("gjs-dashed");
+    editor.clearDirtyCount();
+    editor.Storage.setAutosave(projectSettings.enable_auto_save);
 
     return () => {
+      editor.Storage.setAutosave(false);
       oldPreventAnimationsValue
-        ? wrapper.addClass(`inf-stop-all-animations`)
-        : wrapper.removeClass(`inf-stop-all-animations`);
+        ? wrapper.getEl().classList.add(`inf-stop-all-animations`)
+        : wrapper.getEl().classList.remove(`inf-stop-all-animations`);
 
       isOutLine && body.classList.add("gjs-dashed");
+      editor.clearDirtyCount();
+      editor.Storage.setAutosave(projectSettings.enable_auto_save);
     };
   }, [editor, projectSettings]);
 
@@ -56,7 +62,7 @@ export const CustomModals = () => {
         style={{ zIndex: 1000 }}
         className={`
           auto-animate
-          fixed ${window?.electron?.isDesktop ? "top-[40px]" : "top-0"} left-0 transition-all bg-blue-950/40 backdrop-blur-sm w-full h-full flex justify-center items-center
+          fixed ${window?.electron?.isDesktop ? "top-[40px]" : "top-0"} left-0 transition-all bg-blue-950/40  w-full h-full flex justify-center items-center
           animate-go-to`}
       >
         <main

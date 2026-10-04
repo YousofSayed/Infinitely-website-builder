@@ -17,7 +17,11 @@ import {
 import { db } from "@/helpers/db";
 import { opfs } from "@/helpers/initOpfs";
 import { installTypes } from "@/helpers/installTypes";
-import { uploadAssets, workerSendToast } from "@/helpers/workerCommands";
+import {
+  offlineInstaller,
+  uploadAssets,
+  workerSendToast,
+} from "@/helpers/workerCommands";
 import JSZip from "jszip";
 import { parseHTML } from "linkedom";
 import { isNumber, isPlainObject, random, sortBy, uniqueId } from "lodash";
@@ -175,11 +179,13 @@ export const loadProject = async (props) => {
 
           const { document } = parseHTML(text);
           // console.log(`page content : ` , document.body.innerHTML);
-          document.body.querySelectorAll(`script , link`).forEach((el) => {
-            if (el.src || el.href) {
-              el.remove();
-            }
-          });
+          document.body
+            .querySelectorAll(`script[src] , link[rel="stylesheet"][href]`)
+            .forEach((el) => {
+              if (el.src || el.href) {
+                el.remove();
+              }
+            });
 
           // reversTryCatchInDirectives(document);
 
@@ -188,6 +194,29 @@ export const loadProject = async (props) => {
             document.body.innerHTML,
           );
         } else {
+        }
+      }
+
+      const isAnyThingGrapped =
+        dbJSONData.projectSetting.grap_all_css_libs_in_single_file ||
+        dbJSONData.projectSetting.grap_all_header_scripts_in_single_file ||
+        dbJSONData.projectSetting.grap_all_footer_scripts_in_single_file;
+
+      //Handle local files
+      if (isAnyThingGrapped) {
+        const allLibs = dbJSONData.jsHeaderLibs
+          .concat(dbJSONData.jsFooterLibs)
+          .concat(dbJSONData.cssLibs);
+
+        for (const lib of allLibs) {
+          if (lib.isLocal) {
+            const fileHandleCreated = await opfs.createFile(
+              defineRoot(lib.path),
+              lib.file,
+            );
+
+            (await fileHandleCreated.exists()) && delete lib.file;
+          }
         }
       }
 
@@ -323,7 +352,20 @@ export const loadProject = async (props) => {
 
     //******** end AI ******** */
 
-    await db.projects.update(projectDBId, dbJSONData);
+    const projectUPdatedDBId = await db.projects.update(
+      projectDBId,
+      dbJSONData,
+    );
+
+    if (isNormal && navigator.onLine) {
+      const allUpdated = await offlineInstaller({
+        projectId: projectDBId,
+      });
+
+      if (!allUpdated) {
+        throw new Error("Error installing scripts and styles");
+      }
+    }
 
     workerSendToast({
       isNotMessage: true,

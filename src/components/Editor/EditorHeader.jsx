@@ -46,10 +46,12 @@ import {
   getComponentRules,
   getCurrentPageName,
   getProjectData,
+  getProjectId,
   getProjectSettings,
   getWpPageConfig,
   getWpRestBase,
   gjsComponentsToJSON,
+  isNormal,
   isWordpress,
   preventSelectNavigation,
   reorderCss,
@@ -83,6 +85,8 @@ import { cloneDeep } from "lodash";
 import { toast } from "react-toastify";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { Wordpress } from "../Protos/wordpress/Wordpress";
+import { OverflowList } from "react-responsive-overflow-list";
+import { wp_get_media_files_by_slugs } from "@/Apps/wordpress/functions";
 
 // export const HomeHeader = () => <h1>helo</h1>
 export const HomeHeader = memo(() => {
@@ -479,129 +483,322 @@ export const HomeHeader = memo(() => {
 
   useNotifiers();
 
+  const tools = useMemo(() => {
+    return [
+      <IframeControllers />,
+      // <Hr />,
+      <Li
+        onClick={() => {
+          editor.runCommand(open_code_manager_modal);
+        }}
+        title="Code manager"
+        className="shrink-0"
+      >
+        {Icons.code({ strokWidth: 3 })}
+      </Li>,
+
+      <Li
+        title="preview mode"
+        icon={Icons.watch}
+        onClick={(ev) => {
+          // localStorage.setItem(preview_url, getCurrentPageName());
+          // window.open(`/preview/${getCurrentPageName()}`, "_blank");
+
+          setShowPreview((old) => !old);
+        }}
+        className="shrink-0"
+      />,
+
+      <Li
+        title="show in frontend"
+        icon={Icons.showInFrontEnd}
+        isObjectParamsIcon
+        onClick={(ev) => {
+          doInNormal(() => {
+            localStorage.setItem(preview_url, getCurrentPageName());
+            window.open(
+              `/${getCurrentPageName()}`,
+              "infinitely-preview",
+              // 'width=800,height=600,top=50,left=50,scrollbars=yes,resizable=yes,location=yes,menubar=no,toolbar=no,status=yes,titlebar=yes'
+            );
+          });
+
+          doInWordpress(async () => {
+            localStorage.setItem(preview_url, getCurrentPageName());
+            const wp_post = getWpPageConfig();
+            const projectData = await getProjectData();
+            window.open(
+              `/wordpress/preview?url=${wp_post.link}&save_state=${projectData.currentEditingPage.save_state}&mode=preview`,
+              "infinitely-preview",
+              // 'width=800,height=600,top=50,left=50,scrollbars=yes,resizable=yes,location=yes,menubar=no,toolbar=no,status=yes,titlebar=yes'
+            );
+          });
+          // console.log("navigated to frontend");
+
+          // navigate("/preview" , {});
+          // setShowPreview((old) => !old);
+        }}
+        className="shrink-0"
+      />,
+
+      <Li
+        icon={Icons.save}
+        title="save"
+        justHover={true}
+        className="shrink-0"
+        onClick={() => {
+          editor.store();
+        }}
+      />,
+
+      <Li
+        icon={Icons.share}
+        title="share"
+        isObjectParamsIcon
+        className="shrink-0"
+        // justHover
+        fillObjIconStroke
+        fillObjectIconOnHover
+        onClick={() => {
+          // editor.store();
+          shareProject();
+          /**
+           *
+           * @param {MessageEvent} ev
+           */
+          const callback = async (ev) => {
+            if (ev.data.command == "shareProject") {
+              console.log(ev);
+              const { response } = ev.data;
+              if (response.status == "success") {
+                // "http://tmpfiles.org/11276583/dasd.zip"
+                const fileUrl = response.data.url.replace(
+                  "http://tmpfiles.org/",
+                  "https://tmpfiles.org/dl/",
+                );
+                await navigator.clipboard.writeText(
+                  `${window.origin}/workspace?file=${btoa(fileUrl)}`,
+                );
+                toast.info(
+                  <ToastMsgInfo
+                    msg={`Share URL is copied , so you can share now💙`}
+                  />,
+                  { progressClassName: "bg-brand-primary" },
+                );
+              }
+              fetcherWorker.removeEventListener("message", callback);
+            }
+          };
+          fetcherWorker.addEventListener("message", callback);
+        }}
+      />,
+
+      <Li
+        icon={Icons.export}
+        title="export"
+        justHover={true}
+        className="shrink-0"
+        onClick={async () => {
+          exportProject();
+        }}
+      />,
+      <Li
+        to={"/edite/styling"}
+        className="shrink-0"
+        icon={Icons.prush}
+        isObjectParamsIcon
+        fillObjIcon={false}
+        fillObjectIconOnHover
+        notify={Object.values(asideControllersNotifires).some(
+          (val) => val === true,
+        )}
+        title="edite component"
+      />,
+      <Li
+        to={"/add-blocks"}
+        className="shrink-0"
+        icon={Icons.plus}
+        fillIcon
+        fillObjIcon
+        title="add blocks"
+      />,
+    ];
+  }, [editor, asideControllersNotifires, currentEl, cmpRules, showPreview]);
+
+  useEffect(() => {
+    (async ()=>{
+      const projectData = await getProjectData();
+      console.log( 'jsFooterLibs' , await wp_get_media_files_by_slugs({
+        slugs:projectData.jsFooterLibs.map(item=>item.slug),
+        projectId:getProjectId()
+      }));
+      
+    })()
+  } , [])
 
   return (
-    <header className="disable-when-load w-full h-[55px] z-[999] zoom-80 px-2 bg-surface-secondary  border-b-[1.5px]  border-slate-600    flex items-center justify-between gap-2 auto-animate animate-go-to">
-      <ScrollableToolbar
-        className="w-[37.5%] h-full flex shrink-0   max-w-[700px] py-2 "
-        innerClassName="!justify-start"
-        space={2}
-      >
-        {/* <ul className="flex gap-[25px] flex-shrink  h-full  items-center"> */}
-        {/* <UlContextProvider> */}
-        <ul
-          ref={sizeAutoAnimate}
-          className="flex items-center w-[150px]  h-full gap-2 justify-between shrink-0  bg-surface-tertiary shadow-2xl shadow-slate-950 rounded-lg  p-1"
-        >
-          <Li
-            title="Default size"
-            className="shrink-0"
-            // className="max-xl:shrink-0"
-            onClick={(ev) => {
-              editor.setDevice("desktop");
-              setMediaConditon("");
-              // setCurrentEl({ currentEl: editor?.getSelected()?.getEl() });
-              editor.trigger("device:change");
-            }}
-            isObjectParamsIcon
-            icon={Icons.desktop}
-            id={"desktop-size"}
-            notify={Boolean(detectedMedia.desktop.length)}
-            mode={"group"}
-            enableSelecting
-          />
-          <Li
-            title="max-width: 900px"
-            className="shrink-0"
-            // className="max-xl:shrink-0"
-            onClick={(ev) => {
-              editor.setDevice("tablet");
-              setMediaConditon("max-width");
-              // setCurrentEl({ currentEl: editor?.getSelected()?.getEl() });
-              editor.trigger("device:change");
-            }}
-            isObjectParamsIcon
-            fillObjectIconOnHover
-            icon={Icons.tablet}
-            notify={Boolean(detectedMedia.tablet.length)}
-            id={"tablet-size"}
-            mode={"group"}
-            enableSelecting
-          />
+    <header
+      className={
+        `
+        disable-when-load
+      grid
+      ${isNormal() ? `grid-cols-[minmax(0,1fr)_minmax(0,1fr)]`  : `grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]`}
+      items-center
+      gap-1
+      w-full
+      h-[55px]
+      z-[999]
+      zoom-80
+      px-2
+      bg-surface-secondary
+      overflow-hidden
+      border-b-[1.5px]
+      border-slate-600
+      auto-animate
+      animate-go-to
+        `
+      }
+    >
+      {/* =========================================================
+        LEFT / DEVICE CONTROLS
+        ========================================================= */}
+      <ScrollableToolbar className="h-[calc(100%-8px)] ">
+       
+          {/* Device buttons */}
+          <ul
+            ref={sizeAutoAnimate}
+            className="
+          flex
+          items-center
+          w-[150px]
+          min-w-[150px]
+          h-full
+          gap-
+          justify-between
+          shrink-0
+          bg-surface-tertiary
+          shadow-2xl
+          shadow-slate-950
+          rounded-lg
+          p-1
+        "
+          >
+            <Li
+              title="Default size"
+              className="shrink-0"
+              onClick={() => {
+                editor.setDevice("desktop");
+                setMediaConditon("");
+                editor.trigger("device:change");
+              }}
+              isObjectParamsIcon
+              icon={Icons.desktop}
+              id="desktop-size"
+              notify={Boolean(detectedMedia.desktop.length)}
+              mode="group"
+              enableSelecting
+            />
 
-          <Li
-            title="max-width: 360px"
-            className="shrink-0 relative"
-            onClick={(ev) => {
-              editor.setDevice("mobile");
-              setMediaConditon("max-width");
-              // setCurrentEl({ currentEl: editor?.getSelected()?.getEl() });
-              editor.trigger("device:change");
-            }}
-            isObjectParamsIcon
-            fillObjectIconOnHover
-            icon={Icons.mobile}
-            notify={Boolean(detectedMedia.mobile.length)}
-            id={"mobile-size"}
-            mode={"group"}
-            enableSelecting
-          />
-          {Boolean(detectedMedia.others.length) && (
-            <OptionsButton
-              className="hover:bg-brand-primary w-[30px!important] h-[30px] shrink-0 "
-              notify={Boolean(detectedMedia.others.length)}
-            >
-              {
+            <Li
+              title="max-width 900px"
+              className="shrink-0"
+              onClick={() => {
+                editor.setDevice("tablet");
+                setMediaConditon("max-width");
+                editor.trigger("device:change");
+              }}
+              isObjectParamsIcon
+              fillObjectIconOnHover
+              icon={Icons.tablet}
+              notify={Boolean(detectedMedia.tablet.length)}
+              id="tablet-size"
+              mode="group"
+              enableSelecting
+            />
+
+            <Li
+              title="max-width 360px"
+              className="shrink-0 relative"
+              onClick={() => {
+                editor.setDevice("mobile");
+                setMediaConditon("max-width");
+                editor.trigger("device:change");
+              }}
+              isObjectParamsIcon
+              fillObjectIconOnHover
+              icon={Icons.mobile}
+              notify={Boolean(detectedMedia.mobile.length)}
+              id="mobile-size"
+              mode="group"
+              enableSelecting
+            />
+
+            {Boolean(detectedMedia.others.length) && (
+              <OptionsButton
+                className="
+              hover:bg-brand-primary
+              !w-[30px]
+              !h-[30px]
+              shrink-0
+            "
+                notify={Boolean(detectedMedia.others.length)}
+              >
                 <ul
                   onMouseOver={(ev) => {
                     ev.preventDefault();
                     ev.stopPropagation();
                   }}
-                  className=" relative flex flex-col gap-2"
+                  className="relative flex flex-col gap-2"
                 >
                   {detectedMedia.others.map((rule, i) => {
-                    console.log(
-                      "rule : ",
-                      rule,
-                      rule.trim() ==
-                        `${editor.config.mediaCondition}: ${widthMedia}px`,
-                    );
+                    const widthValue = rule.match(/\d+/gi);
+                    const mediaCondition = rule.split(":")[0];
 
                     return (
                       <li
                         key={i}
                         style={{
                           backgroundColor:
-                            rule.trim() ==
+                            rule.trim() ===
                             `${editor.config.mediaCondition}: ${widthMedia}px`
                               ? "var(--main-bg)"
                               : "",
                         }}
-                        className="p-2 bg-slate-700 w-[200px!important] flex justify-center items-center  rounded-md  transition-all hover:bg-brand-primary"
+                        className="
+                      p-2
+                      bg-slate-700
+                      !w-[200px]
+                      flex
+                      justify-center
+                      items-center
+                      rounded-md
+                      transition-all
+                      hover:bg-brand-primary
+                    "
                         onClick={(ev) => {
                           ev.preventDefault();
                           ev.stopPropagation();
+
                           addClickClass(ev.currentTarget, "click");
-                          const widthValue = rule.match(/\d+/gi);
-                          const mediaCondition = rule.split(":")[0];
-                          // console.log("widthValue" , widthValue, mediaCondition);
+
                           setMediaValue(mediaCondition);
                           setMediaCond(mediaCondition);
 
                           editor.getConfig().mediaCondition = mediaCondition;
+
                           localStorage.setItem(
                             "media-condition",
                             mediaCondition,
                           );
-                          const sle = editor.getSelected();
+
                           setDimaonsion({
                             ...dimansions,
                             width: +widthValue[0],
                           });
+
                           setCustomDevice("width", +widthValue[0]);
 
                           editor.trigger("device:change");
-                          // preventSelectNavigation(editor, sle);
                         }}
                       >
                         {rule}
@@ -609,275 +806,277 @@ export const HomeHeader = memo(() => {
                     );
                   })}
                 </ul>
-              }
-            </OptionsButton>
-          )}
-        </ul>
+              </OptionsButton>
+            )}
+          </ul>
 
-        <li className=" shrink-0 grow-0 w-[130px]">
-          <Select
-            preventInput
-            keywords={["min-width", "max-width"]}
-            placeholder="Media"
-            value={mediaValue}
-            onAll={(value) => {
-              setMediaValue(value);
-              editor.getConfig().mediaCondition = value;
-              localStorage.setItem("media-condition", value);
-              const sle = editor.getSelected();
-              preventSelectNavigation(editor, sle);
-            }}
-          />
-        </li>
+          {/* Media */}
+          <div className=" w-full grow-0 h-full min-w-[200px]">
+            <Select
+              preventInput
+              keywords={["min-width", "max-width"]}
+              placeholder="Media"
+              value={mediaValue}
+              onAll={(value) => {
+                setMediaValue(value);
+                editor.getConfig().mediaCondition = value;
 
-        <li className="flex h-full   gap-2 max-lg:shrink-0">
-          <Input
-            type="number"
-            placeholder="Width"
-            className="bg-surface-tertiary p-1 w-[70px] text-center  h-full font-bold text-sm max-lg:shrink-0"
-            value={dimansions.width}
-            onInput={(ev) => {
-              // transformToNumInput(ev.target);
-              setCustomDevice("width", ev.target.value);
-              setDimaonsion({ ...dimansions, width: ev.target.value });
-              setCurrentEl({ currentEl: JSON.stringify(editor.getSelected()) });
-            }}
-          />
+                localStorage.setItem("media-condition", value);
 
-          <Input
-            type="number"
-            value={dimansions.height}
-            placeholder="Height"
-            className="bg-surface-tertiary w-[70px] p-1  text-center  h-full font-bold text-sm max-lg:shrink-0 "
-            onInput={(ev) => {
-              // transformToNumInput(ev.target);
-              setCustomDevice("height", ev.target.value);
-              setDimaonsion({ ...dimansions, height: ev.target.value });
-              setCurrentEl({ currentEl: editor.getSelected().getEl() });
-            }}
-          />
+                const sle = editor.getSelected();
+                preventSelectNavigation(editor, sle);
+              }}
+            />
+          </div>
 
-          <Input
-            value={zoomValue}
-            placeholder="Zoom"
-            className="bg-surface-tertiary w-[70px] p-1  text-center  h-full font-bold text-sm max-lg:shrink-0 "
-            type="number"
-            onInput={(ev) => {
-              // transformToNumInput(ev.target);
-              // editor.getContainer().style.zoom = ev.target.value / 100;
+          {/* Dimensions */}
+          <div className="flex h-full gap-1 shrink-0">
+            <Input
+              type="number"
+              placeholder="Width"
+              className="
+            bg-surface-tertiary
+            p-1
+            !w-[70px]
+            min-w-[70px]
+            text-center
+            h-full
+            font-bold
+            text-sm
+            shrink-0
+          "
+              value={dimansions.width}
+              onInput={(ev) => {
+                setCustomDevice("width", ev.target.value);
 
-              // editor.trigger(InfinitelyEvents.devices.update_zoom , {value:true});
-              const val = ev.target.value;
-              const container = editor.getContainer();
+                setDimaonsion({
+                  ...dimansions,
+                  width: ev.target.value,
+                });
 
-              // ✅ 1. Add the "zooming" flag so the ResizeObserver ignores this manual change
-              // container.setAttribute("zooming", "true");
+                setCurrentEl({
+                  currentEl: JSON.stringify(editor.getSelected()),
+                });
+              }}
+            />
 
-              // 2. Apply the manual zoom
-              container.style.zoom = val / 100;
-              const parent = container.parentElement;
-              if (parent) {
-                parent.style.display = "flex";
-                parent.style.justifyContent = "center";
-                parent.style.alignItems = "center";
-                parent.style.width = "100%";
-                parent.style.height = "100%";
-                parent.style.overflow = "hidden"; // Prevents scrollbars from zoom
-              }
-              // editor.Canvas.setZoom(val / 100);
-              // editor.trigger(InfinitelyEvents.devices.update_zoom , {value:false});
+            <Input
+              type="number"
+              value={dimansions.height}
+              placeholder="Height"
+              className="
+            bg-surface-tertiary
+            !w-[70px]
+            min-w-[70px]
+            p-1
+            text-center
+            h-full
+            font-bold
+            text-sm
+            shrink-0
+          "
+              onInput={(ev) => {
+                setCustomDevice("height", ev.target.value);
 
-              // 3. Keep the React state and Event Bus in sync (prevents UI flicker)
-              setZoomValue(val);
-              editorContainerInstance.emit(
-                InfinitelyEvents.editorContainer.update,
-                {
-                  value: container.style.zoom,
-                },
-              );
-            }}
-          />
-        </li>
-        <PagesSelector />
-        {/* </ul> */}
+                setDimaonsion({
+                  ...dimansions,
+                  height: ev.target.value,
+                });
+
+                setCurrentEl({
+                  currentEl: editor.getSelected().getEl(),
+                });
+              }}
+            />
+
+            <Input
+              value={zoomValue}
+              placeholder="Zoom"
+              className="
+            bg-surface-tertiary
+            !w-[70px]
+            min-w-[70px]
+            p-1
+            text-center
+            h-full
+            font-bold
+            text-sm
+            shrink-0
+          "
+              type="number"
+              onInput={(ev) => {
+                const val = ev.target.value;
+                const container = editor.getContainer();
+
+                container.style.zoom = val / 100;
+
+                const parent = container.parentElement;
+
+                if (parent) {
+                  parent.style.display = "flex";
+                  parent.style.justifyContent = "center";
+                  parent.style.alignItems = "center";
+                  parent.style.width = "100%";
+                  parent.style.height = "100%";
+                  parent.style.overflow = "hidden";
+                }
+
+                setZoomValue(val);
+
+                editorContainerInstance.emit(
+                  InfinitelyEvents.editorContainer.update,
+                  {
+                    value: container.style.zoom,
+                  },
+                );
+              }}
+            />
+          </div>
+
+          {/* Pages */}
+          <div className="shrink-0 h-full">
+            <PagesSelector />
+          </div>
+
       </ScrollableToolbar>
 
-      <ScrollableToolbar
-        className=" w-full   h-full   [&_svg]:w-[20px] [&_svg]:h-[18px] tools"
-        space={2}
+      {/* =========================================================
+        TOOLS
+        ========================================================= */}
+      {/* <section
+        className="
+        min-w-0
+        w-full
+        h-full
+        flex
+        overflow-hidden
+        bg-surface-tertiary
+        p-1
+        rounded-lg
+      "
+      > */}
+       <ScrollableToolbar
+        innerClassName="w-full flex justify-between  bg-surface-tertiary p-1 rounded-lg [&_svg]:!w-[19px] [&_svg]:!h-[19px]"
+        className="h-[calc(100%-8px)]"
       >
-        <section className="flex items-center gap-2 w-full  grow-0 justify-between bg-surface-tertiary p-[5px] rounded-lg">
-          <IframeControllers />
-          <Hr />
-
-          <>
-            <Li
-              onClick={() => {
-                editor.runCommand(open_code_manager_modal);
-              }}
-              title="Code manager"
-              className="shrink-0"
-            >
-              {Icons.code({ strokWidth: 3 })}
-            </Li>
-            <Li
-              title="preview mode"
-              icon={Icons.watch}
-              onClick={(ev) => {
-                // localStorage.setItem(preview_url, getCurrentPageName());
-                // window.open(`/preview/${getCurrentPageName()}`, "_blank");
-
-                setShowPreview((old) => !old);
-              }}
-              className="shrink-0"
-            />
-
-            <Li
-              title="show in frontend"
-              icon={Icons.showInFrontEnd}
-              isObjectParamsIcon
-              onClick={(ev) => {
-                doInNormal(() => {
-                  localStorage.setItem(preview_url, getCurrentPageName());
-                  window.open(
-                    `/${getCurrentPageName()}`,
-                    "infinitely-preview",
-                    // 'width=800,height=600,top=50,left=50,scrollbars=yes,resizable=yes,location=yes,menubar=no,toolbar=no,status=yes,titlebar=yes'
-                  );
-                });
-
-                doInWordpress(async () => {
-                  localStorage.setItem(preview_url, getCurrentPageName());
-                  const wp_post = getWpPageConfig();
-                  const projectData = await getProjectData();
-                  window.open(
-                    `/wordpress/preview?url=${wp_post.link}&save_state=${projectData.currentEditingPage.save_state}&mode=preview`,
-                    "infinitely-preview",
-                    // 'width=800,height=600,top=50,left=50,scrollbars=yes,resizable=yes,location=yes,menubar=no,toolbar=no,status=yes,titlebar=yes'
-                  );
-                });
-                // console.log("navigated to frontend");
-
-                // navigate("/preview" , {});
-                // setShowPreview((old) => !old);
-              }}
-              className="shrink-0"
-            />
-
-            <Li
-              icon={Icons.save}
-              title="save"
-              justHover={true}
-              className="shrink-0"
-              onClick={() => {
-                editor.store();
-              }}
-            />
-
-            <section className="relative">
-              <Li
-                icon={Icons.share}
-                title="share"
-                isObjectParamsIcon
-                className="shrink-0"
-                // justHover
-                fillObjIconStroke
-                fillObjectIconOnHover
-                onClick={() => {
-                  // editor.store();
-                  shareProject();
-                  /**
-                   *
-                   * @param {MessageEvent} ev
-                   */
-                  const callback = async (ev) => {
-                    if (ev.data.command == "shareProject") {
-                      console.log(ev);
-                      const { response } = ev.data;
-                      if (response.status == "success") {
-                        // "http://tmpfiles.org/11276583/dasd.zip"
-                        const fileUrl = response.data.url.replace(
-                          "http://tmpfiles.org/",
-                          "https://tmpfiles.org/dl/",
-                        );
-                        await navigator.clipboard.writeText(
-                          `${window.origin}/workspace?file=${btoa(fileUrl)}`,
-                        );
-                        toast.info(
-                          <ToastMsgInfo
-                            msg={`Share URL is copied , so you can share now💙`}
-                          />,
-                          { progressClassName: "bg-brand-primary" },
-                        );
-                      }
-                      fetcherWorker.removeEventListener("message", callback);
-                    }
-                  };
-                  fetcherWorker.addEventListener("message", callback);
-                }}
-              />
-
-              {/* <p className="absolute top-[100%] left-[-150px] w-[300px] p-2 bg-surface-tertiary rounded-lg z-[500]">dadsadadl dlas,dlsadlklsakdlaksldksalkdlsalkd</p> */}
-            </section>
-
-            <Li
-              icon={Icons.export}
-              title="export"
-              justHover={true}
-              className="shrink-0"
-              onClick={async () => {
-                exportProject();
-              }}
-            />
-            <Li
-              to={"/edite/styling"}
-              className="shrink-0"
-              icon={Icons.prush}
-              isObjectParamsIcon
-              fillObjIcon={false}
-              fillObjectIconOnHover
-              notify={Object.values(asideControllersNotifires).some(
-                (val) => val === true,
-              )}
-              title="edite component"
-            />
-            <Li
-              to={"/add-blocks"}
-              className="shrink-0"
-              icon={Icons.plus}
-              fillIcon
-              fillObjIcon
-              title="add blocks"
-            />
-          </>
-        </section>
-
-        <Wordpress>
-          <section className=" max-w-[200px] w-[calc(100%+25px)] h-full py-2">
-            <Button
-              refForward={animatedRefForPublishBtn}
-              disabled={storeLoad || !publish}
-              onClick={(ev) => {
-                publishToWp();
-              }}
-              className="font-bold capitalize flex items-center justify-center gap-1 w-full h-full"
-            >
-              {storeLoad && (
-                <section className="w-[15px] h-[15px]">
-                  <Loader
-                    width={15}
-                    height={15}
-                    loaderClassName={"border-white"}
-                  />
-                </section>
-              )}
-              {storeLoad ? <p>Process</p> : <p>Publish</p>}
-            </Button>
-          </section>
-        </Wordpress>
+   
+          {tools.map((tool, i) => {
+            return <React.Fragment key={i}>{tool}</React.Fragment>;
+          })}
+       
       </ScrollableToolbar>
+      
+      {/* <OverflowList
+          items={tools}
+          maxRows={1}
+          // maxVisibleItems={tools.length}
+          
+          // observeItemSizes
+          // flushImmediately
+          className="
+          w-full
+
+          h-full
+
+          justify-between
+          gap-2
+        "
+          renderItem={(item) => (
+            <
+              
+            >
+              {item}
+            </>
+          )}
+          renderOverflow={(hiddenItems) => (
+            <div
+              className="
+              shrink-0
+              grow-0
+              flex
+
+              justify-between
+            "
+            >
+              <OptionsButton
+                className="
+                !w-[30px]
+                !min-w-[30px]
+                !h-[30px]
+                shrink-0
+                grow-0
+                
+              "
+              >
+                <div
+                className="gap-2 flex flex-col"
+                >
+                  {hiddenItems.map((item, i) => (
+                    <React.Fragment
+                      key={i}
+                      
+                    >
+                      {item}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </OptionsButton>
+            </div>
+          )}
+          style={{
+            width: "100%",
+            minWidth: 0,
+            height: "100%",
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            alignContent: "center",
+            gap: "8px",
+            overflow: "hidden",
+          }}
+        /> */}
       {/* </section> */}
-      {/* </ToolbarComponent> */}
+
+      {/* =========================================================
+        WORDPRESS
+        ========================================================= */}
+      <Wordpress>
+        <section
+          className="
+          w-[140px]
+          min-w-[140px]
+          max-w-[200px]
+          !h-full
+          py-1
+        "
+        >
+          <Button
+            refForward={animatedRefForPublishBtn}
+            disabled={storeLoad || !publish}
+            onClick={() => {
+              publishToWp();
+            }}
+            className="
+            font-bold
+            capitalize
+            flex
+            items-center
+            justify-center
+            gap-1
+            w-full
+            !h-full
+          "
+          >
+            {storeLoad && (
+              <section className="w-[15px] h-[15px] shrink-0">
+                <Loader width={15} height={15} loaderClassName="border-white" />
+              </section>
+            )}
+
+            {storeLoad ? <p>Process</p> : <p>Publish</p>}
+          </Button>
+        </section>
+      </Wordpress>
     </header>
   );
 });

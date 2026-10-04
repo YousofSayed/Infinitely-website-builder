@@ -1,6 +1,6 @@
 import { blocks } from "@/Blocks/blocks.jsx";
 import { InfinitelyEvents } from "@/constants/infinitelyEvents.js";
-import { current_symbol_id } from "@/constants/shared.js";
+import { current_symbol_id, DEV_SCRIPT_DEFINITIONS_EXCLUDES_IN_EDITOR_FOR_HEADER } from "@/constants/shared.js";
 import {
   cmpRulesState,
   currentElState,
@@ -8,6 +8,7 @@ import {
   reloaderState,
   ruleState,
   selectorState,
+  showUpdateDialogState,
 } from "@/helpers/atoms";
 import { isChrome } from "@/helpers/bridge.js";
 import { html } from "@/helpers/cocktail.js";
@@ -255,6 +256,11 @@ export const GJEditor = ({ children }) => {
       }
     });
 
+    ev.on(InfinitelyEvents.storage.loadStart, () => {
+        updateCurrentEl("");
+      setCmpRules([]);
+    })
+
     editor.on(InfinitelyEvents.ruleTitle.update, () => {
       // const selectedEl = ev.getSelected();
       // if (!selectedEl) return;
@@ -381,6 +387,8 @@ export const GJEditor = ({ children }) => {
               { src: `/scripts/initSw.js`, name: "initSw.js" },
             ]) ||
               []),
+
+              ...DEV_SCRIPT_DEFINITIONS_EXCLUDES_IN_EDITOR_FOR_HEADER
           ],
           styles: [],
           customBadgeLabel:

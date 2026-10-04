@@ -35,6 +35,32 @@ const defaultState = /** @type {BusyState} */ ({
 });
 
 // ==============================================================================
+// HELPER: AUTO-GENERATE STABLE KEY FROM SOURCE CODE
+// ==============================================================================
+
+/**
+ * MAGIC FIX: Generates a stable hash from a function's source code.
+ * This allows the hook to "remember" its state across component unmounts/remounts 
+ * without requiring the user to manually pass a unique `key`.
+ */
+const getStableAutoKey = (fn) => {
+  if (!fn || typeof fn !== 'function') return null;
+  try {
+    const str = fn.toString();
+    let h1 = 0, h2 = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      h1 = (h1 << 5) - h1 + char; h1 |= 0;
+      h2 = (h2 << 7) ^ char; h2 |= 0;
+    }
+    // Combine function name (if any) and hashes for maximum uniqueness
+    return `auto_${fn.name || 'anon'}_${(h1 >>> 0).toString(36)}_${(h2 >>> 0).toString(36)}`;
+  } catch (e) {
+    return null;
+  }
+};
+
+// ==============================================================================
 // RECOIL GLOBAL STATE (Dictionary Approach)
 // ==============================================================================
 
@@ -83,7 +109,7 @@ export const getMultipleTaskStatesSelector = selectorFamily({
     const states = /** @type {Record<string, BusyState>} */ ({});
     let isLoading = false;
     let isError = false;
-    let allSuccess = keys.length > 0; // True only if ALL are successful
+    let allSuccess = keys.length > 0; 
     let anySuccess = false;
 
     for (const key of keys) {
@@ -110,31 +136,11 @@ export const getMultipleTaskStatesSelector = selectorFamily({
 // HELPER HOOKS FOR CROSS-COMPONENT SHARING
 // ==============================================================================
 
-/**
- * Custom hook to easily read the state of a SPECIFIC task from anywhere in the app.
- * 
- * @param {string} taskKey - The unique key provided to the useBusyCallback hook.
- * @returns {BusyState} The current state of the task.
- */
 export const useTaskState = (taskKey) => {
   return useRecoilValue(getTaskStateSelector(taskKey));
 };
 
-/**
- * Custom hook to read the state of MULTIPLE tasks at once. 
- * Provides both the individual states and aggregated boolean flags.
- * 
- * @param {string[]} keys - An array of unique task keys.
- * @returns {MultipleTasksState} The aggregated and individual states.
- * 
- * @example
- * const { states, isLoading, isError } = useTasksState(["delete-lib-1", "delete-lib-2"]);
- * // isLoading is true if EITHER task is loading.
- * // states["delete-lib-1"].data gives the specific data for task 1.
- */
 export const useTasksState = (keys = []) => {
-  // MAGIC FIX: Sort and join to create a stable string cache key for Recoil's selectorFamily.
-  // This prevents memory leaks and cache bloat if the array reference changes on every render.
   const stableKeyString = Array.isArray(keys) 
     ? [...keys].filter(Boolean).sort().join('|') 
     : '';
@@ -155,14 +161,31 @@ export const useTasksState = (keys = []) => {
 export const useBusyCallback = (callback, options = {}) => {
   const { persist = true, key } = options;
   
-  const stableKey = useRef(key || callback?.name || `task_${Math.random().toString(36).substr(2, 9)}`).current;
+  // We use useRef to store the key so it only gets generated ONCE per component mount.
+  const stableKeyRef = useRef(null);
+  
+  if (stableKeyRef.current === null) {
+    if (key) {
+      // 1. Use explicit key if provided
+      stableKeyRef.current = key;
+    } else {
+      // 2. MAGIC: Generate a stable key from the function's source code!
+      // Because the source code doesn't change when the component remounts, 
+      // the hash will be identical, allowing Recoil to resume the exact same state.
+      stableKeyRef.current = getStableAutoKey(callback) || `task_${Math.random().toString(36).substr(2, 9)}`;
+    }
+  }
+  
+  const stableKey = stableKeyRef.current;
 
   const setBusyState = useRecoilCallback(({ set }) => (nextState) => {
     set(busyStatesAtom, (prev) => ({ ...prev, [stableKey]: nextState }));
   }, [stableKey]);
 
-  const globalStates = useRecoilValue(busyStatesAtom);
-  const state = globalStates[stableKey] || defaultState;
+  // OPTIMIZATION: Use your selector to only subscribe to this specific task's state.
+  // This prevents unnecessary re-renders and ensures the state is perfectly synced 
+  // even if the component unmounts and remounts.
+  const state = useRecoilValue(getTaskStateSelector(stableKey));
 
   const execute = useCallback(
     async (...args) => {
@@ -183,16 +206,12 @@ export const useBusyCallback = (callback, options = {}) => {
         throw error;
       }
     },
-    [callback, setBusyState, stableKey]
+    [callback, setBusyState] 
   );
 
   const reset = useCallback(() => {
     setBusyState(defaultState);
   }, [setBusyState]);
 
-  return /** @type {[(...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>>, BusyState, () => void]} */ ([
-    execute, 
-    state, 
-    reset
-  ]);
+  return [execute, state, reset];
 };

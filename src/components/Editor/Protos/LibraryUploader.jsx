@@ -54,7 +54,7 @@ export const LibraryUploader = () => {
       file.latest = URL.createObjectURL(file);
       return file;
     });
-    setFiles(newFiles);
+    setFiles((files) => [...files, ...newFiles]);
     input.value = "";
   };
 
@@ -71,6 +71,7 @@ export const LibraryUploader = () => {
     <section className="p-1 rounded-lg min-h-full h-full flex flex-col auto-animate">
       <header className="flex items-center justify-between gap-2 p-2 mb-2 bg-surface-tertiary rounded-lg">
         <Input
+          value={remoteLibraryDetail.latest}
           placeholder="Add Library Url"
           className="w-full bg-surface-secondary"
           onInput={(ev) => {
@@ -78,6 +79,7 @@ export const LibraryUploader = () => {
           }}
         />
         <Input
+          value={remoteLibraryDetail.name}
           placeholder="Add Library Name"
           className="w-full bg-surface-secondary"
           onInput={(ev) => {
@@ -118,6 +120,12 @@ export const LibraryUploader = () => {
                       ),
                     },
                   ]);
+
+                  setRemoteLibraryDetail({
+                    latest: "",
+                    name: "",
+                    file: null,
+                  });
                 } else {
                   // setAddManualy(remoteLibraryDetail.latest);
                   setAddManualy(remoteLibraryDetail.latest);
@@ -248,21 +256,9 @@ export const LibraryUploader = () => {
       </ShowIf>
 
       <main className="h-full w-full overflow-hidden">
-        {/* <VList className="hideScrollBar auto-animate" >
-            {files.map((file, i) => (
-            <JsLibrary
-                key={i}
-                library={file}
-                // fileuploader
-                afterInstall={({ key, lib }) => {
-                  const newLibs = files.filter((file) => file.name != lib.name);
-                  setFiles(newLibs);
-                }}
-              />
-          ))}
-        </VList> */}
+        
         <Virtuoso
-          className="auto-animate"
+          className="hideScrollBar"
           totalCount={files.length}
           itemContent={(i) => {
             const file = files[i];
@@ -272,8 +268,9 @@ export const LibraryUploader = () => {
                 library={file}
                 // fileuploader
                 afterInstall={({ key, lib }) => {
-                  const newLibs = files.filter((file) => file.name != lib.name);
+                  const newLibs = files.filter((file) => file.name != lib.nameWithoutExt);
                   setFiles(newLibs);
+                  console.log("afterInstall : ", { key, lib, newLibs });
                 }}
               />
             );

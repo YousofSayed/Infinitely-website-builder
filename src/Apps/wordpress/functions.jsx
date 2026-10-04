@@ -725,7 +725,7 @@ export async function wp_get_media_by_slugs({ projectId, slugs = [] }) {
  * @param {object} options
  * @param {number} options.projectId
  * @param {string[]} [options.slugs=[]]
- * @returns {Promise<Object.<string, string>>} Map of slug → file content.
+ * @returns {Promise<Object.<string, {error:string , content?:string , url:string , slug:string}>>} Map of slug → file content.
  * @throws {Error} If the request fails.
  */
 export async function wp_get_media_files_by_slugs({ projectId, slugs = [] }) {
@@ -1977,6 +1977,8 @@ export async function wp_update_main_global_files({ data }) {
   //   JSON.stringify(data.projectSetting)
   // )
   //   return;
+  const { minify_sync } = await import("terser");
+  const { minify } = await import("csso");
   const mainHeaderScripts = await Promise.all(
     buildWpHeaderScripts({
       projectSetting: data.projectSetting,
@@ -1987,7 +1989,10 @@ export async function wp_update_main_global_files({ data }) {
       }
       if (isBoolean(item.condition)) {
         if (item.condition) {
-          return new File([blob], item.name, { type: blob.type });
+          const fileMinified = data.projectSetting.minify_Js
+            ? minify_sync(await blob.text()).code
+            : blob;
+          return new File([fileMinified], item.name, { type: blob.type });
         } else {
           return new File([" "], item.name, { type: blob.type });
         }
@@ -2006,7 +2011,10 @@ export async function wp_update_main_global_files({ data }) {
       }
       if (isBoolean(item.condition)) {
         if (item.condition) {
-          return new File([blob], item.name, { type: blob.type });
+          const fileMinified = data.projectSetting.minify_Js
+            ? minify_sync(await blob.text()).code
+            : blob;
+          return new File([fileMinified], item.name, { type: blob.type });
         } else {
           return new File([" "], item.name, { type: blob.type });
         }
@@ -2025,7 +2033,12 @@ export async function wp_update_main_global_files({ data }) {
       }
       if (isBoolean(item.condition)) {
         if (item.condition) {
-          return new File([blob], item.name, { type: blob.type });
+          const fileMinified = data.projectSetting.minify_Css
+            ? await (
+                await minify(await blob.text())
+              ).css
+            : blob;
+          return new File([fileMinified], item.name, { type: blob.type });
         } else {
           return new File([" "], item.name, { type: blob.type });
         }
@@ -2034,14 +2047,80 @@ export async function wp_update_main_global_files({ data }) {
     }),
   );
 
+  let allHeaderJs, allFooterJs, allCss;
+  if (data.projectSetting.grap_all_header_scripts_in_single_file) {
+    const files = await wp_get_media_files_by_slugs({
+      slugs: projecdData.jsHeaderLibs.map((item) => item.slug),
+      projectId: id,
+    });
+
+    if (isPlainObject(files)) {
+      const fileString = Object.values(files)
+        .map((file) => file.content || "")
+        .join("\n");
+      const fileMinified = data.projectSetting.minify_Js
+        ? minify_sync(fileString).code
+        : fileString;
+
+      allHeaderJs = new File([fileMinified], "inf-all-header-scripts.js", {
+        type: "text/javascript",
+      });
+      allFiles.push(allHeaderJs);
+    }
+  }
+
+  if (data.projectSetting.grap_all_footer_scripts_in_single_file) {
+    const files = await wp_get_media_files_by_slugs({
+      slugs: projecdData.jsFooterLibs.map((item) => item.slug),
+      projectId: id,
+    });
+
+    if (isPlainObject(files)) {
+      const fileString = Object.values(files)
+        .map((file) => file.content || "")
+        .join("\n");
+      const fileMinified = data.projectSetting.minify_Js
+        ? minify_sync(fileString).code
+        : fileString;
+
+      allFooterJs = new File([fileMinified], "inf-all-footer-scripts.js", {
+        type: "text/javascript",
+      });
+      allFiles.push(allFooterJs);
+    }
+  }
+
+  if (data.projectSetting.grap_all_css_libs_in_single_file) {
+    const files = await wp_get_media_files_by_slugs({
+      slugs: projecdData.cssLibs.map((item) => item.slug),
+      projectId: id,
+    });
+
+    if (isPlainObject(files)) {
+      const fileString = Object.values(files)
+        .map((file) => file.content || "")
+        .join("\n");
+      const fileMinified = data.projectSetting.minify_Css
+        ? minify(fileString).css
+        : fileString;
+
+      allCss = new File([fileMinified], "inf-all-styles.css", {
+        type: "text/css",
+      });
+      allFiles.push(allCss);
+    }
+  }
   // for (const script of mainScripts) {
   //   // const res = await wp_update_media({ file: script, projectId: id });
   //   files.push(script);
   // }
 
   allFiles.push(...mainHeaderScripts, ...mainScripts);
-
-  const fontsCss = new File([getFonts(data.projectData) || " "], "fonts.css", {
+  const fontsString = getFonts(data.projectData);
+  const fontsMinified = data.projectSetting.minify_Css
+    ? minify(fontsString || " ").css
+    : fontsString;
+  const fontsCss = new File([fontsMinified], "fonts.css", {
     type: "text/css",
   });
 
@@ -2092,19 +2171,34 @@ export async function wp_update_main_global_files({ data }) {
       header: [],
     },
     mainEditorStyles: [],
+    all: {
+      js: {
+        header: {},
+        footer: {},
+      },
+      css: {},
+    },
   };
 
   // Map main scripts to footer
   for (const script of mainScripts) {
     const slug = fileNameToMediaSlug(script.name);
-    
+
     if (files[slug]) {
       newUpdatedConfig.mainEditorScripts.footer.push({
         ...files[slug],
         attributes: attributes[slug],
       });
     }
-    console.log('file slug after update : ' , slug , script , files[slug] ,`---------------` ,attributes , attributes[slug] );
+    console.log(
+      "file slug after update : ",
+      slug,
+      script,
+      files[slug],
+      `---------------`,
+      attributes,
+      attributes[slug],
+    );
   }
 
   // Map main header scripts to header
@@ -2129,9 +2223,40 @@ export async function wp_update_main_global_files({ data }) {
     }
   }
 
+  if (allHeaderJs) {
+    const slug = fileNameToMediaSlug(allHeaderJs.name);
+    if (files[slug]) {
+      newUpdatedConfig.all.js.header = {
+        ...files[slug],
+        attributes: attributes[slug],
+      };
+    }
+  }
+
+  if (allFooterJs) {
+    const slug = fileNameToMediaSlug(allFooterJs.name);
+    if (files[slug]) {
+      newUpdatedConfig.all.js.footer = {
+        ...files[slug],
+        attributes: attributes[slug],
+      };
+    }
+  }
+
+  if (allCss) {
+    const slug = fileNameToMediaSlug(allCss.name);
+    if (files[slug]) {
+      newUpdatedConfig.all.css = {
+        ...files[slug],
+        attributes: attributes[slug],
+      };
+    }
+  }
+
   if (data.update_project_config) {
     await db.projects.update(data.id, {
       ...newUpdatedConfig,
+      projectSetting: data.projectSetting,
     });
 
     const newProjectData = await db.projects.get(data.id);
@@ -2139,7 +2264,7 @@ export async function wp_update_main_global_files({ data }) {
     newProjectData.current_inf_meta = {};
     await wp_update_option({
       optionName: "inf_config",
-      projectId : data.id,
+      projectId: data.id,
       value: newProjectData,
     });
   }

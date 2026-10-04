@@ -23,7 +23,7 @@ export const useConsoleFeed = (target, source, onLog) => {
           ...prev,
           {
             ...decoded,
-            source: "preview",
+            source: event.data?.from,
             timestamp: Date.now(),
             id: decoded.id || crypto.randomUUID(),
           },
@@ -37,6 +37,7 @@ export const useConsoleFeed = (target, source, onLog) => {
 
     return () => {
       window.removeEventListener("message", callback);
+      
     };
   }, []);
 
@@ -46,7 +47,12 @@ export const useConsoleFeed = (target, source, onLog) => {
 
     const win = target;
 
-    if (!win?.console) return;
+    if (!win?.console) {
+      // alert('no console');
+      return
+    };
+
+    // alert('yes console');
 
     let isHooked = false;
 

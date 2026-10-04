@@ -4,6 +4,7 @@ import { Li } from "@/components/Protos/Li";
 // import { useEditorMaybe } from "@grapesjs/react";
 import { useRecoilState } from "recoil";
 import { asideControllersNotifiresState} from "@/helpers/atoms";
+import { ScrollableToolbar } from "@/components/Protos/ScrollableToolbar";
 // import {
 //   interactionId,
 //   mainInteractionId,
@@ -57,7 +58,8 @@ export const AsideControllers = () => {
   // }, [sle , cmpRules , editor]);
 
   return (
-    <ul className="w-full flex items-center  bg-surface-tertiary p-1 rounded-lg gap-2 [&_svg]:w-[22px]">
+    <ScrollableToolbar className="w-full" innerClassName="w-full w-full shrink-0 flex-nowrap flex items-center  bg-surface-tertiary p-1 rounded-lg gap-2 [&_svg]:w-[22px]">
+      {/* <ul className=""> */}
       {/* {cmp && !isDynamicComponent(cmp) && (
         <Li
           title="commands"
@@ -132,6 +134,7 @@ export const AsideControllers = () => {
         icon={Icons.prush}
         notify={notify.styling}
       />
-    </ul>
+    {/* </ul> */}
+    </ScrollableToolbar>
   );
 };

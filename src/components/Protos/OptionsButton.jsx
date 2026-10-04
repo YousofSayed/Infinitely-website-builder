@@ -33,6 +33,7 @@ export const OptionsButton = ({
     ev.stopPropagation();
     startTransition(() => setShowTooltip((prev) => !prev));
     addClickClass(ev.currentTarget, "click");
+    if(showTooltip) return;
     onClick?.(ev);
   };
 
@@ -77,7 +78,7 @@ export const OptionsButton = ({
           // delayHide={10}
           // delayShow={10}
           id={`tooltip-${id.current}`}
-          className="w-fit !p-[unset] [&_>div]:!p-2 z-[100] shadow-lg bg-surface-tertiary shadow-slate-950"
+          className="w-fit !p-[unset] [&_>div]:!p-2 z-[9999] shadow-lg bg-surface-tertiary shadow-slate-950"
           style={{
             boxShadow: "0px 0px 10px 1px #020617",
             padding: "5px !important",

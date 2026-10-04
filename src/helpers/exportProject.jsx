@@ -206,7 +206,7 @@ export async function buildProject(props) {
           page.name,
         );
 
-        console.log('filtered motions : ' , filterdMotions , page.name);
+        console.log("filtered motions : ", filterdMotions, page.name);
 
         zip.file(
           `js/motions/${page.name}.js`,
@@ -340,6 +340,7 @@ export async function buildProject(props) {
         recursive: true,
       },
     );
+
     const jsFooterLibsFiles = await Promise.all(
       jsFooterHandles.map((handle) => handle.getOriginFile()),
     );
@@ -444,12 +445,27 @@ export async function buildProject(props) {
       rm.response = "";
     }
 
+    //Handling Editor Data
+    console.log(`Start loading Editor Data`);
+    const allLibs = projectData.jsHeaderLibs
+      .concat(projectData.jsFooterLibs)
+      .concat(projectData.cssLibs);
+
+    for (const lib of allLibs) {
+      if (!lib.isLocal) continue;
+
+      const fileHandle = await opfs.getFile(defineRoot(lib.path));
+      const file = await fileHandle.getOriginFile();
+      lib.file = file;
+    }
+
     const editorDataBlob = new Blob(
       [JSON.stringify(await replaceBlobs(projectData))],
       { type: "application/json" },
     );
 
     zip.file("editor/infinitely.json", editorDataBlob);
+
     const screenshot = await (
       await opfs.getFile(defineRoot(`screenshot.webp`))
     ).getOriginFile();
@@ -585,7 +601,7 @@ export const getProject = async (props) => {
   const projectData = await db.projects.get(props.projectId);
 
   const project = await buildProject(props);
-  console.log("build file getProject:", props,projectData,project);
+  console.log("build file getProject:", props, projectData, project);
   const file = await project.generateAsync({
     type: "blob",
     compression: "STORE",
@@ -593,16 +609,16 @@ export const getProject = async (props) => {
   });
 
   const response = {
-      file,
-      name: `${projectData.name}`,
-    }
+    file,
+    name: `${projectData.name}`,
+  };
 
   self.postMessage({
     command: "getProject",
     props: response,
   });
 
-  return response
+  return response;
 };
 
 /**

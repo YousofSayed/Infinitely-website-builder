@@ -16,7 +16,7 @@ import {
 } from "@/helpers/functions";
 import { infinitelyWorker } from "@/helpers/infinitelyWorker";
 import { opfs } from "@/helpers/initOpfs";
-import { isFunction } from "lodash";
+import { isFunction, isPlainObject } from "lodash";
 import { toast } from "react-toastify";
 
 // Dropbox PKCE Flow for permanent (refreshable) token
@@ -49,15 +49,69 @@ export async function authDropBox() {
   localStorage.setItem(dropbox_code_verifier, verifier);
 
   // Step 2: Redirect to Dropbox Auth
-  const authUrl = `https://www.dropbox.com/oauth2/authorize?response_type=code&client_id=${DROPBOX_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&token_access_type=offline&code_challenge_method=S256&code_challenge=${challenge}`;
+  const params = new URLSearchParams({
+    response_type: "code",
+    client_id: DROPBOX_CLIENT_ID.trim(),
+    redirect_uri: REDIRECT_URI,
+    token_access_type: "offline",
+    code_challenge_method: "S256",
+    code_challenge: challenge,
+    force_reapprove: "true",
+  });
 
-  window.location.href = authUrl;
+  const authUrl = `https://www.dropbox.com/oauth2/authorize?${params.toString()}`;
+
+  if(!navigator.onLine){
+    toast.error(
+      <ToastMsgInfo
+        msg={`Please connect to the internet to connect to Dropbox 😶`}
+      />,
+    );
+    return;
+  }
+
+  if (window.electron?.isDesktop) {
+    window.electron?.dropbox.openAuth(authUrl);
+    window.electron.dropbox.onOAuthCallback(async (callbackUrl) => {
+      console.log("redirect url : ", callbackUrl);
+      const res = await handleDropboxRedirect(callbackUrl, true);
+
+      if (isPlainObject(res)) {
+        res?.access_token &&
+          window.dispatchEvent(
+            new CustomEvent(
+              InfinitelyEvents.electronApp.updateDropBoxSignInState,
+              {},
+            ),
+          );
+
+        res?.error &&
+          toast.error(
+            <ToastMsgInfo
+              msg={res?.error_description || `Failed to connect to Dropbox 😶`}
+            />,
+          );
+      }
+      // alert("Please log in to your Dropbox account.");
+    });
+
+    
+  } else {
+    window.location.href = authUrl;
+  }
 }
 
 // Step 3: On redirect back
-export async function handleDropboxRedirect() {
-  const params = new URLSearchParams(window.location.search);
+/**
+ *
+ * @param {Window} windowApp
+ * @returns
+ */
+export async function handleDropboxRedirect(url = window.location.href) {
+  const parsedUrl = new URL(url);
+  const params = new URLSearchParams(parsedUrl.search);
   const code = params.get("code");
+
   if (!code) return null;
 
   const verifier = localStorage.getItem(dropbox_code_verifier);

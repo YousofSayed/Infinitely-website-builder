@@ -1,5 +1,8 @@
 const { LLM } = require("@themaximalist/llm.js");
-const { ipcMain, BrowserWindow } = require("electron");
+const { ipcMain, BrowserWindow, app, shell } = require("electron");
+const { openDropboxAuth } = require("./utils/dropboxOAuth.cjs");
+
+
 
 ipcMain.on("window:minimize", (event) => {
   BrowserWindow
@@ -36,6 +39,49 @@ ipcMain.on('reload-electron-app', (event) => {
   }
 });
 
-ipcMain.on('ai', (event) => {
-  return LLM
+ipcMain.handle("app:version", () => {
+  return app.getVersion();
 });
+
+ipcMain.handle(
+  "dropbox:open-auth",
+  async (event, authUrl) => {
+
+    if (
+      typeof authUrl !== "string" ||
+      !authUrl
+    ) {
+      throw new Error(
+        "Invalid Dropbox authorization URL"
+      );
+    }
+
+
+    const mainWindow =
+      BrowserWindow.fromWebContents(
+        event.sender
+      );
+
+
+    if (!mainWindow) {
+      throw new Error(
+        "Could not find main Electron window"
+      );
+    }
+
+
+    console.log(
+      "[Dropbox OAuth] Opening authorization URL:",
+      authUrl
+    );
+
+
+    openDropboxAuth(
+      authUrl,
+      mainWindow
+    );
+
+
+    return true;
+  }
+);

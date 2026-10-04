@@ -3769,7 +3769,7 @@ export async function reloadEditor(editor) {
     justSendToWorker: true,
     async onSend(elements, styles) {
       editorStorageInstance.emit(InfinitelyEvents.storage.loadStart);
-      editor.trigger(InfinitelyEvents.storage.loadStart);
+      editor.trigger(InfinitelyEvents.storage.loadStart , editor.Canvas.getFrameEl().contentWindow);
       const render = (index) => {
         if (index >= elements.length) {
           editor.UndoManager.start();

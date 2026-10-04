@@ -113,8 +113,8 @@ export const ScrollableToolbar = ({
       <section
         ref={scrollEl}
         onScroll={calcStartAndEnd}
-        className={`w-full h-full items-center overflow-auto hideScrollBar flex justify-between ${
-          space && `gap-${space} ${innerClassName}`
+        className={`w-full h-full items-center overflow-x-auto overflow-y-hidden hideScrollBar flex justify-between ${innerClassName} ${
+          space && `gap-${space} ` 
         }`}
       >
         {/* Added "scroll-spacer" class so JS can find and subtract them */}

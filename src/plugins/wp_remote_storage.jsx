@@ -235,6 +235,7 @@ export const wp_remote_storage = (editor) => {
       if (data) {
         await db.projects.update(projectId, {
           current_inf_meta: { ...(inf_meta || {}) },
+          save_state,
           currentEditingPage: {
             ...data,
             id: page.id,
@@ -280,6 +281,9 @@ export const wp_remote_storage = (editor) => {
           : Object.fromEntries(
               [...el.attributes].map((attr) => [attr.name, attr.value]),
             );
+
+            console.log('js file from meta : ' , data?.["js"] , data , before_save , saved , page);
+            
       files.push({ path: defineRoot("local.js"), content: data?.["js"] ?? "" });
 
       const isGlobalCss =
@@ -446,28 +450,6 @@ export const wp_remote_storage = (editor) => {
           }),
         ).filter(Boolean);
 
-        // [
-        //   projectSettings.enable_tailwind
-        //     ? `<script src="/scripts/tailwindcss.v4.js"></script>`
-        //     : "",
-        //   projectSettings.optimize_outlines
-        //     ? `<script src="/scripts/optimizeOutlines.js"></script>`
-        //     : "",
-        //   !projectSettings.disable_will_change_in_editor
-        //     ? `<script src="/scripts/willChange.js"></script>`
-        //     : "",
-        //   projectSettings.enable_spline_viewer
-        //     ? `<script src="https://unpkg.com/@splinetool/viewer@1.10.27/build/spline-viewer.js"></script>`
-        //     : "",
-        //   projectSettings.enable_swiperjs
-        //     ? `<script src="https://cdn.jsdelivr.net/npm/swiper@latest/swiper-bundle.min.js"></script><script src="https://cdn.jsdelivr.net/npm/swiper@latest/swiper-element-bundle.min.js"></script>`
-        //     : "",
-        //   ...mainScriptsForEditor.map((src) =>
-        //     src.includes("p-vue.js")
-        //       ? `<script id="global-js" src="${projectData.globalJs.source_url || projectData.globalJs.url}"></script><script id="local-js">${data.js}</script><script src="${src}"></script>`
-        //       : `<script src="${src}"></script>`,
-        //   ),
-        // ];
 
         parsedFooterDom.body.insertAdjacentHTML(
           "beforeend",
@@ -490,6 +472,7 @@ export const wp_remote_storage = (editor) => {
           );
           newEl.innerHTML = el.innerHTML;
           const addedNode = body.appendChild(newEl);
+          
           return new Promise((res) => {
             if (el.tagName !== "SCRIPT") return res(appendScript(index + 1));
             if (!addedNode.src) return res(appendScript(index + 1));
@@ -514,6 +497,8 @@ export const wp_remote_storage = (editor) => {
       editor.clearDirtyCount();
       editor.setComponents(content);
       editor.render();
+
+
       const slugs = [projectData.globalJs.slug, projectData.globalCss.slug];
       wpWorkerCallbackMaker(
         pageBuilderWorker,
@@ -523,11 +508,13 @@ export const wp_remote_storage = (editor) => {
           if (props.done && isPlainObject(props.res)) {
             for (const [slug, data] of Object.entries(props.res)) {
               if (data.error) continue;
+              
               files.push({
                 path: defineRoot(mediaSlugToFileName(slug)),
                 content: data.content,
               });
             }
+            console.log('files to write : ' , files);
             wpWorkerCallbackMaker(
               pageBuilderWorker,
               "writeFilesToOPFS",

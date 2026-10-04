@@ -73,5 +73,8 @@ export const InfinitelyEvents = {
   },
   tokens:{
     update:'infinitely:tokens:update'
+  },
+  electronApp:{
+    updateDropBoxSignInState:'infinitely:electron-app:update-dropbox-sign-in-state'
   }
 };

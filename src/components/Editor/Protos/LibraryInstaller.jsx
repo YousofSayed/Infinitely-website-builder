@@ -12,6 +12,7 @@ import { useCDNLibraries } from "@/queries/editor.queries";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { getProjectData } from "@/helpers/functions";
+import { Icons } from "@/components/Icons/Icons";
 
 //million-ignore
 export const LibraryInstaller = () => {
@@ -97,15 +98,16 @@ export const LibraryInstaller = () => {
             id="search"
             type="text"
             placeholder="Search by library name..."
-            className="w-full  p-2 rounded-lg bg-surface-main border border-slate-800 focus:ring-2 focus:ring-blue-600 focus:outline-none  font-semibold placeholder-slate-500"
+            className="w-full  p-2 rounded-lg bg-surface-main border border-slate-800 focus:ring-[.5px] focus:ring-blue-600 focus:outline-none  font-semibold placeholder-slate-500"
             onInput={(ev) => {
               onInput(ev.target.value);
             }}
           />
           <div className="absolute  inset-y-0 right-3 flex items-center gap-2">
             {isLoadingCDNLibraries && <Loader width={15} height={15} />}
-            <svg
-              width={27.5}
+            <Icons.search width={18} height={18}/>
+            {/* <svg
+              width={2.5}
               height={27.5}
               className=" text-slate-500 shrink-0"
               xmlns="http://www.w3.org/2000/svg"
@@ -119,7 +121,7 @@ export const LibraryInstaller = () => {
                 strokeWidth="2"
                 d="M21 21l-4.35-4.35m-6.65 1.35a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15z"
               />
-            </svg>
+            </svg> */}
           </div>
         </div>
 
@@ -131,7 +133,7 @@ export const LibraryInstaller = () => {
 
         {/* <section className="h-full overflow-auto  flex flex-col gap-2"> */}
         <Virtuoso
-          className="overflow-y-auto hideScrollBar"
+          className="hideScrollBar"
           totalCount={libraries.length}
           itemContent={(i) => {
             const lib = libraries[i];

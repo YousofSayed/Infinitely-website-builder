@@ -52,7 +52,7 @@ export const Popover = ({
       const placeBelow = spaceBelow >= size.height + 20;
 
       x = rect.left;
-      y = placeBelow ? rect.bottom + 8 : rect.top - size.height - 8;
+      y = placeBelow ? rect.bottom + 3 : rect.top - size.height - 3;
     }
 
     x = Math.max(8, Math.min(window.innerWidth - size.width - 8, x));

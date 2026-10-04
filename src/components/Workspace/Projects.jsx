@@ -95,9 +95,9 @@ export const Projects = () => {
 
       {showLoader && <Loader />}
 
-      <div className="absolute right-[2%] bottom-[2%] text-slate-600 opacity-[.9] z-40 text-2xl pointer-events-none">
+      {/* <div className="absolute right-[2%] bottom-[2%] text-slate-600 opacity-[.9] z-40 text-2xl pointer-events-none">
         {version}
-      </div>
+      </div> */}
     </section>
     // {/* </section> */}
   );

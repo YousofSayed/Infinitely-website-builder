@@ -8,6 +8,7 @@ import {
   getComponentRules,
   getCurrentMediaDevice,
   getCurrentSelector,
+  getProjectSettings,
 } from "@/helpers/functions";
 import { useRemoveCssProp } from "@/hooks/useRemoveCssProp";
 import { useEditorMaybe } from "@grapesjs/react";
@@ -18,9 +19,10 @@ export const useRemoveCurrentMedia = () => {
   const editor = useEditorMaybe();
   const rule = useRecoilValue(ruleState);
   const [selector, setSelector] = useRecoilState(selectorState);
-  const removeProp = useRemoveCssProp();
+  // const removeProp = useRemoveCssProp();
   const [cmpRules, setCmpRules] = useRecoilState(cmpRulesState);
   const [currentEl, setCurrentEl] = useRecoilState(currentElState);
+  const {projectSettings} = getProjectSettings();
 
   return () => {
     const Media = getCurrentMediaDevice(editor);
@@ -33,7 +35,7 @@ export const useRemoveCurrentMedia = () => {
       {
         ...Media,
         addStyles: true,
-        validate: false,
+        // validate: false,
         // inline:true,
         addStyle: true,
       }
@@ -48,7 +50,12 @@ export const useRemoveCurrentMedia = () => {
     );
 
     setCurrentEl({
-        currentEl: JSON.parse(JSON.stringify(editor.getSelected() || {})),
+        currentEl: {id : editor.getSelected().getId()}, //JSON.parse(JSON.stringify(editor.getSelected() || {})),
+        currentElId : editor.getSelected().getId(),
       });
+
+      if(projectSettings.enable_auto_save){
+        editor.store();
+      }
   };
 };

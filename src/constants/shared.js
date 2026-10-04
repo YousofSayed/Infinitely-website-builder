@@ -675,11 +675,11 @@ export const SCRIPT_DEFINITIONS = [
     condition: (settings) => !settings.disable_petite_vue,
   },
 
-  {
-    name: "vCatch.js",
-    localUrl: `/scripts/vCatch.js`,
-    condition: (settings) => !settings.disable_petite_vue,
-  },
+  // {
+  //   name: "vCatch.js",
+  //   localUrl: `/scripts/vCatch.js`,
+  //   condition: (settings) => !settings.disable_petite_vue,
+  // },
 
   {
     name: "p-vue.js",
@@ -687,11 +687,11 @@ export const SCRIPT_DEFINITIONS = [
     condition: (settings) => !settings.disable_petite_vue,
   },
 
-  {
-    name: "petite-router.js",
-    localUrl: `/scripts/petite-router.js`,
-    condition: (settings) => !settings.disable_petite_vue,
-  },
+  // {
+  //   name: "petite-router.js",
+  //   localUrl: `/scripts/petite-router.js`,
+  //   condition: (settings) => !settings.disable_petite_vue,
+  // },
 
   {
     name: "initPVue.js",
@@ -702,16 +702,16 @@ export const SCRIPT_DEFINITIONS = [
 ];
 
 export const DEV_SCRIPT_DEFINITIONS = [
-  {
-    name: "iframeLogs.js",
-    localUrl: "/scripts/iframeLogs.js?source=grapesjs",
-    // condition: (settings) => !settings.disable_will_change_in_editor,
-  },
-  {
-    name: "willChange.js",
-    localUrl: "/scripts/willChange.js",
-    condition: (settings) => !settings.disable_will_change_in_editor,
-  },
+  // {
+  //   name: "iframeLogs.js",
+  //   localUrl: "/scripts/iframeLogs.js?source=grapesjs",
+  //   // condition: (settings) => !settings.disable_will_change_in_editor,
+  // },
+  // {
+  //   name: "willChange.js",
+  //   localUrl: "/scripts/willChange.js",
+  //   condition: (settings) => !settings.disable_will_change_in_editor,
+  // },
   {
     name: "optimizeOutlines.js",
     localUrl: "/scripts/optimizeOutlines.js",
@@ -729,11 +729,23 @@ export const DEV_SCRIPT_DEFINITIONS = [
   },
 ];
 
-export const DEV_PREVIEW_SCRIPT_DEFINITIONS = [
+export const DEV_SCRIPT_DEFINITIONS_EXCLUDES_IN_EDITOR_FOR_HEADER = [
   {
     name: "iframeLogs.js",
-    localUrl: "/scripts/iframeLogs.js?source=preview",
+    src: "/scripts/iframeLogs.js?source=grapesjs",
+    type:'module'
+    // condition: (settings) => !settings.disable_will_change_in_editor,
   },
+]
+
+export const DEV_PREVIEW_SCRIPT_DEFINITIONS = [
+  // {
+  //   name: "iframeLogs.js",
+  //   localUrl: "/scripts/iframeLogs.js?source=preview",
+  //   attributes: {
+  //     type: "module",
+  //   }
+  // },
   { localUrl: "/scripts/previewHmr.dev.js", name: "previewHmr.dev.js" },
 ];
 

@@ -159,7 +159,7 @@ export type InfinitelyTrait = {
     | string[]
     | (({ projectData }: { projectData: Project & WpProject }) => string[]);
   command: string;
-  component: import("react").JSX.Element;
+  component: (props: TraitCallProps) => import("react").JSX.Element;
   textareaLanguage: string;
   allowCmdsContext: boolean;
   callback: TraitCallback;
@@ -211,8 +211,8 @@ export interface Action {
   access: {
     [key: string]: {
       keyframes: boolean;
-      themesNames:String[],
-      themesModes:String[],
+      themesNames: String[];
+      themesModes: String[];
     };
   };
 }
@@ -749,12 +749,12 @@ export type ThemeConfig = {
 };
 
 export type Themes = {
-  root: ThemeConfig ;
+  root: ThemeConfig;
   config: ThemeConfig[];
   path: string;
   wp_media_config: InfinitelyWpMedia;
-  default_theme:string;
-  default_mode:string;
+  default_theme: string;
+  default_mode: string;
 };
 
 export type Chat = {
@@ -764,16 +764,16 @@ export type Chat = {
   messages: { role: "user" | "assistant" | "system"; content: string }[];
   provider: LLMProvider;
   model: {
-    name:string,
-    model:string,
-    max_input_tokens: number,
-    max_output_tokens:number
+    name: string;
+    model: string;
+    max_input_tokens: number;
+    max_output_tokens: number;
   };
-  date : string;
+  date: string;
   llm_id: string;
   is_pinned: boolean;
-  mode : 'builder' | 'chat';
-}
+  mode: "builder" | "chat";
+};
 
 export type Chats = Chat[];
 
@@ -786,14 +786,13 @@ export type LLMProvider =
   | "xai"
   | "deepseek";
 
-
-  export type AISettings = {
-      defaultProvider: LLMProvider;
-      max_tokens : number;
-      providers : {
-        [key : string] : string
-      }
-  }
+export type AISettings = {
+  defaultProvider: LLMProvider;
+  max_tokens: number;
+  providers: {
+    [key: string]: string;
+  };
+};
 
 export interface Project {
   id: number;
@@ -841,7 +840,7 @@ export interface Project {
   lastScreenshot: Date | string;
   themes: Themes;
   aiChats: Chats;
-  aiSettings : AISettings;
+  aiSettings: AISettings;
 }
 
 export type WPQueryArgs = {
@@ -1348,6 +1347,13 @@ export interface WpProject {
   themes: Themes;
   aiChats: Chats;
   aiSettings: AISettings;
+  all: {
+    js: {
+      header: InfinitelyWpMedia;
+      footer: InfinitelyWpMedia;
+    };
+    css: InfinitelyWpMedia;
+  };
 }
 
 export type GlobalSettings = {
@@ -2300,17 +2306,9 @@ export interface WpTermsAllParams {
   order?: "ASC" | "DESC";
 }
 
+export type ConsoleLogLevel = "log" | "info" | "warn" | "error" | "debug";
 
-export type ConsoleLogLevel =
-  | "log"
-  | "info"
-  | "warn"
-  | "error"
-  | "debug";
-
-export type ConsoleLogSource =
-  | "grapesjs"
-  | "preview";
+export type ConsoleLogSource = "grapesjs" | "preview";
 
 export interface ConsoleLogLocation {
   url: string;

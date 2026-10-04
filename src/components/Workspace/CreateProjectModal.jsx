@@ -252,7 +252,8 @@ export const CreateProjectModal = ({
             setShowCrtModal(false);
           }}
           className={`
-            fixed ${window?.electron?.isDesktop ? "top-[40px]" : "top-0"} left-0 w-full h-full bg-blue-950/40 backdrop-blur-sm flex items-center justify-center z-50
+            animate-go-to
+            fixed ${window?.electron?.isDesktop ? "top-[40px]" : "top-0"} left-0 w-full h-full bg-blue-950/40  flex items-center justify-center z-50
             `}
           id="createProjectModal"
         >
@@ -296,11 +297,18 @@ export const CreateProjectModal = ({
                   >
                     Project Name
                   </label>
+
                   <input
                     onInput={(ev) => {
                       ev.stopPropagation();
                       onInput(ev.target.value);
                       setData({ ...data, name: ev.target.value });
+                    }}
+                    onKeyDown={(ev) => {
+                      if (ev.key === "Enter") {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                      }
                     }}
                     autoFocus
                     type="text"

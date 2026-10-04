@@ -115,13 +115,13 @@ export const PagesSelector = () => {
     //   return;
     // }
     setPageName(value);
-    return;
-    doInNormal(() => {});
+    // return;
+    // doInNormal(() => {});
 
-    doInWordpress(() => {
-      const exactTitle = `${value.slug} ${value?.["inf_meta"]?.["inf_template_type"] ? ` - (${value?.["inf_meta"]?.["inf_template_type"]})` : ""}`;
-      setPageName(exactTitle);
-    });
+    // doInWordpress(() => {
+    //   const exactTitle = `${value.slug} ${value?.["inf_meta"]?.["inf_template_type"] ? ` - (${value?.["inf_meta"]?.["inf_template_type"]})` : ""}`;
+    //   setPageName(exactTitle);
+    // });
   };
 
   const onSelectPage = (value) => {
@@ -179,7 +179,7 @@ export const PagesSelector = () => {
   };
 
   return (
-    <li className=" grow-0 w-full">
+    <li className=" grow-0 w-full h-full   max-w-[min(100%,300px)]">
       <Select
         icon={Icons.stNote()}
         className=" bg-surface-tertiary  "

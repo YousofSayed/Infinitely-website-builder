@@ -7,6 +7,7 @@ import { reloadRequiredInstance } from "@/constants/InfinitelyInstances";
 import { current_page_id, current_project_id } from "@/constants/shared";
 import { db } from "@/helpers/db";
 import {
+  callWorkerCommand,
   doInNormal,
   doInNormalAsync,
   doInWordpressAsync,
@@ -33,8 +34,9 @@ import { cloneDeep } from "lodash";
 import React, { memo, useEffect, useRef, useState } from "react";
 import { ReactSortable } from "react-sortablejs";
 import { toast } from "react-toastify";
-import { useBusyCallback } from "@/hooks/useBusyCallback";
+import { useBusyCallback, useTasksState } from "@/hooks/useBusyCallback";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { fetcherWorker } from "@/helpers/defineWorkers";
 
 const ReactSortableComponent = memo(
   ({ libraries = {}, prop = "", updateList = (newList, key) => {} }) => {
@@ -43,7 +45,7 @@ const ReactSortableComponent = memo(
     // const [isDeleting, setIsDeleting] = useState(false);
     const libs = libraries[prop].libs;
     const parentRef = useRef(/** @type {HTMLDivElement} */ (null));
-
+    const { isLoading: isHandleLibraries } = useTasksState(["install-lib"]);
     const executeDeleteLibraries = async () => {
       const cnfrm = confirm(`Are you sure to delete selected libraries ? 🤔`);
       if (!cnfrm) return;
@@ -56,7 +58,13 @@ const ReactSortableComponent = memo(
         // const project = await await db.projects.get(projectId);
         // const data = project;
         const newArr = libs.filter(
-          (lib) => !selected.some((slLib) => slLib.name === lib.name),
+          (lib) =>
+            !selected.some(
+              (slLib) =>
+                slLib.name === lib.name ||
+                slLib.nameWithoutExt === lib.nameWithoutExt ||
+                slLib?.slug === lib?.slug,
+            ),
         );
         console.log("new arr selected: ", newArr);
         const libsPathes = selected.map((lib) => lib.path);
@@ -82,10 +90,19 @@ const ReactSortableComponent = memo(
             `Do you want to delete those libraries from media library too ? 🤔`,
           );
           if (cnfrm) {
-            const wp_delete_file_res = await wp_delete_media_files_by_slugs({
-              projectId,
-              slugs,
-            });
+            const wp_delete_file_res = await callWorkerCommand(
+              fetcherWorker,
+              "wp_delete_media_files_by_slugs",
+              {
+                projectId,
+                slugs,
+              },
+            );
+
+            // wp_delete_media_files_by_slugs({
+            //   projectId,
+            //   slugs,
+            // });
 
             if (!wp_delete_file_res.success) {
               console.error(wp_delete_file_res);
@@ -94,11 +111,21 @@ const ReactSortableComponent = memo(
           }
 
           projecdData[prop] = newArr;
-          const wp_update_option_res = await wp_update_option({
-            projectId,
-            optionName: "inf_config",
-            value: projecdData,
-          });
+          const wp_update_option_res = await callWorkerCommand(
+            fetcherWorker,
+            "wp_update_option",
+            {
+              projectId,
+              optionName: "inf_config",
+              value: projecdData,
+            },
+          );
+
+          // wp_update_option({
+          //   projectId,
+          //   optionName: "inf_config",
+          //   value: projecdData,
+          // });
 
           if (!wp_update_option_res?.success) {
             console.error(wp_update_option_res);
@@ -108,6 +135,7 @@ const ReactSortableComponent = memo(
           await deleteLibFromDB();
         });
 
+        setSelected([]);
         toast.done(tid);
         toast.success(<ToastMsgInfo msg={"Library Removed Successfully"} />);
         reloadRequiredInstance.emit(InfinitelyEvents.editor.require, {
@@ -137,9 +165,11 @@ const ReactSortableComponent = memo(
 
     useEffect(() => {
       setCheckedAll(selected.length === libs.length);
-    }, [selected]);
+    }, [selected , libs]);
 
     const [animatedRef] = useAutoAnimate();
+
+    const isDisabled = isDeletingLibraries || isHandleLibraries;
 
     return (
       <section
@@ -164,7 +194,7 @@ const ReactSortableComponent = memo(
 
             <section>
               <Button
-                disabled={isDeletingLibraries}
+                disabled={isDisabled}
                 className="bg-surface-tertiary hover:bg-[crimson] transition-colors font-semibold"
                 onClick={async () => {
                   await deleteLibraries();
@@ -262,7 +292,9 @@ export const InstalledLibraries = () => {
     }));
 
     // 2. Mark that we have unsaved changes to show the "Save" button
-    setScriptsNeedToPublish(JSON.stringify(list) !== JSON.stringify(libraries[key]?.libs));
+    setScriptsNeedToPublish(
+      JSON.stringify(list) !== JSON.stringify(libraries[key]?.libs),
+    );
 
     // const data = await db.projects.get(projectId);
     // await doInNormalAsync(async () => {

@@ -54,29 +54,40 @@ import {
   consoleLogsNotification,
   isAnimationsChangedState,
   showComponentsInLeftPanelState,
+  showUpdateDialogState,
   viewsKeyState,
 } from "@/helpers/atoms";
 import { animationsSavingMsg } from "@/constants/confirms";
 import { useBusyCallback } from "@/hooks/useBusyCallback";
+import { useAppUpdate } from "@/hooks/useAppUpdate";
 
 export const HomeNav = () => {
   const editor = useEditorMaybe();
   const navigate = useNavigate();
   const pushRef = useRef(refType);
   const pullRef = useRef(refType);
+  const { isDesktop, status, isUpdateAvailable, update } = useAppUpdate();
+
   const projectData = useLiveQuery(async () => {
     return await getProjectData();
   });
+
   const [showsComponents, setShowsComponents] = useRecoilState(
     showComponentsInLeftPanelState,
   );
+
   const [logsNotification, setLogsNotification] = useRecoilState(
     consoleLogsNotification,
   );
+
   const [viewsKey, setViewKey] = useRecoilState(viewsKeyState);
 
   const [isAnimationsChanged, setAnimationsChanged] = useRecoilState(
     isAnimationsChangedState,
+  );
+
+  const [showUpdateDialog, setShowUpdateDialog] = useRecoilState(
+    showUpdateDialogState,
   );
 
   useEffect(() => {
@@ -143,29 +154,27 @@ export const HomeNav = () => {
     },
   );
 
-  const [pullFromDBX, { isLoading: isDBXPullLoading }] = useBusyCallback(async () => {
-    const tid = toast.loading(
-      <ToastMsgInfo msg={`Pulling dropbox project...`} />,
-    );
-    const cnfrm = confirm(
-      `Are you sure you want to pull from dropbox? This will overwrite your local project files.`,
-    );
-    if (!cnfrm) return;
-    
+  const [pullFromDBX, { isLoading: isDBXPullLoading }] = useBusyCallback(
+    async () => {
+      const tid = toast.loading(
+        <ToastMsgInfo msg={`Pulling dropbox project...`} />,
+      );
+      const cnfrm = confirm(
+        `Are you sure you want to pull from dropbox? This will overwrite your local project files.`,
+      );
+      if (!cnfrm) return;
 
-    try {
-      await pullProject(projectData);
-      toast.success(<ToastMsgInfo msg={`Dropbox project pulled! 🎉`} />);
-    } catch (error) {
-      toast.error(<ToastMsgInfo msg={`Failed to pull from dropbox 😩`} />);
-      throw new Error(error);
-
-    } finally {
-      toast.dismiss(tid);
-      
-    }
-
-  });
+      try {
+        await pullProject(projectData);
+        toast.success(<ToastMsgInfo msg={`Dropbox project pulled! 🎉`} />);
+      } catch (error) {
+        toast.error(<ToastMsgInfo msg={`Failed to pull from dropbox 😩`} />);
+        throw new Error(error);
+      } finally {
+        toast.dismiss(tid);
+      }
+    },
+  );
 
   const leave = () => {
     if (editor.getDirtyCount()) {
@@ -208,14 +217,7 @@ export const HomeNav = () => {
                 editor.runCommand(open_pages_manager_modal);
               }}
             />
-            {/* <Li
-            title="Dynamic Templates"
-            onClick={() => {
-              editor.runCommand(open_dynamic_templates_modal);
-            }}
-          >
-            {Icons.dynamicTemp({})}
-          </Li> */}
+
             <Li
               title="Sympols & Templates"
               icon={Icons.components}
@@ -256,98 +258,6 @@ export const HomeNav = () => {
               }}
             />
 
-            {/* {Boolean(checkDropBoxSignInState()) && (
-              <li className="group relative li-btn h-[30px] w-[30px]     rounded-lg cursor-pointer grid place-items-center transition-all hover:bg-brand-primary   [&_#dbx-svg]:hover:fill-white [&_#dbx-svg_g]:hover:fill-white ">
-                <OptionsButton icon={Icons.dropbox({})}>
-                  <menu className="flex flex-col gap-2 min-w-[100px]">
-                    {projectData?.dropboxFileMeta?.path_lower && (
-                      <>
-                        <Button
-                          refForward={pushRef}
-                          // disabled={projectData.dbx_pull_requried}
-                          onClick={async (ev) => {
-                            // let tId = toast.loading(
-                            //   <ToastMsgInfo msg={`Pushing project...`} />
-                            // );
-                            pushRef.current.disabled = true;
-                            pullRef.current.disabled = true;
-
-                            try {
-                              addClickClass(ev.currentTarget, "click");
-                              const dataMeta =
-                                await uploadDbxFileWithToastProgress(
-                                  projectData.dropboxFileMeta.path_lower,
-                                  await getProject(),
-                                  projectData.dropboxFileMeta.rev,
-                                );
-                              if (!dataMeta) {
-                                throw new Error(`No data meta founded`);
-                              }
-                              console.log("data meta : ", dataMeta);
-                              await db.projects.update(
-                                +localStorage.getItem(current_project_id),
-                                {
-                                  dbx_pull_requried: false,
-                                  dropboxFileMeta: dataMeta,
-                                },
-                              );
-                              // toast.done(tId);
-                            } catch (error) {
-                              // if(error.message.includes("conflict")){
-                              //   console.error('hahahahahahahahahah');
-
-                              // }
-                              // toast.dismiss(tId);
-                              throw new Error(error);
-                            } finally {
-                              pushRef.current.disabled = false;
-                              pullRef.current.disabled = false;
-                            }
-                          }}
-                        >
-                          {Icons.upload({ strokeColor: "white" })}
-                          <h1>Push</h1>
-                        </Button>
-                        <Button
-                          refForward={pullRef}
-                          // disabled={!projectData.dbx_pull_requried}
-                          onClick={async (ev) => {
-                            const cnfrm = confirm(
-                              `Are you sure you want to pull from dropbox? This will overwrite your local project files.`,
-                            );
-                            if (!cnfrm) return;
-                            console.log("refff : ", pushRef.current);
-                            const btn = ev.currentTarget;
-                            addClickClass(btn, "click");
-
-                            btn.disabled = true;
-                            pushRef.current.disabled = true;
-                            try {
-                              await pullProject(projectData);
-                              btn.disabled = true;
-                            } catch (error) {
-                              throw new Error(error);
-                            } finally {
-                              btn.disabled = null;
-                              // pushRef.current.disabled = null;
-                            }
-                          }}
-                          style={{
-                            backgroundColor: projectData.dbx_pull_requried
-                              ? "crimson"
-                              : null,
-                          }}
-                        >
-                          {Icons.export("white")}
-                          <h1>Pull</h1>
-                        </Button>
-                      </>
-                    )}
-                  </menu>
-                </OptionsButton>
-              </li>
-            )} */}
-
             {/* <Li title="Github" icon={Icons.git} /> */}
           </ul>
 
@@ -357,9 +267,6 @@ export const HomeNav = () => {
               icon={Icons.layers}
               title="layers"
               onClick={(ev) => {
-                // setShowLayers((old) => !old);
-                // setShowAnimBuilder(false);
-
                 setShowsComponents((old) => ({
                   ...old,
                   layers: !old.layers,
@@ -418,7 +325,10 @@ export const HomeNav = () => {
                     animationsBuilder: false,
                     layers: false,
                     stylesBuilder: false,
-                    viewPanel: !old?.viewPanel,
+                    viewPanel:
+                      showsComponents.views.viewKey === "wordpress"
+                        ? !old?.viewPanel
+                        : true,
                     // showsComponents.views.viewKey === "wordpress"
                     //   ? !old?.viewPanel
                     //   : true,
@@ -442,7 +352,10 @@ export const HomeNav = () => {
                   animationsBuilder: false,
                   layers: false,
                   stylesBuilder: false,
-                  viewPanel: !old?.viewPanel,
+                  viewPanel:
+                    showsComponents.views.viewKey === "aiBuilder"
+                      ? !old?.viewPanel
+                      : true,
                   views: {
                     ...old?.views,
                     viewKey: "aiBuilder",
@@ -512,8 +425,36 @@ export const HomeNav = () => {
 
       <div>
         <ul className="flex flex-col gap-5 items-center p-1.5 py-2 bg-surface-tertiary rounded-lg ">
-          {checkDropBoxSignInState() && (
-            <OptionsButton
+          <ShowIf condition={isDesktop}>
+            <Li
+              title={
+                !isDesktop
+                  ? "Check for updates"
+                  : status === "checking"
+                    ? "Checking for updates..."
+                    : status === "error"
+                      ? "Updates unavailable in development"
+                      : isUpdateAvailable
+                        ? `Update available: v${update?.version}`
+                        : "Check for updates"
+              }
+              notify={isUpdateAvailable}
+              onClick={(e) => {
+                // alert("coming soon");
+
+                setShowUpdateDialog(!showUpdateDialog);
+              }}
+            >
+              <i className="[&_path]:transition-all  [&:hover_path]:stroke-white  w-full h-full flex justify-center items-center">
+                <Icons.needUpdate />
+              </i>
+            </Li>
+          </ShowIf>
+
+          <ShowIf condition={checkDropBoxSignInState()}>
+            <Li title="Dropbox" className="!p-0">
+              <OptionsButton
+              className="!w-full aspect-square h-full "
               icon={
                 <i
                   className="
@@ -573,7 +514,8 @@ export const HomeNav = () => {
                 </menu>
               </ShowIf>
             </OptionsButton>
-          )}
+            </Li>
+          </ShowIf>
 
           <Li
             title="Settings"
@@ -582,6 +524,7 @@ export const HomeNav = () => {
               editor.runCommand(open_settings_modal);
             }}
           />
+
           <Li
             title="Out to projects"
             icon={Icons.logOut}

@@ -24,7 +24,7 @@ import { useEditorMaybe } from "@grapesjs/react";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useRecoilState } from "recoil";
-import { useBusyCallback, useTaskState } from "@/hooks/useBusyCallback";
+import { useBusyCallback, useTasksState, useTaskState } from "@/hooks/useBusyCallback";
 
 //million-ignore
 /**
@@ -42,6 +42,7 @@ export const InstalledLibraryDetails = ({
   const editor = useEditorMaybe();
   const [fileInfo, setFileInfo] = useRecoilState(fileInfoState);
   const [checked, setChecked] = useState(false);
+  const { isLoading: isHandleLibraries } = useTasksState(["install-lib"]);
   // const [isDeleting, setIsDeleting] = useState(false);
 
   const executeDeleteLibrary = async () => {
@@ -138,6 +139,8 @@ export const InstalledLibraryDetails = ({
     setChecked(isChecked);
   }, [selected]);
 
+  const isDisabled = isHandleLibraries || isDeleting || isDeletingLibraries || isSavingOrders;
+
   return (
     <section
       className={`p-2 bg-surface-secondary rounded-lg flex flex-col gap-2 mt-2 ${isDeleting && "pointer-events-none"}`}
@@ -164,7 +167,7 @@ export const InstalledLibraryDetails = ({
           />
           {/* <FitTitle className="flex items-center gap-2">select to delete<Input type="checkbox" /></FitTitle> */}
           <SmallButton
-            disabled={isDeletingLibraries || isSavingOrders}
+            disabled={isDisabled}
             onClick={async (ev) => {
               setFileInfo({
                 path: library.path,
@@ -180,9 +183,9 @@ export const InstalledLibraryDetails = ({
           </SmallButton>
 
           <SmallButton
-            disabled={isDeletingLibraries || isSavingOrders}
+            disabled={isDisabled}
             className={`
-              ${!(isDeletingLibraries || isSavingOrders) && 'handle'} w-fit cursor-[move!important]
+              ${!(isDisabled) && 'handle'} w-fit cursor-[move!important]
              [&_svg]:hover:fill-white [&_path]:hover:fill-white
               `}
           >
@@ -258,7 +261,7 @@ export const InstalledLibraryDetails = ({
 
       <section className="items-end justify-end flex bg-surface-main p-2 rounded-lg w-fit self-end">
         <Button
-          disabled={isDeleting || isDeletingLibraries}
+          disabled={isDisabled}
           onClick={async (ev) => {
             onDelete(ev);
             await deleteLibrary();

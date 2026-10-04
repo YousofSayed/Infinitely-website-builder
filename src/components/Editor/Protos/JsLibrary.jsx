@@ -16,6 +16,7 @@ import {
   doInNormalAsync,
   doInWordpressAsync,
   getProjectData,
+  getProjectId,
   isNormal,
   jsToDataURL,
 } from "@/helpers/functions";
@@ -67,6 +68,28 @@ export const JsLibrary = ({
     manually = false,
   }) => {
     console.log(window._installing_lib);
+    console.log("library", library);
+    const projectId = getProjectId();
+    const projectData = await getProjectData();
+    const allLibs = []
+      .concat(!isHeader ? projectData.jsFooterLibs : [])
+      .concat(isHeader ? projectData.jsHeaderLibs : [])
+      .concat(projectData.cssLibs);
+
+    if (
+      allLibs.some(
+        (lib) =>
+          lib.name == library.name ||
+          lib.nameWithoutExt == library.nameWithoutExt ||
+          lib.nameWithoutExt == library.name ||
+          lib.name == library.nameWithoutExt ||
+          lib.fileUrl == library.latest ||
+          lib.fileUrl == fileUrl,
+      )
+    ) {
+      toast.error(<ToastMsgInfo msg={`Library already installed`} />);
+      return;
+    }
 
     if (window._installing_lib) {
       toast.warn(<ToastMsgInfo msg={`Wait to install current library 😁`} />);
@@ -77,8 +100,6 @@ export const JsLibrary = ({
     );
     window._installing_lib = true;
     try {
-      const projectId = +localStorage.getItem(current_project_id);
-      const projectData = await db.projects.get(+projectId);
       if (
         installData.globalName &&
         [...projectData.jsFooterLibs, ...projectData.jsHeaderLibs].some(
@@ -141,7 +162,7 @@ export const JsLibrary = ({
           //   resBlob = new Blob([libContent.replaceAll(rgx, "")], {
           //     type: resBlob.type,
           //   });
-          // } 
+          // }
           // else {
           //   throw new Error(`Modules not allowed 😑`);
           // }
@@ -168,7 +189,6 @@ export const JsLibrary = ({
         ]);
 
         await doInNormalAsync(async () => {
-
           await db.projects.update(+projectId, {
             [key]: [...projectData[key], { ...newContent }],
           });
@@ -267,8 +287,13 @@ export const JsLibrary = ({
       }
 
       // if(installData.globalName){
-      console.log('is js for install types ?' , isJs , defaultData , doGlobalType(nameWithoutExt, installData.globalName));
-      
+      console.log(
+        "is js for install types ?",
+        isJs,
+        defaultData,
+        doGlobalType(nameWithoutExt, installData.globalName),
+      );
+
       isJs &&
         fetcherWorker.postMessage({
           command: "installTypes",
@@ -294,13 +319,16 @@ export const JsLibrary = ({
     }
   };
 
-  const [install, { isLoading: isInstalling }] = useBusyCallback(executeInstall, {
-    key: "install-lib",
-  });
+  const [install, { isLoading: isInstalling }] = useBusyCallback(
+    executeInstall,
+    {
+      key: "install-lib",
+    },
+  );
 
   return (
     <>
-      <section className="w-full mb-2 animate-go-to">
+      <section className="w-full mb-2 ">
         <article className="w-full p-2 rounded-lg bg-surface-main border border-slate-800 shadow-md  hover:shadow-lg">
           <section className="w-full flex justify-between  items-center bg-surface-secondary p-2 rounded-lg">
             <div className="w-full flex items-start flex-col gap-2 ">

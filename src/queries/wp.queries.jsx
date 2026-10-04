@@ -132,7 +132,7 @@ export const useWpTokens = () => {
 };
 
 export const useWpPostTypes = ({
-  exclude = ["inf_symbols", "inf_blocks", "inf_template", "inf_motions"].join(","),
+  exclude = ["inf_symbols", "inf_blocks", "inf_template", "inf_motions" , "inf_snippets"].join(","),
   show_builtin = false,
 }) => {
   return useQuery({

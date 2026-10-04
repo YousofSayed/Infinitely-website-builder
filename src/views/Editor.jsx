@@ -20,6 +20,7 @@ import { WordpressViewPanelNav } from "@/components/Protos/wordpress/WordpressVi
 import { WpSettings } from "@/components/Protos/wordpress/WpSettings";
 import { WpTokenPickers } from "@/components/Protos/wordpress/WpTokenPickers";
 import { ShowIf } from "@/components/ShowIf";
+import UpdateDialog from "@/components/UpdateDialog";
 import { InfinitelyEvents } from "@/constants/infinitelyEvents";
 import {
   app_type,
@@ -29,6 +30,7 @@ import {
 import { tailwindClasses } from "@/constants/tailwindClasses";
 import {
   appInstallingState,
+  consoleLogs,
   currentElState,
   currentWpPageNameState,
   dbAssetsSwState,
@@ -40,6 +42,7 @@ import {
   showLayersState,
   showPreviewState,
   showStylesBuilderForMotionBuilderState,
+  showUpdateDialogState,
 } from "@/helpers/atoms";
 import { isProjectExist } from "@/helpers/bridge";
 import {
@@ -70,7 +73,8 @@ import { initDBAssetsSw } from "@/serviceWorkers/initDBAssets-sw";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { isPlainObject } from "lodash";
 import React, { memo, useEffect, useLayoutEffect, useState } from "react";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+// import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { Panel, Group, Separator } from "react-resizable-panels";
 import {
   Navigate,
   Outlet,
@@ -118,6 +122,11 @@ export function Editor({ params }) {
   const [showsComponents, setShowsComponents] = useRecoilState(
     showComponentsInLeftPanelState,
   );
+  const [showUpdateDialog, setShowUpdateDialog] = useRecoilState(
+    showUpdateDialogState,
+  );
+
+  const setLogs = useSetRecoilState(consoleLogs);
 
   const [isProject, setIsProject] = useState(true);
 
@@ -272,6 +281,8 @@ export function Editor({ params }) {
         InfinitelyEvents.navigator.navigate,
         windowNavigate,
       );
+
+      setLogs([]);
     };
   }, []);
 
@@ -305,7 +316,10 @@ export function Editor({ params }) {
           }
         >
           <>
-            <section className={`w-full h-full  relative auto-animate`}>
+            <section
+              id="infinitely-editor"
+              className={`w-full h-full  relative auto-animate`}
+            >
               <GJEditor key={reloader}>
                 {/* <WithEditor> */}
                 <main
@@ -323,43 +337,32 @@ export function Editor({ params }) {
                   >
                     {/* {!showPreview && <HomeHeader />} */}
                     <HomeHeader />
-                    <PanelGroup
+
+                    <Group
                       id={"panels-group"}
                       tagName="section"
                       className="flex h-full w-full"
                       direction="horizontal"
-                      autoSaveId="panels"
-                      // ref={parentForPanelsGroup}
+                      autoSaveId="panels-v2" // 👈 Changed to clear old cached layouts
                     >
+                      {/* --- LEFT PANEL --- */}
                       <ShowIf
-                        condition={
-                          Object.values(showsComponents).some(
-                            (item) => !isPlainObject(item) && Boolean(item),
-                          ) //&& !showPreview
-                        }
+                        condition={Object.values(showsComponents).some(
+                          (item) => !isPlainObject(item) && Boolean(item),
+                        )}
                       >
-                        <Panel defaultSize={300} id="left-panel" order={1}>
-                          <section
-                            // ref={parentForPanelsGroup}
-                            className="h-full w-full auto-animate"
-                          >
-                            {/* {showLayers && (
-                              <Aside dir="right">
-                                <Layers />
-                              </Aside>
-                            )} */}
-
+                        <Panel
+                          defaultSize="20%" // Starts at 20% when revealed
+                          id="left-panel"
+                          order={1}
+                          minSize="20%" // 👈 Min size is 20% of available width
+                        >
+                          <section className="h-full w-full auto-animate">
                             <ShowIf condition={showsComponents.layers}>
                               <Aside dir="right">
                                 <Layers />
                               </Aside>
                             </ShowIf>
-
-                            {/* {showAnimBuilder && (
-                              <Aside>
-                                <AnimationsBuilder />
-                              </Aside>
-                            )} */}
 
                             <ShowIf
                               condition={showsComponents.animationsBuilder}
@@ -368,12 +371,6 @@ export function Editor({ params }) {
                                 <AnimationsBuilder />
                               </Aside>
                             </ShowIf>
-
-                            {/* {showStylesBuilder && (
-                              <section className="h-full pl-2 pr-1 overflow-y-auto hideScrollBar">
-                                <StyleAside />
-                              </section>
-                            )} */}
 
                             <ShowIf condition={showsComponents.stylesBuilder}>
                               <section className="h-full pl-2 pr-1 overflow-y-auto hideScrollBar">
@@ -414,17 +411,25 @@ export function Editor({ params }) {
                             </ShowIf>
                           </section>
                         </Panel>
-                        <PanelResizeHandle
-                          className={`w-[5px] bg-brand-primary  opacity-0 hover:opacity-[1] transition-all`}
-                        />
+
+                        <Separator className="w-[5px] bg-brand-primary opacity-0 hover:opacity-[1] transition-all" />
                       </ShowIf>
 
-                      <Panel id="center" defaultSize={600} order={2}>
+                      {/* --- CENTER PANEL --- */}
+                      {/* No defaultSize = This panel automatically takes all remaining space */}
+                      <Panel id="center" order={2}>
                         <Iframe />
                       </Panel>
 
-                      <PanelResizeHandle className="w-[5px] bg-brand-primary opacity-0 hover:opacity-[1] transition-all" />
-                      <Panel defaultSize={300} order={3} id="right-panel">
+                      <Separator className="w-[5px] bg-brand-primary opacity-0 hover:opacity-[1] transition-all" />
+
+                      {/* --- RIGHT PANEL --- */}
+                      <Panel
+                        defaultSize="300px" // 👈 Starts exactly from 300px
+                        order={3}
+                        id="right-panel"
+                        minSize="20%" // 👈 Min size is 20% of available width
+                      >
                         <Aside className="">
                           {pathname.pathname != "/add-blocks" && (
                             <AsideControllers />
@@ -432,11 +437,20 @@ export function Editor({ params }) {
                           <Outlet />
                         </Aside>
                       </Panel>
-                    </PanelGroup>
+                    </Group>
                   </section>
 
                   <ShowIf condition={showCustomModal}>
                     <CustomModals />
+                  </ShowIf>
+
+                  <ShowIf condition={showUpdateDialog}>
+                    <UpdateDialog
+                      open={showUpdateDialog}
+                      onClose={() => {
+                        setShowUpdateDialog(false);
+                      }}
+                    />
                   </ShowIf>
 
                   <Wordpress>

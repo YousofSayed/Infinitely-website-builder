@@ -877,7 +877,8 @@ export async function offlineInstaller(props) {
     const mime = (await import("mime")).default;
     let isTypesInstalled = false;
     console.log("offline installer : start install rest models API");
-    await installRestModelsAPI(projectData.restAPIModels);
+    projectData?.restAPIModels &&
+      (await installRestModelsAPI(projectData?.restAPIModels));
     console.log("offline installer : end install rest models API");
 
     console.log("offline installer : start install js footer scripts API");
@@ -1058,7 +1059,9 @@ export const getAllStyleSheetClasses = async (props) => {
       };
 
       await doInNormalAsyncInWorker(props.projectId, async () => {
-        const filesHandles = await opfs.getAllFiles(defineRoot(`libs/css`), {recursive: true});
+        const filesHandles = await opfs.getAllFiles(defineRoot(`libs/css`), {
+          recursive: true,
+        });
         for (const fHandle of filesHandles) {
           const file = await fHandle.getOriginFile();
           const lastModified = file.lastModified;
@@ -2862,26 +2865,26 @@ export async function updateSymbolsStylesFiles({ symbols = {}, cssCode = "" }) {
 }
 
 /**
- * 
+ *
  * @param {{
- * css:string , 
+ * css:string ,
  * options?: (import("csso").MinifyOptions & import("csso").CompressOptions)
- * }} props 
+ * }} props
  */
 export function minifyCss(props) {
-  if(!props.css){
+  if (!props.css) {
     console.warn(`css not found in minifyCss`);
     return "";
-  };
-  return minify(props.css , props.options || {}).css;
+  }
+  return minify(props.css, props.options || {}).css;
 }
 
 /**
- * 
+ *
  * @param {{
  *  html : string
- * }} props 
+ * }} props
  */
 export async function htmlToGrapesjsComponents(props) {
-    return await htmlToGrapesJS(props.html);
+  return await htmlToGrapesJS(props.html);
 }

@@ -2559,6 +2559,11 @@ export function chunkHtmlElements(html = "") {
   return html.match(pattern) || [];
 }
 
+/**
+ * 
+ * @param {import("@/helpers/types").Project & import("@/helpers/types").WpProject} param0 
+ * @returns {import("@/helpers/types").Project & import("@/helpers/types").WpProject}
+ */
 export function getInitProjectData({
   name = "",
   description = "This is a new project created with Infinitely Editor.",

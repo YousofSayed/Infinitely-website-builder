@@ -2,6 +2,7 @@
 
 import React from "react";
 import Logo from "@/assets/images/logo.svg";
+import { Icons } from "@/components/Icons/Icons";
 
 export default function  ElectronTitleBar() {
   const minimize = () => window.electron?.minimize();
@@ -10,8 +11,10 @@ export default function  ElectronTitleBar() {
   
   const close = () => window.electron?.close();
 
+  const reload = () => window.electron.reloadApp();
+
   return (
-    <div className="animate-go-to fixed left-0 top-0 flex h-[40px!important] border-b-[1px] border-b-slate-600 w-full select-none bg-slate-900 text-white shrink-0 z-[100000000]">
+    <div className="animate-go-to will-change-transform isolate fixed left-0 top-0 flex h-[40px!important] border-b-[1px] border-b-slate-600 w-full select-none bg-slate-900 text-white shrink-0 z-[100000000]">
       {/* App / title area */}
       <div
         className="
@@ -34,6 +37,21 @@ export default function  ElectronTitleBar() {
 
       {/* Window controls */}
       <div className="flex h-full [-webkit-app-region:no-drag]">
+        <button
+          type="button"
+          onClick={reload}
+          className="
+            flex h-full w-11 items-center justify-center
+            text-zinc-300
+            transition-colors
+            hover:bg-white/10
+          "
+        >
+          <i>
+            <Icons.refresh strokeColor={'#d4d4d8'} height={15} width={15} strokWidth={2}/>
+          </i>
+        </button>
+
         <button
           type="button"
           onClick={minimize}

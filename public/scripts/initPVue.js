@@ -16,7 +16,7 @@ const initPlugins = () => {
   app.directive("ref", vRef);
   app.directive("gsap", vGsap);
   app.directive("mount", vMount);
-  app.directive("catch", vCatch);
+  // app.directive("catch", vCatch);
 };
 
 initPlugins();

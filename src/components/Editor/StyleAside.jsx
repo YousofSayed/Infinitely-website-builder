@@ -596,7 +596,8 @@ export const StyleAside = ({ className }) => {
     );
 
     setCurrentEl({
-      currentEl: JSON.parse(JSON.stringify(slEL)),
+      currentEl:{id : slEL.getId()},
+      currentElId : slEL.getId()
     });
   };
 

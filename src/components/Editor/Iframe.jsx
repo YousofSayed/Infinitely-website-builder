@@ -9,6 +9,7 @@ import {
   animationsState,
   animationsWillRemoveState,
   consoleLogs,
+  currentElState,
   isAnimationsChangedState,
   reloaderState,
   showAnimationsBuilderState,
@@ -23,6 +24,7 @@ import { addClickClass } from "@/helpers/cocktail";
 import { keyframesGetterWorker } from "@/helpers/defineWorkers";
 import {
   doInNormal,
+  doInNormalAsync,
   doInWordpress,
   doInWordpressAsync,
   emitChange,
@@ -61,10 +63,10 @@ export const Iframe = () => {
   const [showAnimBuilder, setShowAnimBuilder] = useRecoilState(
     showAnimationsBuilderState,
   );
-  const [isResize, setIsResize] = useState(false);
-  const [reloader, setReloader] = useRecoilState(reloaderState);
+  // const [isResize, setIsResize] = useState(false);
+  // const [reloader, setReloader] = useRecoilState(reloaderState);
   const [showPreview, setShowPreview] = useRecoilState(showPreviewState);
-  const [showDragLayer, setShowDragLayer] = useRecoilState(showDragLayerState);
+  // const [showDragLayer, setShowDragLayer] = useRecoilState(showDragLayerState);
   const [animations, setAnimations] = useRecoilState(animationsState);
   const [animationsWillRemove, setAnimationsWillRemove] = useRecoilState(
     animationsWillRemoveState,
@@ -84,14 +86,14 @@ export const Iframe = () => {
 
   // ✅ FIXED: Replaced editorIframe with editorWindow and added previewWindow
   const [previewWindow, setPreviewWindow] = useState(null);
-  const [editorWindow, setEditorWindow] = useState(null);
+  // const [editorWindow, setEditorWindow] = useState(null);
 
   const iframeContainer = useRef();
-  const virtualBrowserWindow = useRef(iframeType);
+  // const virtualBrowserWindow = useRef(iframeType);
   const editor = useEditorMaybe();
   const projectId = +localStorage.getItem(current_project_id);
   const setStyle = useSetClassForCurrentEl();
-  const [autoAnimate] = useAutoAnimate();
+  // const [autoAnimate] = useAutoAnimate();
   const [animatePreviewContainer] = useAutoAnimate();
   const [showLoader, setShowLoader] = useState(true);
   const [showPreviewLoader, setShowPreviewLoader] = useState(true);
@@ -100,47 +102,72 @@ export const Iframe = () => {
   const [showsComponents, setShowsComponents] = useRecoilState(
     showComponentsInLeftPanelState,
   );
-  const [zoomValue, setZoomValue] = useRecoilState(zoomValueState);
+  // const [currentEl, setCurrentEl] = useRecoilState(currentElState);
+  // const [zoomValue, setZoomValue] = useRecoilState(zoomValueState);
   const [previewIframeClient, setPreviewIframeClient] = useState({
     width: null,
     height: null,
     zoom: null,
   });
 
-  const [logs, setLogs] = useRecoilState(consoleLogs);
+  // const [logs, setLogs] = useRecoilState(consoleLogs);
 
   // ✅ FIXED: Pass the Window objects to the hook
-  doInNormal(() => {
-    useConsoleFeed(previewWindow, "preview");
-  });
+  // doInNormal(() => {
+  // });
+  useConsoleFeed();
 
-  useConsoleFeed(editorWindow, "editor");
+  // useConsoleFeed(editorWindow, "editor");
 
   // ✅ FIXED: Listen to GrapesJS events to grab the canvas window dynamically
-  useEffect(() => {
-    if (!editor) return;
+  // useEffect(() => {
+  //   if (!editor) return;
 
-    const updateEditorWindow = () => {
-      const iframeEl = editor.Canvas.getFrameEl();
-      if (iframeEl && iframeEl?.contentWindow) {
-        setEditorWindow(iframeEl.contentWindow);
-      }
-    };
+  //   const updateEditorWindow = (ev) => {
+  //     // const iframeEl = editor.Canvas.getFrameEl();
+  //     // if (iframeEl && iframeEl?.contentWindow) {
+  //     //   setEditorWindow(iframeEl.contentWindow);
+  //     // }
+  //     // alert("updateEditorWindow");
+  //     console.log("evoooooooooooo - 2 : ", ev);
 
-    updateEditorWindow();
-    editor.on("canvas:frame:load", updateEditorWindow);
-    editor.on("canvas:ready", updateEditorWindow);
+  //     const wind = ev?.console ? ev : ev?.window?.console ? ev.window : null;
+  //     console.log("evoooooooooooo - 2 window from start loading", ev , wind);
+  //     if (wind) {
+  //       // setEditorWindow(wind);
+  //     }
+  //   };
 
-    return () => {
-      editor.off("canvas:frame:load", updateEditorWindow);
-      editor.off("canvas:ready", updateEditorWindow);
-    };
-  }, [editor]);
+  //   const iframeWindow = editor.Canvas.getFrameEl()?.contentWindow;
+  //   if (iframeWindow) {
+  //     setEditorWindow(iframeWindow);
+  //     console.log("evoooooooooooo - 2 iframe window: ", iframeWindow);
+  //   }
+
+  //   editor.on(InfinitelyEvents.storage.loadStart, updateEditorWindow);
+  //   // editor.on("canvas", updateEditorWindow);
+  //   editor.on("canvas:frame:load", updateEditorWindow);
+  //   // editor.on("canvas:frame:load:body", updateEditorWindow);
+  //   // editor.on("canvas:ready", updateEditorWindow);
+
+  //   return () => {
+  //     editor.off("canvas", updateEditorWindow);
+  //     editor.off("canvas:frame:load", updateEditorWindow);
+  //     editor.off("canvas:frame:load:body", updateEditorWindow);
+  //     editor.off("canvas:ready", updateEditorWindow);
+  //     editor.off(InfinitelyEvents.storage.loadStart, updateEditorWindow);
+  //   };
+  // }, [editor]);
 
   // useEffect(()=>{
-  //   if(!previewIframe?.current?.contentWindow) return;
-  //   setPreviewWindow(previewIframe.current.contentWindow)
-  // },[previewIframe.current])
+  //   if(!editor) return;
+
+  //   const callback = (ev) => {
+  //     setCurrentEl(null);
+  //   }
+
+  //   editor.on(InfinitelyEvents.storage.loadStart, callback);
+  // }, [editor])
 
   const saveAnimations = () => {
     if (isAnimationsChanged) {

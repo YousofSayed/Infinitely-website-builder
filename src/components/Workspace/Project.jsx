@@ -21,7 +21,13 @@ import { getProjectRoot } from "@/helpers/bridge";
 import { uniqueID } from "@/helpers/cocktail";
 import { db } from "@/helpers/db";
 import { checkDropBoxSignInState } from "@/helpers/dropboxHandlers";
-import { getProjectSettings } from "@/helpers/functions";
+import {
+  callWorkerCommand,
+  doInNormalAsync,
+  doInWordpressAsync,
+  getProjectSettings,
+  isNormal,
+} from "@/helpers/functions";
 import { infinitelyWorker } from "@/helpers/infinitelyWorker";
 import { opfs } from "@/helpers/initOpfs";
 import { refType } from "@/helpers/jsDocs";
@@ -30,11 +36,13 @@ import { ToastMsgInfo } from "@/components/Editor/Protos/ToastMsgInfo";
 import { Icons } from "@/components/Icons/Icons";
 import { Li } from "@/components/Protos/Li";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { random, uniqueId } from "lodash";
+import { isPlainObject, random, uniqueId } from "lodash";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useRecoilState } from "recoil";
+import { useBusyCallback, useTasksState } from "@/hooks/useBusyCallback";
+import { fetcherWorker } from "@/helpers/defineWorkers";
 
 // million-ignore
 /**
@@ -51,7 +59,7 @@ export const Project = ({ project }) => {
   const [isProjectInited, setIsProjectInited] =
     useRecoilState(isProjectInitedState);
   const [currentWpPageName, setCurrentWpPageName] = useRecoilState(
-    currentWpPageNameState
+    currentWpPageNameState,
   );
   const urlsRef = useRef([]);
   // console.log(project.imgSrc);
@@ -90,6 +98,129 @@ export const Project = ({ project }) => {
     };
   }, [project, project.id]);
 
+  const [editeProject, { isLoading: isEditeProjectLoading }] = useBusyCallback(
+    async (project) => {
+      if (!project.inited) return;
+      if (project.apps == "Dropbox" && !(await checkDropBoxSignInState())) {
+        toast.error(
+          <ToastMsgInfo msg={"Please sign in to Dropbox to continue."} />,
+        );
+        return;
+      }
+
+      opfs.id = project.id;
+      localStorage.setItem(current_project_id, project.id);
+
+      if (project.app_type === "normal" || !project.app_type) {
+        localStorage.removeItem(wp_meta);
+        localStorage.setItem(app_type, project.app_type);
+        localStorage.setItem(current_page_id, "index");
+        setCurrentWpPageName("index");
+        navigate("/add-blocks");
+      }
+
+      if (project.app_type === "wordpress") {
+        const tid = toast.loading(<ToastMsgInfo msg={"Checking config..."} />);
+        try {
+          localStorage.setItem(wp_meta, JSON.stringify(project.wp_meta));
+          localStorage.setItem(app_type, project.app_type);
+          const infConfigOption = await callWorkerCommand(
+            fetcherWorker,
+            "wp_get_option",
+            {
+              optionName: "inf_config",
+              wp_meta_data: project.wp_meta,
+            },
+          );
+
+          if (!infConfigOption?.success) {
+            toast.error(<ToastMsgInfo msg={"Config file not founded 😩"} />);
+            return;
+          }
+
+          infConfigOption?.value?.id && delete infConfigOption.value.id;
+          if (infConfigOption?.value && isPlainObject(infConfigOption.value)) {
+            await db.projects.update(project.id, {
+              ...(infConfigOption.value || {}),
+            });
+            setCurrentWpPageName("");
+            navigate("/wordpress/select");
+            toast.done(tid);
+            toast.success(
+              <ToastMsgInfo msg={"Config checked successfully 💙"} />,
+            );
+          } else {
+            toast.error(<ToastMsgInfo msg={"Config file not founded 😩"} />);
+            toast.dismiss(tid);
+          }
+        } catch (error) {
+          toast.error(
+            <ToastMsgInfo msg={"An error occurred while checking config."} />,
+          );
+          toast.dismiss(tid);
+          console.error("Error checking config:", error);
+          throw error; // Re-throw the error to be handled by the caller if needed
+        }
+      }
+    },
+    {
+      key: `workspace-edite-project`,
+    },
+  );
+
+  const [deleteProject, { isLoading: isDeleteProjectLoading }] =
+    useBusyCallback(
+      async () => {
+        if (!project.inited) return;
+
+        const cnfrm = confirm(
+          `Are you sure to delete ${project.name} project ?`,
+        );
+
+        let wpCnfrm;
+        if (project.app_type === "wordpress") {
+          wpCnfrm = confirm(
+            `Are you sure to delete ${project.name} wordpress config ?`,
+          );
+        }
+
+        if (!cnfrm) return;
+        const tId = toast.loading(<ToastMsgInfo msg={"Deleting project"} />);
+
+        wpCnfrm &&
+          (await wp_delete_option({
+            optionName: "inf_config",
+            projectId: project.id,
+          }));
+
+        await opfs.remove({
+          dirOrFile: await opfs.getFolder(`projects/project-${project.id}`),
+        });
+
+        await db.projects.delete(project.id);
+        sessionStorage.removeItem(current_dynamic_template_id);
+        localStorage.removeItem(current_page_id);
+        localStorage.removeItem(current_project_id);
+        localStorage.removeItem(app_type);
+        setCurrentWpPageName("");
+        toast.done(tId);
+      },
+      {
+        key: `workspace-delete-project`,
+      },
+    );
+
+  const { isLoading: isAllTasksLoading } = useTasksState([
+    "workspace-edite-project",
+    "workspace-delete-project",
+  ]);
+
+  const isDisabled =
+    !project.inited ||
+    isEditeProjectLoading ||
+    isDeleteProjectLoading ||
+    isAllTasksLoading;
+
   return (
     <article
       // ref={autoAminRef}
@@ -101,10 +232,11 @@ export const Project = ({ project }) => {
           ref={thumbnailRef}
           src={"/images/blank.jpg"}
           project-image-src={img || "/images/blank.jpg"}
-          className={`max-w-full max-h-full select-none ${project.imgSrc ? "h-full " : "h-full  object-cover"
-            }  w-full   max-h-[190px!important] rounded`}
+          className={`max-w-full max-h-full select-none ${
+            project.imgSrc ? "h-full " : "h-full  object-cover"
+          }  w-full   max-h-[190px!important] rounded`}
           alt="project image"
-        // loading="lazy"
+          // loading="lazy"
         />
         <figcaption
           className=" w-full rounded-lg p-1 text-center capitalize text-text-primary text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600 "
@@ -131,109 +263,18 @@ export const Project = ({ project }) => {
       )}
       <ul className="flex gap-2 items-center justify-center p-1 bg-surface-main rounded-lg">
         <Li
-          onClick={async () => {
-            if (!project.inited) return;
-            if (
-              project.apps == "Dropbox" &&
-              !(await checkDropBoxSignInState())
-            ) {
-              toast.error(
-                <ToastMsgInfo msg={"Please sign in to Dropbox to continue."} />
-              );
-              return;
-            }
-
-            opfs.id = project.id;
-            localStorage.setItem(current_project_id, project.id);
-            if (project.app_type == "wordpress") {
-              localStorage.setItem(wp_meta, JSON.stringify(project.wp_meta));
-              localStorage.setItem(app_type, project.app_type);
-              wp_toast_handler({
-                returnCallback: async () =>
-                  await wp_get_option({
-                    optionName: "inf_config",
-                    wp_meta_data: project.wp_meta,
-                  }),
-                async onSuccess(res) {
-                  res?.value?.id && delete res.value.id;
-                  await db.projects.update(project.id, {
-                    ...(res.value || {}), 
-                  });
-                  setCurrentWpPageName("");
-                  navigate("/wordpress/select");
-                },
-                toast_loading_msg: "Checking config...",
-                toast_success_msg: "Config checked successfully 💙",
-                toast_error_msg: "Config file not founded 😩",
-              });
-            } else {
-              localStorage.removeItem(wp_meta);
-              localStorage.setItem(app_type, project.app_type);
-              localStorage.setItem(current_page_id, "index");
-              setCurrentWpPageName("index");
-              navigate("/add-blocks");
-            }
-          }}
+          disabled={isDisabled}
+          onClick={async () => await editeProject(project)}
         >
           {Icons.edite({ fill: "white", width: "20" })}
         </Li>
 
-        <Li
-          onClick={async () => {
-             if (!project.inited) return;
-            //  await wp_update_option({
-            //     optionName:'inf_config',
-            //     projectId:project.id,
-            //     value:{
-            //       ...project
-            //     }
-
-            //   })
-            // await  wp_get_option({
-            //     wp_meta_data:project.wp_meta,
-            //     optionName:'inf_config'
-            //   })
-            //   return;
-            // if (!project.inited) return;
-            const cnfrm = confirm(
-              `Are you sure to delete ${project.name} project ?`
-            );
-
-            let wpCnfrm;
-            if (project.app_type === "wordpress") {
-              wpCnfrm = confirm(
-                `Are you sure to delete ${project.name} wordpress config ?`
-              );
-            }
-
-            if (!cnfrm) return;
-            const tId = toast.loading(
-              <ToastMsgInfo msg={"Deleting project"} />
-            );
-
-            wpCnfrm &&
-              (await wp_delete_option({
-                optionName: "inf_config",
-                projectId: project.id,
-              }));
-
-            await opfs.remove({
-              dirOrFile: await opfs.getFolder(`projects/project-${project.id}`),
-            });
-
-            await db.projects.delete(project.id);
-            sessionStorage.removeItem(current_dynamic_template_id);
-            localStorage.removeItem(current_page_id);
-            localStorage.removeItem(current_project_id);
-            localStorage.removeItem(app_type);
-            setCurrentWpPageName("");
-            toast.done(tId);
-          }}
-        >
+        <Li disabled={isDisabled} onClick={async () => await deleteProject()}>
           {Icons.trash("white", undefined, 20)}
         </Li>
 
         <Li
+          disabled={isDisabled}
           onClick={() => {
             if (!project.inited) return;
             infinitelyWorker.postMessage({
