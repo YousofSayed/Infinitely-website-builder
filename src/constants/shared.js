@@ -594,7 +594,23 @@ export const makeCPTTemplates = (postTypes = []) =>
 
 //   return scripts;
 // };
-
+export const DEV_SCRIPT_DEFINITIONS_BEFORE_HEADER_FOR_ALL = [
+  // {
+  //   name: "iframeLogs.js",
+  //   src: "/scripts/iframeLogs.js",
+  //   type: "module",
+  //   defer:true
+  // },
+];
+export const DEV_SCRIPT_DEFINITIONS_BEFORE = [
+  // {
+  //   name: "iframeLogs.js",
+  //   localUrl: "/scripts/iframeLogs.js",
+  //   attributes: {
+  //     type: "module",
+  //   },
+  // },
+];
 /**
  * Central script definitions - single source of truth
  */
@@ -603,21 +619,25 @@ export const SCRIPT_DEFINITIONS = [
     name: "infinitely.js",
     localUrl: "/scripts/infinitely.js",
   },
+
   {
     name: "dev.js",
     localUrl: "/scripts/dev.js",
   },
+
   {
     name: "swiper.js",
     localUrl: "https://cdn.jsdelivr.net/npm/swiper@latest/swiper-bundle.min.js",
     condition: (settings) => settings.enable_swiperjs,
   },
+
   {
     name: "swiper-element.js",
     localUrl:
       "https://cdn.jsdelivr.net/npm/swiper@latest/swiper-element-bundle.min.js",
     condition: (settings) => settings.enable_swiperjs,
   },
+
   {
     name: "spline.js",
     localUrl:
@@ -627,16 +647,19 @@ export const SCRIPT_DEFINITIONS = [
       type: "module",
     },
   },
+
   {
     name: "gsap.min.js",
     localUrl: "/scripts/gsap.min.js",
     condition: (settings) => !settings.disable_gsap_core,
   },
+
   {
     name: "scrollTrigger.js",
     localUrl: "/scripts/scrollTrigger.min.js",
     condition: (settings) => !settings.disable_gsap_scrollTrigger,
   },
+
   {
     name: "splitText.js",
     localUrl: "/scripts/splitText.min.js",
@@ -730,13 +753,13 @@ export const DEV_SCRIPT_DEFINITIONS = [
 ];
 
 export const DEV_SCRIPT_DEFINITIONS_EXCLUDES_IN_EDITOR_FOR_HEADER = [
-  {
-    name: "iframeLogs.js",
-    src: "/scripts/iframeLogs.js?source=grapesjs",
-    type:'module'
-    // condition: (settings) => !settings.disable_will_change_in_editor,
-  },
-]
+  // {
+  //   name: "iframeLogs.js",
+  //   src: "/scripts/iframeLogs.js?source=grapesjs",
+  //   type:'module'
+  //   // condition: (settings) => !settings.disable_will_change_in_editor,
+  // },
+];
 
 export const DEV_PREVIEW_SCRIPT_DEFINITIONS = [
   // {

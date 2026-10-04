@@ -8,6 +8,7 @@ import {
   current_symbol_rule,
   current_template_id,
   DEV_SCRIPT_DEFINITIONS,
+  DEV_SCRIPT_DEFINITIONS_BEFORE,
   DEV_STYLE_DEFINITIONS,
   inf_symbol_Id_attribute,
   mainScriptsForEditor,
@@ -354,6 +355,9 @@ export const IDB = (editor) => {
       editor.setStyle("");
       editor.setComponents("");
       editor.clearDirtyCount();
+      editor.select(undefined);
+      
+      
 
       clearTimeouts();
 
@@ -1013,6 +1017,24 @@ export const loadScripts = async (editor, projectData) => {
     //   }
     // };
 
+     for (const scriptDefBefore of DEV_SCRIPT_DEFINITIONS_BEFORE) {
+      if (
+        isFunction(scriptDefBefore.condition) &&
+        !scriptDefBefore.condition(projectSettings)
+      )
+        continue;
+
+      await appendScript([scriptDefBefore.localUrl], 0, (script, lib) => {
+        script.src = lib;
+        if (isPlainObject(scriptDefBefore.attributes)) {
+          for (const attr in scriptDefBefore.attributes) {
+            script.setAttribute(attr, scriptDefBefore.attributes[attr]);
+          }
+        }
+        script.setAttribute("name", scriptDefBefore.name);
+      });
+    }
+
     // Usage example
     await appendScript(jsFooterLibs, 0, (script, lib) => {
       if (lib.isCDN) {
@@ -1029,6 +1051,8 @@ export const loadScripts = async (editor, projectData) => {
     await appendScript(["/global/global.js"], 0, (script, lib) => {
       script.src = lib;
     });
+
+   
 
     for (const scriptDef of SCRIPT_DEFINITIONS) {
       if (

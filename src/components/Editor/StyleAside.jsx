@@ -71,6 +71,7 @@ const SelectElementToStyle = () => (
 const StyleAccordion = () => {
   // const showAnimeBuilder = useRecoilValue(showAnimationsBuilderState);
   const [notifires, setNotifires] = useState({});
+  const [currentEl, setCurrentEl] = useRecoilState(currentElState);
   const showAnimationsBuilder = useRecoilValue(showAnimationsBuilderState);
   const [showsComponents, setShowsComponents] = useRecoilState(
     showComponentsInLeftPanelState,
@@ -171,6 +172,12 @@ const StyleAccordion = () => {
   useUpdateInputValue({
     getAllStyles,
   });
+
+  useEffect(()=>{
+    if(!currentEl?.currentEl){
+      setNotifires({});
+    }
+  },[currentEl])
 
   // let stylesClone = cloneDeep(styles);
   // showAnimationsBuilder && delete stylesClone['Animation'];
@@ -428,7 +435,11 @@ export const StyleAside = ({ className }) => {
   useEffect(() => {
     if (!editor) return;
     const sle = editor.getSelected();
-    if (!sle) return;
+    if (!sle) {
+      setNotifyStates(false);
+      setMediaCondTitle("");
+      return;
+    };
     const settingGlobalRuleTitle = () => {
       let currentSelector = getCurrentSelector(selector, sle);
       const currentMedia = getCurrentMediaDevice(editor);

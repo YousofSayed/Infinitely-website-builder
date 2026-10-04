@@ -27,3 +27,6 @@ if (window.__earlyLogs && window.__earlyLogs.length > 0) {
   });
   window.__earlyLogs = []; // Clear buffer
 }
+
+
+console.log("iframeLogs loaded ✨");

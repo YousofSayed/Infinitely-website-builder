@@ -94,48 +94,48 @@ function App() {
       command: "refreshSW",
     });
 
-    // (async () => {
-    //   const prevRegs = await navigator.serviceWorker.getRegistrations();
-    //   if (!(prevRegs.length && navigator.serviceWorker.controller)) {
-    //     setAppInstalling(true);
-    //     localStorage.setItem("installed", "false");
-    //     await initDBAssetsSw(() => {
-    //       setAppInstalling(false);
-    //       localStorage.setItem("installed", "true");
-    //     });
-    //   } else {
-    //     localStorage.setItem("installed", "true");
-    //     setAppInstalling(false);
-    //   }
-    //   console.log(
-    //     "Previous registrations:",
-    //     prevRegs,
-    //     navigator.serviceWorker.controller,
-    //   );
-    // })();
-
     (async () => {
-      try {
-        !Boolean(localStorage.getItem('installed')) && setAppInstalling(true);
-
+      const prevRegs = await navigator.serviceWorker.getRegistrations();
+      if (!(prevRegs.length && navigator.serviceWorker.controller)) {
+        setAppInstalling(true);
         localStorage.setItem("installed", "false");
-
-        const result = await initDBAssetsSw();
-
-        if (result?.installed) {
+        await initDBAssetsSw(() => {
+          setAppInstalling(false);
           localStorage.setItem("installed", "true");
-          setAppInstalling(false);
-        } else {
-          localStorage.setItem("installed", "false");
-          setAppInstalling(false);
-        }
-      } catch (error) {
-        console.error("PWA installation failed:", error);
-
-        localStorage.setItem("installed", "false");
+        });
+      } else {
+        localStorage.setItem("installed", "true");
         setAppInstalling(false);
       }
+      console.log(
+        "Previous registrations:",
+        prevRegs,
+        navigator.serviceWorker.controller,
+      );
     })();
+
+    // (async () => {
+    //   try {
+    //     !Boolean(localStorage.getItem('installed')) && setAppInstalling(true);
+
+    //     localStorage.setItem("installed", "false");
+
+    //     const result = await initDBAssetsSw();
+
+    //     if (result?.installed) {
+    //       localStorage.setItem("installed", "true");
+    //       setAppInstalling(false);
+    //     } else {
+    //       localStorage.setItem("installed", "false");
+    //       setAppInstalling(false);
+    //     }
+    //   } catch (error) {
+    //     console.error("PWA installation failed:", error);
+
+    //     localStorage.setItem("installed", "false");
+    //     setAppInstalling(false);
+    //   }
+    // })();
 
     /**
      *

@@ -1,6 +1,10 @@
 import { blocks } from "@/Blocks/blocks.jsx";
 import { InfinitelyEvents } from "@/constants/infinitelyEvents.js";
-import { current_symbol_id, DEV_SCRIPT_DEFINITIONS_EXCLUDES_IN_EDITOR_FOR_HEADER } from "@/constants/shared.js";
+import {
+  current_symbol_id,
+  DEV_SCRIPT_DEFINITIONS_BEFORE_HEADER_FOR_ALL,
+  DEV_SCRIPT_DEFINITIONS_EXCLUDES_IN_EDITOR_FOR_HEADER,
+} from "@/constants/shared.js";
 import {
   cmpRulesState,
   currentElState,
@@ -257,9 +261,13 @@ export const GJEditor = ({ children }) => {
     });
 
     ev.on(InfinitelyEvents.storage.loadStart, () => {
-        updateCurrentEl("");
-      setCmpRules([]);
-    })
+      // updateCurrentEl("");
+      // setCmpRules([]);
+      // setSelectedEl({
+      //   currentEl: undefined,
+      //   currentElId: undefined,
+      // });
+    });
 
     editor.on(InfinitelyEvents.ruleTitle.update, () => {
       // const selectedEl = ev.getSelected();
@@ -325,6 +333,109 @@ export const GJEditor = ({ children }) => {
       // setCmpRules(rules.rules || []);
       scheduleRules();
     });
+
+    // ev.on('canvas:frame:load:head' , (ev)=>{
+    //   const document  = ev.window.document;
+    //   const head = ev.window.document.head;
+    //   for (const scriptDef of DEV_SCRIPT_DEFINITIONS_BEFORE_HEADER_FOR_ALL) {
+    //     const script = document.createElement("script");
+    //     Object.entries(scriptDef).forEach(([key, value]) => {
+    //       script.setAttribute(key, value);
+    //     });
+    //     head.prepend(script);
+    //   }
+    // })
+
+    // Assuming DEV_SCRIPT_DEFINITIONS_BEFORE_HEADER_FOR_ALL is in scope
+
+editor.on("canvas:frame:load", (ev) => {
+  const doc = ev.window.document;
+  const head = doc.head;
+
+  // 1. EARLY HOOK: The absolute first script. 
+  // It executes synchronously and patches console before ANY user scripts run.
+  const earlyScript = doc.createElement("script");
+  earlyScript.innerHTML = `
+    (() => {
+      if (window.__infinitelyEarlyConsoleHook) return;
+      
+      window.__infinitelyEarlyConsoleHook = true;
+      window.__earlyLogs = [];
+      window.__consoleFeedActive = false;
+
+      const methods = [
+        "log", "info", "warn", "error", "debug", "table", "dir", "trace",
+        "group", "groupCollapsed", "groupEnd", "clear", "count", "countReset",
+        "assert", "time", "timeEnd", "timeLog"
+      ];
+
+      for (const method of methods) {
+        const original = console[method];
+        console[method] = function (...args) {
+          // Only buffer if console-feed hasn't taken over yet
+          if (!window.__consoleFeedActive) {
+            window.__earlyLogs.push({ method, args });
+          }
+          return original.apply(console, args);
+        };
+      }
+    })();
+  `;
+  
+  // Prepend to ensure it's the first element in <head>
+  head.prepend(earlyScript);
+
+  // 2. YOUR CUSTOM SCRIPTS
+  // Inject your dev scripts after the early hook but BEFORE GrapesJS injects user scripts
+  for (const scriptDef of DEV_SCRIPT_DEFINITIONS_BEFORE_HEADER_FOR_ALL) {
+    const script = doc.createElement("script");
+    Object.entries(scriptDef).forEach(([key, value]) => {
+      script.setAttribute(key, value);
+    });
+    head.append(script);
+  }
+
+  // 3. CONSOLE-FEED LOADER
+  // This module script loads asynchronously. Once ready, it takes over the console
+  // and replays everything that was buffered by the early hook.
+  const hookScript = doc.createElement("script");
+  hookScript.type = "module";
+  hookScript.innerHTML = `
+    import { Hook } from "https://esm.sh/console-feed@latest";
+
+    const sendToParent = (log) => {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: "CONSOLE_LOG",
+          from: "editor",
+          payload: { ...log },
+        }, "*");
+      }
+    };
+
+    // Wrap the current console. 
+    // Note: This wraps our early hook wrapper, creating a chain.
+    Hook(window.console, (log) => sendToParent(log));
+    
+    // Tell the early hook to stop buffering logs to prevent memory leaks
+    window.__consoleFeedActive = true;
+
+    if (window.__earlyLogs && window.__earlyLogs.length > 0) {
+      window.__earlyLogs.forEach((entry) => {
+        // Replay early logs. Because console is now wrapped by Hook,
+        // this will trigger the sendToParent callback AND print locally!
+        if (console[entry.method]) {
+          console[entry.method].apply(console, entry.args);
+        }
+      });
+      window.__earlyLogs = [];
+    }
+    console.log("iframeLogs loaded ✨");
+  `;
+  
+  head.appendChild(hookScript);
+});
+    
   };
 
   useSettingsHandler();
@@ -388,7 +499,8 @@ export const GJEditor = ({ children }) => {
             ]) ||
               []),
 
-              ...DEV_SCRIPT_DEFINITIONS_EXCLUDES_IN_EDITOR_FOR_HEADER
+            // ...DEV_SCRIPT_DEFINITIONS_EXCLUDES_IN_EDITOR_FOR_HEADER,
+            // ...DEV_SCRIPT_DEFINITIONS_BEFORE_HEADER_FOR_ALL
           ],
           styles: [],
           customBadgeLabel:

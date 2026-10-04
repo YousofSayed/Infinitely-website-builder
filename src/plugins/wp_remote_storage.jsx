@@ -17,6 +17,7 @@ import {
   current_project_id,
   current_symbol_id,
   DEV_SCRIPT_DEFINITIONS,
+  DEV_SCRIPT_DEFINITIONS_BEFORE,
   DEV_STYLE_DEFINITIONS,
   inf_symbol_Id_attribute,
   mainScriptsForEditor,
@@ -143,6 +144,7 @@ export const wp_remote_storage = (editor) => {
       editorStorageInstance.emit(InfinitelyEvents.storage.loadStart);
       editor.trigger(InfinitelyEvents.storage.loadStart);
       editor.trigger("storage:start:load");
+      editor.select(null);
       editor.clearDirtyCount();
       clearTimeouts();
       const pageSlug = localStorage.getItem(current_page_id);
@@ -438,7 +440,7 @@ export const wp_remote_storage = (editor) => {
           .forEach((el) => el.remove());
 
         dev_scripts = cloneDeep(
-          SCRIPT_DEFINITIONS.concat(DEV_SCRIPT_DEFINITIONS).map((scriptDef) => {
+          DEV_SCRIPT_DEFINITIONS_BEFORE.concat(SCRIPT_DEFINITIONS).concat(DEV_SCRIPT_DEFINITIONS).map((scriptDef) => {
             if (
               isFunction(scriptDef.condition) &&
               !scriptDef.condition(projectSettings)
@@ -472,7 +474,7 @@ export const wp_remote_storage = (editor) => {
           );
           newEl.innerHTML = el.innerHTML;
           const addedNode = body.appendChild(newEl);
-          
+
           return new Promise((res) => {
             if (el.tagName !== "SCRIPT") return res(appendScript(index + 1));
             if (!addedNode.src) return res(appendScript(index + 1));
